@@ -1,9 +1,8 @@
 import { bs, ensureSuperThis, PARAM, rt } from "@fireproof/core";
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
-import { mockSuperThis } from "../helpers.js";
+import { mockLoader, mockSuperThis } from "../helpers.js";
 import { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
-import { toKeyWithFingerPrint } from "../../src/runtime/key-bag.js";
 
 describe("KeyBag indexeddb and file", () => {
   let url: URI;
@@ -73,10 +72,10 @@ describe("KeyBag indexeddb and file", () => {
         return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
       });
     }
-    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
+    expect((await rt.kb.toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
       (await res.Ok().get())?.fingerPrint,
     );
-    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
+    expect((await rt.kb.toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
       (await created.Ok().get())?.fingerPrint,
     );
     const algo = {
@@ -105,29 +104,20 @@ describe("KeyedCryptoStore", () => {
   beforeEach(async () => {
     await sthis.start();
     // logger = MockLogger().logger;
-    let kbUrl: URI;
+    // let kbUrl: URI;
     if (runtimeFn().isBrowser) {
-      kbUrl = URI.from("indexeddb://fp-keybag");
+      // kbUrl = URI.from("indexeddb://fp-keybag");
       baseUrl = URI.from("indexeddb://fp-keyed-crypto-store");
     } else {
-      kbUrl = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
+      // kbUrl = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
       baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", sthis.env.get("FP_STORAGE_URL"));
     }
     baseUrl = baseUrl.build().defParam(PARAM.NAME, "test").URI();
-    loader = {
-      sthis,
-      keyBag: () => rt.kb.getKeyBag(sthis, { url: kbUrl }),
-    } as bs.Loadable;
+    loader = mockLoader(sthis);
   });
   it("no crypto", async () => {
-    const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
-
-    for (const pstore of [
-      strt.makeDataStore({ url, loader }),
-      strt.makeMetaStore({ url, loader }),
-      strt.makeWALStore({ url, loader }),
-    ]) {
+    for (const pstore of (await bs.createAttachedStores(url, loader, "insecure")).stores.baseStores) {
       const store = await pstore;
       // await store.start();
       const kc = await store.keyedCrypto();

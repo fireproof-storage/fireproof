@@ -8,33 +8,30 @@ import {
   type AnyLink,
   type CarHeader,
   type CommitOpts,
-  type DbMeta,
   type TransactionMeta,
   type CarGroup,
   type CarLog,
   DataStore,
-  WALStore,
-  // RemoteMetaStore,
-  // RemoteMetaStore,
-  MetaStore,
-  BaseStore,
   type Loadable,
   BlockstoreRuntime,
   BlockstoreOpts,
-  AttachedRemotes,
+  AttachedStores,
+  ActiveStore,
+  DataActiveStore,
 } from "./types.js";
 
 import { parseCarFile } from "./loader-helpers.js";
 
 import { defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import type { Attachable, Attached, CarTransaction, Falsy, SuperThis } from "../types.js";
+import type { Attachable, Attached, CarTransaction, DbMeta, Falsy, SuperThis } from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { TaskManager } from "./task-manager.js";
-import { AttachedRemotesImpl } from "./attachable-store.js";
+import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
+import { isNotFoundError } from "../utils.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -74,66 +71,66 @@ export class Loader implements Loadable {
   // remoteCarStore?: DataStore;
   // remoteFileStore?: DataStore;
 
-  readonly attachedRemotes: AttachedRemotes;
+  readonly attachedStores: AttachedStores;
 
   attach(attached: Attachable): Promise<Attached> {
-    return this.attachedRemotes.attach(attached);
+    return this.attachedStores.attach(attached);
   }
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
   private writeLimit = pLimit(1);
 
-  private readonly _carStore = new ResolveOnce<DataStore>();
-  async carStore(): Promise<DataStore> {
-    return this._carStore.once(async () =>
-      this.ebOpts.storeRuntime.makeDataStore({
-        // sthis: this.sthis,
-        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
-        url: this.ebOpts.storeUrls.data,
-        // keybag: await this.keyBag(),
-        loader: this,
-      }),
-    );
-  }
+  // private readonly _carStore = new ResolveOnce<DataStore>();
+  // async carStore(): Promise<DataStore> {
+  //   return this._carStore.once(async () =>
+  //     this.ebOpts.storeRuntime.makeDataStore({
+  //       // sthis: this.sthis,
+  //       gatewayInterceptor: this.ebOpts.gatewayInterceptor,
+  //       url: this.ebOpts.storeUrls.data,
+  //       // keybag: await this.keyBag(),
+  //       loader: this,
+  //     }),
+  //   );
+  // }
 
-  private readonly _fileStore = new ResolveOnce<DataStore>();
-  async fileStore(): Promise<DataStore> {
-    return this._fileStore.once(async () =>
-      this.ebOpts.storeRuntime.makeDataStore({
-        // sthis: this.sthis,
-        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
-        url: this.ebOpts.storeUrls.file,
-        // keybag: await this.keyBag(),
-        loader: this,
-      }),
-    );
-  }
-  private readonly _WALStore = new ResolveOnce<WALStore>();
-  async WALStore(): Promise<WALStore> {
-    return this._WALStore.once(async () =>
-      this.ebOpts.storeRuntime.makeWALStore({
-        // sthis: this.sthis,
-        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
-        url: this.ebOpts.storeUrls.wal,
-        // keybag: await this.keyBag(),
-        loader: this,
-      }),
-    );
-  }
+  // private readonly _fileStore = new ResolveOnce<DataStore>();
+  // async fileStore(): Promise<DataStore> {
+  //   return this._fileStore.once(async () =>
+  //     this.ebOpts.storeRuntime.makeDataStore({
+  //       // sthis: this.sthis,
+  //       gatewayInterceptor: this.ebOpts.gatewayInterceptor,
+  //       url: this.ebOpts.storeUrls.file,
+  //       // keybag: await this.keyBag(),
+  //       loader: this,
+  //     }),
+  //   );
+  // }
+  // private readonly _WALStore = new ResolveOnce<WALStore>();
+  // async WALStore(): Promise<WALStore> {
+  //   return this._WALStore.once(async () =>
+  //     this.ebOpts.storeRuntime.makeWALStore({
+  //       // sthis: this.sthis,
+  //       gatewayInterceptor: this.ebOpts.gatewayInterceptor,
+  //       url: this.ebOpts.storeUrls.wal,
+  //       // keybag: await this.keyBag(),
+  //       loader: this,
+  //     }),
+  //   );
+  // }
 
-  private readonly _metaStore = new ResolveOnce<MetaStore>();
-  async metaStore(): Promise<MetaStore> {
-    return this._metaStore.once(async () =>
-      this.ebOpts.storeRuntime.makeMetaStore({
-        // sthis: this.sthis,
-        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
-        url: this.ebOpts.storeUrls.meta,
-        // keybag: await this.keyBag(),
-        loader: this,
-      }),
-    );
-  }
+  // private readonly _metaStore = new ResolveOnce<MetaStore>();
+  // async metaStore(): Promise<MetaStore> {
+  //   return this._metaStore.once(async () =>
+  //     this.ebOpts.storeRuntime.makeMetaStore({
+  //       // sthis: this.sthis,
+  //       gatewayInterceptor: this.ebOpts.gatewayInterceptor,
+  //       url: this.ebOpts.storeUrls.meta,
+  //       // keybag: await this.keyBag(),
+  //       loader: this,
+  //     }),
+  //   );
+  // }
 
   keyBag(): Promise<KeyBag> {
     return getKeyBag(this.sthis, this.ebOpts.keyBag);
@@ -142,25 +139,39 @@ export class Loader implements Loadable {
   private readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
-      const metas = await this.metaStore().then((i) => i.load());
+      await createAttachedStores(
+        {
+          car: { url: this.ebOpts.storeUrls.car, gatewayInterceptor: this.ebOpts.gatewayInterceptor },
+          file: { url: this.ebOpts.storeUrls.file, gatewayInterceptor: this.ebOpts.gatewayInterceptor },
+          meta: { url: this.ebOpts.storeUrls.meta, gatewayInterceptor: this.ebOpts.gatewayInterceptor },
+          wal: { url: this.ebOpts.storeUrls.wal, gatewayInterceptor: this.ebOpts.gatewayInterceptor },
+        },
+        this.attachedStores,
+      );
+      const local = this.attachedStores.local();
+      const metas = await local.active.meta.load();
       if (this.ebOpts.meta) {
-        await this.handleDbMetasFromStore([this.ebOpts.meta]);
+        await this.handleDbMetasFromStore([this.ebOpts.meta, ...(metas || [])], local);
       } else if (metas) {
-        await this.handleDbMetasFromStore(metas);
+        await this.handleDbMetasFromStore(metas, local);
       }
     });
   }
 
   async close() {
     await this.commitQueue.waitIdle();
-    await this.attachedRemotes.detach();
-    const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
-    await Promise.all(toClose.map((store) => store.close()));
+    await this.attachedStores.detach();
+    // const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
+    // await Promise.all(toClose.map((store) => store.close()));
   }
 
   async destroy() {
-    const toDestroy = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
-    await Promise.all(toDestroy.map((store) => store.destroy()));
+    await Promise.all(
+      this.attachedStores
+        .local()
+        .baseStores()
+        .map((store) => store.destroy()),
+    );
   }
 
   readonly logger: Logger;
@@ -177,10 +188,10 @@ export class Loader implements Loadable {
       "Loader",
     );
     this.logger = this.ebOpts.logger;
-    this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta) => {
-      await this.handleDbMetasFromStore([dbMeta]);
+    this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta, activeStore: ActiveStore) => {
+      await this.handleDbMetasFromStore([dbMeta], activeStore);
     });
-    this.attachedRemotes = new AttachedRemotesImpl(this);
+    this.attachedStores = new AttachedRemotesImpl(this);
   }
 
   // async snapToCar(carCid: AnyLink | string) {
@@ -194,20 +205,20 @@ export class Loader implements Loadable {
   //   await this._applyCarHeader(carHeader, true)
   // }
 
-  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
+  async handleDbMetasFromStore(metas: DbMeta[], activeStore: ActiveStore): Promise<void> {
     this.logger.Debug().Any("metas", metas).Msg("handleDbMetasFromStore");
     for (const meta of metas) {
       await this.writeLimit(async () => {
-        await this.mergeDbMetaIntoClock(meta);
+        await this.mergeDbMetaIntoClock(meta, activeStore);
       });
     }
   }
 
-  async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
+  async mergeDbMetaIntoClock(meta: DbMeta, activeStore: ActiveStore): Promise<void> {
     if (this.isCompacting) {
       throw this.logger.Error().Msg("cannot merge while compacting").AsError();
     }
-
+    // this could be abit more compact
     if (this.seenMeta.has(meta.cars.toString())) return;
     this.seenMeta.add(meta.cars.toString());
 
@@ -217,12 +228,12 @@ export class Loader implements Loadable {
     if (carLogIncludesGroup(this.carLog, meta.cars)) {
       return;
     }
-    const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta);
+    const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta, activeStore);
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
-    await this.getMoreReaders(carHeader.cars.flat());
+    await this.getMoreReaders(carHeader.cars.flat(), activeStore);
     this.carLog = [...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)];
     await this.ebOpts.applyMeta?.(carHeader.meta);
   }
@@ -234,9 +245,9 @@ export class Loader implements Loadable {
   //   }
   // }
 
-  async loadCarHeaderFromMeta<T>({ cars: cids }: DbMeta): Promise<CarHeader<T>> {
+  async loadCarHeaderFromMeta<T>(dbm: DbMeta, astore: ActiveStore): Promise<CarHeader<T>> {
     //Call loadCar for every cid
-    const reader = await this.loadCar(cids[0]);
+    const reader = await this.loadCar(dbm.cars[0], astore);
     return await parseCarFile(reader, this.logger);
   }
 
@@ -255,13 +266,13 @@ export class Loader implements Loadable {
     // opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.ready();
-    const fstore = await this.fileStore();
-    const wstore = await this.WALStore();
+    const fstore = this.attachedStores.local().active.file;
+    const wstore = this.attachedStores.local().active.wal;
     return this.commitQueue.enqueue(() => commitFiles(fstore, wstore, t, done));
   }
 
-  async loadFileCar(cid: AnyLink /*, isPublic = false*/): Promise<CarReader> {
-    return await this.storesLoadCar(cid, await this.fileStore(), await this.attachedRemotes.fileStore());
+  async loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<CarReader> {
+    return await this.storesLoadCar(cid, store.fileStore()); // store.local.file, store.remotes.map((r) => r.file));
   }
 
   async commit<T = TransactionMeta>(
@@ -270,13 +281,13 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.ready();
-    const carStore = await this.carStore();
+    const carStore = await this.attachedStores.local().active.car;
     const params: CommitParams = {
       encoder: (await carStore.keyedCrypto()).codec(),
       carLog: this.carLog,
       carStore: carStore,
-      WALStore: await this.WALStore(),
-      metaStore: await this.metaStore(),
+      WALStore: await this.attachedStores.local().active.wal,
+      metaStore: await this.attachedStores.local().active.meta,
       threshold: this.ebOpts.threshold,
     };
     return this.commitQueue.enqueue(async () => {
@@ -292,7 +303,7 @@ export class Loader implements Loadable {
       const previousCompactCid = fp.compact[fp.compact.length - 1];
       fp.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
       this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)];
-      await this.removeCidsForCompact(previousCompactCid[0]).catch((e) => e);
+      await this.removeCidsForCompact(previousCompactCid[0], this.attachedStores.local()).catch((e) => e);
     } else {
       this.carLog.unshift(cids);
     }
@@ -318,13 +329,16 @@ export class Loader implements Loadable {
     }
   }
 
-  async removeCidsForCompact(cid: AnyLink) {
-    const carHeader = await this.loadCarHeaderFromMeta({
-      cars: [cid],
-    } as unknown as DbMeta);
+  async removeCidsForCompact(cid: AnyLink, store: ActiveStore) {
+    const carHeader = await this.loadCarHeaderFromMeta(
+      {
+        cars: [cid],
+      },
+      store,
+    );
     for (const cids of carHeader.compact) {
       for (const cid of cids) {
-        await this.carStore().then((i) => i.remove(cid));
+        await this.attachedStores.local().active.car.remove(cid);
       }
     }
   }
@@ -350,7 +364,7 @@ export class Loader implements Loadable {
       }
       for (const cids of this.carLog) {
         for (const cid of cids) {
-          const reader = await this.loadCar(cid);
+          const reader = await this.loadCar(cid, this.attachedStores.local());
           if (!reader) throw this.logger.Error().Ref("cid", cid).Msg("missing car reader").AsError();
           for await (const block of reader.blocks()) {
             const sCid = block.cid.toString();
@@ -363,14 +377,14 @@ export class Loader implements Loadable {
     }
   }
 
-  async getBlock(cid: AnyLink): Promise<AnyBlock | Falsy> {
+  async getBlock(cid: AnyLink, store: ActiveStore): Promise<AnyBlock | Falsy> {
     await this.ready();
     const sCid = cid.toString();
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
 
     const getCarCid = async (carCid: AnyLink) => {
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
-      const reader = await this.loadCar(carCid);
+      const reader = await this.loadCar(carCid, store);
       if (!reader) {
         throw this.logger.Error().Ref("cid", carCid).Msg("missing car reader").AsError();
       }
@@ -384,7 +398,7 @@ export class Loader implements Loadable {
     const getCompactCarCids = async (carCid: AnyLink) => {
       // console.log("getCompactCarCids", carCid.toString())
 
-      const reader = await this.loadCar(carCid);
+      const reader = await this.loadCar(carCid, store);
       if (!reader) {
         throw this.logger.Error().Str("cid", carCid.toString()).Msg("missing car reader").AsError();
       }
@@ -438,39 +452,43 @@ export class Loader implements Loadable {
     return got;
   }
 
-  async loadCar(cid: AnyLink): Promise<CarReader> {
-    if (!this.carStore) {
-      throw this.logger.Error().Msg("car store not initialized").AsError();
-    }
-    const loaded = await this.storesLoadCar(cid, await this.carStore(), await this.attachedRemotes.carStore());
+  async loadCar(cid: AnyLink, store: ActiveStore): Promise<CarReader> {
+    // if (!this.carStore) {
+    //   throw this.logger.Error().Msg("car store not initialized").AsError();
+    // }
+    const loaded = await this.storesLoadCar(cid, store.carStore());
     return loaded;
   }
 
-  async makeDecoderAndCarReader(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
+  async makeDecoderAndCarReader(cid: AnyLink, store: DataActiveStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let loadedCar: AnyBlock | undefined = undefined;
-    let activeStore: BaseStore = local;
+    let activeStore: DataStore = store.attached.local();
     try {
       //loadedCar now is an array of AnyBlocks
       this.logger.Debug().Any("cid", cidsString).Msg("loading car");
-      loadedCar = await local.load(cid);
+      loadedCar = await store.attached.local().load(cid);
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
-      if (remote) {
+      if (!isNotFoundError(e)) {
+        throw this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
+      }
+      for (const remote of store.attached.remotes()) {
         const remoteCar = await remote.load(cid);
         if (remoteCar) {
           // todo test for this
           this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
-          await local.save(remoteCar);
+          await store.attached.local().save(remoteCar);
           loadedCar = remoteCar;
           activeStore = remote;
+          break;
+        } else {
+          this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
         }
-      } else {
-        this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
       }
     }
     if (!loadedCar) {
-      throw this.logger.Error().Url(local.url()).Str("cid", cidsString).Msg("missing car files").AsError();
+      throw this.logger.Error().Url(store.attached.local().url()).Str("cid", cidsString).Msg("missing car files").AsError();
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
@@ -492,19 +510,19 @@ export class Loader implements Loadable {
   }
 
   //What if instead it returns an Array of CarHeader
-  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
+  protected async storesLoadCar(cid: AnyLink, store: DataActiveStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let dacr = this.carReaders.get(cidsString);
     if (!dacr) {
-      dacr = this.makeDecoderAndCarReader(cid, local, remote);
+      dacr = this.makeDecoderAndCarReader(cid, store);
       this.carReaders.set(cidsString, dacr);
     }
     return dacr;
   }
 
-  protected async getMoreReaders(cids: AnyLink[]) {
+  protected async getMoreReaders(cids: AnyLink[], store: ActiveStore) {
     const limit = pLimit(5);
     const missing = cids.filter((cid) => !this.carReaders.has(cid.toString()));
-    await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid))));
+    await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid, store))));
   }
 }
