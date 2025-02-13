@@ -32,9 +32,9 @@ import { Future } from "@adviser/cement";
 
 describe("noop Gateway", function () {
   let db: Ledger;
-  let carStore: bs.DataStore;
+  let carStore: bs.CarStore;
   let metaStore: bs.MetaStore;
-  let fileStore: bs.DataStore;
+  let fileStore: bs.FileStore;
   let walStore: bs.WALStore;
   let carGateway: bs.SerdeGateway;
   let metaGateway: bs.SerdeGateway;
@@ -90,10 +90,10 @@ describe("noop Gateway", function () {
 
   it("should have correct store types in URLs", async () => {
     // Check that all stores have the correct store type in their URL
-    expect(carStore.url().toString()).toContain("store=data");
+    expect(carStore.url().toString()).toContain("store=car");
     expect(carStore.url().toString()).toContain("suffix=.car");
     expect(metaStore.url().toString()).toContain("store=meta");
-    expect(fileStore.url().toString()).toContain("store=data");
+    expect(fileStore.url().toString()).toContain("store=file");
     expect(walStore.url().toString()).toContain("store=wal");
   });
 

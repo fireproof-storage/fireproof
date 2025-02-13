@@ -220,10 +220,9 @@ export async function fpDeserialize<S>(
     ...pdecoder,
   };
   switch (url.getParam(PARAM.STORE)) {
-    case "data":
-      if (url.getParam(PARAM.SUFFIX) === ".car") {
-        return makeFPEnvelope(FPEnvelopeTypes.CAR, await decoder.car(sthis, raw)) as Result<FPEnvelope<S>>;
-      }
+    case "car":
+      return makeFPEnvelope(FPEnvelopeTypes.CAR, await decoder.car(sthis, raw)) as Result<FPEnvelope<S>>;
+    case "file":
       return makeFPEnvelope(FPEnvelopeTypes.FILE, await decoder.file(sthis, raw)) as Result<FPEnvelope<S>>;
     case "wal":
       return makeFPEnvelope(FPEnvelopeTypes.WAL, await decode2WalState(sthis, await decoder.wal(sthis, raw))) as Result<

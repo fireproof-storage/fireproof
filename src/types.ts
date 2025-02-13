@@ -18,10 +18,11 @@ import type {
   StoreURIRuntime,
   DataAndMetaAndWalStore,
   UrlAndInterceptor,
-  DataStore,
   MetaStore,
   WALStore,
   BaseStore,
+  FileStore,
+  CarStore,
 } from "./blockstore/index.js";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
@@ -75,7 +76,7 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
   return value;
 }
 
-export type StoreType = "data" | "wal" | "meta";
+export type StoreType = "car" | "file" | "wal" | "meta";
 export interface FPStats {
   isFile(): boolean;
   isDirectory(): boolean;
@@ -491,8 +492,8 @@ export interface Attachable {
 
 export class DataAndMetaAndWalAndBaseStore implements DataAndMetaAndWalStore {
   readonly wal?: WALStore | undefined;
-  readonly file: DataStore;
-  readonly car: DataStore;
+  readonly file: FileStore;
+  readonly car: CarStore;
   readonly meta: MetaStore;
   readonly baseStores: BaseStore[];
 

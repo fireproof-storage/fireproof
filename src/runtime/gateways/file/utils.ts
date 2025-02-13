@@ -28,8 +28,10 @@ export function getFileName(url: URI, sthis: SuperThis): string {
   const key = url.getParam("key");
   if (!key) throw sthis.logger.Error().Url(url).Msg(`key not found`).AsError();
   const res = getStore(url, sthis, (...a: string[]) => a.join("-"));
-  switch (res.store) {
-    case "data":
+  switch (res.fromUrl) {
+    case "file":
+      return sthis.pathOps.join(res.name, key)
+    case "car":
       return sthis.pathOps.join(res.name, key + ".car");
     case "wal":
     case "meta":

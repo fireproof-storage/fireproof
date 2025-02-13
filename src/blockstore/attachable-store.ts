@@ -10,154 +10,20 @@ import {
   LocalActiveStore,
   LocalDataAndMetaAndWalStore,
   BaseStore,
-  DataActiveStore,
   MetaActiveStore,
   WALActiveStore,
-  DataAttachedStores,
-  DataStore,
   MetaStore,
   WALAttachedStores,
   WALStore,
   MetaAttachedStores,
+  FileActiveStore,
+  CarActiveStore,
+  CarAttachedStores,
+  CarStore,
+  FileAttachedStores,
+  FileStore,
 } from "./types.js";
 import { toSortedArray } from "../utils.js";
-
-// class AttachedStoreBase {
-//   private remotes: AttachedRemotesImpl;
-//   private baseGetStores: () => BaseStore[];
-//   private logger: Logger;
-//   constructor(remotes: AttachedRemotesImpl, getStores: () => BaseStore[]) {
-//     this.remotes = remotes;
-//     this.baseGetStores = getStores;
-//     this.logger = ensureLogger(remotes.loadable.sthis, "AttachedStoreBase");
-//   }
-
-//   get realGateway(): SerdeGateway {
-//     throw new Error("Method not implementable");
-//   }
-//   // readonly url: URI
-//   url(): URI {
-//     throw new Error("Method not implementable");
-//   }
-
-//   readonly _onStarted: (() => void)[] = [];
-//   onStarted(fn: () => void) {
-//     this._onStarted.push(fn);
-//   }
-//   readonly _onClosed: (() => void)[] = [];
-//   onClosed(fn: () => void) {
-//     this._onClosed.push(fn);
-//   }
-
-//   keyedCrypto(): Promise<CryptoAction> {
-//     throw new Error("Method not implementable");
-//   }
-
-//   close(): Promise<Result<void>> {
-//     return Promise.all(
-//       this.baseGetStores().map(async (store) => {
-//         return store.close();
-//       }),
-//     ).then(() => {
-//       this._onClosed.forEach((fn) => fn());
-//       return Result.Ok(undefined);
-//     });
-//   }
-//   destroy(): Promise<Result<void>> {
-//     return Promise.all(
-//       this.baseGetStores().map(async (store) => {
-//         return store.destroy();
-//       }),
-//     ).then(() => Result.Ok(undefined));
-//   }
-
-//   readonly ready?: () => Promise<void> = undefined;
-
-//   start(): Promise<Result<URI>> {
-//     return Promise.all(
-//       this.baseGetStores().map(async (store) => {
-//         return store.start(store);
-//       }),
-//     ).then(() => {
-//       this._onStarted.forEach((fn) => fn());
-//       return Result.Ok(this.url());
-//     });
-//   }
-// }
-
-// class AttachedDataStore extends AttachedStoreBase implements DataStore {
-//   readonly storeType = "data";
-//   // realGateway: SerdeGateway;
-//   // onStarted(fn: () => void): void {
-//   //   throw new Error("Method not implemented.");
-//   // }
-//   // onClosed(fn: () => void): void {
-//   //   throw new Error("Method not implemented.");
-//   // }
-//   // ready?: (() => Promise<void>) | undefined;
-//   // start(): Promise<Result<URI>> {
-//   //   throw new Error("Method not implemented.");
-//   // }
-
-//   private getStores: () => DataStore[];
-
-//   constructor(remotes: AttachedRemotesImpl, getStores: () => DataStore[]) {
-//     super(remotes, getStores);
-//     this.getStores = getStores;
-//   }
-
-//   async load(cid: AnyLink): Promise<AnyBlock> {
-//     return Promise.race(
-//       this.getStores().map(async (store) => {
-//         return store.load(cid);
-//       }),
-//     );
-//   }
-
-//   save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void> {
-//     return Promise.all(
-//       this.getStores().map(async (store) => {
-//         return store.save(car, opts);
-//       }),
-//     ).then((i) => i[0]);
-//   }
-
-//   remove(cid: AnyLink): Promise<Result<void>> {
-//     return Promise.all(
-//       this.getStores().map(async (store) => {
-//         return store.remove(cid);
-//       }),
-//     )
-//       .then((i) => i[0])
-//       .catch((e) => Result.Err(e as Error));
-//   }
-// }
-
-// class AttachedMetaStore extends AttachedStoreBase implements MetaStore {
-//   readonly storeType = "meta";
-//   getStores: () => MetaStore[];
-
-//   constructor(remotes: AttachedRemotesImpl, getStores: () => MetaStore[]) {
-//     super(remotes, getStores);
-//     this.getStores = getStores;
-//   }
-
-//   load(branch?: string): Promise<DbMeta[] | Falsy> {
-//     return Promise.race(
-//       this.getStores().map(async (store) => {
-//         return store.load(branch);
-//       }),
-//     );
-//   }
-
-//   save(meta: DbMeta, branch?: string): Promise<Result<void>> {
-//     return Promise.all(
-//       this.getStores().map(async (store) => {
-//         return store.save(meta, branch);
-//       }),
-//     ).then(() => Result.Ok(undefined));
-//   }
-// }
 
 class AttachedImpl implements Attached {
   readonly gatewayUrls: GatewayUrls;
@@ -181,40 +47,53 @@ class AttachedImpl implements Attached {
   }
 }
 
-class DataActiveStoreImpl implements DataActiveStore {
+class FileActiveStoreImpl implements FileActiveStore {
   ref: ActiveStore;
-  active: DataStore;
-  attached: DataAttachedStores;
+  active: FileStore;
+  attached: FileAttachedStores;
 
-  constructor(ref: ActiveStore, active: DataStore, attached: DataAttachedStores) {
+  constructor(ref: ActiveStore, active: FileStore, attached: FileAttachedStores) {
     this.ref = ref;
     this.active = active;
     this.attached = attached;
   }
 }
 
-class CarAttachedStoresImpl implements DataAttachedStores {
+class CarActiveStoreImpl implements CarActiveStore {
+  ref: ActiveStore;
+  active: CarStore;
+  attached: CarAttachedStores;
+
+  constructor(ref: ActiveStore, active: CarStore, attached: CarAttachedStores) {
+    this.ref = ref;
+    this.active = active;
+    this.attached = attached;
+  }
+}
+
+
+class CarAttachedStoresImpl implements CarAttachedStores {
   readonly attached: AttachedStores;
   constructor(attached: AttachedStores) {
     this.attached = attached;
   }
-  local(): DataStore {
+  local(): CarStore {
     return this.attached.local().active.car;
   }
-  remotes(): DataStore[] {
+  remotes(): CarStore[] {
     return this.attached.remotes().map(({ active }) => active.car);
   }
 }
 
-class FileAttachedStoresImpl implements DataAttachedStores {
+class FileAttachedStoresImpl implements FileAttachedStores {
   readonly attached: AttachedStores;
   constructor(attached: AttachedStores) {
     this.attached = attached;
   }
-  local(): DataStore {
+  local(): FileStore {
     return this.attached.local().active.file;
   }
-  remotes(): DataStore[] {
+  remotes(): FileStore[] {
     return this.attached.remotes().map(({ active }) => active.file);
   }
 }
@@ -291,11 +170,11 @@ class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
     }
     return bs;
   }
-  carStore(): DataActiveStore {
-    return new DataActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.attached));
+  carStore(): CarActiveStore {
+    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.attached));
   }
-  fileStore(): DataActiveStore {
-    return new DataActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.attached));
+  fileStore(): FileActiveStore {
+    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.attached));
   }
   metaStore(): MetaActiveStore {
     return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.attached));
@@ -356,24 +235,6 @@ export class AttachedRemotesImpl implements AttachedStores {
 
   constructor(loadable: Loadable) {
     this.loadable = loadable;
-    // this.attactedFileStore = new AttachedDataStore(this, () =>
-    //   this._remotes
-    //     .values()
-    //     .filter(({ value }) => value.isOk())
-    //     .map(({ value }) => value.Ok().stores.file),
-    // );
-    // this.attactedCarStore = new AttachedDataStore(this, () =>
-    //   this._remotes
-    //     .values()
-    //     .filter(({ value }) => value.isOk())
-    //     .map(({ value }) => value.Ok().stores.car),
-    // );
-    // this.attactedMetaStore = new AttachedMetaStore(this, () =>
-    //   this._remotes
-    //     .values()
-    //     .filter(({ value }) => value.isOk())
-    //     .map(({ value }) => value.Ok().stores.meta),
-    // );
   }
 
   forRemotes(action: (store: ActiveStore) => Promise<unknown>): Promise<void> {
@@ -451,11 +312,6 @@ export class AttachedRemotesImpl implements AttachedStores {
           byStore: gws,
           loader: this.loadable,
         }),
-        // {
-        //   car: await rt.makeDataStore({ url: gws.carUrl, loader: this.loadable }),
-        //   file: await rt.makeDataStore({ url: gws.filesUrl, loader: this.loadable }),
-        //   meta: await rt.makeMetaStore({ url: gws.metaUrl, loader: this.loadable }),
-        // },
         () => {
           this._remotes.unget(key);
         },

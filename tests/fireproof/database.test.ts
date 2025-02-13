@@ -595,14 +595,14 @@ describe("StoreURIRuntime", () => {
   it("default toStoreURIRuntime", () => {
     expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "test")))).toEqual({
       data: {
-        car: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
-        file: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&urlGen=fromEnv",
+        car: "my://bla/storage?name=test&store=car&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?name=test&store=file&storekey=%40test-data%40&urlGen=fromEnv",
         meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
         wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
       },
       idx: {
-        car: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
-        file: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&urlGen=fromEnv",
+        car: "my://bla/storage?index=idx&name=test&store=car&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?index=idx&name=test&store=file&storekey=%40test-data-idx%40&urlGen=fromEnv",
         meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
         wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",
       },
@@ -612,14 +612,14 @@ describe("StoreURIRuntime", () => {
   it("no name toStoreURIRuntime(not more)", () => {
     expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "gogo")))).toEqual({
       data: {
-        car: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&suffix=.car&urlGen=fromEnv",
-        file: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&urlGen=fromEnv",
+        car: "my://bla/storage?name=gogo&store=car&storekey=%40gogo-data%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?name=gogo&store=file&storekey=%40gogo-data%40&urlGen=fromEnv",
         meta: "my://bla/storage?name=gogo&store=meta&storekey=%40gogo-meta%40&urlGen=fromEnv",
         wal: "my://bla/storage?name=gogo&store=wal&storekey=%40gogo-wal%40&urlGen=fromEnv",
       },
       idx: {
-        car: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&suffix=.car&urlGen=fromEnv",
-        file: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&urlGen=fromEnv",
+        car: "my://bla/storage?index=idx&name=gogo&store=car&storekey=%40gogo-data-idx%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?index=idx&name=gogo&store=file&storekey=%40gogo-data-idx%40&urlGen=fromEnv",
         meta: "my://bla/storage?index=idx&name=gogo&store=meta&storekey=%40gogo-meta-idx%40&urlGen=fromEnv",
         wal: "my://bla/storage?index=idx&name=gogo&store=wal&storekey=%40gogo-wal-idx%40&urlGen=fromEnv",
       },
@@ -633,11 +633,11 @@ describe("StoreURIRuntime", () => {
           toStoreURIRuntime(sthis, "xxx", {
             base: "my://storage-base",
             data: {
-              data: "my://storage-data?name=yyy",
+              car: "my://storage-data?name=yyy",
               meta: "my://storage-meta",
             },
             idx: {
-              data: "my://storage-idx-data?name=yyy&index=bla",
+              car: "my://storage-idx-data?name=yyy&index=bla",
               meta: "my://storage-idx-meta",
             },
           }),
@@ -645,14 +645,14 @@ describe("StoreURIRuntime", () => {
       ),
     ).toEqual({
       data: {
-        car: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40&suffix=.car",
-        file: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40",
+        car: "my://storage-data?name=yyy&store=car&storekey=%40yyy-data%40&suffix=.car",
+        file: "my://storage-data?name=yyy&store=file&storekey=%40yyy-data%40",
         meta: "my://storage-meta?name=xxx&store=meta&storekey=%40xxx-meta%40",
         wal: "my://storage-base?name=xxx&store=wal&storekey=%40xxx-wal%40",
       },
       idx: {
-        car: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40&suffix=.car",
-        file: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40",
+        car: "my://storage-idx-data?index=bla&name=yyy&store=car&storekey=%40yyy-data-idx%40&suffix=.car",
+        file: "my://storage-idx-data?index=bla&name=yyy&store=file&storekey=%40yyy-data-idx%40",
         meta: "my://storage-idx-meta?index=idx&name=xxx&store=meta&storekey=%40xxx-meta-idx%40",
         wal: "my://storage-base?index=idx&name=xxx&store=wal&storekey=%40xxx-wal-idx%40",
       },
@@ -663,14 +663,14 @@ describe("StoreURIRuntime", () => {
     sthis.env.delete("FP_STORAGE_URL");
     expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "maxi")))).toEqual({
       data: {
-        car: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&suffix=.car&urlGen=default",
-        file: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&urlGen=default",
+        car: "murks://fp?name=maxi&store=car&storekey=%40maxi-data%40&suffix=.car&urlGen=default",
+        file: "murks://fp?name=maxi&store=file&storekey=%40maxi-data%40&urlGen=default",
         meta: "murks://fp?name=maxi&store=meta&storekey=%40maxi-meta%40&urlGen=default",
         wal: "murks://fp?name=maxi&store=wal&storekey=%40maxi-wal%40&urlGen=default",
       },
       idx: {
-        car: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&suffix=.car&urlGen=default",
-        file: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&urlGen=default",
+        car: "murks://fp?index=idx&name=maxi&store=car&storekey=%40maxi-data-idx%40&suffix=.car&urlGen=default",
+        file: "murks://fp?index=idx&name=maxi&store=file&storekey=%40maxi-data-idx%40&urlGen=default",
         meta: "murks://fp?index=idx&name=maxi&store=meta&storekey=%40maxi-meta-idx%40&urlGen=default",
         wal: "murks://fp?index=idx&name=maxi&store=wal&storekey=%40maxi-wal-idx%40&urlGen=default",
       },
@@ -686,16 +686,16 @@ describe("StoreURIRuntime", () => {
         stores: [
           {
             data: {
-              car: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
-              file: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&urlGen=fromEnv",
+              car: "my://bla/storage?name=test&store=car&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
+              file: "my://bla/storage?name=test&store=file&storekey=%40test-data%40&urlGen=fromEnv",
               meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
               wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
             },
           },
           {
             idx: {
-              car: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
-              file: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&urlGen=fromEnv",
+              car: "my://bla/storage?index=idx&name=test&store=car&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
+              file: "my://bla/storage?index=idx&name=test&store=file&storekey=%40test-data-idx%40&urlGen=fromEnv",
               meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
               wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",
             },

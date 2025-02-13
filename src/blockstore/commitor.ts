@@ -6,9 +6,10 @@ import {
   CarHeader,
   CarLog,
   CarMakeable,
+  CarStore,
   CommitOpts,
-  DataStore,
   DbMeta,
+  FileStore,
   MetaStore,
   toCIDBlock,
   TransactionMeta,
@@ -60,7 +61,7 @@ export async function createCarFile(
 }
 
 export async function commitFiles(
-  fileStore: DataStore,
+  fileStore: FileStore,
   walStore: WALStore,
   t: CarTransaction,
   done: TransactionMeta,
@@ -125,7 +126,7 @@ async function encodeCarHeader<T>(fp: CarHeader<T>) {
 export interface CommitParams {
   readonly encoder: BlockEncoder<number, Uint8Array>;
   readonly carLog: CarLog;
-  readonly carStore: DataStore;
+  readonly carStore: CarStore;
   readonly WALStore: WALStore;
   readonly metaStore: MetaStore;
   readonly threshold?: number;

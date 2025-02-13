@@ -173,9 +173,9 @@ export interface BlobLike {
 }
 
 export interface StoreFactory {
-  makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
-  makeDataStore?: (loader: Loadable) => Promise<DataStore>;
-  makeWALStore?: (loader: Loadable) => Promise<WALStore>;
+  // makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
+  // makeDataStore?: (loader: Loadable) => Promise<DataStore>;
+  // makeWALStore?: (loader: Loadable) => Promise<WALStore>;
 
   encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
@@ -186,7 +186,8 @@ export interface StoreUrls {
   // URL means schema selects the storeType
   // readonly base: CoerceURI;
   readonly meta: CoerceURI;
-  readonly data: CoerceURI;
+  readonly car: CoerceURI;
+  readonly file: CoerceURI;
   // readonly index: CoerceURI;
   readonly wal: CoerceURI;
 }
@@ -267,8 +268,8 @@ export interface CommitOpts {
 // }
 
 export interface WriteableDataAndMetaStore {
-  file: DataStore;
-  car: DataStore;
+  file: FileStore;
+  car: CarStore;
   meta: MetaStore;
 }
 
@@ -397,8 +398,15 @@ export interface DataSaveOpts {
   readonly public: boolean;
 }
 
-export interface DataStore extends BaseStore {
-  readonly storeType: "data";
+export interface CarStore extends BaseStore {
+  readonly storeType: "car"
+  load(cid: AnyLink): Promise<AnyBlock>;
+  save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
+  remove(cid: AnyLink): Promise<Result<void>>;
+}
+
+export interface FileStore extends BaseStore {
+  readonly storeType: "file"
   load(cid: AnyLink): Promise<AnyBlock>;
   save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   remove(cid: AnyLink): Promise<Result<void>>;
@@ -490,35 +498,67 @@ export interface AttachedStores {
   detach(): Promise<void>;
 }
 
-export interface DataAttachedStores {
-  local(): DataStore;
+export interface BaseAttachedStores {
+  local(): BaseStore;
   // without local and active
-  remotes(): DataStore[];
+  remotes(): BaseStore[];
 }
 
-export interface DataActiveStore {
+export interface CarAttachedStores extends BaseAttachedStores {
+  local(): CarStore;
+  // without local and active
+  remotes(): CarStore[];
+}
+
+export interface BaseActiveStore {
   readonly ref: ActiveStore;
-  readonly active: DataStore;
-  readonly attached: DataAttachedStores;
+  readonly active: BaseStore;
+  readonly attached: BaseAttachedStores;
 }
 
-export interface MetaAttachedStores {
+export interface CarActiveStore extends BaseActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: CarStore;
+  readonly attached: CarAttachedStores;
+}
+
+export interface FileAttachedStores extends BaseAttachedStores {
+  local(): FileStore;
+  // without local and active
+  remotes(): FileStore[];
+}
+
+export interface CarActiveStore extends BaseActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: CarStore;
+  readonly attached: CarAttachedStores;
+}
+
+export interface FileActiveStore extends BaseActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: FileStore;
+  readonly attached: FileAttachedStores;
+}
+
+export type CIDActiveStore = CarActiveStore | FileActiveStore;
+
+export interface MetaAttachedStores extends BaseAttachedStores {
   local(): MetaStore;
   remotes(): MetaStore[];
 }
 
-export interface MetaActiveStore {
+export interface MetaActiveStore extends BaseActiveStore {
   readonly ref: ActiveStore;
   readonly active: MetaStore;
   readonly attached: MetaAttachedStores;
 }
 
-export interface WALAttachedStores {
+export interface WALAttachedStores extends BaseAttachedStores {
   local(): WALStore;
   remotes(): WALStore[];
 }
 
-export interface WALActiveStore {
+export interface WALActiveStore extends BaseActiveStore {
   readonly ref: ActiveStore;
   readonly active: WALStore;
   readonly attached: WALAttachedStores;
@@ -527,8 +567,8 @@ export interface WALActiveStore {
 export interface ActiveStore {
   readonly active: DataAndMetaAndWalStore;
   baseStores(): BaseStore[];
-  carStore(): DataActiveStore;
-  fileStore(): DataActiveStore;
+  carStore(): CarActiveStore;
+  fileStore(): FileActiveStore;
   metaStore(): MetaActiveStore;
   walStore(): WALActiveStore;
   readonly attached: AttachedStores;
