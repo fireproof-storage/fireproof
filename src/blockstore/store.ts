@@ -4,7 +4,6 @@ import type {
   AnyLink,
   CommitOpts,
   DataSaveOpts,
-  DataStore,
   DbMeta,
   WALStore as WALStore,
   WALState,
@@ -17,6 +16,8 @@ import type {
   DbMetaEvent,
   MetaStore,
   DataAndMetaStore,
+  CarStore,
+  FileStore,
 } from "./types.js";
 import { Falsy, PARAM, StoreType, SuperThis } from "../types.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
@@ -214,8 +215,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   //   return (rDbMeta.Ok() as FPEnvelopeMeta).payload;
   // }
 
-  async load(): Promise<DbMeta[] | Falsy> {
-    const branch = "main";
+  async load(branch = "main"): Promise<DbMeta[] | Falsy> {
     const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
     if (url.isErr()) {
       throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
@@ -268,11 +268,11 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 }
 
-export class DataStoreImpl extends BaseStoreImpl implements DataStore {
-  readonly storeType = "data";
 
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
-    super(sthis, url, { ...opts }, ensureLogger(sthis, "DataStoreImpl"));
+abstract class DataStoreImpl extends BaseStoreImpl {
+
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
+    super(sthis, url, { ...opts }, logger);
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -307,12 +307,11 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     // can distinguish between car and file
     let fpMsg: Result<FPEnvelopeCar | FPEnvelopeFile>;
     switch (url.Ok().getParam(PARAM.STORE)) {
-      case "data":
-        if (url.Ok().getParam(PARAM.SUFFIX)) {
-          fpMsg = Car2FPMsg(car.bytes);
-        } else {
-          fpMsg = File2FPMsg(car.bytes);
-        }
+      case "car":
+        fpMsg = Car2FPMsg(car.bytes);
+        break;
+      case "file":
+        fpMsg = File2FPMsg(car.bytes);
         break;
       default:
         throw this.logger.Error().Str("store", url.Ok().getParam(PARAM.STORE)).Msg("unexpected store").AsError();
@@ -343,6 +342,24 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     return this.gateway.destroy({ loader: this.loader }, this.url());
   }
 }
+
+export class CarStoreImpl extends DataStoreImpl implements CarStore {
+  readonly storeType = "car";
+
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+    super(sthis, url, { ...opts }, ensureLogger(sthis, "CarStoreImpl"));
+  }
+}
+
+export class FileStoreImpl extends DataStoreImpl implements FileStore {
+  readonly storeType = "file";
+
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+    super(sthis, url, { ...opts }, ensureLogger(sthis, "FileStoreImpl"));
+  }
+}
+
+
 
 export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly storeType = "wal";

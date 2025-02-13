@@ -279,26 +279,31 @@ export function ensureLogger(
 export type Joiner = (...toJoin: string[]) => string;
 
 export interface Store {
-  readonly store: StoreType;
+  readonly pathPart: "data" | "wal" | "meta";
+  readonly fromUrl: StoreType;
   readonly name: string;
 }
 
 export function getStore(url: URI, sthis: SuperThis, joiner: Joiner): Store {
-  const store = url.getParam(PARAM.STORE);
-  switch (store) {
-    case "data":
+  const fromUrl = url.getParam(PARAM.STORE) as StoreType;
+  let pathPart: Store["pathPart"]; 
+  switch (fromUrl) {
+    case "car":
+    case "file":
+      pathPart = "data"
+      break;
     case "wal":
     case "meta":
+      pathPart = fromUrl
       break;
     default:
       throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
-      throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
   }
-  let name: string = store;
+  let name: string = pathPart;
   if (url.hasParam("index")) {
     name = joiner(url.getParam(PARAM.INDEX) || "idx", name);
   }
-  return { store, name };
+  return { pathPart, fromUrl, name };
 }
 
 export function getKey(url: URI, logger: Logger): string {

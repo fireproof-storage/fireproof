@@ -44,7 +44,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "file",
         storekey: "@my-app-data@",
         urlGen: "fromEnv",
         version: "v0.19-file",
@@ -59,7 +59,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "car",
         suffix: ".car",
         storekey: "@my-app-data@",
         urlGen: "fromEnv",
@@ -121,7 +121,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "car",
         storekey: "@my-app-data@",
         suffix: ".car",
         version: "v0.19-file",
@@ -135,7 +135,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "file",
         storekey: "@my-app-data@",
         version: "v0.19-file",
       },
@@ -191,7 +191,7 @@ describe("config file gateway", () => {
         suffix: ".car",
         runtime: runtimeFn().isDeno ? "deno" : "node",
         urlGen: "default",
-        store: "data",
+        store: "car",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
         version: rt.FILESTORE_VERSION,
@@ -209,7 +209,7 @@ describe("config file gateway", () => {
         // ...isMemFS,
         runtime: runtimeFn().isDeno ? "deno" : "node",
         urlGen: "default",
-        store: "data",
+        store: "file",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
         version: rt.FILESTORE_VERSION,
@@ -261,7 +261,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         urlGen: "fromEnv",
-        store: "data",
+        store: "car",
         // runtime: "node",
         suffix: ".car",
         name: my_app(),
@@ -279,7 +279,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         urlGen: "fromEnv",
-        store: "data",
+        store: "file",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
         version: rt.FILESTORE_VERSION,

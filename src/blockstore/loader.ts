@@ -11,13 +11,15 @@ import {
   type TransactionMeta,
   type CarGroup,
   type CarLog,
-  DataStore,
   type Loadable,
   BlockstoreRuntime,
   BlockstoreOpts,
   AttachedStores,
   ActiveStore,
-  DataActiveStore,
+  CarActiveStore,
+  FileActiveStore,
+  BaseStore,
+  CIDActiveStore,
 } from "./types.js";
 
 import { parseCarFile } from "./loader-helpers.js";
@@ -73,8 +75,23 @@ export class Loader implements Loadable {
 
   readonly attachedStores: AttachedStores;
 
-  attach(attached: Attachable): Promise<Attached> {
-    return this.attachedStores.attach(attached);
+  async attach(attached: Attachable): Promise<Attached> {
+    const at = await this.attachedStores.attach(attached);
+    if (!at.stores.wal) {
+      try {
+        // remote Store need to kick off the sync by requesting the latest meta
+        const dbMeta = await at.stores.meta.load("main");
+        if (!Array.isArray(dbMeta)) {
+          throw this.logger.Error().Msg("missing dbMeta").AsError();
+        }
+        await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
+      } catch (e) {
+        this.logger.Error().Err(e).Msg("error attaching store");
+        at.detach();
+      }
+    }
+
+    return at;
   }
 
   private getBlockCache = new Map<string, AnyBlock>();
@@ -460,10 +477,10 @@ export class Loader implements Loadable {
     return loaded;
   }
 
-  async makeDecoderAndCarReader(cid: AnyLink, store: DataActiveStore): Promise<CarReader> {
+  async makeDecoderAndCarReader(cid: AnyLink, store: CIDActiveStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let loadedCar: AnyBlock | undefined = undefined;
-    let activeStore: DataStore = store.attached.local();
+    let activeStore: BaseStore = store.attached.local();
     try {
       //loadedCar now is an array of AnyBlocks
       this.logger.Debug().Any("cid", cidsString).Msg("loading car");
@@ -510,7 +527,7 @@ export class Loader implements Loadable {
   }
 
   //What if instead it returns an Array of CarHeader
-  protected async storesLoadCar(cid: AnyLink, store: DataActiveStore): Promise<CarReader> {
+  protected async storesLoadCar(cid: AnyLink, store: CarActiveStore | FileActiveStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let dacr = this.carReaders.get(cidsString);
     if (!dacr) {

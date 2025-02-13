@@ -15,6 +15,7 @@ import type {
   LedgerOpts,
   Attachable,
   Attached,
+  StoreType,
 } from "./types.js";
 import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
@@ -210,7 +211,8 @@ class LedgerImpl implements Ledger {
     this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
-  attach(a: Attachable): Promise<Attached> {
+  async attach(a: Attachable): Promise<Attached> {
+    await this.ready();
     return this.crdt.blockstore.loader.attach(a);
   }
 
@@ -220,6 +222,7 @@ class LedgerImpl implements Ledger {
   // }
 
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
+    this.ready();
     this.logger.Debug().Bool("updates", updates).Msg("subscribe");
     if (updates) {
       if (!this._listening) {
@@ -264,12 +267,25 @@ class LedgerImpl implements Ledger {
   }
 }
 
+function storeKey(store: StoreType) {
+  switch (store) {
+    case "car":
+    case "file":
+      return "data";
+    case "meta":
+    case "wal":
+      return store;
+    default:
+      throw new Error(`unknown store ${store}`);
+  }
+}
+
 function defaultURI(
   sthis: SuperThis,
   name: string,
   curi: CoerceURI | undefined,
   uri: URI,
-  store: "data" | "meta" | "wal",
+  store: StoreType,
   ctx?: Partial<{
     readonly idx: boolean;
     readonly file: boolean;
@@ -286,11 +302,11 @@ function defaultURI(
   }
   if (ctx.idx) {
     ret.defParam(PARAM.INDEX, "idx");
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${store}-idx@`);
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeKey(store)}-idx@`);
   } else {
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${store}@`);
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeKey(store)}@`);
   }
-  if (store === "data") {
+  if (store === "car") {
     if (ctx.file) {
       // ret.defParam(PARAM.SUFFIX, "");
     } else {
@@ -320,14 +336,14 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
   // readonly threshold?: number;
   return {
     idx: {
-      car: defaultURI(sthis, name, sopts.idx?.data, base, "data", { idx: true }),
-      file: defaultURI(sthis, name, sopts.idx?.data, base, "data", { file: true, idx: true }),
+      car: defaultURI(sthis, name, sopts.idx?.car, base, "car", { idx: true }),
+      file: defaultURI(sthis, name, sopts.idx?.file ?? sopts.idx?.car, base, "file", { file: true, idx: true }),
       meta: defaultURI(sthis, name, sopts.idx?.meta, base, "meta", { idx: true }),
       wal: defaultURI(sthis, name, sopts.idx?.wal, base, "wal", { idx: true }),
     },
     data: {
-      car: defaultURI(sthis, name, sopts.data?.data, base, "data"),
-      file: defaultURI(sthis, name, sopts.data?.data, base, "data", { file: true }),
+      car: defaultURI(sthis, name, sopts.data?.car, base, "car"),
+      file: defaultURI(sthis, name, sopts.data?.file ?? sopts.data?.car, base, "file", { file: true }),
       meta: defaultURI(sthis, name, sopts.data?.meta, base, "meta"),
       wal: defaultURI(sthis, name, sopts.data?.wal, base, "wal"),
     },
