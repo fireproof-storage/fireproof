@@ -1,10 +1,12 @@
 import { Logger, KeyedResolvOnce, URI, Result } from "@adviser/cement";
 
 import { decodeFile, encodeFile } from "../runtime/files.js";
-import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
+import { CarStoreImpl, FileStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import {
   BaseStore,
+  CarStore,
   DataAndMetaAndWalStore,
+  FileStore,
   StoreEnDeFile,
   StoreFactoryItem,
   StoreRuntime,
@@ -30,8 +32,9 @@ export async function getStartedGateway(ctx: SerdeGatewayCtx, url: URI): Promise
     if (item) {
       const ret = {
         url,
-        ...(await gatewayInstances.get(url.protocol).once(async () => ({}))),
-        gateway: await item.serdegateway(ctx.loader.sthis),
+        ...(await gatewayInstances.get(url.protocol).once(async () => ({
+          gateway: await item.serdegateway(ctx.loader.sthis),
+        }))),
       };
       const res = await ret.gateway.start(ctx, url);
       if (res.isErr()) {
@@ -44,14 +47,29 @@ export async function getStartedGateway(ctx: SerdeGatewayCtx, url: URI): Promise
   });
 }
 
-async function dataStoreFactory(ctx: SerdeGatewayCtx, uai: UrlAndInterceptor): Promise<DataStoreImpl> {
-  const storeUrl = uai.url.build().setParam(PARAM.STORE, "data").URI();
+async function carStoreFactory(ctx: SerdeGatewayCtx, uai: UrlAndInterceptor): Promise<CarStore> {
+  const storeUrl = uai.url.build().setParam(PARAM.STORE, "car").URI();
   const rgateway = await getStartedGateway(ctx, storeUrl);
   if (rgateway.isErr()) {
     throw ctx.loader.sthis.logger.Error().Result("err", rgateway).Url(uai.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new DataStoreImpl(ctx.loader.sthis, gateway.url, {
+  const store = new CarStoreImpl(ctx.loader.sthis, gateway.url, {
+    gateway: gateway.gateway,
+    gatewayInterceptor: uai.gatewayInterceptor,
+    loader: ctx.loader,
+  });
+  return store;
+}
+
+async function fileStoreFactory(ctx: SerdeGatewayCtx, uai: UrlAndInterceptor): Promise<FileStore> {
+  const storeUrl = uai.url.build().setParam(PARAM.STORE, "file").URI();
+  const rgateway = await getStartedGateway(ctx, storeUrl);
+  if (rgateway.isErr()) {
+    throw ctx.loader.sthis.logger.Error().Result("err", rgateway).Url(uai.url).Msg("notfound").AsError();
+  }
+  const gateway = rgateway.Ok();
+  const store = new FileStoreImpl(ctx.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: uai.gatewayInterceptor,
     loader: ctx.loader,
@@ -144,8 +162,8 @@ export function toStoreRuntime(sthis: SuperThis, endeOpts: Partial<StoreEnDeFile
       };
       const storeSet: WriteableDataAndMetaAndWalStore = {} as DataAndMetaAndWalStore;
       storeSet.meta = await metaStoreFactory(ctx, sfi.byStore.meta);
-      storeSet.car = await dataStoreFactory(ctx, sfi.byStore.car);
-      storeSet.file = await dataStoreFactory(ctx, sfi.byStore.file);
+      storeSet.car = await carStoreFactory(ctx, sfi.byStore.car);
+      storeSet.file = await fileStoreFactory(ctx, sfi.byStore.file);
       if (sfi.byStore.wal) {
         storeSet.wal = await WALStoreFactory(ctx, sfi.byStore.wal);
       }

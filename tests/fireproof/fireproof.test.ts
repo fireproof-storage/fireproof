@@ -131,12 +131,12 @@ describe("database fullconfig", () => {
         // meta: `${base}/meta?taste=${taste}`,
         data: {
           meta: base.build().pathname("dist/full/meta"),
-          data: base.build().pathname("dist/full/data"),
+          car: base.build().pathname("dist/full/data"),
           wal: base.build().pathname("dist/full/wal"),
         },
         idx: {
           meta: base.build().pathname("dist/full/idx-meta"),
-          data: base.build().pathname("dist/full/idx-data"),
+          car: base.build().pathname("dist/full/idx-data"),
           wal: base.build().pathname("dist/full/idx-wal"),
         },
         // wal: `${base}/wal?taste=${taste}`,

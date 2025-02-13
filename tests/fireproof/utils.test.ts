@@ -17,22 +17,30 @@ describe("utils", () => {
 
   const storeOpts = [
     {
-      type: "data",
+      type: "car",
+      pathPart: "data",
       suffix: ".car",
     },
     {
+      type: "file",
+      pathPart: "data",
+      suffix: "",
+    },
+    {
       type: "wal",
+      pathPart: "wal",
       suffix: ".json",
     },
     {
       type: "meta",
+      pathPart: "meta",
       suffix: ".json",
     },
   ];
   it("getfilename plain", () => {
     for (const store of storeOpts) {
       const url = URI.from(`file://./x/path?store=${store.type}&name=name&key=key&version=version&suffix=${store.suffix}`);
-      expect(rt.getFileName(url, logger)).toEqual(`${store.type}/key${store.suffix}`);
+      expect(rt.getFileName(url, logger)).toEqual(`${store.pathPart}/key${store.suffix}`);
     }
   });
 
@@ -41,7 +49,7 @@ describe("utils", () => {
       const url = URI.from(
         `file://./x/path?index=idx&store=${store.type}&name=name&key=key&version=version&suffix=${store.suffix}`,
       );
-      expect(rt.getFileName(url, logger)).toEqual(`idx-${store.type}/key${store.suffix}`);
+      expect(rt.getFileName(url, logger)).toEqual(`idx-${store.pathPart}/key${store.suffix}`);
     }
   });
 
@@ -49,8 +57,9 @@ describe("utils", () => {
     for (const store of storeOpts) {
       const url = URI.from(`file://./x/path?store=${store.type}&name=name&key=key&version=version`);
       expect(getStore(url, logger, (...toJoin) => toJoin.join("+"))).toEqual({
-        name: store.type,
-        store: store.type,
+        fromUrl: store.type,
+        name: store.pathPart,
+        pathPart: store.pathPart,
       });
     }
   });
@@ -59,8 +68,9 @@ describe("utils", () => {
     for (const store of storeOpts) {
       const url = URI.from(`file://./x/path?index=ix&store=${store.type}&name=name&key=key&version=version`);
       expect(getStore(url, logger, (...toJoin) => toJoin.join("+"))).toEqual({
-        name: `ix+${store.type}`,
-        store: store.type,
+        fromUrl: store.type,
+        pathPart: store.pathPart,
+        name: `ix+${store.pathPart}`,
       });
     }
   });

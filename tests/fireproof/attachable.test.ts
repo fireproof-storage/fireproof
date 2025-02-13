@@ -29,9 +29,9 @@ describe("join function", () => {
     }
     prepare(): Promise<GatewayUrlsParam> {
       return Promise.resolve({
-        car: { url: "memory://${this.name}" },
-        meta: { url: "memory://${this.name}" },
-        file: { url: "memory://${this.name}" },
+        car: { url: `memory://car/${this.name}` },
+        meta: { url: `memory://meta/${this.name}` },
+        file: { url: `memory://file/${this.name}` },
       });
     }
   }
@@ -40,20 +40,22 @@ describe("join function", () => {
   }
 
   let db: Database;
+  let joinableDBs: string[] = [];
   beforeAll(async () => {
     const set = Math.random().toString(16);
-    await Promise.all(
-      Array.from({ length: 10 }).map(async (_, i) => {
-        const db = fireproof(`remote-db-${i}-${set}`, {
+    joinableDBs = await Promise.all(
+      (new Array(1)).fill(1).map(async (_, i) => {
+        const name = `remote-db-${i}-${set}`;
+        const db = fireproof(name, {
           storeUrls: {
-            base: `memory://remote-db-${i}-${set}`,
+            base: `memory://${name}`,
           },
         });
         for (let j = 0; j < 10; j++) {
           await db.put({ _id: `${i}-${j}`, value: `${i}-${set}` });
         }
         await db.close();
-        return db;
+        return name;
       }),
     );
 
@@ -62,21 +64,49 @@ describe("join function", () => {
         base: `memory://db-${set}`,
       },
     });
+    for (let j = 0; j < 10; j++) {
+      await db.put({ _id: `db-${j}`, value: `db-${set}` });
+    }
+
   });
   afterAll(async () => {
     await db.close();
   });
 
-  it("it is joinable", async () => {
-    for (let i = 0; i < 10; i++) {
-      // create  meta/car/files store from aJoinable
-      // retrieve meta from attachable and subscribe to it
-      // merge incoming meta with local
-      // the attach meta includes source url's which ref back to aJoinable Attachable
+  it("it is joinable detachable", async () => {
+    const my = fireproof("my", {
+      storeUrls: {
+        base: "memory://my",
+      },
+    });
+    await Promise.all(
+      joinableDBs.map(async (name) =>{
+        const tmp = fireproof(name, {
+          storeUrls: {
+            base: `memory://${name}`,
+          },
+        });
+        const res = await tmp.allDocs();
+        expect(res.rows.length).toBe(10);
+        await tmp.close();
+        const attached = await my.attach(aJoinable(name));
+        expect(attached).toBeDefined();
+      }),
+    );
+    expect(my.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
+    await my.close();
+    expect(my.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(0);
+  });
 
-      const attached = await db.attach(aJoinable("i" + i));
+  it("it is inbound syncing", async () => {
+    await Promise.all(
+    joinableDBs.map(async (name) => {
+      const attached = await db.attach(aJoinable(name));
       expect(attached).toBeDefined();
-      await attached.detach();
-    }
+    }))
+    expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const res = await db.allDocs();
+    expect(res.rows.length).toBe(100);
   });
 });
