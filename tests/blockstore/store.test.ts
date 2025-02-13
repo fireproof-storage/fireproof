@@ -17,8 +17,8 @@ import { mockLoader, noopUrl } from "../helpers.js";
 //   };
 // }
 
-describe("DataStore", function () {
-  let store: bs.DataStore;
+describe("CarStore", function () {
+  let store: bs.CarStore;
   const sthis = ensureSuperThis();
   const loader = mockLoader(sthis);
 
@@ -49,8 +49,8 @@ describe("DataStore", function () {
   });
 });
 
-describe("DataStore with a saved car", function () {
-  let store: bs.DataStore;
+describe("CarStore with a saved car", function () {
+  let store: bs.CarStore;
   let car: bs.AnyBlock;
 
   const sthis = ensureSuperThis();
