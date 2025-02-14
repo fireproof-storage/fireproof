@@ -22,7 +22,7 @@ describe("fireproof config indexeddb", () => {
       protocol: "indexeddb:",
       searchParams: {
         name: "my-app",
-        store: "data",
+        store: "file",
         runtime: "browser",
         storekey: "@my-app-data@",
         urlGen: "default",
@@ -37,7 +37,7 @@ describe("fireproof config indexeddb", () => {
       protocol: "indexeddb:",
       searchParams: {
         name: "my-app",
-        store: "data",
+        store: "car",
         runtime: "browser",
         storekey: "@my-app-data@",
         suffix: ".car",

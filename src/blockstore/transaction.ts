@@ -14,7 +14,7 @@ import {
 } from "./types.js";
 
 import { Loader } from "./loader.js";
-import type { CID, Block, Version, UnknownLink } from "multiformats";
+import type { Block, Version, UnknownLink } from "multiformats";
 import { BaseBlockstore, CarTransaction, falsyToUndef, SuperThis } from "../types.js";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
@@ -39,7 +39,7 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined> {
-    return ((await this.superGet(cid)) || falsyToUndef(await this.parent.get(cid))) as Block<T, C, A, V>;
+    return ((await this.superGet(cid)) ?? falsyToUndef(await this.parent.get(cid))) as Block<T, C, A, V>;
   }
 
   async superGet(cid: AnyLink): Promise<AnyBlock | undefined> {
@@ -226,7 +226,8 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     if (!this.loader) {
       return;
     }
-    return falsyToUndef(await this.loader.getBlock(cid, this.loader.attachedStores.local())) as Block<T, C, A, V>;
+    const ret = falsyToUndef(await this.loader.getBlock(cid, this.loader.attachedStores.local())) as Block<T, C, A, V>;
+    return ret;
   }
 
   async transaction<M extends TransactionMeta>(
@@ -252,7 +253,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
     const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
-    const block = await reader.get(cid as CID);
+    const block = await reader.blocks.find((i) => i.cid.equals(cid));
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;
   }
