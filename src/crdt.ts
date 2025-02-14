@@ -126,9 +126,13 @@ export class CRDTImpl implements CRDT {
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       try {
+        // console.log("bs-ready-pre")
         // await this.blockstore.ready();
+        // console.log("bs-ready-post-1")
         // await this.indexBlockstore.ready();
+        // console.log("bs-ready-post-2")
         // await this.clock.ready();
+        // console.log("bs-ready-post-3")
         await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
       } catch (e) {
         throw this.logger.Error().Err(e).Msg(`CRDT is not ready`).AsError();

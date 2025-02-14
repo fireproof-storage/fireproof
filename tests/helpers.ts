@@ -14,8 +14,8 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-import { CarReader } from "@ipld/car";
 import { TaskManager } from "../src/blockstore/task-manager.js";
+import { CarCacheItem } from "../src/blockstore/types.js";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -136,11 +136,11 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<CarReader> {
+  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<CarCacheItem> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<CarReader> {
+  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<CarCacheItem> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

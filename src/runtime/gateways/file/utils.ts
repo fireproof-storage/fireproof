@@ -30,7 +30,7 @@ export function getFileName(url: URI, sthis: SuperThis): string {
   const res = getStore(url, sthis, (...a: string[]) => a.join("-"));
   switch (res.fromUrl) {
     case "file":
-      return sthis.pathOps.join(res.name, key)
+      return sthis.pathOps.join(res.name, key);
     case "car":
       return sthis.pathOps.join(res.name, key + ".car");
     case "wal":

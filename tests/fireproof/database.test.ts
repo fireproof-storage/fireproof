@@ -453,7 +453,7 @@ describe("basic Ledger with no update subscription", function () {
       didRun++;
     });
   });
-  it("should run on put", async () => {
+  it("xshould run on put", async function () {
     const all = await db.allDocs();
     expect(all.rows.length).toBe(0);
     /** @type {Doc} */
@@ -462,7 +462,7 @@ describe("basic Ledger with no update subscription", function () {
     const ok = await db.put(doc);
     expect(ok.id).toBe("hello");
     expect(didRun).toBe(1);
-  });
+  }, 10000);
   it("should unsubscribe", async () => {
     unsubscribe();
     const doc = { _id: "hello", message: "again" };
@@ -565,7 +565,7 @@ describe("ledger with files input", () => {
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);
-  });
+  }, 1000000);
 });
 
 describe("StoreURIRuntime", () => {

@@ -3,10 +3,10 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import type { Logger } from "@adviser/cement";
 
-import { CarHeader } from "./types.js";
+import { CarCacheItem, CarHeader } from "./types.js";
 // import { decodeRunLength } from "../runtime/keyed-crypto.js";
 // import { base58btc } from "multiformats/bases/base58";
-import { CarReader } from "@ipld/car/reader";
+// import { CarReader } from "@ipld/car/reader";
 
 // export async function encodeCarHeader<T>(fp: CarHeader<T>) {
 //   return (await encode({
@@ -27,9 +27,9 @@ interface CarDecoded<T> {
   readonly fp: CarHeader<T>;
 }
 
-export async function parseCarFile<T>(reader: CarReader, logger: Logger): Promise<CarHeader<T>> {
-  const roots = await reader.getRoots();
-  const header = await reader.get(roots[0]);
+export async function parseCarFile<T>(reader: CarCacheItem, logger: Logger): Promise<CarHeader<T>> {
+  const roots = await reader.roots;
+  const header = reader.blocks.find((i) => i.cid.equals(roots[0]));
   if (!header) throw logger.Error().Msg("missing header block").AsError();
   const dec = await decode({ bytes: header.bytes, hasher, codec: dagCodec });
   // console.log("parseCarFile-done", roots[0].toString(), header)

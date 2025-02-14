@@ -1,4 +1,4 @@
-import { KeyedResolvOnce, BuildURI, CoerceURI, isCoerceURI } from "@adviser/cement";
+import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI } from "@adviser/cement";
 import { Attached, Attachable, GatewayUrls, UnReg, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import {
@@ -23,7 +23,7 @@ import {
   FileAttachedStores,
   FileStore,
 } from "./types.js";
-import { toSortedArray } from "../utils.js";
+import { ensureURIDefaults, toSortedArray } from "../utils.js";
 
 class AttachedImpl implements Attached {
   readonly gatewayUrls: GatewayUrls;
@@ -70,7 +70,6 @@ class CarActiveStoreImpl implements CarActiveStore {
     this.attached = attached;
   }
 }
-
 
 class CarAttachedStoresImpl implements CarAttachedStores {
   readonly attached: AttachedStores;
@@ -278,20 +277,20 @@ export class AttachedRemotesImpl implements AttachedStores {
     const gws: GatewayUrls = {
       car: {
         ...gwp.car,
-        url: BuildURI.from(gwp.car.url).defParam("name", attached.name).URI(),
+        url: ensureURIDefaults(this.loadable.sthis, attached.name, gwp.car.url, URI.from(gwp.car.url), "car"),
       },
       file: {
         ...gwp.file,
-        url: BuildURI.from(gwp.file.url).defParam("name", attached.name).URI(),
+        url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.file.url), "file", { file: true }),
       },
       meta: {
         ...gwp.meta,
-        url: BuildURI.from(gwp.meta.url).defParam("name", attached.name).URI(),
+        url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.meta.url), "meta"),
       },
       wal: gwp.wal
         ? {
             ...gwp.wal,
-            url: BuildURI.from(gwp.wal.url).defParam("name", attached.name).URI(),
+            url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.wal.url), "wal"),
           }
         : undefined,
     };

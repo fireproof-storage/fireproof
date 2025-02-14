@@ -58,6 +58,10 @@ export const PARAM = {
   FRAG_HEAD: "headerSize",
   EXTRACTKEY: "extractKey",
   SELF_REFLECT: "selfReflect", // if no subscribe in Gateway see your own META updates
+  CAR_PARALLEL: "parallel",
+  CAR_CACHE_SIZE: "carCacheSize",
+  CAR_COMPACT_CACHE_SIZE: "carCompactCacheSize",
+  CAR_META_CACHE_SIZE: "carMetaCacheSize",
   // FS = "fs",
 };
 export type PARAMS = (typeof PARAM)[keyof typeof PARAM];

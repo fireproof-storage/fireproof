@@ -1,4 +1,4 @@
-import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
 import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
 import type {
@@ -15,11 +15,10 @@ import type {
   LedgerOpts,
   Attachable,
   Attached,
-  StoreType,
 } from "./types.js";
 import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
-import { ensureLogger, ensureSuperThis, toSortedArray } from "./utils.js";
+import { ensureLogger, ensureSuperThis, ensureURIDefaults, toSortedArray } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts } from "./runtime/key-bag.js";
@@ -267,55 +266,6 @@ class LedgerImpl implements Ledger {
   }
 }
 
-function storeKey(store: StoreType) {
-  switch (store) {
-    case "car":
-    case "file":
-      return "data";
-    case "meta":
-    case "wal":
-      return store;
-    default:
-      throw new Error(`unknown store ${store}`);
-  }
-}
-
-function defaultURI(
-  sthis: SuperThis,
-  name: string,
-  curi: CoerceURI | undefined,
-  uri: URI,
-  store: StoreType,
-  ctx?: Partial<{
-    readonly idx: boolean;
-    readonly file: boolean;
-  }>,
-): URI {
-  ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, name);
-  if (!ret.hasParam(PARAM.NAME)) {
-    // const name = sthis.pathOps.basename(ret.URI().pathname);
-    // if (!name) {
-    throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-    // }
-    // ret.setParam(PARAM.NAME, name);
-  }
-  if (ctx.idx) {
-    ret.defParam(PARAM.INDEX, "idx");
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeKey(store)}-idx@`);
-  } else {
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeKey(store)}@`);
-  }
-  if (store === "car") {
-    if (ctx.file) {
-      // ret.defParam(PARAM.SUFFIX, "");
-    } else {
-      ret.defParam(PARAM.SUFFIX, ".car");
-    }
-  }
-  return ret.URI();
-}
-
 export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
   sopts = sopts || {};
   if (!sopts.base) {
@@ -336,16 +286,19 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
   // readonly threshold?: number;
   return {
     idx: {
-      car: defaultURI(sthis, name, sopts.idx?.car, base, "car", { idx: true }),
-      file: defaultURI(sthis, name, sopts.idx?.file ?? sopts.idx?.car, base, "file", { file: true, idx: true }),
-      meta: defaultURI(sthis, name, sopts.idx?.meta, base, "meta", { idx: true }),
-      wal: defaultURI(sthis, name, sopts.idx?.wal, base, "wal", { idx: true }),
+      car: ensureURIDefaults(sthis, name, sopts.idx?.car ?? sopts.data?.car, base, "car", { idx: true }),
+      file: ensureURIDefaults(sthis, name, sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car, base, "file", {
+        file: true,
+        idx: true,
+      }),
+      meta: ensureURIDefaults(sthis, name, sopts.idx?.meta ?? sopts.data?.meta, base, "meta", { idx: true }),
+      wal: ensureURIDefaults(sthis, name, sopts.idx?.wal ?? sopts.data?.wal, base, "wal", { idx: true }),
     },
     data: {
-      car: defaultURI(sthis, name, sopts.data?.car, base, "car"),
-      file: defaultURI(sthis, name, sopts.data?.file ?? sopts.data?.car, base, "file", { file: true }),
-      meta: defaultURI(sthis, name, sopts.data?.meta, base, "meta"),
-      wal: defaultURI(sthis, name, sopts.data?.wal, base, "wal"),
+      car: ensureURIDefaults(sthis, name, sopts.data?.car, base, "car"),
+      file: ensureURIDefaults(sthis, name, sopts.data?.file ?? sopts.data?.car, base, "file", { file: true }),
+      meta: ensureURIDefaults(sthis, name, sopts.data?.meta, base, "meta"),
+      wal: ensureURIDefaults(sthis, name, sopts.data?.wal, base, "wal"),
     },
   };
 }
