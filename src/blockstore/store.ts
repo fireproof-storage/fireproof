@@ -116,16 +116,12 @@ export abstract class BaseStoreImpl {
       return res as Result<URI>;
     }
     this._url = res.Ok();
+
     // add storekey to url
     const kb = await this.loader.keyBag();
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
-      const idx = this._url.getParam(PARAM.INDEX);
-      const storeKeyName = [this.url().getParam(PARAM.NAME)];
-      if (idx) {
-        storeKeyName.push(idx);
-      }
-      storeKeyName.push(this.storeType);
-      return storeKeyName.join(":");
+      const key = this._url.getParam(PARAM.KEY);
+      return key as string;
     });
 
     if (skRes.isErr()) {
@@ -268,9 +264,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 }
 
-
 abstract class DataStoreImpl extends BaseStoreImpl {
-
   constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
     super(sthis, url, { ...opts }, logger);
   }
@@ -288,7 +282,6 @@ abstract class DataStoreImpl extends BaseStoreImpl {
     const fpenv = res.Ok() as FPEnvelopeFile | FPEnvelopeCar;
     switch (fpenv.type) {
       case "car":
-        return { cid, bytes: fpenv.payload };
       case "file":
         return { cid, bytes: fpenv.payload };
       default:
@@ -358,8 +351,6 @@ export class FileStoreImpl extends DataStoreImpl implements FileStore {
     super(sthis, url, { ...opts }, ensureLogger(sthis, "FileStoreImpl"));
   }
 }
-
-
 
 export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly storeType = "wal";

@@ -709,6 +709,7 @@ describe("same workload twice, same CID", function () {
     await sthis.start();
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     dbA = fireproof("test-dual-workload-a", configA);
+    await dbA.destroy();
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
@@ -718,6 +719,7 @@ describe("same workload twice, same CID", function () {
 
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     dbB = fireproof("test-dual-workload-b", configB);
+    await dbA.destroy();
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
