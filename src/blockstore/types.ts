@@ -8,7 +8,6 @@ import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } fr
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { CarReader } from "@ipld/car";
 import { Context } from "../context.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
@@ -399,14 +398,14 @@ export interface DataSaveOpts {
 }
 
 export interface CarStore extends BaseStore {
-  readonly storeType: "car"
+  readonly storeType: "car";
   load(cid: AnyLink): Promise<AnyBlock>;
   save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   remove(cid: AnyLink): Promise<Result<void>>;
 }
 
 export interface FileStore extends BaseStore {
-  readonly storeType: "file"
+  readonly storeType: "file";
   load(cid: AnyLink): Promise<AnyBlock>;
   save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   remove(cid: AnyLink): Promise<Result<void>>;
@@ -574,6 +573,13 @@ export interface ActiveStore {
   readonly attached: AttachedStores;
 }
 
+export interface CarCacheItem {
+  readonly type: "car" | "block";
+  readonly cid: AnyLink;
+  readonly blocks: AnyBlock[];
+  readonly roots: CID[];
+}
+
 export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
@@ -604,8 +610,8 @@ export interface Loadable {
   commit<T = TransactionMeta>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup>;
   destroy(): Promise<void>;
   getBlock(cid: AnyLink, store: ActiveStore): Promise<AnyBlock | Falsy>;
-  loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<CarReader>;
-  loadCar(cid: AnyLink, store: ActiveStore): Promise<CarReader>;
+  loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<CarCacheItem>;
+  loadCar(cid: AnyLink, store: ActiveStore): Promise<CarCacheItem>;
   commitFiles(
     t: CarTransaction,
     done: TransactionMeta /* opts: CommitOpts = { noLoader: false, compact: false } */,

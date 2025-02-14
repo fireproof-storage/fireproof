@@ -113,7 +113,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
       tblocks.putSync(cid, bytes);
     }
   }
-  return { head: result.head } as CRDTMeta;
+  return { head: result.head } satisfies CRDTMeta;
 }
 
 // this whole thing can get pulled outside of the write queue
@@ -197,9 +197,13 @@ export async function getValueFromCrdt<T extends DocTypes>(
   logger: Logger,
 ): Promise<DocValue<T>> {
   if (!head.length) throw logger.Debug().Msg("Getting from an empty ledger").AsError();
+  // console.log("getValueFromCrdt-1", head, key)
   const link = await get(blocks, head, key);
+  // console.log("getValueFromCrdt-2", key)
   if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
-  return await getValueFromLink(blocks, link, logger);
+  const ret = await getValueFromLink<T>(blocks, link, logger);
+  // console.log("getValueFromCrdt-3", key)
+  return ret;
 }
 
 export function readFiles<T extends DocTypes>(blocks: BaseBlockstore, { doc }: Partial<DocValue<T>>) {

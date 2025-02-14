@@ -1,4 +1,4 @@
-import { bs, ensureSuperThis, PARAM, rt } from "@fireproof/core";
+import { bs, ensureSuperThis, PARAM, rt, StoreType, storeType2DataMetaWal } from "@fireproof/core";
 import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
@@ -278,7 +278,9 @@ describe("KeyedCryptoStore", () => {
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("cryptoAction");
       // expect(kc.isEncrypting).toBe(true);
-      expect(store.url().getParam(PARAM.STORE_KEY)).toBe(`@test:${store.url().getParam(PARAM.STORE)}@`);
+      expect(store.url().getParam(PARAM.STORE_KEY)).toBe(
+        `@test-${storeType2DataMetaWal(store.url().getParam(PARAM.STORE) as StoreType)}@`,
+      );
     }
   });
 
