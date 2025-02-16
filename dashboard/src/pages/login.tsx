@@ -30,8 +30,8 @@ export function Login() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] min-h-screen overflow-hidden">
-      <div className="relative h-full">
-        <div className="relative flex flex-col p-10 sm:p-14 lg:p-20 z-10 h-full z-1">
+      <div className="relative lg:min-h-screen order-2 lg:order-1">
+        <div className="relative flex justify-center flex-col p-10 sm:p-14 lg:p-20 z-10 h-full z-1">
           <svg
             className="max-w-36 sm:max-w-max"
             width="191"
@@ -75,14 +75,10 @@ export function Login() {
               d="M14.6914 38.2124H0L7.35754 50.9338H22.0489C17.6581 48.3943 14.6914 43.6475 14.6914 38.2124ZM44.0978 38.2124H29.4064L22.0489 50.9338H36.7402L44.0978 38.2124Z"
             />
           </svg>
-          <Slide data={slides[activeSlide]} isDarkMode={isDarkMode} />
-          <div className="mt-auto bottom-16 left-20 flex gap-6 z-50">
-            <button onClick={decSlide}>
-              <SlideButtonIcon isDarkMode={isDarkMode} />
-            </button>
-            <button onClick={incSlide} className="rotate-180">
-              <SlideButtonIcon isDarkMode={isDarkMode} />
-            </button>
+          <div className="flex flex-col gap-10 sm:gap-16 mt-4 sm:mt-[30px]">
+            {slides.map((slide) => (
+              <Slide data={slide} isDarkMode={isDarkMode} />
+            ))}
           </div>
         </div>
         <img
@@ -91,9 +87,9 @@ export function Login() {
         />
       </div>
 
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full order-1 lg:order-2">
         <div
-          className={`relative max-w-[445px] p-10 sm:px-[48px] sm:py-[60px] m-10 mb-20 sm:m-14 sm:ml-6 grow-0 rounded-fp-l ${isDarkMode ? "bg-fp-bg-01" : ""}`}
+          className={`relative max-w-[445px] p-10 sm:px-[48px] sm:py-[60px] mx-10 my-20 sm:m-14 sm:ml-6 grow-0 rounded-fp-l ${isDarkMode ? "bg-fp-bg-01" : ""}`}
         >
           <svg width="32" height="36" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -218,11 +214,13 @@ export function Login() {
 
 function Slide({ data, isDarkMode }) {
   return (
-    <div className="flex flex-col text-white mt-4 sm:mt-[30px]">
-      <p className="xxl:max-w-[86%] text-[6.5vw] lg:text-[2.8vw] text-main font-bold mb-[90px] leading-[1.3]">“{data.text}“</p>
-      <div className="text-16 ml-auto mb-20">
-        <p className="text-[20px] font-bold">– {data.author}</p>
-        <p className={`text-16 ${isDarkMode ? "text-fp-dec-02" : "text-fp-dec-01"}`}>{data.role}</p>
+    <div className="flex flex-col text-white">
+      <p className="text-[20px] sm:text-[34px] lg:text-[2vw] text-main font-bold text-balance mb-4 leading-[1.3]">“{data.text}“</p>
+      <div className="">
+        <p className="text-14-bold sm:text-16">
+          <b>– {data.author}</b>
+        </p>
+        <p className={`text-14 ${isDarkMode ? "text-fp-dec-02" : "text-fp-dec-01"}`}>{data.role}</p>
       </div>
     </div>
   );
