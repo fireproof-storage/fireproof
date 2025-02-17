@@ -223,9 +223,9 @@ export class Loader implements Loadable {
         this.logger.Error().Err(e).Msg("error getting more readers");
       }
       this.carLog = [...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)];
-      console.log(">>>>> pre applyMeta", this.ebOpts.applyMeta.toString())
+      console.log(">>>>> pre applyMeta", this.ebOpts.applyMeta.toString());
       await this.ebOpts.applyMeta?.(carHeader.meta);
-      console.log(">>>>> post applyMeta")
+      console.log(">>>>> post applyMeta");
     } finally {
       this.isCompacting = false;
     }
