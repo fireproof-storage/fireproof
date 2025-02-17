@@ -42,8 +42,8 @@ importers:
         specifier: ^13.6.1
         version: 13.6.1
       multiformats:
-        specifier: ^13.3.1
-        version: 13.3.1
+        specifier: ^13.3.2
+        version: 13.3.2
       p-limit:
         specifier: ^6.2.0
         version: 6.2.0
@@ -2085,8 +2085,8 @@ packages:
       typescript:
         optional: true
 
-  multiformats@13.3.1:
-    resolution: {integrity: sha512-QxowxTNwJ3r5RMctoGA5p13w5RbRT2QDkoM+yFlqfLiioBp78nhDjnRLvmSBI9+KAqN4VdgOVWM9c0CHd86m3g==}
+  multiformats@13.3.2:
+    resolution: {integrity: sha512-qbB0CQDt3QKfiAzZ5ZYjLFOs+zW43vA4uyM8g27PeEuXZybUOFyjrVdP93HPBHMoglibwfkdVwbzfUq8qGcH6g==}
 
   murmurhash3js-revisited@3.0.0:
     resolution: {integrity: sha512-/sF3ee6zvScXMb1XFJ8gDsSnY+X8PbOyjIuBhtgis10W2Jx4ZjIhikUCIF9c4gpJxVnQIsPAFrSwTCuAjicP6g==}
@@ -3242,7 +3242,7 @@ snapshots:
   '@fireproof/vendor@1.1.0-dev':
     dependencies:
       '@ipld/dag-cbor': 9.2.2
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   '@gerrit0/mini-shiki@1.27.2':
     dependencies:
@@ -3293,26 +3293,26 @@ snapshots:
     dependencies:
       '@ipld/dag-cbor': 9.2.2
       cborg: 4.2.8
-      multiformats: 13.3.1
+      multiformats: 13.3.2
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.2':
     dependencies:
       cborg: 4.2.8
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   '@ipld/dag-json@10.2.3':
     dependencies:
       cborg: 4.2.8
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   '@ipld/dag-pb@4.0.8':
     dependencies:
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   '@ipld/dag-pb@4.1.3':
     dependencies:
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   '@ipld/unixfs@3.0.0':
     dependencies:
@@ -3320,7 +3320,7 @@ snapshots:
       '@multiformats/murmur3': 2.1.8
       '@perma/map': 1.0.3
       actor: 2.3.1
-      multiformats: 13.3.1
+      multiformats: 13.3.2
       protobufjs: 7.2.5
       rabin-rs: 2.1.0
 
@@ -3365,7 +3365,7 @@ snapshots:
 
   '@multiformats/murmur3@2.1.8':
     dependencies:
-      multiformats: 13.3.1
+      multiformats: 13.3.2
       murmurhash3js-revisited: 3.0.0
 
   '@nodelib/fs.scandir@2.1.5':
@@ -4618,7 +4618,7 @@ snapshots:
   interface-blockstore@5.3.1:
     dependencies:
       interface-store: 6.0.2
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   interface-store@6.0.2: {}
 
@@ -4642,7 +4642,7 @@ snapshots:
       it-parallel: 3.0.8
       it-pipe: 3.0.1
       it-pushable: 3.2.3
-      multiformats: 13.3.1
+      multiformats: 13.3.2
       p-queue: 8.0.1
       progress-events: 1.0.1
 
@@ -4903,7 +4903,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  multiformats@13.3.1: {}
+  multiformats@13.3.2: {}
 
   murmurhash3js-revisited@3.0.0: {}
 
@@ -5571,7 +5571,7 @@ snapshots:
 
   uint8arrays@5.1.0:
     dependencies:
-      multiformats: 13.3.1
+      multiformats: 13.3.2
 
   undici-types@6.19.8: {}
 
