@@ -42,6 +42,9 @@ describe("join function", () => {
   let db: Database;
   let joinableDBs: string[] = [];
   beforeAll(async () => {
+    const gdb = fireproof("gdb");
+    await gdb.put({ _id: `genesis`, value: `genesis` });
+    await gdb.close();
     const set = Math.random().toString(16);
     joinableDBs = await Promise.all(
       new Array(1).fill(1).map(async (_, i) => {
@@ -53,10 +56,11 @@ describe("join function", () => {
               car: `memory://car/${name}`,
               meta: `memory://meta/${name}`,
               file: `memory://file/${name}`,
-              wal: `memory://file/${name}`,
+              wal: `memory://wal/${name}`,
             },
           },
         });
+        await db.put({ _id: `genesis`, value: `genesis` });
         // await db.ready();
         for (let j = 0; j < 10; j++) {
           await db.put({ _id: `${i}-${j}`, value: `${i}-${set}` });
@@ -72,6 +76,7 @@ describe("join function", () => {
         base: `memory://db-${set}`,
       },
     });
+    await db.put({ _id: `genesis`, value: `genesis` });
     for (let j = 0; j < 10; j++) {
       await db.put({ _id: `db-${j}`, value: `db-${set}` });
     }
@@ -80,7 +85,7 @@ describe("join function", () => {
     await db.close();
   });
 
-  it.skip("it is joinable detachable", async () => {
+  it("it is joinable detachable", async () => {
     const my = fireproof("my", {
       storeUrls: {
         base: "memory://my",
@@ -90,7 +95,12 @@ describe("join function", () => {
       joinableDBs.map(async (name) => {
         const tmp = fireproof(name, {
           storeUrls: {
-            base: `memory://${name}`,
+            data: {
+              car: `memory://car/${name}`,
+              meta: `memory://meta/${name}`,
+              file: `memory://file/${name}`,
+              wal: `memory://wal/${name}`,
+            },
           },
         });
         const res = await tmp.allDocs();
@@ -105,16 +115,18 @@ describe("join function", () => {
     expect(my.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(0);
   });
 
-  it.skip("it is inbound syncing", async () => {
+  it("it is inbound syncing", async () => {
+    console.log("joinableDBs-1", joinableDBs);
     await Promise.all(
       joinableDBs.map(async (name) => {
         const attached = await db.attach(aJoinable(name));
         expect(attached).toBeDefined();
       }),
     );
+    console.log("joinableDBs-2", joinableDBs);
     expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     const res = await db.allDocs();
+    console.log("joinableDBs-3", joinableDBs);
     expect(res.rows.length).toBe(100);
-  });
+  }, 1000000);
 });
