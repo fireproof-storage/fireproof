@@ -100,40 +100,58 @@ export class CRDTClockImpl {
     // if (!(this.head && prevHead && newHead)) {
     //   throw new Error("missing head");
     // }
+
+    console.log("int_applyHead:1") 
     const noLoader = !localUpdates;
 
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
+    console.log("int_applyHead:2") 
     newHead = sortClockHead(newHead);
+    console.log("int_applyHead:3") 
     if (compareClockHeads(ogHead, newHead)) {
+      console.log("int_applyHead:4") 
       return;
     }
+    console.log("int_applyHead:5") 
     const ogPrev = sortClockHead(prevHead);
+    console.log("int_applyHead:6") 
     if (compareClockHeads(ogHead, ogPrev)) {
+      console.log("int_applyHead:7") 
       this.setHead(newHead);
       return;
     }
 
     // const noLoader = this.head.length === 1 && !updates?.length
+    console.log("int_applyHead:8") 
     if (!this.blockstore) {
       throw this.logger.Error().Msg("missing blockstore").AsError();
     }
+    console.log("int_applyHead:9") 
     await validateBlocks(this.logger, newHead, this.blockstore);
+    console.log("int_applyHead:10") 
     if (!this.transaction) {
       this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
     }
     const tblocks = this.transaction;
 
+    console.log("int_applyHead:11") 
     const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
+    console.log("int_applyHead:12", tblocks, advancedHead) 
     const result = await root(tblocks, advancedHead);
+    console.log("int_applyHead:12.x", result.additions.length) 
     for (const { cid, bytes } of [
       ...result.additions,
       // ...result.removals
     ]) {
+      console.log("int_applyHead:12.y", result.additions.length) 
       tblocks.putSync(cid, bytes);
     }
+    console.log("int_applyHead:12.1") 
     if (!noLoader) {
+      console.log("int_applyHead:13") 
       await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
+      console.log("int_applyHead:14") 
       this.transaction = undefined;
     }
     this.setHead(advancedHead);
@@ -162,9 +180,11 @@ function compareClockHeads(head1: ClockHead, head2: ClockHead) {
 async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTransaction, head: ClockHead) {
   for (const cid of newHead) {
     try {
+      console.log("advanceBlocks:1", cid.toString(), newHead.length)
       head = await advance(tblocks, head, cid);
+      console.log("advanceBlocks:2", cid.toString(), head)
     } catch (e) {
-      logger.Debug().Err(e).Msg("failed to advance head");
+      logger.Error().Err(e).Msg("failed to advance head");
       // console.log('failed to advance head:', cid.toString(), e)
       continue;
     }
