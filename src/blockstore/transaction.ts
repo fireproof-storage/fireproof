@@ -223,9 +223,9 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
     const got = await super.get(cid);
     if (got) return got as Block<T, C, A, V>;
-    if (!this.loader) {
-      return;
-    }
+    // if (!this.loader) {
+    //   return;
+    // }
     const ret = falsyToUndef(await this.loader.getBlock(cid, this.loader.attachedStores.local())) as Block<T, C, A, V>;
     return ret;
   }
