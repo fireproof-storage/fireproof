@@ -25,4 +25,3 @@ then
 else
   git status
 fi
-
