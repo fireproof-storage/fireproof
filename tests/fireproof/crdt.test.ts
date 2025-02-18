@@ -1,7 +1,9 @@
-import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt, CRDTImpl } from "@fireproof/core";
+import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt, CRDTImpl, PARAM } from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
+import { BuildURI } from "@adviser/cement";
+import { decode } from 'cborg';
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;
@@ -240,11 +242,13 @@ describe("Compact a named CRDT with writes", function () {
   });
   beforeEach(async () => {
     await sthis.start();
+    sthis.env.set("FP_STORAGE_URL", BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam(PARAM.STORE_KEY, "insecure").toString());
+    console.log("FP_STORAGE_URL", sthis.env.get("FP_STORAGE_URL"));
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
       keyBag: rt.defaultKeyBagOpts(sthis),
-      storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction`),
+      storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction-${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -255,6 +259,7 @@ describe("Compact a named CRDT with writes", function () {
       ];
       await crdt.bulk(bulk);
     }
+    // await sleep(1000);
   });
   it("has data", async () => {
     const got = (await crdt.get("ace")) as DocValue<CRDTTestType>;
@@ -266,7 +271,36 @@ describe("Compact a named CRDT with writes", function () {
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
-    expect(blz.length).toBe(13);
+    expect(blz.map((i) => sthis.txt.decode(i.bytes) + "\n=================\n")).toEqual([
+
+    ])
+    expect(blz.map((i) => i.cid.toString())).toEqual([
+         "bafyreiebpjwz24gowtbv3mr3wcqt6ypcjm6ondqclhru53dkby4npnqdeq",
+   "bafyreig5jhovaiocwk3vfafzdspgtwinftjygyghjzigkc554muhdmp5ba",
+   "bafyreiegj7yumreue7llzqroebigscedyzrkeir3zneg5q7zia77itowy4",
+   "bafyreibslqo6sjj77fy45xhvphxt45xd7dhlzglb37sexviegi66m2zqia",
+   "bafyreiaqsmgdqzr2vsgcp6sx2tadvdmvnnjnnzdvyxbuov7ldhm6k5knfq",
+   "bafyreiff76gzgricfm73nyxm5ypbg7fy3cb6w65ltvo5oduqjq566zcoda",
+   "bafyreiezej4gdjgzw3k5z45zpsj2iy42cs6humxr7e3v6mob6qh45s6fx4",
+   "bafyreicyynhujiwq54xlkldavqtindhgjvdlaxxqjn4gqfvgb4pytfs7ka",
+   "bafyreib4bllkgytzo4pgukinbo7agqkvd32a6pcgvbdqvzowfjzuzbfswe",
+   "bafyreidnclmuatqf6yelrlp3pfsmwzkkofdbbkdedthfxh7nreoyacmwva",
+   "bafyreibuugw3gfta5bibhi77ali7dhk74hw6n2ojskpwaznmo2mavprjrm",
+   "bafyreifupkgympx4lmr7pd5oloti3zzfijvvnuqbgkbpn6uxxkom3kvb2m",
+   "bafyreiaeoyem6uqqz6ddixv2ambiscxialuqgi5mvt7mwhfrzdviyh53z4",
+   "bafyreihuykwc3irfwvmfdz3amh3hvamablrvqb6kpo7xdcroraktbosbly",
+   "bafyreif6nsskhs5t6mwlzh4fi7hglrhqikk4pgituv6eymivujcebafyn4",
+   "bafyreig72tfvtd7zm4twin4bgx733imlkvqonstxkg7f27qdmdg3ehrzx4",
+   "bafyreia3eapldkpycceygv5lz2mlbbozyvno5ba7ou3ps2liytj2hh3wru",
+   "bafyreidwknp7fo6yqxuta3nr2zpbpjadsvtqg3gr74vhhm6q7qrvqfcoxe",
+   "bafyreiepqkkf6jm63d2hjjdsp4u3gge74c3cx6gzwfb4x6m2bbkcbwko3y",
+   "bafyreigq42dy5zv744smplrz6ljhmuo2e5j4gxrk7eo3h7ei3chn2r4yai",
+   "bafyreih2mmym2gzq3qljazv3rqlfjx452lv2pqlcpwkdv5o7skmxlzeqru",
+   "bafyreidjjtz3ixbxfgmpspans22uyxi22fvitbquugmjqv76uot7go37wq",
+   "bafyreibrbrcjfuwdnpk4agshincgdtb3atjnvzzjl2gcodb5dpru46osya",
+
+    ]);
+    // expect(blz.length).toBe(13);
   });
   it("should start with changes", async () => {
     const { result } = await crdt.changes();

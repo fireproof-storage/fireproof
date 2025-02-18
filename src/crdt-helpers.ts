@@ -94,11 +94,13 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
     for (const update of updates) {
+      console.log("applyBulkUpdateToCrdt-batch", update.id);
       const link = await writeDocContent(store, tblocks, update, logger);
       await batch.put(toString(update.id, logger), link);
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
+    console.log("applyBulkUpdateToCrdt-single", update.id);
     const link = await writeDocContent(store, tblocks, updates[0], logger);
     result = await put(tblocks, head, toString(updates[0].id, logger), link);
   }
@@ -110,6 +112,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
       // ...result.removals,
       result.event,
     ]) {
+      console.log("applyBulkUpdateToCrdt-event", cid.toString());
       tblocks.putSync(cid, bytes);
     }
   }
