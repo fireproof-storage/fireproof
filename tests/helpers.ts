@@ -101,7 +101,7 @@ class MockLoader implements bs.Loadable {
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
     this.ebOpts = {} as bs.BlockstoreRuntime;
-    this.carLog = [];
+    this.carLog = new bs.CarLog();
     this.taskManager = new TaskManager(sthis, () => Promise.resolve());
     this.attachedStores = new bs.AttachedRemotesImpl(this);
   }

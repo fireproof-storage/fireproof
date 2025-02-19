@@ -663,7 +663,7 @@ describe("basic js verify", function () {
     const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
-    const cid = loader.carLog[0][0];
+    const cid = loader.carLog.asArray()[0][0];
     const cid2 = db.ledger.crdt.clock.head[0];
     expect(cid).not.toBe(cid2);
     expect(cid).not.toBe(cid2);
@@ -744,8 +744,8 @@ describe("same workload twice, same CID", function () {
     assert(logB);
     expect(logB.length).toBe(docs.length);
 
-    const logA2 = logA.map((c) => c.toString());
-    const logB2 = logB.map((c) => c.toString());
+    const logA2 = logA.asArray().map((c) => c.toString());
+    const logB2 = logB.asArray().map((c) => c.toString());
 
     expect(logA2.length).toBe(logB2.length);
 
@@ -766,8 +766,8 @@ describe("same workload twice, same CID", function () {
     assert(cmpLogB);
     expect(cmpLogB.length).toBe(1);
 
-    const cmpLogA2 = cmpLogA.map((c) => c.toString());
-    const cmpLogB2 = cmpLogB.map((c) => c.toString());
+    const cmpLogA2 = cmpLogA.asArray().map((c) => c.toString());
+    const cmpLogB2 = cmpLogB.asArray().map((c) => c.toString());
 
     expect(cmpLogA2.length).toBe(cmpLogB2.length);
 

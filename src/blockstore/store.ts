@@ -460,7 +460,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
               const car = await this.loader.attachedStores.local().active.car.load(cid);
               // .carStore().then((i) => i.load(cid));
               if (!car) {
-                if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
+                if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
                 }
               } else {
@@ -486,7 +486,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             for (const cid of dbMeta.cars) {
               const car = await this.loader.attachedStores.local().active.car.load(cid);
               if (!car) {
-                if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
+                if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
                 }
               } else {

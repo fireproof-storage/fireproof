@@ -10,7 +10,6 @@ import {
   type CommitOpts,
   type TransactionMeta,
   type CarGroup,
-  type CarLog,
   type Loadable,
   BlockstoreRuntime,
   BlockstoreOpts,
@@ -19,6 +18,8 @@ import {
   BaseStore,
   CIDActiveStore,
   CarCacheItem,
+  CarLog,
+  FroozenCarLog,
 } from "./types.js";
 
 import { parseCarFile } from "./loader-helpers.js";
@@ -34,13 +35,23 @@ import { TaskManager } from "./task-manager.js";
 import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
 import { ensureLogger, isNotFoundError } from "../utils.js";
 
-export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
-  const cidSet = cids.map((cid) => cid.toString()).sort().join(",");
-  return list.some((arr: CarGroup) => cidSet === arr.map((cid) => cid.toString()).sort().join(","));
+export function carLogIncludesGroup(list: FroozenCarLog, cids: CarGroup) {
+  const cidSet = cids
+    .map((cid) => cid.toString())
+    .sort()
+    .join(",");
+  return list.some(
+    (arr: CarGroup) =>
+      cidSet ===
+      arr
+        .map((cid) => cid.toString())
+        .sort()
+        .join(","),
+  );
 }
 
 // this works for car groups because toString looks like bafy,bafy
-function uniqueCids(list: CarLog, remove = new LRUSet<string>()): CarLog {
+function uniqueCids(list: FroozenCarLog, remove = new LRUSet<string>()): FroozenCarLog {
   const byString = new Map<string, CarGroup>();
   for (const cid of list) {
     if (remove.has(cid.toString())) continue;
@@ -67,7 +78,7 @@ export class Loader implements Loadable {
   readonly sthis: SuperThis;
   readonly taskManager: TaskManager;
 
-  carLog: CarLog = [];
+  readonly carLog: CarLog = new CarLog();
   // key?: string;
   // keyId?: string;
   // remoteMetaStore?: MetaStore;
@@ -165,7 +176,10 @@ export class Loader implements Loadable {
     this.maxConcurrentCarReader = pLimit(parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_PARALLEL, "5"), 10));
 
     this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta, activeStore: ActiveStore) => {
-      console.log("taskManager", dbMeta.cars.map((c) => c.toString()));
+      console.log(
+        "taskManager",
+        dbMeta.cars.map((c) => c.toString()),
+      );
       await this.handleDbMetasFromStore([dbMeta], activeStore);
     });
     this.attachedStores = new AttachedRemotesImpl(this);
@@ -183,7 +197,11 @@ export class Loader implements Loadable {
   // }
 
   async handleDbMetasFromStore(metas: DbMeta[], activeStore: ActiveStore): Promise<void> {
-    console.log("handleDbMetasFromStore", activeStore.active.car.url().toString(),  metas.map((m) => m.cars.map((c) => c.toString())).flat());
+    console.log(
+      "handleDbMetasFromStore",
+      activeStore.active.car.url().toString(),
+      metas.map((m) => m.cars.map((c) => c.toString())).flat(),
+    );
     this.logger.Debug().Any("metas", metas).Msg("handleDbMetasFromStore");
     for (const meta of metas) {
       await this.maxConcurrentWrite(async () => {
@@ -209,7 +227,7 @@ export class Loader implements Loadable {
       // if (meta.key) {
       //   await this.setKey(meta.key);
       // }
-      if (carLogIncludesGroup(this.carLog, meta.cars)) {
+      if (carLogIncludesGroup(this.carLog.asArray(), meta.cars)) {
         return;
       }
       const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta, activeStore);
@@ -222,8 +240,14 @@ export class Loader implements Loadable {
       } catch (e) {
         this.logger.Error().Err(e).Msg("error getting more readers");
       }
-      this.carLog = uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted);
-      console.log(">>>>> pre applyMeta", this.carLog.map((c) => c.map((cc) => cc.toString())).flat());
+      this.carLog.update(uniqueCids([meta.cars, ...this.carLog.asArray(), ...carHeader.cars], this.seenCompacted));
+      console.log(
+        ">>>>> pre applyMeta",
+        this.carLog
+          .asArray()
+          .map((c) => c.map((cc) => cc.toString()))
+          .flat(),
+      );
       await this.ebOpts.applyMeta?.(carHeader.meta);
       console.log(">>>>> post applyMeta");
     } finally {
@@ -295,11 +319,23 @@ export class Loader implements Loadable {
     if (compact) {
       const previousCompactCid = cHeader.compact[cHeader.compact.length - 1];
       cHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
-      this.carLog = uniqueCids([...this.carLog, ...cHeader.cars, cids], this.seenCompacted);
-      console.log("compact - updateCarLog", this.carLog.map((c) => c.map((cc) => cc.toString())).flat());
+      this.carLog.update(uniqueCids([...this.carLog.asArray(), ...cHeader.cars, cids], this.seenCompacted));
+      console.log(
+        "compact - updateCarLog",
+        this.carLog
+          .asArray()
+          .map((c) => c.map((cc) => cc.toString()))
+          .flat(),
+      );
       await this.removeCidsForCompact(previousCompactCid[0], this.attachedStores.local()).catch((e) => e);
     } else {
-      console.log("update - updateCarLog", this.carLog.map((c) => c.map((cc) => cc.toString())).flat());
+      console.log(
+        "update - updateCarLog",
+        this.carLog
+          .asArray()
+          .map((c) => c.map((cc) => cc.toString()))
+          .flat(),
+      );
       this.carLog.unshift(cids);
     }
   }
@@ -372,13 +408,17 @@ export class Loader implements Loadable {
     // }
     // console.log("entries", this.carLog.map((c) => c.map((cc) => cc.toString())).flat());
     const seen = new Set<string>();
-    for (const carCids of this.carLog) {
+    for (const carCids of this.carLog.asArray()) {
       for (const carCid of carCids) {
         const reader = await this.loadCar(carCid, this.attachedStores.local());
         if (!reader || reader.type !== "car") {
           throw this.logger.Error().Any("reader", reader.type).Str("cid", carCid.toString()).Msg("missing car reader").AsError();
         }
-        console.log("entries", carCid.toString(), reader.blocks.map((b) => b.cid.toString()));
+        console.log(
+          "entries",
+          carCid.toString(),
+          reader.blocks.map((b) => b.cid.toString()),
+        );
         // const readBlocks = await this.readCar(reader);
         for (const block of reader.blocks) {
           const cidStr = block.cid.toString();
@@ -441,7 +481,7 @@ export class Loader implements Loadable {
       };
 
       let got: AnyBlock | undefined;
-      for (const carCids of this.carLog) {
+      for (const carCids of this.carLog.asArray()) {
         for (const carCid of carCids) {
           const ci = await this.loadCar(carCid, store);
           if (!ci) {
@@ -455,7 +495,7 @@ export class Loader implements Loadable {
         }
       }
       if (!got) {
-        await getCompactCarCids(this.carLog[this.carLog.length - 1][0]);
+        await getCompactCarCids(this.carLog.last()[0]);
       }
       return {
         type: "block",
@@ -509,14 +549,13 @@ export class Loader implements Loadable {
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
     const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
-    const rawReader = await CarReader.fromBytes(bytes.value);
+    const rawReader = await CarReader.fromBytes(bytes.bytes);
     // const readerP = Promise.resolve(rawReader);
     // const kc = await activeStore.keyedCrypto()
     // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
 
     const blocks: AnyBlock[] = [];
     for await (const block of rawReader.blocks()) {
-      
       const sBlock = block.cid.toString();
       blocks.push(block);
       this.cidCache.get(sBlock).once<CarCacheItem>(() => ({

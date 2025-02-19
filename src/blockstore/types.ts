@@ -1,5 +1,4 @@
 import type { CID, Link, Version } from "multiformats";
-import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 import { Attachable, Attached, CarTransaction, DocFileMeta, Falsy, GatewayUrls, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
@@ -9,10 +8,54 @@ import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
 import { Context } from "../context.js";
+import { AsyncBlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
-export type CarLog = CarGroup[];
+// export type CarLog = CarGroup[];
+
+export type FroozenCarLog = CarGroup[];
+export class CarLog {
+  readonly _logs: CarGroup[] = [];
+
+  get length() {
+    return this._logs.length;
+  }
+  last() {
+    const x = [...this._logs[this._logs.length - 1]];
+    Object.freeze(x);
+    return x;
+  }
+  unshift(logs: CarGroup) {
+    console.log(
+      "CarLog-unshift",
+      logs.map((l) => l.toString()),
+    );
+    this._logs.unshift(logs);
+  }
+  update(logs: FroozenCarLog) {
+    console.log(
+      "CarLog-update",
+      logs.map((l) => l.map((l) => l.toString())),
+    );
+    this._logs.length = 0;
+    this._logs.push(...logs);
+  }
+  asArray(): FroozenCarLog {
+    // in production it should be
+    // return this._logs
+
+    const a = [
+      ...this._logs.map((l) => {
+        const x = [...l];
+        Object.freeze(x);
+        return x;
+      }),
+    ];
+    Object.freeze(a);
+    return a;
+  }
+}
 export type AnyAnyLink = Link<unknown, number, number, Version>;
 
 export type AnyLinkFn = (cid: AnyLink) => Promise<AnyBlock | undefined>;
@@ -76,8 +119,8 @@ export interface CarMakeable {
 }
 
 export interface CarHeader<T> {
-  readonly cars: CarLog;
-  readonly compact: CarLog;
+  readonly cars: FroozenCarLog;
+  readonly compact: FroozenCarLog;
   readonly meta: T;
 }
 
@@ -156,8 +199,9 @@ export interface CryptoAction {
   // readonly isEncrypting: boolean;
   // keyByFingerPrint(id: Uint8Array | string): Promise<Result<KeyWithFingerPrint>>;
   // fingerPrint(): Promise<string>;
+
   algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number };
-  codec(iv?: Uint8Array, codecOpts?: Partial<CodecOpts>): BlockCodec<number, Uint8Array>;
+  codec(iv?: Uint8Array, codecOpts?: Partial<CodecOpts>): AsyncBlockCodec<24, Uint8Array, IvKeyIdData>;
   _decrypt(data: IvAndKeyAndBytes): Promise<Uint8Array>;
   _encrypt(data: BytesAndKeyWithIv): Promise<Uint8Array>;
   // encode(data: Uint8Array): Promise<Uint8Array>;
