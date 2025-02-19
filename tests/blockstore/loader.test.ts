@@ -154,8 +154,8 @@ describe("basic Loader with two commits", function () {
 
   it("should have a car log", function () {
     expect(loader.carLog.length).toBe(2);
-    expect(loader.carLog[0].toString()).toBe(carCid.toString());
-    expect(loader.carLog[1].toString()).toBe(carCid0.toString());
+    expect(loader.carLog.asArray()[0].toString()).toBe(carCid.toString());
+    expect(loader.carLog.asArray()[1].toString()).toBe(carCid0.toString());
   });
 
   it("should commit", async () => {

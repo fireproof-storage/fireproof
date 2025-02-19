@@ -1,8 +1,9 @@
 import { bs, ensureSuperThis, PARAM, rt, StoreType, storeType2DataMetaWal } from "@fireproof/core";
 import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
-import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as dagCodec from "@ipld/dag-cbor";
+// import { sha256 as hasher } from "multiformats/hashes/sha2";
+// import * as dagCodec from "@ipld/dag-cbor";
+import * as cborg from "cborg";
 import type { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
 import { mockLoader, MockSuperThis, mockSuperThis } from "../helpers.js";
 import { KeyWithFingerPrint } from "../../src/blockstore/types.js";
@@ -350,10 +351,10 @@ describe("KeyedCrypto", () => {
     const iv = kb.rt.crypto.randomBytes(12);
     const codec = kycr.codec(iv, { noIVVerify: true });
     const blk = (await codec.encode(testData)) as Uint8Array;
-    const myDec = await rt.mf.block.decode<bs.IvKeyIdData, number, number>({ bytes: blk, hasher, codec: dagCodec });
-    expect(myDec.value.iv).toEqual(iv);
+    const myDec = cborg.decode(blk) as bs.IvKeyIdData;
+    expect(myDec.iv).toEqual(iv);
     const kc = (await kycr.key.get()) as KeyWithFingerPrint;
-    expect(base58btc.encode(myDec.value.keyId)).toEqual(kc.fingerPrint);
+    expect(base58btc.encode(myDec.keyId)).toEqual(kc.fingerPrint);
     const dec = await codec.decode(blk);
     expect(dec).toEqual(testData);
   });
