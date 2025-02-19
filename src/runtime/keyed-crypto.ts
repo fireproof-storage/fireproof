@@ -9,7 +9,7 @@ import {
 } from "../blockstore/index.js";
 import { ensureLogger, UInt8ArrayEqual } from "../utils.js";
 import { KeyBag } from "./key-bag.js";
-import type { BlockCodec } from "./wait-pr-multiformats/codec-interface.js";
+import type { AsyncBlockCodec } from "./wait-pr-multiformats/codec-interface.js";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as CBOR from "cborg";
@@ -52,8 +52,8 @@ function getGenerateIVFn(url: URI, opts: Partial<CodecOpts>): GenerateIVFn {
   return generateIV[ivhash] || generateIV["hash"];
 }
 
-export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
-  readonly code = 0x300539;
+export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
+  readonly code = 24;
   readonly name = "Fireproof@encrypted-block:aes-gcm";
 
   readonly ko: CryptoAction;
@@ -79,10 +79,10 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
       iv: iv,
       keyId: keyId,
       data: await this.ko._encrypt({ iv, key: defKey.key, bytes: data }),
-    } as IvKeyIdData);
+    } satisfies IvKeyIdData);
   }
 
-  async decode(abytes: Uint8Array | ArrayBuffer): Promise<Uint8Array> {
+  async decode(abytes: Uint8Array | ArrayBuffer): Promise<IvKeyIdData> {
     let bytes: Uint8Array;
     if (abytes instanceof Uint8Array) {
       bytes = abytes;
@@ -98,11 +98,16 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     if (!this.opts?.noIVVerify && !(await getGenerateIVFn(this.ko.url, this.opts).verify(this.ko, this.ko.crypto, iv, result))) {
       throw this.ko.logger.Error().Msg("iv missmatch").AsError();
     }
-    return result;
+    return {
+      iv,
+      keyId,
+      data: result,
+    };
   }
 }
 
 class cryptoAction implements CryptoAction {
+  readonly code = 24;
   readonly ivLength = 12;
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
@@ -123,7 +128,7 @@ class cryptoAction implements CryptoAction {
   // fingerPrint(): Promise<string> {
   //   return this.key.get().then((k) => k.fingerPrint);
   // }
-  codec(iv?: Uint8Array, opts?: CodecOpts): BlockCodec<number, Uint8Array> {
+  codec(iv?: Uint8Array, opts?: CodecOpts): AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
     return new BlockIvKeyIdCodec(this, iv, opts);
   }
   algo(iv?: Uint8Array) {
@@ -145,15 +150,20 @@ class cryptoAction implements CryptoAction {
   }
 }
 
-class nullCodec implements BlockCodec<0x0, Uint8Array> {
-  readonly code = 0x0;
+class nullCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
+  readonly code = 24;
   readonly name = "Fireproof@unencrypted-block";
+  readonly empty = new Uint8Array();
 
-  encode(data: Uint8Array): Uint8Array {
+  async encode(data: Uint8Array): Promise<Uint8Array> {
     return data;
   }
-  decode(data: Uint8Array): Uint8Array {
-    return data;
+  async decode(data: Uint8Array): Promise<IvKeyIdData> {
+    return {
+      iv: this.empty,
+      keyId: this.empty,
+      data: data,
+    };
   }
 }
 
@@ -190,7 +200,7 @@ class noCrypto implements CryptoAction {
     return Promise.resolve(this._fingerPrint);
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  codec(iv?: Uint8Array): BlockCodec<number, Uint8Array> {
+  codec(iv?: Uint8Array): AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
     return new nullCodec();
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -100,7 +100,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
-    console.log("applyBulkUpdateToCrdt-single", update.id);
+    console.log("applyBulkUpdateToCrdt-single", updates[0].id);
     const link = await writeDocContent(store, tblocks, updates[0], logger);
     result = await put(tblocks, head, toString(updates[0].id, logger), link);
   }
