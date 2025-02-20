@@ -122,7 +122,7 @@ export function Login() {
             />
           </svg>
           <h1 className="text-[6.5vw] font-bold xs:text-34 mb-[30px] sm:mb-[46px] mt-[16px] tracking-[0.02em] leading-[1.3]">
-            Sign in to Fireproof Dashboard
+            Sign in to Fireproof Connect
           </h1>
           <h2 className="text-11 text-fp-dec-02 mb-4">Email preferences</h2>
           <p className="text-14 sm:text-16 max-w-[90%] mb-4 text-balance">
