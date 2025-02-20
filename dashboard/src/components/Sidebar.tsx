@@ -17,7 +17,7 @@ export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent:
         <div className="flex items-center gap-2 font-semibold">
           <FireproofHome />
           <Link to="" onClick={() => setIsSidebarOpen?.(false)}>
-            <span>Fireproof Dashboard</span>
+            <span>Fireproof Connect</span>
           </Link>
         </div>
         {/* Close button for mobile */}
