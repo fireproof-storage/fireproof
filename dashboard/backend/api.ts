@@ -1,25 +1,24 @@
 import { Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
+import { and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, and, inArray, gt, lt, ne, or } from "drizzle-orm/expressions";
+import { InviteTicket, InvitedParams, prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
+import { LedgerUser, sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
+import { QueryUser, queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.ts";
+import { Tenant, sqlTenantUsers, sqlTenants } from "./tenants.ts";
 import {
   AuthType,
-  UserStatus as UserStatus,
-  User,
+  ClerkClaim,
   ClerkVerifyAuth,
+  User,
+  UserNotFoundError,
+  UserStatus,
+  VerifiedAuth,
   getUser,
   isUserNotFound,
-  upsetUserByProvider,
-  UserNotFoundError,
   queryUser,
-  VerifiedAuth,
-  ClerkClaim,
+  upsetUserByProvider,
 } from "./users.ts";
-import { Tenant, sqlTenants, sqlTenantUsers } from "./tenants.ts";
-import { InviteTicket, sqlInviteTickets, prepareInviteTicket, InvitedParams, sqlToInviteTickets } from "./invites.ts";
-import { queryCondition, queryEmail, queryNick, QueryUser, toBoolean, toUndef } from "./sql-helper.ts";
-import { LedgerUser, sqlLedgers, sqlLedgerUsers, sqlToLedgers } from "./ledgers.ts";
-import { jwtVerify } from "jose";
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
@@ -570,10 +569,7 @@ type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUse
 };
 
 function nameFromAuth(name: string | undefined, auth: ActiveUserWithUserId): string {
-  return (
-    name ??
-    `my-tenant[${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}]`
-  );
+  return name ?? `${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}`;
 }
 
 function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
