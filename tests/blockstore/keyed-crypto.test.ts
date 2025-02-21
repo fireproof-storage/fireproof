@@ -365,7 +365,7 @@ describe("KeyedCrypto", () => {
     const blk = await codec.encode(testData);
     expect(blk.length).toBeGreaterThanOrEqual(12 + testData.length);
     const dec = await codec.decode(blk);
-    expect(dec).toEqual(testData);
+    expect(dec.data).toEqual(testData);
   });
 
   it("codec implict iv same for multiple clients", async () => {
