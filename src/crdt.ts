@@ -17,6 +17,7 @@ import {
   clockVis,
   getBlock,
   doCompact,
+  sanitizeDocumentFields,
 } from "./crdt-helpers.js";
 import type {
   DocUpdate,
@@ -104,6 +105,10 @@ export class CRDT<T extends DocTypes> {
   async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
     await this.ready();
     const prevHead = [...this.clock.head];
+    updates = updates.map((dupdate: DocUpdate<T>) => ({
+      ...dupdate,
+      value: sanitizeDocumentFields(dupdate.value) as typeof dupdate.value
+    }));
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(
