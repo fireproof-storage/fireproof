@@ -12,6 +12,7 @@ import {
   CryptoRuntime,
   JSONFormatter,
   YAMLFormatter,
+  CoerceURI,
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
@@ -279,26 +280,31 @@ export function ensureLogger(
 export type Joiner = (...toJoin: string[]) => string;
 
 export interface Store {
-  readonly store: StoreType;
+  readonly pathPart: "data" | "wal" | "meta";
+  readonly fromUrl: StoreType;
   readonly name: string;
 }
 
 export function getStore(url: URI, sthis: SuperThis, joiner: Joiner): Store {
-  const store = url.getParam(PARAM.STORE);
-  switch (store) {
-    case "data":
+  const fromUrl = url.getParam(PARAM.STORE) as StoreType;
+  let pathPart: Store["pathPart"];
+  switch (fromUrl) {
+    case "car":
+    case "file":
+      pathPart = "data";
+      break;
     case "wal":
     case "meta":
+      pathPart = fromUrl;
       break;
     default:
       throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
-      throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
   }
-  let name: string = store;
+  let name: string = pathPart;
   if (url.hasParam("index")) {
     name = joiner(url.getParam(PARAM.INDEX) || "idx", name);
   }
-  return { store, name };
+  return { pathPart, fromUrl, name };
 }
 
 export function getKey(url: URI, logger: Logger): string {
@@ -411,4 +417,67 @@ export async function coercePromiseIntoUint8(raw: PromiseToUInt8): Promise<Resul
     }
   }
   return Result.Err("Not a Uint8Array");
+}
+
+export function makeName(fnString: string) {
+  const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g;
+  let found: RegExpExecArray | null = null;
+  const matches = Array.from(fnString.matchAll(regex), (match) => match[1].trim());
+  if (matches.length === 0) {
+    found = /=>\s*{?\s*([^{}]+)\s*}?/.exec(fnString);
+    if (found && found[1].includes("return")) {
+      found = null;
+    }
+  }
+  if (!found) {
+    return fnString;
+  } else {
+    // it's a consise arrow function, match everything after the arrow
+    return found[1];
+  }
+}
+
+export function storeType2DataMetaWal(store: StoreType) {
+  switch (store) {
+    case "car":
+    case "file":
+      return "data";
+    case "meta":
+    case "wal":
+      return store;
+    default:
+      throw new Error(`unknown store ${store}`);
+  }
+}
+
+export function ensureURIDefaults(
+  sthis: SuperThis,
+  name: string,
+  curi: CoerceURI | undefined,
+  uri: URI,
+  store: StoreType,
+  ctx?: Partial<{
+    readonly idx: boolean;
+    readonly file: boolean;
+  }>,
+): URI {
+  ctx = ctx || {};
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, name);
+  if (!ret.hasParam(PARAM.NAME)) {
+    // const name = sthis.pathOps.basename(ret.URI().pathname);
+    // if (!name) {
+    throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
+    // }
+    // ret.setParam(PARAM.NAME, name);
+  }
+  if (ctx.idx) {
+    ret.defParam(PARAM.INDEX, "idx");
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
+  } else {
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}@`);
+  }
+  if (store === "car") {
+    ret.defParam(PARAM.SUFFIX, ".car");
+  }
+  return ret.URI();
 }

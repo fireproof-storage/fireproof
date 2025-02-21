@@ -1,5 +1,5 @@
 import { defineConfig, Options } from "tsup";
-import resolve from "esbuild-plugin-resolve";
+// import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
 
 const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
@@ -24,7 +24,7 @@ const external = [
   "@fireproof/core",
   "@fireproof/core/node",
   "@fireproof/core/mem",
-  "@fireproof/core/web",
+  "@fireproof/core/indexeddb",
   "@fireproof/core/react",
 ];
 
@@ -68,9 +68,9 @@ function skipper(suffix: string[], target: string) {
 //   // "./node-sys-container.js": "../bundle-not-impl.js",
 //   // "./key-bag-file.js": "../bundle-not-impl.js",
 // };
-const skipEsm = {};
+// const skipEsm = {};
 
-const ourMultiformat = {};
+// const ourMultiformat = {};
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
@@ -137,9 +137,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
       skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
       // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
-      resolve({
-        ...ourMultiformat,
-      }),
+      // resolve({
+      //   ...ourMultiformat,
+      // }),
     ],
     dts: {
       footer: "declare module '@fireproof/core'",
@@ -158,9 +158,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      resolve({
-        ...ourMultiformat,
-      }),
+      // resolve({
+      //   ...ourMultiformat,
+      // }),
     ],
     dts: {
       footer: "declare module '@fireproof/core/node'",
@@ -179,9 +179,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      resolve({
-        ...ourMultiformat,
-      }),
+      // resolve({
+      //   ...ourMultiformat,
+      // }),
     ],
     dts: {
       footer: "declare module '@fireproof/core/deno'",
@@ -190,21 +190,21 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
-    name: "@fireproof/core/web",
-    entry: ["src/runtime/gateways/indexdb/web/index.ts"],
+    name: "@fireproof/core/indexeddb",
+    entry: ["src/runtime/gateways/indexeddb/index.ts"],
     platform: "browser",
-    outDir: "dist/fireproof-core/web",
+    outDir: "dist/fireproof-core/indexeddb",
     esbuildPlugins: [
       replace({
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      resolve({
-        ...ourMultiformat,
-      }),
+      // resolve({
+      //   ...ourMultiformat,
+      // }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/web'",
+      footer: "declare module '@fireproof/core/indexeddb'",
     },
   },
   {
@@ -221,12 +221,12 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      resolve({
-        ...ourMultiformat,
-      }),
+      // resolve({
+      //   ...ourMultiformat,
+      // }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/web'",
+      footer: "declare module '@fireproof/core/indexeddb'",
     },
   },
   {
@@ -247,10 +247,10 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
       skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
       // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      resolve({
-        ...skipEsm,
-        ...ourMultiformat,
-      }),
+      // resolve({
+      //   ...skipEsm,
+      //   ...ourMultiformat,
+      // }),
     ],
     dts: {
       footer: "declare module 'use-fireproof'",

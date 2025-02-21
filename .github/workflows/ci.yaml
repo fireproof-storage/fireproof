@@ -2,10 +2,12 @@ name: CI
 on:
   - push
   - pull_request
+
 env:
   FP_CI: "fp_ci"
+
 jobs:
-  quality-checks:
+  build-test-smoke:
     name: Quality Checks
     runs-on: ubuntu-24.04
     steps:
@@ -33,6 +35,13 @@ jobs:
           path: .esm-cache
           key: smoke-esm-cache
 
+      - name: cache-kaputt
+        id: cache-kaputt
+        run: |
+          rm -rf .esm-cache/*
+          #chmod -R ogu+wx .esm-cache
+          #find .esm-cache/esm/.esmd/npm -ls
+
       - name: install
         run: pnpm install
       - name: format-check
@@ -43,6 +52,8 @@ jobs:
         run: pnpm run build
       - name: test
         run: pnpm run test
+      - name: test:deno
+        run: pnpm run test:deno
       - name: smoke
         run: pnpm run smoke
       - name: publish
@@ -58,4 +69,4 @@ jobs:
           git tag -v $(git describe --tags --abbrev=0)
           # should only run if a tag is set
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          pnpm run publish
+          pnpm run fppublish

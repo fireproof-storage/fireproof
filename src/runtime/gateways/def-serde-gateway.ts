@@ -1,9 +1,10 @@
 import { Result, URI } from "@adviser/cement";
-import { Gateway } from "../../blockstore/gateway.js";
-import { FPEnvelope } from "../../blockstore/fp-envelope.js";
+import type { Gateway } from "../../blockstore/gateway.js";
+import { FPEnvelopeTypes, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
 import { fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
-import { SerdeGateway, SerdeGetResult } from "../../blockstore/serde-gateway.js";
-import { SuperThis } from "../../types.js";
+import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult } from "../../blockstore/serde-gateway.js";
+import type { DbMetaEvent } from "../../blockstore/types.js";
+import { PARAM } from "../../types.js";
 
 export class DefSerdeGateway implements SerdeGateway {
   // abstract readonly storeType: StoreType;
@@ -13,39 +14,81 @@ export class DefSerdeGateway implements SerdeGateway {
     this.gw = gw;
   }
 
-  start(sthis: SuperThis, baseURL: URI): Promise<Result<URI>> {
+  start({ loader: { sthis } }: SerdeGatewayCtx, baseURL: URI): Promise<Result<URI>> {
     return this.gw.start(baseURL, sthis);
   }
 
-  async buildUrl(sthis: SuperThis, baseUrl: URI, key: string): Promise<Result<URI>> {
+  async buildUrl({ loader: { sthis } }: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
     return this.gw.buildUrl(baseUrl, key, sthis);
   }
 
-  async close(sthis: SuperThis, uri: URI): Promise<Result<void>> {
+  async close({ loader: { sthis } }: SerdeGatewayCtx, uri: URI): Promise<Result<void>> {
     return this.gw.close(uri, sthis);
   }
 
-  async put<T>(sthis: SuperThis, url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
-    const rUint8 = await fpSerialize(sthis, env);
+  private subscribeFn = new Map<string, (raw: Uint8Array) => Promise<void>>();
+
+  async put<T>({ loader: { sthis }, encoder }: SerdeGatewayCtx, url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
+    const rUint8 = await fpSerialize(sthis, env, encoder);
     if (rUint8.isErr()) return rUint8;
-    return this.gw.put(url, rUint8.Ok(), sthis);
+    const ret = this.gw.put(url, rUint8.Ok(), sthis);
+
+    if (env.type === FPEnvelopeTypes.META) {
+      const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
+      const subFn = this.subscribeFn.get(urlWithoutKey);
+      if (subFn) {
+        await subFn(rUint8.Ok());
+      }
+    }
+    return ret;
   }
 
-  async get<S>(sthis: SuperThis, url: URI): Promise<SerdeGetResult<S>> {
+  async get<S>({ loader: { sthis }, decoder }: SerdeGatewayCtx, url: URI): Promise<SerdeGetResult<S>> {
     const res = await this.gw.get(url, sthis);
     if (res.isErr()) return Result.Err(res.Err());
-    return fpDeserialize(sthis, url, res) as Promise<SerdeGetResult<S>>;
+    return fpDeserialize(sthis, url, res, decoder) as Promise<SerdeGetResult<S>>;
   }
 
-  async delete(sthis: SuperThis, url: URI): Promise<Result<void>> {
+  async subscribe(
+    { loader: { sthis }, decoder }: SerdeGatewayCtx,
+    url: URI,
+    callback: (meta: FPEnvelopeMeta) => Promise<void>,
+  ): Promise<Result<() => void>> {
+    function rawCallback(raw: Uint8Array) {
+      return fpDeserialize<DbMetaEvent[]>(sthis, url, Result.Ok(raw), decoder).then((res) => {
+        if (res.isErr()) {
+          sthis.logger.Error().Err(res).Msg("Failed to deserialize");
+          return;
+        }
+        callback(res.Ok() as FPEnvelopeMeta);
+      });
+    }
+    if (!this.gw.subscribe) {
+      if (!url.hasParam(PARAM.SELF_REFLECT)) {
+        return Result.Ok(() => {
+          /* noop */
+        });
+      }
+      // memory leak possible
+      const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
+      this.subscribeFn.set(urlWithoutKey, rawCallback);
+      return Result.Ok(() => {
+        this.subscribeFn.delete(url.toString());
+      });
+    }
+    const unreg = await this.gw.subscribe(url, rawCallback, sthis);
+    return unreg;
+  }
+
+  async delete({ loader: { sthis } }: SerdeGatewayCtx, url: URI): Promise<Result<void>> {
     return this.gw.delete(url, sthis);
   }
 
-  async destroy(sthis: SuperThis, baseURL: URI): Promise<Result<void>> {
+  async destroy({ loader: { sthis } }: SerdeGatewayCtx, baseURL: URI): Promise<Result<void>> {
     return this.gw.destroy(baseURL, sthis);
   }
 
-  async getPlain(sthis: SuperThis, iurl: URI, key: string) {
+  async getPlain({ loader: { sthis } }: SerdeGatewayCtx, iurl: URI, key: string) {
     return this.gw.getPlain(iurl, key, sthis);
   }
 }

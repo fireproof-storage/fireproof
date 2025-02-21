@@ -4,19 +4,20 @@ import { CID } from "multiformats/cid";
 
 import {
   ConfigOpts,
-  Ledger,
-  LedgerFactory,
   DocResponse,
   DocWithId,
   Index,
   IndexRows,
   MapFn,
   bs,
-  fireproof,
   index,
-  isLedger,
   ensureSuperThis,
+  fireproof,
+  Database,
+  isDatabase,
+  PARAM,
 } from "@fireproof/core";
+import { URI } from "@adviser/cement";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -38,13 +39,13 @@ describe("dreamcode", function () {
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let result: IndexRows<string, Doc>;
-  let db: Ledger;
+  let db: Database;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-db");
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
@@ -64,7 +65,7 @@ describe("dreamcode", function () {
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe("fireproof");
   });
-  it("should query with function", async function () {
+  it("should query with function", async () => {
     const result = await db.query<boolean, Doc>((doc) => doc.dream);
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -77,7 +78,7 @@ describe("public API", function () {
   interface Doc {
     foo: string;
   }
-  let db: Ledger;
+  let db: Database;
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let query: IndexRows<string, Doc>;
@@ -88,7 +89,7 @@ describe("public API", function () {
     await db.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-api");
     // index = index(db, 'test-index', (doc) => doc.foo)
@@ -98,7 +99,7 @@ describe("public API", function () {
   });
   it("should be a ledger instance", function () {
     expect(db).toBeTruthy();
-    expect(isLedger(db)).toBeTruthy();
+    expect(isDatabase(db)).toBeTruthy();
   });
   it("should put", function () {
     expect(ok).toBeTruthy();
@@ -115,32 +116,74 @@ describe("public API", function () {
   });
 });
 
+describe("database fullconfig", () => {
+  const sthis = ensureSuperThis();
+  it("have the right name", async () => {
+    let protocol: string | undefined;
+    const url = sthis.env.get("FP_STORAGE_URL");
+    if (url) {
+      protocol = URI.from(url).protocol;
+    }
+    const base = bs.getDefaultURI(sthis, protocol);
+    const db = fireproof("my-funky-name", {
+      storeUrls: {
+        base: base,
+        // meta: `${base}/meta?taste=${taste}`,
+        data: {
+          meta: base.build().pathname("dist/full/meta"),
+          car: base.build().pathname("dist/full/data"),
+          wal: base.build().pathname("dist/full/wal"),
+        },
+        idx: {
+          meta: base.build().pathname("dist/full/idx-meta"),
+          car: base.build().pathname("dist/full/idx-data"),
+          wal: base.build().pathname("dist/full/idx-wal"),
+        },
+        // wal: `${base}/wal?taste=${taste}`,
+      },
+    });
+    await db.ready();
+
+    const carStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
+    expect(carStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
+    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
+    expect(metaStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
+    const walStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
+    expect(walStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
+
+    expect(db).toBeTruthy();
+    expect(db.name).toBe("my-funky-name");
+    await db.put({ _id: "test", foo: "bar" });
+    expect(db.name).toBe("my-funky-name");
+  });
+});
+
 describe("basic ledger", function () {
   interface Doc {
     foo: string;
   }
-  let db: Ledger<Doc>;
+  let db: Database;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
-    db = LedgerFactory("test-basic");
+    db = fireproof("test-basic");
   });
-  it("can put with id", async function () {
+  it("can put with id", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
   });
-  it("can put without id", async function () {
+  it("can put without id", async () => {
     const ok = await db.put({ foo: "bam" });
     expect(ok).toBeTruthy();
     const got = await db.get<Doc>(ok.id);
     expect(got.foo).toBe("bam");
   });
-  it("can bulk an array", async function () {
+  it("can bulk an array", async () => {
     const ok = await db.bulk([{ foo: "cool" }, { foo: "dude" }]);
     expect(ok).toBeTruthy();
     expect(ok.ids.length).toBe(2);
@@ -149,7 +192,7 @@ describe("basic ledger", function () {
     const got2 = await db.get<Doc>(ok.ids[1]);
     expect(got2.foo).toBe("dude");
   });
-  it("can define an index", async function () {
+  it("can define an index", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
@@ -159,7 +202,7 @@ describe("basic ledger", function () {
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe("bar");
   });
-  it("can define an index with a default function", async function () {
+  it("can define an index with a default function", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     const idx = index(db, "foo");
@@ -169,7 +212,7 @@ describe("basic ledger", function () {
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe("bar");
   });
-  it("should query with multiple successive functions", async function () {
+  it("should query with multiple successive functions", async () => {
     interface TestDoc {
       _id: string;
       foo: string;
@@ -192,23 +235,23 @@ describe("basic ledger", function () {
 });
 
 describe("benchmarking with compaction", function () {
-  let db: Ledger;
+  let db: Database;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     // erase the existing test data
     await sthis.start();
-    db = LedgerFactory("test-benchmark-compaction", { autoCompact: 3 });
+    db = fireproof("test-benchmark-compaction", { autoCompact: 3 });
   });
-  it.skip("insert during compaction", async function () {
+  it.skip("insert during compaction", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
-    expect(db.crdt.clock.head).toBeTruthy();
-    expect(db.crdt.clock.head.length).toBe(1);
+    expect(db.ledger.crdt.clock.head).toBeTruthy();
+    expect(db.ledger.crdt.clock.head.length).toBe(1);
 
     const numDocs = 20;
     const batchSize = 5;
@@ -229,7 +272,7 @@ describe("benchmarking with compaction", function () {
           }),
         );
       }
-      const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeTruthy();
 
@@ -246,18 +289,17 @@ describe("benchmarking with compaction", function () {
 });
 
 describe("benchmarking a ledger", function () {
-  /** @type {Ledger} */
-  let db: Ledger;
+  let db: Database;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
     // erase the existing test data
-    db = LedgerFactory("test-benchmark", { autoCompact: 100000, public: true });
-    // db = LedgerFactory(null, {autoCompact: 100000})
+    db = fireproof("test-benchmark", { autoCompact: 100000, public: true });
+    // db = fireproof(null, {autoCompact: 100000})
   });
 
   // run benchmarking tests
@@ -270,8 +312,8 @@ describe("benchmarking a ledger", function () {
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
-    expect(db.crdt.clock.head).toBeTruthy();
-    expect(db.crdt.clock.head.length).toBe(1);
+    expect(db.ledger.crdt.clock.head).toBeTruthy();
+    expect(db.ledger.crdt.clock.head.length).toBe(1);
 
     const numDocs = 2500;
     const batchSize = 500;
@@ -307,7 +349,7 @@ describe("benchmarking a ledger", function () {
     // equals(allDocsResult2.rows.length, numDocs+1)
 
     // console.time("open new DB");
-    const newDb = LedgerFactory("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb = fireproof("test-benchmark", { autoCompact: 100000, public: true });
     const doc = await newDb.get<{ foo: string }>("test");
     expect(doc.foo).toBe("fast");
     // console.timeEnd("open new DB");
@@ -337,7 +379,7 @@ describe("benchmarking a ledger", function () {
     await db.put({ _id: "compacted-test", foo: "bar" });
 
     // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     expect(loader.carLog.length).toBe(2);
@@ -349,10 +391,10 @@ describe("benchmarking a ledger", function () {
     await sleep(100);
 
     // console.time("compacted reopen again");
-    const newDb2 = LedgerFactory("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb2 = fireproof("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     expect(doc21.foo).toBe("fast");
-    const blocks2 = newDb2.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks2 = newDb2.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader2 = blocks2.loader;
     expect(loader2).toBeTruthy();
 
@@ -405,53 +447,53 @@ describe("Reopening a ledger", function () {
   interface Doc {
     foo: string;
   }
-  let db: Ledger;
+  let db: Database;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     // erase the existing test data
     await sthis.start();
 
-    db = LedgerFactory("test-reopen", { autoCompact: 100000 });
+    db = fireproof("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
-    expect(db.crdt.clock.head).toBeDefined();
-    expect(db.crdt.clock.head.length).toBe(1);
+    expect(db.ledger.crdt.clock.head).toBeDefined();
+    expect(db.ledger.crdt.clock.head.length).toBe(1);
   });
 
-  it("should persist data", async function () {
+  it("should persist data", async () => {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
   });
 
-  it("should have the same data on reopen", async function () {
-    const db2 = LedgerFactory("test-reopen");
+  it("should have the same data on reopen", async () => {
+    const db2 = fireproof("test-reopen");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
-    expect(db2.crdt.clock.head).toBeDefined();
-    expect(db2.crdt.clock.head.length).toBe(1);
-    expect(db2.crdt.clock.head).toEqual(db.crdt.clock.head);
+    expect(db2.ledger.crdt.clock.head).toBeDefined();
+    expect(db2.ledger.crdt.clock.head.length).toBe(1);
+    expect(db2.ledger.crdt.clock.head).toEqual(db.ledger.crdt.clock.head);
     await db2.close();
   });
 
-  it("should have a car in the car log", async function () {
-    await db.crdt.ready();
-    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+  it("should have a car in the car log", async () => {
+    await db.ledger.crdt.ready();
+    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
     expect(loader.carLog.length).toBe(1);
   });
 
-  it("should have carlog after reopen", async function () {
-    const db2 = LedgerFactory("test-reopen");
-    await db2.crdt.ready();
-    const blocks = db2.crdt.blockstore as bs.EncryptedBlockstore;
+  it("should have carlog after reopen", async () => {
+    const db2 = fireproof("test-reopen");
+    await db2.ledger.crdt.ready();
+    const blocks = db2.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
@@ -459,13 +501,13 @@ describe("Reopening a ledger", function () {
     await db2.close();
   });
 
-  it("faster, should have the same data on reopen after reopen and update", async function () {
+  it("faster, should have the same data on reopen after reopen and update", async () => {
     for (let i = 0; i < 4; i++) {
       // console.log('iteration', i)
-      const db = LedgerFactory("test-reopen");
+      const db = fireproof("test-reopen");
       // assert(db._crdt.xready());
-      await db.crdt.ready();
-      const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+      await db.ready();
+      const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader.carLog.length).toBe(i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
@@ -477,15 +519,15 @@ describe("Reopening a ledger", function () {
     }
   }, 20000);
 
-  it.skip("passing slow, should have the same data on reopen after reopen and update", async function () {
+  it.skip("passing slow, should have the same data on reopen after reopen and update", async () => {
     for (let i = 0; i < 200; i++) {
       // console.log("iteration", i);
       // console.time("db open");
-      const db = LedgerFactory("test-reopen", { autoCompact: 1000 }); // try with 10
+      const db = fireproof("test-reopen", { autoCompact: 1000 }); // try with 10
       // assert(db._crdt.ready);
-      await db.crdt.ready();
+      await db.ready();
       // console.timeEnd("db open");
-      const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeDefined();
       expect(loader.carLog.length).toBe(i + 1);
@@ -507,16 +549,16 @@ describe("Reopening a ledger with indexes", function () {
   interface Doc {
     foo: string;
   }
-  let db: Ledger;
+  let db: Database;
   let idx: Index<string, Doc>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-reopen-idx");
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -531,7 +573,7 @@ describe("Reopening a ledger with indexes", function () {
     idx = index<string, Doc>(db, "foo", mapFn);
   });
 
-  it("should persist data", async function () {
+  it("should persist data", async () => {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
     const idx2 = index<string, Doc>(db, "foo");
@@ -544,7 +586,7 @@ describe("Reopening a ledger with indexes", function () {
     expect(didMap).toBeTruthy();
   });
 
-  it("should reuse the index", async function () {
+  it("should reuse the index", async () => {
     const idx2 = index(db, "foo", mapFn);
     expect(idx2).toBe(idx);
     const result = await idx2.query();
@@ -562,16 +604,16 @@ describe("Reopening a ledger with indexes", function () {
     expect(didMap).toBeFalsy();
   });
 
-  it("should have the same data on reopen", async function () {
+  it("should have the same data on reopen", async () => {
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
-    expect(db2.crdt.clock.head).toBeTruthy();
-    expect(db2.crdt.clock.head.length).toBe(1);
-    expect(db2.crdt.clock.head).toEqual(db.crdt.clock.head);
+    expect(db2.ledger.crdt.clock.head).toBeTruthy();
+    expect(db2.ledger.crdt.clock.head.length).toBe(1);
+    expect(db2.ledger.crdt.clock.head).toEqual(db.ledger.crdt.clock.head);
   });
 
-  it("should have the same data on reopen after a query", async function () {
+  it("should have the same data on reopen after a query", async () => {
     const r0 = await idx.query();
     expect(r0).toBeTruthy();
     expect(r0.rows).toBeTruthy();
@@ -581,12 +623,12 @@ describe("Reopening a ledger with indexes", function () {
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
-    expect(db2.crdt.clock.head).toBeTruthy();
-    expect(db2.crdt.clock.head.length).toBe(1);
-    expect(db2.crdt.clock.head).toEqual(db.crdt.clock.head);
+    expect(db2.ledger.crdt.clock.head).toBeTruthy();
+    expect(db2.ledger.crdt.clock.head.length).toBe(1);
+    expect(db2.ledger.crdt.clock.head).toEqual(db.ledger.crdt.clock.head);
   });
 
-  // it('should query the same data on reopen', async function () {
+  // it('should query the same data on reopen', async () =>{
   //   const r0 = await idx.query()
   //   assert(r0)
   //   assert(r0.rows)
@@ -609,20 +651,20 @@ describe("Reopening a ledger with indexes", function () {
 
 describe("basic js verify", function () {
   const sthis = ensureSuperThis();
-  beforeAll(async function () {
+  beforeAll(async () => {
     await sthis.start();
   });
-  it("should include cids in arrays", async function () {
+  it("should include cids in arrays", async () => {
     const db = fireproof("test-verify");
     const ok = await db.put({ _id: "test", foo: ["bar", "bam"] });
     expect(ok.id).toBe("test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
     expect(ok2.id).toBe("test2");
-    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
-    const cid = loader.carLog[0][0];
-    const cid2 = db.crdt.clock.head[0];
+    const cid = loader.carLog.asArray()[0][0];
+    const cid2 = db.ledger.crdt.clock.head[0];
     expect(cid).not.toBe(cid2);
     expect(cid).not.toBe(cid2);
     const cidList = [cid, cid2];
@@ -635,8 +677,8 @@ describe("basic js verify", function () {
 });
 
 describe("same workload twice, same CID", function () {
-  let dbA: Ledger;
-  let dbB: Ledger;
+  let dbA: Database;
+  let dbB: Database;
   let headA: string;
   let headB: string;
 
@@ -656,74 +698,76 @@ describe("same workload twice, same CID", function () {
     },
   };
 
-  afterEach(async function () {
+  afterEach(async () => {
     await dbA.close();
     await dbA.destroy();
     await dbB.close();
     await dbB.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     let ok: DocResponse;
     await sthis.start();
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     dbA = fireproof("test-dual-workload-a", configA);
+    await dbA.destroy();
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
       expect(ok.id).toBeTruthy();
     }
-    headA = dbA.crdt.clock.head.toString();
+    headA = dbA.ledger.crdt.clock.head.toString();
 
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     dbB = fireproof("test-dual-workload-b", configB);
+    await dbA.destroy();
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
       expect(ok.id).toBeTruthy();
     }
-    headB = dbB.crdt.clock.head.toString();
+    headB = dbB.ledger.crdt.clock.head.toString();
   });
-  it("should have head A and B", async function () {
+  it("should have head A and B", async () => {
     expect(headA).toBeTruthy();
     expect(headB).toBeTruthy();
     expect(headA).toEqual(headB);
     expect(headA.length).toBeGreaterThan(10);
   });
-  it("should have same car log", async function () {
-    const logA = dbA.crdt.blockstore.loader?.carLog;
+  it("should have same car log", async () => {
+    const logA = dbA.ledger.crdt.blockstore.loader?.carLog;
     expect(logA).toBeTruthy();
     assert(logA);
     expect(logA.length).toBe(docs.length);
 
-    const logB = dbB.crdt.blockstore.loader?.carLog;
+    const logB = dbB.ledger.crdt.blockstore.loader?.carLog;
     expect(logB).toBeTruthy();
     assert(logB);
     expect(logB.length).toBe(docs.length);
 
-    const logA2 = logA.map((c) => c.toString());
-    const logB2 = logB.map((c) => c.toString());
+    const logA2 = logA.asArray().map((c) => c.toString());
+    const logB2 = logB.asArray().map((c) => c.toString());
 
     expect(logA2.length).toBe(logB2.length);
 
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     // expect(logA2).toEqual(logB2);
   });
-  it("should have same car log after compact", async function () {
+  it("should have same car log after compact", async () => {
     await dbA.compact();
     await dbB.compact();
 
-    const cmpLogA = dbA.crdt.blockstore.loader?.carLog;
+    const cmpLogA = dbA.ledger.crdt.blockstore.loader?.carLog;
     expect(cmpLogA).toBeTruthy();
     assert(cmpLogA);
     expect(cmpLogA.length).toBe(1);
 
-    const cmpLogB = dbB.crdt.blockstore.loader?.carLog;
+    const cmpLogB = dbB.ledger.crdt.blockstore.loader?.carLog;
     expect(cmpLogB).toBeTruthy();
     assert(cmpLogB);
     expect(cmpLogB.length).toBe(1);
 
-    const cmpLogA2 = cmpLogA.map((c) => c.toString());
-    const cmpLogB2 = cmpLogB.map((c) => c.toString());
+    const cmpLogA2 = cmpLogA.asArray().map((c) => c.toString());
+    const cmpLogB2 = cmpLogB.asArray().map((c) => c.toString());
 
     expect(cmpLogA2.length).toBe(cmpLogB2.length);
 

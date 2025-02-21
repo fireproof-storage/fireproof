@@ -1,29 +1,27 @@
 import { CID } from "multiformats";
-import { rt, bs, NotFoundError, SuperThis, PARAM, DbMeta, ensureSuperThis } from "@fireproof/core";
-import { noopUrl } from "../helpers.js";
+import { rt, bs, NotFoundError, PARAM, ensureSuperThis } from "@fireproof/core";
 import { Result } from "@adviser/cement";
+import { createAttachedStores } from "../../src/blockstore/attachable-store.js";
+import { mockLoader, noopUrl } from "../helpers.js";
 
-function runtime(sthis: SuperThis) {
-  return bs.toStoreRuntime(sthis);
-}
+// function runtime(sthis: SuperThis) {
+//   return bs.toStoreRuntime(sthis);
+// }
 
-async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFactoryItem> {
-  const url = noopUrl(name);
-  return {
-    sthis,
-    url: url,
-    loader: {
-      keyBag: () => rt.kb.getKeyBag(sthis),
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      handleDbMetasFromStore: (metas: DbMeta[]): Promise<void> => Promise.resolve(),
-    } as bs.Loader,
-  };
-}
+// async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFactoryItem> {
+//   const url = noopUrl(name);
+//   return {
+//     // sthis,
+//     url: url,
+//     loader:
+//   };
+// }
 
-describe("DataStore", function () {
-  let store: bs.DataStore;
-
+describe("CarStore", function () {
+  let store: bs.CarStore;
   const sthis = ensureSuperThis();
+  const loader = mockLoader(sthis);
+
   afterEach(async () => {
     await store.close();
     await store.destroy();
@@ -31,40 +29,44 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(await mockLoader(sthis));
-    await store.start();
+    const at = await createAttachedStores(noopUrl("test"), loader);
+    store = at.stores.car;
+    await store.start(at.stores);
   });
 
   it("should have a name", function () {
     expect(store.url().getParam(PARAM.NAME)).toEqual("test");
   });
 
-  it("should save a car", async function () {
+  it("should save a car", async () => {
     const car: bs.AnyBlock = {
       cid: "cidKey" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const data = (await store.realGateway.getPlain(sthis, store.url(), car.cid.toString())).Ok();
+    const data = (await store.realGateway.getPlain({ loader }, store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
 
-describe("DataStore with a saved car", function () {
-  let store: bs.DataStore;
+describe("CarStore with a saved car", function () {
+  let store: bs.CarStore;
   let car: bs.AnyBlock;
 
   const sthis = ensureSuperThis();
+  const loader = mockLoader(sthis);
 
   afterEach(async () => {
     await store.close();
     await store.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(await mockLoader(sthis, "test2"));
-    await store.start();
+
+    const at = await createAttachedStores(noopUrl("test2"), loader);
+    store = at.stores.car;
+    await store.start(at.stores);
     car = {
       cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -72,19 +74,19 @@ describe("DataStore with a saved car", function () {
     await store.save(car);
   });
 
-  it("should have a car", async function () {
-    const data = (await store.realGateway.getPlain(sthis, store.url(), car.cid.toString())).Ok();
+  it("should have a car", async () => {
+    const data = (await store.realGateway.getPlain({ loader }, store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
-  it("should load a car", async function () {
+  it("should load a car", async () => {
     const loaded = await store.load(car.cid);
     expect(loaded.cid).toEqual(car.cid);
     expect(loaded.bytes.constructor.name).toEqual("Uint8Array");
     expect(loaded.bytes.toString()).toEqual(car.bytes.toString());
   });
 
-  it("should remove a car", async function () {
+  it("should remove a car", async () => {
     await store.remove(car.cid);
     const { e: error } = (await store.load(car.cid).catch((e: Error) => ({ e }))) as { e: NotFoundError };
     expect(error).toBeTruthy();
@@ -93,32 +95,33 @@ describe("DataStore with a saved car", function () {
 
 describe("MetaStore", function () {
   let store: bs.MetaStore;
-
   const sthis = ensureSuperThis();
+  const loader = mockLoader(sthis);
 
   afterEach(async () => {
     await store.close();
     await store.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test"));
-    await store.start();
+    const at = await createAttachedStores(noopUrl("test"), loader);
+    store = at.stores.meta;
+    await store.start(at.stores);
   });
 
   it("should have a name", function () {
     expect(store.url().getParam(PARAM.NAME)).toEqual("test");
   });
 
-  it("should save a header", async function () {
+  it("should save a header", async () => {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     const h: bs.DbMeta = {
       cars: [cid],
       // key: undefined,
     };
     await store.save(h);
-    const file = await store.realGateway.getPlain(sthis, store.url(), "main");
+    const file = await store.realGateway.getPlain({ loader }, store.url(), "main");
     const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
@@ -133,28 +136,30 @@ describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
   let cid: CID;
   const sthis = ensureSuperThis();
+  const loader = mockLoader(sthis);
 
   afterEach(async () => {
     await store.close();
     await store.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test-saved-header"));
-    await store.start();
+    const at = await createAttachedStores(noopUrl("test3-meta"), loader);
+    store = at.stores.meta;
+    await store.start(at.stores);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid] /*, key: undefined */ });
   });
 
-  // it("should load", async function () {
+  // it("should load", async () =>{
   //   expect(onload).toBeTruthy();
   //   expect(onload?.length).toEqual(1);
   //   expect(onload?.[0].cars.toString()).toEqual(cid.toString());
   // });
 
-  it("should have a header", async function () {
-    const bytes = await store.realGateway.getPlain(sthis, store.url(), "main");
+  it("should have a header", async () => {
+    const bytes = await store.realGateway.getPlain({ loader }, store.url(), "main");
     const data = sthis.txt.decode(bytes.Ok());
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];
@@ -171,7 +176,7 @@ describe("MetaStore with a saved header", function () {
     expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());
   });
 
-  it("should load a header", async function () {
+  it("should load a header", async () => {
     const loadeds = (await store.load()) as bs.DbMeta[];
     const loaded = loadeds[0];
     expect(loaded).toBeTruthy();

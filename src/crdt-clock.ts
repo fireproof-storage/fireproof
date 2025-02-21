@@ -3,24 +3,23 @@ import { root } from "@fireproof/vendor/@web3-storage/pail/crdt";
 import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { clockChangesSince } from "./crdt-helpers.js";
-import type { BaseBlockstore, CarTransaction } from "./blockstore/index.js";
-import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
+import type { DocUpdate, ClockHead, DocTypes, VoidFn, UnReg, SuperThis, BaseBlockstore, CarTransaction } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "./utils.js";
 
-export class CRDTClock<T extends DocTypes> {
+export class CRDTClockImpl {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
   // should go with making sure the local clock only references locally available blockstore on write
-  head: ClockHead = [];
+  readonly head: ClockHead = [];
 
-  readonly zoomers: Set<() => void> = new Set<() => void>();
-  readonly watchers: Set<(updates: DocUpdate<T>[]) => void> = new Set<(updates: DocUpdate<T>[]) => void>();
-  readonly emptyWatchers: Set<() => void> = new Set<() => void>();
+  readonly zoomers = new Map<string, VoidFn>();
+  readonly watchers = new Map<string, (updates: DocUpdate<DocTypes>[]) => void>();
+  readonly emptyWatchers = new Map<string, VoidFn>();
 
   readonly blockstore: BaseBlockstore;
 
-  readonly applyHeadQueue: ApplyHeadQueue<T>;
+  readonly applyHeadQueue: ApplyHeadQueue<DocTypes>;
   transaction?: CarTransaction;
 
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
@@ -35,17 +34,20 @@ export class CRDTClock<T extends DocTypes> {
   }
 
   readonly logger: Logger;
+  readonly sthis: SuperThis;
   constructor(blockstore: BaseBlockstore) {
+    this.sthis = blockstore.sthis;
     this.blockstore = blockstore;
     this.logger = ensureLogger(blockstore.sthis, "CRDTClock");
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this), this.logger);
   }
 
   setHead(head: ClockHead) {
-    this.head = head;
+    // this.head = head;
+    this.head.splice(0, this.head.length, ...head);
   }
 
-  async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<T>[]): Promise<void> {
+  async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<DocTypes>[]): Promise<void> {
     for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({
       newHead,
       prevHead,
@@ -55,71 +57,101 @@ export class CRDTClock<T extends DocTypes> {
     }
   }
 
-  async processUpdates(updatesAcc: DocUpdate<T>[], all: boolean, prevHead: ClockHead) {
+  async processUpdates(updatesAcc: DocUpdate<DocTypes>[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc;
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince<T>(throwFalsy(this.blockstore), this.head, prevHead, {}, this.logger);
+      const changes = await clockChangesSince<DocTypes>(this.blockstore, this.head, prevHead, {}, this.logger);
       internalUpdates = changes.result;
     }
     this.zoomers.forEach((fn) => fn());
     this.notifyWatchers(internalUpdates || []);
   }
 
-  notifyWatchers(updates: DocUpdate<T>[]) {
+  notifyWatchers(updates: DocUpdate<DocTypes>[]) {
     this.emptyWatchers.forEach((fn) => fn());
     this.watchers.forEach((fn) => fn(updates || []));
   }
 
-  onTick(fn: (updates: DocUpdate<T>[]) => void) {
-    this.watchers.add(fn);
+  onTick(fn: (updates: DocUpdate<DocTypes>[]) => void): UnReg {
+    const key = this.sthis.timeOrderedNextId().str;
+    this.watchers.set(key, fn);
+    return () => {
+      this.watchers.delete(key);
+    };
   }
 
-  onTock(fn: () => void) {
-    this.emptyWatchers.add(fn);
+  onTock(fn: VoidFn): UnReg {
+    const key = this.sthis.timeOrderedNextId().str;
+    this.emptyWatchers.set(key, fn);
+    return () => {
+      this.emptyWatchers.delete(key);
+    };
   }
 
-  onZoom(fn: () => void) {
-    this.zoomers.add(fn);
+  onZoom(fn: VoidFn): UnReg {
+    const key = this.sthis.timeOrderedNextId().str;
+    this.zoomers.set(key, fn);
+    return () => {
+      this.zoomers.delete(key);
+    };
   }
 
   async int_applyHead(newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) {
     // if (!(this.head && prevHead && newHead)) {
     //   throw new Error("missing head");
     // }
+
+    console.log("int_applyHead:1");
     const noLoader = !localUpdates;
 
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
+    console.log("int_applyHead:2");
     newHead = sortClockHead(newHead);
+    console.log("int_applyHead:3");
     if (compareClockHeads(ogHead, newHead)) {
+      console.log("int_applyHead:4");
       return;
     }
+    console.log("int_applyHead:5");
     const ogPrev = sortClockHead(prevHead);
+    console.log("int_applyHead:6");
     if (compareClockHeads(ogHead, ogPrev)) {
+      console.log("int_applyHead:7");
       this.setHead(newHead);
       return;
     }
 
     // const noLoader = this.head.length === 1 && !updates?.length
+    console.log("int_applyHead:8");
     if (!this.blockstore) {
       throw this.logger.Error().Msg("missing blockstore").AsError();
     }
+    console.log("int_applyHead:9");
     await validateBlocks(this.logger, newHead, this.blockstore);
+    console.log("int_applyHead:10");
     if (!this.transaction) {
       this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
     }
     const tblocks = this.transaction;
 
+    console.log("int_applyHead:11");
     const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
+    console.log("int_applyHead:12", tblocks, advancedHead);
     const result = await root(tblocks, advancedHead);
+    console.log("int_applyHead:12.x", result.additions.length);
     for (const { cid, bytes } of [
       ...result.additions,
       // ...result.removals
     ]) {
+      console.log("int_applyHead:12.y", result.additions.length);
       tblocks.putSync(cid, bytes);
     }
+    console.log("int_applyHead:12.1");
     if (!noLoader) {
+      console.log("int_applyHead:13");
       await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
+      console.log("int_applyHead:14");
       this.transaction = undefined;
     }
     this.setHead(advancedHead);
@@ -148,9 +180,11 @@ function compareClockHeads(head1: ClockHead, head2: ClockHead) {
 async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTransaction, head: ClockHead) {
   for (const cid of newHead) {
     try {
+      console.log("advanceBlocks:1", cid.toString(), newHead.length);
       head = await advance(tblocks, head, cid);
+      console.log("advanceBlocks:2", cid.toString(), head);
     } catch (e) {
-      logger.Debug().Err(e).Msg("failed to advance head");
+      logger.Error().Err(e).Msg("failed to advance head");
       // console.log('failed to advance head:', cid.toString(), e)
       continue;
     }

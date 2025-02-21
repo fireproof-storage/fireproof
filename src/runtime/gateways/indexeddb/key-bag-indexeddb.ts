@@ -1,8 +1,8 @@
 import { IDBPDatabase, openDB } from "idb";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
-import { SuperThis, rt } from "@fireproof/core";
+import { type SuperThis, rt } from "@fireproof/core";
 
-export class KeyBagProviderIndexDB implements rt.kb.KeyBagProvider {
+export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
   readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
 
   readonly dbName: string;
@@ -31,7 +31,7 @@ export class KeyBagProviderIndexDB implements rt.kb.KeyBagProvider {
     });
   }
 
-  async get(id: string): Promise<rt.kb.KeyItem | undefined> {
+  async get(id: string): Promise<rt.kb.KeysItem | rt.kb.V1StorageKeyItem | undefined> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readonly");
     const keyItem = await tx.objectStore("bag").get(id);
@@ -42,10 +42,10 @@ export class KeyBagProviderIndexDB implements rt.kb.KeyBagProvider {
     return keyItem;
   }
 
-  async set(id: string, item: rt.kb.KeyItem): Promise<void> {
+  async set(item: rt.kb.KeysItem): Promise<void> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readwrite");
-    await tx.objectStore("bag").put(item, id);
+    await tx.objectStore("bag").put(item, item.name);
     await tx.done;
   }
 }

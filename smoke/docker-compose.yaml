@@ -9,7 +9,9 @@ services:
     volumes:
       - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage/data
   esm-sh:
-    image: "ghcr.io/esm-dev/esm.sh:latest"
+    image: "ghcr.io/esm-dev/esm.sh:v136"
+    # image: "ghcr.io/esm-dev/esm.sh:latest"
+    # image: "ghcr.io/esm-dev/esm.sh:v135_7"
     environment:
       NPM_REGISTRY: http://registry:4873/
     volumes:
@@ -19,7 +21,7 @@ services:
   wait-for-ready:
     image: curlimages/curl
     #command: "sleep 86400"
-    entrypoint: ["/bin/sh", "-c", "--", "while true; do curl -f http://registry:4873; curl -f http://esm-sh:8080; sleep 30; done;"]
+    entrypoint: ["/bin/sh", "-c", "--", "while true; do curl -f http://registry:4873; curl -f http://esm-sh:8080; sleep 10; done;"]
     depends_on:
       registry:
         condition: service_started

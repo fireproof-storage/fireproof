@@ -7,17 +7,27 @@ import type {
   DocWithId,
   IndexKeyType,
   IndexRow,
-  Ledger,
   MapFn,
   QueryOpts,
+  Database,
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { AllDocsQueryOpts, ChangesOptions, ClockHead } from "@fireproof/core";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
   readonly rows: IndexRow<K, T, R>[];
+  /** @internal */
+  readonly length: number;
+  /** @internal */
+  map<U>(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U): U[];
+  /** @internal */
+  filter(predicate: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean): DocWithId<T>[];
+  /** @internal */
+  forEach(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void): void;
+  /** @internal */
+  [Symbol.iterator](): Iterator<DocWithId<T>>;
 }
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
@@ -49,36 +59,53 @@ type StoreDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<Do
 
 type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DocResponse>;
 
-export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
+type UseDocumentResultTuple<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
+
+interface UseDocumentResultObject<T extends DocTypes> {
+  doc: DocWithId<T>;
+  merge: (newDoc: Partial<T>) => void;
+  replace: (newDoc: T) => void;
+  reset: () => void;
+  refresh: () => Promise<void>;
+  save: StoreDocFn<T>;
+  remove: DeleteDocFn<T>;
+  submit: (e?: Event) => Promise<void>;
+}
+
+export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
 
 export type UseDocumentInitialDocOrFn<T extends DocTypes> = DocSet<T> | (() => DocSet<T>);
 export type UseDocument = <T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>) => UseDocumentResult<T>;
 
 export interface UseFireproof {
-  readonly ledger: Ledger;
+  readonly database: Database;
   /**
    * ## Summary
    *
-   * React hook that provides the ability to create/update/save new Fireproof documents into your custom Fireproof ledger.
-   * The creation occurs when you do not pass in an `_id` as part of your initial document -- the ledger will assign a new
+   * React hook that provides the ability to create/update/save new Fireproof documents into your custom Fireproof database.
+   * The creation occurs when you do not pass in an `_id` as part of your initial document -- the database will assign a new
    * one when you call the provided `save` handler. The hook also provides generics support so you can inline your custom type into
    * the invocation to receive type-safety and auto-complete support in your IDE.
    *
    * ## Usage
    *
    * ```tsx
-   * const [todo, setTodo, saveTodo] = useDocument<Todo>({
+   * const todo = useDocument<Todo>({
    *   text: '',
    *   date: Date.now(),
    *   completed: false
    * })
+   * // Access via object properties
+   * todo.doc // The current document
+   * todo.merge({ completed: true }) // Update specific fields
+   * todo.replace({ text: 'new', date: Date.now(), completed: false }) // Replace entire doc
+   * todo.save() // Save changes
+   * todo.remove() // Delete document
+   * todo.reset() // Reset to initial state
+   * todo.refresh() // Refresh from database
    *
-   * const [doc, setDoc, saveDoc] = useDocument<Customer>({
-   *   _id: `${props.customerId}-profile`, // you can imagine `customerId` as a prop passed in
-   *   name: "",
-   *   company: "",
-   *   startedAt: Date.now()
-   * })
+   * // Or use tuple destructuring for legacy compatibility
+   * const [doc, updateDoc, saveDoc, removeDoc] = todo
    * ```
    *
    * ## Overview
@@ -108,7 +135,7 @@ export interface UseFireproof {
   readonly useLiveQuery: UseLiveQuery;
   /**
    * ## Summary
-   * React hook that provides access to all documents in the ledger, sorted by `_id`.
+   * React hook that provides access to all documents in the database, sorted by `_id`.
    *
    * ## Usage
    * ```tsx
@@ -124,13 +151,12 @@ export interface UseFireproof {
   readonly useAllDocs: UseAllDocs;
   /**
    * ## Summary
-   * React hook that provides access to all new documents in the ledger added since the last time the changes was called
+   * React hook that provides access to all new documents in the database added since the last time the changes was called
    *
    * ## Usage
    * ```tsx
    * const result = useChanges(prevresult.clock,{limit:10}); // with options
    * const result = useChanges(); // without options
-   * const ledger = useChanges.ledger; // underlying "useFireproof" ledger accessor
    * ```
    *
    * ## Overview
@@ -146,99 +172,164 @@ export interface UseFireproof {
  */
 export const FireproofCtx = {} as UseFireproof;
 
+function deepClone<T>(value: T): T {
+  if (typeof structuredClone !== "undefined") {
+    return structuredClone(value);
+  } else {
+    // Fallback if structuredClone is not available (older browsers, older Node versions, etc.)
+    return JSON.parse(JSON.stringify(value));
+  }
+}
+
 /**
  *
  * ## Summary
  *
- * React hook to create a custom-named Fireproof ledger and provides the utility hooks to query against it.
+ * React hook to create a custom-named Fireproof database and provides the utility hooks to query against it.
  *
  * ## Usage
  * ```tsx
- * const { ledger, useLiveQuery, useDocument } = useFireproof("dbname");
- * const { ledger, useLiveQuery, useDocument } = useFireproof("dbname", { ...options });
+ * const { database, useLiveQuery, useDocument } = useFireproof("dbname");
+ * const { database, useLiveQuery, useDocument } = useFireproof("dbname", { ...options });
  * ```
  *
  * ## Overview
  *
- * TL;DR: Only use this hook if you need to configure a ledger name other than the default `useFireproof`.
+ * TL;DR: Only use this hook if you need to configure a database name other than the default `useFireproof`.
  *
  * For most applications, using the `useLiveQuery` or `useDocument` hooks exported from `use-fireproof` should
- * suffice for the majority of use-cases. Under the hood, they act against a ledger named `useFireproof` instantiated with
- * default configurations. However, if you need to do a custom ledger setup or configure a ledger name more to your liking
+ * suffice for the majority of use-cases. Under the hood, they act against a database named `useFireproof` instantiated with
+ * default configurations. However, if you need to do a custom database setup or configure a database name more to your liking
  * than the default `useFireproof`, then use `useFireproof` as it exists for that purpose. It will provide you with the
- * custom ledger accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
- * custom ledger.
+ * custom database accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
+ * custom database.
  *
  */
-export function useFireproof(name: string | Ledger = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  const ledger = typeof name === "string" ? fireproof(name, config) : name;
+export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
+  const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument<T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
+  const updateHappenedRef = useRef(false);
+
+  function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
     } else {
-      initialDoc = initialDocOrFn;
+      initialDoc = initialDocOrFn ?? ({} as T);
     }
 
-    // We purposely refetch the docId everytime to check if it has changed
-    const docId = initialDoc._id ?? "";
+    const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
-    // We do not want to force consumers to memoize their initial document so we do it for them.
-    // We use the stringified generator function to ensure that the memoization is stable across renders.
-    // const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
     const [doc, setDoc] = useState(initialDoc);
 
-    const refreshDoc = useCallback(async () => {
-      // todo add option for mvcc checks
-      const doc = docId ? await ledger.get<T>(docId).catch(() => initialDoc) : initialDoc;
-      setDoc(doc);
-    }, [docId]);
+    const refresh = useCallback(async () => {
+      const gotDoc = doc._id ? await database.get<T>(doc._id).catch(() => initialDoc) : initialDoc;
+      setDoc(gotDoc);
+    }, [doc._id]);
 
-    const saveDoc: StoreDocFn<T> = useCallback(
+    const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        const res = await ledger.put(existingDoc ?? doc);
-        // If the document was created, then we need to update the local state with the new `_id`
-        if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
+        updateHappenedRef.current = false;
+        const toSave = existingDoc ?? doc;
+        const res = await database.put(toSave);
+
+        if (!updateHappenedRef.current && !doc._id && !existingDoc) {
+          setDoc((d) => ({ ...d, _id: res.id }));
+        }
+
         return res;
       },
       [doc],
     );
 
-    const deleteDoc: DeleteDocFn<T> = useCallback(
+    const remove: DeleteDocFn<T> = useCallback(
       async (existingDoc) => {
-        const id = existingDoc?._id ?? docId;
-        const doc = await ledger.get<T>(id).catch(() => undefined);
-        if (!doc) throw ledger.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
-        const res = await ledger.del(id);
+        const id = existingDoc?._id ?? doc._id;
+        if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
+        const gotDoc = await database.get<T>(id).catch(() => undefined);
+        if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
+        const res = await database.del(id);
         setDoc(initialDoc);
         return res;
       },
-      [docId, initialDoc],
+      [doc, initialDoc],
     );
 
-    const updateDoc: UpdateDocFn<T> = useCallback(
-      (newDoc, opts = { replace: false, reset: false }) => {
-        if (!newDoc) return void (opts.reset ? setDoc(initialDoc) : refreshDoc());
-        setDoc((d) => (opts.replace ? (newDoc as DocWithId<T>) : { ...d, ...newDoc }));
-      },
-      [refreshDoc, initialDoc],
-    );
+    // New granular update methods
+    const merge = useCallback((newDoc: Partial<T>) => {
+      updateHappenedRef.current = true;
+      setDoc((prev) => ({ ...prev, ...newDoc }));
+    }, []);
 
-    useEffect(() => {
-      if (!docId) return;
-      return ledger.subscribe((changes) => {
-        if (changes.find((c) => c._id === docId)) {
-          void refreshDoc(); // todo use change.value
+    const replace = useCallback((newDoc: T) => {
+      updateHappenedRef.current = true;
+      setDoc(newDoc);
+    }, []);
+
+    const reset = useCallback(() => {
+      updateHappenedRef.current = true;
+      setDoc({ ...originalInitialDoc });
+    }, [originalInitialDoc]);
+
+    // Legacy-compatible updateDoc
+    const updateDoc = useCallback(
+      (newDoc?: DocSet<T>, opts = { replace: false, reset: false }) => {
+        if (!newDoc) {
+          return opts.reset ? reset() : refresh();
         }
-      });
-    }, [docId, refreshDoc]);
+        return opts.replace ? replace(newDoc as T) : merge(newDoc);
+      },
+      [refresh, reset, replace, merge],
+    );
 
     useEffect(() => {
-      void refreshDoc();
-    }, [refreshDoc]);
+      if (!doc._id) return;
+      return database.subscribe((changes) => {
+        if (updateHappenedRef.current) {
+          return;
+        }
+        if (changes.find((c) => c._id === doc._id)) {
+          void refresh();
+        }
+      }, true);
+    }, [doc._id, refresh]);
 
-    return [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc];
+    useEffect(() => {
+      void refresh();
+    }, [refresh]);
+
+    const submit = useCallback(
+      async (e?: Event) => {
+        if (e?.preventDefault) e.preventDefault();
+        await save();
+        reset();
+      },
+      [save, reset],
+    );
+
+    // Primary Object API with both new and legacy methods
+    const apiObject = {
+      doc: { ...doc } as DocWithId<T>,
+      merge,
+      replace,
+      reset,
+      refresh,
+      save,
+      remove,
+      submit,
+    };
+
+    // Make the object properly iterable
+    const tuple = [{ ...doc }, updateDoc, save, remove, reset, refresh];
+    Object.assign(apiObject, tuple);
+    Object.defineProperty(apiObject, Symbol.iterator, {
+      enumerable: false,
+      value: function* () {
+        yield* tuple;
+      },
+    });
+
+    return apiObject as UseDocumentResult<T>;
   }
 
   function useLiveQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
@@ -246,22 +337,39 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
-    const [result, setResult] = useState<LiveQueryResult<T, K, R>>(() => ({
-      rows: initialRows,
-      docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
-    }));
+    const [result, setResult] = useState<LiveQueryResult<T, K, R>>(() => {
+      const docs = initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r);
+      return {
+        rows: initialRows,
+        docs,
+        length: docs.length,
+        map: (fn) => docs.map(fn),
+        filter: (fn) => docs.filter(fn),
+        forEach: (fn) => docs.forEach(fn),
+        [Symbol.iterator]: () => docs[Symbol.iterator](),
+      };
+    });
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
     const refreshRows = useCallback(async () => {
-      const res = await ledger.query<K, T, R>(mapFn, query);
-      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
+      const res = await database.query<K, T, R>(mapFn, query);
+      const docs = res.rows.map((r) => r.doc as DocWithId<T>).filter((r): r is DocWithId<T> => !!r);
+      setResult({
+        ...res,
+        docs,
+        length: docs.length,
+        map: (fn) => docs.map(fn),
+        filter: (fn) => docs.filter(fn),
+        forEach: (fn) => docs.forEach(fn),
+        [Symbol.iterator]: () => docs[Symbol.iterator](),
+      });
     }, [mapFnString, queryString]);
 
     useEffect(() => {
       refreshRows(); // Initial data fetch
-      return ledger.subscribe(refreshRows);
+      return database.subscribe(refreshRows);
     }, [refreshRows]);
 
     return result;
@@ -275,13 +383,13 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
     const queryString = useMemo(() => JSON.stringify(query), [query]);
 
     const refreshRows = useCallback(async () => {
-      const res = await ledger.allDocs<T>(query);
+      const res = await database.allDocs<T>(query);
       setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
     }, [queryString]);
 
     useEffect(() => {
       refreshRows(); // Initial data fetch
-      return ledger.subscribe(refreshRows);
+      return database.subscribe(refreshRows);
     }, [refreshRows]);
 
     return result;
@@ -295,17 +403,17 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
     const queryString = useMemo(() => JSON.stringify(opts), [opts]);
 
     const refreshRows = useCallback(async () => {
-      const res = await ledger.changes<T>(since, opts);
+      const res = await database.changes<T>(since, opts);
       setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
     }, [since, queryString]);
 
     useEffect(() => {
       refreshRows(); // Initial data fetch
-      return ledger.subscribe(refreshRows);
+      return database.subscribe(refreshRows);
     }, [refreshRows]);
 
     return result;
   }
 
-  return { ledger, useLiveQuery, useDocument, useAllDocs, useChanges };
+  return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
 }

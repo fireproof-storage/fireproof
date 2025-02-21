@@ -8,12 +8,10 @@ import { EventFetcher, vis } from "@fireproof/vendor/@web3-storage/pail/clock";
 import * as Batch from "@fireproof/vendor/@web3-storage/pail/crdt/batch";
 import {
   type EncryptedBlockstore,
-  CarTransaction,
   BlockFetcher,
   TransactionMeta,
   AnyLink,
   StoreRuntime,
-  BaseBlockstore,
   CompactFetcher,
 } from "./blockstore/index.js";
 import {
@@ -29,9 +27,12 @@ import {
   type DocWithId,
   type DocTypes,
   throwFalsy,
+  CarTransaction,
+  BaseBlockstore,
 } from "./types.js";
 import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
+import { CarTransactionImpl } from "./blockstore/transaction.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
@@ -64,11 +65,13 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
     for (const update of updates) {
+      console.log("applyBulkUpdateToCrdt-batch", update.id);
       const link = await writeDocContent(store, tblocks, update, logger);
       await batch.put(toString(update.id, logger), link);
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
+    console.log("applyBulkUpdateToCrdt-single", updates[0].id);
     const link = await writeDocContent(store, tblocks, updates[0], logger);
     result = await put(tblocks, head, toString(updates[0].id, logger), link);
   }
@@ -80,10 +83,11 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
       // ...result.removals,
       result.event,
     ]) {
+      console.log("applyBulkUpdateToCrdt-event", cid.toString());
       tblocks.putSync(cid, bytes);
     }
   }
-  return { head: result.head } as CRDTMeta;
+  return { head: result.head } satisfies CRDTMeta;
 }
 
 // this whole thing can get pulled outside of the write queue
@@ -121,9 +125,9 @@ async function processFileset(
   blocks: CarTransaction,
   files: DocFiles /*, publicFiles = false */,
 ) {
-  const dbBlockstore = blocks.parent as EncryptedBlockstore;
+  const dbBlockstore = blocks.parent as unknown as EncryptedBlockstore;
   if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, ledger name is required").AsError();
-  const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
+  const t = new CarTransactionImpl(dbBlockstore); // maybe this should move to encrypted-blockstore
   const didPut = [];
   // let totalSize = 0
   for (const filename in files) {
@@ -167,9 +171,13 @@ export async function getValueFromCrdt<T extends DocTypes>(
   logger: Logger,
 ): Promise<DocValue<T>> {
   if (!head.length) throw logger.Debug().Msg("Getting from an empty ledger").AsError();
+  // console.log("getValueFromCrdt-1", head, key)
   const link = await get(blocks, head, key);
+  // console.log("getValueFromCrdt-2", key)
   if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
-  return await getValueFromLink(blocks, link, logger);
+  const ret = await getValueFromLink<T>(blocks, link, logger);
+  // console.log("getValueFromCrdt-3", key)
+  return ret;
 }
 
 export function readFiles<T extends DocTypes>(blocks: BaseBlockstore, { doc }: Partial<DocValue<T>>) {

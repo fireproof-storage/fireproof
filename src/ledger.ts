@@ -1,42 +1,35 @@
-import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
-import { defaultWriteQueueOpts, WriteQueue, writeQueue, WriteQueueParams } from "./write-queue.js";
-import { CRDT, HasCRDT } from "./crdt.js";
-import { index } from "./indexer.js";
-import {
-  type DocUpdate,
-  type ClockHead,
-  type ConfigOpts,
-  type MapFn,
-  type QueryOpts,
-  type ChangesOptions,
-  type DocSet,
-  type DocWithId,
-  type IndexKeyType,
-  type ListenerFn,
-  type DocResponse,
-  type BulkResponse,
-  type ChangesResponse,
-  type DocTypes,
-  type IndexRows,
-  type DocFragment,
-  type ChangesResponseRow,
-  type CRDTMeta,
-  type AllDocsQueryOpts,
-  type AllDocsResponse,
-  type SuperThis,
-  PARAM,
+import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
+import type {
+  DocUpdate,
+  ConfigOpts,
+  DocWithId,
+  ListenerFn,
+  DocTypes,
+  SuperThis,
+  Database,
+  Ledger,
+  WriteQueue,
+  CRDT,
+  LedgerOpts,
+  Attachable,
+  Attached,
 } from "./types.js";
-import { DbMeta, SerdeGatewayInterceptor, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
-import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
+import { PARAM } from "./types.js";
+import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
+import { ensureLogger, ensureSuperThis, ensureURIDefaults, toSortedArray } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
-import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
+import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
+import { DatabaseImpl } from "./database.js";
+import { CRDTImpl } from "./crdt.js";
+import { Context } from "./context.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
-export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
+export function keyConfigOpts(sthis: SuperThis, name: string, opts?: ConfigOpts): string {
   return JSON.stringify(
     toSortedArray({
       name,
@@ -45,67 +38,15 @@ export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts
   );
 }
 
-export interface LedgerOpts {
-  readonly name?: string;
-  // readonly public?: boolean;
-  readonly meta?: DbMeta;
-  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
-
-  readonly writeQueue: WriteQueueParams;
-  // readonly factoryUnreg?: () => void;
-  // readonly persistIndexes?: boolean;
-  // readonly autoCompact?: number;
-  readonly storeUrls: StoreURIRuntime;
-  readonly storeEnDe: StoreEnDeFile;
-  readonly keyBag: KeyBagRuntime;
-  // readonly threshold?: number;
-}
-
-export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasCRDT<DT> {
-  // readonly name: string;
-  readonly logger: Logger;
-  readonly sthis: SuperThis;
-  readonly id: string;
-
-  readonly name: string;
-
-  onClosed(fn: () => void): void;
-
-  close(): Promise<void>;
-  destroy(): Promise<void>;
-  ready(): Promise<void>;
-
-  get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
-  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
-  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
-  del(id: string): Promise<DocResponse>;
-  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
-  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
-  allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }>;
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
-
-  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
-    opts?: QueryOpts<K>,
-  ): Promise<IndexRows<K, T, R>>;
-  compact(): Promise<void>;
-}
-
-export function isLedger<T extends DocTypes = NonNullable<unknown>>(db: unknown): db is Ledger<T> {
+export function isLedger(db: unknown): db is Ledger {
   return db instanceof LedgerImpl || db instanceof LedgerShell;
 }
 
-export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: string | undefined, opts?: ConfigOpts): Ledger<T> {
+export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   const sthis = ensureSuperThis(opts);
-  return new LedgerShell<T>(
+  return new LedgerShell(
     ledgers.get(keyConfigOpts(sthis, name, opts)).once((key) => {
-      const db = new LedgerImpl<T>(sthis, {
+      const db = new LedgerImpl(sthis, {
         name,
         meta: opts?.meta,
         keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
@@ -126,11 +67,28 @@ export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: s
   );
 }
 
-export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements Ledger<DT> {
-  readonly ref: LedgerImpl<DT>;
-  constructor(ref: LedgerImpl<DT>) {
+export class LedgerShell implements Ledger {
+  readonly ref: LedgerImpl;
+  readonly writeQueue: WriteQueue<DocUpdate<DocTypes>>;
+  readonly name: string;
+
+  constructor(ref: LedgerImpl) {
     this.ref = ref;
+    this.writeQueue = ref.writeQueue;
+    this.name = ref.name;
     ref.addShell(this);
+  }
+
+  attach(a: Attachable): Promise<Attached> {
+    return this.ref.attach(a);
+  }
+
+  get opts(): LedgerOpts {
+    return this.ref.opts;
+  }
+
+  get context(): Context {
+    return this.ref.context;
   }
 
   get id(): string {
@@ -142,14 +100,11 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   get sthis(): SuperThis {
     return this.ref.sthis;
   }
-  get crdt(): CRDT<DT> {
+  get crdt(): CRDT {
     return this.ref.crdt;
   }
 
-  get name(): string {
-    return this.ref.name;
-  }
-  onClosed(fn: () => void): void {
+  onClosed(fn: () => void): () => void {
     return this.ref.onClosed(fn);
   }
   close(): Promise<void> {
@@ -161,72 +116,52 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   ready(): Promise<void> {
     return this.ref.ready();
   }
-  get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    return this.ref.get(id);
-  }
-  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
-    return this.ref.put(doc);
-  }
-  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
-    return this.ref.bulk(docs);
-  }
-  del(id: string): Promise<DocResponse> {
-    return this.ref.del(id);
-  }
-  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>> {
-    return this.ref.changes(since, opts);
-  }
-  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> {
-    return this.ref.allDocs(opts);
-  }
-  allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }> {
-    return this.ref.allDocuments();
-  }
+
+  // asDB(): Database {
+  //   return this.ref.asDB();
+  // }
+
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
     return this.ref.subscribe(listener, updates);
   }
-  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
-    opts?: QueryOpts<K>,
-  ): Promise<IndexRows<K, T, R>> {
-    return this.ref.query(field, opts);
-  }
-  compact(): Promise<void> {
-    return this.ref.compact();
-  }
 }
 
-class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<DT> {
+class LedgerImpl implements Ledger {
   // readonly name: string;
   readonly opts: LedgerOpts;
 
   _listening = false;
-  readonly _listeners = new Set<ListenerFn<DT>>();
-  readonly _noupdate_listeners = new Set<ListenerFn<DT>>();
-  readonly crdt: CRDT<DT>;
-  readonly _writeQueue: WriteQueue<DT>;
+  readonly _listeners = new Set<ListenerFn<DocTypes>>();
+  readonly _noupdate_listeners = new Set<ListenerFn<DocTypes>>();
+  readonly crdt: CRDT;
+  readonly writeQueue: WriteQueue<DocUpdate<DocTypes>>;
   // readonly blockstore: BaseBlockstore;
 
-  readonly shells: Set<LedgerShell<DT>> = new Set<LedgerShell<DT>>();
+  readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  addShell(shell: LedgerShell<DT>) {
+  readonly context = new Context();
+
+  get name(): string {
+    return this.opts.name;
+    // this.opts.storeUrls.data.data.getParam(PARAM.NAME) ?? "default";
+  }
+
+  addShell(shell: LedgerShell) {
     this.shells.add(shell);
   }
 
-  readonly _onClosedFns = new Set<() => void>();
-  onClosed(fn: () => void) {
-    this._onClosedFns.add(fn);
+  readonly _onClosedFns = new Map<string, () => void>();
+  onClosed(fn: () => void): () => void {
+    const id = this.sthis.nextId().str;
+    this._onClosedFns.set(id, fn);
+    return () => {
+      this._onClosedFns.delete(id);
+    };
   }
   async close() {
     throw this.logger.Error().Str("db", this.name).Msg(`use shellClose`).AsError();
   }
-  async shellClose(db: LedgerShell<DT>) {
+  async shellClose(db: LedgerShell) {
     if (!this.shells.has(db)) {
       throw this.logger.Error().Str("db", this.name).Msg(`LedgerShell mismatch`).AsError();
     }
@@ -234,7 +169,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     if (this.shells.size === 0) {
       await this.ready();
       await this.crdt.close();
-      await this._writeQueue.close();
+      await this.writeQueue.close();
       this._onClosedFns.forEach((fn) => fn());
     }
     // await this.blockstore.close();
@@ -266,102 +201,27 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
-    this.crdt = new CRDT(this.sthis, this.opts);
-    this._writeQueue = writeQueue(this.sthis, async (updates: DocUpdate<DT>[]) => this.crdt.bulk(updates), this.opts.writeQueue);
+    this.crdt = new CRDTImpl(this.sthis, this.opts);
+    this.writeQueue = writeQueue(
+      this.sthis,
+      async (updates: DocUpdate<DocTypes>[]) => this.crdt.bulk(updates),
+      this.opts.writeQueue,
+    );
     this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
-  get name(): string {
-    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
-  }
-
-  async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
-
+  async attach(a: Attachable): Promise<Attached> {
     await this.ready();
-    this.logger.Debug().Str("id", id).Msg("get");
-    const got = await this.crdt.get(id).catch((e) => {
-      throw new NotFoundError(`Not found: ${id} - ${e.message}`);
-    });
-    if (!got) throw new NotFoundError(`Not found: ${id}`);
-    const { doc } = got;
-    return { ...(doc as unknown as DocWithId<T>), _id: id };
+    return this.crdt.blockstore.loader.attach(a);
   }
 
-  async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
-    await this.ready();
-    this.logger.Debug().Str("id", doc._id).Msg("put");
-    const { _id, ...value } = doc;
-    const docId = _id || this.sthis.timeOrderedNextId().str;
-    const result = (await this._writeQueue.push({
-      id: docId,
-      value: {
-        ...(value as unknown as DocSet<DT>),
-        _id: docId,
-      },
-    })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
-  }
-
-  async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
-    await this.ready();
-
-    const updates = docs.map((doc) => {
-      const id = doc._id || this.sthis.timeOrderedNextId().str;
-      return {
-        id,
-        value: {
-          ...(doc as unknown as DocSet<DT>),
-          _id: id,
-        },
-      };
-    });
-    const result = (await this._writeQueue.bulk(updates)) as CRDTMeta;
-    return { ids: updates.map((u) => u.id), clock: result.head, name: this.name } as BulkResponse;
-  }
-
-  async del(id: string): Promise<DocResponse> {
-    await this.ready();
-    this.logger.Debug().Str("id", id).Msg("del");
-    const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head, name: this.name } as DocResponse;
-  }
-
-  async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
-    await this.ready();
-    this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
-    const { result, head } = await this.crdt.changes(since, opts);
-    const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-      clock,
-    }));
-    return { rows, clock: head, name: this.name };
-  }
-
-  async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
-    await this.ready();
-    void opts;
-    this.logger.Debug().Msg("allDocs");
-    const { result, head } = await this.crdt.allDocs();
-    const rows = result.map(({ id: key, value, del }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-    }));
-    return { rows, clock: head, name: this.name };
-  }
-
-  async allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }> {
-    return this.allDocs<T>();
-  }
+  // readonly _asDb = new ResolveOnce<Database>();
+  // asDB(): Database {
+  //   return this._asDb.once(() => new DatabaseImpl(this));
+  // }
 
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
+    this.ready();
     this.logger.Debug().Bool("updates", updates).Msg("subscribe");
     if (updates) {
       if (!this._listening) {
@@ -382,39 +242,19 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     }
   }
 
-  // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
-    opts: QueryOpts<K> = {},
-  ): Promise<IndexRows<K, T, R>> {
-    await this.ready();
-    this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
-    const _crdt = this.crdt as unknown as CRDT<T>;
-    const idx =
-      typeof field === "string"
-        ? index<K, T, R>({ crdt: _crdt }, field)
-        : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
-    return await idx.query(opts);
-  }
-
-  async compact() {
-    await this.ready();
-    await this.crdt.compact();
-  }
-
-  async _notify(updates: DocUpdate<NonNullable<unknown>>[]) {
+  private async _notify(updates: DocUpdate<DocTypes>[]) {
     await this.ready();
     if (this._listeners.size) {
-      const docs: DocWithId<NonNullable<unknown>>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
+      const docs: DocWithId<DocTypes>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
-        await (async () => await listener(docs as DocWithId<DT>[]))().catch((e: Error) => {
+        await (async () => await listener(docs as DocWithId<DocTypes>[]))().catch((e: Error) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
     }
   }
 
-  async _no_update_notify() {
+  private async _no_update_notify() {
     await this.ready();
     if (this._noupdate_listeners.size) {
       for (const listener of this._noupdate_listeners) {
@@ -426,42 +266,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   }
 }
 
-function defaultURI(
-  sthis: SuperThis,
-  curi: CoerceURI | undefined,
-  uri: URI,
-  store: "data" | "meta" | "wal",
-  ctx?: Partial<{
-    readonly idx: boolean;
-    readonly file: boolean;
-  }>,
-): URI {
-  ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store);
-  if (!ret.hasParam(PARAM.NAME)) {
-    const name = sthis.pathOps.basename(ret.URI().pathname);
-    if (!name) {
-      throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-    }
-    ret.setParam(PARAM.NAME, name);
-  }
-  if (ctx.idx) {
-    ret.defParam(PARAM.INDEX, "idx");
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${store}-idx@`);
-  } else {
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${store}@`);
-  }
-  if (store === "data") {
-    if (ctx.file) {
-      // ret.defParam(PARAM.SUFFIX, "");
-    } else {
-      ret.defParam(PARAM.SUFFIX, ".car");
-    }
-  }
-  return ret.URI();
-}
-
-export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
+export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
   sopts = sopts || {};
   if (!sopts.base) {
     const fp_env = sthis.env.get("FP_STORAGE_URL");
@@ -471,11 +276,9 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
       sopts = { ...sopts, base: getDefaultURI(sthis).build().setParam(PARAM.URL_GEN, "default") };
     }
   }
-  const bbase = BuildURI.from(sopts.base);
-  if (name) {
-    bbase.setParam(PARAM.NAME, name);
-  }
-  const base = bbase.URI();
+  const base = URI.from(sopts.base);
+  // bbase.setParam(PARAM.NAME, name);
+  // const base = bbase.URI();
   // readonly public?: boolean;
   // readonly meta?: DbMeta;
   // readonly persistIndexes?: boolean;
@@ -483,38 +286,23 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
   // readonly threshold?: number;
   return {
     idx: {
-      data: defaultURI(sthis, sopts.idx?.data, base, "data", { idx: true }),
-      file: defaultURI(sthis, sopts.idx?.data, base, "data", { file: true, idx: true }),
-      meta: defaultURI(sthis, sopts.idx?.meta, base, "meta", { idx: true }),
-      wal: defaultURI(sthis, sopts.idx?.wal, base, "wal", { idx: true }),
+      car: ensureURIDefaults(sthis, name, sopts.idx?.car ?? sopts.data?.car, base, "car", { idx: true }),
+      file: ensureURIDefaults(sthis, name, sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car, base, "file", {
+        file: true,
+        idx: true,
+      }),
+      meta: ensureURIDefaults(sthis, name, sopts.idx?.meta ?? sopts.data?.meta, base, "meta", { idx: true }),
+      wal: ensureURIDefaults(sthis, name, sopts.idx?.wal ?? sopts.data?.wal, base, "wal", { idx: true }),
     },
     data: {
-      data: defaultURI(sthis, sopts.data?.data, base, "data"),
-      file: defaultURI(sthis, sopts.data?.data, base, "data", { file: true }),
-      meta: defaultURI(sthis, sopts.data?.meta, base, "meta"),
-      wal: defaultURI(sthis, sopts.data?.wal, base, "wal"),
+      car: ensureURIDefaults(sthis, name, sopts.data?.car, base, "car"),
+      file: ensureURIDefaults(sthis, name, sopts.data?.file ?? sopts.data?.car, base, "file", { file: true }),
+      meta: ensureURIDefaults(sthis, name, sopts.data?.meta, base, "meta"),
+      wal: ensureURIDefaults(sthis, name, sopts.data?.wal, base, "wal"),
     },
   };
 }
 
-export function fireproof(name: string, opts?: ConfigOpts): Ledger {
-  return LedgerFactory(name, opts);
-}
-
-function makeName(fnString: string) {
-  const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g;
-  let found: RegExpExecArray | null = null;
-  const matches = Array.from(fnString.matchAll(regex), (match) => match[1].trim());
-  if (matches.length === 0) {
-    found = /=>\s*{?\s*([^{}]+)\s*}?/.exec(fnString);
-    if (found && found[1].includes("return")) {
-      found = null;
-    }
-  }
-  if (!found) {
-    return fnString;
-  } else {
-    // it's a consise arrow function, match everything after the arrow
-    return found[1];
-  }
+export function fireproof(name: string, opts?: ConfigOpts): Database {
+  return new DatabaseImpl(LedgerFactory(name, opts));
 }

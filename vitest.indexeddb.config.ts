@@ -1,3 +1,6 @@
+/// <reference types="@vitest/browser/providers/playwright" />
+/// <reference types="@vitest/browser/providers/webdriverio" />
+
 import { defineConfig } from "vite";
 
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -5,7 +8,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    name: "indexdb",
+    name: "indexeddb",
     exclude: ["examples/**", "tests/gateway/file"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     browser: {
@@ -13,8 +16,13 @@ export default defineConfig({
       headless: true,
       provider: "webdriverio",
       name: process.env.FP_BROWSER || "chrome", // browser name is required
+      // instances: [
+      //   {
+      //     browser: process.env.FP_BROWSER || "chrome", // browser name is required
+      //   },
+      // ],
     },
     globals: true,
-    setupFiles: "./setup.indexdb.ts",
+    setupFiles: "./setup.indexeddb.ts",
   },
 });

@@ -1,4 +1,4 @@
-import { BuildURI, CoerceURI, URI } from "@adviser/cement";
+import { BuildURI, CoerceURI, runtimeFn, URI } from "@adviser/cement";
 import { fireproof, PARAM, rt, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../../helpers.js";
 
@@ -35,16 +35,16 @@ describe("config file gateway", () => {
   it("loader", async () => {
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.ledger.name).toBe(my_app());
 
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "file",
         storekey: "@my-app-data@",
         urlGen: "fromEnv",
         version: "v0.19-file",
@@ -52,14 +52,14 @@ describe("config file gateway", () => {
       style: "path",
     });
 
-    const dataStore = await db.crdt.blockstore.loader?.carStore();
+    const dataStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
     expect(dataStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "car",
         suffix: ".car",
         storekey: "@my-app-data@",
         urlGen: "fromEnv",
@@ -67,7 +67,7 @@ describe("config file gateway", () => {
       },
       style: "path",
     });
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -81,7 +81,7 @@ describe("config file gateway", () => {
       },
       style: "path",
     });
-    const WALStore = await db.crdt.blockstore.loader?.WALStore();
+    const WALStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
     expect(WALStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -113,36 +113,36 @@ describe("config file gateway", () => {
     const db = fireproof(my_app(), { storeUrls: { base } });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader?.carStore();
+    expect(db.ledger.name).toBe(my_app());
+    const carStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "car",
         storekey: "@my-app-data@",
         suffix: ".car",
         version: "v0.19-file",
       },
       style: "path",
     });
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
       searchParams: {
         // ...isMemFS,
         name: "my-app",
-        store: "data",
+        store: "file",
         storekey: "@my-app-data@",
         version: "v0.19-file",
       },
       style: "path",
     });
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "data"))).isDirectory()).toBeTruthy();
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
@@ -179,8 +179,8 @@ describe("config file gateway", () => {
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader?.carStore();
+    expect(db.ledger.name).toBe(my_app());
+    const carStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
 
     expect(carStore?.url().asObj()).toEqual({
       pathname: `${sthis.env.get("HOME")}/.fireproof/v0.19`,
@@ -189,9 +189,9 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         suffix: ".car",
-        runtime: "node",
+        runtime: runtimeFn().isDeno ? "deno" : "node",
         urlGen: "default",
-        store: "data",
+        store: "car",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
         version: rt.FILESTORE_VERSION,
@@ -200,29 +200,29 @@ describe("config file gateway", () => {
 
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "data"))).isDirectory()).toBeTruthy();
 
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
     expect(fileStore?.url().asObj()).toEqual({
       pathname: `${sthis.env.get("HOME")}/.fireproof/v0.19`,
       protocol: "file:",
       style: "path",
       searchParams: {
         // ...isMemFS,
-        runtime: "node",
+        runtime: runtimeFn().isDeno ? "deno" : "node",
         urlGen: "default",
-        store: "data",
+        store: "file",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
         version: rt.FILESTORE_VERSION,
       },
     });
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore?.url().asObj()).toEqual({
       pathname: `${sthis.env.get("HOME")}/.fireproof/v0.19`,
       protocol: "file:",
       style: "path",
       searchParams: {
         // ...isMemFS,
-        runtime: "node",
+        runtime: runtimeFn().isDeno ? "deno" : "node",
         urlGen: "default",
         store: "meta",
         name: my_app(),
@@ -252,8 +252,8 @@ describe("config file gateway", () => {
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader.carStore();
+    expect(db.ledger.name).toBe(my_app());
+    const carStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -261,7 +261,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         urlGen: "fromEnv",
-        store: "data",
+        store: "car",
         // runtime: "node",
         suffix: ".car",
         name: my_app(),
@@ -271,7 +271,7 @@ describe("config file gateway", () => {
     });
 
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "data"))).isDirectory()).toBeTruthy();
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
     expect(fileStore?.url().asObj()).toEqual({
       pathname: `./dist/fp-dir-file`,
       protocol: "file:",
@@ -279,14 +279,14 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         urlGen: "fromEnv",
-        store: "data",
+        store: "file",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
         version: rt.FILESTORE_VERSION,
       },
     });
 
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore?.url().asObj()).toEqual({
       pathname: `./dist/fp-dir-file`,
       protocol: "file:",

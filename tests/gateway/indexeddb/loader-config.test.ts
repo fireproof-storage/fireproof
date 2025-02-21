@@ -1,7 +1,7 @@
 import { fireproof } from "@fireproof/core";
 import { mockSuperThis } from "../../helpers.js";
 
-describe("fireproof config indexdb", () => {
+describe("fireproof config indexeddb", () => {
   const _my_app = "my-app";
   function my_app() {
     return _my_app;
@@ -11,66 +11,66 @@ describe("fireproof config indexdb", () => {
     await sthis.start();
   });
 
-  it("indexdb-loader", async () => {
+  it("indexeddb-loader", async () => {
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.ledger.name).toBe(my_app());
 
-    const fileStore = await db.crdt.blockstore.loader.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "fp",
-      protocol: "indexdb:",
+      protocol: "indexeddb:",
       searchParams: {
         name: "my-app",
-        store: "data",
+        store: "file",
         runtime: "browser",
         storekey: "@my-app-data@",
         urlGen: "default",
-        version: "v0.19-indexdb",
+        version: "v0.19-indexeddb",
       },
       style: "path",
     });
 
-    const dataStore = await db.crdt.blockstore.loader.carStore();
+    const dataStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
     expect(dataStore?.url().asObj()).toEqual({
       pathname: "fp",
-      protocol: "indexdb:",
+      protocol: "indexeddb:",
       searchParams: {
         name: "my-app",
-        store: "data",
+        store: "car",
         runtime: "browser",
         storekey: "@my-app-data@",
         suffix: ".car",
         urlGen: "default",
-        version: "v0.19-indexdb",
+        version: "v0.19-indexeddb",
       },
       style: "path",
     });
-    const metaStore = await db.crdt.blockstore.loader.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "fp",
-      protocol: "indexdb:",
+      protocol: "indexeddb:",
       searchParams: {
         name: "my-app",
         store: "meta",
         runtime: "browser",
         storekey: "@my-app-meta@",
         urlGen: "default",
-        version: "v0.19-indexdb",
+        version: "v0.19-indexeddb",
       },
       style: "path",
     });
-    const WALStore = await db.crdt.blockstore.loader.WALStore();
+    const WALStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
     expect(WALStore?.url().asObj()).toEqual({
       pathname: "fp",
-      protocol: "indexdb:",
+      protocol: "indexeddb:",
       searchParams: {
         name: "my-app",
         store: "wal",
         runtime: "browser",
         storekey: "@my-app-wal@",
         urlGen: "default",
-        version: "v0.19-indexdb",
+        version: "v0.19-indexeddb",
       },
       style: "path",
     });

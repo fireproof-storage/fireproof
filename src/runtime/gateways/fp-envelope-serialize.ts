@@ -1,17 +1,14 @@
 import { exception2Result, Result, URI } from "@adviser/cement";
+import type { CarClockLink, DbMeta, DbMetaBinary, DbMetaEvent, WALState } from "../../blockstore/index.js";
 import {
-  CarClockLink,
-  DbMeta,
-  DbMetaBinary,
-  DbMetaEvent,
   FPEnvelope,
   FPEnvelopeCar,
   FPEnvelopeFile,
   FPEnvelopeMeta,
   FPEnvelopeType,
+  FPEnvelopeTypes,
   FPEnvelopeWAL,
-  WALState,
-} from "../../blockstore/index.js";
+} from "../../blockstore/fp-envelope.js";
 import { PARAM, PromiseToUInt8, SuperThis } from "../../types.js";
 import { decodeEventBlock, EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
@@ -27,7 +24,10 @@ export interface SerializedMeta {
   readonly cid: string;
 }
 
-async function dbMetaEvent2Serialized(sthis: SuperThis, dbEvents: Omit<DbMetaEvent, "eventCid">[]): Promise<SerializedMeta[]> {
+export async function dbMetaEvent2Serialized(
+  sthis: SuperThis,
+  dbEvents: Omit<DbMetaEvent, "eventCid">[],
+): Promise<SerializedMeta[]> {
   return await Promise.all(
     dbEvents.map(async (dbEvent) => {
       const event = await EventBlock.create<DbMetaBinary>(
@@ -40,7 +40,7 @@ async function dbMetaEvent2Serialized(sthis: SuperThis, dbEvents: Omit<DbMetaEve
         cid: event.cid.toString(),
         parents: dbEvent.parents.map((i) => i.toString()),
         data: base64pad.encode(event.bytes),
-      } as SerializedMeta;
+      } satisfies SerializedMeta;
     }),
   );
 }
@@ -70,14 +70,14 @@ export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL) => Pr
 // export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
 // export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[], base: METAEncodeEnvelopeBase) => Promise<Uint8Array>;
 // export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL, base: WALEncodeEnvelopeBase) => Promise<Uint8Array>;
-export interface Encoder {
+export interface FPEncoder {
   readonly car: CAREncodeEnvelope;
   readonly file: FILEEncodeEnvelope;
   readonly meta: METAEncodeEnvelope;
   readonly wal: WALEncodeEnvelope;
 }
 
-const defaultEncoder: Encoder = {
+const defaultEncoder: FPEncoder = {
   car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
   file: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
   meta: async (sthis: SuperThis, payload: SerializedMeta[]) => Result.Ok(sthis.txt.encode(JSON.stringify(payload))),
@@ -87,27 +87,30 @@ const defaultEncoder: Encoder = {
 export async function fpSerialize<T>(
   sthis: SuperThis,
   env: FPEnvelope<T>,
-  pencoder?: Partial<Encoder>,
+  pencoder?: Partial<FPEncoder>,
 ): Promise<Result<Uint8Array>> {
   const encoder = {
     ...defaultEncoder,
     ...pencoder,
   };
   switch (env.type) {
-    case FPEnvelopeType.FILE:
+    case FPEnvelopeTypes.FILE:
       return encoder.file(sthis, (env as FPEnvelopeFile).payload);
-    case FPEnvelopeType.CAR:
+    case FPEnvelopeTypes.CAR:
       return encoder.car(sthis, (env as FPEnvelopeCar).payload);
-    case FPEnvelopeType.WAL:
+    case FPEnvelopeTypes.WAL:
       return encoder.wal(sthis, WALState2Serialized(sthis, (env as FPEnvelopeWAL).payload));
-    case FPEnvelopeType.META:
+    case FPEnvelopeTypes.META:
       return encoder.meta(sthis, await dbMetaEvent2Serialized(sthis, (env as FPEnvelopeMeta).payload));
     default:
       throw sthis.logger.Error().Str("type", env.type).Msg("unsupported store").AsError();
   }
 }
 
-async function decode2DbMetaEvents(sthis: SuperThis, rserializedMeta: Result<SerializedMeta[]>): Promise<Result<DbMetaEvent[]>> {
+export async function decode2DbMetaEvents(
+  sthis: SuperThis,
+  rserializedMeta: Result<SerializedMeta[]>,
+): Promise<Result<DbMetaEvent[]>> {
   if (rserializedMeta.isErr()) {
     return Result.Err(rserializedMeta.Err());
   }
@@ -115,9 +118,9 @@ async function decode2DbMetaEvents(sthis: SuperThis, rserializedMeta: Result<Ser
   if (!Array.isArray(serializedMeta)) {
     return sthis.logger.Debug().Any("metaEntries", serializedMeta).Msg("No data in MetaEntries").ResultError();
   }
-  if (!serializedMeta.length) {
-    return sthis.logger.Debug().Msg("No MetaEntries found").ResultError();
-  }
+  // if (!serializedMeta.length) {
+  //   return sthis.logger.Debug().Msg("No MetaEntries found").ResultError();
+  // }
   return Result.Ok(
     await Promise.all(
       serializedMeta.map(async (metaEntry) => {
@@ -175,7 +178,7 @@ export type CARDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promi
 export type FILEDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
 export type METADecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedMeta[]>>;
 export type WALDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedWAL>>;
-export interface Decoder {
+export interface FPDecoder {
   readonly car: CARDecodeEnvelope;
   readonly file: FILEDecodeEnvelope;
   readonly meta: METADecodeEnvelope;
@@ -205,7 +208,7 @@ export async function fpDeserialize<S>(
   sthis: SuperThis,
   url: URI,
   intoRaw: PromiseToUInt8,
-  pdecoder?: Partial<Decoder>,
+  pdecoder?: Partial<FPDecoder>,
 ): Promise<Result<FPEnvelope<S>>> {
   const rraw = await coercePromiseIntoUint8(intoRaw);
   if (rraw.isErr()) {
@@ -217,17 +220,16 @@ export async function fpDeserialize<S>(
     ...pdecoder,
   };
   switch (url.getParam(PARAM.STORE)) {
-    case "data":
-      if (url.getParam(PARAM.SUFFIX) === ".car") {
-        return makeFPEnvelope(FPEnvelopeType.CAR, await decoder.car(sthis, raw)) as Result<FPEnvelope<S>>;
-      }
-      return makeFPEnvelope(FPEnvelopeType.FILE, await decoder.file(sthis, raw)) as Result<FPEnvelope<S>>;
+    case "car":
+      return makeFPEnvelope(FPEnvelopeTypes.CAR, await decoder.car(sthis, raw)) as Result<FPEnvelope<S>>;
+    case "file":
+      return makeFPEnvelope(FPEnvelopeTypes.FILE, await decoder.file(sthis, raw)) as Result<FPEnvelope<S>>;
     case "wal":
-      return makeFPEnvelope(FPEnvelopeType.WAL, await decode2WalState(sthis, await decoder.wal(sthis, raw))) as Result<
+      return makeFPEnvelope(FPEnvelopeTypes.WAL, await decode2WalState(sthis, await decoder.wal(sthis, raw))) as Result<
         FPEnvelope<S>
       >;
     case "meta":
-      return makeFPEnvelope(FPEnvelopeType.META, await decode2DbMetaEvents(sthis, await decoder.meta(sthis, raw))) as Result<
+      return makeFPEnvelope(FPEnvelopeTypes.META, await decode2DbMetaEvents(sthis, await decoder.meta(sthis, raw))) as Result<
         FPEnvelope<S>
       >;
     default:

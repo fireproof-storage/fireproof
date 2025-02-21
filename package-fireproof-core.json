@@ -15,27 +15,27 @@
     },
     "./node": {
       "import": {
-        "browser": "./web/index.js",
+        "browser": "./indexeddb/index.js",
         "default": "./node/index.js"
       },
-      "browser": "./web/index.js",
+      "browser": "./indexeddb/index.js",
       "require": "./node/index.cjs",
       "types": "./node/index.d.ts"
     },
     "./deno": {
       "import": {
-        "browser": "./web/index.js",
+        "browser": "./indexeddb/index.js",
         "default": "./deno/index.js"
       },
-      "browser": "./web/index.js",
+      "browser": "./indexeddb/index.js",
       "require": "./deno/index.cjs",
       "types": "./deno/index.d.ts"
     },
-    "./web": {
-      "import": "./web/index.js",
-      "browser": "./web/index.js",
-      "require": "./web/index.cjs",
-      "types": "./web/index.d.ts"
+    "./indexeddb": {
+      "import": "./indexeddb/index.js",
+      "browser": "./indexeddb/index.js",
+      "require": "./indexeddb/index.cjs",
+      "types": "./indexeddb/index.d.ts"
     },
     "./react": {
       "import": "./react/index.js",
@@ -50,7 +50,7 @@
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
   "homepage": "https://use-fireproof.com",
-  "gptdoc": "import { fireproof } from 'use-fireproof; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); useEffect(()=> db.subscribe(updateReactStateAsyncFn), []); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "gptdoc": "import { fireproof } from 'use-fireproof'; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); db.subscribe(myRedrawFn); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fireproof-storage/fireproof.git"
@@ -60,10 +60,12 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "@adviser/cement": "~0.3.12!",
+    "@adviser/cement": "~0.3.19!",
     "react": ">=18.0.0!"
   },
   "dependencies": {
+    "@adviser/cement": "from-package-json",
+    "@fireproof/vendor": "from-package-json",
     "@ipld/car": "from-package-json",
     "@ipld/dag-cbor": "from-package-json",
     "@ipld/dag-json": "from-package-json",
