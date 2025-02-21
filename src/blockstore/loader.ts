@@ -549,7 +549,7 @@ export class Loader implements Loadable {
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
     const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
-    const rawReader = await CarReader.fromBytes(bytes.bytes);
+    const rawReader = await CarReader.fromBytes(bytes.value.data);
     // const readerP = Promise.resolve(rawReader);
     // const kc = await activeStore.keyedCrypto()
     // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);

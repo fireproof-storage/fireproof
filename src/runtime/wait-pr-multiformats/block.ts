@@ -9,24 +9,16 @@ import { AsyncBlockDecoder, AsyncBlockEncoder, BlockDecoder, BlockEncoder } from
 
 export const Block = mfBlock;
 
-export interface HashBytesGet<T> {
-  get(v: T): ByteView<unknown>;
-}
-
 export interface DecodeInput<T, Code extends number, Alg extends number> {
   readonly bytes: ByteView<unknown>;
-  readonly hashBytes?: HashBytesGet<T>;
+  // readonly hashBytes?: HashBytesGet<T>;
   readonly codec: BlockDecoder<Code, T>;
   readonly hasher: MultihashHasher<Alg>;
 }
 
-export interface AsyncHashBytesGet<T> {
-  get(v: T): Promise<ByteView<unknown>>;
-}
-
 export interface AsyncDecodeInput<T, Code extends number, Alg extends number> {
   readonly bytes: ByteView<unknown>;
-  readonly hashBytes?: AsyncHashBytesGet<T>;
+  // readonly hashBytes?: AsyncHashBytesGet<T>;
   readonly codec: AsyncBlockDecoder<Code, T>;
   readonly hasher: MultihashHasher<Alg>;
 }
@@ -34,7 +26,6 @@ export interface AsyncDecodeInput<T, Code extends number, Alg extends number> {
 export async function decode<T, Code extends number, Alg extends number>({
   bytes,
   codec,
-  hashBytes: serializer,
   hasher,
 }: AsyncDecodeInput<T, Code, Alg> | DecodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg>> {
   if (bytes == null) throw new Error('Missing required argument "bytes"');
@@ -43,25 +34,13 @@ export async function decode<T, Code extends number, Alg extends number>({
   // outer cbor
   const value = (await Promise.resolve(codec.decode(bytes))) as T;
   let toHash = bytes;
-  if (serializer) {
-    toHash = (await Promise.resolve(serializer.get(value))) as ByteView<unknown>;
+  if (codec.valueToHashBytes) {
+    toHash = (await Promise.resolve(codec.valueToHashBytes(value))) as ByteView<unknown>;
   }
   const hash = await hasher.digest(toHash);
   const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
 
   return new mfBlock<T, Code, Alg, 1>({ value, bytes: toHash as ByteView<T>, cid });
-}
-
-export interface AsyncHashBytesGet<T> {
-  get(v: T): Promise<ByteView<unknown>>;
-}
-
-export interface HashAsBytes<T> {
-  as(v: T): ByteView<unknown>;
-}
-
-export interface AsyncHashAsBytes<T> {
-  as(v: T): Promise<ByteView<unknown>>;
 }
 
 export interface EncodeInput<T, Code extends number, Alg extends number> {
@@ -72,7 +51,7 @@ export interface EncodeInput<T, Code extends number, Alg extends number> {
   // 1. serializer
   // 2. hasher
   // 3. codec
-  readonly hashBytes?: HashAsBytes<T>;
+  // readonly hashBytes?: HashAsBytes<T>;
   readonly hasher: MultihashHasher<Alg>;
 }
 
@@ -84,7 +63,7 @@ export interface AsyncEncodeInput<T, Code extends number, Alg extends number> {
   // 1. serializer
   // 2. hasher
   // 3. codec
-  readonly hashBytes?: AsyncHashAsBytes<T>;
+  // readonly hashBytes?: AsyncHashAsBytes<T>;
   readonly hasher: MultihashHasher<Alg>;
 }
 
@@ -97,15 +76,14 @@ export async function encode<T, Code extends number, Alg extends number>({
   value,
   codec,
   hasher,
-  hashBytes,
 }: AsyncEncodeInput<T, Code, Alg> | EncodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg>> {
   if (typeof value === "undefined") throw new Error('Missing required argument "value"');
   if (codec == null || hasher == null) throw new Error("Missing required argument: codec or hasher");
 
   let bytes: ByteView<T>;
   let hash: MultihashDigest;
-  if (hashBytes) {
-    const hashable = await Promise.resolve(hashBytes.as(value));
+  if (codec.bytesToHash) {
+    const hashable = await Promise.resolve(codec.bytesToHash(value));
     hash = await hasher.digest(hashable);
     bytes = await Promise.resolve(codec.encode(value as T));
   } else {
