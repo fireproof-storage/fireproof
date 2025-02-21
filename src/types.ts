@@ -217,9 +217,19 @@ export interface IndexUpdateString {
 // export type IndexRow<K extends IndexKeyType, T extends DocTypes> =
 //   T extends DocLiteral ? IndexRowLiteral<K, T> : IndexRowObject<K, T>
 
+export interface Row<K extends IndexKeyType, R extends DocFragment> {
+  readonly id: string;
+  readonly key: IndexKey<K>;
+  readonly value: R;
+}
+
+export interface DocumentRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> extends Row<K, R> {
+  readonly doc: DocWithId<T>;
+}
+
 export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> {
   readonly id: string;
-  readonly key: K; // IndexKey<K>;
+  readonly key: IndexKey<K>;
   readonly value: R;
   readonly doc?: DocWithId<T>;
 }
@@ -227,6 +237,7 @@ export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends
 export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];
 }
+
 export interface CRDTMeta {
   readonly head: ClockHead;
 }
@@ -256,31 +267,41 @@ export interface IdxMetaMap {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface QueryOpts<K extends IndexKeyType> {
   readonly descending?: boolean;
+  readonly excludeDocs?: boolean;
   readonly limit?: number;
-  includeDocs?: boolean;
   readonly range?: [IndexKeyType, IndexKeyType];
   readonly key?: DocFragment;
   readonly keys?: DocFragment[];
   prefix?: IndexKeyType;
 }
 
-export interface AllDocsQueryOpts extends QueryOpts<string> {
-  readonly key?: string;
-  readonly keys?: string[];
-  prefix?: string;
+export type QueryStreamMarker = { readonly kind: "preexisting"; readonly done: boolean } | { readonly kind: "new" };
+
+export interface InquiryResponse<K extends IndexKeyType, R extends DocFragment> {
+  snapshot(opts?: { since?: ClockHead } & ChangesOptions): AsyncGenerator<Row<K, R>>;
+  live(opts?: { since?: ClockHead } & ChangesOptions): ReadableStream<{ row: Row<K, R>; marker: QueryStreamMarker }>;
+  future(): ReadableStream<{ row: Row<K, R>; marker: QueryStreamMarker }>;
+  /** Convenience function to consume a future stream. */
+  subscribe(callback: (row: Row<K, R>) => void): () => void;
+  /** Convenience function to get a full snapshot. */
+  toArray(opts?: { since?: ClockHead } & ChangesOptions): Promise<Row<K, R>[]>;
 }
 
-export interface AllDocsResponse<T extends DocTypes> {
-  readonly rows: {
-    readonly key: string;
-    readonly value: DocWithId<T>;
-  }[];
-  readonly clock: ClockHead;
-  readonly name?: string;
+/**
+ * Same as `InquiryResponse` but with the document attached.
+ */
+export interface QueryResponse<K extends IndexKeyType, T extends DocObject, R extends DocFragment> {
+  snapshot(opts?: { since?: ClockHead } & ChangesOptions): AsyncGenerator<DocumentRow<K, T, R>>;
+  live(opts?: { since?: ClockHead } & ChangesOptions): ReadableStream<{ row: DocumentRow<K, T, R>; marker: QueryStreamMarker }>;
+  future(): ReadableStream<{ row: DocumentRow<K, T, R>; marker: QueryStreamMarker }>;
+  /** Convenience function to consume a future stream. */
+  subscribe(callback: (row: DocumentRow<K, T, R>) => void): () => void;
+  /** Convenience function to get a full snapshot. */
+  toArray(opts?: { since?: ClockHead } & ChangesOptions): Promise<DocumentRow<K, T, R>[]>;
 }
 
-type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
-export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | unknown;
+type EmitFn<R extends DocFragment> = (k: IndexKeyType, v?: R) => void;
+export type MapFn<T extends DocTypes, R extends DocFragment> = (doc: DocWithId<T>, emit: EmitFn<R>) => R | unknown;
 
 export interface ChangesOptions {
   readonly dirty?: boolean;

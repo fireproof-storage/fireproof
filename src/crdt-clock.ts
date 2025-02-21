@@ -58,8 +58,8 @@ export class CRDTClock<T extends DocTypes> {
   async processUpdates(updatesAcc: DocUpdate<T>[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc;
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince<T>(throwFalsy(this.blockstore), this.head, prevHead, {}, this.logger);
-      internalUpdates = changes.result;
+      const changes = await Array.fromAsync(clockChangesSince(throwFalsy(this.blockstore), this.head, prevHead, {}, this.logger));
+      internalUpdates = changes;
     }
     this.zoomers.forEach((fn) => fn());
     this.notifyWatchers(internalUpdates || []);
@@ -72,10 +72,12 @@ export class CRDTClock<T extends DocTypes> {
 
   onTick(fn: (updates: DocUpdate<T>[]) => void) {
     this.watchers.add(fn);
+    return () => this.watchers.delete(fn);
   }
 
   onTock(fn: () => void) {
     this.emptyWatchers.add(fn);
+    return () => this.emptyWatchers.delete(fn);
   }
 
   onZoom(fn: () => void) {
