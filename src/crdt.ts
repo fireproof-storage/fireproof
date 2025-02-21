@@ -107,7 +107,7 @@ export class CRDT<T extends DocTypes> {
     const prevHead = [...this.clock.head];
     updates = updates.map((dupdate: DocUpdate<T>) => ({
       ...dupdate,
-      value: sanitizeDocumentFields(dupdate.value) as typeof dupdate.value
+      value: sanitizeDocumentFields(dupdate.value),
     }));
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {

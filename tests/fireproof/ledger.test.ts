@@ -142,7 +142,7 @@ describe("named Ledger with record", function () {
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
     expect(doc.value).toBeNull();
-    expect(Object.keys(doc).includes('value')).toBeTruthy();
+    expect(Object.keys(doc).includes("value")).toBeTruthy();
   });
   it("should update with undefined value", async function () {
     const ok = await db.put({ _id: "hello", value: undefined });
@@ -150,9 +150,9 @@ describe("named Ledger with record", function () {
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
-    
+
     // expect 'value' not to be in keys
-    expect(Object.keys(doc).includes('value')).toBeFalsy();
+    expect(Object.keys(doc).includes("value")).toBeFalsy();
   });
   it("should update with NaN value", async function () {
     const ok = await db.put({ _id: "hello", value: NaN });
@@ -160,22 +160,22 @@ describe("named Ledger with record", function () {
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
-    
+
     // expect 'value' not to be in keys
-    expect(Object.keys(doc).includes('value')).toBeFalsy();
-  })
+    expect(Object.keys(doc).includes("value")).toBeFalsy();
+  });
   it("should not update with Infinity value", async function () {
     const ok = await db.put({ _id: "hello", value: Infinity }).catch((e) => e);
     expect(ok.message).toMatch(/IPLD/);
-  })
+  });
   it("should not update with undefined array value", async function () {
     const ok = await db.put({ _id: "hello", value: [undefined] }).catch((e) => e);
     expect(ok.message).toMatch(/IPLD/);
-  })
+  });
   it("should not update with NaN array value", async function () {
     const ok = await db.put({ _id: "hello", value: [NaN] }).catch((e) => e);
     expect(ok.message).toMatch(/IPLD/);
-  })
+  });
   it("should del last record", async function () {
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
