@@ -1,21 +1,23 @@
 import type { ArrayBufferView, ByteView } from "multiformats";
 
+// export type HashAsBytes<T> = (v: T) => ByteView<unknown>;
+// export type AsyncHashAsBytes<T> =(v: T) => Promise<ByteView<unknown>>;
+
 /**
  * IPLD encoder part of the codec.
  */
 export interface BlockEncoder<Code extends number, T> {
   readonly name: string;
   readonly code: Code;
-  // encode(data: T): ByteView<T>;
-  // encode(data: T): PromiseLike<ByteView<T>>;
+
+  bytesToHash?(data: T): ByteView<unknown>;
   encode(data: T): ByteView<T>;
 }
 
 export interface AsyncBlockEncoder<Code extends number, T> {
   readonly name: string;
   readonly code: Code;
-  // encode(data: T): ByteView<T>;
-  // encode(data: T): PromiseLike<ByteView<T>>;
+  bytesToHash?(data: T): Promise<ByteView<unknown>>;
   encode(data: T): PromiseLike<ByteView<T>>;
 }
 
@@ -24,6 +26,8 @@ export interface AsyncBlockEncoder<Code extends number, T> {
  */
 export interface BlockDecoder<Code extends number, T> {
   readonly code: Code;
+  valueToHashBytes?(value: T): ByteView<unknown>;
+
   // decode(bytes: ByteView<T> | ArrayBufferView<T>): T;
   // decode(bytes: ByteView<T> | ArrayBufferView<T>): PromiseLike<T>;
   decode(bytes: ByteView<unknown>): T;
@@ -31,6 +35,7 @@ export interface BlockDecoder<Code extends number, T> {
 
 export interface AsyncBlockDecoder<Code extends number, T> {
   readonly code: Code;
+  valueToHashBytes?(value: T): Promise<ByteView<unknown>>;
   // decode(bytes: ByteView<T> | ArrayBufferView<T>): T;
   // decode(bytes: ByteView<T> | ArrayBufferView<T>): PromiseLike<T>;
   decode(bytes: ByteView<unknown>): PromiseLike<T>;

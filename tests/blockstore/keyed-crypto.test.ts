@@ -356,7 +356,7 @@ describe("KeyedCrypto", () => {
     const kc = (await kycr.key.get()) as KeyWithFingerPrint;
     expect(base58btc.encode(myDec.keyId)).toEqual(kc.fingerPrint);
     const dec = await codec.decode(blk);
-    expect(dec).toEqual(testData);
+    expect(dec.data).toEqual(testData);
   });
 
   it("codec implict iv", async () => {
@@ -365,7 +365,7 @@ describe("KeyedCrypto", () => {
     const blk = await codec.encode(testData);
     expect(blk.length).toBeGreaterThanOrEqual(12 + testData.length);
     const dec = await codec.decode(blk);
-    expect(dec).toEqual(testData);
+    expect(dec.data).toEqual(testData);
   });
 
   it("codec implict iv same for multiple clients", async () => {
