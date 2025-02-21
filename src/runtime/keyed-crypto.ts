@@ -9,7 +9,7 @@ import {
 } from "../blockstore/index.js";
 import { ensureLogger, UInt8ArrayEqual } from "../utils.js";
 import { KeyBag } from "./key-bag.js";
-import type { AsyncBlockCodec } from "./wait-pr-multiformats/codec-interface.js";
+import type { AsyncBlockCodec, ByteView } from "./wait-pr-multiformats/codec-interface.js";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as CBOR from "cborg";
@@ -63,6 +63,17 @@ export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyI
     this.ko = ko;
     this.iv = iv;
     this.opts = opts || {};
+  }
+
+  // hashAsBytes(data: IvKeyIdData): AsyncHashAsBytes<Uint8Array<ArrayBufferLike>> {
+  //   return data;
+  // }
+
+  valueToHashBytes(value: IvKeyIdData): Promise<ByteView<unknown>> {
+    return Promise.resolve(value.data);
+  }
+  bytesToHash(data: Uint8Array): Promise<ByteView<unknown>> {
+    return Promise.resolve(data);
   }
 
   async encode(data: Uint8Array): Promise<Uint8Array> {

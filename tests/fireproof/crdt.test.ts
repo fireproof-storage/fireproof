@@ -243,7 +243,7 @@ describe("Compact a named CRDT with writes", function () {
     // sthis.env.set(
     //   "FP_STORAGE_URL",
     //   BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam(PARAM.STORE_KEY, "insecure").toString(),
-    // // );
+    // );
     // console.log("FP_STORAGE_URL", sthis.env.get("FP_STORAGE_URL"));
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -276,25 +276,25 @@ describe("Compact a named CRDT with writes", function () {
     //
     //    ])
     expect(blz.map((i) => i.cid.toString())).toEqual([
-      "bafyreihlpe35swmwbmok3gh3v5rpe7vovegpzgkf2anlvipbm3oohili4m",
+      "bafyreie4dg3ypgl23yr2fjux2mxn7w5dgc6wtk72ctunkblx3o6npxroia",
       "bafyreig5jhovaiocwk3vfafzdspgtwinftjygyghjzigkc554muhdmp5ba",
       "bafyreiegj7yumreue7llzqroebigscedyzrkeir3zneg5q7zia77itowy4",
       "bafyreibslqo6sjj77fy45xhvphxt45xd7dhlzglb37sexviegi66m2zqia",
-      "bafyreiaxnmyd4j2you7urb47oahqzlfllw5mzm7jhgm44analbngoxaepm",
+      "bafyreihyialjln5wu6x4tsmtskcaifpddj5p3q4pcbmd2s3lsfxd7cfgwu",
       "bafyreiff76gzgricfm73nyxm5ypbg7fy3cb6w65ltvo5oduqjq566zcoda",
-      "bafyreif5oe3mmvzeb5hacyp6dmby3y56f6eu4mh6akguqxds7ggheahxha",
+      "bafyreidz2rgtfdmmzsatngbbpfkb4lfc2x43axk7h7fzmcsvwhpikpiykm",
       "bafyreicyynhujiwq54xlkldavqtindhgjvdlaxxqjn4gqfvgb4pytfs7ka",
-      "bafyreieesybdvey3z4w6aygbepsyjory5rxesxaa7pw3cogmwuv656y6py",
+      "bafyreie7c3kulz4fin5y6ffwhanqnag24f3g7ig3qsy4htao3emiiaumn4",
       "bafyreidnclmuatqf6yelrlp3pfsmwzkkofdbbkdedthfxh7nreoyacmwva",
-      "bafyreidf47wmv7hiyvv3ytvkhwjn3ws5gl7cl2ki2r5h7abmmm2muhxffa",
+      "bafyreib363epeuknentp35yw2bj46vjdpa5m6z4qa537vtqjkc6prxyg6e",
       "bafyreifupkgympx4lmr7pd5oloti3zzfijvvnuqbgkbpn6uxxkom3kvb2m",
-      "bafyreia6p2yja4ine4qwyvhcvcjdi7url45fihlye62aucd4bgbfmybtum",
+      "bafyreigwy3xabwoqhrgxxhzvnjthjb34alcqpeseruvzv5betfsbuquuti",
       "bafyreihuykwc3irfwvmfdz3amh3hvamablrvqb6kpo7xdcroraktbosbly",
-      "bafyreicvvicic2s2n24tbwy4be6ap5d4eb2rblw7ckdf7wb6mzhmsjisyy",
+      "bafyreidtyefzqhggtxapec4nm2d4y6qd6hw4r432pauc2izmpecfwvcu4e",
       "bafyreig72tfvtd7zm4twin4bgx733imlkvqonstxkg7f27qdmdg3ehrzx4",
-      "bafyreigbsicq3rhf4wj6igcp4nhuvc2yfnaraihx4qmskvxccpcgtaomim",
+      "bafyreihjnqfpwgf2rr7dyzjymc2yngsvhpbxzfke425fudgq4c5vjkoytu",
       "bafyreidwknp7fo6yqxuta3nr2zpbpjadsvtqg3gr74vhhm6q7qrvqfcoxe",
-      "bafyreicgj6fiubg6rcr6cwwcngsgz72mwuywga33jg3fbkmrojwqyriihq",
+      "bafyreigzxee7hcgrwsz42ndinxergvweixscwidsbxcfxcnplgosz5p7by",
       "bafyreigq42dy5zv744smplrz6ljhmuo2e5j4gxrk7eo3h7ei3chn2r4yai",
       "bafyreih2mmym2gzq3qljazv3rqlfjx452lv2pqlcpwkdv5o7skmxlzeqru",
       "bafyreidjjtz3ixbxfgmpspans22uyxi22fvitbquugmjqv76uot7go37wq",
