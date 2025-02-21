@@ -53,6 +53,35 @@ function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
   }
 }
 
+export function sanitizeDocumentFields(obj: unknown): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map((item: unknown) => {
+      if (typeof item === 'object' && item !== null) {
+        return sanitizeDocumentFields(item);
+      }
+      return item;
+    });
+  } else if (typeof obj === 'object' && obj !== null) {
+    const typedObj = obj as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const key in typedObj) {
+      if (Object.hasOwnProperty.call(typedObj, key)) {
+        const value = typedObj[key];
+        if (value === null || (!Number.isNaN(value) && value !== undefined)) {
+          if (typeof value === 'object' && key[0] !== '_') {
+            const sanitized = sanitizeDocumentFields(value);
+            result[key] = sanitized;
+          } else {
+            result[key] = value;
+          }
+        }
+      }
+    }
+    return result;
+  }
+  return obj;
+}
+
 export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   store: StoreRuntime,
   tblocks: CarTransaction,
