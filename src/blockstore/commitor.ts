@@ -78,7 +78,7 @@ export async function commitFiles(
   };
   const cids: AnyLink[] = [];
   // const fileStore = await this.fileStore();
-  const codec = (await fileStore.keyedCrypto()).codec();
+  const codec = await fileStore.keyedCrypto().then((i) => i.codec());
   const cars = await prepareCarFilesFiles(codec, roots, t);
   for (const car of cars) {
     const { cid, bytes } = car;
