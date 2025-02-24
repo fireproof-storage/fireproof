@@ -177,7 +177,7 @@ describe("named Ledger with record", function () {
     const ok = await db.put({ _id: "hello", value: [NaN] }).catch((e) => e);
     expect(ok.message).toMatch(/IPLD/);
   });
-  it("should del last record", async () =>{
+  it("should del last record", async () => {
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
 
