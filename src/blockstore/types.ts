@@ -26,18 +26,18 @@ export class CarLog {
     Object.freeze(x);
     return x;
   }
-  unshift(logs: CarGroup) {
-    console.log(
-      "CarLog-unshift",
-      logs.map((l) => l.toString()),
-    );
+  xunshift(logs: CarGroup) {
+    // console.log(
+    //   "CarLog-unshift",
+    //   logs.map((l) => l.toString()),
+    // );
     this._logs.unshift(logs);
   }
   update(logs: FroozenCarLog) {
-    console.log(
-      "CarLog-update",
-      logs.map((l) => l.map((l) => l.toString())),
-    );
+    // console.log(
+    //   "CarLog-update",
+    //   logs.map((l) => l.map((l) => l.toString())),
+    // );
     this._logs.length = 0;
     this._logs.push(...logs);
   }
@@ -536,7 +536,7 @@ export interface AttachedStores {
   local(): LocalActiveStore;
   forRemotes(actionFn: (store: ActiveStore) => Promise<unknown>): Promise<void>;
   remotes(): ActiveStore[];
-  activate(store: DataAndMetaStore): ActiveStore;
+  activate(store: DataAndMetaStore | CoerceURI): ActiveStore;
   attach(attached: Attachable): Promise<Attached>;
   detach(): Promise<void>;
 }
@@ -553,17 +553,24 @@ export interface CarAttachedStores extends BaseAttachedStores {
   remotes(): CarStore[];
 }
 
-export interface BaseActiveStore {
-  readonly ref: ActiveStore;
-  readonly active: BaseStore;
-  readonly attached: BaseAttachedStores;
+export abstract class BaseActiveStore {
+  abstract readonly ref: ActiveStore;
+  abstract readonly active: BaseStore;
+
+  // readonly local: ActiveStore;
+  // readonly remotes: ActiveStore[];
+
+  abstract local(): BaseStore;
+  abstract remotes(): BaseStore[];
+
+  protected abstract readonly xattached: BaseAttachedStores;
 }
 
-export interface CarActiveStore extends BaseActiveStore {
-  readonly ref: ActiveStore;
-  readonly active: CarStore;
-  readonly attached: CarAttachedStores;
-}
+// export abstract class CarActiveStore extends BaseActiveStore {
+//   readonly ref: ActiveStore;
+//   readonly active: CarStore;
+//   readonly xattached: CarAttachedStores;
+// }
 
 export interface FileAttachedStores extends BaseAttachedStores {
   local(): FileStore;
@@ -571,16 +578,20 @@ export interface FileAttachedStores extends BaseAttachedStores {
   remotes(): FileStore[];
 }
 
-export interface CarActiveStore extends BaseActiveStore {
-  readonly ref: ActiveStore;
-  readonly active: CarStore;
-  readonly attached: CarAttachedStores;
+export abstract class CarActiveStore extends BaseActiveStore {
+  // readonly ref: ActiveStore;
+  // readonly active: CarStore;
+  protected abstract readonly xattached: CarAttachedStores;
+  abstract local(): CarStore;
+  abstract remotes(): CarStore[];
 }
 
-export interface FileActiveStore extends BaseActiveStore {
-  readonly ref: ActiveStore;
-  readonly active: FileStore;
-  readonly attached: FileAttachedStores;
+export abstract class FileActiveStore extends BaseActiveStore {
+  // readonly ref: ActiveStore;
+  // readonly active: FileStore;
+  protected abstract readonly xattached: FileAttachedStores;
+  abstract local(): FileStore;
+  abstract remotes(): FileStore[];
 }
 
 export type CIDActiveStore = CarActiveStore | FileActiveStore;
@@ -590,10 +601,12 @@ export interface MetaAttachedStores extends BaseAttachedStores {
   remotes(): MetaStore[];
 }
 
-export interface MetaActiveStore extends BaseActiveStore {
-  readonly ref: ActiveStore;
-  readonly active: MetaStore;
-  readonly attached: MetaAttachedStores;
+export abstract class MetaActiveStore extends BaseActiveStore {
+  // readonly ref: ActiveStore;
+  // readonly active: MetaStore;
+  protected abstract readonly xattached: MetaAttachedStores;
+  abstract local(): MetaStore;
+  abstract remotes(): MetaStore[];
 }
 
 export interface WALAttachedStores extends BaseAttachedStores {
@@ -601,10 +614,12 @@ export interface WALAttachedStores extends BaseAttachedStores {
   remotes(): WALStore[];
 }
 
-export interface WALActiveStore extends BaseActiveStore {
-  readonly ref: ActiveStore;
-  readonly active: WALStore;
-  readonly attached: WALAttachedStores;
+export abstract class WALActiveStore extends BaseActiveStore {
+  // readonly ref: ActiveStore;
+  // readonly active: WALStore;
+  protected abstract readonly xattached: WALAttachedStores;
+  abstract local(): WALStore;
+  abstract remotes(): WALStore[];
 }
 
 export interface ActiveStore {
@@ -614,7 +629,11 @@ export interface ActiveStore {
   fileStore(): FileActiveStore;
   metaStore(): MetaActiveStore;
   walStore(): WALActiveStore;
-  readonly attached: AttachedStores;
+
+  local(): LocalActiveStore;
+  remotes(): ActiveStore[];
+
+  readonly xattached: AttachedStores;
 }
 
 export interface CarCacheItem {
@@ -628,7 +647,7 @@ export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
   readonly ebOpts: BlockstoreRuntime;
-  carLog: CarLog;
+  readonly carLog: CarLog;
 
   // xremoteMetaStore?: MetaStore;
   // xremoteFileStore?: DataStore;

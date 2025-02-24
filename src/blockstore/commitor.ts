@@ -44,6 +44,7 @@ async function encodeCarFile(
   }
 
   for await (const { cid, bytes } of t.entries()) {
+    // console.log("encodeCarFile", cid.toString(), bytes.length);
     writer.write({ cid, bytes } as CBW.Block);
   }
   writer.close();
@@ -150,12 +151,12 @@ export async function commit<T>(
   const rootBlock = await encodeCarHeader(fp);
 
   const cars = await prepareCarFiles(params.encoder, params.threshold, rootBlock, t);
-  console.log(
-    "commit-root",
-    rootBlock.cid.toString(),
-    fp,
-    cars.map((c) => c.cid.toString()),
-  );
+  // console.log(
+  //   "commit-root",
+  //   rootBlock.cid.toString(),
+  //   fp,
+  //   cars.map((c) => c.cid.toString()),
+  // );
   const cids: AnyLink[] = [];
   // console.log("committing", cars.map((c) => c.cid.toString()));
   for (const car of cars) {
@@ -181,13 +182,14 @@ async function prepareCarFiles(
   const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
   threshold = threshold || 16 * 65536;
   let clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });
-  console.log("prepareCarFiles-root", rootBlock.cid.toString());
+  // console.log("prepareCarFiles-root", rootBlock.cid.toString());
   clonedt.putSync(rootBlock.cid, rootBlock.bytes);
   let newsize = CBW.blockLength(toCIDBlock(rootBlock));
   let cidRootBlock = rootBlock;
   for await (const { cid, bytes } of t.entries()) {
+    // console.log("prepareCarFiles", cid.toString(), bytes.length);
     newsize += CBW.blockLength(toCIDBlock({ cid: cid, bytes }));
-    // console.log("prepareCarFiles", cid.toString())
+    // console.log("prepareCarFiles", cid.toString(), bytes.length)
     if (newsize >= threshold) {
       carFiles.push(await createCarFile(encoder, cidRootBlock.cid, clonedt));
       clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });

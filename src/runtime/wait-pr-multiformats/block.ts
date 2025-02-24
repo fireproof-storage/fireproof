@@ -90,9 +90,7 @@ export async function encode<T, Code extends number, Alg extends number>({
     bytes = await Promise.resolve(codec.encode(value));
     hash = await hasher.digest(bytes);
   }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
   const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
-
   return new Block({ value, bytes, cid });
 }
 
