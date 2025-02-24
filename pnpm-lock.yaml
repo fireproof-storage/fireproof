@@ -79,7 +79,7 @@ importers:
         specifier: ^18.3.12
         version: 18.3.23
       '@typescript-eslint/typescript-estree':
-        specifier: ^8.24.0
+        specifier: ^8.24.1
         version: 8.33.1(typescript@5.8.3)
       '@vitest/browser':
         specifier: ^3.0.5
