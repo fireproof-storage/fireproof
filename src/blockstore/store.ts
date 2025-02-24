@@ -226,7 +226,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
     // const dbMetas = await this.handleByteHeads(fpMeta);
     const dbMetas = fpMeta.map((m) => m.dbMeta);
-    await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.local());
+    await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.activate(url.Ok()));
     this.updateParentsFromDbMetas(fpMeta);
     return dbMetas;
   }
@@ -296,6 +296,12 @@ abstract class DataStoreImpl extends BaseStoreImpl {
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Ref("cid", car.cid).Msg("got error from gateway.buildUrl").AsError();
     }
+    // if (url.Ok().getParam(PARAM.KEY) === PARAM.GENESIS_CID) {
+    //   console.log("saving genesis cid");
+    // }
+    // if (car.bytes.length === 0) {
+    //   return;
+    // }
     // without URL changes in super-this branch we
     // can distinguish between car and file
     let fpMsg: Result<FPEnvelopeCar | FPEnvelopeFile>;

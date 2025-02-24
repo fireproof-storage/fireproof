@@ -20,6 +20,7 @@ import {
   CarCacheItem,
   CarLog,
   FroozenCarLog,
+  CarStore,
 } from "./types.js";
 
 import { parseCarFile } from "./loader-helpers.js";
@@ -92,7 +93,7 @@ export class Loader implements Loadable {
     if (!at.stores.wal) {
       try {
         // remote Store need to kick off the sync by requesting the latest meta
-        const dbMeta = await at.stores.meta.load("main");
+        const dbMeta = await at.stores.meta.load();
         if (!Array.isArray(dbMeta)) {
           throw this.logger.Error().Msg("missing dbMeta").AsError();
         }
@@ -176,10 +177,10 @@ export class Loader implements Loadable {
     this.maxConcurrentCarReader = pLimit(parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_PARALLEL, "5"), 10));
 
     this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta, activeStore: ActiveStore) => {
-      console.log(
-        "taskManager",
-        dbMeta.cars.map((c) => c.toString()),
-      );
+      // console.log(
+      //   "taskManager",
+      //   dbMeta.cars.map((c) => c.toString()),
+      // );
       await this.handleDbMetasFromStore([dbMeta], activeStore);
     });
     this.attachedStores = new AttachedRemotesImpl(this);
@@ -197,12 +198,12 @@ export class Loader implements Loadable {
   // }
 
   async handleDbMetasFromStore(metas: DbMeta[], activeStore: ActiveStore): Promise<void> {
-    console.log(
-      "handleDbMetasFromStore",
-      activeStore.active.car.url().toString(),
-      metas.map((m) => m.cars.map((c) => c.toString())).flat(),
-    );
-    this.logger.Debug().Any("metas", metas).Msg("handleDbMetasFromStore");
+    // console.log(
+    //   "handleDbMetasFromStore",
+    //   activeStore.active.car.url().toString(),
+    //   metas.map((m) => m.cars.map((c) => c.toString())).flat(),
+    // );
+    this.logger.Debug().Any("metas", metas).Url(activeStore.active.car.url()).Msg("handleDbMetasFromStore");
     for (const meta of metas) {
       await this.maxConcurrentWrite(async () => {
         await this.mergeDbMetaIntoClock(meta, activeStore);
@@ -241,15 +242,15 @@ export class Loader implements Loadable {
         this.logger.Error().Err(e).Msg("error getting more readers");
       }
       this.carLog.update(uniqueCids([meta.cars, ...this.carLog.asArray(), ...carHeader.cars], this.seenCompacted));
-      console.log(
-        ">>>>> pre applyMeta",
-        this.carLog
-          .asArray()
-          .map((c) => c.map((cc) => cc.toString()))
-          .flat(),
-      );
+      // console.log(
+      //   ">>>>> pre applyMeta",
+      //   this.carLog
+      //     .asArray()
+      //     .map((c) => c.map((cc) => cc.toString()))
+      //     .flat(),
+      // );
       await this.ebOpts.applyMeta?.(carHeader.meta);
-      console.log(">>>>> post applyMeta");
+      // console.log(">>>>> post applyMeta");
     } finally {
       this.isCompacting = false;
     }
@@ -316,27 +317,31 @@ export class Loader implements Loadable {
   }
 
   async updateCarLog<T>(cids: CarGroup, cHeader: CarHeader<T>, compact: boolean): Promise<void> {
+    // if (this.carLog.length === 0) {
+    //   // console.log("updateCarLog", cids.map((c) => c.toString()));
+    // }
+
     if (compact) {
       const previousCompactCid = cHeader.compact[cHeader.compact.length - 1];
       cHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
       this.carLog.update(uniqueCids([...this.carLog.asArray(), ...cHeader.cars, cids], this.seenCompacted));
-      console.log(
-        "compact - updateCarLog",
-        this.carLog
-          .asArray()
-          .map((c) => c.map((cc) => cc.toString()))
-          .flat(),
-      );
+      // console.log(
+      //   "compact - updateCarLog",
+      //   this.carLog
+      //     .asArray()
+      //     .map((c) => c.map((cc) => cc.toString()))
+      //     .flat(),
+      // );
       await this.removeCidsForCompact(previousCompactCid[0], this.attachedStores.local()).catch((e) => e);
     } else {
-      console.log(
-        "update - updateCarLog",
-        this.carLog
-          .asArray()
-          .map((c) => c.map((cc) => cc.toString()))
-          .flat(),
-      );
-      this.carLog.unshift(cids);
+      // console.log(
+      //   "update - updateCarLog",
+      //   this.carLog
+      //     .asArray()
+      //     .map((c) => c.map((cc) => cc.toString()))
+      //     .flat(),
+      // );
+      this.carLog.xunshift(cids);
     }
   }
 
@@ -414,11 +419,11 @@ export class Loader implements Loadable {
         if (!reader || reader.type !== "car") {
           throw this.logger.Error().Any("reader", reader.type).Str("cid", carCid.toString()).Msg("missing car reader").AsError();
         }
-        console.log(
-          "entries",
-          carCid.toString(),
-          reader.blocks.map((b) => b.cid.toString()),
-        );
+        // console.log(
+        //   "entries",
+        //   carCid.toString(),
+        //   reader.blocks.map((b) => b.cid.toString()),
+        // );
         // const readBlocks = await this.readCar(reader);
         for (const block of reader.blocks) {
           const cidStr = block.cid.toString();
@@ -434,7 +439,7 @@ export class Loader implements Loadable {
     await this.ready();
     const cidStr = cid.toString();
     const ci = await this.cidCache.get(cidStr).once(async () => {
-      console.log("getBlock", cidStr);
+      // console.log("getBlock", cidStr);
       // const getCarCid = async (carCid: AnyLink) => {
       //   const sCid = carCid.toString();
       //   if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
@@ -518,33 +523,37 @@ export class Loader implements Loadable {
   private async makeDecoderAndCarReader(carCid: AnyLink, store: CIDActiveStore): Promise<CarCacheItem> {
     const carCidStr = carCid.toString();
     let loadedCar: AnyBlock | undefined = undefined;
-    let activeStore: BaseStore = store.attached.local();
+    let activeStore: BaseStore = store.local();
     try {
       //loadedCar now is an array of AnyBlocks
       this.logger.Debug().Any("cid", carCidStr).Msg("loading car");
-      loadedCar = await store.attached.local().load(carCid);
+      loadedCar = await store.local().load(carCid);
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
       }
-      for (const remote of store.attached.remotes()) {
-        console.log("makeDecoderAndCarReader", remote.url());
-        const remoteCar = await remote.load(carCid);
-        if (remoteCar) {
-          // todo test for this
-          this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
-          await store.attached.local().save(remoteCar);
-          loadedCar = remoteCar;
-          activeStore = remote;
-          break;
-        } else {
-          this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
+      for (const remote of store.remotes() as CarStore[]) {
+        // console.log("makeDecoderAndCarReader", remote.url().toString());
+        try {
+          const remoteCar = await remote.load(carCid);
+          if (remoteCar) {
+            // todo test for this
+            this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
+            await store.local().save(remoteCar);
+            loadedCar = remoteCar;
+            activeStore = remote;
+            break;
+          } else {
+            this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
+          }
+        } catch (e) {
+          this.logger.Warn().Str("cid", carCidStr).Url(remote.url()).Err(e).Msg("loading car");
         }
       }
     }
     if (!loadedCar) {
-      throw this.logger.Error().Url(store.attached.local().url()).Str("cid", carCidStr).Msg("missing car files").AsError();
+      throw this.logger.Error().Url(store.local().url()).Str("cid", carCidStr).Msg("missing car files").AsError();
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
@@ -593,9 +602,9 @@ export class Loader implements Loadable {
 
   protected async getMoreReaders(cids: AnyLink[], store: ActiveStore) {
     for (const cid of cids) {
-      console.log("getMoreReaders>>>", cid.toString());
+      // console.log("getMoreReaders>>>", cid.toString());
       await this.loadCar(cid, store);
     }
-    console.log("getMoreReaders<<<");
+    // console.log("getMoreReaders<<<");
   }
 }
