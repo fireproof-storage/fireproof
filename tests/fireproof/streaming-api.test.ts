@@ -156,8 +156,6 @@ describe("Streaming API", () => {
     expect(row).toHaveProperty("id");
     expect(row).toHaveProperty("doc");
     expect((row as DocumentRow<K, T, R>).doc).toHaveProperty("name");
-    // TODO:
-    // expect((row as DocumentRow<K, T, R>)?.doc).toBe("doc-extra");
   }
 
   async function testToArray<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
@@ -298,6 +296,18 @@ describe("Streaming API", () => {
 
         expect(doc).toBeTruthy();
         expect(doc).not.toHaveProperty("doc");
+      });
+
+      it("test `subscribe` method", async () => {
+        const row = await new Promise((resolve) => {
+          lr.select<string, DocType>("name", { excludeDocs: true }).subscribe(resolve);
+          lr.put({ _id: `doc-extra`, name: `doc-extra` });
+        });
+
+        expect(row).toBeTruthy();
+        expect(row).toHaveProperty("id");
+        expect(row).toHaveProperty("key");
+        expect(row).toHaveProperty("value");
       });
     });
   });

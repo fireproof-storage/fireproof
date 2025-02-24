@@ -308,7 +308,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
         if (excludeDocs === true) {
           // NOTE: Don't know why the type overloading is not doing its thing here
-          // (callback as (row: Row<K, R>) => void)(row);
+          (callback as (row: Row<K, R>) => void)({ ...indexEntry, id: update.id });
         } else if (!excludeDocs) {
           const doc = docUpdateToDocWithId(update);
           const docRow: DocumentRow<K, T, R> = { ...indexEntry, id: update.id, doc };

@@ -317,10 +317,9 @@ async function* gatherUpdates(
 }
 
 export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
-  // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
-    const docValue = await getValueFromLink(blocks, link, logger);
-    yield { id: key, value: docValue.doc, del: docValue.del } as DocUpdate<T>;
+    const docValue = await getValueFromLink<T>(blocks, link, logger);
+    yield { id: key, value: docValue.doc, del: docValue.del };
   }
 }
 
