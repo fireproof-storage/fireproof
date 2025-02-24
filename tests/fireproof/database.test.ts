@@ -136,8 +136,6 @@ describe("named Ledger with record", function () {
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("universe");
   });
-<<<<<<< HEAD
-<<<<<<< HEAD
   it("should update with null value", async function () {
     const ok = await db.put({ _id: "hello", value: null });
     expect(ok.id).toBe("hello");
@@ -179,7 +177,6 @@ describe("named Ledger with record", function () {
     const ok = await db.put({ _id: "hello", value: [NaN] }).catch((e) => e);
     expect(ok.message).toMatch(/IPLD/);
   });
-  it("should del last record", async function () {
   it("should del last record", async () =>{
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
