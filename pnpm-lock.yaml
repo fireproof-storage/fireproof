@@ -83,7 +83,7 @@ importers:
         version: 8.24.1(typescript@5.7.3)
       '@vitest/browser':
         specifier: ^3.0.5
-        version: 3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.9.1)
+        version: 3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.10.0)
       '@vitest/coverage-v8':
         specifier: ^3.0.5
         version: 3.0.5(@vitest/browser@3.0.5)(vitest@3.0.5)
@@ -133,8 +133,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5(@types/node@22.10.5)(@vitest/browser@3.0.5)(@vitest/ui@3.0.5)(happy-dom@14.12.3)(msw@2.7.0(@types/node@22.10.5)(typescript@5.7.3))(tsx@4.19.3)(yaml@2.7.0)
       webdriverio:
-        specifier: ^9.9.1
-        version: 9.9.1
+        specifier: ^9.10.0
+        version: 9.10.0
       zx:
         specifier: ^8.3.2
         version: 8.3.2
@@ -1448,8 +1448,8 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
-  deepmerge-ts@7.1.4:
-    resolution: {integrity: sha512-fxqo6nHGQ9zOVgI4KXqtWXJR/yCLtC7aXIVq+6jc8tHPFUxlFmuUcm2kC4vztQ+LJxQ3gER/XAWearGYQ8niGA==}
+  deepmerge-ts@7.1.5:
+    resolution: {integrity: sha512-HOJkrhaYsweh+W+e74Yn7YStZOilkoPb6fycpwNLKzSPtruFs48nYis0zy5yJz1+ktUhHxoRDJ27RQAWLIJVJw==}
     engines: {node: '>=16.0.0'}
 
   degenerator@5.0.1:
@@ -1629,8 +1629,8 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-xml-parser@4.5.1:
-    resolution: {integrity: sha512-y655CeyUQ+jj7KBbYMc4FG01V8ZQqjN+gDYGJ50RtfsUB8iG9AmwmwoAgeKLJdmueKKMrH1RJ7yXHTSoczdv5w==}
+  fast-xml-parser@4.5.3:
+    resolution: {integrity: sha512-RKihhV+SHsIUGXObeVy9AXiBbFwkVk7Syp8XgwN5U3JV416+Gwp/GO9i0JYKmikykgz/UHRrrV4ROuZEo/T0ig==}
     hasBin: true
 
   fastq@1.19.0:
@@ -2182,8 +2182,8 @@ packages:
     resolution: {integrity: sha512-UJUyfKbwvr/uZSV6btANfb+0t/mOhKV/KXcCUTp8FcQI+v/0d+wXqH4htrW0E4rR6WiEO/EPvUFiV9D5OI4vlw==}
     engines: {node: '>=14.16'}
 
-  pac-proxy-agent@7.1.0:
-    resolution: {integrity: sha512-Z5FnLVVZSnX7WjBg0mhDtydeRZ1xMcATZThjySQUHqr+0ksP8kqaw23fNKkaaN/Z8gwLUs/W7xdl0I75eP2Xyw==}
+  pac-proxy-agent@7.2.0:
+    resolution: {integrity: sha512-TEB8ESquiLMc0lV8vcd5Ql/JAKAoyzHFXaStwjkzpOpC5Yv+pIzLfHvjTSdf3vpa2bMiUQrg9i6276yn8666aA==}
     engines: {node: '>= 14'}
 
   pac-resolver@7.0.1:
@@ -2562,8 +2562,8 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  strnum@1.0.5:
-    resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}
+  strnum@1.1.1:
+    resolution: {integrity: sha512-O7aCHfYCamLCctjAiaucmE+fHf2DYHkus2OKCn4Wv03sykfFtgeECn505X6K4mPl8CRNd/qurC9guq+ynoN4pw==}
 
   sucrase@3.35.0:
     resolution: {integrity: sha512-8EbVDiu9iN/nESwxeSxDKe0dunta1GOlHufmSSXxMD2z2/tMZpDMpvXQGsc+ajGo8y2uYUmixaSRUc/QPoQ0GA==}
@@ -2875,8 +2875,8 @@ packages:
     resolution: {integrity: sha512-VqHDph80Pd/HmeEtoNiqX/ixML/ub8Rw54oviVYm6V7cbnzACrSbSlt9zpdWfjEk+Qkm/CytyYFggan30RfAiQ==}
     engines: {node: '>=18.20.0'}
 
-  webdriverio@9.9.1:
-    resolution: {integrity: sha512-3TO8JcA2fylti2ExsIKgyicwdDvft5slWdq1wz50BXw41/3yOwyg4z8UkT6fUuSUYDOt8QPlfddALtOdQqvuKA==}
+  webdriverio@9.10.0:
+    resolution: {integrity: sha512-60jJBfpy+7UworuoTo2mHLlhTHgFPggveYfIb4T4CfJ//4kejr4xbTXnL+2DxvoVWn2nqakdHJA6ceJRan0m3Q==}
     engines: {node: '>=18.20.0'}
     peerDependencies:
       puppeteer-core: ^22.3.0
@@ -2938,6 +2938,18 @@ packages:
 
   ws@8.18.0:
     resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+  ws@8.18.1:
+    resolution: {integrity: sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -3737,7 +3749,7 @@ snapshots:
       '@typescript-eslint/types': 8.24.1
       eslint-visitor-keys: 4.2.0
 
-  '@vitest/browser@3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.9.1)':
+  '@vitest/browser@3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.10.0)':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
@@ -3751,7 +3763,7 @@ snapshots:
       ws: 8.18.0
     optionalDependencies:
       playwright: 1.49.0
-      webdriverio: 9.9.1
+      webdriverio: 9.10.0
     transitivePeerDependencies:
       - '@types/node'
       - bufferutil
@@ -3775,7 +3787,7 @@ snapshots:
       tinyrainbow: 2.0.0
       vitest: 3.0.5(@types/node@22.10.5)(@vitest/browser@3.0.5)(@vitest/ui@3.0.5)(happy-dom@14.12.3)(msw@2.7.0(@types/node@22.10.5)(typescript@5.7.3))(tsx@4.19.3)(yaml@2.7.0)
     optionalDependencies:
-      '@vitest/browser': 3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.9.1)
+      '@vitest/browser': 3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.10.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -3836,7 +3848,7 @@ snapshots:
       '@wdio/logger': 9.4.4
       '@wdio/types': 9.9.0
       '@wdio/utils': 9.9.0
-      deepmerge-ts: 7.1.4
+      deepmerge-ts: 7.1.5
       glob: 10.4.5
       import-meta-resolve: 4.1.0
     transitivePeerDependencies:
@@ -3866,7 +3878,7 @@ snapshots:
       '@wdio/logger': 9.4.4
       '@wdio/types': 9.9.0
       decamelize: 6.0.0
-      deepmerge-ts: 7.1.4
+      deepmerge-ts: 7.1.5
       edgedriver: 6.1.1
       geckodriver: 5.0.0
       get-port: 7.1.0
@@ -4182,7 +4194,7 @@ snapshots:
 
   deep-is@0.1.4: {}
 
-  deepmerge-ts@7.1.4: {}
+  deepmerge-ts@7.1.5: {}
 
   degenerator@5.0.1:
     dependencies:
@@ -4225,7 +4237,7 @@ snapshots:
       '@zip.js/zip.js': 2.7.57
       decamelize: 6.0.0
       edge-paths: 3.0.5
-      fast-xml-parser: 4.5.1
+      fast-xml-parser: 4.5.3
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       node-fetch: 3.3.2
@@ -4434,9 +4446,9 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-xml-parser@4.5.1:
+  fast-xml-parser@4.5.3:
     dependencies:
-      strnum: 1.0.5
+      strnum: 1.1.1
 
   fastq@1.19.0:
     dependencies:
@@ -4995,7 +5007,7 @@ snapshots:
 
   p-timeout@6.1.3: {}
 
-  pac-proxy-agent@7.1.0:
+  pac-proxy-agent@7.2.0:
     dependencies:
       '@tootallnate/quickjs-emscripten': 0.23.0
       agent-base: 7.1.3
@@ -5134,7 +5146,7 @@ snapshots:
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       lru-cache: 7.18.3
-      pac-proxy-agent: 7.1.0
+      pac-proxy-agent: 7.2.0
       proxy-from-env: 1.1.0
       socks-proxy-agent: 8.0.5
     transitivePeerDependencies:
@@ -5397,7 +5409,7 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  strnum@1.0.5: {}
+  strnum@1.1.1: {}
 
   sucrase@3.35.0:
     dependencies:
@@ -5677,7 +5689,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.10.5
-      '@vitest/browser': 3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.9.1)
+      '@vitest/browser': 3.0.5(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.3)(yaml@2.7.0))(vitest@3.0.5)(webdriverio@9.10.0)
       '@vitest/ui': 3.0.5(vitest@3.0.5)
       happy-dom: 14.12.3
     transitivePeerDependencies:
@@ -5713,16 +5725,16 @@ snapshots:
       '@wdio/protocols': 9.7.0
       '@wdio/types': 9.9.0
       '@wdio/utils': 9.9.0
-      deepmerge-ts: 7.1.4
+      deepmerge-ts: 7.1.5
       undici: 6.21.1
-      ws: 8.18.0
+      ws: 8.18.1
     transitivePeerDependencies:
       - bare-buffer
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.9.1:
+  webdriverio@9.10.0:
     dependencies:
       '@types/node': 20.17.19
       '@types/sinonjs__fake-timers': 8.1.5
@@ -5809,6 +5821,8 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.18.0: {}
+
+  ws@8.18.1: {}
 
   y18n@5.0.8: {}
 
