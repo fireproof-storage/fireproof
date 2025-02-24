@@ -487,7 +487,7 @@ describe("Reopening a ledger", function () {
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
-    expect(loader.carLog.length).toBe(1);
+    expect(loader.carLog.length).toBe(1 + 1 /* genesis */);
   });
 
   it("should have carlog after reopen", async () => {
@@ -497,7 +497,7 @@ describe("Reopening a ledger", function () {
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
-    expect(loader.carLog.length).toBe(1);
+    expect(loader.carLog.length).toBe(1 + 1 /* genesis */);
     await db2.close();
   });
 
@@ -509,10 +509,10 @@ describe("Reopening a ledger", function () {
       await db.ready();
       const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
-      expect(loader.carLog.length).toBe(i + 1);
+      expect(loader.carLog.length).toBe(i + 1 + 1 /* genesis */);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       expect(ok).toBeTruthy();
-      expect(loader.carLog.length).toBe(i + 2);
+      expect(loader.carLog.length).toBe(i + 2 + 1 /* genesis */);
       const doc = await db.get<FireType>(`test${i}`);
       expect(doc.fire).toBe("proof".repeat(50 * 1024));
       await db.close();
@@ -737,12 +737,12 @@ describe("same workload twice, same CID", function () {
     const logA = dbA.ledger.crdt.blockstore.loader?.carLog;
     expect(logA).toBeTruthy();
     assert(logA);
-    expect(logA.length).toBe(docs.length);
+    expect(logA.length).toBe(docs.length + 1 /*genesis*/);
 
     const logB = dbB.ledger.crdt.blockstore.loader?.carLog;
     expect(logB).toBeTruthy();
     assert(logB);
-    expect(logB.length).toBe(docs.length);
+    expect(logB.length).toBe(docs.length + 1 /*genesis*/);
 
     const logA2 = logA.asArray().map((c) => c.toString());
     const logB2 = logB.asArray().map((c) => c.toString());

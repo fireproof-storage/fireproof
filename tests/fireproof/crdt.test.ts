@@ -276,29 +276,34 @@ describe("Compact a named CRDT with writes", function () {
     //
     //    ])
     expect(blz.map((i) => i.cid.toString())).toEqual([
-      "bafyreie4dg3ypgl23yr2fjux2mxn7w5dgc6wtk72ctunkblx3o6npxroia",
+      "bafyreicuomyooryb747esregkhooc4phr656tocowyo6dwcocq22h7qdhu",
       "bafyreig5jhovaiocwk3vfafzdspgtwinftjygyghjzigkc554muhdmp5ba",
       "bafyreiegj7yumreue7llzqroebigscedyzrkeir3zneg5q7zia77itowy4",
-      "bafyreibslqo6sjj77fy45xhvphxt45xd7dhlzglb37sexviegi66m2zqia",
-      "bafyreihyialjln5wu6x4tsmtskcaifpddj5p3q4pcbmd2s3lsfxd7cfgwu",
-      "bafyreiff76gzgricfm73nyxm5ypbg7fy3cb6w65ltvo5oduqjq566zcoda",
-      "bafyreidz2rgtfdmmzsatngbbpfkb4lfc2x43axk7h7fzmcsvwhpikpiykm",
-      "bafyreicyynhujiwq54xlkldavqtindhgjvdlaxxqjn4gqfvgb4pytfs7ka",
-      "bafyreie7c3kulz4fin5y6ffwhanqnag24f3g7ig3qsy4htao3emiiaumn4",
-      "bafyreidnclmuatqf6yelrlp3pfsmwzkkofdbbkdedthfxh7nreoyacmwva",
-      "bafyreib363epeuknentp35yw2bj46vjdpa5m6z4qa537vtqjkc6prxyg6e",
-      "bafyreifupkgympx4lmr7pd5oloti3zzfijvvnuqbgkbpn6uxxkom3kvb2m",
-      "bafyreigwy3xabwoqhrgxxhzvnjthjb34alcqpeseruvzv5betfsbuquuti",
-      "bafyreihuykwc3irfwvmfdz3amh3hvamablrvqb6kpo7xdcroraktbosbly",
-      "bafyreidtyefzqhggtxapec4nm2d4y6qd6hw4r432pauc2izmpecfwvcu4e",
-      "bafyreig72tfvtd7zm4twin4bgx733imlkvqonstxkg7f27qdmdg3ehrzx4",
-      "bafyreihjnqfpwgf2rr7dyzjymc2yngsvhpbxzfke425fudgq4c5vjkoytu",
-      "bafyreidwknp7fo6yqxuta3nr2zpbpjadsvtqg3gr74vhhm6q7qrvqfcoxe",
-      "bafyreigzxee7hcgrwsz42ndinxergvweixscwidsbxcfxcnplgosz5p7by",
-      "bafyreigq42dy5zv744smplrz6ljhmuo2e5j4gxrk7eo3h7ei3chn2r4yai",
-      "bafyreih2mmym2gzq3qljazv3rqlfjx452lv2pqlcpwkdv5o7skmxlzeqru",
-      "bafyreidjjtz3ixbxfgmpspans22uyxi22fvitbquugmjqv76uot7go37wq",
-      "bafyreibrbrcjfuwdnpk4agshincgdtb3atjnvzzjl2gcodb5dpru46osya",
+      "bafyreihobual6tt3hgdfve4h5uzt7fey62se3dfecbuj6f4ndkkwquke4u",
+      "bafyreibqqcs3r6mhpr3525na6jtqnjcf6dmgskk27x4a2jb3r2qveqgexm",
+      "bafyreibr7udlekt4xgavn54i4zfsdlrmi4r76iq6gh3bdq4xh52px6to3e",
+      "bafyreidg2eyas62nvwvi6ggq44tsldj4kwmupyk2xtwmxbwf77g3noqtp4",
+      "bafyreigbzxzj4eh7ljfvzlc7smdextuuk7gvep5mpnb3igaj5r2qzjlfye",
+      "bafyreicr7takuntpofvk52xerdcoiq7wdt73ef54acoya2geig2ywkqlsi",
+      "bafyreihmmgm5sufvnsgjic4fbizkdbajpy2yrklyieadstbtegfr4qko2m",
+      "bafyreibnu44uyu3ggqwgmnlxodw6dyta3qg7e5qldsjq7bkbv452ova6oa",
+      "bafyreieh4nlzg7enfczmj4z7uxvgrnykh7ajw7crxjrncqfrzj47ip6t6m",
+      "bafyreigqqrccymfvvdfetjd2twsdzjwxbb6cn6tedqntvpgp5vboky2ol4",
+      "bafyreid6kkobhgdmce2cyroepyos3jwumtdrfuzi6suldlxzjsgagc3fvi",
+      "bafyreibo2d56wo5ldey24hygtmsfhdxsqgdpmtne5oitehxjppipru33ma",
+      "bafyreifjv6havcza3is7w6ii345f5akba7e34xqcxwoqozmsnihkivykum",
+      "bafyreig6eroqeg3y7am4bnrun3yzbvd656epzxjyivdpzwqo3j3vpuwysi",
+      "bafyreibpsnfsducp7refempcyqnte54j7ueh4ysdlabggihclbddfnuzxm",
+      "bafyreicfkkygbzz5zawr3xbfah2gy3e7w4opzysew4tini7xnksujj4gf4",
+      "bafyreiddjm5xkpfa5vmyhoj5opocrwo6zbdnmqyhouc5ttfxoilmaf25bm",
+      "bafyreibp7vlgfexaknaoxpemnnwadyfa4cfuc3euzlkslskks2n44wwspu",
+      "bafyreichwj7izzpxeyjkhwl26pq45m4hnhxcgzqfk5ffeqkscafleiwfzm",
+      "bafyreidzjjqou36q2ghqdue4buq7536w4sl5aejni6tw25mzsusl26gtwu",
+      "bafyreibxibqhi6wh5klrje7ne4htffeqyyqfd6y7x2no6wnhid4nixizau",
+      "bafyreidnvv4mwvweup5w52ddre2sl4syhvczm6ejqsmuekajowdl2cf2q4",
+      "bafyreihh6nbfbhgkf5lz7hhsscjgiquw426rxzr3fprbgonekzmyvirrhe",
+      "bafyreiejg3twlaxr7gfvvhtxrhvwaydytdv4guidmtvaz5dskm6gp73ryi",
+      "bafyreiblui55o25dopc5faol3umsnuohb5carto7tot4kicnkfc37he4h4",
     ]);
     // expect(blz.length).toBe(13);
   }, 1000000);
@@ -411,7 +416,7 @@ describe("Loader with a committed transaction", function () {
   it("should commit a transaction", function () {
     expect(done.head).toBeTruthy();
     // expect(done.cars).toBeTruthy();
-    expect(loader.carLog.length).toBe(1);
+    expect(loader.carLog.length).toBe(1 + 1 /* genesis */);
   });
   it("can load the car", async () => {
     const blk = loader.carLog.asArray()[0][0];
@@ -420,7 +425,7 @@ describe("Loader with a committed transaction", function () {
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
-    expect(parsed.cars.length).toBe(0);
+    expect(parsed.cars.length).toBe(0 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
     expect(parsed.meta.head).toBeTruthy();
   });
@@ -461,7 +466,7 @@ describe("Loader with two committed transactions", function () {
     expect(done1.head).not.toBe(done2.head);
     // expect(done1.cars).not.toBe(done2.cars);
     // expect(blockstore.transactions.size).toBe(2);
-    expect(loader.carLog.length).toBe(2);
+    expect(loader.carLog.length).toBe(2 + 1 /* genesis */);
     // expect(loader.carLog.indexOf(done1.cars)).toBe(1);
     // expect(loader.carLog.map((cs) => cs.toString()).indexOf(done1.cars.toString())).toBe(1);
     // expect(loader.carLog.indexOf(done2.cars)).toBe(0);
@@ -474,7 +479,7 @@ describe("Loader with two committed transactions", function () {
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
-    expect(parsed.cars.length).toBe(1);
+    expect(parsed.cars.length).toBe(1 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
     expect(parsed.meta.head).toBeTruthy();
   });
@@ -516,7 +521,7 @@ describe("Loader with many committed transactions", function () {
       // expect(done.cars).toBeTruthy();
     }
     expect(blockstore.transactions.size).toBe(0); // cleaned up on commit
-    expect(loader.carLog.length).toBe(count);
+    expect(loader.carLog.length).toBe(count + 1 /* genesis */);
   });
   it("can load the car", async () => {
     const blk = loader.carLog.asArray()[2][0];
@@ -525,7 +530,7 @@ describe("Loader with many committed transactions", function () {
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
-    expect(parsed.cars.length).toBe(7);
+    expect(parsed.cars.length).toBe(7 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
     expect(parsed.meta.head).toBeTruthy();
   });

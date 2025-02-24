@@ -330,6 +330,9 @@ async function gatherUpdates<T extends DocTypes>(
       if (!keys.has(key)) {
         // todo option to see all updates
         const docValue = await getValueFromLink<T>(blocks, value, logger);
+        if (key === PARAM.GENESIS_CID) {
+          continue;
+        }
         updates.push({ id: key, value: docValue.doc, del: docValue.del, clock: link });
         limit--;
         keys.add(key);

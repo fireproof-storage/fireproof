@@ -100,10 +100,10 @@ export class IndexedDBGateway implements bs.Gateway {
     return exception2Result(async () => {
       // return deleteDB(getIndexedDBName(this.url).fullDb);
       const type = getStore(baseUrl, sthis, joinDBName).name;
-      // console.log("IndexedDBDataStore:destroy", type);
       const idb = this._db;
       const trans = idb.transaction(type, "readwrite");
       const object_store = trans.objectStore(type);
+      // console.log("IndexedDBDataStore:destroy", type);
       const toDelete = [];
       for (let cursor = await object_store.openCursor(); cursor; cursor = await cursor.continue()) {
         toDelete.push(cursor.primaryKey);
@@ -112,6 +112,7 @@ export class IndexedDBGateway implements bs.Gateway {
         await trans.db.delete(type, key);
       }
       await trans.done;
+      // console.log("IndexedDBDataStore:destroy-completed", type);
     });
   }
 

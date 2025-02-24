@@ -3,7 +3,17 @@ import { root } from "@fireproof/vendor/@web3-storage/pail/crdt";
 import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { clockChangesSince } from "./crdt-helpers.js";
-import type { DocUpdate, ClockHead, DocTypes, VoidFn, UnReg, SuperThis, BaseBlockstore, CarTransaction } from "./types.js";
+import {
+  type DocUpdate,
+  type ClockHead,
+  type DocTypes,
+  type VoidFn,
+  type UnReg,
+  type SuperThis,
+  type BaseBlockstore,
+  type CarTransaction,
+  PARAM,
+} from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "./utils.js";
 
@@ -68,6 +78,10 @@ export class CRDTClockImpl {
   }
 
   notifyWatchers(updates: DocUpdate<DocTypes>[]) {
+    updates = updates.filter((update) => update.id !== PARAM.GENESIS_CID);
+    if (!updates.length) {
+      return;
+    }
     this.emptyWatchers.forEach((fn) => fn());
     this.watchers.forEach((fn) => fn(updates || []));
   }

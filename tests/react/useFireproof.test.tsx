@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { Database, fireproof, useFireproof } from "use-fireproof";
-import { LiveQueryResult, UseDocumentResult } from "../../src/react/useFireproof.js";
+import { LiveQueryResult, UseDocumentResult } from "use-fireproof";
 
 describe("HOOK: useFireproof", () => {
   it("should be defined", () => {
@@ -26,18 +26,14 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
     database: ReturnType<typeof useFireproof>["database"],
     useLiveQuery: ReturnType<typeof useFireproof>["useLiveQuery"];
 
+  let cnt = 0;
+
   beforeEach(async () => {
     db = fireproof(dbName);
-    await db.put({ foo: "aha" });
-    await db.put({ foo: "bar" });
-    await db.put({ foo: "caz" });
-
-    renderHook(() => {
-      const result = useFireproof(dbName);
-      database = result.database;
-      useLiveQuery = result.useLiveQuery;
-      query = useLiveQuery<{ foo: string }>("foo");
-    });
+    await db.put({ foo: "aha", cnt });
+    await db.put({ foo: "bar", cnt });
+    await db.put({ foo: "caz", cnt });
+    cnt++;
   });
 
   it("should have setup data", async () => {
@@ -49,19 +45,29 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
   });
 
   it("queries correctly", async () => {
+    renderHook(() => {
+      const result = useFireproof(dbName);
+      database = result.database;
+      useLiveQuery = result.useLiveQuery;
+      query = useLiveQuery<{ foo: string }>("foo");
+    });
+
     await waitFor(() => {
+      // act(() => {
+      // expect(query.rows).toBe([]);
       expect(query.rows.length).toBe(3);
       expect(query.rows[0].doc?.foo).toBe("aha");
       expect(query.rows[1].doc?.foo).toBe("bar");
       expect(query.rows[2].doc?.foo).toBe("caz");
+      // });
     });
   });
 
   afterEach(async () => {
     await db.close();
     await db.destroy();
-    await database.close();
-    await database.destroy();
+    await database?.close();
+    await database?.destroy();
   });
 });
 
