@@ -112,7 +112,7 @@ importers:
         specifier: ^4.19.2
         version: 4.19.2
       typedoc:
-        specifier: ^0.27.7
+        specifier: ^0.27.8
         version: 0.27.9(typescript@5.8.3)
       typescript:
         specifier: ^5.7.3
