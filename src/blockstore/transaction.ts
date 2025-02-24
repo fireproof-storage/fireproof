@@ -29,6 +29,7 @@ export interface CarTransactionOpts {
 export class CarTransactionImpl implements CarMakeable, CarTransaction {
   readonly parent: BaseBlockstore;
   readonly #memblock = new MemoryBlockstore();
+  #hackUnshift?: AnyBlock;
 
   constructor(parent: BaseBlockstore, opts: CarTransactionOpts = { add: true, noLoader: false }) {
     // super();
@@ -54,7 +55,17 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
     this.#memblock.putSync(cid, bytes);
   }
 
+  unshift(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void {
+    if (this.#hackUnshift) {
+      throw new Error("unshift already called");
+    }
+    this.#hackUnshift = { cid, bytes };
+  }
+
   async *entries(): AsyncIterableIterator<AnyBlock> {
+    if (this.#hackUnshift) {
+      yield this.#hackUnshift;
+    }
     for await (const blk of this.#memblock.entries()) {
       yield blk;
     }

@@ -29,6 +29,7 @@ import {
   throwFalsy,
   CarTransaction,
   BaseBlockstore,
+  PARAM,
 } from "./types.js";
 import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
@@ -94,13 +95,11 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
     for (const update of updates) {
-      console.log("applyBulkUpdateToCrdt-batch", update.id);
       const link = await writeDocContent(store, tblocks, update, logger);
       await batch.put(toString(update.id, logger), link);
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
-    console.log("applyBulkUpdateToCrdt-single", updates[0].id);
     const link = await writeDocContent(store, tblocks, updates[0], logger);
     result = await put(tblocks, head, toString(updates[0].id, logger), link);
   }
@@ -112,7 +111,6 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
       // ...result.removals,
       result.event,
     ]) {
-      console.log("applyBulkUpdateToCrdt-event", cid.toString());
       tblocks.putSync(cid, bytes);
     }
   }
@@ -347,8 +345,10 @@ async function gatherUpdates<T extends DocTypes>(
 export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
-    const docValue = await getValueFromLink(blocks, link, logger);
-    yield { id: key, value: docValue.doc, del: docValue.del } as DocUpdate<T>;
+    if (key !== PARAM.GENESIS_CID) {
+      const docValue = await getValueFromLink(blocks, link, logger);
+      yield { id: key, value: docValue.doc, del: docValue.del } as DocUpdate<T>;
+    }
   }
 }
 

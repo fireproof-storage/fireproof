@@ -62,6 +62,7 @@ export const PARAM = {
   CAR_CACHE_SIZE: "carCacheSize",
   CAR_COMPACT_CACHE_SIZE: "carCompactCacheSize",
   CAR_META_CACHE_SIZE: "carMetaCacheSize",
+  GENESIS_CID: "baembeiarootfireproofgenesisblockaaaafireproofgenesisblocka",
   // FS = "fs",
 };
 export type PARAMS = (typeof PARAM)[keyof typeof PARAM];
@@ -368,6 +369,8 @@ export interface CarTransaction {
 
   superGet(cid: AnyLink): Promise<AnyBlock | undefined>;
 
+  // needed for genesis block
+  unshift(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
   putSync(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
 
   put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;

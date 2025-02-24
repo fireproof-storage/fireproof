@@ -12,23 +12,24 @@ import {
   doCompact,
   sanitizeDocumentFields,
 } from "./crdt-helpers.js";
-import type {
-  DocUpdate,
-  CRDTMeta,
-  ClockHead,
-  ChangesOptions,
-  DocValue,
-  IndexKeyType,
-  DocWithId,
-  Falsy,
-  SuperThis,
-  IndexTransactionMeta,
-  LedgerOpts,
-  BaseBlockstore,
-  CRDT,
-  CRDTClock,
-  CarTransaction,
-  DocTypes,
+import {
+  type DocUpdate,
+  type CRDTMeta,
+  type ClockHead,
+  type ChangesOptions,
+  type DocValue,
+  type IndexKeyType,
+  type DocWithId,
+  type Falsy,
+  type SuperThis,
+  type IndexTransactionMeta,
+  type LedgerOpts,
+  type BaseBlockstore,
+  type CRDT,
+  type CRDTClock,
+  type CarTransaction,
+  type DocTypes,
+  PARAM,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
@@ -97,12 +98,22 @@ export class CRDTImpl implements CRDT {
 
   async bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
     await this.ready();
-    const prevHead = [...this.clock.head];
     updates = updates.map((dupdate: DocUpdate<T>) => ({
       ...dupdate,
       value: sanitizeDocumentFields(dupdate.value),
     }));
 
+    if (this.clock.head.length === 0) {
+      // INJECT GENESIS Block
+      const value = { id: PARAM.GENESIS_CID, value: { _id: PARAM.GENESIS_CID } }; // satisfies DocUpdate<DocSet<DocTypes>>;
+      // const block = await encode({ value, hasher: sha256, codec: dagCodec });
+      await this._bulk([value]);
+    }
+    return await this._bulk(updates);
+  }
+
+  async _bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
+    const prevHead = [...this.clock.head];
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
       const { head } = await applyBulkUpdateToCrdt<DocTypes>(
         this.blockstore.ebOpts.storeRuntime,

@@ -47,27 +47,41 @@ class AttachedImpl implements Attached {
   }
 }
 
-class FileActiveStoreImpl implements FileActiveStore {
-  ref: ActiveStore;
-  active: FileStore;
-  attached: FileAttachedStores;
+class FileActiveStoreImpl extends FileActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: FileStore;
+  protected readonly xattached: FileAttachedStores;
 
   constructor(ref: ActiveStore, active: FileStore, attached: FileAttachedStores) {
+    super();
     this.ref = ref;
     this.active = active;
-    this.attached = attached;
+    this.xattached = attached;
+  }
+  local(): FileStore {
+    return this.xattached.local();
+  }
+  remotes(): FileStore[] {
+    return this.xattached.remotes();
   }
 }
 
-class CarActiveStoreImpl implements CarActiveStore {
-  ref: ActiveStore;
-  active: CarStore;
-  attached: CarAttachedStores;
+class CarActiveStoreImpl extends CarActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: CarStore;
+  protected readonly xattached: CarAttachedStores;
 
   constructor(ref: ActiveStore, active: CarStore, attached: CarAttachedStores) {
+    super();
     this.ref = ref;
     this.active = active;
-    this.attached = attached;
+    this.xattached = attached;
+  }
+  local(): CarStore {
+    return this.xattached.local();
+  }
+  remotes(): CarStore[] {
+    return [this.active, ...this.xattached.remotes().filter((i) => i !== this.active)];
   }
 }
 
@@ -97,15 +111,22 @@ class FileAttachedStoresImpl implements FileAttachedStores {
   }
 }
 
-class MetaActiveStoreImpl implements MetaActiveStore {
-  ref: ActiveStore;
-  active: MetaStore;
-  attached: MetaAttachedStores;
+class MetaActiveStoreImpl extends MetaActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: MetaStore;
+  protected readonly xattached: MetaAttachedStores;
 
   constructor(ref: ActiveStore, active: MetaStore, attached: MetaAttachedStores) {
+    super();
     this.ref = ref;
     this.active = active;
-    this.attached = attached;
+    this.xattached = attached;
+  }
+  local(): MetaStore {
+    return this.xattached.local();
+  }
+  remotes(): MetaStore[] {
+    return [this.active, ...this.xattached.remotes().filter((i) => i !== this.active)];
   }
 }
 
@@ -122,15 +143,23 @@ class MetaAttachedStoresImpl implements MetaAttachedStores {
   }
 }
 
-class WALActiveStoreImpl implements WALActiveStore {
-  ref: ActiveStore;
-  active: WALStore;
-  attached: WALAttachedStores;
+class WALActiveStoreImpl extends WALActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: WALStore;
+  protected readonly xattached: WALAttachedStores;
 
   constructor(ref: ActiveStore, active: WALStore, attached: WALAttachedStores) {
+    super();
     this.ref = ref;
     this.active = active;
-    this.attached = attached;
+    this.xattached = attached;
+  }
+
+  local(): WALStore {
+    return this.xattached.local();
+  }
+  remotes(): WALStore[] {
+    return this.xattached.remotes();
   }
 }
 
@@ -155,11 +184,21 @@ class WALAttachedStoresImpl implements WALAttachedStores {
 
 class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
   readonly active: T;
-  readonly attached: AttachedRemotesImpl;
+  readonly xattached: AttachedRemotesImpl;
 
   constructor(active: T, attached: AttachedRemotesImpl) {
     this.active = active;
-    this.attached = attached;
+    this.xattached = attached;
+  }
+
+  local(): LocalActiveStore {
+    return this.xattached.local();
+  }
+  remotes(): ActiveStore[] {
+    return this.xattached.remotes();
+    // return  [
+    //   this.attached.remotes().filter(i => i !== this.active)
+    // ]
   }
 
   baseStores(): BaseStore[] {
@@ -170,19 +209,19 @@ class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
     return bs;
   }
   carStore(): CarActiveStore {
-    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.attached));
+    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.xattached));
   }
   fileStore(): FileActiveStore {
-    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.attached));
+    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.xattached));
   }
   metaStore(): MetaActiveStore {
-    return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.attached));
+    return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.xattached));
   }
   walStore(): WALActiveStore {
     if (!this.active.wal) {
-      throw this.attached.loadable.sthis.logger.Error().Msg("wal store not set").AsError();
+      throw this.xattached.loadable.sthis.logger.Error().Msg("wal store not set").AsError();
     }
-    return new WALActiveStoreImpl(this, this.active.wal, new WALAttachedStoresImpl(this.attached));
+    return new WALActiveStoreImpl(this, this.active.wal, new WALAttachedStoresImpl(this.xattached));
   }
 }
 
@@ -257,7 +296,25 @@ export class AttachedRemotesImpl implements AttachedStores {
 
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore {
     if (isCoerceURI(store)) {
-      throw this.loadable.sthis.logger.Error().Msg("store must be an object").AsError();
+      const activateUrl = URI.from(store);
+      let maxScore = 0;
+      let maxStore: DataAndMetaStore | undefined;
+      for (const { value } of this._remotes.values()) {
+        if (value.isErr()) {
+          continue;
+        }
+        for (const url of value.Ok().stores.baseStores.map((i) => i.url())) {
+          const mr = url.match(activateUrl);
+          if (mr.score > maxScore) {
+            maxScore = mr.score;
+            maxStore = value.Ok().stores;
+          }
+        }
+      }
+      if (!maxStore) {
+        throw this.loadable.sthis.logger.Error().Url(activateUrl).Msg("no store found").AsError();
+      }
+      store = maxStore;
     }
     return new ActiveStoreImpl(store as DataAndMetaStore, this);
   }
