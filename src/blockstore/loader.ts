@@ -143,6 +143,7 @@ export class Loader implements Loadable {
   }
 
   async destroy() {
+    // console.log("destroy", this.attachedStores.local().baseStores().map((store) => store.url().toString()));
     await Promise.all(
       this.attachedStores
         .local()

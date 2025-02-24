@@ -70,7 +70,7 @@ describe("InterceptorGateway", () => {
     await db.close();
     await db.destroy();
     // await sleep(1000);
-    expect(gwi.fn.mock.calls.length).toBe(46);
+    expect(gwi.fn.mock.calls.length).toBe(56);
     // might be a stupid test
     expect(gwi.fn.mock.calls.map((i) => i[0]).sort() /* not ok there are some operation */).toEqual(
       [
@@ -81,18 +81,28 @@ describe("InterceptorGateway", () => {
         "buildUrl",
         "buildUrl",
         "buildUrl",
+        "buildUrl",
+        "buildUrl",
+        "buildUrl",
+        "buildUrl",
+        "buildUrl",
         "get",
         "get",
         "start",
         "start",
         "buildUrl",
         "get",
+        "get",
         "buildUrl",
         "put",
         "put",
         "buildUrl",
         "put",
         "buildUrl",
+        "put",
+        "put",
+        "put",
+        "put",
         "put",
         "start",
         "start",
