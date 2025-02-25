@@ -73,7 +73,7 @@ export class DefSerdeGateway implements SerdeGateway {
       const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
       this.subscribeFn.set(urlWithoutKey, rawCallback);
       return Result.Ok(() => {
-        this.subscribeFn.delete(url.toString());
+        this.subscribeFn.delete(urlWithoutKey);
       });
     }
     const unreg = await this.gw.subscribe(url, rawCallback, sthis);
