@@ -144,7 +144,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           // we already initialized from application code
           if (mapFn) {
             if (this.mapFn.toString() !== mapFn.toString()) {
-              throw this.logger.Error().Msg("cannot apply different mapFn app2").AsError();
+              this.logger.Error().Msg("cannot apply different mapFn app2");
             }
           }
         } else {
@@ -155,12 +155,11 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (this.mapFnString) {
             // we already loaded from a header
             if (this.mapFnString !== mapFn.toString()) {
-              throw this.logger
+              this.logger
                 .Error()
                 .Str("mapFnString", this.mapFnString)
                 .Str("mapFn", mapFn.toString())
-                .Msg("cannot apply different mapFn app")
-                .AsError();
+                .Msg("cannot apply different mapFn app");
             }
           } else {
             // we are first
