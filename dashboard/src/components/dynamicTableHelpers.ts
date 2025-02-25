@@ -1,4 +1,6 @@
-export function headersForDocs(docs: object[]) {
+import { TableRow } from "./DynamicTable.tsx";
+
+export function headersForDocs(docs: object[]): string[] {
   const headers = new Map();
   for (const doc of docs) {
     if (!doc) continue;

@@ -1,10 +1,11 @@
+import { JSX, useCallback, useEffect, useState } from "react";
+import Editor from "react-simple-code-editor";
+
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import json from "highlight.js/lib/languages/json";
 
 import "highlight.js/styles/stackoverflow-light.css";
-import { JSX, useCallback, useEffect, useState } from "react";
-import Editor from "react-simple-code-editor";
 
 hljs.registerLanguage("json", json);
 hljs.registerLanguage("javascript", javascript);
@@ -26,7 +27,7 @@ const codeStyle = {
 
 export function CodeHighlight({ code, language = "json" }: { code: string; language?: string }): JSX.Element {
   return (
-    <div className="p-2 text-code" style={codeStyle}>
+    <div className="p-2 text-code" style={codeStyle as React.CSSProperties}>
       <HighlightedCode code={code} language={language} />
     </div>
   );

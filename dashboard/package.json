@@ -22,21 +22,21 @@
     "drizzle:d1-pages": "drizzle-kit push --config ./drizzle.d1-local-pages.config.ts"
   },
   "dependencies": {
-    "@adviser/cement": "^0.3.6",
+    "@adviser/cement": "^0.3.20",
     "@clerk/backend": "^1.22.0",
     "@clerk/clerk-js": "^5.40.0",
     "@clerk/clerk-react": "^5.19.0",
     "@fireproof/cloud": "^0.19.118",
-    "@fireproof/core": "^0.19.121",
+    "@fireproof/core": "^0.19.118",
     "@libsql/client": "^0.14.0",
     "@libsql/kysely-libsql": "^0.4.1",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/react-query": "5.66.0",
-    "better-auth": "^1.1.15",
     "drizzle-orm": "^0.38.3",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
-    "jose": "^5.9.6",
+    "jose": "^6.0.6",
+    "multiformats": "^13.3.2",
     "partysocket": "^1.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -45,7 +45,7 @@
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
     "use-fireproof": "^0.19.118",
-    "vitest": "^2.1.8"
+    "vitest": "^3.0.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250109.0",

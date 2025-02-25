@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { type DocBase, useFireproof } from "use-fireproof";
-import DynamicTable from "../../components/DynamicTable.tsx";
+import { type DocBase, DocTypes, DocWithId, useFireproof } from "use-fireproof";
+import { DynamicTable, TableRow } from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 
 export function DatabasesHistory() {
@@ -9,12 +9,12 @@ export function DatabasesHistory() {
   const { database } = useFireproof(name);
 
   const [history, setHistory] = useState({ rows: [] } as {
-    rows: { key: string; value: DocBase }[];
+    rows: { key: string; value: TableRow }[];
   });
 
   useEffect(() => {
     const handleChanges = async () => {
-      const changes = await database.changes();
+      const changes = await database.changes<Record<string, unknown>>();
       setHistory(changes);
     };
 

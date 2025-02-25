@@ -19,6 +19,8 @@ import {
   queryUser,
   upsetUserByProvider,
 } from "./users.ts";
+import { env2jwk } from "./jwk-helper.ts";
+import { SignJWT } from "jose";
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
@@ -381,6 +383,16 @@ export interface ResDeleteLedger {
   readonly type: "resDeleteLedger";
 }
 
+export interface ReqCloudSessionToken {
+  readonly type: "reqCloudSessionToken";
+  readonly auth: AuthType;
+}
+
+export interface ResCloudSessionToken {
+  readonly type: "resCloudSessionToken";
+  readonly token: string; // JWT
+}
+
 export interface FPApiInterface {
   ensureUser(req: ReqEnsureUser): Promise<Result<ResEnsureUser>>;
   findUser(req: ReqFindUser): Promise<Result<ResFindUser>>;
@@ -407,6 +419,7 @@ export interface FPApiInterface {
   // listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant>
 
   // attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger>
+  getCloudSessionToken(req: ReqCloudSessionToken): Promise<Result<ResCloudSessionToken>>;
 }
 
 interface FPApiMsgInterface {
@@ -470,6 +483,10 @@ class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger {
     return (jso as ReqDeleteLedger).type === "reqDeleteLedger";
+  }
+
+  isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken {
+    return (jso as ReqCloudSessionToken).type === "reqCloudSessionToken";
   }
 }
 
@@ -2071,6 +2088,86 @@ export class FPApiSQL implements FPApiInterface {
       type: "resListLedgersByUser",
       userId: auth.user.userId,
       ledgers: sqlToLedgers(rows),
+    });
+  }
+
+  async getCloudSessionToken(
+    req: ReqCloudSessionToken,
+    ictx: Partial<{
+      secretToken: string;
+      validFor: number;
+      issuer: string;
+      audience: string;
+    }> = {},
+  ): Promise<Result<ResCloudSessionToken>> {
+    const resListTenants = await this.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: req.auth,
+    });
+    if (resListTenants.isErr()) {
+      return Result.Err(resListTenants.Err());
+    }
+
+    const resListLedgers = await this.listLedgersByUser({
+      type: "reqListLedgersByUser",
+      auth: req.auth,
+    });
+
+    if (resListLedgers.isErr()) {
+      return Result.Err(resListLedgers.Err());
+    }
+
+    const ctx = {
+      secretToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_SECRET")!,
+      validFor: parseInt(this.sthis.env.get("CLOUD_SESSION_TOKEN_VALID_FOR") ?? "3600000", 10),
+      issuer: this.sthis.env.get("CLOUD_SESSION_TOKEN_ISSUER") ?? "FP_CLOUD",
+      audience: this.sthis.env.get("CLOUD_SESSION_TOKEN_AUDIENCE") ?? "PUBLIC",
+      ...ictx,
+    };
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    const privKey = await env2jwk(ctx.secretToken);
+    let validFor = ctx.validFor;
+    if (!(0 <= validFor && validFor <= 3600000)) {
+      validFor = 3600000;
+    }
+    const token = await new SignJWT({
+      userId: auth.user.userId,
+      tenants: resListTenants.Ok().tenants.map((i) => ({
+        id: i.tenantId,
+        role: i.role,
+      })),
+      ledgers: resListLedgers
+        .Ok()
+        .ledgers.map((i) => {
+          const rights = i.users.find((u) => u.userId === auth.user!.userId);
+          if (!rights) {
+            return undefined;
+          }
+          return {
+            id: i.ledgerId,
+            role: rights.role,
+            right: rights.right,
+          };
+        })
+        .filter((i) => i),
+    })
+      .setProtectedHeader({ alg: "ES256" }) // algorithm
+      .setIssuedAt()
+      .setIssuer(ctx.issuer) // issuer
+      .setAudience(ctx.audience) // audience
+      .setExpirationTime(Date.now() + validFor) // expiration time
+      .sign(privKey);
+
+    return Result.Ok({
+      type: "resCloudSessionToken",
+      token,
     });
   }
 }

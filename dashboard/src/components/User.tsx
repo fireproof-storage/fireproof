@@ -1,7 +1,4 @@
-import { Clerk } from "@clerk/clerk-js";
-import { SignedIn, SignedOut, SignIn, SignInButton, UserButton, useSession } from "@clerk/clerk-react";
-import { useEffect } from "react";
-import { aw } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
+import { SignedIn, SignedOut, SignInButton, UserButton, useSession } from "@clerk/clerk-react";
 
 // let user;
 

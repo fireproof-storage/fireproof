@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { MapFn, useFireproof } from "use-fireproof";
 import { EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
-import DynamicTable from "../../components/DynamicTable.tsx";
+import { DynamicTable, TableRow } from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 
 type AnyMapFn = MapFn<object>;
@@ -90,5 +90,5 @@ function QueryDynamicTable({ mapFn, name }: { mapFn: string; name: string }) {
   console.log(docs);
   const headers = headersForDocs(docs);
 
-  return <DynamicTable headers={headers} th="key" link={["_id"]} rows={docs} dbName={name} />;
+  return <DynamicTable headers={headers} th="key" link={["_id"]} rows={docs as TableRow[]} dbName={name} />;
 }

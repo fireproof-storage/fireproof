@@ -37,7 +37,7 @@ const buttonStyles = {
 
 export function Button<T extends ElementType = "button">({
   children,
-  tag = "button",
+  // tag = "button",
   variation = "primary",
   style = "",
   disabled = false,
@@ -45,22 +45,22 @@ export function Button<T extends ElementType = "button">({
   ...rest
 }: ButtonProps<T>) {
   const isDarkMode = useContext(AppContext).sideBar.isDarkMode;
-  const Component = tag;
+  // const Component = tag;
 
   const typeStyles = isDarkMode ? buttonStyles[variation].dark : buttonStyles[variation].light;
   const disabledStyles = disabled ? "opacity-50 pointer-events-none" : "";
   const combinedStyles = baseStylesButton + " " + typeStyles + " " + disabledStyles + " " + style;
 
   return (
-    <Component className={combinedStyles} onClick={onClick} disabled={disabled} {...rest}>
+    <button className={combinedStyles} onClick={onClick} disabled={disabled} {...rest}>
       {children}
-    </Component>
+    </button>
   );
 }
 
 export function IconButton<T extends ElementType = "button">({
   children,
-  tag = "button",
+  // tag = "button",
   variation = "primary",
   style = "",
   size = "38",
@@ -69,7 +69,7 @@ export function IconButton<T extends ElementType = "button">({
   ...rest
 }: ButtonProps<T>) {
   const isDarkMode = useContext(AppContext).sideBar.isDarkMode;
-  const Component = tag;
+  // const Component = tag;
 
   const typeStyles = isDarkMode ? buttonStyles[variation].dark : buttonStyles[variation].light;
   const disabledStyles = disabled ? "opacity-50 pointer-events-none" : "";
@@ -77,8 +77,8 @@ export function IconButton<T extends ElementType = "button">({
   const combinedStyles = baseStylesIconButton + " " + typeStyles + " " + disabledStyles + " " + sizeStyles + " " + style;
 
   return (
-    <Component className={combinedStyles} onClick={onClick} disabled={disabled} {...rest}>
+    <button className={combinedStyles} onClick={onClick} disabled={disabled} {...rest}>
       {children}
-    </Component>
+    </button>
   );
 }

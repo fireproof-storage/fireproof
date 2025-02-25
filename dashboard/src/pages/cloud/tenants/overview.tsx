@@ -21,6 +21,8 @@ export function CloudTenantOverview() {
     return <div>Not found</div>;
   }
 
+  const cloudToken = cloud.getCloudToken();
+
   return (
     <div className="space-y-6 p-6">
       <div className="bg-[--muted] shadow sm:rounded-lg p-6">
@@ -31,6 +33,12 @@ export function CloudTenantOverview() {
             <code className="text-sm text-[--foreground]">
               {`await connect(db, "${tenant.tenantId}", "my-ledger-id", "token");`}
             </code>
+            {cloudToken.data && (
+              <code>
+                /* * your current cloud-token: {cloudToken.data.token}
+                */
+              </code>
+            )}
           </div>
           To learn more about using Fireproof Cloud, check out our{" "}
           <a href="https://use-fireproof.com/docs/getting-started" className="text-[--accent] hover:underline">

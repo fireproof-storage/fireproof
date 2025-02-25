@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
-import DynamicTable from "../../components/DynamicTable.tsx";
+import { TableRow, DynamicTable } from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 import { SYNC_DB_NAME, truncateDbName } from "../../helpers.ts";
 
@@ -350,7 +350,14 @@ export default function App() {
             to get started.
           </div>
         ) : (
-          <DynamicTable headers={headers} th="key" link={["_id"]} rows={docs} dbName={name} onDelete={deleteDocument} />
+          <DynamicTable
+            headers={headers}
+            th="key"
+            link={["_id"]}
+            rows={docs as TableRow[]}
+            dbName={name}
+            onDelete={deleteDocument}
+          />
         )}
       </div>
     </div>
