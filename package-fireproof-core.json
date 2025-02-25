@@ -60,7 +60,8 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "@adviser/cement": "~0.3.19!",
+    "@adviser/cement": "~0.3.20!",
+    "@fireproof/vendor": ">=1.1.0!",
     "react": ">=18.0.0!"
   },
   "dependencies": {

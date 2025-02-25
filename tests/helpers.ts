@@ -14,8 +14,6 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-import { TaskManager } from "../src/blockstore/task-manager.js";
-import { CarCacheItem } from "../src/blockstore/types.js";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -96,13 +94,13 @@ class MockLoader implements bs.Loadable {
   readonly ebOpts: bs.BlockstoreRuntime;
   readonly carLog: bs.CarLog;
   readonly attachedStores: bs.AttachedStores;
-  readonly taskManager: TaskManager;
+  readonly taskManager: bs.TaskManager;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
     this.ebOpts = {} as bs.BlockstoreRuntime;
     this.carLog = new bs.CarLog();
-    this.taskManager = new TaskManager(sthis, () => Promise.resolve());
+    this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve());
     this.attachedStores = new bs.AttachedRemotesImpl(this);
   }
 
@@ -136,11 +134,11 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<CarCacheItem> {
+  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.CarCacheItem> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<CarCacheItem> {
+  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.CarCacheItem> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
