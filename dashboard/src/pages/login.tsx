@@ -7,7 +7,7 @@ const slides = [
   { text: "Fastest I’ve ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },
 ];
 
-export async function loginLoader({ request }) {
+export async function loginLoader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const nextUrl = url.searchParams.get("next_url") || "/";
   return nextUrl;
@@ -212,7 +212,7 @@ export function Login() {
   );
 }
 
-function Slide({ data, isDarkMode }) {
+function Slide({ data, isDarkMode }: { data: { text: string; author: string; role: string }; isDarkMode: boolean }) {
   return (
     <div className="flex flex-col text-white">
       <p className="text-[20px] sm:text-[34px] lg:text-[2vw] text-main font-bold text-balance mb-4 leading-[1.3]">“{data.text}“</p>
@@ -226,7 +226,7 @@ function Slide({ data, isDarkMode }) {
   );
 }
 
-function SlideButtonIcon({ isDarkMode }) {
+function SlideButtonIcon({ isDarkMode }: { isDarkMode: boolean }) {
   return (
     <svg
       className={`${isDarkMode ? "text-fp-s hover:text-fp-p" : "text-fp-bg-00 hover:text-fp-dec-01"} active:scale-95 transition-transform`}

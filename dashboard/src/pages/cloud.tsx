@@ -7,7 +7,7 @@ import { WithSidebar } from "../layouts/with-sidebar.tsx";
 
 // TODO: This is a temporary loader to ensure the user is logged in with Clerk.
 // TODO: We should move this to a provider agnostic loader
-export async function cloudLoader({ request }) {
+export async function cloudLoader({ request }: { request: Request }) {
   const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
   const clerk = new Clerk(publishableKey);

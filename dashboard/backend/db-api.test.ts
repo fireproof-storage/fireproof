@@ -12,6 +12,8 @@ import { FPApiSQL, FPApiToken, AdminTenant, ReqEnsureUser, ResEnsureUser } from 
 import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
 import { AuthType, VerifiedAuth } from "./users.ts";
 import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
+import { jwtVerify } from "jose/jwt/verify";
+import { env2jwk } from "./jwk-helper.ts";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
 // // import Database from 'better-sqlite3';
@@ -813,6 +815,79 @@ describe("db-api", () => {
     });
     const myAfterDelete = afterListOwnersLedger.Ok().ledgers.filter((i) => i.ledgerId === createLedger.Ok().ledger.ledgerId);
     expect(myAfterDelete.length).toEqual(0);
+  });
+
+  it("create session with claim", async () => {
+    const auth: AuthType = data[0].reqs.auth;
+    // fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "
+
+    const rledger = await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: data[0].ress.tenants[0].tenantId,
+        name: `Session Ledger`,
+      },
+    });
+    await fpApi.updateLedger({
+      type: "reqUpdateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        ledgerId: rledger.Ok().ledger.ledgerId,
+        tenantId: data[0].ress.tenants[0].tenantId,
+        name: `Session X-Ledger`,
+        right: "read",
+        role: "member",
+      },
+    });
+
+    const resSt = await fpApi.getCloudSessionToken(
+      {
+        type: "reqCloudSessionToken",
+        auth,
+      },
+      {
+        secretToken:
+          "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+        issuer: "TEST_I",
+        audience: "TEST_A",
+        validFor: 40000000,
+      },
+    );
+    expect(resSt.isOk()).toBeTruthy();
+    const pub = await env2jwk(
+      "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
+    );
+    const v = await jwtVerify(resSt.Ok().token, pub);
+    expect(v.payload.exp).toBeLessThanOrEqual(new Date().getTime() + 3700000);
+    expect(v.payload).toEqual({
+      aud: "TEST_A",
+      exp: v.payload.exp,
+      iat: v.payload.iat,
+      iss: "TEST_I",
+      ledgers: [
+        {
+          id: rledger.Ok().ledger.ledgerId,
+          right: "read",
+          role: "member",
+        },
+      ],
+      tenants: [
+        {
+          id: data[0].ress.tenants[0].tenantId,
+          role: "admin",
+        },
+      ],
+      userId: data[0].ress.user.userId,
+    });
+    await fpApi.deleteLedger({
+      type: "reqDeleteLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        ledgerId: rledger.Ok().ledger.ledgerId,
+        tenantId: data[0].ress.tenants[0].tenantId,
+      },
+    });
   });
 });
 

@@ -2,15 +2,15 @@ import { useEffect } from "react";
 import { IconButton } from "./Button.tsx";
 import { User } from "./User.tsx";
 
-export default function Header({ isDarkMode, setIsDarkMode }) {
+export default function Header({ isDarkMode, setIsDarkMode }: { isDarkMode: boolean; setIsDarkMode: (x: boolean) => void }) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("darkMode", isDarkMode.toString());
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((isDarkMode) => !isDarkMode);
-  };
+  function toggleDarkMode() {
+    setIsDarkMode(!isDarkMode);
+  }
 
   return (
     <header className="flex h-14 items-center gap-4 border-b border-fp-dec-00 px-main flex-shrink-0">

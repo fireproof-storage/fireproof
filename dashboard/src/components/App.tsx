@@ -9,7 +9,6 @@ import {
 } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { WithoutSidebar } from "../layouts/without-sidebar.tsx";
-import { Better } from "../pages/better.tsx";
 import { Cloud, cloudLoader } from "../pages/cloud.tsx";
 import CloudIndex from "../pages/cloud/index.tsx";
 import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
@@ -71,7 +70,7 @@ export function App() {
             </Route>
           </Route>
         </Route>
-        <Route path="better" element={<Better />} />
+        {/* <Route path="better" element={<Better />} /> */}
       </Route>
       <Route path="/fp/databases" element={<Databases />} loader={databaseLoader}>
         <Route index element={<DatabasesIndex />} />

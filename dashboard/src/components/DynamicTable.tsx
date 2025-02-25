@@ -1,25 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useNavigate } from "react-router-dom";
+import { DocBase, DocTypes, DocWithId } from "use-fireproof";
 
-interface TableRow {
-  _id: string;
-  [key: string]: unknown;
-}
+// export interface TableRow extends DocBase {
+//   // readonly _id: string;
+//   readonly [key: string]: unknown;
+// }
+
+export type TableRow = DocWithId<Record<string, unknown>>;
 
 interface TableProps {
-  hrefFn?: (id: string) => string;
-  dbName?: string;
-  headers: string[];
-  rows: TableRow[];
-  th?: string;
-  link?: string[];
-  onDelete?: (id: string) => Promise<void>;
+  readonly hrefFn?: (id: string) => string;
+  readonly dbName?: string;
+  readonly headers: string[];
+  readonly rows: TableRow[];
+  readonly th?: string;
+  readonly link?: string[];
+  readonly onDelete?: (id: string) => Promise<void>;
 }
 
-export default function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id", link = ["_id"] }: TableProps) {
+export function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id", link = ["_id"] }: TableProps) {
   const navigate = useNavigate();
 
-  function handleRowClick(fields: TableRow) {
+  function handleRowClick(fields: DocBase) {
     if (hrefFn) {
       navigate(hrefFn(fields._id));
     } else if (dbName) {
