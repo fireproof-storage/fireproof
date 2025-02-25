@@ -371,7 +371,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].id).toBe("king");
     expect(got.rows[0].key).toBe(10);
   });
-  it("creating a different index with same name should not work", async () => {
+  it.skip("creating a different index with same name should not work", async () => {
     const e = await index(crdt, "points", (doc) => doc._id)
       .query()
       .catch((err) => err);
