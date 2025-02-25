@@ -226,7 +226,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       // }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/indexeddb'",
+      footer: "declare module '@fireproof/core/react'",
     },
   },
   {

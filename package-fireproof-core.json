@@ -69,7 +69,6 @@
     "@ipld/car": "from-package-json",
     "@ipld/dag-cbor": "from-package-json",
     "@ipld/dag-json": "from-package-json",
-    "@fireproof/vendor": "from-package-json",
     "cborg": "from-package-json",
     "ipfs-unixfs-exporter": "from-package-json",
     "multiformats": "from-package-json",
