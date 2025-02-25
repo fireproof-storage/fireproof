@@ -68,7 +68,7 @@ export function sanitizeDocumentFields<T>(obj: T): T {
     if (obj instanceof Date) {
       return obj.toISOString() as unknown as T;
     }
-    
+
     const typedObj = obj as Record<string, unknown>;
     const result: Record<string, unknown> = {};
     for (const key in typedObj) {
