@@ -64,6 +64,11 @@ export function sanitizeDocumentFields<T>(obj: T): T {
       return item;
     }) as T;
   } else if (typeof obj === "object" && obj !== null) {
+    // Special case for Date objects - convert to ISO string
+    if (obj instanceof Date) {
+      return obj.toISOString() as unknown as T;
+    }
+    
     const typedObj = obj as Record<string, unknown>;
     const result: Record<string, unknown> = {};
     for (const key in typedObj) {
@@ -71,8 +76,13 @@ export function sanitizeDocumentFields<T>(obj: T): T {
         const value = typedObj[key];
         if (value === null || (!Number.isNaN(value) && value !== undefined)) {
           if (typeof value === "object" && !key.startsWith("_")) {
-            const sanitized = sanitizeDocumentFields(value);
-            result[key] = sanitized;
+            // Handle Date objects in properties
+            if (value instanceof Date) {
+              result[key] = (value as Date).toISOString();
+            } else {
+              const sanitized = sanitizeDocumentFields(value);
+              result[key] = sanitized;
+            }
           } else {
             result[key] = value;
           }
