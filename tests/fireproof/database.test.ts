@@ -136,6 +136,19 @@ describe("named Ledger with record", function () {
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("universe");
   });
+  it("should update with Date value", async function () {
+    const date = new Date();
+    const dateStr = date.toISOString();
+    const ok = await db.put({ _id: "hello", value: date });
+    expect(ok.id).toBe("hello");
+    const doc = await db.get<Doc>("hello");
+    expect(doc).toBeTruthy();
+    expect(doc._id).toBe("hello");
+    expect(doc.value).toBe(dateStr);
+    expect(typeof doc.value).toBe("string");
+    const parsed = new Date(doc.value);
+    expect(parsed).toStrictEqual(date);
+  });
   it("should update with null value", async function () {
     const ok = await db.put({ _id: "hello", value: null });
     expect(ok.id).toBe("hello");
