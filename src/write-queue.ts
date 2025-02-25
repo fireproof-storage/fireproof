@@ -24,15 +24,15 @@ export function defaultWriteQueueOpts(opts: Partial<WriteQueueParams> = {}): Wri
   };
 }
 
-class WriteQueueImpl<T extends DocUpdate<T>> implements WriteQueue<T> {
+class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> implements WriteQueue<T> {
   private readonly opts: WriteQueueParams;
 
-  private readonly queue: WriteQueueItem<T>[] = [];
-  private readonly worker: WorkerFunction<T>;
+  private readonly queue: WriteQueueItem<S>[] = [];
+  private readonly worker: WorkerFunction<S>;
   private isProcessing = false;
   private readonly logger: Logger;
 
-  constructor(sthis: SuperThis, worker: WorkerFunction<T>, opts: WriteQueueParams) {
+  constructor(sthis: SuperThis, worker: WorkerFunction<S>, opts: WriteQueueParams) {
     this.logger = ensureLogger(sthis, "WriteQueueImpl");
     this.worker = worker;
     this.opts = defaultWriteQueueOpts(opts);
@@ -54,7 +54,7 @@ class WriteQueueImpl<T extends DocUpdate<T>> implements WriteQueue<T> {
     try {
       this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processing tasks");
       const tasksToProcess = this.queue.splice(0, this.opts.chunkSize);
-      const updates = tasksToProcess.map((item) => item.tasks).filter((item) => item) as DocUpdate<T>[][];
+      const updates = tasksToProcess.map((item) => item.tasks).filter((item) => item) as DocUpdate<S>[][];
       const promises = updates.map(async (update, index) => {
         try {
           const result = await this.worker(update);
@@ -73,13 +73,13 @@ class WriteQueueImpl<T extends DocUpdate<T>> implements WriteQueue<T> {
     }
   }
 
-  bulk(tasks: DocUpdate<T>[]): Promise<MetaType> {
+  bulk(tasks: DocUpdate<S>[]): Promise<MetaType> {
     return new Promise<MetaType>((resolve, reject) => {
       this.queue.push({ tasks, resolve, reject });
       this.process();
     });
   }
-  push(task: DocUpdate<T>): Promise<MetaType> {
+  push(task: DocUpdate<S>): Promise<MetaType> {
     return this.bulk([task]);
   }
   close(): Promise<void> {
@@ -89,10 +89,10 @@ class WriteQueueImpl<T extends DocUpdate<T>> implements WriteQueue<T> {
   }
 }
 
-export function writeQueue<T extends DocUpdate<T>>(
+export function writeQueue<T extends DocUpdate<S>, S extends DocTypes = DocTypes>(
   sthis: SuperThis,
-  worker: WorkerFunction<T>,
+  worker: WorkerFunction<S>,
   opts: WriteQueueParams,
-): WriteQueue<T> {
-  return new WriteQueueImpl<T>(sthis, worker, opts);
+): WriteQueue<T, S> {
+  return new WriteQueueImpl<T, S>(sthis, worker, opts);
 }
