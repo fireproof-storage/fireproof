@@ -1,7 +1,6 @@
 import { CID } from "multiformats";
 import { rt, bs, NotFoundError, PARAM, ensureSuperThis } from "@fireproof/core";
 import { Result } from "@adviser/cement";
-import { createAttachedStores } from "../../src/blockstore/attachable-store.js";
 import { mockLoader, noopUrl } from "../helpers.js";
 
 // function runtime(sthis: SuperThis) {
@@ -29,7 +28,7 @@ describe("CarStore", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    const at = await createAttachedStores(noopUrl("test"), loader);
+    const at = await bs.createAttachedStores(noopUrl("test"), loader);
     store = at.stores.car;
     await store.start(at.stores);
   });
@@ -64,7 +63,7 @@ describe("CarStore with a saved car", function () {
   beforeEach(async () => {
     await sthis.start();
 
-    const at = await createAttachedStores(noopUrl("test2"), loader);
+    const at = await bs.createAttachedStores(noopUrl("test2"), loader);
     store = at.stores.car;
     await store.start(at.stores);
     car = {
@@ -105,7 +104,7 @@ describe("MetaStore", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    const at = await createAttachedStores(noopUrl("test"), loader);
+    const at = await bs.createAttachedStores(noopUrl("test"), loader);
     store = at.stores.meta;
     await store.start(at.stores);
   });
@@ -145,7 +144,7 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    const at = await createAttachedStores(noopUrl("test3-meta"), loader);
+    const at = await bs.createAttachedStores(noopUrl("test3-meta"), loader);
     store = at.stores.meta;
     await store.start(at.stores);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
