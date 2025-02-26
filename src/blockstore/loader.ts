@@ -183,7 +183,7 @@ export class Loader implements Loadable {
       //   dbMeta.cars.map((c) => c.toString()),
       // );
       await this.handleDbMetasFromStore([dbMeta], activeStore);
-    });
+    }, this.ebOpts.taskManager);
     this.attachedStores = new AttachedRemotesImpl(this);
   }
 
