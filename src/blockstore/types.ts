@@ -5,7 +5,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } from "@adviser/cement";
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
-import { TaskManager } from "./task-manager.js";
+import { TaskManager, TaskManagerParams } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
 import { Context } from "../context.js";
 import { AsyncBlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
@@ -502,6 +502,7 @@ export interface BlockstoreParams {
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
   readonly storeRuntime: StoreRuntime;
+  readonly taskManager: TaskManagerParams;
 }
 
 export type BlockstoreOpts = Partial<BlockstoreParams> & {
@@ -520,6 +521,7 @@ export interface BlockstoreRuntime {
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+  readonly taskManager: TaskManagerParams;
   // readonly storeEnDeFile: StoreEnDeFile;
   // readonly public: boolean;
   readonly meta?: DbMeta;

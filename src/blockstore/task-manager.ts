@@ -10,6 +10,11 @@ interface TaskItem {
   retries: number;
 }
 
+export interface TaskManagerParams {
+  readonly removeAfter: number; // default 3
+  readonly retryTimeout: number; // default 50
+}
+
 export class TaskManager {
   // we need to remove the events after some time
   private readonly eventsWeHandled = new Set<string>();
@@ -18,10 +23,13 @@ export class TaskManager {
   private isProcessing = false;
 
   readonly logger: Logger;
+  readonly params: TaskManagerParams;
+
   readonly callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>;
-  constructor(sthis: SuperThis, callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>) {
+  constructor(sthis: SuperThis, callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>, params: TaskManagerParams) {
     this.logger = ensureLogger(sthis, "TaskManager");
     this.callback = callback;
+    this.params = params
   }
 
   async handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta, store: ActiveStore) {
@@ -52,7 +60,7 @@ export class TaskManager {
         this.queue = this.queue.filter(({ cid }) => cid !== first.cid);
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
-      throw this.logger.Error().Err(err).Msg("failed to process event block").AsError();
+      this.logger.Warn().Err(err).Msg("retry to process event block")
     } finally {
       this.isProcessing = false;
       if (this.queue.length > 0) {
