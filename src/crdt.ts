@@ -10,6 +10,7 @@ import {
 } from "./blockstore/index.js";
 import {
   clockChangesSince,
+  sanitizeDocumentFields,
   applyBulkUpdateToCrdt,
   getValueFromCrdt,
   readFiles,
@@ -97,6 +98,10 @@ export class CRDT<T extends DocTypes> {
   async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
     await this.ready();
     const prevHead = [...this.clock.head];
+    updates = updates.map((dupdate: DocUpdate<T>) => ({
+      ...dupdate,
+      value: sanitizeDocumentFields(dupdate.value),
+    }));
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(
