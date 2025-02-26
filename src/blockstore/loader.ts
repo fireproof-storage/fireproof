@@ -177,13 +177,17 @@ export class Loader implements Loadable {
     });
     this.maxConcurrentCarReader = pLimit(parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_PARALLEL, "5"), 10));
 
-    this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta, activeStore: ActiveStore) => {
-      // console.log(
-      //   "taskManager",
-      //   dbMeta.cars.map((c) => c.toString()),
-      // );
-      await this.handleDbMetasFromStore([dbMeta], activeStore);
-    }, this.ebOpts.taskManager);
+    this.taskManager = new TaskManager(
+      sthis,
+      async (dbMeta: DbMeta, activeStore: ActiveStore) => {
+        // console.log(
+        //   "taskManager",
+        //   dbMeta.cars.map((c) => c.toString()),
+        // );
+        await this.handleDbMetasFromStore([dbMeta], activeStore);
+      },
+      this.ebOpts.taskManager,
+    );
     this.attachedStores = new AttachedRemotesImpl(this);
   }
 

@@ -29,7 +29,7 @@ export class TaskManager {
   constructor(sthis: SuperThis, callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>, params: TaskManagerParams) {
     this.logger = ensureLogger(sthis, "TaskManager");
     this.callback = callback;
-    this.params = params
+    this.params = params;
   }
 
   async handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta, store: ActiveStore) {
@@ -60,7 +60,7 @@ export class TaskManager {
         this.queue = this.queue.filter(({ cid }) => cid !== first.cid);
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
-      this.logger.Warn().Err(err).Msg("retry to process event block")
+      this.logger.Warn().Err(err).Msg("retry to process event block");
     } finally {
       this.isProcessing = false;
       if (this.queue.length > 0) {
