@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.3.20
+        specifier: ~0.3.20
         version: 0.3.20(typescript@5.8.3)
       '@fireproof/vendor':
-        specifier: ^1.1.0-dev
-        version: 1.2.0
+        specifier: ~2.0.0
+        version: 2.0.0
       '@ipld/car':
         specifier: ^5.4.0
         version: 5.4.2
@@ -2518,8 +2518,8 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/vendor@1.2.0':
-    resolution: {integrity: sha512-mzKlRs9iNEbuKMEhf+1kqkqs9f7KFFsJKkBl8Cn/8K6GX/FKuhGZMvOMofdYCwoWw6wiNBkPMX3EfFwWKZL1ug==}
+  '@fireproof/vendor@2.0.0':
+    resolution: {integrity: sha512-XjxDzGyKS/c4ZtP5rHRGHClm3X66K1RbSpgeFHgCX/qR+MsiVHLdWdWAQMYtQACzc7TpodsBdRBl8tl6h9Y8ew==}
 
   '@gerrit0/mini-shiki@1.27.2':
     resolution: {integrity: sha512-GeWyHz8ao2gBiUW4OJnQDxXQnFgZQwwQk05t/CVVgNBN7/rK8XZ7xY6YhLVv9tH3VppWWmr9DCl3MwemB/i+Og==}
@@ -8494,11 +8494,6 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
-  yaml@2.7.0:
-    resolution: {integrity: sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==}
-    engines: {node: '>= 14'}
-    hasBin: true
-
   yaml@2.8.0:
     resolution: {integrity: sha512-4lLa/EcQCB0cJkyts+FpIRx5G/llPxfP6VQU5KByHEhLxY3IJCH0f0Hy1MHI8sClTvsIb8qwRJ6R/ZdlDJ/leQ==}
     engines: {node: '>= 14.6'}
@@ -8566,7 +8561,7 @@ snapshots:
   '@adviser/cement@0.3.20(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.3)
-      yaml: 2.7.0
+      yaml: 2.8.0
     transitivePeerDependencies:
       - typescript
 
@@ -9650,23 +9645,10 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/vendor@1.2.0':
+  '@fireproof/vendor@2.0.0':
     dependencies:
-      '@ipld/dag-pb': 4.1.5
-      '@multiformats/murmur3': 2.1.8
-      hamt-sharding: 3.0.6
-      interface-blockstore: 5.3.2
-      ipfs-unixfs: 11.2.1
-      it-filter: 3.1.4
-      it-last: 3.0.9
-      it-map: 3.1.4
-      it-parallel: 3.0.13
-      it-pipe: 3.0.1
-      it-pushable: 3.2.3
-      multiformats: 13.3.6
-      p-queue: 8.1.0
-      progress-events: 1.0.1
-      varint: 6.0.0
+      '@ipld/dag-cbor': 9.2.4
+      multiformats: 13.3.2
 
   '@gerrit0/mini-shiki@1.27.2':
     dependencies:
@@ -17143,8 +17125,6 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
-
-  yaml@2.7.0: {}
 
   yaml@2.8.0: {}
 

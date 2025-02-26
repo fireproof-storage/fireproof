@@ -16,4 +16,5 @@ npx tsx ./node-test.ts
 command -v deno && \
   deno run --allow-read --allow-write --allow-env --unstable-sloppy-imports ./node-test.ts
   # deno run --config node_modules/@fireproof/core/deno.json --allow-read --allow-write --allow-env --unstable-sloppy-imports ./node-test.ts
+echo $tmpDir
 rm -rf $tmpDir
