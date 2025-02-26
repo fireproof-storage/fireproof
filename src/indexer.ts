@@ -1,3 +1,6 @@
+// @ts-expect-error "charwise" has no types
+import charwise from "charwise";
+
 import {
   type ClockHead,
   type DocUpdate,
@@ -34,6 +37,8 @@ import {
   loadIndex,
   IndexDocString,
   CompareKey,
+  IndexDoc,
+  indexEntriesForRows,
 } from "./indexer-helpers.js";
 import { CRDT, HasCRDT } from "./crdt.js";
 import { arrayFromAsyncIterable, ensureLogger } from "./utils.js";
@@ -392,19 +397,20 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.logger.Debug().Msg("enter _updateIndex");
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
-    let result: DocUpdate<T>[];
+    let rows: DocumentRow<K, T, R>[];
     const head = [...this.crdt.clock.head];
     if (!this.indexHead || this.indexHead.length === 0) {
-      result = await Array.fromAsync(this.crdt.all<T>());
+      rows = await Array.fromAsync(this.crdt.all<K, T, R>());
       this.logger.Debug().Msg("enter crdt.all");
     } else {
-      result = await Array.fromAsync(this.crdt.changes<T>(this.indexHead));
+      rows = await Array.fromAsync(this.crdt.changes<K, T, R>(this.indexHead));
       this.logger.Debug().Msg("enter crdt.changes");
     }
-    if (result.length === 0) {
+    if (rows.length === 0) {
       this.indexHead = head;
       // return { byId: this.byId, byKey: this.byKey } as IndexTransactionMeta;
     }
+    const result = rows;
     let staleKeyIndexEntries: IndexUpdate<K>[] = [];
     let removeIdIndexEntries: IndexUpdateString[] = [];
     if (this.byId.root) {
@@ -413,7 +419,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       staleKeyIndexEntries = oldChangeEntries.map((key) => ({ key, del: true }));
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }
-    const indexEntries = indexEntriesForChanges<K, T, R>(result, this.mapFn); // use a getter to translate from string
+
+    const indexEntries: IndexDoc<K, R>[] = indexEntriesForRows(rows, this.mapFn);
     const byIdIndexEntries: IndexDocString[] = indexEntries.map(({ key }) => ({
       key: key[1],
       value: key,

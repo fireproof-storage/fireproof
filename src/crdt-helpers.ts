@@ -30,17 +30,23 @@ import {
   type DocTypes,
   throwFalsy,
   ClockLink,
+  DocFragment,
+  Row,
+  DocumentRow,
 } from "./types.js";
 import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
 
+// @ts-expect-error "charwise" has no types
+import charwise from "charwise";
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function time(tag: string) {
+function time(_tag: string) {
   // console.time(tag)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function timeEnd(tag: string) {
+function timeEnd(_tag: string) {
   // console.timeEnd(tag)
 }
 
@@ -239,17 +245,31 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
   }
 }
 
-export async function* clockUpdatesSince<T extends DocTypes>(
+export async function* clockUpdatesSince<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
   blocks: BlockFetcher,
   head: ClockHead,
   since: ClockHead,
-  opts: ChangesOptions,
+  opts: ChangesOptions = {},
   logger: Logger,
   allowedKeys?: Set<string>,
-): AsyncGenerator<DocUpdate<T>> {
+): AsyncGenerator<Row<K, R> & { clock: ClockLink }> {
   for await (const { id, clock, docLink } of clockChangesSince(blocks, head, since, opts, logger, allowedKeys)) {
-    const docValue = await getValueFromLink<T>(blocks, docLink, logger);
-    yield { id, value: docValue.doc, del: docValue.del, clock };
+    const { doc } = await getValueFromLink<T>(blocks, docLink, logger);
+    yield { id, key: [charwise.encode(id) as K, id], value: docValues<T, R>(doc) as R, clock };
+  }
+}
+
+export async function* clockUpdatesSinceWithDoc<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+  blocks: BlockFetcher,
+  head: ClockHead,
+  since: ClockHead,
+  opts: ChangesOptions = {},
+  logger: Logger,
+  allowedKeys?: Set<string>,
+): AsyncGenerator<DocumentRow<K, T, R> & { clock: ClockLink }> {
+  for await (const { id, clock, docLink } of clockChangesSince(blocks, head, since, opts, logger, allowedKeys)) {
+    const { doc } = await getValueFromLink<T>(blocks, docLink, logger);
+    yield { id, key: [charwise.encode(id) as K, id], doc, value: docValues<T, R>(doc) as R, clock };
   }
 }
 
@@ -316,11 +336,32 @@ async function* gatherUpdates(
   }
 }
 
-export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
-  for await (const [key, link] of entries(blocks, head)) {
-    const docValue = await getValueFromLink<T>(blocks, link, logger);
-    yield { id: key, value: docValue.doc, del: docValue.del };
+export async function* getAllEntries<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+  blocks: BlockFetcher,
+  head: ClockHead,
+  logger: Logger,
+): AsyncGenerator<Row<K, R>> {
+  for await (const [id, link] of entries(blocks, head)) {
+    const { doc } = await getValueFromLink<T>(blocks, link, logger);
+    yield { id, key: [charwise.encode(id) as K, id], value: docValues<T, R>(doc) as R };
   }
+}
+
+export async function* getAllEntriesWithDoc<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+  blocks: BlockFetcher,
+  head: ClockHead,
+  logger: Logger,
+): AsyncGenerator<DocumentRow<K, T, R>> {
+  for await (const [id, link] of entries(blocks, head)) {
+    const { doc } = await getValueFromLink<T>(blocks, link, logger);
+    yield { id, key: [charwise.encode(id) as K, id], doc: doc, value: docValues<T, R>(doc) as R };
+  }
+}
+
+export function docValues<T extends DocTypes, R extends DocFragment>(doc: DocWithId<T>) {
+  return Object.entries(doc)
+    .filter(([k, _v]) => !k.startsWith("_"))
+    .map(([_k, v]) => v as R);
 }
 
 export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {

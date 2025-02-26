@@ -27,6 +27,7 @@ import {
   ClockHead,
   ChangesOptions,
   IndexRow,
+  DocumentRow,
 } from "./types.js";
 import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { CRDT } from "./crdt.js";
@@ -71,6 +72,35 @@ export interface IndexDoc<K extends IndexKeyType, R extends DocFragment> {
 export interface IndexDocString {
   readonly key: string;
   readonly value: DocFragment;
+}
+
+export function indexEntriesForRows<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+  rows: DocumentRow<K, T, R>[],
+  mapFn: MapFn<T, R>,
+): IndexDoc<K, R>[] {
+  const indexEntries: IndexDoc<K, R>[] = [];
+
+  rows.forEach((r) => {
+    let mapCalled = false;
+
+    const mapReturn = mapFn(r.doc, (k: IndexKeyType, v?: R) => {
+      mapCalled = true;
+      if (typeof k === "undefined") return;
+      indexEntries.push({
+        key: r.key,
+        value: (v || null) as R,
+      });
+    });
+
+    if (!mapCalled && mapReturn) {
+      indexEntries.push({
+        key: [charwise.encode(mapReturn) as K, r.key[1]],
+        value: null as R,
+      });
+    }
+  });
+
+  return indexEntries;
 }
 
 export function indexEntriesForChanges<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(

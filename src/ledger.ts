@@ -354,7 +354,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     const opts = b ? b : typeof a === "object" ? a : {};
 
     if (!field) {
-      return this.crdt.allDocs<T>({ waitFor: this.ready() });
+      return this.crdt.allDocs<K, T, R>({ waitFor: this.ready() });
     }
 
     const _crdt = this.crdt as unknown as CRDT<T>;

@@ -170,7 +170,7 @@ describe("Streaming API", () => {
   // ALL DOCS //
   //////////////
 
-  describe.skip("allDocs", () => {
+  describe("allDocs", () => {
     it("test `snapshot` method", async () => {
       const snapshot = lr.select().snapshot();
       await testSnapshot(snapshot, AMOUNT_OF_DOCS);
@@ -285,7 +285,7 @@ describe("Streaming API", () => {
     });
 
     // EXCLUDE DOCS
-    describe("excludeDocs", () => {
+    describe.skip("excludeDocs", () => {
       it("inquiry", async () => {
         const inquiry = lr.select("name", {
           excludeDocs: true,
