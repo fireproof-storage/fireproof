@@ -1,12 +1,10 @@
 import { URI } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
-import { Attachable, Database, ensureSuperThis, fireproof, GatewayUrlsParam, PARAM, rt, Attached } from "@fireproof/core";
+import { Attachable, Database, ensureSuperThis, fireproof, GatewayUrlsParam, PARAM, rt, Attached, bs } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
 import { sleep } from "../helpers.js";
-import { AttachedRemotesImpl } from "../../src/blockstore/attachable-store.js";
 import { mockLoader } from "../helpers.js";
-import { AttachedStores } from "../../src/blockstore/types.js";
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();
@@ -152,11 +150,11 @@ describe("activate store", () => {
   // }
 
   const sthis = ensureSuperThis();
-  let attach: AttachedStores;
+  let attach: bs.AttachedStores;
   let firstAttached: Attached;
   let secondAttached: Attached;
   beforeEach(async () => {
-    attach = new AttachedRemotesImpl(mockLoader(sthis));
+    attach = new bs.AttachedRemotesImpl(mockLoader(sthis));
     firstAttached = await attach.attach({
       name: "first",
       prepare: async () => ({

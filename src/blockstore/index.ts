@@ -15,6 +15,8 @@ export * from "./register-store-protocol.js";
 
 export * from "./attachable-store.js";
 
+export * from "./task-manager.js";
+
 export {
   EncryptedBlockstore,
   BaseBlockstoreImpl,
