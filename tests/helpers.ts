@@ -100,7 +100,10 @@ class MockLoader implements bs.Loadable {
     this.sthis = sthis;
     this.ebOpts = {} as bs.BlockstoreRuntime;
     this.carLog = new bs.CarLog();
-    this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve());
+    this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve(), {
+      removeAfter: 3,
+      retryTimeout: 50,
+    });
     this.attachedStores = new bs.AttachedRemotesImpl(this);
   }
 
