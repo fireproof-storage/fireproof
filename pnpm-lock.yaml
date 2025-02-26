@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.3.20
+        specifier: ~0.3.20
         version: 0.3.20(typescript@5.7.3)
       '@fireproof/vendor':
-        specifier: ^1.1.0-dev
-        version: 1.1.0-dev
+        specifier: ~2.0.0
+        version: 2.0.0
       '@ipld/car':
         specifier: ^5.4.0
         version: 5.4.0
@@ -545,8 +545,8 @@ packages:
     resolution: {integrity: sha512-lB05FkqEdUg2AA0xEbUz0SnkXT1LcCTa438W4IWTUh4hdOnVbQyOJ81OrDXsJk/LSiJHubgGEFoR5EHq1NsH1A==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fireproof/vendor@1.1.0-dev':
-    resolution: {integrity: sha512-Ouc/ZlJNmlJ+rQ00Ayebbqp+YrHbwtO3lD/UI8QFg1xOS99k78QGXkf4bps+1+ie7ADKrkYB7t75MEpJtZIRpQ==}
+  '@fireproof/vendor@2.0.0':
+    resolution: {integrity: sha512-XjxDzGyKS/c4ZtP5rHRGHClm3X66K1RbSpgeFHgCX/qR+MsiVHLdWdWAQMYtQACzc7TpodsBdRBl8tl6h9Y8ew==}
 
   '@gerrit0/mini-shiki@1.24.4':
     resolution: {integrity: sha512-YEHW1QeAg6UmxEmswiQbOVEg1CW22b1XUD/lNTliOsu0LD0wqoyleFMnmbTp697QE0pcadQiR5cVtbbAPncvpw==}
@@ -3769,7 +3769,7 @@ snapshots:
       '@eslint/core': 0.10.0
       levn: 0.4.1
 
-  '@fireproof/vendor@1.1.0-dev':
+  '@fireproof/vendor@2.0.0':
     dependencies:
       '@ipld/dag-cbor': 9.2.2
       multiformats: 13.3.2
