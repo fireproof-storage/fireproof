@@ -20,4 +20,5 @@ export {
   useChanges,
 } from "./useChanges.js";
 
-export { ImgFile } from "./ImgFile.js";
+// Temporarily disabled for CI
+// export { ImgFile } from "./ImgFile.js";
