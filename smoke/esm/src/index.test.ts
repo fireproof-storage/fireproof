@@ -47,11 +47,11 @@ test("esm.sh", async () => {
     (async function runTest() {
       try {
         updateTestStatus('RUNNING', 'Importing Fireproof module...');
-        const { Fireproof } = await import('https://esm.sh/@fireproof/core@latest');
+        const fireproof = await import('https://esm.sh/@fireproof/core@latest');
         console.log('window-js', 'latest');
         
         updateTestStatus('RUNNING', 'Creating database...');
-        const db = new Fireproof('esm-test');
+        const db = new fireproof.Fireproof('esm-test');
         
         updateTestStatus('RUNNING', 'Adding document...');
         const doc = await db.put({hello: 'world', timestamp: Date.now()});
