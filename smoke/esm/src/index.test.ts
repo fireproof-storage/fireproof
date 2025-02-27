@@ -365,6 +365,6 @@ it("esm.sh", async () => {
   `;
   document.body.appendChild(script);
 
-  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 180_000 }); 
+  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 180_000 });
   expect(await page.getByTestId("label").element().innerHTML).toBe("9 - esm-success");
 });
