@@ -1,16 +1,24 @@
 import type { Block } from "multiformats";
 import { Logger, ResolveOnce } from "@adviser/cement";
+
+// @ts-expect-error "charwise" has no types
+import charwise from "charwise";
+
 import { EncryptedBlockstore, type TransactionMeta, CompactFetcher, toStoreRuntime } from "./blockstore/index.js";
 import {
-  clockChangesSince,
   applyBulkUpdateToCrdt,
   getValueFromCrdt,
   readFiles,
-  getAllEntries,
   clockVis,
   getBlock,
   doCompact,
   sanitizeDocumentFields,
+  docUpdateToDocWithId,
+  getAllEntries,
+  clockUpdatesSince,
+  getAllEntriesWithDoc,
+  clockUpdatesSinceWithDoc,
+  docValues,
 } from "./crdt-helpers.js";
 import {
   type DocUpdate,
@@ -30,11 +38,16 @@ import {
   type CarTransaction,
   type DocTypes,
   PARAM,
+  QueryResponse,
+  QueryStreamMarker,
+  DocFragment,
+  Row,
+  DocumentRow,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
-import { ensureLogger } from "./utils.js";
 import { CRDTClockImpl } from "./crdt-clock.js";
+import { arrayFromAsyncIterable, ensureLogger } from "./utils.js";
 
 export class CRDTImpl implements CRDT {
   readonly opts: LedgerOpts;
@@ -164,13 +177,115 @@ export class CRDTImpl implements CRDT {
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
-  async allDocs<T extends DocTypes>(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
-    await this.ready();
-    const result: DocUpdate<T>[] = [];
-    for await (const entry of getAllEntries<DocTypes>(this.blockstore, this.clock.head, this.logger)) {
-      result.push(entry as DocUpdate<T>);
+  /**
+   * Retrieve the current set of documents.
+   */
+  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>({
+    waitFor,
+  }: { waitFor?: Promise<unknown> } = {}): QueryResponse<K, T, R> {
+    const stream = this.#stream.bind(this);
+
+    return {
+      snapshot: (sinceOpts) => this.#snapshot<K, T, R>(sinceOpts, { waitFor }),
+      subscribe: (callback) => this.#subscribe<K, T, R>(callback),
+      toArray: (sinceOpts) => arrayFromAsyncIterable(this.#snapshot<K, T, R>(sinceOpts, { waitFor })),
+
+      live(opts?: { since?: ClockHead } & ChangesOptions) {
+        return stream<K, T, R>({ ...opts, futureOnly: false }, { waitFor });
+      },
+      future() {
+        return stream<K, T, R>({ futureOnly: true }, { waitFor });
+      },
+    };
+  }
+
+  #currentDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    since?: ClockHead,
+    sinceOptions?: ChangesOptions,
+  ) {
+    return since ? this.changes<K, T, R>(since, sinceOptions) : this.all<K, T, R>();
+  }
+
+  #snapshot<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    opts: { since?: ClockHead } & ChangesOptions = {},
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ): AsyncGenerator<DocumentRow<K, T, R>> {
+    const currentDocs = this.#currentDocs.bind(this);
+    const ready = this.ready.bind(this);
+
+    async function* currentRows() {
+      await waitFor;
+      await ready();
+
+      for await (const row of currentDocs<K, T, R>(opts.since, opts)) {
+        yield row;
+      }
     }
-    return { result, head: this.clock.head };
+
+    return currentRows();
+  }
+
+  #subscribe<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(callback: (row: DocumentRow<K, T, R>) => void) {
+    const unsubscribe = this.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+      updates.forEach((update) => {
+        const doc = docUpdateToDocWithId<T>(update as DocUpdate<T>);
+        callback({
+          id: doc._id,
+          key: [charwise.encode(doc._id) as K, doc._id],
+          value: docValues<T, R>(doc) as R,
+          doc,
+        });
+      });
+    });
+
+    return unsubscribe;
+  }
+
+  #stream<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    opts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions,
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ) {
+    const currentDocs = this.#currentDocs.bind(this);
+    const ready = this.ready.bind(this);
+    const subscribe = this.#subscribe.bind(this);
+
+    let unsubscribe: undefined | (() => void);
+    let isClosed = false;
+
+    return new ReadableStream<{ row: DocumentRow<K, T, R>; marker: QueryStreamMarker }>({
+      async start(controller) {
+        await waitFor;
+        await ready();
+
+        if (opts.futureOnly === false) {
+          const it = currentDocs<K, T, R>(opts.since, opts);
+
+          async function iterate(prevValue: DocumentRow<K, T, R>) {
+            const { done, value } = await it.next();
+
+            controller.enqueue({
+              row: prevValue,
+              marker: { kind: "preexisting", done: done || false },
+            });
+
+            if (!done) await iterate(value);
+          }
+
+          const { value } = await it.next();
+          if (value) await iterate(value);
+        }
+
+        unsubscribe = subscribe<K, T, R>((row) => {
+          if (isClosed) return;
+          controller.enqueue({ row, marker: { kind: "new" } });
+        });
+      },
+
+      cancel() {
+        isClosed = true;
+        unsubscribe?.();
+      },
+    });
   }
 
   async vis(): Promise<string> {
@@ -180,6 +295,37 @@ export class CRDTImpl implements CRDT {
       txt.push(line);
     }
     return txt.join("\n");
+  }
+
+  all<K extends IndexKeyType, R extends DocFragment>(withDocs: false): AsyncGenerator<Row<K, R>>;
+  all<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(withDocs?: true): AsyncGenerator<DocumentRow<K, T, R>>;
+  all<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    withDocs?: boolean,
+  ): AsyncGenerator<Row<K, R>> | AsyncGenerator<DocumentRow<K, T, R>> {
+    if (withDocs === undefined || withDocs) {
+      return getAllEntriesWithDoc<K, T, R>(this.blockstore, this.clock.head, this.logger);
+    }
+
+    return getAllEntries<K, T, R>(this.blockstore, this.clock.head, this.logger);
+  }
+
+  changes<K extends IndexKeyType, R extends DocFragment>(
+    since?: ClockHead,
+    opts?: ChangesOptions & { withDocs: false },
+  ): AsyncGenerator<Row<K, R>>;
+  changes<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    since?: ClockHead,
+    opts?: ChangesOptions & { withDocs?: true },
+  ): AsyncGenerator<DocumentRow<K, T, R>>;
+  changes<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    since: ClockHead = [],
+    opts?: ChangesOptions & { withDocs?: boolean },
+  ): AsyncGenerator<Row<K, R>> | AsyncGenerator<DocumentRow<K, T, R>> {
+    if (opts?.withDocs === undefined || opts?.withDocs) {
+      return clockUpdatesSinceWithDoc<K, T, R>(this.blockstore, this.clock.head, since, opts, this.logger);
+    }
+
+    return clockUpdatesSince<K, T, R>(this.blockstore, this.clock.head, since, opts, this.logger);
   }
 
   async getBlock(cidString: string): Promise<Block> {
@@ -192,17 +338,6 @@ export class CRDTImpl implements CRDT {
     const result = await getValueFromCrdt<DocTypes>(this.blockstore, this.clock.head, key, this.logger);
     if (result.del) return undefined;
     return result;
-  }
-
-  async changes<T extends DocTypes>(
-    since: ClockHead = [],
-    opts: ChangesOptions = {},
-  ): Promise<{
-    result: DocUpdate<T>[];
-    head: ClockHead;
-  }> {
-    await this.ready();
-    return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
   }
 
   async compact(): Promise<void> {
