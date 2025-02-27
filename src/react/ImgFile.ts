@@ -50,12 +50,15 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
       }
     };
 
-    loadFile();
+    let cleanup: (() => void) | undefined;
+    loadFile().then((result) => {
+      cleanup = result;
+    });
 
     return () => {
-      if (imgDataUrl) {
-        URL.revokeObjectURL(imgDataUrl);
-      }
+      // The cleanup function from loadFile already revokes the URL
+      // so we don't need to do it here as well
+      if (cleanup) cleanup();
     };
   }, [fileData]);
 
