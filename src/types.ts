@@ -601,7 +601,9 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
     }[];
     clock: ClockHead;
   }>;
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+
+  get clock(): ClockHead;
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>): () => void;
 
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T, R>,
