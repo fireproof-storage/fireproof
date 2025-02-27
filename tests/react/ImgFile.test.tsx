@@ -1,22 +1,22 @@
-// @ts-nocheck - Ignoring type errors in test file
-import { render, waitFor, RenderResult } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { fireproof } from "@fireproof/core";
 import { ImgFile } from "use-fireproof";
-import type { Database } from '@fireproof/core';
-import { createElement } from 'react';
+import type { Database } from "@fireproof/core";
+import { createElement } from "react";
 
 // Extend HTMLElement to include querySelector for TypeScript
 declare global {
   interface HTMLElement {
     querySelector(selectors: string): HTMLElement | null;
   }
-  
-  namespace Vi {
-    interface Assertion {
-      toHaveAttribute(attr: string, value?: string): void;
-      toHaveClass(className: string): void;
-    }
+}
+
+// Augment Vitest's Assertion interface
+declare module "vitest" {
+  interface Assertion {
+    toHaveAttribute(attr: string, value?: string): Assertion;
+    toHaveClass(className: string): Assertion;
   }
 }
 
@@ -31,49 +31,51 @@ window.URL.revokeObjectURL = vi.fn();
 describe("COMPONENT: ImgFile", () => {
   let db: Database;
   let docId: string;
-  
+
   beforeEach(async () => {
     db = fireproof("img-file-test-db");
-    
-    const svgBlob = new Blob([SVG_CONTENT], { type: 'image/svg+xml' });
-    const file = new File([svgBlob], 'test.svg', { type: 'image/svg+xml' });
-    
+
+    const svgBlob = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
+    const file = new File([svgBlob], "test.svg", { type: "image/svg+xml" });
+
     const result = await db.put({
       description: "Test SVG",
       _files: {
-        myFile: file
-      }
+        myFile: file,
+      },
     });
-    
+
     docId = result.id;
   });
-  
+
   it("renders the image from a File object", async () => {
-    const file = new File([new Blob([SVG_CONTENT], { type: 'image/svg+xml' })], 'file.svg', { type: 'image/svg+xml' });
-    
+    const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "file.svg", { type: "image/svg+xml" });
+
     const { container } = render(
-      createElement('div', null,
+      createElement(
+        "div",
+        null,
         createElement(ImgFile, {
           file,
           alt: "File",
-          className: "test"
-        })
-      )
+          className: "test",
+        }),
+      ),
     );
-    
+
     await waitFor(() => {
-      const img = container.querySelector('img');
+      const img = container.querySelector("img");
       expect(img).not.toBeNull();
     });
-    
-    const img = container.querySelector('img');
-    expect(img).toHaveAttribute('src', mockObjectURL);
-    expect(img).toHaveAttribute('alt', 'File');
-    expect(img).toHaveClass('test');
-    
+
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", mockObjectURL);
+    expect(img).toHaveAttribute("alt", "File");
+    expect(img).toHaveClass("test");
+
     expect(window.URL.createObjectURL).toHaveBeenCalled();
   });
-  
+
   it("renders the image from a document file", async () => {
     const doc = await db.get(docId);
     expect(doc._files).toBeTruthy();
@@ -84,59 +86,65 @@ describe("COMPONENT: ImgFile", () => {
       createElement(ImgFile, {
         file: doc._files.myFile,
         alt: "Test SVG",
-        className: "test"
-      })
+        className: "test",
+      }),
     );
-    
+
     await waitFor(() => {
-      const img = container.querySelector('img');
+      const img = container.querySelector("img");
       expect(img).not.toBeNull();
     });
-    
-    const img = container.querySelector('img');
-    expect(img).toHaveAttribute('src', mockObjectURL);
-    expect(img).toHaveAttribute('alt', 'Test SVG');
-    expect(img).toHaveClass('test');
-    
+
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", mockObjectURL);
+    expect(img).toHaveAttribute("alt", "Test SVG");
+    expect(img).toHaveClass("test");
+
     expect(window.URL.createObjectURL).toHaveBeenCalled();
   });
-  
+
   it("renders correctly when used with document files", async () => {
     const doc = await db.get(docId);
-    
+
     const { container } = render(
-      createElement('div', null,
-        doc._files && doc._files.myFile && createElement(ImgFile, {
-          file: doc._files.myFile,
-          alt: "File",
-          className: "test"
-        })
-      )
+      createElement(
+        "div",
+        null,
+        doc._files &&
+          doc._files.myFile &&
+          createElement(ImgFile, {
+            file: doc._files.myFile,
+            alt: "File",
+            className: "test",
+          }),
+      ),
     );
-    
+
     await waitFor(() => {
-      const img = container.querySelector('img');
+      const img = container.querySelector("img");
       expect(img).not.toBeNull();
     });
-    
-    const img = container.querySelector('img');
-    expect(img).toHaveAttribute('src', mockObjectURL);
-    expect(img).toHaveAttribute('alt', 'File');
-    expect(img).toHaveClass('test');
+
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", mockObjectURL);
+    expect(img).toHaveAttribute("alt", "File");
+    expect(img).toHaveClass("test");
   });
-  
+
   it("does not render when file is not present", () => {
     const { container } = render(
-      createElement('div', null,
+      createElement(
+        "div",
+        null,
         createElement(ImgFile, {
           file: null as unknown as File,
           alt: "File",
-          className: "test"
-        })
-      )
+          className: "test",
+        }),
+      ),
     );
-    
-    const img = container.querySelector('img');
+
+    const img = container.querySelector("img");
     expect(img).toBeNull();
   });
 });
