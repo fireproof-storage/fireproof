@@ -151,6 +151,10 @@ export class DatabaseImpl implements Database {
     return this.allDocs<T>();
   }
 
+  get clock() {
+    return this.ledger.clock;
+  }
+
   subscribe<T extends DocTypes>(listener: ListenerFn<T>): () => void {
     return this.select<IndexKeyType, T>().subscribe((row) => {
       listener(row.doc);

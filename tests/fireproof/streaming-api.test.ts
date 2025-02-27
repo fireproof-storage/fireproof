@@ -85,7 +85,7 @@ describe("Streaming API", () => {
     streamCreator: (since: ClockHead) => Stream<K, T, R>;
   }) {
     const amountOfNewDocs = Math.floor(Math.random() * (10 - 1) + 1);
-    const since = db.ledger.clock;
+    const since = db.clock;
 
     await Array(amountOfNewDocs)
       .fill(0)
@@ -112,7 +112,7 @@ describe("Streaming API", () => {
     // NOTE: This also tests the stream cancellation process.
     // NOTE: Concurrency limit disallows for using `Promise.all` with x items
     const amountOfSnapshotDocs = Math.floor(Math.random() * (10 - 4) + 4);
-    const sincePt2 = db.ledger.clock;
+    const sincePt2 = db.clock;
 
     await Array(amountOfSnapshotDocs)
       .fill(0)
