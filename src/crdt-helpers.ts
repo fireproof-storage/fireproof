@@ -403,8 +403,10 @@ export async function* getAllEntriesWithDoc<K extends IndexKeyType, T extends Do
   logger: Logger,
 ): AsyncGenerator<DocumentRow<K, T, R>> {
   for await (const [id, link] of entries(blocks, head)) {
-    const { doc } = await getValueFromLink<T>(blocks, link, logger);
-    yield { id, key: [charwise.encode(id) as K, id], doc: doc, value: docValues<T, R>(doc) as R };
+    if (id !== PARAM.GENESIS_CID) {
+      const { doc } = await getValueFromLink<T>(blocks, link, logger);
+      yield { id, key: [charwise.encode(id) as K, id], doc: doc, value: docValues<T, R>(doc) as R };
+    }
   }
 }
 
