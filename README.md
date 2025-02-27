@@ -131,6 +131,38 @@ globalThis[Symbol.for("FP_PRESET_ENV")] = {
 };
 ```
 
+### Testing
+
+To run the full test suite across all projects (tested storage gateways configs), run:
+
+```bash
+pnpm run test
+```
+
+To run tests for specific components or modules, use the following command pattern:
+
+```bash
+pnpm run test -t 'test name pattern' path/to/test/file
+```
+
+For example, to run a specific test for the CRDT module, in just one project:
+
+```bash
+FP_DEBUG=Loader pnpm run test --project file -t 'codec implict iv' crdt
+```
+
+For testing React components, you can use:
+
+```bash
+pnpm run test tests/react/[ComponentName].test.tsx
+```
+
+Example for testing the ImgFile component:
+
+```bash
+pnpm run test tests/react/ImgFile.test.tsx
+```
+
 ### Log Formatting
 
 It's possible to change the logformat by setting FP_FORMAT to:
