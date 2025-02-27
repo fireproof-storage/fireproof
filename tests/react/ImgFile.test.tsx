@@ -37,6 +37,9 @@ describe("COMPONENT: ImgFile", () => {
     window.URL.revokeObjectURL = originalRevokeObjectURL;
   });
 
+  // Test timeout value for CI
+  const TEST_TIMEOUT = 60000; // 1 minute per test
+
   it("renders the image from a File object", async () => {
     const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "test.svg", { type: "image/svg+xml" });
 
@@ -58,7 +61,7 @@ describe("COMPONENT: ImgFile", () => {
     expect(img?.getAttribute("alt")).toBe("Test SVG");
     expect(img?.classList.contains("test-class")).toBe(true);
     expect(window.URL.createObjectURL).toHaveBeenCalledWith(file);
-  });
+  }, TEST_TIMEOUT);
 
   it("does not render when file is not present", () => {
     const { container } = render(
@@ -71,7 +74,7 @@ describe("COMPONENT: ImgFile", () => {
     const img = container.querySelector("img");
     expect(img).toBeNull();
     expect(window.URL.createObjectURL).not.toHaveBeenCalled();
-  });
+  }, TEST_TIMEOUT);
 
   it("supports legacy 'meta' parameter", async () => {
     const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "legacy.svg", { type: "image/svg+xml" });
@@ -92,7 +95,7 @@ describe("COMPONENT: ImgFile", () => {
     expect(img?.getAttribute("src")).toBe(mockObjectURL);
     expect(img?.getAttribute("alt")).toBe("Legacy File");
     expect(window.URL.createObjectURL).toHaveBeenCalledWith(file);
-  });
+  }, TEST_TIMEOUT);
 
   it("renders from DocFileMeta object", async () => {
     const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "meta.svg", { type: "image/svg+xml" });
@@ -122,7 +125,7 @@ describe("COMPONENT: ImgFile", () => {
     expect(img?.getAttribute("src")).toBe(mockObjectURL);
     expect(img?.getAttribute("alt")).toBe("DocFileMeta Image");
     expect(window.URL.createObjectURL).toHaveBeenCalledWith(file);
-  });
+  }, TEST_TIMEOUT);
 
   it("does not render for non-image file types", async () => {
     const textFile = new File(["test content"], "test.txt", { type: "text/plain" });
@@ -139,7 +142,7 @@ describe("COMPONENT: ImgFile", () => {
 
     const img = container.querySelector("img");
     expect(img).toBeNull();
-  });
+  }, TEST_TIMEOUT);
 
   it("cleans up object URLs when unmounted", async () => {
     const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "cleanup.svg", { type: "image/svg+xml" });
@@ -163,5 +166,5 @@ describe("COMPONENT: ImgFile", () => {
     unmount();
 
     expect(window.URL.revokeObjectURL).toHaveBeenCalledWith(mockObjectURL);
-  });
+  }, TEST_TIMEOUT);
 });

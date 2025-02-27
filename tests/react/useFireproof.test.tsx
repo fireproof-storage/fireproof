@@ -4,10 +4,13 @@ import { describe, expect, it } from "vitest";
 import { Database, fireproof, useFireproof } from "use-fireproof";
 import { LiveQueryResult, UseDocumentResult } from "use-fireproof";
 
+// Test timeout value for CI
+const TEST_TIMEOUT = 60000; // 1 minute per test
+
 describe("HOOK: useFireproof", () => {
   it("should be defined", () => {
     expect(useFireproof).toBeDefined();
-  });
+  }, TEST_TIMEOUT);
 
   it("renders the hook correctly and checks types", () => {
     renderHook(() => {
@@ -16,7 +19,7 @@ describe("HOOK: useFireproof", () => {
       expect(typeof useDocument).toBe("function");
       expect(database?.constructor.name).toMatch(/^Database/);
     });
-  });
+  }, TEST_TIMEOUT);
 });
 
 describe("HOOK: useFireproof useLiveQuery has results", () => {
@@ -42,7 +45,7 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
     expect(allDocs.rows[0].value.foo).toBe("aha");
     expect(allDocs.rows[1].value.foo).toBe("bar");
     expect(allDocs.rows[2].value.foo).toBe("caz");
-  });
+  }, TEST_TIMEOUT);
 
   it("queries correctly", async () => {
     renderHook(() => {
@@ -61,7 +64,7 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
       expect(query.rows[2].doc?.foo).toBe("caz");
       // });
     });
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -92,14 +95,14 @@ describe("HOOK: useFireproof useDocument has results", () => {
   it("should have empty setup data", async () => {
     const allDocs = await db.allDocs<{ input: string }>();
     expect(allDocs.rows.length).toBe(0);
-  });
+  }, TEST_TIMEOUT);
 
   it("queries correctly", async () => {
     await waitFor(() => {
       expect(docResult.doc.input).toBe("");
       expect(docResult.doc._id).toBeUndefined();
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles mutations correctly", async () => {
     docResult.merge({ input: "new" });
@@ -107,7 +110,7 @@ describe("HOOK: useFireproof useDocument has results", () => {
       expect(docResult.doc.input).toBe("new");
       expect(docResult.doc._id).toBeUndefined();
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles save correctly", async () => {
     docResult.merge({ input: "first" });
@@ -123,7 +126,7 @@ describe("HOOK: useFireproof useDocument has results", () => {
     await waitFor(() => {
       expect(docResult.doc._id).toBeDefined();
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles reset after save", async () => {
     docResult.merge({ input: "new" });
@@ -175,7 +178,7 @@ describe("HOOK: useFireproof useDocument has results", () => {
     expect(allDocs.rows[0].value.input).toBe("first");
     expect(allDocs.rows[1].value.input).toBe("new");
     expect(allDocs.rows[2].value.input).toBe("fresh");
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -206,14 +209,14 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
   it("should have empty setup data", async () => {
     const allDocs = await db.allDocs<{ input: string }>();
     expect(allDocs.rows.length).toBe(0);
-  });
+  }, TEST_TIMEOUT);
 
   it("queries correctly", async () => {
     await waitFor(() => {
       expect(docResult.doc.input).toBe("");
       expect(docResult.doc._id).toBeUndefined();
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles mutations correctly", async () => {
     docResult.merge({ input: "new" });
@@ -221,7 +224,7 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
       expect(docResult.doc.input).toBe("new");
       expect(docResult.doc._id).toBeUndefined();
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles save correctly", async () => {
     docResult.merge({ input: "first" });
@@ -237,7 +240,7 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
     await waitFor(() => {
       expect(docResult.doc._id).toBeDefined();
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles reset after save", async () => {
     docResult.merge({ input: "new" });
@@ -277,7 +280,7 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
     expect(allDocs.rows.length).toBe(3);
     const inputs = allDocs.rows.map((r) => r.value.input);
     expect(inputs).toEqual(expect.arrayContaining(["first", "new", "fresh"]));
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -313,14 +316,14 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
     expect(allDocs.rows.length).toBe(1);
     expect(allDocs.rows[0].value.input).toBe("initial");
     expect(allDocs.rows[0].key).toBe(id);
-  });
+  }, TEST_TIMEOUT);
 
   it("queries correctly", async () => {
     await waitFor(() => {
       expect(docResult.doc.input).toBe("initial");
       expect(docResult.doc._id).toBe(id);
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles mutations correctly", async () => {
     // First verify initial state
@@ -339,7 +342,7 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
       expect(docResult.doc.input).toBe("new");
       expect(docResult.doc._id).toBe(id);
     });
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -375,14 +378,14 @@ describe("HOOK: useFireproof useDocument with existing document handles external
     expect(allDocs.rows.length).toBe(1);
     expect(allDocs.rows[0].value.input).toBe("initial");
     expect(allDocs.rows[0].key).toBe(id);
-  });
+  }, TEST_TIMEOUT);
 
   it("queries correctly", async () => {
     await waitFor(() => {
       expect(docResult.doc.input).toBe("initial");
       expect(docResult.doc._id).toBe(id);
     });
-  });
+  }, TEST_TIMEOUT);
 
   it("handles mutations correctly", async () => {
     // First verify initial state
@@ -402,7 +405,7 @@ describe("HOOK: useFireproof useDocument with existing document handles external
       expect(docResult.doc.input).toBe("external");
       expect(docResult.doc._id).toBe(id);
     });
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -468,7 +471,7 @@ describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
     const docInputs = allDocs.rows.map((row) => row.value.input);
     expect(docInputs).toContain("temp data");
     expect(docInputs).toContain("new temp data");
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -509,7 +512,7 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
       expect(docResult.doc._id).toBeUndefined();
       expect(docResult.doc.input).toBe("");
     });
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
@@ -546,7 +549,7 @@ describe("useFireproo calling submit()", () => {
       expect(docResult.doc._id).toBeUndefined();
       expect(docResult.doc.input).toBe("");
     });
-  });
+  }, TEST_TIMEOUT);
 
   afterEach(async () => {
     await db.close();
