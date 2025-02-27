@@ -28,7 +28,9 @@
     "test:browser": "vitest --config vitest.browser.config.ts --run",
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prepare": "husky",
+    "pre-push": "pnpm run format --check && pnpm run lint && pnpm run test && pnpm run build"
   },
   "keywords": [
     "ledger",
@@ -62,6 +64,8 @@
     "eslint": "^9.18.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "prettier": "^3.4.2",
     "semver": "^7.7.1",
     "tsup": "^8.3.6",
@@ -93,10 +97,10 @@
     "@ipld/unixfs": "^3.0.0",
     "@web3-storage/pail": "^0.6.0",
     "cborg": "^4.2.8",
-    "ipfs-unixfs-exporter": "^13.6.1",
     "charwise": "^3.0.1",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.2",
+    "ipfs-unixfs-exporter": "^13.6.1",
     "multiformats": "^13.3.2",
     "p-limit": "^6.2.0",
     "p-map": "^7.0.3",
