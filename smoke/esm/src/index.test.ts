@@ -23,7 +23,7 @@ test("esm.sh", async () => {
 
   const script = document.createElement("script");
   // eslint-disable-next-line no-console
-  console.log("FP_VERSION", process.env.FP_VERSION);
+  console.log("Running ESM test");
   script.textContent = `
     // Create a function to update the test status
     function updateTestStatus(status, message) {
@@ -47,8 +47,8 @@ test("esm.sh", async () => {
     (async function runTest() {
       try {
         updateTestStatus('RUNNING', 'Importing Fireproof module...');
-        const { Fireproof } = await import('https://esm.sh/@fireproof/core@${process.env.FP_VERSION}');
-        console.log('window-js', '${process.env.FP_VERSION}');
+        const { Fireproof } = await import('https://esm.sh/@fireproof/core@latest');
+        console.log('window-js', 'latest');
         
         updateTestStatus('RUNNING', 'Creating database...');
         const db = new Fireproof('esm-test');
