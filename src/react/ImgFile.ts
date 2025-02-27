@@ -7,13 +7,23 @@ const { URL } = window;
 type FileType = File | DocFileMeta;
 
 interface ImgFileProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
-  file: FileType;
+  file?: FileType;
+  /**
+   * @deprecated Use 'file' instead. This is for internal use only to support legacy code.
+   * @internal
+   */
+  meta?: FileType;
 }
 
-export function ImgFile({ file, ...imgProps }: ImgFileProps) {
+export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const [imgDataUrl, setImgDataUrl] = useState("");
 
+  // Use meta as fallback if file is not provided (for backward compatibility)
+  const fileData = file || meta;
+
   useEffect(() => {
+    if (!fileData) return;
+
     // Helper function to determine if the object is a File
     const isFile = (obj: FileType): obj is File => obj instanceof File;
 
@@ -25,12 +35,12 @@ export function ImgFile({ file, ...imgProps }: ImgFileProps) {
       let fileObj: File | null = null;
       let fileType = "";
 
-      if (isFile(file)) {
-        fileObj = file;
-        fileType = file.type;
-      } else if (isFileMeta(file)) {
-        fileType = file.type;
-        fileObj = (await file.file?.()) || null;
+      if (isFile(fileData)) {
+        fileObj = fileData;
+        fileType = fileData.type;
+      } else if (isFileMeta(fileData)) {
+        fileType = fileData.type;
+        fileObj = (await fileData.file?.()) || null;
       }
 
       if (fileObj && /image/.test(fileType)) {
@@ -47,7 +57,7 @@ export function ImgFile({ file, ...imgProps }: ImgFileProps) {
         URL.revokeObjectURL(imgDataUrl);
       }
     };
-  }, [file]);
+  }, [fileData]);
 
   return imgDataUrl
     ? React.createElement("img", {

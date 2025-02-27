@@ -147,4 +147,92 @@ describe("COMPONENT: ImgFile", () => {
     const img = container.querySelector("img");
     expect(img).toBeNull();
   });
+
+  // Legacy support tests
+  it("renders the image using legacy 'meta' parameter with a File object", async () => {
+    const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "file.svg", { type: "image/svg+xml" });
+
+    const { container } = render(
+      createElement(
+        "div",
+        null,
+        createElement(ImgFile, {
+          meta: file,
+          alt: "Legacy File",
+          className: "legacy-test",
+        }),
+      ),
+    );
+
+    await waitFor(() => {
+      const img = container.querySelector("img");
+      expect(img).not.toBeNull();
+    });
+
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", mockObjectURL);
+    expect(img).toHaveAttribute("alt", "Legacy File");
+    expect(img).toHaveClass("legacy-test");
+
+    expect(window.URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it("renders the image using legacy 'meta' parameter with a document file", async () => {
+    const doc = await db.get(docId);
+    expect(doc._files).toBeTruthy();
+    expect(doc._files?.myFile).toBeTruthy();
+    if (!doc._files?.myFile) throw new Error("Document does not have a file");
+
+    const { container } = render(
+      createElement(ImgFile, {
+        meta: doc._files.myFile,
+        alt: "Legacy Test SVG",
+        className: "legacy-test",
+      }),
+    );
+
+    await waitFor(() => {
+      const img = container.querySelector("img");
+      expect(img).not.toBeNull();
+    });
+
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", mockObjectURL);
+    expect(img).toHaveAttribute("alt", "Legacy Test SVG");
+    expect(img).toHaveClass("legacy-test");
+
+    expect(window.URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it("prioritizes 'file' parameter over 'meta' when both are provided", async () => {
+    // Create two different files with different names to distinguish them
+    const file1 = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "file1.svg", { type: "image/svg+xml" });
+    const file2 = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "file2.svg", { type: "image/svg+xml" });
+
+    // Mock createObjectURL to return different URLs for different files
+    window.URL.createObjectURL = vi.fn((file) => {
+      if (file === file1) return "file1-url";
+      if (file === file2) return "file2-url";
+      return "unknown-url";
+    });
+
+    const { container } = render(
+      createElement(ImgFile, {
+        file: file1,
+        meta: file2,
+        alt: "Priority Test",
+      }),
+    );
+
+    await waitFor(() => {
+      const img = container.querySelector("img");
+      expect(img).not.toBeNull();
+    });
+
+    const img = container.querySelector("img");
+    expect(img).toHaveAttribute("src", "file1-url");
+
+    // Reset the mock for other tests
+    window.URL.createObjectURL = vi.fn(() => mockObjectURL);
+  });
 });
