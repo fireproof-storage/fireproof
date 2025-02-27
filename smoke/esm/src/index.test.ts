@@ -75,37 +75,37 @@ test("esm.sh", async () => {
   document.body.appendChild(script);
 
   // Wait for 5 seconds before checking for results to allow the script to initialize
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // Poll for test completion instead of waiting for a specific element
   const maxWaitTime = 600000; // 10 minutes
   const startTime = Date.now();
-  
+
   let status = null;
   while (Date.now() - startTime < maxWaitTime) {
-    const resultElement = document.getElementById('test-result');
-    if (resultElement && resultElement.hasAttribute('data-status')) {
-      status = resultElement.getAttribute('data-status');
-      if (status === 'SUCCESS' || status === 'ERROR') {
+    const resultElement = document.getElementById("test-result");
+    if (resultElement && resultElement.hasAttribute("data-status")) {
+      status = resultElement.getAttribute("data-status");
+      if (status === "SUCCESS" || status === "ERROR") {
         break;
       }
     }
     // Wait a short time before checking again
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   // Get the final result
-  const resultElement = document.getElementById('test-result');
-  const content = resultElement ? resultElement.textContent : 'No result found';
+  const resultElement = document.getElementById("test-result");
+  const content = resultElement ? resultElement.textContent : "No result found";
   console.log(content);
 
   // Check if there was an error
   if (!resultElement || !status) {
     throw new Error(`Test timed out or failed to complete: ${content}`);
-  } else if (status === 'ERROR') {
+  } else if (status === "ERROR") {
     throw new Error(`Test failed with error: ${content}`);
   }
-  
+
   // Check for success
-  expect(status).toBe('SUCCESS');
+  expect(status).toBe("SUCCESS");
 });
