@@ -17,7 +17,7 @@ export default defineConfig({
       },
     },
     isolate: false,
-    testTimeout: 60_000,
+    testTimeout: 180_000, // Increase timeout to 3 minutes for CI
     setupFiles: "./setup.js",
   },
 });

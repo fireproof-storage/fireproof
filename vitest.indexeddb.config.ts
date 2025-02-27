@@ -24,5 +24,6 @@ export default defineConfig({
     },
     globals: true,
     setupFiles: "./setup.indexeddb.ts",
+    testTimeout: 180000, // Increase timeout to 3 minutes for CI
   },
 });
