@@ -136,8 +136,7 @@ describe("Streaming API", () => {
     await db.put({ _id: `${newProps.prefix}${amountOfDocs + 1}`, [newProps.key]: `${newProps.prefix}${amountOfDocs + 1}` });
     await db.put({ _id: `${newProps.prefix}${amountOfDocs + 2}`, [newProps.key]: `${newProps.prefix}${amountOfDocs + 2}` });
 
-    for await (const { row, marker } of stream) {
-      console.log(row, marker);
+    for await (const { marker } of stream) {
       if (marker.kind === "new") docCount++;
       if (docCount === 3) break;
     }
@@ -227,7 +226,7 @@ describe("Streaming API", () => {
         });
       });
 
-      it.only("test `future` method", async () => {
+      it("test `future` method", async () => {
         const stream = db.select("name").future();
         await testFuture(stream, AMOUNT_OF_DOCS, { prefix: "doc-", key: "name" });
       });
