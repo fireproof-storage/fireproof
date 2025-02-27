@@ -54,9 +54,8 @@ test("esm.sh", async () => {
         console.log('Module structure:', Object.keys(fireproof));
         
         updateTestStatus('RUNNING', 'Creating database...');
-        // Try default export if it exists
-        const Fireproof = fireproof.default || fireproof.Fireproof;
-        const db = new Fireproof('esm-test');
+        // Use the fireproof export which contains the Fireproof constructor
+        const db = new fireproof.fireproof('esm-test');
         
         updateTestStatus('RUNNING', 'Adding document...');
         const doc = await db.put({hello: 'world', timestamp: Date.now()});
