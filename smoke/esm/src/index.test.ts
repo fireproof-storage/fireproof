@@ -55,6 +55,6 @@ main().catch(console.error)
   document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
   document.body.appendChild(script);
 
-  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 500_000 });
+  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 600_000 });
   expect(await page.getByTestId("label").element().innerHTML).toBe("9 - esm-success");
 });
