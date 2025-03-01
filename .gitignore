@@ -23,6 +23,7 @@ smoke/package.json
 smoke/pnpm-lock.yaml
 smoke/react/package.json
 smoke/react/pnpm-lock.yaml
+smoke/esm/.npmrc
 **/__screenshots__/
 /test-results/
 /playwright-report/
