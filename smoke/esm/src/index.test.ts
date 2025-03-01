@@ -205,39 +205,50 @@ it("esm.sh", async () => {
 `;
   script.type = "module";
 
-  console.log("🔧 Setting up DOM elements");
-  // Create a more visible and clickable label with clear styling
+  console.log("🔧 Setting up DOM elements with absolute positioning");
+  // Create a very simple DOM with minimal styling to avoid any potential interference
   document.body.innerHTML = `
-    <div style="
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      height: 100vh; 
-      font-family: Arial, sans-serif;
-      position: relative;
+    <div id="root" style="
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: white;
+      z-index: 999999;
     ">
-      <label 
-        data-testid="label" 
-        id="test-label"
-        style="
-          display: block;
-          padding: 20px;
-          margin: 20px;
-          font-size: 18px;
-          background-color: #f0f0f0;
-          border: 2px solid #ccc;
-          border-radius: 8px;
-          min-width: 300px;
-          min-height: 50px;
-          text-align: center;
-          cursor: pointer;
-          z-index: 99999;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        "
-      >Test running...</label>
+      <div id="container" style="
+        position: relative;
+        width: 80%;
+        max-width: 500px;
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #ccc;
+        z-index: 999999;
+      ">
+        <label 
+          data-testid="label" 
+          id="test-label"
+          style="
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin: 0;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            background-color: #e0e0e0;
+            border: 2px solid #999;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 999999;
+            box-sizing: border-box;
+          "
+        >Test running...</label>
+      </div>
     </div>
   `;
   document.body.appendChild(script);
@@ -296,36 +307,78 @@ it("esm.sh", async () => {
 
     // Make sure the label is visible and scrolled into view before interacting
     try {
+      console.log("🔧 Preparing element for interaction");
+
+      // Force document to be at the top
+      window.scrollTo(0, 0);
+
+      const rootElement = document.querySelector("#root");
+      if (rootElement) {
+        console.log("✅ Root element found");
+        // Ensure the root takes up the full viewport
+        (rootElement as HTMLElement).style.width = "100vw";
+        (rootElement as HTMLElement).style.height = "100vh";
+      } else {
+        console.error("❌ Root element not found");
+      }
+
+      const containerElement = document.querySelector("#container");
+      if (containerElement) {
+        console.log("✅ Container element found");
+        // Center the container
+        (containerElement as HTMLElement).style.position = "absolute";
+        (containerElement as HTMLElement).style.top = "50%";
+        (containerElement as HTMLElement).style.left = "50%";
+        (containerElement as HTMLElement).style.transform = "translate(-50%, -50%)";
+      } else {
+        console.error("❌ Container element not found");
+      }
+
       const labelElement = document.querySelector("#test-label");
       if (labelElement) {
-        // Force the element to be in a fixed position at the center of the screen
-        (labelElement as HTMLElement).style.position = "fixed";
-        (labelElement as HTMLElement).style.top = "50%";
-        (labelElement as HTMLElement).style.left = "50%";
-        (labelElement as HTMLElement).style.transform = "translate(-50%, -50%)";
-        (labelElement as HTMLElement).style.zIndex = "99999";
+        console.log("✅ Label element found");
 
-        // Ensure the element is visible
-        (labelElement as HTMLElement).style.visibility = "visible";
-        (labelElement as HTMLElement).style.display = "block";
+        // Make the label extremely visible and positioned in a way that's easy to click
+        (labelElement as HTMLElement).style.position = "relative";
+        (labelElement as HTMLElement).style.width = "100%";
+        (labelElement as HTMLElement).style.height = "auto";
+        (labelElement as HTMLElement).style.padding = "30px";
+        (labelElement as HTMLElement).style.margin = "0";
+        (labelElement as HTMLElement).style.fontSize = "28px";
+        (labelElement as HTMLElement).style.fontWeight = "bold";
+        (labelElement as HTMLElement).style.backgroundColor = "#4CAF50";
+        (labelElement as HTMLElement).style.color = "white";
+        (labelElement as HTMLElement).style.border = "none";
+        (labelElement as HTMLElement).style.borderRadius = "4px";
+        (labelElement as HTMLElement).style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
 
-        // Scroll to ensure it's in view
-        (labelElement as HTMLElement).scrollIntoView({ behavior: "auto", block: "center" });
-
+        // Log element details for debugging
+        const rect = (labelElement as HTMLElement).getBoundingClientRect();
+        console.log(`🔍 Label rect: top=${rect.top}, left=${rect.left}, width=${rect.width}, height=${rect.height}`);
         console.log(
-          `🔍 Label position: top=${(labelElement as HTMLElement).style.top}, left=${(labelElement as HTMLElement).style.left}`,
+          `🔍 Label computed style: display=${window.getComputedStyle(labelElement as HTMLElement).display}, visibility=${window.getComputedStyle(labelElement as HTMLElement).visibility}`,
         );
-        console.log(
-          `🔍 Label dimensions: width=${(labelElement as HTMLElement).offsetWidth}px, height=${(labelElement as HTMLElement).offsetHeight}px`,
-        );
+        console.log(`🔍 Label z-index: ${window.getComputedStyle(labelElement as HTMLElement).zIndex}`);
+
+        // Try to ensure the element is in view
+        (labelElement as HTMLElement).scrollIntoView({ block: "center", inline: "center", behavior: "auto" });
+      } else {
+        console.error("❌ Label element not found");
       }
+
+      // Log the entire DOM structure for debugging
+      console.log("🔍 Current DOM structure:");
+      console.log(document.documentElement.outerHTML.substring(0, 500) + "...");
     } catch (error) {
-      console.warn(`⚠️ Failed to scroll element into view: ${error.message}`);
+      console.error(`❌ Failed to prepare element for interaction: ${error.message}`);
     }
 
-    // Add a longer delay to ensure the element is fully visible and ready for interaction
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Add a much longer delay to ensure the element is fully visible and ready
+    console.log("⏳ Waiting for 5 seconds before interaction...");
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    console.log("✅ Wait complete, proceeding with interaction");
 
+    // Get the label content and verify it
     const labelContent = await page.getByTestId("label").element().innerHTML;
     console.log(`✅ Final label content: "${labelContent}"`);
     expect(labelContent).toBe("9 - esm-success");
