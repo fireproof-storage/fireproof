@@ -287,7 +287,11 @@ if [ $retry_count -ge $max_retries ]; then
   # Collect diagnostic information
   echo "📊 Diagnostic information for troubleshooting:"
   echo "1. Registry package information:"
-  curl -s "http://localhost:4873/@fireproof%2Fcore" | grep -E '(name|version|dist-tags)' | head -10
+  if command -v jq >/dev/null 2>&1; then
+    curl -s "http://localhost:4873/@fireproof%2Fcore" | jq '.name, .version, .["dist-tags"]'
+  else
+    curl -s "http://localhost:4873/@fireproof%2Fcore" | grep -E '(name|version|dist-tags)' | head -10
+  fi
   echo
   
   echo "2. ESM server status:"

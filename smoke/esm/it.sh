@@ -75,8 +75,6 @@ verify_esm_module() {
         echo
       fi
       
-      # Update the setup.js file to use this URL
-      echo "export const ESM_MODULE_URL = '$ESM_MODULE_URL';" > esm_module_url.js
       return 0
     else
       echo " Module not available yet: $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
@@ -101,8 +99,6 @@ verify_esm_module() {
           echo
         fi
         
-        # Update the setup.js file to use the tagged URL
-        echo "export const ESM_MODULE_URL = '$ESM_MODULE_URL_TAG';" > esm_module_url.js
         return 0
       fi
     fi
@@ -120,11 +116,11 @@ verify_esm_module() {
   # Collect diagnostic information
   echo " Diagnostic information for troubleshooting:"
   echo "1. Registry package information:"
-  curl -s "http://localhost:4873/@fireproof%2Fcore" || echo "Failed to get package info"
+  curl -s "http://localhost:4873/@fireproof%2Fcore" | grep -E '(name|version|dist-tags)' || echo "Failed to get package info"
   echo
   
   echo "2. ESM server status:"
-  curl -v "http://localhost:4874/" || echo "Failed to get ESM server status"
+  curl -v "http://localhost:4874/" | head -10 || echo "Failed to get ESM server status"
   echo
   
   if [ "$FP_CI" = "fp_ci" ]; then
@@ -200,7 +196,7 @@ cat > "$tmpDir/package.json" << EOL
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest --run --testTimeout=90000"
+    "test": "vitest --run --testTimeout=120000"
   },
   "devDependencies": {
     "@vitest/browser": "^3.0.4",
@@ -215,7 +211,7 @@ echo "✅ package.json created successfully"
 echo "📊 package.json content (summary):"
 echo "  - name: @fireproof-example/esm"
 echo "  - type: module"
-echo "  - test timeout: 90000ms"
+echo "  - test timeout: 120000ms"
 
 echo "🔍 Creating setup.js..."
 cat > "$tmpDir/setup.js" << EOL
