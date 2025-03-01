@@ -17,6 +17,7 @@ export default defineConfig({
       },
     },
     isolate: false,
+    testTimeout: 60_000,
     setupFiles: "./setup.js",
   },
 });
