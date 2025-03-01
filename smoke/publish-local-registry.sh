@@ -28,8 +28,8 @@ verify_package_published() {
       echo "✅ Package is available at $PACKAGE_URL (HTTP Status: $HTTP_STATUS)"
       
       # Check if we can get the package metadata with the specific version
-      METADATA=$(curl -s "$PACKAGE_URL")
-      if echo "$METADATA" | grep -q "$version"; then
+      # Use grep directly with curl to avoid storing the full metadata
+      if curl -s "$PACKAGE_URL" | grep -q "$version"; then
         echo "✅ Package version $version found in metadata"
         return 0
       else
@@ -165,7 +165,6 @@ do
      pnpm version $(cat $projectRoot/dist/fp-version) --no-git-tag-version &&
      node $projectRoot/smoke/patch-fp-version.js package.json $(cat $projectRoot/dist/fp-version)
      cat .npmrc &&
-     cat package.json &&
      pnpm publish --registry=http://localhost:4873 --no-git-checks --tag smoke
      # Get the correct package name from package.json
      package_name=$(node -e "console.log(require('./package.json').name)")

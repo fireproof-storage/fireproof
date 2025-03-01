@@ -85,120 +85,123 @@ it("esm.sh", async () => {
   console.log("  Using module URL:", moduleToUse);
 
   script.textContent = `
-import { fireproof } from '${moduleToUse}'
-console.log("✅ Module import statement executed")
-
-// Add global error handler to catch any uncaught errors
-window.addEventListener('error', function(event) {
-  console.error("❌ GLOBAL ERROR:", event.message, "at", event.filename, ":", event.lineno);
-});
-
-try {
-  console.log("✅ Module imported successfully")
-  
-  function invariant(cond, message) {
-    if (!cond) {
-      console.error("❌ INVARIANT FAILED:", message);
-      throw new Error(message)
-    }
-  }
-  
-  async function action(label, iteration) {
-    console.log("🔄 Running iteration " + iteration + "/10");
-    try {
-      console.log("🔍 Creating database for iteration " + iteration);
-      const db = fireproof("esm-test");
-      console.log("✅ Database created for iteration " + iteration);
-      
-      console.log("🔍 Putting first document for iteration " + iteration);
-      const ok = await db.put({ sort: Math.random(), test: "esm-success" });
-      console.log("✅ First document created with id: " + ok.id);
-      
-      console.log("🔍 Getting all docs (before) for iteration " + iteration);
-      const beforeAll = await db.allDocs();
-      console.log("✅ Got all docs (before): " + beforeAll.rows.length + " documents");
-      
-      console.log("🔍 Putting second document for iteration " + iteration);
-      await db.put({ foo: 1 });
-      console.log("✅ Second document created");
-      
-      console.log("🔍 Getting all docs (after) for iteration " + iteration);
-      const afterAll = await db.allDocs();
-      console.log("✅ Got all docs (after): " + afterAll.rows.length + " documents");
-  
-      console.log("🔍 Checking invariant for iteration " + iteration);
-      invariant(
-        afterAll.rows.length == beforeAll.rows.length + 1,
-        "all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length
-      );
-      console.log("✅ Invariant check passed");
-  
-      console.log("🔍 Getting document by id for iteration " + iteration);
-      const res = await db.get(ok.id);
-      console.log("✅ Got document by id: " + JSON.stringify(res));
-      
-      console.log("🔍 Updating label for iteration " + iteration);
-      label.innerHTML = [iteration,res.test].join(' - ');
-      console.log("✅ Label updated to: " + label.innerHTML);
-      
-      console.log("🔍 Closing database for iteration " + iteration);
-      await db.close();
-      console.log("✅ Database closed for iteration " + iteration);
-      
-      return true;
-    } catch (error) {
-      console.error("❌ Error in iteration " + iteration + ": " + error.message);
-      console.error("❌ Error stack: " + error.stack);
-      label.innerHTML = "ERROR: " + error.message;
-      throw error;
-    }
-  }
-  
-  async function main() {
-    console.log("🚀 Main function started");
-    const label = document.querySelector('#test-label');
-    if (!label) {
-      console.error("❌ Label element not found in main()");
-      throw new Error("Label element not found");
-    }
-    console.log("✅ Found label element");
+(async () => {
+  try {
+    console.log("🔍 Starting dynamic import of module")
+    const module = await import('${moduleToUse}')
+    console.log("✅ Module imported successfully")
+    const { fireproof } = module
     
-    for (let i = 0; i < 10; i++) {
-      console.log("🔄 Starting iteration " + i);
-      await action(label, i);
-      console.log("✅ Completed iteration " + i);
+    if (!fireproof) {
+      console.error("❌ fireproof not found in imported module")
+      throw new Error("fireproof not found in imported module")
+    }
+    console.log("✅ fireproof function found in module")
+    
+    function invariant(cond, message) {
+      if (!cond) {
+        console.error("❌ INVARIANT FAILED:", message);
+        throw new Error(message)
+      }
     }
     
-    console.log("🔍 Setting data-ready attribute");
-    label.setAttribute("data-ready", "true");
-    label.style.backgroundColor = "#4CAF50";
-    label.style.color = "white";
-    console.log("✅ All iterations completed successfully!");
-  }
+    async function action(label, iteration) {
+      console.log("🔄 Running iteration " + iteration + "/10");
+      try {
+        console.log("🔍 Creating database for iteration " + iteration);
+        const db = fireproof("esm-test");
+        console.log("✅ Database created for iteration " + iteration);
+        
+        console.log("🔍 Putting first document for iteration " + iteration);
+        const ok = await db.put({ sort: Math.random(), test: "esm-success" });
+        console.log("✅ First document created with id: " + ok.id);
+        
+        console.log("🔍 Getting all docs (before) for iteration " + iteration);
+        const beforeAll = await db.allDocs();
+        console.log("✅ Got all docs (before): " + beforeAll.rows.length + " documents");
+        
+        console.log("🔍 Putting second document for iteration " + iteration);
+        await db.put({ foo: 1 });
+        console.log("✅ Second document created");
+        
+        console.log("🔍 Getting all docs (after) for iteration " + iteration);
+        const afterAll = await db.allDocs();
+        console.log("✅ Got all docs (after): " + afterAll.rows.length + " documents");
   
-  console.log("🔍 About to call main()");
-  main().catch(error => {
-    console.error("❌ FATAL ERROR in main():", error.message);
+        console.log("🔍 Checking invariant for iteration " + iteration);
+        invariant(
+          afterAll.rows.length == beforeAll.rows.length + 1,
+          "all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length
+        );
+        console.log("✅ Invariant check passed");
+  
+        console.log("🔍 Getting document by id for iteration " + iteration);
+        const res = await db.get(ok.id);
+        console.log("✅ Got document by id: " + JSON.stringify(res));
+        
+        console.log("🔍 Updating label for iteration " + iteration);
+        label.innerHTML = [iteration,res.test].join(' - ');
+        console.log("✅ Label updated to: " + label.innerHTML);
+        
+        console.log("🔍 Closing database for iteration " + iteration);
+        await db.close();
+        console.log("✅ Database closed for iteration " + iteration);
+        
+        return true;
+      } catch (error) {
+        console.error("❌ Error in iteration " + iteration + ": " + error.message);
+        console.error("❌ Error stack: " + error.stack);
+        label.innerHTML = "ERROR: " + error.message;
+        throw error;
+      }
+    }
+    
+    async function main() {
+      console.log("🚀 Main function started");
+      const label = document.querySelector('#test-label');
+      if (!label) {
+        console.error("❌ Label element not found in main()");
+        throw new Error("Label element not found");
+      }
+      console.log("✅ Found label element");
+      
+      for (let i = 0; i < 10; i++) {
+        console.log("🔄 Starting iteration " + i);
+        await action(label, i);
+        console.log("✅ Completed iteration " + i);
+      }
+      
+      console.log("🔍 Setting data-ready attribute");
+      label.setAttribute("data-ready", "true");
+      label.style.backgroundColor = "#4CAF50";
+      label.style.color = "white";
+      console.log("✅ All iterations completed successfully!");
+    }
+    
+    console.log("🔍 About to call main()");
+    main().catch(error => {
+      console.error("❌ FATAL ERROR in main():", error.message);
+      console.error("❌ Error stack:", error.stack);
+      const label = document.querySelector('#test-label');
+      if (label) {
+        label.style.backgroundColor = "#F44336";
+        label.style.color = "white";
+        label.innerHTML = "FATAL ERROR: " + error.message;
+      } else {
+        console.error("❌ Could not find label element to show error");
+      }
+    });
+  } catch (error) {
+    console.error("❌ TOP-LEVEL ERROR:", error.message);
     console.error("❌ Error stack:", error.stack);
     const label = document.querySelector('#test-label');
     if (label) {
       label.style.backgroundColor = "#F44336";
       label.style.color = "white";
-      label.innerHTML = "FATAL ERROR: " + error.message;
-    } else {
-      console.error("❌ Could not find label element to show error");
+      label.innerHTML = "TOP-LEVEL ERROR: " + error.message;
     }
-  });
-} catch (error) {
-  console.error("❌ TOP-LEVEL ERROR:", error.message);
-  console.error("❌ Error stack:", error.stack);
-  const label = document.querySelector('#test-label');
-  if (label) {
-    label.style.backgroundColor = "#F44336";
-    label.style.color = "white";
-    label.innerHTML = "TOP-LEVEL ERROR: " + error.message;
   }
-}
+})();
 `;
   script.type = "module";
 
@@ -325,7 +328,8 @@ try {
       }
 
       // Log the entire document body for debugging
-      console.error("🔍 Document body:", document.body.innerHTML);
+      const truncatedBody = document.body.innerHTML.slice(0, 100);
+      console.error("🔍 Document body (first 100 bytes):", truncatedBody);
     } catch (error) {
       console.error(`❌ Failed to capture debug state: ${error.message}`);
     }
