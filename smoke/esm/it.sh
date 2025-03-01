@@ -138,16 +138,17 @@ echo "🚀 Starting ESM smoke test..."
 echo "🔍 Verifying services before running tests..."
 
 # Check if .npmrc file exists and has correct content
-if [ ! -f "$projectBase/dist/npmrc-smoke" ]; then
-  echo "❌ ERROR: .npmrc file not found at $projectBase/dist/npmrc-smoke"
+NPMRC_PATH="$projectBase/dist/npmrc-smoke"
+if [ -f "$NPMRC_PATH" ]; then
+  echo "✅ .npmrc file found at $NPMRC_PATH"
+  echo "📊 .npmrc content (first 5 lines):"
+  head -5 "$NPMRC_PATH"
+else
+  echo "❌ ERROR: .npmrc file not found at $NPMRC_PATH"
   if [ "$FP_CI" = "fp_ci" ]; then
     echo "Running in CI environment - failing fast"
     exit 1
   fi
-else
-  echo "✅ .npmrc file found at $projectBase/dist/npmrc-smoke"
-  echo "📊 .npmrc content:"
-  cat "$projectBase/dist/npmrc-smoke"
 fi
 
 check_registry_health
@@ -192,43 +193,55 @@ cp -pr * $tmpDir
 cd $tmpDir
 
 echo "🔍 Creating package.json from template..."
-cp package-template.json package.json
-if [ ! -f "package.json" ]; then
-  echo "❌ ERROR: Failed to create package.json"
-  if [ "$FP_CI" = "fp_ci" ]; then
-    echo "Running in CI environment - failing fast"
-    exit 1
-  fi
-else
-  echo "✅ package.json created successfully"
-  echo "📊 package.json content:"
-  cat package.json
-fi
+cat > "$tmpDir/package.json" << EOL
+{
+  "name": "@fireproof-example/esm",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest --run --testTimeout=90000"
+  },
+  "devDependencies": {
+    "@vitest/browser": "^3.0.4",
+    "@vitest/ui": "^3.0.4",
+    "vite": "^6.0.11",
+    "vitest": "^3.0.4",
+    "webdriverio": "^9.7.1"
+  }
+}
+EOL
+echo "✅ package.json created successfully"
+echo "📊 package.json content (summary):"
+echo "  - name: @fireproof-example/esm"
+echo "  - type: module"
+echo "  - test timeout: 90000ms"
 
 echo "🔍 Creating setup.js..."
-cat > setup.js <<EOF
+cat > "$tmpDir/setup.js" << EOL
 function gthis() {
   return globalThis;
 }
 
 function getVersion() {
-  let version = "refs/tags/v$(cat $projectBase/dist/fp-version)";
+  let version = "$GITHUB_REF";
   if ("$GITHUB_REF" && "$GITHUB_REF".startsWith("refs/tags/v")) {
     version = "GITHUB_REF";
   }
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
-gthis()["FP_STACK"]="stack"
-gthis()["FP_DEBUG"]="*"
-gthis()["FP_VERSION"]=getVersion()
+gthis()["FP_STACK"]="$FP_STACK"
+gthis()["FP_DEBUG"]="$FP_DEBUG"
+gthis()["FP_VERSION"]="$FP_VERSION"
 
 console.log("🔍 Setup.js initialized with FP_VERSION =", gthis()["FP_VERSION"]);
-EOF
-
+EOL
 echo "✅ setup.js created successfully"
-echo "📊 setup.js content:"
-cat setup.js
+echo "📊 setup.js content (summary):"
+echo "  - FP_VERSION: $FP_VERSION"
+echo "  - FP_DEBUG: $FP_DEBUG"
+echo "  - FP_STACK: $FP_STACK"
 
 echo "🔍 Installing dependencies..."
 pnpm install
