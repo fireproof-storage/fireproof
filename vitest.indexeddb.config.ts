@@ -23,6 +23,6 @@ export default defineConfig({
       // ],
     },
     globals: true,
-    setupFiles: "./setup.indexeddb.ts"
+    setupFiles: "./setup.indexeddb.ts",
   },
 });
