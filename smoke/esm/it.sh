@@ -215,8 +215,12 @@ echo "  - test timeout: 30000ms"
 
 echo "🔍 Creating setup.js..."
 cat > "$tmpDir/setup.js" << EOL
+// This file is loaded by Vitest before tests run
+// It sets up global variables needed by the tests
+
+// Make sure we're setting variables on the correct global object
 function gthis() {
-  return globalThis;
+  return globalThis || window || self || global;
 }
 
 function getVersion() {
@@ -227,6 +231,7 @@ function getVersion() {
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
+// Set environment variables on the global object
 gthis()["FP_STACK"]="$FP_STACK"
 gthis()["FP_DEBUG"]="$FP_DEBUG"
 gthis()["FP_VERSION"]="$FP_VERSION"
@@ -252,7 +257,7 @@ else
 fi
 
 echo "🚀 Running tests..."
-pnpm run test
+FP_VERSION="$FP_VERSION" FP_DEBUG="$FP_DEBUG" FP_STACK="$FP_STACK" pnpm run test
 TEST_RESULT=$?
 
 echo "🔍 Cleaning up temporary directory..."
