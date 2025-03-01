@@ -1,4 +1,4 @@
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
 
 test("esm.sh", async () => {
   // Create a visible label to ensure it can be interacted with
