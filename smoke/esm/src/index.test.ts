@@ -88,15 +88,31 @@ it("esm.sh", async () => {
 (async () => {
   try {
     console.log("🔍 Starting dynamic import of module")
-    const module = await import('${moduleToUse}')
-    console.log("✅ Module imported successfully")
-    const { fireproof } = module
-    
-    if (!fireproof) {
-      console.error("❌ fireproof not found in imported module")
-      throw new Error("fireproof not found in imported module")
+    try {
+      const module = await import('${moduleToUse}')
+      console.log("✅ Module imported successfully")
+      const { fireproof } = module
+      
+      if (!fireproof) {
+        console.error("❌ fireproof not found in imported module")
+        throw new Error("fireproof not found in imported module")
+      }
+      console.log("✅ fireproof function found in module")
+    } catch (error) {
+      console.error("❌ CRITICAL ERROR: Failed to import module:", error.message);
+      console.error("❌ Error stack:", error.stack);
+      
+      // Update label with error
+      const label = document.querySelector('#test-label');
+      if (label) {
+        label.style.backgroundColor = "#F44336";
+        label.style.color = "white";
+        label.innerHTML = "MODULE LOAD ERROR: " + error.message;
+      }
+      
+      // Fail fast - don't proceed with test if module loading fails
+      throw new Error("Module loading failed: " + error.message);
     }
-    console.log("✅ fireproof function found in module")
     
     function invariant(cond, message) {
       if (!cond) {
