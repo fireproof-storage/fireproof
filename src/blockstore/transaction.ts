@@ -98,6 +98,11 @@ export function defaultedBlockstoreRuntime(
     keyBag: opts.keyBag || {},
     crypto: toCryptoRuntime(opts.crypto),
     storeUrls: opts.storeUrls,
+    taskManager: {
+      removeAfter: 3,
+      retryTimeout: 50,
+      ...opts.taskManager,
+    },
     // storeEnDeFile: ensureStoreEnDeFile(opts.storeEnDeFile),
     // store,
     storeRuntime: toStoreRuntime(sthis, ensureStoreEnDeFile(opts.storeEnDeFile)),
