@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 projectBase=$(pwd)
 cd smoke/esm
@@ -7,9 +7,9 @@ smokeDir=$(pwd)
 check_registry_health() {
   local registry_status=$(curl --retry 3 --retry-max-time 10 --retry-all-errors -s -o /dev/null -w "%{http_code}" http://localhost:4873/)
   if [ "$registry_status" != "200" ]; then
-    echo " ERROR: Registry not responding properly (HTTP $registry_status)"
+    echo "❌ ERROR: Registry not responding properly (HTTP $registry_status)"
     # Try to get more diagnostic information
-    echo " Registry diagnostic information:"
+    echo "🔍 Registry diagnostic information:"
     curl -v http://localhost:4873/ || echo "Failed to get verbose output from registry"
     if [ "$FP_CI" = "fp_ci" ]; then
       echo "Running in CI environment - failing fast"
@@ -17,16 +17,16 @@ check_registry_health() {
     fi
     return 1
   fi
-  echo " Registry is responding properly (HTTP $registry_status)"
+  echo "✅ Registry is responding properly (HTTP $registry_status)"
   return 0
 }
 
 check_esm_server_health() {
   local esm_status=$(curl --retry 3 --retry-max-time 10 --retry-all-errors -s -o /dev/null -w "%{http_code}" http://localhost:4874/)
   if [ "$esm_status" != "200" ]; then
-    echo " ERROR: ESM server not responding properly (HTTP $esm_status)"
+    echo "❌ ERROR: ESM server not responding properly (HTTP $esm_status)"
     # Try to get more diagnostic information
-    echo " ESM server diagnostic information:"
+    echo "🔍 ESM server diagnostic information:"
     curl -v http://localhost:4874/ || echo "Failed to get verbose output from ESM server"
     if [ "$FP_CI" = "fp_ci" ]; then
       echo "Running in CI environment - failing fast"
@@ -34,7 +34,7 @@ check_esm_server_health() {
     fi
     return 1
   fi
-  echo " ESM server is responding properly (HTTP $esm_status)"
+  echo "✅ ESM server is responding properly (HTTP $esm_status)"
   return 0
 }
 
@@ -44,10 +44,10 @@ verify_esm_module() {
   local retry_count=0
   local wait_time=2
   
-  echo "Verifying ESM module @fireproof/core@$version is available..."
+  echo "🔍 Verifying ESM module @fireproof/core@$version is available..."
   
   if [ -z "$version" ]; then
-    echo " ERROR: No version provided for ESM module verification"
+    echo "❌ ERROR: No version provided for ESM module verification"
     if [ "$FP_CI" = "fp_ci" ]; then
       echo "Running in CI environment - failing fast"
       exit 1
@@ -57,44 +57,44 @@ verify_esm_module() {
   
   while [ $retry_count -lt $max_retries ]; do
     ESM_MODULE_URL="http://localhost:4874/@fireproof/core@$version?no-dts"
-    echo "Checking URL: $ESM_MODULE_URL"
+    echo "🔍 Checking URL: $ESM_MODULE_URL"
     ESM_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$ESM_MODULE_URL")
     
     if [ "$ESM_STATUS" = "200" ]; then
-      echo " ESM module is available at $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
+      echo "✅ ESM module is available at $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
       
       # Verify content length
       CONTENT_LENGTH=$(curl -sI "$ESM_MODULE_URL" | grep -i "Content-Length" | awk '{print $2}' | tr -d '\r\n')
-      echo " Module content length: $CONTENT_LENGTH bytes"
+      echo "📊 Module content length: $CONTENT_LENGTH bytes"
       
       if [ -z "$CONTENT_LENGTH" ] || [ "$CONTENT_LENGTH" -lt 1000 ]; then
-        echo " WARNING: Module content length is suspiciously small: $CONTENT_LENGTH bytes"
+        echo "⚠️ WARNING: Module content length is suspiciously small: $CONTENT_LENGTH bytes"
         # Get a sample of the content
-        echo " Content sample:"
+        echo "🔍 Content sample:"
         curl -s "$ESM_MODULE_URL" | head -c 200
         echo
       fi
       
       return 0
     else
-      echo " Module not available yet: $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
+      echo "⚠️ Module not available yet: $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
       
       # Try with the smoke tag
       ESM_MODULE_URL_TAG="http://localhost:4874/@fireproof/core@$version?tag=smoke&no-dts"
-      echo "Checking URL with tag: $ESM_MODULE_URL_TAG"
+      echo "🔍 Checking URL with tag: $ESM_MODULE_URL_TAG"
       ESM_STATUS_TAG=$(curl -s -o /dev/null -w "%{http_code}" "$ESM_MODULE_URL_TAG")
       
       if [ "$ESM_STATUS_TAG" = "200" ]; then
-        echo " ESM module is available with tag at $ESM_MODULE_URL_TAG (HTTP Status: $ESM_STATUS_TAG)"
+        echo "✅ ESM module is available with tag at $ESM_MODULE_URL_TAG (HTTP Status: $ESM_STATUS_TAG)"
         
         # Verify content length
         CONTENT_LENGTH=$(curl -sI "$ESM_MODULE_URL_TAG" | grep -i "Content-Length" | awk '{print $2}' | tr -d '\r\n')
-        echo " Module content length: $CONTENT_LENGTH bytes"
+        echo "📊 Module content length: $CONTENT_LENGTH bytes"
         
         if [ -z "$CONTENT_LENGTH" ] || [ "$CONTENT_LENGTH" -lt 1000 ]; then
-          echo " WARNING: Module content length is suspiciously small: $CONTENT_LENGTH bytes"
+          echo "⚠️ WARNING: Module content length is suspiciously small: $CONTENT_LENGTH bytes"
           # Get a sample of the content
-          echo " Content sample:"
+          echo "🔍 Content sample:"
           curl -s "$ESM_MODULE_URL_TAG" | head -c 200
           echo
         fi
@@ -106,15 +106,15 @@ verify_esm_module() {
     retry_count=$((retry_count + 1))
     if [ $retry_count -lt $max_retries ]; then
       wait_time=$((wait_time * 2))
-      echo "Retrying in $wait_time seconds... (Attempt $retry_count/$max_retries)"
+      echo "⏳ Retrying in $wait_time seconds... (Attempt $retry_count/$max_retries)"
       sleep $wait_time
     fi
   done
   
-  echo " Failed to verify ESM module @fireproof/core@$version after $max_retries attempts"
+  echo "❌ Failed to verify ESM module @fireproof/core@$version after $max_retries attempts"
   
   # Collect diagnostic information
-  echo " Diagnostic information for troubleshooting:"
+  echo "🔍 Diagnostic information for troubleshooting:"
   echo "1. Registry package information:"
   curl -s "http://localhost:4873/@fireproof%2Fcore" | grep -E '(name|version|dist-tags)' || echo "Failed to get package info"
   echo

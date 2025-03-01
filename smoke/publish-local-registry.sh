@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 set -e
 
 # Function to verify package is published and available
@@ -60,6 +60,9 @@ check_registry_health() {
   local registry_status=$(curl --retry 3 --retry-max-time 10 --retry-all-errors -s -o /dev/null -w "%{http_code}" http://localhost:4873/)
   if [ "$registry_status" != "200" ]; then
     echo "❌ ERROR: Registry not responding properly (HTTP $registry_status)"
+    # Try to get more diagnostic information
+    echo "🔍 Registry diagnostic information:"
+    curl -v http://localhost:4873/ || echo "Failed to get verbose output from registry"
     if [ "$FP_CI" = "fp_ci" ]; then
       echo "Running in CI environment - failing fast"
       exit 1
@@ -75,6 +78,9 @@ check_esm_server_health() {
   local esm_status=$(curl --retry 3 --retry-max-time 10 --retry-all-errors -s -o /dev/null -w "%{http_code}" http://localhost:4874/)
   if [ "$esm_status" != "200" ]; then
     echo "❌ ERROR: ESM server not responding properly (HTTP $esm_status)"
+    # Try to get more diagnostic information
+    echo "🔍 ESM server diagnostic information:"
+    curl -v http://localhost:4874/ || echo "Failed to get verbose output from ESM server"
     if [ "$FP_CI" = "fp_ci" ]; then
       echo "Running in CI environment - failing fast"
       exit 1
