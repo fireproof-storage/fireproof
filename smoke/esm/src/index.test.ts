@@ -1,6 +1,7 @@
 import { page } from "@vitest/browser/context";
 import { expect, it, vi } from "vitest";
 
+/* eslint-disable no-console */
 it("esm.sh", async () => {
   console.log(" ESM TEST STARTING: Checking environment variables and module availability");
 
@@ -35,9 +36,7 @@ it("esm.sh", async () => {
 
       // Try URL with tag
       console.log(` Checking alternative URL: ${moduleUrlWithTag}`);
-      const tagStartTime = Date.now();
       const tagResponse = await fetch(moduleUrlWithTag);
-      const tagFetchTime = Date.now() - tagStartTime;
 
       if (tagResponse.ok) {
         console.log(` Module is available with tag. Status: ${tagResponse.status}`);
@@ -180,3 +179,4 @@ main().catch(error => {
     throw error;
   }
 });
+/* eslint-enable no-console */
