@@ -2,6 +2,38 @@ import { page } from "@vitest/browser/context";
 import { expect, it, vi } from "vitest";
 
 it("esm.sh", async () => {
+  // Check if the module is available before proceeding
+  const fpVersion = (window as unknown as { FP_VERSION: string }).FP_VERSION;
+  const moduleUrl = `http://localhost:4874/@fireproof/core@${fpVersion}?no-dts`;
+  const moduleUrlWithTag = `http://localhost:4874/@fireproof/core@${fpVersion}?tag=smoke&no-dts`;
+  
+  console.log(`Checking if module is available: ${moduleUrl} or ${moduleUrlWithTag}`);
+  
+  let moduleToUse = moduleUrl;
+  
+  try {
+    // Try regular URL first
+    const response = await fetch(moduleUrl);
+    if (response.ok) {
+      console.log(`Module is available at ${moduleUrl}. Status: ${response.status}`);
+      moduleToUse = moduleUrl;
+    } else {
+      console.log(`Module not available at ${moduleUrl}. Status: ${response.status}`);
+      
+      // Try URL with tag
+      const tagResponse = await fetch(moduleUrlWithTag);
+      if (tagResponse.ok) {
+        console.log(`Module is available at ${moduleUrlWithTag}. Status: ${tagResponse.status}`);
+        moduleToUse = moduleUrlWithTag;
+      } else {
+        throw new Error(`Module not available with tag either. Status: ${tagResponse.status}`);
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to fetch module: ${error.message}`);
+    throw new Error(`Module not available at ${moduleUrl} or ${moduleUrlWithTag}: ${error.message}`);
+  }
+
   const script = document.createElement("script");
   // eslint-disable-next-line no-console
   console.log("FP_VERSION", (window as unknown as { FP_VERSION: string }).FP_VERSION);
@@ -9,14 +41,12 @@ it("esm.sh", async () => {
   console.log("FP_DEBUG", (window as unknown as { FP_DEBUG: string }).FP_DEBUG);
   // eslint-disable-next-line no-console
   console.log("FP_STACK", (window as unknown as { FP_STACK: string }).FP_STACK);
-  // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
-  // // console.log("window-res", await res.text());
-  // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
-  // // console.log("window-imp", fireproof);
+  // eslint-disable-next-line no-console
+  console.log("Using module URL:", moduleToUse);
 
   script.textContent = `
 //console.log("pre-window-js", window.FP_VERSION)
-import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
+import { fireproof } from '${moduleToUse}'
 
 console.log("window-js", window.FP_VERSION)
 function invariant(cond, message) {
