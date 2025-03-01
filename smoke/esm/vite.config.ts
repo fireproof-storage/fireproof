@@ -17,8 +17,8 @@ export default defineConfig({
       },
     },
     isolate: false,
-    testTimeout: 120_000, // Increased from 60_000 to 120_000
-    hookTimeout: 120_000, // Added hook timeout to match test timeout
+    testTimeout: 15_000, // Set to 15 seconds (3x the ~5 second actual test time)
+    hookTimeout: 15_000, // Match hook timeout to test timeout
     setupFiles: "./setup.js",
   },
 });
