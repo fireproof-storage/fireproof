@@ -17,7 +17,6 @@ export default defineConfig({
       },
     },
     isolate: false,
-    testTimeout: 600_000, // Increase timeout to 10 minutes for CI
     //coverage: {
     //  provider: "istanbul",
     //},
