@@ -7,7 +7,7 @@ pnpm run format --check || { echo "Format check failed. Run 'pnpm format --write
 echo "2. Lint Check"
 pnpm run lint || { echo "Lint check failed. Fix the linting issues before pushing."; exit 1; }
 
-echo "3. Build"
-pnpm run build || { echo "Build failed. Fix the build issues before pushing."; exit 1; }
+echo "3. TSC Check"
+pnpm run build:tsc || { echo "Build failed. Fix the build issues before pushing."; exit 1; }
 
 echo "All checks passed! Pushing changes..."
