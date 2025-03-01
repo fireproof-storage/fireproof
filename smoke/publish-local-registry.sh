@@ -70,6 +70,50 @@ do
      npm dist-tag add $(node -e "console.log(require('./package.json').name)")@$(cat $projectRoot/dist/fp-version) latest --registry=http://localhost:4873)
 done
 
+# Wait for registry to be fully ready
+echo "Waiting for registry to be fully ready..."
+MAX_REGISTRY_RETRIES=15
+REGISTRY_RETRY_COUNT=0
+
+while [ $REGISTRY_RETRY_COUNT -lt $MAX_REGISTRY_RETRIES ]; do
+  REGISTRY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4873/)
+  if [ "$REGISTRY_STATUS" = "200" ]; then
+    echo "✅ Registry is ready (HTTP Status: $REGISTRY_STATUS)"
+    break
+  else
+    echo "⚠️ Registry not yet ready (HTTP status: $REGISTRY_STATUS), retrying in 2 seconds..."
+    sleep 2
+    REGISTRY_RETRY_COUNT=$((REGISTRY_RETRY_COUNT + 1))
+  fi
+done
+
+if [ $REGISTRY_RETRY_COUNT -eq $MAX_REGISTRY_RETRIES ]; then
+  echo "⚠️ Warning: Registry may not be ready after $MAX_REGISTRY_RETRIES retries"
+  echo "Continuing anyway, but this might cause issues..."
+fi
+
+# Wait for ESM server to be fully ready
+echo "Waiting for ESM server to be fully ready..."
+MAX_ESM_RETRIES=15
+ESM_RETRY_COUNT=0
+
+while [ $ESM_RETRY_COUNT -lt $MAX_ESM_RETRIES ]; do
+  ESM_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4874/)
+  if [ "$ESM_STATUS" = "200" ]; then
+    echo "✅ ESM server is ready (HTTP Status: $ESM_STATUS)"
+    break
+  else
+    echo "⚠️ ESM server not yet ready (HTTP status: $ESM_STATUS), retrying in 2 seconds..."
+    sleep 2
+    ESM_RETRY_COUNT=$((ESM_RETRY_COUNT + 1))
+  fi
+done
+
+if [ $ESM_RETRY_COUNT -eq $MAX_ESM_RETRIES ]; then
+  echo "⚠️ Warning: ESM server may not be ready after $MAX_ESM_RETRIES retries"
+  echo "Continuing anyway, but this might cause issues..."
+fi
+
 # Verify that the package is available via HTTP before proceeding
 echo "Verifying package availability..."
 MAX_RETRIES=10

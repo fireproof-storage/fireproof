@@ -83,6 +83,34 @@ test("esm.sh", async () => {
       }
     }
 
+    // Helper function to retry operations with exponential backoff
+    async function retryOperation(operation, maxRetries = 3, initialDelay = 1000) {
+      let lastError;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          // eslint-disable-next-line no-console
+          console.log('Attempt ' + (attempt + 1) + '/' + maxRetries + '...');
+          return await operation();
+        } catch (error) {
+          lastError = error;
+          // eslint-disable-next-line no-console
+          console.log('Attempt ' + (attempt + 1) + ' failed: ' + error.message);
+          await logDiagnostics('Retry attempt ' + (attempt + 1) + ' failed', { 
+            error: error.message,
+            stack: error.stack
+          });
+          
+          if (attempt < maxRetries - 1) {
+            const delay = initialDelay * Math.pow(2, attempt);
+            // eslint-disable-next-line no-console
+            console.log('Retrying in ' + delay + 'ms...');
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+      throw lastError;
+    }
+
     // Set initial status
     updateTestStatus('RUNNING', 'Starting ESM test diagnostics...');
 
@@ -125,7 +153,7 @@ test("esm.sh", async () => {
         await logDiagnostics('ESM server connectivity result', esmConnectivity);
         
         // First check if the module is available by doing a fetch
-        const moduleUrl = 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts';
+        let moduleUrl = 'http://localhost:4874/@fireproof/core@' + window.FP_VERSION + '?no-dts';
         updateTestStatus('RUNNING', 'Checking if module is available: ' + moduleUrl);
         await logDiagnostics('Checking module availability', { url: moduleUrl });
         
@@ -144,12 +172,33 @@ test("esm.sh", async () => {
               status: scopeCheck.status,
               content: scopeText.substring(0, 1000) // Limit the size
             });
+            
+            // Try alternate URL formats that might work
+            const alternateUrls = [
+              'http://localhost:4874/@fireproof/core@latest?no-dts',
+              'http://localhost:4874/@fireproof/core?no-dts'
+            ];
+            
+            for (const altUrl of alternateUrls) {
+              await logDiagnostics('Trying alternate URL', { url: altUrl });
+              const altCheck = await checkConnectivity(altUrl);
+              await logDiagnostics('Alternate URL result', altCheck);
+              
+              if (altCheck.ok) {
+                await logDiagnostics('Found working alternate URL', { url: altUrl });
+                // Use this URL instead
+                moduleUrl = altUrl;
+                break;
+              }
+            }
           } catch (e) {
             await logDiagnostics('Failed to check package scope', { error: e.message });
           }
           
-          throw new Error('Module not available: HTTP status ' + moduleCheck.status + 
-            (moduleCheck.statusText ? ' - ' + moduleCheck.statusText : ''));
+          if (!moduleCheck.ok) {
+            throw new Error('Module not available: HTTP status ' + moduleCheck.status + 
+              (moduleCheck.statusText ? ' - ' + moduleCheck.statusText : ''));
+          }
         }
         
         updateTestStatus('RUNNING', 'Module available, importing Fireproof...');
@@ -157,7 +206,12 @@ test("esm.sh", async () => {
         const importStartTime = performance.now();
         
         try {
-          const { fireproof } = await import(moduleUrl);
+          // Use retry logic for the import
+          const { fireproof } = await retryOperation(async () => {
+            await logDiagnostics('Attempting module import', { url: moduleUrl });
+            return await import(moduleUrl);
+          }, 3, 2000);
+          
           const importEndTime = performance.now();
           await logDiagnostics('Module import successful', { 
             duration: (importEndTime - importStartTime).toFixed(2) + 'ms',
