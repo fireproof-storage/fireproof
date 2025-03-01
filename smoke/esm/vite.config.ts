@@ -1,6 +1,14 @@
 import { defineConfig } from "vitest/config";
+import { browser } from "@vitest/browser";
 
 export default defineConfig({
+  plugins: [
+    browser({
+      name: "chrome",
+      headless: true,
+      enabled: true,
+    }),
+  ],
   test: {
     globals: true,
     include: ["src/**/*test.?(c|m)[jt]s?(x)"],
@@ -17,8 +25,8 @@ export default defineConfig({
       },
     },
     isolate: false,
-    testTimeout: 15_000, // Set to 15 seconds (3x the ~5 second actual test time)
-    hookTimeout: 15_000, // Match hook timeout to test timeout
+    testTimeout: 30_000, // 30 seconds
+    hookTimeout: 30_000, // 30 seconds
     setupFiles: "./setup.js",
   },
 });

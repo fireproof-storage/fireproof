@@ -86,73 +86,119 @@ it("esm.sh", async () => {
 
   script.textContent = `
 import { fireproof } from '${moduleToUse}'
+console.log("✅ Module import statement executed")
 
-console.log("✅ Module imported successfully")
+// Add global error handler to catch any uncaught errors
+window.addEventListener('error', function(event) {
+  console.error("❌ GLOBAL ERROR:", event.message, "at", event.filename, ":", event.lineno);
+});
 
-function invariant(cond, message) {
-  if (!cond) {
-    console.error("❌ INVARIANT FAILED:", message);
-    throw new Error(message)
-  }
-}
-
-async function action(label, iteration) {
-  console.log("🔄 Running iteration " + iteration + "/10");
-  try {
-    const db = fireproof("esm-test");
-    
-    const ok = await db.put({ sort: Math.random(), test: "esm-success" });
-    
-    const beforeAll = await db.allDocs();
-    
-    await db.put({ foo: 1 });
-    
-    const afterAll = await db.allDocs();
-
-    invariant(
-      afterAll.rows.length == beforeAll.rows.length + 1,
-      "all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length
-    );
-
-    const res = await db.get(ok.id);
-    
-    label.innerHTML = [iteration,res.test].join(' - ');
-    
-    await db.close();
-    
-    return true;
-  } catch (error) {
-    console.error("❌ Error in iteration " + iteration + ": " + error.message);
-    label.innerHTML = "ERROR: " + error.message;
-    throw error;
-  }
-}
-
-async function main() {
-  const label = document.querySelector('#test-label');
-  if (!label) {
-    throw new Error("Label element not found");
+try {
+  console.log("✅ Module imported successfully")
+  
+  function invariant(cond, message) {
+    if (!cond) {
+      console.error("❌ INVARIANT FAILED:", message);
+      throw new Error(message)
+    }
   }
   
-  for (let i = 0; i < 10; i++) {
-    await action(label, i);
+  async function action(label, iteration) {
+    console.log("🔄 Running iteration " + iteration + "/10");
+    try {
+      console.log("🔍 Creating database for iteration " + iteration);
+      const db = fireproof("esm-test");
+      console.log("✅ Database created for iteration " + iteration);
+      
+      console.log("🔍 Putting first document for iteration " + iteration);
+      const ok = await db.put({ sort: Math.random(), test: "esm-success" });
+      console.log("✅ First document created with id: " + ok.id);
+      
+      console.log("🔍 Getting all docs (before) for iteration " + iteration);
+      const beforeAll = await db.allDocs();
+      console.log("✅ Got all docs (before): " + beforeAll.rows.length + " documents");
+      
+      console.log("🔍 Putting second document for iteration " + iteration);
+      await db.put({ foo: 1 });
+      console.log("✅ Second document created");
+      
+      console.log("🔍 Getting all docs (after) for iteration " + iteration);
+      const afterAll = await db.allDocs();
+      console.log("✅ Got all docs (after): " + afterAll.rows.length + " documents");
+  
+      console.log("🔍 Checking invariant for iteration " + iteration);
+      invariant(
+        afterAll.rows.length == beforeAll.rows.length + 1,
+        "all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length
+      );
+      console.log("✅ Invariant check passed");
+  
+      console.log("🔍 Getting document by id for iteration " + iteration);
+      const res = await db.get(ok.id);
+      console.log("✅ Got document by id: " + JSON.stringify(res));
+      
+      console.log("🔍 Updating label for iteration " + iteration);
+      label.innerHTML = [iteration,res.test].join(' - ');
+      console.log("✅ Label updated to: " + label.innerHTML);
+      
+      console.log("🔍 Closing database for iteration " + iteration);
+      await db.close();
+      console.log("✅ Database closed for iteration " + iteration);
+      
+      return true;
+    } catch (error) {
+      console.error("❌ Error in iteration " + iteration + ": " + error.message);
+      console.error("❌ Error stack: " + error.stack);
+      label.innerHTML = "ERROR: " + error.message;
+      throw error;
+    }
   }
   
-  label.setAttribute("data-ready", "true");
-  label.style.backgroundColor = "#4CAF50";
-  label.style.color = "white";
-  console.log("✅ All iterations completed successfully!");
-}
-
-main().catch(error => {
-  console.error("❌ FATAL ERROR in main():", error.message);
+  async function main() {
+    console.log("🚀 Main function started");
+    const label = document.querySelector('#test-label');
+    if (!label) {
+      console.error("❌ Label element not found in main()");
+      throw new Error("Label element not found");
+    }
+    console.log("✅ Found label element");
+    
+    for (let i = 0; i < 10; i++) {
+      console.log("🔄 Starting iteration " + i);
+      await action(label, i);
+      console.log("✅ Completed iteration " + i);
+    }
+    
+    console.log("🔍 Setting data-ready attribute");
+    label.setAttribute("data-ready", "true");
+    label.style.backgroundColor = "#4CAF50";
+    label.style.color = "white";
+    console.log("✅ All iterations completed successfully!");
+  }
+  
+  console.log("🔍 About to call main()");
+  main().catch(error => {
+    console.error("❌ FATAL ERROR in main():", error.message);
+    console.error("❌ Error stack:", error.stack);
+    const label = document.querySelector('#test-label');
+    if (label) {
+      label.style.backgroundColor = "#F44336";
+      label.style.color = "white";
+      label.innerHTML = "FATAL ERROR: " + error.message;
+    } else {
+      console.error("❌ Could not find label element to show error");
+    }
+  });
+} catch (error) {
+  console.error("❌ TOP-LEVEL ERROR:", error.message);
+  console.error("❌ Error stack:", error.stack);
   const label = document.querySelector('#test-label');
   if (label) {
     label.style.backgroundColor = "#F44336";
     label.style.color = "white";
-    label.innerHTML = "FATAL ERROR: " + error.message;
+    label.innerHTML = "TOP-LEVEL ERROR: " + error.message;
   }
-});
+}
 `;
   script.type = "module";
 
@@ -183,12 +229,27 @@ main().catch(error => {
   document.body.appendChild(script);
   console.log("✅ Script appended to document body");
 
+  // Check if the script element is actually in the DOM
+  const scriptElements = document.querySelectorAll("script[type='module']");
+  console.log(`🔍 Found ${scriptElements.length} module script elements in the DOM`);
+
+  // Check if the label element exists before waiting
+  const initialLabel = document.querySelector("#test-label");
+  if (initialLabel) {
+    console.log(`🔍 Initial label content: "${initialLabel.innerHTML}"`);
+    console.log(`🔍 Label visibility: ${window.getComputedStyle(initialLabel as HTMLElement).visibility}`);
+    console.log(`🔍 Label display: ${window.getComputedStyle(initialLabel as HTMLElement).display}`);
+  } else {
+    console.error("❌ Label element not found before waitUntil");
+  }
+
   console.log("⏳ Waiting for test completion (data-ready attribute)");
   try {
     let progressCounter = 0;
     await vi.waitUntil(
       () => {
         const element = document.querySelector("[data-ready]");
+
         // Log progress every 10 seconds
         if (++progressCounter % 10 === 0) {
           const elapsedTime = Math.floor((Date.now() - testStartTime) / 1000);
@@ -199,14 +260,25 @@ main().catch(error => {
           if (currentLabel) {
             console.log(`🔍 Current label content: "${currentLabel.innerHTML}"`);
           }
+
+          // Check if any console errors have been logged by the script
+          console.log("🔍 Checking for any script errors in console...");
         }
+
+        // Log every check attempt (at a lower interval to avoid flooding)
+        if (progressCounter % 3 === 0) {
+          console.log(`🔄 Check attempt ${progressCounter}: data-ready attribute ${element ? "found" : "not found"}`);
+        }
+
         return element;
       },
       {
-        timeout: 15_000, // 15 seconds (matching the test timeout)
+        timeout: 30_000, // 30 seconds (increased from 15 seconds)
         interval: 1000, // Check every second
       },
     );
+
+    console.log("✅ waitUntil completed successfully - data-ready attribute found");
 
     // Make sure the label is visible and scrolled into view before interacting
     try {

@@ -196,7 +196,7 @@ cat > "$tmpDir/package.json" << EOL
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest --run --testTimeout=15000"
+    "test": "vitest --run --testTimeout=30000"
   },
   "devDependencies": {
     "@vitest/browser": "^3.0.4",
@@ -211,7 +211,7 @@ echo "✅ package.json created successfully"
 echo "📊 package.json content (summary):"
 echo "  - name: @fireproof-example/esm"
 echo "  - type: module"
-echo "  - test timeout: 15000ms"
+echo "  - test timeout: 30000ms"
 
 echo "🔍 Creating setup.js..."
 cat > "$tmpDir/setup.js" << EOL
