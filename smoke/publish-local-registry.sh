@@ -32,7 +32,23 @@ token=$(curl \
      -X PUT \
      -H "Content-type: application/json" \
      -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
-     'http://localhost:4873/-/user/org.couchdb.user:$user' | jq .token)
+     'http://localhost:4873/-/user/org.couchdb.user:$user' | jq -r .token)
+
+# Ensure token is not empty, use a fallback if needed
+if [ -z "$token" ] || [ "$token" = "null" ]; then
+  echo "ERROR: Failed to get auth token from registry"
+  # Only use fallback in local development, fail in CI
+  if [ "$FP_CI" = "fp_ci" ]; then
+    echo "Running in CI environment - failing fast due to token generation error"
+    exit 1
+  else
+    echo "Warning: Using fallback token for local development"
+    token="dummy-token"
+  fi
+fi
+
+# Remove any quotes that might be around the token
+token=$(echo $token | tr -d '"')
 
 echo "Token: $user:$token"
 cat <<EOF > $projectRoot/dist/npmrc-smoke
@@ -67,8 +83,39 @@ do
      cat .npmrc &&
      cat package.json &&
      pnpm publish --registry=http://localhost:4873 --no-git-checks --tag smoke &&
+     verify_package_published "@fireproof/$(basename $packageDir)" &&
      npm dist-tag add $(node -e "console.log(require('./package.json').name)")@$(cat $projectRoot/dist/fp-version) latest --registry=http://localhost:4873)
 done
+
+verify_package_published() {
+  local package_name=$1
+  local max_retries=5
+  local retry_count=0
+  local sleep_time=2
+  
+  echo "Verifying that $package_name was published successfully..."
+  
+  while [ $retry_count -lt $max_retries ]; do
+    if curl --silent --fail "http://localhost:4873/$package_name" > /dev/null; then
+      echo "✅ Package $package_name published successfully"
+      return 0
+    fi
+    
+    retry_count=$((retry_count + 1))
+    if [ $retry_count -lt $max_retries ]; then
+      echo "Package not found yet, retrying in ${sleep_time}s (attempt $retry_count/$max_retries)"
+      sleep $sleep_time
+      sleep_time=$((sleep_time * 2)) # Exponential backoff
+    fi
+  done
+  
+  echo "❌ ERROR: Failed to verify package $package_name was published after $max_retries attempts"
+  if [ "$FP_CI" = "fp_ci" ]; then
+    echo "Running in CI environment - failing fast"
+    exit 1
+  fi
+  return 1
+}
 
 # Wait for registry to be fully ready
 echo "Waiting for registry to be fully ready..."
