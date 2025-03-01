@@ -2,7 +2,7 @@
 
 echo "Running pre-push checks..."
 echo "1. Format Check"
-pnpm run format --write || { echo "Format write failed. Run 'pnpm format --write' to fix formatting issues."; exit 1; }
+pnpm run format --check || { echo "Format check failed. Run 'pnpm format --write' to fix formatting issues."; exit 1; }
 
 echo "2. Lint Check"
 pnpm run lint || { echo "Lint check failed. Fix the linting issues before pushing."; exit 1; }
