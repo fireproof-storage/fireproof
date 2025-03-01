@@ -1,23 +1,15 @@
 import { defineConfig } from "vitest/config";
-import { browser } from "@vitest/browser";
 
 export default defineConfig({
-  plugins: [
-    browser({
-      name: "chrome",
-      headless: true,
-      enabled: true,
-    }),
-  ],
   test: {
-    globals: true,
-    include: ["src/**/*test.?(c|m)[jt]s?(x)"],
     browser: {
       enabled: true,
+      name: "chrome",
       headless: true,
       provider: "webdriverio",
-      name: "chrome", // browser name is required
     },
+    globals: true,
+    include: ["src/**/*test.?(c|m)[jt]s?(x)"],
     deps: {
       optimizer: {
         web: { enabled: true },
