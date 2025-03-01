@@ -208,7 +208,14 @@ it("esm.sh", async () => {
   console.log("🔧 Setting up DOM elements");
   // Create a more visible and clickable label with clear styling
   document.body.innerHTML = `
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
+    <div style="
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      font-family: Arial, sans-serif;
+      position: relative;
+    ">
       <label 
         data-testid="label" 
         id="test-label"
@@ -224,7 +231,11 @@ it("esm.sh", async () => {
           min-height: 50px;
           text-align: center;
           cursor: pointer;
-          z-index: 9999;
+          z-index: 99999;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
         "
       >Test running...</label>
     </div>
@@ -287,14 +298,33 @@ it("esm.sh", async () => {
     try {
       const labelElement = document.querySelector("#test-label");
       if (labelElement) {
-        (labelElement as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+        // Force the element to be in a fixed position at the center of the screen
+        (labelElement as HTMLElement).style.position = "fixed";
+        (labelElement as HTMLElement).style.top = "50%";
+        (labelElement as HTMLElement).style.left = "50%";
+        (labelElement as HTMLElement).style.transform = "translate(-50%, -50%)";
+        (labelElement as HTMLElement).style.zIndex = "99999";
+
+        // Ensure the element is visible
+        (labelElement as HTMLElement).style.visibility = "visible";
+        (labelElement as HTMLElement).style.display = "block";
+
+        // Scroll to ensure it's in view
+        (labelElement as HTMLElement).scrollIntoView({ behavior: "auto", block: "center" });
+
+        console.log(
+          `🔍 Label position: top=${(labelElement as HTMLElement).style.top}, left=${(labelElement as HTMLElement).style.left}`,
+        );
+        console.log(
+          `🔍 Label dimensions: width=${(labelElement as HTMLElement).offsetWidth}px, height=${(labelElement as HTMLElement).offsetHeight}px`,
+        );
       }
     } catch (error) {
       console.warn(`⚠️ Failed to scroll element into view: ${error.message}`);
     }
 
-    // Add a small delay to ensure the element is fully visible
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Add a longer delay to ensure the element is fully visible and ready for interaction
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const labelContent = await page.getByTestId("label").element().innerHTML;
     console.log(`✅ Final label content: "${labelContent}"`);

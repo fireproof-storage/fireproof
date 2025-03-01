@@ -7,6 +7,10 @@ export default defineConfig({
       name: "chrome",
       headless: true,
       provider: "webdriverio",
+      options: {
+        // Add additional browser options for stability
+        args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--window-size=1280,1024", "--start-maximized"],
+      },
     },
     globals: true,
     include: ["src/**/*test.?(c|m)[jt]s?(x)"],
@@ -17,8 +21,8 @@ export default defineConfig({
       },
     },
     isolate: false,
-    testTimeout: 30_000, // 30 seconds
-    hookTimeout: 30_000, // 30 seconds
+    testTimeout: 60_000, // 60 seconds
+    hookTimeout: 60_000, // 60 seconds
     setupFiles: "./setup.js",
   },
 });
