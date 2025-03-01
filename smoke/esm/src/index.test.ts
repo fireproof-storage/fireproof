@@ -45,7 +45,7 @@ test("esm.sh", async () => {
     }
 
     // Set initial status
-    updateTestStatus('RUNNING', 'Importing Fireproof...');
+    updateTestStatus('RUNNING', 'Checking module availability...');
 
     // Handle errors globally
     window.addEventListener('error', function(event) {
@@ -56,8 +56,18 @@ test("esm.sh", async () => {
     // Run the test in an async IIFE
     (async function runTest() {
       try {
-        updateTestStatus('RUNNING', 'Importing Fireproof module...');
-        const { fireproof } = await import('http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts');
+        // First check if the module is available by doing a fetch
+        const moduleUrl = 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts';
+        updateTestStatus('RUNNING', 'Checking if module is available: ' + moduleUrl);
+        
+        // Try to fetch the module first to fail fast if it's not available
+        const response = await fetch(moduleUrl);
+        if (!response.ok) {
+          throw new Error('Module not available: HTTP status ' + response.status);
+        }
+        
+        updateTestStatus('RUNNING', 'Module available, importing Fireproof...');
+        const { fireproof } = await import(moduleUrl);
         console.log('window-js', window.FP_VERSION);
         
         // Debug the module structure

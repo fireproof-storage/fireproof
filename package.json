@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/monorepo",
-  "version": "0.0.0-smoke",
+  "version": "0.0.0-smoke-1d257543-1740848951",
   "private": true,
   "description": "Live ledger for the web",
   "type": "module",
