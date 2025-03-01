@@ -168,27 +168,106 @@ done
 
 # Verify ESM module is available
 ESM_MODULE_URL="http://localhost:4874/@fireproof/core@$FP_VERSION?no-dts"
-echo "Verifying ESM module is available at: $ESM_MODULE_URL"
+echo "🔍 Verifying ESM module is available at: $ESM_MODULE_URL"
 
 max_retries=5
 retry_count=0
 wait_time=2
 
 while [ $retry_count -lt $max_retries ]; do
+  echo "  Attempt $((retry_count + 1))/$max_retries: Checking $ESM_MODULE_URL"
   ESM_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$ESM_MODULE_URL")
   
   if [ "$ESM_STATUS" = "200" ]; then
     echo "✅ ESM module is available at $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
+    
+    # Verify content length to ensure we got a valid module
+    CONTENT_LENGTH=$(curl -sI "$ESM_MODULE_URL" | grep -i "Content-Length" | awk '{print $2}' | tr -d '\r\n')
+    echo "📊 Module content length: $CONTENT_LENGTH bytes"
+    
+    if [ -z "$CONTENT_LENGTH" ] || [ "$CONTENT_LENGTH" -lt 1000 ]; then
+      echo "⚠️ WARNING: Module content length is suspiciously small: $CONTENT_LENGTH bytes"
+      # Get a sample of the content for diagnosis
+      echo "📊 Content sample:"
+      curl -s "$ESM_MODULE_URL" | head -c 200
+      echo
+      
+      if [ "$CONTENT_LENGTH" -lt 100 ]; then
+        echo "❌ ERROR: Module content is too small to be valid (< 100 bytes)"
+        if [ "$FP_CI" = "fp_ci" ]; then
+          echo "Running in CI environment - failing fast"
+          exit 1
+        fi
+      fi
+    else
+      # Verify the content contains expected fireproof code
+      MODULE_CONTENT=$(curl -s "$ESM_MODULE_URL" | head -c 1000)
+      if ! echo "$MODULE_CONTENT" | grep -q "fireproof"; then
+        echo "❌ ERROR: Module content does not contain expected 'fireproof' string"
+        echo "📊 Content sample:"
+        echo "$MODULE_CONTENT" | head -c 200
+        echo
+        
+        if [ "$FP_CI" = "fp_ci" ]; then
+          echo "Running in CI environment - failing fast"
+          exit 1
+        fi
+      else
+        echo "✅ Module content validation passed"
+        break
+      fi
+    fi
+    
     break
   else
-    echo "⚠️ ESM module not available yet: $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
+    echo "⚠️ Module not available yet: $ESM_MODULE_URL (HTTP Status: $ESM_STATUS)"
     
     # Try with the smoke tag
     ESM_MODULE_URL_TAG="http://localhost:4874/@fireproof/core@$FP_VERSION?tag=smoke&no-dts"
+    echo "  Checking alternative URL: $ESM_MODULE_URL_TAG"
     ESM_STATUS_TAG=$(curl -s -o /dev/null -w "%{http_code}" "$ESM_MODULE_URL_TAG")
     
     if [ "$ESM_STATUS_TAG" = "200" ]; then
       echo "✅ ESM module is available with tag at $ESM_MODULE_URL_TAG (HTTP Status: $ESM_STATUS_TAG)"
+      
+      # Verify content length to ensure we got a valid module
+      CONTENT_LENGTH=$(curl -sI "$ESM_MODULE_URL_TAG" | grep -i "Content-Length" | awk '{print $2}' | tr -d '\r\n')
+      echo "📊 Module content length: $CONTENT_LENGTH bytes"
+      
+      if [ -z "$CONTENT_LENGTH" ] || [ "$CONTENT_LENGTH" -lt 1000 ]; then
+        echo "⚠️ WARNING: Module content length is suspiciously small: $CONTENT_LENGTH bytes"
+        # Get a sample of the content for diagnosis
+        echo "📊 Content sample:"
+        curl -s "$ESM_MODULE_URL_TAG" | head -c 200
+        echo
+        
+        if [ "$CONTENT_LENGTH" -lt 100 ]; then
+          echo "❌ ERROR: Module content is too small to be valid (< 100 bytes)"
+          if [ "$FP_CI" = "fp_ci" ]; then
+            echo "Running in CI environment - failing fast"
+            exit 1
+          fi
+        fi
+      else
+        # Verify the content contains expected fireproof code
+        MODULE_CONTENT=$(curl -s "$ESM_MODULE_URL_TAG" | head -c 1000)
+        if ! echo "$MODULE_CONTENT" | grep -q "fireproof"; then
+          echo "❌ ERROR: Module content does not contain expected 'fireproof' string"
+          echo "📊 Content sample:"
+          echo "$MODULE_CONTENT" | head -c 200
+          echo
+          
+          if [ "$FP_CI" = "fp_ci" ]; then
+            echo "Running in CI environment - failing fast"
+            exit 1
+          fi
+        else
+          echo "✅ Module content validation passed"
+          ESM_MODULE_URL="$ESM_MODULE_URL_TAG"
+          break
+        fi
+      fi
+      
       ESM_MODULE_URL="$ESM_MODULE_URL_TAG"
       break
     fi
@@ -197,17 +276,30 @@ while [ $retry_count -lt $max_retries ]; do
   retry_count=$((retry_count + 1))
   if [ $retry_count -lt $max_retries ]; then
     wait_time=$((wait_time * 2))
-    echo "Retrying in $wait_time seconds... (Attempt $retry_count/$max_retries)"
+    echo "⏳ Retrying in $wait_time seconds... (Attempt $retry_count/$max_retries)"
     sleep $wait_time
   fi
 done
 
 if [ $retry_count -ge $max_retries ]; then
   echo "❌ ERROR: ESM module not available after $max_retries attempts"
+  
+  # Collect diagnostic information
+  echo "📊 Diagnostic information for troubleshooting:"
+  echo "1. Registry package information:"
+  curl -s "http://localhost:4873/@fireproof%2Fcore" || echo "Failed to get package info"
+  echo
+  
+  echo "2. ESM server status:"
+  curl -v "http://localhost:4874/" || echo "Failed to get ESM server status"
+  echo
+  
   if [ "$FP_CI" = "fp_ci" ]; then
     echo "Running in CI environment - failing fast"
     exit 1
   fi
 fi
 
+# Pre-load the module to warm up the cache
+echo "🔍 Pre-loading module to warm up cache..."
 curl -L "$ESM_MODULE_URL" > /dev/null &
