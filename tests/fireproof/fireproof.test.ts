@@ -121,23 +121,26 @@ describe("database fullconfig", () => {
   it("have the right name", async () => {
     let protocol: string | undefined;
     const url = sthis.env.get("FP_STORAGE_URL");
+    let path = "";
     if (url) {
-      protocol = URI.from(url).protocol;
+      const uri = URI.from(url);
+      protocol = uri.protocol;
+      path = uri.pathname;
     }
-    const base = bs.getDefaultURI(sthis, protocol);
+    const base = bs.getDefaultURI(sthis, protocol).build().appendRelative(path).URI();
     const db = fireproof("my-funky-name", {
       storeUrls: {
         base: base,
         // meta: `${base}/meta?taste=${taste}`,
         data: {
-          meta: base.build().pathname("dist/full/meta"),
-          car: base.build().pathname("dist/full/data"),
-          wal: base.build().pathname("dist/full/wal"),
+          meta: base.build().appendRelative("funky/meta"),
+          car: base.build().appendRelative("funky/data"),
+          wal: base.build().appendRelative("funky/wal"),
         },
         idx: {
-          meta: base.build().pathname("dist/full/idx-meta"),
-          car: base.build().pathname("dist/full/idx-data"),
-          wal: base.build().pathname("dist/full/idx-wal"),
+          meta: base.build().appendRelative("funky/idx-meta"),
+          car: base.build().appendRelative("funky/idx-data"),
+          wal: base.build().appendRelative("funky/idx-wal"),
         },
         // wal: `${base}/wal?taste=${taste}`,
       },
