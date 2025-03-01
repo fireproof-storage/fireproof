@@ -75,21 +75,73 @@ echo "Verifying package availability..."
 MAX_RETRIES=10
 RETRY_COUNT=0
 PACKAGE_URL="http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version)"
+PACKAGE_VERSION="$(cat $projectRoot/dist/fp-version)"
 
+echo "Package version: $PACKAGE_VERSION"
+echo "Package URL: $PACKAGE_URL"
+
+# First check registry metadata to see what versions are available
+echo "Checking registry metadata..."
+REGISTRY_META=$(curl -s http://localhost:4873/@fireproof/core)
+echo "Available versions in registry:"
+echo "$REGISTRY_META" | grep -o '"versions":{[^}]*}' | tr ',' '\n' | grep -v '"versions"'
+
+# Check if our version is in the registry
+if echo "$REGISTRY_META" | grep -q "\"$PACKAGE_VERSION\""; then
+  echo "✅ Version $PACKAGE_VERSION found in registry metadata"
+else
+  echo "⚠️ Version $PACKAGE_VERSION NOT found in registry metadata"
+fi
+
+# Check registry tags
+echo "Checking registry tags..."
+REGISTRY_TAGS=$(curl -s http://localhost:4873/-/package/@fireproof/core/dist-tags)
+echo "Available tags in registry: $REGISTRY_TAGS"
+
+# Now check HTTP availability
+echo "Checking HTTP availability..."
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
   HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $PACKAGE_URL)
   if [ "$HTTP_STATUS" = "200" ]; then
-    echo "Package is available at $PACKAGE_URL"
-    break
+    echo "✅ Package is available at $PACKAGE_URL (HTTP Status: $HTTP_STATUS)"
+    
+    # Additional verification - check that we can actually get the content
+    CONTENT_SIZE=$(curl -s "$PACKAGE_URL" | wc -c)
+    echo "Package content size: $CONTENT_SIZE bytes"
+    
+    if [ $CONTENT_SIZE -gt 100 ]; then
+      echo "✅ Package content verified (size: $CONTENT_SIZE bytes)"
+      break
+    else
+      echo "⚠️ Package content too small ($CONTENT_SIZE bytes), may be an error response"
+      sleep 2
+      RETRY_COUNT=$((RETRY_COUNT + 1))
+    fi
   else
-    echo "Package not yet available (status: $HTTP_STATUS), retrying in 2 seconds..."
+    echo "⚠️ Package not yet available (HTTP status: $HTTP_STATUS), retrying in 2 seconds..."
+    
+    # Check if the ESM server is responding at all
+    ESM_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4874/)
+    echo "ESM server status: $ESM_STATUS"
+    
     sleep 2
     RETRY_COUNT=$((RETRY_COUNT + 1))
   fi
 done
 
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-  echo "Warning: Package may not be available after $MAX_RETRIES retries"
+  echo "⚠️ Warning: Package may not be available after $MAX_RETRIES retries"
+  echo "Diagnostic information:"
+  echo "- Registry URL: http://localhost:4873/"
+  echo "- ESM Server URL: http://localhost:4874/"
+  echo "- Package URL: $PACKAGE_URL"
+  echo "- Latest HTTP Status: $HTTP_STATUS"
+  
+  # Try to get directory listing from ESM server
+  echo "ESM server directory listing:"
+  curl -s http://localhost:4874/@fireproof/ | head -n 20
 fi
 
+# Prefetch the package to warm up the cache
+echo "Prefetching package to warm cache..."
 curl -L "$PACKAGE_URL" > /dev/null &
