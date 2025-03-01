@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running pre-commit hooks..."
+
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx|json|css|scss|md|yaml|yml)$' || true)
+
+if [ -n "$STAGED_FILES" ]; then
+  echo "Formatting staged files..."
+  # Format only the staged files
+  echo "$STAGED_FILES" | xargs pnpm prettier --write
+
+  # Add the formatted files back to staging
+  echo "$STAGED_FILES" | xargs git add
+  
+  echo "✅ Formatted and staged files"
+else
+  echo "No relevant files to format"
+fi
+
+# Run lint on the entire codebase
+echo "Running lint check..."
+pnpm run lint || { echo "❌ Lint check failed. Fix the linting issues before committing."; exit 1; }
+
+echo "✅ All pre-commit checks passed!"
