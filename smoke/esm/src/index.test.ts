@@ -6,11 +6,11 @@ it("esm.sh", async () => {
   const fpVersion = (window as unknown as { FP_VERSION: string }).FP_VERSION;
   const moduleUrl = `http://localhost:4874/@fireproof/core@${fpVersion}?no-dts`;
   const moduleUrlWithTag = `http://localhost:4874/@fireproof/core@${fpVersion}?tag=smoke&no-dts`;
-  
+
   console.log(`Checking if module is available: ${moduleUrl} or ${moduleUrlWithTag}`);
-  
+
   let moduleToUse = moduleUrl;
-  
+
   try {
     // Try regular URL first
     const response = await fetch(moduleUrl);
@@ -19,7 +19,7 @@ it("esm.sh", async () => {
       moduleToUse = moduleUrl;
     } else {
       console.log(`Module not available at ${moduleUrl}. Status: ${response.status}`);
-      
+
       // Try URL with tag
       const tagResponse = await fetch(moduleUrlWithTag);
       if (tagResponse.ok) {
