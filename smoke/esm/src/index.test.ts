@@ -23,6 +23,7 @@ it("esm.sh", async () => {
 
   let moduleToUse = moduleUrl;
   let moduleResponse = null;
+  let moduleContent = "";
 
   try {
     // Try regular URL first
@@ -53,9 +54,12 @@ it("esm.sh", async () => {
 
     // Verify module content
     if (moduleResponse) {
-      const moduleText = await moduleResponse.text();
-      const contentLength = moduleText.length;
+      moduleContent = await moduleResponse.text();
+      const contentLength = moduleContent.length;
       console.log(`📊 Module content received. Size: ${contentLength} bytes`);
+
+      // Log the first 200 characters of the module content for debugging
+      console.log(`📊 Module content (first 200 chars): ${moduleContent.substring(0, 200)}`);
 
       if (contentLength < 100) {
         console.error(`❌ Module content suspiciously small (${contentLength} bytes)`);
@@ -63,7 +67,7 @@ it("esm.sh", async () => {
       }
 
       // Check for basic expected content in the module
-      if (!moduleText.includes("fireproof")) {
+      if (!moduleContent.includes("fireproof")) {
         console.error(`❌ Module content does not contain expected 'fireproof' string`);
         throw new Error(`Module content validation failed - missing expected content`);
       }
@@ -73,6 +77,73 @@ it("esm.sh", async () => {
     console.error(`Stack trace: ${error.stack}`);
     throw new Error(`Module not available: ${error.message}`);
   }
+
+  // Modify the waitUntil function to fail fast if there's a module loading error
+  const waitForDataReadyOrError = async () => {
+    let progressCounter = 0;
+    let moduleLoadError = false;
+
+    try {
+      await vi.waitUntil(
+        () => {
+          const element = document.querySelector("[data-ready]");
+          const errorLabel = document.querySelector("#test-label");
+
+          // Check if there's an error message in the label
+          if (errorLabel && (errorLabel as HTMLElement).innerHTML.includes("MODULE LOAD ERROR")) {
+            console.error("❌ Detected module load error in label, failing test immediately");
+            moduleLoadError = true;
+            return true; // Return true to exit the waitUntil
+          }
+
+          // Log progress periodically
+          progressCounter++;
+          if (progressCounter % 3 === 0) {
+            console.log(`🔄 Check attempt ${progressCounter}: data-ready attribute not found`);
+          }
+
+          // Log more details every 10 seconds
+          if (progressCounter % 10 === 0) {
+            console.log(`⏳ Still waiting for test completion... (${Math.floor(progressCounter)}s elapsed)`);
+
+            // Check the current label content for debugging
+            if (errorLabel) {
+              console.log(`🔍 Current label content: "${(errorLabel as HTMLElement).innerHTML}"`);
+              console.log(`🔍 Checking for any script errors in console...`);
+            }
+          }
+
+          return !!element;
+        },
+        {
+          timeout: 30000,
+          interval: 1000,
+        },
+      );
+
+      if (moduleLoadError) {
+        throw new Error("Test failed due to module loading error");
+      }
+    } catch (error) {
+      console.error(`❌ Test failed during waitUntil: ${error.message}`);
+
+      // Try to capture the current state for debugging
+      try {
+        const labelElement = document.querySelector("#test-label");
+        if (labelElement) {
+          console.log(`🔍 Current label content: "${(labelElement as HTMLElement).innerHTML}"`);
+          console.log(`🔍 Label visibility: ${window.getComputedStyle(labelElement as HTMLElement).visibility}`);
+          console.log(`🔍 Label display: ${window.getComputedStyle(labelElement as HTMLElement).display}`);
+        }
+
+        console.log(`🔍 Document body (first 100 bytes): \n${document.body.innerHTML.substring(0, 100)}`);
+      } catch (debugError) {
+        console.error(`❌ Error during debug capture: ${debugError.message}`);
+      }
+
+      throw error;
+    }
+  };
 
   console.log("🔧 Creating script element and setting up test environment");
   const script = document.createElement("script");
@@ -88,10 +159,18 @@ it("esm.sh", async () => {
 (async () => {
   try {
     console.log("🔍 Starting dynamic import of module")
+    let fireproof;
     try {
+      // Verify that the module URL is accessible before attempting to import
+      const checkResponse = await fetch('${moduleToUse}');
+      if (!checkResponse.ok) {
+        throw new Error("Module URL returned status " + checkResponse.status + " during pre-import check");
+      }
+      console.log("✅ Pre-import URL check successful: " + checkResponse.status);
+      
       const module = await import('${moduleToUse}')
       console.log("✅ Module imported successfully")
-      const { fireproof } = module
+      fireproof = module.fireproof
       
       if (!fireproof) {
         console.error("❌ fireproof not found in imported module")
@@ -102,30 +181,24 @@ it("esm.sh", async () => {
       console.error("❌ CRITICAL ERROR: Failed to import module:", error.message);
       console.error("❌ Error stack:", error.stack);
       
-      // Update label with error
+      // Update label with error and set a special attribute to signal test failure
       const label = document.querySelector('#test-label');
       if (label) {
         label.style.backgroundColor = "#F44336";
         label.style.color = "white";
         label.innerHTML = "MODULE LOAD ERROR: " + error.message;
+        label.setAttribute("data-module-error", "true");
       }
       
       // Fail fast - don't proceed with test if module loading fails
       throw new Error("Module loading failed: " + error.message);
     }
     
-    function invariant(cond, message) {
-      if (!cond) {
-        console.error("❌ INVARIANT FAILED:", message);
-        throw new Error(message)
-      }
-    }
-    
-    async function action(label, iteration) {
+    async function action(label, iteration, fireproofFn) {
       console.log("🔄 Running iteration " + iteration + "/10");
       try {
         console.log("🔍 Creating database for iteration " + iteration);
-        const db = fireproof("esm-test");
+        const db = fireproofFn("esm-test");
         console.log("✅ Database created for iteration " + iteration);
         
         console.log("🔍 Putting first document for iteration " + iteration);
@@ -145,10 +218,10 @@ it("esm.sh", async () => {
         console.log("✅ Got all docs (after): " + afterAll.rows.length + " documents");
   
         console.log("🔍 Checking invariant for iteration " + iteration);
-        invariant(
-          afterAll.rows.length == beforeAll.rows.length + 1,
-          "all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length
-        );
+        if (afterAll.rows.length !== beforeAll.rows.length + 1) {
+          console.error("Error: all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length);
+          throw new Error("all docs wrong count: before=" + beforeAll.rows.length + ", after=" + afterAll.rows.length);
+        }
         console.log("✅ Invariant check passed");
   
         console.log("🔍 Getting document by id for iteration " + iteration);
@@ -156,7 +229,7 @@ it("esm.sh", async () => {
         console.log("✅ Got document by id: " + JSON.stringify(res));
         
         console.log("🔍 Updating label for iteration " + iteration);
-        label.innerHTML = [iteration,res.test].join(' - ');
+        label.innerHTML = iteration + " - " + res.test;
         console.log("✅ Label updated to: " + label.innerHTML);
         
         console.log("🔍 Closing database for iteration " + iteration);
@@ -183,7 +256,7 @@ it("esm.sh", async () => {
       
       for (let i = 0; i < 10; i++) {
         console.log("🔄 Starting iteration " + i);
-        await action(label, i);
+        await action(label, i, fireproof);
         console.log("✅ Completed iteration " + i);
       }
       
@@ -286,40 +359,15 @@ it("esm.sh", async () => {
 
   console.log("⏳ Waiting for test completion (data-ready attribute)");
   try {
-    let progressCounter = 0;
-    await vi.waitUntil(
-      () => {
-        const element = document.querySelector("[data-ready]");
-
-        // Log progress every 10 seconds
-        if (++progressCounter % 10 === 0) {
-          const elapsedTime = Math.floor((Date.now() - testStartTime) / 1000);
-          console.log(`⏳ Still waiting for test completion... (${elapsedTime}s elapsed)`);
-
-          // Get current label content for progress updates
-          const currentLabel = document.querySelector("#test-label");
-          if (currentLabel) {
-            console.log(`🔍 Current label content: "${currentLabel.innerHTML}"`);
-          }
-
-          // Check if any console errors have been logged by the script
-          console.log("🔍 Checking for any script errors in console...");
-        }
-
-        // Log every check attempt (at a lower interval to avoid flooding)
-        if (progressCounter % 3 === 0) {
-          console.log(`🔄 Check attempt ${progressCounter}: data-ready attribute ${element ? "found" : "not found"}`);
-        }
-
-        return element;
-      },
-      {
-        timeout: 30_000, // 30 seconds (increased from 15 seconds)
-        interval: 1000, // Check every second
-      },
-    );
-
+    await waitForDataReadyOrError();
     console.log("✅ waitUntil completed successfully - data-ready attribute found");
+
+    // Check for module error attribute before proceeding
+    const errorElement = document.querySelector("[data-module-error]");
+    if (errorElement) {
+      console.error("❌ Module loading error detected, failing test immediately");
+      throw new Error(`Module loading error detected: ${(errorElement as HTMLElement).innerHTML}`);
+    }
 
     // Make sure the label is visible and scrolled into view before interacting
     try {
