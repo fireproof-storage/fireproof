@@ -4,8 +4,6 @@ import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
 import type {
   DocUpdate,
   ConfigOpts,
-  DocWithId,
-  ListenerFn,
   DocTypes,
   SuperThis,
   Database,
@@ -15,6 +13,7 @@ import type {
   LedgerOpts,
   Attachable,
   Attached,
+  ClockHead,
 } from "./types.js";
 import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
@@ -103,6 +102,9 @@ export class LedgerShell implements Ledger {
   get crdt(): CRDT {
     return this.ref.crdt;
   }
+  get clock(): ClockHead {
+    return this.ref.clock;
+  }
 
   onClosed(fn: () => void): () => void {
     return this.ref.onClosed(fn);
@@ -120,19 +122,11 @@ export class LedgerShell implements Ledger {
   // asDB(): Database {
   //   return this.ref.asDB();
   // }
-
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
-    return this.ref.subscribe(listener, updates);
-  }
 }
 
 class LedgerImpl implements Ledger {
   // readonly name: string;
   readonly opts: LedgerOpts;
-
-  _listening = false;
-  readonly _listeners = new Set<ListenerFn<DocTypes>>();
-  readonly _noupdate_listeners = new Set<ListenerFn<DocTypes>>();
   readonly crdt: CRDT;
   readonly writeQueue: WriteQueue<DocUpdate<DocTypes>>;
   // readonly blockstore: BaseBlockstore;
@@ -207,7 +201,6 @@ class LedgerImpl implements Ledger {
       async (updates: DocUpdate<DocTypes>[]) => this.crdt.bulk(updates),
       this.opts.writeQueue,
     );
-    this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
   async attach(a: Attachable): Promise<Attached> {
@@ -215,55 +208,14 @@ class LedgerImpl implements Ledger {
     return this.crdt.blockstore.loader.attach(a);
   }
 
+  get clock(): ClockHead {
+    return [...this.crdt.clock.head];
+  }
+
   // readonly _asDb = new ResolveOnce<Database>();
   // asDB(): Database {
   //   return this._asDb.once(() => new DatabaseImpl(this));
   // }
-
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
-    this.ready();
-    this.logger.Debug().Bool("updates", updates).Msg("subscribe");
-    if (updates) {
-      if (!this._listening) {
-        this._listening = true;
-        this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
-          void this._notify(updates);
-        });
-      }
-      this._listeners.add(listener as ListenerFn<NonNullable<unknown>>);
-      return () => {
-        this._listeners.delete(listener as ListenerFn<NonNullable<unknown>>);
-      };
-    } else {
-      this._noupdate_listeners.add(listener as ListenerFn<NonNullable<unknown>>);
-      return () => {
-        this._noupdate_listeners.delete(listener as ListenerFn<NonNullable<unknown>>);
-      };
-    }
-  }
-
-  private async _notify(updates: DocUpdate<DocTypes>[]) {
-    await this.ready();
-    if (this._listeners.size) {
-      const docs: DocWithId<DocTypes>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
-      for (const listener of this._listeners) {
-        await (async () => await listener(docs as DocWithId<DocTypes>[]))().catch((e: Error) => {
-          this.logger.Error().Err(e).Msg("subscriber error");
-        });
-      }
-    }
-  }
-
-  private async _no_update_notify() {
-    await this.ready();
-    if (this._noupdate_listeners.size) {
-      for (const listener of this._noupdate_listeners) {
-        await (async () => await listener([]))().catch((e: Error) => {
-          this.logger.Error().Err(e).Msg("subscriber error");
-        });
-      }
-    }
-  }
 }
 
 export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
