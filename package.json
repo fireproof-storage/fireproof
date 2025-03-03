@@ -53,27 +53,26 @@
     "@types/node": "^22.10.5",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.12",
-    "@typescript-eslint/typescript-estree": "^8.24.1",
-    "@vitest/browser": "^3.0.5",
-    "@vitest/coverage-v8": "^3.0.5",
-    "@vitest/ui": "^3.0.5",
+    "@typescript-eslint/typescript-estree": "^8.25.0",
+    "@vitest/browser": "^3.0.7",
+    "@vitest/coverage-v8": "^3.0.7",
+    "@vitest/ui": "^3.0.7",
     "esbuild": "^0.24.2",
     "esbuild-plugin-replace": "^1.4.0",
     "eslint": "^9.18.0",
-    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-import-resolver-typescript": "^3.8.3",
     "eslint-plugin-import": "^2.31.0",
     "prettier": "^3.4.2",
     "semver": "^7.7.1",
     "tsup": "^8.3.6",
     "tsx": "^4.19.3",
-    "typedoc": "^0.27.8",
+    "typedoc": "^0.27.9",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.24.1",
+    "typescript-eslint": "^8.25.0",
     "uuidv7": "^1.0.2",
-    "vite": "^6.0.7",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.5",
-    "webdriverio": "^9.10.0",
+    "vitest": "^3.0.7",
+    "webdriverio": "^9.10.1",
     "zx": "^8.3.2"
   },
   "repository": {
@@ -109,5 +108,10 @@
     "max-size": "390kB",
     "max-gzip-size": "110kB",
     "max-overall-size": "1MB"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "msw"
+    ]
   }
 }
