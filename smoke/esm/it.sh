@@ -1,63 +1,40 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 projectBase=$(pwd)
 cd smoke/esm
 smokeDir=$(pwd)
 
-#if which docker-compose
-#then
-#  dockerCompose="docker-compose"
-#else
-#  dockerCompose="docker compose"
-#fi
+packageDir=${projectBase}/dist/fireproof-core
 
-#cat > .env <<EOF
-#PROJECT_BASE=$projectBase
-#EOF
-#mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-#chmod -R oug+w $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-#ls -la $projectBase/.esm-cache
-#$dockerCompose down || true
-#$dockerCompose up -d
-packageDir=${projectBase=}/dist/fireproof-core
-
-#user="admin$(date +%s)"
-#curl --retry 10 --retry-max-time 30 --retry-all-errors http://localhost:4873/
-#curl \
-#     -X PUT \
-#     -H "Content-type: application/json" \
-#     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
-#     'http://localhost:4873/-/user/org.couchdb.user:$user'
-#
-#user="admin$(date +%s)"
-#token=$(curl \
-#     -X PUT \
-#     -H "Content-type: application/json" \
-#     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
-#     'http://localhost:4873/-/user/org.couchdb.user:$user' | jq .token)
-#
-#echo "Token: $user:$token"
-#cat <<EOF > $packageDir/.npmrc
-#; .npmrc
-#enable-pre-post-scripts=true
-#//localhost:4873/:_authToken=$token
-#@fireproof:registry=http://localhost:4873
-#EOF
-
-#(cd $packageDir &&
-#	(npm unpublish --force || true) &&
-#         npm publish --no-git-checks)
+# Check if FP_VERSION is available
+FP_VERSION=$(cat $projectBase/dist/fp-version)
+if [ -z "$FP_VERSION" ]; then
+  echo "❌ ERROR: FP_VERSION not found in $projectBase/dist/fp-version"
+  exit 1
+fi
 
 tmpDir=$(mktemp -d)
-cp $projectBase/dist/npmrc-smoke .npmrc
+
+cp $projectBase/dist/npmrc-smoke $tmpDir/.npmrc
+if [ ! -f "$tmpDir/.npmrc" ]; then
+  echo "❌ ERROR: Failed to copy .npmrc file"
+  exit 1
+fi
+
 unset npm_config_registry
 rm -rf node_modules dist pnpm-lock.yaml
-cp -pr * $tmpDir
+rsync -vaxH . $tmpDir/
 cd $tmpDir
-cp package-template.json package.json
-cat > setup.js <<EOF
+
+mv package-template.json package.json
+
+cat > "$tmpDir/setup.js" << EOL
+// This file is loaded by Vitest before tests run
+// It sets up global variables needed by the tests
+
+// Make sure we're setting variables on the correct global object
 function gthis() {
-  return globalThis;
+  return globalThis || window || self || global;
 }
 
 function getVersion() {
@@ -68,13 +45,30 @@ function getVersion() {
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
-gthis()["FP_STACK"]="stack"
-gthis()["FP_DEBUG"]="*"
-gthis()["FP_VERSION"]=getVersion()
-EOF
+// Set environment variables on the global object
+gthis()["FP_STACK"]="$FP_STACK"
+gthis()["FP_DEBUG"]="$FP_DEBUG"
+gthis()["FP_VERSION"]="$FP_VERSION"
 
-pnpm install
-pnpm run test
+EOL
+
+pnpm add -D vitest --allow-build edgedriver --allow-build esbuild --allow-build geckodriver --allow-build msw
+
+if [ $? -ne 0 ]; then
+  echo "❌ ERROR: Failed to install dependencies"
+  if [ "$FP_CI" = "fp_ci" ]; then
+    echo "Running in CI environment - failing fast"
+    exit 1
+  fi
+fi
+
+FP_VERSION="$FP_VERSION" FP_DEBUG="$FP_DEBUG" FP_STACK="$FP_STACK" pnpm run test
+TEST_RESULT=$?
+
 rm -rf $tmpDir
 cd $smokeDir
-#$dockerCompose down
+
+if [ $TEST_RESULT -ne 0 ]; then
+  echo "❌ Tests failed with exit code $TEST_RESULT"
+  exit $TEST_RESULT
+fi

@@ -8,16 +8,23 @@ env:
 
 jobs:
   build-test-smoke:
-    name: Quality Checks
+    name: Build Fireproof
+
+    #runs-on: blacksmith-4vcpu-ubuntu-2204
+    #steps:
+    #  - uses: useblacksmith/setup-node@v5
+    #    with:
+    #      node-version: 20
+
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - uses: actions/checkout@v4
         #with:
         #  fetch-tags: true
         #  fetch-depth: 1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -25,7 +32,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-          version: 9
+          version: 10
           cache: "pnpm"
 
       - name: smoke-esm-cache

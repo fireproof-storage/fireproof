@@ -1,14 +1,15 @@
 import { page } from "@vitest/browser/context";
 import { expect, it, vi } from "vitest";
 
+const gthis = window as unknown as { FP_VERSION: string; FP_DEBUG: string; FP_STACK: string };
 it("esm.sh", async () => {
   const script = document.createElement("script");
   // eslint-disable-next-line no-console
-  console.log("FP_VERSION", (window as unknown as { FP_VERSION: string }).FP_VERSION);
+  console.log("FP_VERSION", gthis.FP_VERSION);
   // eslint-disable-next-line no-console
-  console.log("FP_DEBUG", (window as unknown as { FP_DEBUG: string }).FP_DEBUG);
+  console.log("FP_DEBUG", gthis.FP_DEBUG);
   // eslint-disable-next-line no-console
-  console.log("FP_STACK", (window as unknown as { FP_STACK: string }).FP_STACK);
+  console.log("FP_STACK", gthis.FP_STACK);
   // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
   // // console.log("window-res", await res.text());
   // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
@@ -16,9 +17,9 @@ it("esm.sh", async () => {
 
   script.textContent = `
 //console.log("pre-window-js", window.FP_VERSION)
-import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
+import { fireproof } from 'http://localhost:4874/@fireproof/core@${gthis.FP_VERSION}?no-dts'
 
-console.log("window-js", window.FP_VERSION)
+console.log("local-esm.sh-version:", window.FP_VERSION)
 function invariant(cond, message) {
   if (!cond) {
     throw new Error(message)
@@ -55,6 +56,6 @@ main().catch(console.error)
   document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
   document.body.appendChild(script);
 
-  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 500_000 });
+  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 90_000 });
   expect(await page.getByTestId("label").element().innerHTML).toBe("9 - esm-success");
 });

@@ -7,10 +7,9 @@
     "test": "vitest --run --testTimeout=90000"
   },
   "devDependencies": {
-    "@vitest/browser": "^3.0.4",
-    "@vitest/ui": "^3.0.4",
-    "vite": "^6.0.11",
-    "vitest": "^3.0.4",
-    "webdriverio": "^9.7.1"
+    "@vitest/browser": "^3.0.7",
+    "@vitest/ui": "^3.0.7",
+    "vitest": "^3.0.7",
+    "webdriverio": "^9.10.0"
   }
 }
