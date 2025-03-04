@@ -1,9 +1,8 @@
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ImgFile } from "use-fireproof";
+import { ImgFile, bs } from "use-fireproof";
 import { createElement } from "react";
 import type { DocFileMeta } from "use-fireproof";
-import type { AnyLink } from "../../src/blockstore/index.js";
 
 // Extend HTMLElement to include querySelector for TypeScript
 declare global {
@@ -115,7 +114,7 @@ describe("COMPONENT: ImgFile", () => {
       const file = new File([new Blob([SVG_CONTENT], { type: "image/svg+xml" })], "meta.svg", { type: "image/svg+xml" });
 
       // Create a mock DocFileMeta with required cid property
-      const mockCid = { toString: () => "test-cid" } as AnyLink;
+      const mockCid = { toString: () => "test-cid" } as bs.AnyLink;
       const docFileMeta: DocFileMeta = {
         type: "image/svg+xml",
         size: file.size,
