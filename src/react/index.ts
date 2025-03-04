@@ -20,4 +20,4 @@ export {
   useChanges,
 } from "./useChanges.js";
 
-export { ImgFile } from "./ImgFile.js";
+export { ImgFile } from "./img-file.js";
