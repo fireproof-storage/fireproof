@@ -15,6 +15,16 @@ interface ImgFileProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> 
   meta?: FileType;
 }
 
+// Helper function to determine if the object is a File-like object
+function isFile(obj: FileType): obj is File {
+  return "type" in obj && "size" in obj && "stream" in obj && typeof obj.stream === "function";
+}
+
+// Helper function to determine if the object is a DocFileMeta
+function isFileMeta(obj: FileType): obj is DocFileMeta {
+  return "type" in obj && "size" in obj && "file" in obj && typeof obj.file === "function";
+}
+
 export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const [imgDataUrl, setImgDataUrl] = useState("");
 
@@ -23,14 +33,6 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
 
   useEffect(() => {
     if (!fileData) return;
-
-    // Helper function to determine if the object is a File-like object
-    const isFile = (obj: FileType): obj is File =>
-      "type" in obj && "size" in obj && "stream" in obj && typeof obj.stream === "function";
-
-    // Helper function to determine if the object is a DocFileMeta
-    const isFileMeta = (obj: FileType): obj is DocFileMeta =>
-      "type" in obj && "size" in obj && "file" in obj && typeof obj.file === "function";
 
     const loadFile = async () => {
       let fileObj: File | null = null;
