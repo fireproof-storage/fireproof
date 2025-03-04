@@ -38,12 +38,15 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
       let fileObj: File | null = null;
       let fileType = "";
 
-      if (isFile(fileData)) {
-        fileObj = fileData;
-        fileType = fileData.type;
-      } else if (isFileMeta(fileData)) {
-        fileType = fileData.type;
-        fileObj = (await fileData.file?.()) || null;
+      switch (true) {
+        case isFile(fileData):
+          fileObj = fileData;
+          fileType = fileData.type;
+          break;
+        case isFileMeta(fileData):
+          fileType = fileData.type;
+          fileObj = (await fileData.file?.()) || null;
+          break;
       }
 
       if (fileObj && /image/.test(fileType)) {
