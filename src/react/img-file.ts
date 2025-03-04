@@ -24,12 +24,13 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   useEffect(() => {
     if (!fileData) return;
 
-    // Helper function to determine if the object is a File
-    const isFile = (obj: FileType): obj is File => obj instanceof File;
+    // Helper function to determine if the object is a File-like object
+    const isFile = (obj: FileType): obj is File =>
+      "type" in obj && "size" in obj && "stream" in obj && typeof obj.stream === "function";
 
-    // Helper function to determine if the object is a ImgFileMeta
-    const isFileMeta = (obj: DocFileMeta): obj is DocFileMeta =>
-      obj && typeof obj.file === "function" && typeof obj.type === "string";
+    // Helper function to determine if the object is a DocFileMeta
+    const isFileMeta = (obj: FileType): obj is DocFileMeta =>
+      "type" in obj && "size" in obj && "file" in obj && typeof obj.file === "function";
 
     const loadFile = async () => {
       let fileObj: File | null = null;
