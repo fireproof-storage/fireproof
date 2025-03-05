@@ -1,4 +1,4 @@
-# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) browser database API
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) database API
 
 <p align="right">
   <img src="https://img.shields.io/bundlephobia/minzip/%40fireproof%2Fcore" alt="Package size">
@@ -225,6 +225,8 @@ pnpm run build:docs
 ## Thanks 🙏
 
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into ledger development via Apache CouchDB, one of the original document ledgers. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
+
+Thanks to [Meno Abels](https://github.com/mabels) who has taken on the role of project lead engineer. Fireproof is rapidly becoming a mature solution.
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle hash-tree clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
 
