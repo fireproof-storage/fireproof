@@ -21,10 +21,10 @@ env | grep -E 'FP_|GITHUB_|CI|NODE'
 #cat > .env <<EOF
 #PROJECT_BASE=$projectBase
 #EOF
-mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-chmod -R oug+w $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-echo "ESM cache contents:"
-ls -la $projectBase/.esm-cache
+# mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
+# chmod -R oug+w $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
+# echo "ESM cache contents:"
+# ls -la $projectBase/.esm-cache
 #$dockerCompose down || true
 #$dockerCompose up -d
 packageDir=${projectBase=}/dist/fireproof-core
