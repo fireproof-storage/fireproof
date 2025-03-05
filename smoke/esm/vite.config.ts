@@ -19,5 +19,7 @@ export default defineConfig({
     isolate: false,
     testTimeout: 30_000,
     setupFiles: "./setup.js",
+    logHeapUsage: true, // Log memory usage
+    retry: process.env.CI ? 2 : 0, // Retry tests in CI
   },
 });

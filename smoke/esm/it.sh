@@ -4,6 +4,13 @@ projectBase=$(pwd)
 cd smoke/esm
 smokeDir=$(pwd)
 
+# Print debug information to stdout
+echo "=== ESM TEST DEBUG INFO ==="
+echo "Running in directory: $(pwd)"
+echo "Project base: $projectBase"
+echo "Environment variables:"
+env | grep -E 'FP_|GITHUB_|CI|NODE'
+
 #if which docker-compose
 #then
 #  dockerCompose="docker-compose"
@@ -14,9 +21,10 @@ smokeDir=$(pwd)
 #cat > .env <<EOF
 #PROJECT_BASE=$projectBase
 #EOF
-#mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-#chmod -R oug+w $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-#ls -la $projectBase/.esm-cache
+mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
+chmod -R oug+w $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
+echo "ESM cache contents:"
+ls -la $projectBase/.esm-cache
 #$dockerCompose down || true
 #$dockerCompose up -d
 packageDir=${projectBase=}/dist/fireproof-core
@@ -49,6 +57,7 @@ packageDir=${projectBase=}/dist/fireproof-core
 #         npm publish --no-git-checks)
 
 tmpDir=$(mktemp -d)
+echo "Temporary directory: $tmpDir"
 cp $projectBase/dist/npmrc-smoke .npmrc
 unset npm_config_registry
 rm -rf node_modules dist pnpm-lock.yaml
@@ -68,13 +77,24 @@ function getVersion() {
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
+// Set global variables
 gthis()["FP_STACK"]="stack"
 gthis()["FP_DEBUG"]="*"
 gthis()["FP_VERSION"]=getVersion()
+
+// Log setup completion
+console.log("Setup.js executed, globals set:", {
+  FP_STACK: gthis()["FP_STACK"],
+  FP_DEBUG: gthis()["FP_DEBUG"],
+  FP_VERSION: gthis()["FP_VERSION"]
+});
 EOF
 
+echo "Installing dependencies..."
 pnpm install
+echo "Running tests..."
 pnpm run test
+echo "Test run complete"
 rm -rf $tmpDir
 cd $smokeDir
 #$dockerCompose down
