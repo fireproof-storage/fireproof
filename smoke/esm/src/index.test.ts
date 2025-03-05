@@ -9,29 +9,35 @@ it("esm.sh", async () => {
   console.log("Language:", navigator.language);
 
   const script = document.createElement("script");
+  const fpVersion = (window as unknown as { FP_VERSION: string }).FP_VERSION;
   // eslint-disable-next-line no-console
-  console.log("FP_VERSION", (window as unknown as { FP_VERSION: string }).FP_VERSION);
+  console.log("FP_VERSION", fpVersion);
   // eslint-disable-next-line no-console
   console.log("FP_DEBUG", (window as unknown as { FP_DEBUG: string }).FP_DEBUG);
   // eslint-disable-next-line no-console
   console.log("FP_STACK", (window as unknown as { FP_STACK: string }).FP_STACK);
 
+  // Define module URLs in one place
+  const serverUrl = "http://localhost:4874";
+  const moduleUrl = `${serverUrl}/@fireproof/core@${fpVersion}?no-dts`;
+  const useFireproofUrl = `${serverUrl}/use-fireproof@${fpVersion}?no-dts`;
+
   // Check server connectivity
   try {
     // eslint-disable-next-line no-console
-    console.log("Server ping:", await fetch("http://localhost:4874/").then((r) => r.status));
+    console.log("Server ping:", await fetch(serverUrl).then((r) => r.status));
     // eslint-disable-next-line no-console
     console.log(
       "Package ping:",
-      await fetch(`http://localhost:4874/@fireproof/core@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts`).then(
-        (r) => r.status,
+      await fetch(moduleUrl).then(
+        (r) => ({ status: r.status, ok: r.ok, statusText: r.statusText }),
       ),
     );
     // eslint-disable-next-line no-console
     console.log(
       "use-fireproof ping:",
-      await fetch(`http://localhost:4874/use-fireproof@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts`).then(
-        (r) => r.status,
+      await fetch(useFireproofUrl).then(
+        (r) => ({ status: r.status, ok: r.ok, statusText: r.statusText }),
       ),
     );
   } catch (e) {
@@ -53,7 +59,6 @@ it("esm.sh", async () => {
   });
 
   // Create a more robust script with error handling
-  const fpVersion = (window as unknown as { FP_VERSION: string }).FP_VERSION;
   script.textContent = `
 try {
   console.log("start script");
@@ -61,60 +66,87 @@ try {
   // Test basic module functionality first
   console.log("Testing basic module import");
   
-  // Then try the actual import
-  const module = await import("http://localhost:4874/@fireproof/core@${fpVersion}?no-dts")
-  .then(module => {
-    console.log("window-js", window.FP_VERSION);
-    console.log("Fireproof module type:", typeof module.fireproof);
-    
-    function invariant(cond, message) {
-      if (!cond) {
-        throw new Error(message);
+  // Test package URL with fetch before trying to import
+  console.log("Testing package URL with fetch before import");
+  fetch("${moduleUrl}")
+    .then(response => {
+      console.log("Pre-import fetch result:", {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText,
+        url: response.url
+      });
+      if (!response.ok) {
+        throw new Error(\`HTTP error! status: \${response.status}, statusText: \${response.statusText}\`);
       }
-    }
-    
-    async function action(label, run) {
-      console.log("Starting action run:", run);
-      const db = module.fireproof("esm-test");
-      console.log("DB created for run:", run);
-      const ok = await db.put({ sort: Math.random(), test: "esm-success" });
-      console.log("First doc put result:", ok.id);
-    
-      const beforeAll = await db.allDocs();
-      console.log("beforeAll count:", beforeAll.rows.length);
-      await db.put({ foo: 1 });
-      const afterAll = await db.allDocs();
-      console.log("afterAll count:", afterAll.rows.length);
-    
-      invariant(
-        afterAll.rows.length == beforeAll.rows.length + 1,
-        "all docs wrong count"
-      );
-    
-      const res = await db.get(ok.id);
-      console.log("Get result:", res.test);
-      label.innerHTML = [run,res.test].join(' - ');
-      await db.close();
-      console.log("Completed action run:", run);
-    }
-    
-    async function main() {
-      console.log("Starting main function");
-      const label = document.querySelector('label');
-      for (let i = 0; i < 10; i++) {
-        await action(label, i);
-      }
-      label.setAttribute("data-ready", "");
-      console.log("Main function complete");
-    }
-    
-    main().catch(e => {
-      console.error("Main function error:", e);
+      return response.text();
+    })
+    .then(text => {
+      console.log("Module content first 100 chars:", text.substring(0, 100));
+    })
+    .catch(error => {
+      console.error("Pre-import fetch error:", error.message, error.stack);
     });
-  })
-  .catch(error => {
-    console.error("Module import error:", error);
-  });
+  
+  // Then try the actual import
+  import("${moduleUrl}")
+    .then(module => {
+      console.log("window-js", window.FP_VERSION);
+      console.log("Fireproof module type:", typeof module.fireproof);
+      
+      function invariant(cond, message) {
+        if (!cond) {
+          throw new Error(message);
+        }
+      }
+      
+      async function action(label, run) {
+        console.log("Starting action run:", run);
+        const db = module.fireproof("esm-test");
+        console.log("DB created for run:", run);
+        const ok = await db.put({ sort: Math.random(), test: "esm-success" });
+        console.log("First doc put result:", ok.id);
+      
+        const beforeAll = await db.allDocs();
+        console.log("beforeAll count:", beforeAll.rows.length);
+        await db.put({ foo: 1 });
+        const afterAll = await db.allDocs();
+        console.log("afterAll count:", afterAll.rows.length);
+      
+        invariant(
+          afterAll.rows.length == beforeAll.rows.length + 1,
+          "all docs wrong count"
+        );
+      
+        const res = await db.get(ok.id);
+        console.log("Get result:", res.test);
+        label.innerHTML = [run,res.test].join(' - ');
+        await db.close();
+        console.log("Completed action run:", run);
+      }
+      
+      async function main() {
+        console.log("Starting main function");
+        const label = document.querySelector('label');
+        for (let i = 0; i < 10; i++) {
+          await action(label, i);
+        }
+        label.setAttribute("data-ready", "");
+        console.log("Main function complete");
+      }
+      
+      main().catch(e => {
+        console.error("Main function error:", e);
+      });
+    })
+    .catch(error => {
+      console.error("Module import error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause ? { name: error.cause.name, message: error.cause.message } : undefined
+      });
+    });
 } catch (error) {
   console.error("Script execution error:", error);
 }
