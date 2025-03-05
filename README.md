@@ -92,9 +92,9 @@ Fireproof makes it easy to store and display images in your applications. The `_
 // Store an image from a file input
 function handleFileUpload(e) {
   if (e.target.files[0]) {
-    merge({ 
+    merge({
       _files: { profilePic: e.target.files[0] },
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
     });
   }
 }
@@ -103,13 +103,9 @@ function handleFileUpload(e) {
 function ImageDisplay({ doc }) {
   return (
     <div>
-      {doc._files?.profilePic && 
-        <ImgFile 
-          file={doc._files.profilePic} 
-          alt="Profile picture" 
-          onLoad={() => console.log("Image loaded")}
-        />
-      }
+      {doc._files?.profilePic && (
+        <ImgFile file={doc._files.profilePic} alt="Profile picture" onLoad={() => console.log("Image loaded")} />
+      )}
       <p>Uploaded: {doc.uploadedAt}</p>
     </div>
   );
