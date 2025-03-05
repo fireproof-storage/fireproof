@@ -40,6 +40,7 @@ it("esm.sh", async () => {
 
   script.textContent = `
 //console.log("pre-window-js", window.FP_VERSION)
+console.log("start script")
 import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
 
 console.log("window-js", window.FP_VERSION)
@@ -89,8 +90,9 @@ main().catch(e => {
 `;
   script.type = "module";
   document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
+  console.log("adding script");
   document.body.appendChild(script);
-
+  console.log("script added");
   await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 500_000 });
   expect(await page.getByTestId("label").element().innerHTML).toBe("9 - esm-success");
 });
