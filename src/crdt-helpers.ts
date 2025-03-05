@@ -482,6 +482,7 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
   timeEnd("compact root blocks");
 
   time("compact changes");
+  // TODO
   for await (const x of clockChangesSince(blockLog, head, [], {}, logger)) {
     void x;
   }

@@ -193,8 +193,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
   }
 
-  query(qryOpts: QueryOpts<K> & { excludeDocs: true }, intlOpts?: { waitFor?: Promise<unknown> }): InquiryResponse<K, R>;
-  query(qryOpts: QueryOpts<K>, intlOpts?: { waitFor?: Promise<unknown> }): QueryResponse<K, T, R>;
+  query(qryOpts?: QueryOpts<K> & { excludeDocs: true }, intlOpts?: { waitFor?: Promise<unknown> }): InquiryResponse<K, R>;
+  query(qryOpts?: QueryOpts<K>, intlOpts?: { waitFor?: Promise<unknown> }): QueryResponse<K, T, R>;
   query(qryOpts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<K, T, R> {
     const stream = this.#stream.bind(this);
 
@@ -418,10 +418,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     let rows: DocumentRow<K, T, R>[];
     const head = [...this.crdt.clock.head];
     if (!this.indexHead || this.indexHead.length === 0) {
-      rows = await Array.fromAsync(this.crdt.all<K, T, R>());
+      rows = await arrayFromAsyncIterable(this.crdt.all<K, T, R>());
       this.logger.Debug().Msg("enter crdt.all");
     } else {
-      rows = await Array.fromAsync(this.crdt.changes<K, T, R>(this.indexHead));
+      rows = await arrayFromAsyncIterable(this.crdt.changes<K, T, R>(this.indexHead));
       this.logger.Debug().Msg("enter crdt.changes");
     }
     if (rows.length === 0) {

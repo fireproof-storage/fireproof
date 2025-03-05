@@ -157,7 +157,7 @@ export class DatabaseImpl implements Database {
 
   subscribe<T extends DocTypes>(listener: ListenerFn<T>): () => void {
     return this.select<IndexKeyType, T>().subscribe((row) => {
-      listener(row.doc);
+      listener([row.doc]);
     });
   }
 

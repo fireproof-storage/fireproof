@@ -1,4 +1,5 @@
 import {
+  arrayFromAsyncIterable,
   ClockHead,
   Database,
   DocFragment,
@@ -49,7 +50,7 @@ describe("Streaming API", () => {
     snapshot: Snapshot<K, T, R>,
     amountOfDocs: number,
   ) {
-    const docs = await Array.fromAsync(snapshot);
+    const docs = await arrayFromAsyncIterable(snapshot);
     expect(docs.length).toBe(amountOfDocs);
   }
 
@@ -121,7 +122,7 @@ describe("Streaming API", () => {
         await db.put({ _id: `doc-snapshot-${i}`, since: `doc-snapshot-${i}` });
       }, Promise.resolve());
 
-    const docs = await Array.fromAsync(snapshotCreator(sincePt2));
+    const docs = await arrayFromAsyncIterable(snapshotCreator(sincePt2));
     expect(docs.length).toBe(amountOfSnapshotDocs);
   }
 

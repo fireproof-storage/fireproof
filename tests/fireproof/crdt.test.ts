@@ -1,4 +1,15 @@
-import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt, CRDTImpl } from "@fireproof/core";
+import {
+  CRDT,
+  defaultWriteQueueOpts,
+  ensureSuperThis,
+  LedgerOpts,
+  toStoreURIRuntime,
+  rt,
+  CRDTImpl,
+  arrayFromAsyncIterable,
+  IndexKeyType,
+  DocFragment,
+} from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
@@ -93,10 +104,11 @@ describe("CRDT with one record", function () {
     expect(got).toBeFalsy();
   });
   it("should offer changes", async () => {
-    const { result } = await crdt.changes<Partial<CRDTTestType>>([]);
+    const it = crdt.changes<IndexKeyType, Partial<CRDTTestType>, DocFragment>([]);
+    const result = (await arrayFromAsyncIterable(it)).reverse();
     expect(result.length).toBe(1);
     expect(result[0].id).toBe("hello");
-    expect(result[0].value?.hello).toBe("world");
+    expect(result[0].doc?.hello).toBe("world");
   });
 });
 
@@ -149,10 +161,11 @@ describe("CRDT with a multi-write", function () {
     expect(got.doc.points).toBe(10);
   });
   it("should offer changes", async () => {
-    const { result } = await crdt.changes<CRDTTestType>([]);
+    const it = crdt.changes<IndexKeyType, CRDTTestType, DocFragment>([]);
+    const result = (await arrayFromAsyncIterable(it)).reverse();
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
-    expect(result[0].value?.points).toBe(11);
+    expect(result[0].doc?.points).toBe(11);
     expect(result[1].id).toBe("king");
   });
   it("should offer changes since", async () => {
@@ -162,11 +175,15 @@ describe("CRDT with a multi-write", function () {
       { id: "jack", value: { points: 10 } },
     ]);
     expect(secondPut.head).toBeTruthy();
-    const { result: r2, head: h2 } = await crdt.changes<CRDTTestType>();
+    const it2 = crdt.changes<IndexKeyType, CRDTTestType>();
+    const r2 = await arrayFromAsyncIterable(it2);
+    const h2 = crdt.clock.head;
     expect(r2.length).toBe(4);
-    const { result: r3 } = await crdt.changes(firstPut.head);
+    const it3 = crdt.changes(firstPut.head);
+    const r3 = await arrayFromAsyncIterable(it3);
     expect(r3.length).toBe(2);
-    const { result: r4 } = await crdt.changes(h2);
+    const it4 = crdt.changes(h2);
+    const r4 = await arrayFromAsyncIterable(it4);
     expect(r4.length).toBe(0);
   });
 });
@@ -221,10 +238,11 @@ describe("CRDT with two multi-writes", function () {
     }
   });
   it("should offer changes", async () => {
-    const { result } = await crdt.changes<CRDTTestType>();
+    const it = crdt.changes<IndexKeyType, CRDTTestType, DocFragment>();
+    const result = (await arrayFromAsyncIterable(it)).reverse();
     expect(result.length).toBe(4);
     expect(result[0].id).toBe("ace");
-    expect(result[0].value?.points).toBe(11);
+    expect(result[0].doc?.points).toBe(11);
     expect(result[1].id).toBe("king");
     expect(result[2].id).toBe("queen");
     expect(result[3].id).toBe("jack");
@@ -308,7 +326,8 @@ describe("Compact a named CRDT with writes", function () {
     // expect(blz.length).toBe(13);
   }, 1000000);
   it("should start with changes", async () => {
-    const { result } = await crdt.changes();
+    const it = crdt.changes();
+    const result = (await arrayFromAsyncIterable(it)).reverse();
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
   });
@@ -327,8 +346,9 @@ describe("Compact a named CRDT with writes", function () {
     expect(got.doc.points).toBe(11);
   });
   it("should have changes after compact", async () => {
-    const chs = await crdt.changes();
-    expect(chs.result[0].id).toBe("ace");
+    const it = crdt.changes();
+    const result = (await arrayFromAsyncIterable(it)).reverse();
+    expect(result[0].id).toBe("ace");
   });
 });
 
@@ -354,26 +374,29 @@ describe("CRDT with an index", function () {
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<number, CRDTTestType>(crdt, "points");
+    idx = index<number, CRDTTestType>(crdt, "points");
   });
   it("should query the data", async () => {
-    const got = await idx.query({ range: [9, 12] });
-    expect(got.rows.length).toBe(2);
-    expect(got.rows[0].id).toBe("king");
-    expect(got.rows[0].key).toBe(10);
+    const resp = idx.query({ range: [9, 12] });
+    const rows = await resp.toArray();
+    expect(rows.length).toBe(2);
+    expect(rows[0].id).toBe("king");
+    expect(rows[0].key).toBe(10);
   });
   it("should register the index", async () => {
-    const rIdx = await index<number, CRDTTestType>(crdt, "points");
+    const rIdx = index<number, CRDTTestType>(crdt, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
-    const got = await rIdx.query({ range: [9, 12] });
-    expect(got.rows.length).toBe(2);
-    expect(got.rows[0].id).toBe("king");
-    expect(got.rows[0].key).toBe(10);
+    const resp = rIdx.query({ range: [9, 12] });
+    const rows = await resp.toArray();
+    expect(rows.length).toBe(2);
+    expect(rows[0].id).toBe("king");
+    expect(rows[0].key).toBe(10);
   });
   it.skip("creating a different index with same name should not work", async () => {
     const e = await index(crdt, "points", (doc) => doc._id)
       .query()
+      .toArray()
       .catch((err) => err);
     expect(e.message).toMatch(/cannot apply/);
   });
