@@ -82,7 +82,40 @@ function App() {
 }
 ```
 
-Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started or check the [full LLM documentation](https://use-fireproof.com/llms-full.txt) for more examples.
+### Working with Images
+
+Fireproof makes it easy to store and display images in your applications. The `_files` property and `ImgFile` component handle all the complexities of file storage and retrieval:
+
+```js
+// Store an image from a file input
+// The file is automatically stored in Fireproof's content-addressed storage
+function handleFileUpload(e) {
+  if (e.target.files[0]) {
+    merge({ 
+      _files: { profilePic: e.target.files[0] },
+      uploadedAt: new Date().toISOString()
+    });
+  }
+}
+
+// Display an image from a document
+function ImageDisplay({ doc }) {
+  return (
+    <div>
+      {doc._files?.profilePic && 
+        <ImgFile 
+          file={doc._files.profilePic} 
+          alt="Profile picture" 
+          onLoad={() => console.log("Image loaded")}
+        />
+      }
+      <p>Uploaded: {doc.uploadedAt}</p>
+    </div>
+  );
+}
+```
+
+The `ImgFile` component automatically handles loading and displaying images from Fireproof's storage, with all the expected props of a standard image element. For more in-depth examples see our [llms-full.txt](https://use-fireproof.com/llms-full.txt) documentation.
 
 ## JavaScript Core API
 
