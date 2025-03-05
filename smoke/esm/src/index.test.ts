@@ -53,6 +53,7 @@ it("esm.sh", async () => {
   });
 
   // Create a more robust script with error handling
+  const fpVersion = (window as unknown as { FP_VERSION: string }).FP_VERSION;
   script.textContent = `
 try {
   console.log("start script");
@@ -61,7 +62,7 @@ try {
   console.log("Testing basic module import");
   
   // Then try the actual import
-  import { fireproof } from 'http://localhost:4874/@fireproof/core@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts'
+  import { fireproof } from 'http://localhost:4874/@fireproof/core@${fpVersion}?no-dts'
   .then(module => {
     console.log("window-js", window.FP_VERSION);
     console.log("Fireproof module type:", typeof module.fireproof);
