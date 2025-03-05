@@ -52,7 +52,7 @@ tmpDir=$(mktemp -d)
 cp $projectBase/dist/npmrc-smoke .npmrc
 unset npm_config_registry
 rm -rf node_modules dist pnpm-lock.yaml
-cp -pr * $tmpDir
+rsync -vaxH . $tmpDir/
 cd $tmpDir
 cp package-template.json package.json
 cat > setup.js <<EOF
