@@ -7,7 +7,6 @@ it("esm.sh", async () => {
   console.log("User Agent:", navigator.userAgent);
   console.log("Platform:", navigator.platform);
   console.log("Language:", navigator.language);
-  console.log("CI:", !!process.env.CI);
 
   const script = document.createElement("script");
   // eslint-disable-next-line no-console
