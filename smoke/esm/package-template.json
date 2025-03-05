@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest --run --testTimeout=90000"
+    "test": "vitest --run --testTimeout=30000"
   },
   "devDependencies": {
     "@vitest/browser": "^3.0.4",
