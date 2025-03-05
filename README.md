@@ -1,4 +1,4 @@
-# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) realtime database
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) database API
 
 <p align="right">
   <img src="https://img.shields.io/bundlephobia/minzip/%40fireproof%2Fcore" alt="Package size">
@@ -7,13 +7,86 @@
   </a>
 </p>
 
-### No setup: write features first, access your data anywhere
+Fireproof is a lightweight embedded document database with encrypted live sync, designed to make browser apps easy. Use it in any JavaScript environment with a unified API that works both in React (with hooks) and as a standalone core API.
 
-Add collaboration to any app with Fireproof. Access data from JavaScript servers and edge functions. Use live queries to update your UI automatically when the database changes. [Connect realtime sync](https://www.npmjs.com/package/@fireproof/connect) and those changes will sync between browsers and backend functions. Apps built this way are multi-player by default.
+[Point AI coders to these docs.](https://use-fireproof.com/llms-full.txt)
 
-### JavaScript quick start
+## Key Features
 
-The document database API will feel familiar. Queries use dynamic indexes, and the database can refresh your UI, as seen in the `db.subscribe` call below, as well as the React liveQuery hook.
+- **Apps run anywhere:** Bundle UI, data, and logic in one file.
+- **Real-Time & Offline-First:** Automatic persistence and live queries, runs in the browser - no loading or error states.
+- **Unified API:** TypeScript works with Deno, Bun, Node.js, and the browser.
+- **React Hooks:** Leverage `useLiveQuery` and `useDocument` for live collaboration.
+
+Fireproof enforces cryptographic causal consistency and ledger integrity using hash history, providing git-like versioning with lightweight blockchain-style verification. Data is stored and replicated as content-addressed encrypted blobs, making it safe and easy to sync via commodity object storage providers.
+
+## Installation
+
+The `use-fireproof` package provides both the core API and React hooks:
+
+```sh
+npm install use-fireproof
+```
+
+Works with ⚡️ ESM.sh:
+
+```js
+import { useFireproof } from "https://esm.sh/use-fireproof";
+```
+
+Or install the core ledger in any JavaScript environment:
+
+```sh
+npm install @fireproof/core
+```
+
+Add the ledger to any web page via HTML script tag (global is `Fireproof`):
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.global.js"></script>
+```
+
+Deliver generated solutions as runnable micro applications via ChatGPT Canvas, v0, bolt.new, or Claude Artifacts. Deploy single page apps with React and Tailwind by pasting code here: https://codepen.io/useFireproof/pen/MYgNYdx
+
+## ⚛️ React Usage
+
+React hooks are the recommended way to use Fireproof in LLM code generation contexts:
+
+```js
+import { useFireproof } from "use-fireproof";
+
+function App() {
+  const { database, useLiveQuery, useDocument } = useFireproof("my-ledger");
+
+  // Create a new document with useDocument
+  const { doc, merge, submit } = useDocument({ text: "" });
+
+  // Query documents by _id, most recent first
+  const { docs } = useLiveQuery("_id", { descending: true, limit: 100 });
+
+  return (
+    <div>
+      <form onSubmit={submit}>
+        <input value={doc.text} onChange={(e) => merge({ text: e.target.value })} placeholder="New document" />
+        <button type="submit">Submit</button>
+      </form>
+
+      <h3>Recent Documents</h3>
+      <ul>
+        {docs.map((doc) => (
+          <li key={doc._id}>{doc.text}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started or check the [full LLM documentation](https://use-fireproof.com/llms-full.txt) for more examples.
+
+## JavaScript Core API
+
+The document database API will feel familiar to those who have used other document databases:
 
 ```js
 import { fireproof } from "@fireproof/core";
@@ -32,76 +105,30 @@ beyonceDoc.hitSingles += 1;
 await db.put(beyonceDoc);
 ```
 
-Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics)
-
-### Live data hooks for React
-
-Fireproof [React hooks for live data](https://use-fireproof.com/docs/category/react-hooks) avoid boilerplate and make building collaborative apps a breeze.
-
-```js
-import { useLiveQuery, useDocument } from 'use-fireproof'
-
-function App() {
-  const completedTodos = useLiveQuery('completed', { limit: 10 })
-  const [newTodo, setNewTodoData, saveNewTodo] = useDocument({type: 'todo', text: '', completed: false, created: Date.now() })
-```
-
-Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
-
 ## Why choose Fireproof
 
 Compared to other embedded databases, Fireproof:
 
-- is network aware, encrypted, and multi-writer safe
-- is designed for real-time collaboration with CRDTs
-- offers cryptographic causal integrity for all operations
-- is built for the web, with a small package size and no wasm
+- Is network aware, encrypted, and multi-writer safe
+- Is designed for real-time collaboration with CRDTs
+- Offers cryptographic causal integrity for all operations
+- Is built for the web, with a small package size and no wasm
 
 Deliver interactive experiences without waiting on the backend. Fireproof runs in any cloud, browser, or edge environment, so your application can access data anywhere.
 
-[Get the latest roadmap updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the database [architecture](https://use-fireproof.com/docs/architecture).
+## Use cases
 
-### Use cases
+Fireproof is especially useful for:
 
-Fireproof allows web developers to build full-stack apps. It's especially useful for:
-
-- Rapid prototyping
-- AI copilot safety
+- AI-generated apps and rapid prototypes
 - Collaborative editing
-- Personalization and configuration
 - Offline and local-first apps
+- Personalization and configuration
+- AI copilot safety
 
-With Fireproof, you **build first** and sync via your cloud of choice when you are ready, so it's as easy to add to existing apps as it is to build something new. Drop Fireproof in your page with a script tag and start sharing interactive data.
+With Fireproof, you **build first** and sync via your cloud of choice when you are ready, making it perfect for LLM code generation contexts and rapid development.
 
-Fireproof is a great fit for code sandboxes and online IDEs, as you can get started without any configuration. This also makes it [easy for AI to write Fireproof apps](https://use-fireproof.com/docs/chatgpt-quick-start).
-
-### Install
-
-Get started with the React hooks:
-
-```sh
-npm install use-fireproof
-```
-
-or install the database in any JavaScript environment:
-
-```sh
-npm install @fireproof/core
-```
-
-The default build is optimized for browsers, to load the node build add `/node`:
-
-```js
-import { fireproof } from "@fireproof/core/node";
-```
-
-Add the database to any web page via HTML script tag (global is `Fireproof`):
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.global.js"></script>
-```
-
-Go ahead and write features, then [connect to any cloud backend](https://www.npmjs.com/package/@fireproof/connect) later.
+[Get the latest roadmap updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the [architecture](https://use-fireproof.com/docs/architecture).
 
 ### Debug
 
@@ -126,6 +153,38 @@ this[Symbol.for("FP_ENV")].set("FP_DEBUG", "*");
 globalThis[Symbol.for("FP_PRESET_ENV")] = {
   FP_DEBUG: "*",
 };
+```
+
+### Testing
+
+To run the full test suite across all projects (tested storage gateways configs), run:
+
+```bash
+pnpm run test
+```
+
+To run tests for specific components or modules, use the following command pattern:
+
+```bash
+pnpm run test -t 'test name pattern' path/to/test/file
+```
+
+For example, to run a specific test for the CRDT module, in just one project:
+
+```bash
+FP_DEBUG=Loader pnpm run test --project file -t 'codec implict iv' crdt
+```
+
+For testing React components, you can use:
+
+```bash
+pnpm run test tests/react/[ComponentName].test.tsx
+```
+
+Example for testing the ImgFile component:
+
+```bash
+pnpm run test tests/react/ImgFile.test.tsx
 ```
 
 ### Log Formatting
