@@ -126,7 +126,12 @@ export class DatabaseImpl implements Database {
     const qry = this.select<IndexKeyType, T>();
 
     // FIXME: row must have `clock` property
-    const rows = (await qry.toArray({ ...opts, since })).map((row) => ({ key: row.key[1], value: row.doc }));
+    const rows = (await qry.toArray({ ...opts, since }))
+      .map((row) => ({
+        key: row.key[1],
+        value: row.doc,
+      }))
+      .reverse();
 
     return { rows, clock: this.ledger.clock, name: this.name };
   }

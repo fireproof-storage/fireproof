@@ -147,11 +147,11 @@ describe("database fullconfig", () => {
     });
     await db.ready();
 
-    const carStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
+    const carStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
     expect(carStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
-    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
+    const metaStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
-    const walStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
+    const walStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
     expect(walStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
 
     expect(db).toBeTruthy();
@@ -199,21 +199,20 @@ describe("basic ledger", function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
-    const result = await idx.query();
-    expect(result).toBeTruthy();
-    expect(result.rows).toBeTruthy();
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].key).toBe("bar");
+    const rows = await idx.query().toArray();
+    expect(rows).toBeTruthy();
+    expect(rows).toBeTruthy();
+    expect(rows.length).toBe(1);
+    expect(rows[0].key).toBe("bar");
   });
   it("can define an index with a default function", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     const idx = index(db, "foo");
-    const result = await idx.query();
-    expect(result).toBeTruthy();
-    expect(result.rows).toBeTruthy();
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].key).toBe("bar");
+    const rows = await idx.query().toArray();
+    expect(rows).toBeTruthy();
+    expect(rows.length).toBe(1);
+    expect(rows[0].key).toBe("bar");
   });
   it("should query with multiple successive functions", async () => {
     interface TestDoc {
@@ -555,7 +554,7 @@ describe("Reopening a ledger with indexes", function () {
   let db: Database;
   let idx: Index<string, Doc>;
   let didMap: boolean;
-  let mapFn: MapFn<Doc>;
+  let mapFn: MapFn<Doc, Doc>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -581,29 +580,26 @@ describe("Reopening a ledger with indexes", function () {
     expect(doc.foo).toBe("bar");
     const idx2 = index<string, Doc>(db, "foo");
     expect(idx2).toBe(idx);
-    const result = await idx2.query();
-    expect(result).toBeTruthy();
-    expect(result.rows).toBeTruthy();
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].key).toBe("bar");
+    const rows = await idx2.query().toArray();
+    expect(rows).toBeTruthy();
+    expect(rows.length).toBe(1);
+    expect(rows[0].key).toBe("bar");
     expect(didMap).toBeTruthy();
   });
 
   it("should reuse the index", async () => {
     const idx2 = index(db, "foo", mapFn);
     expect(idx2).toBe(idx);
-    const result = await idx2.query();
-    expect(result).toBeTruthy();
-    expect(result.rows).toBeTruthy();
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].key).toBe("bar");
+    const rows = await idx2.query().toArray();
+    expect(rows).toBeTruthy();
+    expect(rows.length).toBe(1);
+    expect(rows[0].key).toBe("bar");
     expect(didMap).toBeTruthy();
     didMap = false;
-    const r2 = await idx2.query();
+    const r2 = await idx2.query().toArray();
     expect(r2).toBeTruthy();
-    expect(r2.rows).toBeTruthy();
-    expect(r2.rows.length).toBe(1);
-    expect(r2.rows[0].key).toBe("bar");
+    expect(r2.length).toBe(1);
+    expect(r2[0].key).toBe("bar");
     expect(didMap).toBeFalsy();
   });
 
@@ -617,11 +613,10 @@ describe("Reopening a ledger with indexes", function () {
   });
 
   it("should have the same data on reopen after a query", async () => {
-    const r0 = await idx.query();
+    const r0 = await idx.query().toArray();
     expect(r0).toBeTruthy();
-    expect(r0.rows).toBeTruthy();
-    expect(r0.rows.length).toBe(1);
-    expect(r0.rows[0].key).toBe("bar");
+    expect(r0.length).toBe(1);
+    expect(r0[0].key).toBe("bar");
 
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
