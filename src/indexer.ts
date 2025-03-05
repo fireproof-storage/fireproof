@@ -200,7 +200,15 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
     return {
       snapshot: (sinceOpts) => this.#snapshot(qryOpts, sinceOpts, { waitFor }),
-      subscribe: (callback) => this.#subscribe(qryOpts, callback),
+      subscribe: (callback) =>
+        this.#subscribe(qryOpts, async (arg) => {
+          callback(arg);
+
+          // NOTE: Sometimes this chain of operations freezes when run in parallel,
+          //       hence the reason why we not execute the callback afterwards.
+          await this._updateIndex();
+          await this._hydrateIndex();
+        }),
       toArray: (sinceOpts) => arrayFromAsyncIterable(this.#snapshot(qryOpts, sinceOpts, { waitFor })),
 
       live(opts?: { since?: ClockHead }) {
@@ -306,10 +314,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     callback: ((row: Row<K, R>) => void) | ((row: DocumentRow<K, T, R>) => void),
   ): () => void {
     // NOTE: Despite using onTick or onTock, it always loads the document (update).
-    const unsubscribe = this.crdt.clock.onTick(async (updates: DocUpdate<NonNullable<unknown>>[]) => {
-      await this._updateIndex();
-      await this._hydrateIndex();
-
+    const unsubscribe = this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
       const mapFn = this.mapFn?.bind(this);
       if (!mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
 
@@ -378,6 +383,11 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (isClosed) return;
           controller.enqueue({ row, marker: { kind: "new" } });
         });
+      },
+
+      async pull() {
+        await updateIndex();
+        await hydrateIndex();
       },
 
       cancel() {
