@@ -43,18 +43,24 @@ it("esm.sh", async () => {
 import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
 
 console.log("window-js", window.FP_VERSION)
+console.log("Fireproof module type:", typeof fireproof)
 function invariant(cond, message) {
   if (!cond) {
     throw new Error(message)
   }
 }
 async function action(label, run) {
+  console.log("Starting action run:", run)
   const db = fireproof("esm-test");
+  console.log("DB created for run:", run)
   const ok = await db.put({ sort: Math.random(), test: "esm-success" });
+  console.log("First doc put result:", ok.id)
 
   const beforeAll = await db.allDocs()
+  console.log("beforeAll count:", beforeAll.rows.length)
   await db.put({ foo: 1 })
   const afterAll = await db.allDocs()
+  console.log("afterAll count:", afterAll.rows.length)
 
   invariant(
      afterAll.rows.length == beforeAll.rows.length + 1,
@@ -62,18 +68,24 @@ async function action(label, run) {
   )
 
   const res = await db.get(ok.id)
+  console.log("Get result:", res.test)
   label.innerHTML = [run,res.test].join(' - ')
   await db.close()
+  console.log("Completed action run:", run)
 }
 
 async function main() {
+  console.log("Starting main function")
   const label = document.querySelector('label')
   for (let i = 0; i < 10; i++) {
     await action(label, i)
   }
   label.setAttribute("data-ready", "");
+  console.log("Main function complete")
 }
-main().catch(console.error)
+main().catch(e => {
+  console.error("Main function error:", e)
+})
 `;
   script.type = "module";
   document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
