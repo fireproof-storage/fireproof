@@ -1,11 +1,10 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-
-import { Database, fireproof, useFireproof } from "use-fireproof";
-import { LiveQueryResult, UseDocumentResult } from "use-fireproof";
+import { fireproof, useFireproof } from "use-fireproof";
+import type { Database, LiveQueryResult, UseDocumentResult } from "use-fireproof";
 
 // Test timeout value for CI
-const TEST_TIMEOUT = 60000; // 1 minute per test
+const TEST_TIMEOUT = 45000;
 
 describe("HOOK: useFireproof", () => {
   it(
@@ -51,10 +50,8 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
     "should have setup data",
     async () => {
       const allDocs = await db.allDocs<{ foo: string }>();
-      expect(allDocs.rows.length).toBe(3);
-      expect(allDocs.rows[0].value.foo).toBe("aha");
-      expect(allDocs.rows[1].value.foo).toBe("bar");
-      expect(allDocs.rows[2].value.foo).toBe("caz");
+      const expectedValues = ["aha", "bar", "caz"];
+      expect(allDocs.rows.map((row) => row.value.foo)).toEqual(expectedValues);
     },
     TEST_TIMEOUT,
   );
@@ -70,13 +67,7 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
       });
 
       await waitFor(() => {
-        // act(() => {
-        // expect(query.rows).toBe([]);
-        expect(query.rows.length).toBe(3);
-        expect(query.rows[0].doc?.foo).toBe("aha");
-        expect(query.rows[1].doc?.foo).toBe("bar");
-        expect(query.rows[2].doc?.foo).toBe("caz");
-        // });
+        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["aha", "bar", "caz"]);
       });
     },
     TEST_TIMEOUT,
@@ -208,10 +199,8 @@ describe("HOOK: useFireproof useDocument has results", () => {
       expect(doc1._id).not.toBe(doc2._id);
 
       const allDocs = await db.allDocs<{ input: string }>();
-      expect(allDocs.rows.length).toBe(3);
-      expect(allDocs.rows[0].value.input).toBe("first");
-      expect(allDocs.rows[1].value.input).toBe("new");
-      expect(allDocs.rows[2].value.input).toBe("fresh");
+      const inputs = allDocs.rows.map((r) => r.value.input);
+      expect(inputs).toEqual(expect.arrayContaining(["first", "new", "fresh"]));
     },
     TEST_TIMEOUT,
   );

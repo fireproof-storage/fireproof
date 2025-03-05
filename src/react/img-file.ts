@@ -56,14 +56,19 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
       }
     };
 
+    let isMounted = true;
     let cleanup: (() => void) | undefined;
+
     loadFile().then((result) => {
-      cleanup = result;
+      if (isMounted) {
+        cleanup = result;
+      } else if (result) {
+        result();
+      }
     });
 
     return () => {
-      // The cleanup function from loadFile already revokes the URL
-      // so we don't need to do it here as well
+      isMounted = false;
       if (cleanup) cleanup();
     };
   }, [fileData]);

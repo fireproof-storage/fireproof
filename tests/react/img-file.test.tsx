@@ -155,7 +155,13 @@ describe("COMPONENT: ImgFile", () => {
       );
 
       // Wait a bit to ensure any async operations complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await waitFor(
+        () => {
+          // Verify that createObjectURL was called (or not called)
+          expect(window.URL.createObjectURL).toHaveBeenCalledTimes(0);
+        },
+        { timeout: 1000 },
+      );
 
       const img = container.querySelector("img");
       expect(img).toBeNull();
