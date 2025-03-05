@@ -27,18 +27,11 @@ it("esm.sh", async () => {
     // eslint-disable-next-line no-console
     console.log("Server ping:", await fetch(serverUrl).then((r) => r.status));
     // eslint-disable-next-line no-console
-    console.log(
-      "Package ping:",
-      await fetch(moduleUrl).then(
-        (r) => ({ status: r.status, ok: r.ok, statusText: r.statusText }),
-      ),
-    );
+    console.log("Package ping:", await fetch(moduleUrl).then((r) => ({ status: r.status, ok: r.ok, statusText: r.statusText })));
     // eslint-disable-next-line no-console
     console.log(
       "use-fireproof ping:",
-      await fetch(useFireproofUrl).then(
-        (r) => ({ status: r.status, ok: r.ok, statusText: r.statusText }),
-      ),
+      await fetch(useFireproofUrl).then((r) => ({ status: r.status, ok: r.ok, statusText: r.statusText })),
     );
   } catch (e) {
     // eslint-disable-next-line no-console
