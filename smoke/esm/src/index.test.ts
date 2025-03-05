@@ -9,20 +9,30 @@ it("esm.sh", async () => {
   console.log("FP_DEBUG", (window as unknown as { FP_DEBUG: string }).FP_DEBUG);
   // eslint-disable-next-line no-console
   console.log("FP_STACK", (window as unknown as { FP_STACK: string }).FP_STACK);
-  
+
   // Check server connectivity
   try {
     // eslint-disable-next-line no-console
-    console.log("Server ping:", await fetch("http://localhost:4874/").then(r => r.status));
+    console.log("Server ping:", await fetch("http://localhost:4874/").then((r) => r.status));
     // eslint-disable-next-line no-console
-    console.log("Package ping:", await fetch(`http://localhost:4874/@fireproof/core@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts`).then(r => r.status));
+    console.log(
+      "Package ping:",
+      await fetch(`http://localhost:4874/@fireproof/core@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts`).then(
+        (r) => r.status,
+      ),
+    );
     // eslint-disable-next-line no-console
-    console.log("use-fireproof ping:", await fetch(`http://localhost:4874/use-fireproof@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts`).then(r => r.status));
+    console.log(
+      "use-fireproof ping:",
+      await fetch(`http://localhost:4874/use-fireproof@${(window as unknown as { FP_VERSION: string }).FP_VERSION}?no-dts`).then(
+        (r) => r.status,
+      ),
+    );
   } catch (e) {
     // eslint-disable-next-line no-console
     console.log("Server error:", e);
   }
-  
+
   // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
   // // console.log("window-res", await res.text());
   // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
