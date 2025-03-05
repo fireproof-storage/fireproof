@@ -25,7 +25,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-          version: 9
+          version: 10
           cache: "pnpm"
 
       - name: smoke-esm-cache
