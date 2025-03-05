@@ -310,8 +310,8 @@ export class CRDTImpl implements CRDT {
   }
 
   changes<K extends IndexKeyType, R extends DocFragment>(
-    since?: ClockHead,
-    opts?: ChangesOptions & { withDocs: false },
+    since: ClockHead,
+    opts: ChangesOptions & { withDocs: false },
   ): AsyncGenerator<Row<K, R>>;
   changes<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
     since?: ClockHead,

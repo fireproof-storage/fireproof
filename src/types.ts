@@ -377,7 +377,7 @@ export interface BulkResponse {
   readonly name?: string;
 }
 
-export type UpdateListenerFn<T extends DocTypes> = (doc: DocWithId<T>) => Promise<void> | void;
+export type UpdateListenerFn<T extends DocTypes> = (docs: DocWithId<T>[]) => Promise<void> | void;
 export type NoUpdateListenerFn = () => Promise<void> | void;
 export type ListenerFn<T extends DocTypes> = UpdateListenerFn<T> | NoUpdateListenerFn;
 
@@ -481,8 +481,8 @@ export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRD
   ): AsyncGenerator<Row<K, R>> | AsyncGenerator<DocumentRow<K, T, R>>;
 
   changes<K extends IndexKeyType, R extends DocFragment>(
-    since?: ClockHead,
-    opts?: ChangesOptions & { withDocs: false },
+    since: ClockHead,
+    opts: ChangesOptions & { withDocs: false },
   ): AsyncGenerator<Row<K, R>>;
   changes<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
     since?: ClockHead,
@@ -603,7 +603,7 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   }>;
 
   get clock(): ClockHead;
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>): () => void;
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
 
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T, R>,

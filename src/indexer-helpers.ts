@@ -35,6 +35,7 @@ import {
 import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { Logger } from "@adviser/cement";
 import { clockChangesSince } from "./crdt-helpers.js";
+import { arrayFromAsyncIterable } from "use-fireproof";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
@@ -96,7 +97,7 @@ export function indexEntriesForRows<K extends IndexKeyType, T extends DocTypes, 
 
     if (!mapCalled && mapReturn) {
       indexEntries.push({
-        key: [charwise.encode(mapReturn) as K, r.key[1]],
+        key: [charwise.encode(mapReturn) as K, r.id],
         value: null as R,
       });
     }
@@ -199,11 +200,15 @@ export async function* applyQuery<K extends IndexKeyType, T extends DocTypes, R 
   query: QueryOpts<K> & { since?: ClockHead; sinceOptions?: ChangesOptions },
 ): AsyncGenerator<IndexRow<K, T, R>> {
   async function* _apply() {
-    let result = [...resp.result];
+    let result = resp.result.map((r) => ({
+      key: charwise.decode(r.key),
+      value: r.value,
+      id: r.id,
+    }));
 
     if (query.since) {
       const gen = clockChangesSince(crdt.blockstore, crdt.clock.head, query.since, query.sinceOptions || {}, logger);
-      const ids = await Array.fromAsync(gen)
+      const ids = await arrayFromAsyncIterable(gen)
         .then((arr) => arr.map((a) => a.id))
         .then((arr) => new Set(arr));
       result = result.reduce((acc: ProllyIndexRow<K, R>[], row) => {
@@ -227,7 +232,10 @@ export async function* applyQuery<K extends IndexKeyType, T extends DocTypes, R 
       for (const res of result) {
         yield crdt.get(res.id).then((val) => {
           if (!val) return undefined;
-          const row: IndexRow<K, T, R> = { ...res, doc: val.doc as DocWithId<T> };
+          const row: IndexRow<K, T, R> = {
+            ...res,
+            doc: val.doc as DocWithId<T>,
+          };
           return row;
         });
       }
