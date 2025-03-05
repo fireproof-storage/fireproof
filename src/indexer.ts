@@ -193,7 +193,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
   }
 
-  query(qryOpts?: QueryOpts<K> & { excludeDocs: true }, intlOpts?: { waitFor?: Promise<unknown> }): InquiryResponse<K, R>;
+  query(qryOpts: QueryOpts<K> & { excludeDocs: true }, intlOpts?: { waitFor?: Promise<unknown> }): InquiryResponse<K, R>;
   query(qryOpts?: QueryOpts<K>, intlOpts?: { waitFor?: Promise<unknown> }): QueryResponse<K, T, R>;
   query(qryOpts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<K, T, R> {
     const stream = this.#stream.bind(this);

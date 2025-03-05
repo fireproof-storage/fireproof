@@ -34,6 +34,7 @@ import {
   DocFragment,
   Row,
   DocumentRow,
+  IndexKey,
 } from "./types.js";
 import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
@@ -314,7 +315,11 @@ export async function* clockUpdatesSinceWithDoc<K extends IndexKeyType, T extend
 ): AsyncGenerator<DocumentRow<K, T, R> & { clock: ClockLink }> {
   for await (const { id, clock, docLink } of clockChangesSince(blocks, head, since, opts, logger, allowedKeys)) {
     const { doc } = await getValueFromLink<T>(blocks, docLink, logger);
-    yield { id, key: [charwise.encode(id) as K, id], doc, value: docValues<T, R>(doc) as R, clock };
+    const key: IndexKey<K> = [charwise.encode(id) as K, id];
+
+    // NOTE: Technically not correct, probably best to remove when removing the old top-level API.
+    if (!doc) yield { id, key, doc: { _id: id, _deleted: true } as DocWithId<T>, value: [] as R, clock };
+    else yield { id, key, doc, value: docValues<T, R>(doc) as R, clock };
   }
 }
 
