@@ -1,10 +1,10 @@
-import { verifyToken } from "@clerk/backend";
-import { SuperThis, Result, ensureSuperThis, ensureLogger } from "use-fireproof";
-import { FPApiToken, FPApiSQL, FPAPIMsg } from "./api.ts";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { ClerkClaim, VerifiedAuth } from "./users.ts";
 // import { auth } from "./better-auth.ts";
 import { URI } from "@adviser/cement";
+import { verifyToken } from "@clerk/backend";
+import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import { Result, SuperThis, ensureLogger, ensureSuperThis } from "use-fireproof";
+import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
+import { VerifiedAuth } from "./users.ts";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -99,6 +99,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
     // better: new BetterApiToken(sthis),
   });
   return async (req: Request): Promise<Response> => {
+    const startTime = performance.now();
     const uri = URI.from(req.url);
     // if (uri.pathname.startsWith("/api/auth/")) {
     //   const res = await auth.handler(req);
@@ -177,27 +178,51 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
       // console.log("Response", rRes);
       if (rRes.isErr()) {
         logger.Error().Any({ request: jso.type }).Err(rRes).Msg("Result-Error");
+        const endTime = performance.now();
+        const duration = endTime - startTime;
         return new Response(
           JSON.stringify({
             type: "error",
             message: rRes.Err().message,
           }),
-          { status: 500, headers: CORS },
+          {
+            status: 500,
+            headers: {
+              ...CORS,
+              "Server-Timing": `total;dur=${duration.toFixed(2)}`,
+            },
+          },
         );
       }
       logger
         .Info()
         .Any({ request: jso.type, response: (rRes.Ok() as { type: string }).type })
         .Msg("Success");
-      return new Response(JSON.stringify(rRes.Ok()), { status: 200, headers: CORS });
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      return new Response(JSON.stringify(rRes.Ok()), {
+        status: 200,
+        headers: {
+          ...CORS,
+          "Server-Timing": `total;dur=${duration.toFixed(2)}`,
+        },
+      });
     } catch (e) {
       logger.Error().Any({ request: jso.type }).Err(e).Msg("Error");
+      const endTime = performance.now();
+      const duration = endTime - startTime;
       return new Response(
         JSON.stringify({
           type: "error",
           message: (e as Error).message,
         }),
-        { status: 500, headers: CORS },
+        {
+          status: 500,
+          headers: {
+            ...CORS,
+            "Server-Timing": `total;dur=${duration.toFixed(2)}`,
+          },
+        },
       );
     }
   };
