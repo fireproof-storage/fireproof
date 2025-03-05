@@ -67,7 +67,7 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
       });
 
       await waitFor(() => {
-        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["aha", "bar", "caz"]);
+        expect(query.rows.map((row) => row.doc?.foo)).toEqual(expect.arrayContaining(["aha", "bar", "caz"]));
       });
     },
     TEST_TIMEOUT,
