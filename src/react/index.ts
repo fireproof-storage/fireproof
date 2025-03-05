@@ -19,5 +19,5 @@ export {
   /** @deprecated Use return values from useFireproof('dbname') instead. Top level usage will be removed in future versions. */
   useChanges,
 } from "./useChanges.js";
-// why is this there is should be a package system
-// export * from "@fireproof/core";
+
+export { ImgFile } from "./img-file.js";
