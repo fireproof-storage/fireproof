@@ -62,7 +62,7 @@ do
      node $projectRoot/smoke/patch-fp-version.js package.json $(cat $projectRoot/dist/fp-version)
      cat .npmrc &&
      cat package.json &&
-     pnpm publish --registry=http://localhost:4873 --no-git-checks)
+     pnpm publish --registry=http://localhost:4873 --no-git-checks --tag smoke)
 done
 
 curl -L "http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version)" > /dev/null &
