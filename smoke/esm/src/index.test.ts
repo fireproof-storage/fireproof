@@ -62,7 +62,7 @@ try {
   console.log("Testing basic module import");
   
   // Then try the actual import
-  import { fireproof } from 'http://localhost:4874/@fireproof/core@${fpVersion}?no-dts'
+  const module = await import("http://localhost:4874/@fireproof/core@${fpVersion}?no-dts")
   .then(module => {
     console.log("window-js", window.FP_VERSION);
     console.log("Fireproof module type:", typeof module.fireproof);
