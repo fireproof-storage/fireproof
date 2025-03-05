@@ -18,6 +18,6 @@ export default defineConfig({
     },
     isolate: false,
     testTimeout: 30_000,
-    setupFiles: "./setup.js"
+    setupFiles: "./setup.js",
   },
 });
