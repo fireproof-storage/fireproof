@@ -149,9 +149,7 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
   opts: StaticProllyOptions<CT>,
 ): Promise<IndexTree<K, T>> {
   logger.Debug().Msg("enter bulkIndex");
-  console.log("🚛", indexEntries);
   if (!indexEntries.length) return inIndex;
-  console.log("🚜", inIndex);
   if (!inIndex.root) {
     if (!inIndex.cid) {
       let returnRootBlock: Block | undefined = undefined;

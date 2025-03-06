@@ -413,7 +413,6 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   async _updateIndex(): Promise<IndexTransactionMeta> {
     await this.ready();
     this.logger.Debug().Msg("enter _updateIndex");
-    console.log("📣 UPDATE INDEX");
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
     let rows: DocumentRow<K, T, R>[];
