@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ImgHTMLAttributes } from "react";
 import { DocFileMeta } from "use-fireproof";
 
-const { URL } = window;
+const { URL } = globalThis;
 
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
