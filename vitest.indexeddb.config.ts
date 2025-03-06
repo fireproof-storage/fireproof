@@ -15,6 +15,7 @@ export default defineConfig({
       enabled: true,
       headless: true,
       provider: "webdriverio",
+      name: "chrome",
       instances: [
         {
           browser: "chrome",
