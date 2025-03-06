@@ -175,7 +175,7 @@ describe("CRDT with a multi-write", function () {
       { id: "jack", value: { points: 10 } },
     ]);
     expect(secondPut.head).toBeTruthy();
-    const it2 = crdt.changes<IndexKeyType, CRDTTestType>();
+    const it2 = crdt.changes<IndexKeyType, CRDTTestType, DocFragment>();
     const r2 = await arrayFromAsyncIterable(it2);
     const h2 = crdt.clock.head;
     expect(r2.length).toBe(4);
