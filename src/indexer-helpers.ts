@@ -88,10 +88,10 @@ export function indexEntriesForRows<K extends IndexKeyType, T extends DocTypes, 
 
     const mapReturn = mapFn(r.doc, (k: IndexKeyType, v?: R) => {
       mapCalled = true;
-      if (k === undefined || v === undefined) return;
+      if (k === undefined) return;
       indexEntries.push({
-        key: r.key,
-        value: v as R,
+        key: [charwise.encode(k) as K, r.id],
+        value: v === undefined ? (null as R) : (v as R),
       });
     });
 
@@ -149,7 +149,9 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
   opts: StaticProllyOptions<CT>,
 ): Promise<IndexTree<K, T>> {
   logger.Debug().Msg("enter bulkIndex");
+  console.log("🚛", indexEntries);
   if (!indexEntries.length) return inIndex;
+  console.log("🚜", inIndex);
   if (!inIndex.root) {
     if (!inIndex.cid) {
       let returnRootBlock: Block | undefined = undefined;
