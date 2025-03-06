@@ -31,7 +31,7 @@ export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R e
 }
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
-  mapFn: string | MapFn<T>,
+  mapFn: string | MapFn<T, R>,
   query?: QueryOpts<K>,
   initialRows?: IndexRow<K, T, R>[],
 ) => LiveQueryResult<T, K, R>;
@@ -333,7 +333,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
   }
 
   function useLiveQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
-    mapFn: MapFn<T> | string,
+    mapFn: MapFn<T, R> | string,
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
