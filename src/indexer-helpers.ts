@@ -35,7 +35,7 @@ import {
 import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { Logger } from "@adviser/cement";
 import { clockChangesSince } from "./crdt-helpers.js";
-import { arrayFromAsyncIterable } from "use-fireproof";
+import { arrayFromAsyncIterable } from "./utils.js";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
