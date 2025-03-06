@@ -88,14 +88,14 @@ export function indexEntriesForRows<K extends IndexKeyType, T extends DocTypes, 
 
     const mapReturn = mapFn(r.doc, (k: IndexKeyType, v?: R) => {
       mapCalled = true;
-      if (typeof k === "undefined") return;
+      if (k === undefined || v === undefined) return;
       indexEntries.push({
         key: r.key,
-        value: (v || null) as R,
+        value: v as R,
       });
     });
 
-    if (!mapCalled && mapReturn) {
+    if (!mapCalled && mapReturn !== undefined) {
       indexEntries.push({
         key: [charwise.encode(mapReturn) as K, r.id],
         value: null as R,
@@ -112,17 +112,17 @@ export function indexEntriesForChanges<K extends IndexKeyType, T extends DocType
 ): IndexDoc<K, R>[] {
   const indexEntries: IndexDoc<K, R>[] = [];
   changes.forEach(({ id: key, value, del }) => {
-    if (del || !value) return;
+    if (del || value === undefined) return;
     let mapCalled = false;
     const mapReturn = mapFn({ ...value, _id: key }, (k: IndexKeyType, v?: R) => {
       mapCalled = true;
-      if (typeof k === "undefined") return;
+      if (k === undefined) return;
       indexEntries.push({
         key: [charwise.encode(k) as K, key],
-        value: (v || null) as R,
+        value: v as R,
       });
     });
-    if (!mapCalled && typeof mapReturn !== "undefined") {
+    if (!mapCalled && mapReturn !== undefined) {
       indexEntries.push({
         key: [charwise.encode(mapReturn) as K, key],
         value: null as R,
