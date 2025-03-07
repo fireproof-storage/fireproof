@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
-import { EditableCodeHighlight } from "../../../../../components/CodeHighlight.tsx";
 import { Button } from "../../../../../components/Button.tsx";
+import { EditableCodeHighlight } from "../../../../../components/CodeHighlight.tsx";
 
 export function NewLedgerDocument() {
   const { tenantId, ledgerId } = useParams();
@@ -37,8 +37,7 @@ export function NewLedgerDocument() {
       <div className="flex gap-[14px] justify-end mt-[14px] mb-[32px]">
         <Button
           variation="secondary"
-          tag={Link}
-          to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`}
+          onClick={() => navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`)}
           style="min-w-[105px]"
         >
           Back

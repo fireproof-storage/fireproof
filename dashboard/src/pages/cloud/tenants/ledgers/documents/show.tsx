@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 import { Button } from "../../../../../components/Button.tsx";
 import { CodeHighlight, EditableCodeHighlight } from "../../../../../components/CodeHighlight.tsx";
@@ -49,8 +49,7 @@ export function ShowLedgerDocument() {
       <div className="flex gap-[14px] justify-end mt-[14px] mb-[32px]">
         <Button
           variation="secondary"
-          tag={Link}
-          to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`}
+          onClick={() => navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`)}
           style="min-w-[105px]"
         >
           Back
@@ -76,8 +75,8 @@ export function ShowLedgerDocument() {
             />
           </svg>
           <div className="absolute bottom-10 right-[-120px] w-[240px] @[380px]:right-[-180px] @[560px]:bottom-7 @[560px]:left-5 @[560px]:w-[360px] @[380px]:w-[280px] px-5 py-3.5 bg-fp-bg-00 border border-fp-dec-01 text-14 text-fp-s rounded-fp-s hidden group-hover:block">
-            <span className="text-14-bold text-fp-a-03">The document _id</span> is unique within a ledger, and assigned randomly.
-            Use it to specify which record to update.
+            <span className="text-14-bold text-fp-a-03">_id</span> is unique within a ledger, and assigned randomly. Use it to
+            specify which record to update.
           </div>
         </div>
       </div>
