@@ -19,7 +19,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-          version: 9
+          version: 10
           cache: "pnpm"
 
       - name: install
@@ -38,3 +38,14 @@ jobs:
         run: |
           pnpm run drizzle:libsql
           pnpm run test
+
+      - name: Build & Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: deploy to preview
+        run: |
+          pnpm run build 
+          pnpm run deploy:cf

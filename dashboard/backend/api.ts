@@ -604,7 +604,9 @@ export class FPApiSQL implements FPApiInterface {
   }
 
   private async _authVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
+    // console.log("_authVerify-1", req);
     const tokenApi = this.tokenApi[req.auth.type];
+    // console.log("_authVerify-2", req);
     if (!tokenApi) {
       return Result.Err(`invalid auth type:[${req.auth.type}]`);
     }
@@ -620,6 +622,7 @@ export class FPApiSQL implements FPApiInterface {
   }
 
   private async activeUser(req: WithAuth, status: UserStatus[] = ["active"]): Promise<Result<ActiveUser>> {
+    // console.log("activeUser-1", req);
     const rAuth = await this._authVerifyAuth(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
@@ -641,7 +644,9 @@ export class FPApiSQL implements FPApiInterface {
   }
 
   async ensureUser(req: ReqEnsureUser): Promise<Result<ResEnsureUser>> {
+    // console.log("ensureUser-1", req);
     const activeUser = await this.activeUser(req);
+    // console.log("ensureUser-2", req);
     if (activeUser.isErr()) {
       return Result.Err(activeUser.Err());
     }
@@ -2116,7 +2121,6 @@ export class FPApiSQL implements FPApiInterface {
     if (resListLedgers.isErr()) {
       return Result.Err(resListLedgers.Err());
     }
-
     const ctx = {
       secretToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_SECRET")!,
       validFor: parseInt(this.sthis.env.get("CLOUD_SESSION_TOKEN_VALID_FOR") ?? "3600000", 10),
@@ -2133,6 +2137,7 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     const privKey = await env2jwk(ctx.secretToken);
+    // console.log(">>>>-pre:", ctx, privKey, (privKey as any)[Symbol.toStringTag], privKey.constructor?.name)
     let validFor = ctx.validFor;
     if (!(0 <= validFor && validFor <= 3600000)) {
       validFor = 3600000;
@@ -2165,6 +2170,7 @@ export class FPApiSQL implements FPApiInterface {
       .setExpirationTime(Date.now() + validFor) // expiration time
       .sign(privKey);
 
+    // console.log(">>>>-post:", ctx, privKey)
     return Result.Ok({
       type: "resCloudSessionToken",
       token,

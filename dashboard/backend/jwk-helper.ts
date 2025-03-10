@@ -10,5 +10,6 @@ export async function jwk2env(jwk: CryptoKey): Promise<string> {
 export async function env2jwk(env: string): Promise<CryptoKey> {
   const txtDecoder = new TextDecoder();
   const inJWT = JSON.parse(txtDecoder.decode(base58btc.decode(env)));
+  // console.log(">>>>>", inJWT);
   return importJWK(inJWT, "ES256", { extractable: true }) as Promise<CryptoKey>;
 }

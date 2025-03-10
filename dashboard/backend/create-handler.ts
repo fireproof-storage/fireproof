@@ -1,10 +1,11 @@
 // import { auth } from "./better-auth.ts";
-import { URI } from "@adviser/cement";
+import { exception2Result, LoggerImpl, URI, utils } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { Result, SuperThis, ensureLogger, ensureSuperThis } from "use-fireproof";
+import { Falsy, Result, SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis } from "use-fireproof";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
 import { VerifiedAuth } from "./users.ts";
+import type { Env } from "./cf-serve.ts";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -39,15 +40,22 @@ class ClerkApiToken implements FPApiToken {
     this.sthis = sthis;
   }
   async verify(token: string): Promise<Result<VerifiedAuth>> {
-    const t = (await verifyToken(token, {
-      // audience: "http://localhost:5173",
-      // issuer: 'https://trusted-glowworm-5.clerk.accounts.dev',
-      secretKey: this.sthis.env.get("CLERK_SECRET_KEY"),
-    })) as unknown as ClerkTemplate;
-    if (!t) {
-      return Result.Err("Invalid token");
+    const secretKey = this.sthis.env.get("CLERK_SECRET_KEY");
+    if (!secretKey) {
+      return Result.Err("Invalid CLERK_SECRET_KEY");
+    }
+    const rt = await exception2Result(async () => {
+      return (await verifyToken(token, {
+        // audience: "http://localhost:5173",
+        // issuer: 'https://trusted-glowworm-5.clerk.accounts.dev',
+        secretKey,
+      })) as unknown as ClerkTemplate;
+    });
+    if (rt.isErr()) {
+      return Result.Err(rt.Err());
     }
     // console.log(t);
+    const t = rt.Ok();
     return Result.Ok({
       type: "clerk",
       token,
@@ -91,29 +99,42 @@ class ClerkApiToken implements FPApiToken {
 //   }
 // }
 
-export function createHandler<T extends LibSQLDatabase>(db: T) {
-  const sthis = ensureSuperThis();
+export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<string, string> | Env) {
+  const stream = new utils.ConsoleWriterStream();
+  const sthis = ensureSuperThis({
+    logger: new LoggerImpl(),
+  } as unknown as SuperThisOpts);
+  sthis.env.sets(env as unknown as Record<string, string>);
   const logger = ensureLogger(sthis, "createHandler");
   const fpApi = new FPApiSQL(sthis, db, {
     clerk: new ClerkApiToken(sthis),
     // better: new BetterApiToken(sthis),
   });
-  return async (req: Request): Promise<Response> => {
+  return async (req: Request): Promise<Response | Falsy> => {
     const startTime = performance.now();
-    const uri = URI.from(req.url);
-    // if (uri.pathname.startsWith("/api/auth/")) {
-    //   const res = await auth.handler(req);
-    //   // for (const [key, value] of Object.entries(CORS)) {
-    //   //   res.headers.set(key, value);
-    //   // }
-    //   console.log("Request", uri.pathname, res.status, res.statusText);
-    //   return res;
-    // }
-    const out = {} as {
-      ensureUserRef: unknown;
-      listTenantsByUser: unknown;
-    };
-    const jso = await req.json();
+    if (!["POST", "PUT"].includes(req.method)) {
+      return;
+    }
+    // const uri = URI.from(req.url);
+    // // if (uri.pathname.startsWith("/api/auth/")) {
+    // //   const res = await auth.handler(req);
+    // //   // for (const [key, value] of Object.entries(CORS)) {
+    // //   //   res.headers.set(key, value);
+    // //   // }
+    // //   console.log("Request", uri.pathname, res.status, res.statusText);
+    // //   return res;
+    // // }
+    // const out = {} as {
+    //   ensureUserRef: unknown;
+    //   listTenantsByUser: unknown;
+    // };
+    const rJso = await exception2Result(async () => await req.json());
+    if (rJso.isErr()) {
+      logger.Error().Err(rJso.Err()).Msg("Error");
+      return new Response("Invalid request", { status: 404, headers: CORS });
+    }
+    const jso = rJso.Ok();
+
     // console.log(jso);
     let res: Promise<Result<unknown>>;
     switch (true) {
