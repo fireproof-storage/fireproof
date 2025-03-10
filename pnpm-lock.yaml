@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.3.20
-        version: 0.3.20(typescript@5.7.3)
+        specifier: ~0.4.0
+        version: 0.4.0(typescript@5.7.3)
       '@fireproof/vendor':
         specifier: ~2.0.1
         version: 2.0.1
@@ -148,8 +148,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.3.20':
-    resolution: {integrity: sha512-G6YDbkmr17KAjqFwW7RC0VUha2cjlv/rojFxTrMj55Vwu4crcL3iwerP/RCpxyFZ8Sf9ypaOAX/PRuxmPoL5pw==}
+  '@adviser/cement@0.4.0':
+    resolution: {integrity: sha512-AH/bfC0nTA/aBEtrS1hjB4E04YgkoBl2/YN/ZFFpUWuPuACwUGqtAGxXvCjuI6hDkUqlFCWodrwZ7/sU09MbKA==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -3399,7 +3399,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.3.20(typescript@5.7.3)':
+  '@adviser/cement@0.4.0(typescript@5.7.3)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.7.3)
       yaml: 2.7.0
