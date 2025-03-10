@@ -4,7 +4,7 @@ import * as fs from "fs";
 
 function getLocalD1DB() {
   try {
-    const basePath = path.resolve("./backend/.wrangler");
+    const basePath = path.resolve("./.wrangler");
     const dbFile = fs.readdirSync(basePath, { encoding: "utf-8", recursive: true }).find((f) => f.endsWith(".sqlite"));
 
     if (!dbFile) {
@@ -12,6 +12,7 @@ function getLocalD1DB() {
     }
 
     const url = path.resolve(basePath, dbFile);
+    console.log("getLocalD1DB:", url);
     return url;
   } catch (err) {
     console.log(`Error  ${err.message}`);

@@ -10,7 +10,7 @@
     "prebackend:pages": "pnpm run build",
     "backend:pages": "wrangler pages dev ./dist/static --live-reload",
     "predeploy:cf": "pnpm run build",
-    "deploy:cf": "wrangler pages deploy ./dist/static  --commit-dirty=true",
+    "deploy:cf": "wrangler deploy",
     "build": "vite build",
     "build:tsc": "tsc",
     "lint": "eslint .",
@@ -18,11 +18,11 @@
     "test": "vitest --run",
     "format": "prettier .",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
-    "drizzle:d1-backend": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
-    "drizzle:d1-pages": "drizzle-kit push --config ./drizzle.d1-local-pages.config.ts"
+    "drizzle:d1-local": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
+    "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.d1-remote.config.ts"
   },
   "dependencies": {
-    "@adviser/cement": "^0.3.20",
+    "@adviser/cement": "^0.4.0",
     "@clerk/backend": "^1.22.0",
     "@clerk/clerk-js": "^5.40.0",
     "@clerk/clerk-react": "^5.19.0",
@@ -35,7 +35,7 @@
     "drizzle-orm": "^0.38.3",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
-    "jose": "^6.0.6",
+    "jose": "^6.0.8",
     "multiformats": "^13.3.2",
     "partysocket": "^1.0.2",
     "react": "^18.3.1",
@@ -48,6 +48,7 @@
     "vitest": "^3.0.6"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^0.1.9",
     "@cloudflare/workers-types": "^4.20250109.0",
     "@eslint/js": "^9.16.0",
     "@rollup/plugin-replace": "^6.0.1",
@@ -69,6 +70,6 @@
     "rollup-plugin-visualizer": "^5.14.0",
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.3",
-    "vite": "^6.0.3"
+    "vite": "^6.1.0"
   }
 }

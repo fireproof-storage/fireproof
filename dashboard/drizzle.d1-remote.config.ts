@@ -8,7 +8,7 @@ config({ path: ".env.local" });
 export default defineConfig({
   dialect: "sqlite",
   schema: "./backend/db-api-schema.ts",
-  out: "./dist",
+  out: "./backend/migrations/d1-remote",
   driver: "d1-http",
   tablesFilter: ["/^(?!.*_cf_KV).*$/"],
   dbCredentials: {
