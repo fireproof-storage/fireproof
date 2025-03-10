@@ -92,10 +92,10 @@
     "@ipld/unixfs": "^3.0.0",
     "@web3-storage/pail": "^0.6.0",
     "cborg": "^4.2.8",
-    "ipfs-unixfs-exporter": "^13.6.2",
     "charwise": "^3.0.1",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.2",
+    "ipfs-unixfs-exporter": "^13.6.2",
     "multiformats": "^13.3.2",
     "p-limit": "^6.2.0",
     "p-map": "^7.0.3",
@@ -111,6 +111,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "esbuild",
       "msw"
     ]
   }
