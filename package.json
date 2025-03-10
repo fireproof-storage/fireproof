@@ -72,7 +72,7 @@
     "uuidv7": "^1.0.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.7",
-    "webdriverio": "^9.10.1",
+    "webdriverio": "^9.11.0",
     "zx": "^8.4.0"
   },
   "repository": {
