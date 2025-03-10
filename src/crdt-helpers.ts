@@ -43,12 +43,10 @@ import { CarTransactionImpl } from "./blockstore/transaction.js";
 // @ts-expect-error "charwise" has no types
 import charwise from "charwise";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(_tag: string) {
   // console.time(tag)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function timeEnd(_tag: string) {
   // console.timeEnd(tag)
 }

@@ -43,6 +43,7 @@ import {
   DocFragment,
   Row,
   DocumentRow,
+  QueryOpts,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
@@ -180,10 +181,13 @@ export class CRDTImpl implements CRDT {
   /**
    * Retrieve the current set of documents.
    */
-  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>({
-    waitFor,
-  }: { waitFor?: Promise<unknown> } = {}): QueryResponse<K, T, R> {
+  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    qryOpts: QueryOpts<K>,
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ): QueryResponse<K, T, R> {
     const stream = this.#stream.bind(this);
+
+    // TODO: Take `qryOpts` in account
 
     return {
       snapshot: (sinceOpts) => this.#snapshot<K, T, R>(sinceOpts, { waitFor }),

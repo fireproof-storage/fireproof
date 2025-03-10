@@ -199,7 +199,7 @@ export class DatabaseImpl implements Database {
     const opts = b ? b : typeof a === "object" ? a : {};
 
     if (!field) {
-      return this.ledger.crdt.allDocs<K, T, R>({ waitFor: this.ready() });
+      return this.ledger.crdt.allDocs<K, T, R>(opts, { waitFor: this.ready() });
     }
 
     const idx = typeof field === "string" ? index<K, T, R>(this, field) : index<K, T, R>(this, makeName(field.toString()), field);

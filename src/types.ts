@@ -468,11 +468,14 @@ export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRD
   getBlock(cidString: string): Promise<Block>;
   get(key: string): Promise<DocValue<DocTypes> | Falsy>;
   compact(): Promise<void>;
-  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>({
-    waitFor,
-  }: {
-    waitFor?: Promise<unknown>;
-  }): QueryResponse<K, T, R>;
+  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
+    qryOpts: QueryOpts<K>,
+    {
+      waitFor,
+    }: {
+      waitFor?: Promise<unknown>;
+    },
+  ): QueryResponse<K, T, R>;
 
   all<K extends IndexKeyType, R extends DocFragment>(withDocs: false): AsyncGenerator<Row<K, R>>;
   all<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(withDocs?: true): AsyncGenerator<DocumentRow<K, T, R>>;
