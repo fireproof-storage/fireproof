@@ -6,6 +6,7 @@ jobs:
   quality-checks:
     name: Testit Runit Buildit
     runs-on: ubuntu-24.04
+    environment: dev
     steps:
       - uses: actions/checkout@v4
         #with:
