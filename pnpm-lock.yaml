@@ -112,7 +112,7 @@ importers:
         specifier: ^7.7.1
         version: 7.7.2
       tsup:
-        specifier: ^8.3.6
+        specifier: ^8.4.0
         version: 8.5.0(jiti@1.21.7)(postcss@8.5.4)(tsx@4.19.3)(typescript@5.8.3)(yaml@2.8.0)
       tsx:
         specifier: ^4.19.3
@@ -7250,9 +7250,9 @@ packages:
       rollup:
         optional: true
 
-  rollup@3.29.5:
-    resolution: {integrity: sha512-GVsDdsbJzzy4S/v3dqWPJ7EfvZJfCHiDqe80IyrF59LYuP+e6U1LJoUqeuqRbwAWoMNoXivMNeNAOf5E22VA1w==}
-    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
+  rollup@4.35.0:
+    resolution: {integrity: sha512-kg6oI4g+vc41vePJyO6dHt/yl0Rz3Thv0kJeVQ3D1kS3E5XSuKbPc29G4IpT/Kv1KQwgHVcN+HtyS+HYLNSvQg==}
+    engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
   rollup@4.42.0:
@@ -9605,8 +9605,8 @@ snapshots:
     dependencies:
       ajv: 6.12.6
       debug: 4.4.1
-      espree: 9.6.1
-      globals: 13.24.0
+      espree: 10.3.0
+      globals: 14.0.0
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 4.1.0
@@ -15592,9 +15592,9 @@ snapshots:
     optionalDependencies:
       rollup: 4.42.0
 
-  rollup@3.29.5:
-    optionalDependencies:
-      fsevents: 2.3.3
+  rollup@4.35.0:
+    dependencies:
+      glob: 7.2.3
 
   rollup@4.42.0:
     dependencies:
@@ -16654,9 +16654,9 @@ snapshots:
 
   vite@4.5.14(@types/node@22.15.30)(terser@5.41.0):
     dependencies:
-      esbuild: 0.18.20
+      esbuild: 0.24.2
       postcss: 8.5.4
-      rollup: 3.29.5
+      rollup: 4.35.0
     optionalDependencies:
       '@types/node': 22.15.30
       fsevents: 2.3.3
