@@ -243,14 +243,14 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
               },
             },
             fileMeta.cid,
-            fileMeta
+            fileMeta,
           );
-          
+
           if (result.isErr()) {
             blocks.logger.Error().Any("error", result.Err()).Any("cid", fileMeta.cid).Msg("Error decoding file");
             return new File([], "file", { type: fileMeta.type });
           }
-          
+
           return result.unwrap();
         };
       }
