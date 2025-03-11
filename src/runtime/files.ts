@@ -75,10 +75,12 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
     const data = raw.decode(bytes);
 
     // Create File object with the original file metadata
-    return Result.Ok(new File([data], "file", {
-      type: meta.type,
-      lastModified: 0,
-    }));
+    return Result.Ok(
+      new File([data], "file", {
+        type: meta.type,
+        lastModified: 0,
+      }),
+    );
   } catch (error) {
     return Result.Err(error as Error);
   }
