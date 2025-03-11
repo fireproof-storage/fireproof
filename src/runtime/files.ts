@@ -1,78 +1,85 @@
-import * as UnixFS from "@ipld/unixfs";
 import * as raw from "multiformats/codecs/raw";
-import { withMaxChunkSize } from "@ipld/unixfs/file/chunker/fixed";
-import { withWidth } from "@ipld/unixfs/file/layout/balanced";
-
-import type { View } from "@ipld/unixfs";
 import { DocFileMeta } from "../types.js";
-
-import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
 import { BlobLike, AnyLink, AnyBlock } from "../blockstore/index.js";
+import { CID } from "multiformats/cid";
+import { sha256 as hasher } from "multiformats/hashes/sha2";
 
-const queuingStrategy = UnixFS.withCapacity();
+/**
+ * Simple implementation to replace UnixFS file handling
+ * Convert a blob to a Uint8Array
+ */
+async function blobToUint8Array(blob: BlobLike): Promise<Uint8Array> {
+  // Use File.arrayBuffer() if available, or stream the blob
+  if ("arrayBuffer" in blob) {
+    const arrayBuffer = await (blob as Blob).arrayBuffer();
+    return new Uint8Array(arrayBuffer);
+  } else {
+    // Use streaming approach
+    const reader = blob.stream().getReader();
+    const chunks: Uint8Array[] = [];
+    let totalLength = 0;
 
-const settings = UnixFS.configure({
-  fileChunkEncoder: raw,
-  smallFileEncoder: raw,
-  chunker: withMaxChunkSize(1024 * 1024),
-  fileLayout: withWidth(1024),
-});
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      totalLength += value.length;
+    }
 
-async function collect<T>(collectable: ReadableStream<T>): Promise<T[]> {
-  const chunks: T[] = [];
-  await collectable.pipeTo(
-    new WritableStream({
-      write(chunk) {
-        chunks.push(chunk);
-      },
-    }),
-  );
-  return chunks;
+    // Combine chunks into a single Uint8Array
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    return result;
+  }
 }
 
+/**
+ * Encode a file into a single block with a CID
+ */
 export async function encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }> {
-  const readable = createFileEncoderStream(blob);
-  const blocks = await collect(readable);
-  return { cid: blocks.at(-1).cid, blocks };
+  // Convert blob to Uint8Array
+  const data = await blobToUint8Array(blob);
+
+  // Encode with raw codec
+  const bytes = raw.encode(data);
+
+  // Create CID
+  const hash = await hasher.digest(bytes);
+  const cid = CID.create(1, raw.code, hash);
+
+  // Return single block with CID
+  const block = { cid, bytes };
+
+  return { cid, blocks: [block] };
 }
 
+/**
+ * Decode a file from its blocks and CID
+ */
 export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File> {
-  const entry = await exporter(cid.toString(), blocks as ReadableStorage, { length: meta.size });
-  const chunks = [];
-  for await (const chunk of entry.content()) {
-    chunks.push(chunk);
-  }
-  return new File(chunks, entry.name, { type: meta.type, lastModified: 0 });
-}
+  // The blocks parameter is expected to be a storage interface with a get method
+  const storage = blocks as { get: (cid: AnyLink) => Promise<Uint8Array> };
 
-function createFileEncoderStream(blob: BlobLike) {
-  const { readable, writable } = new TransformStream({}, queuingStrategy);
-  const unixfsWriter = UnixFS.createWriter({ writable, settings });
-  const fileBuilder = new UnixFSFileBuilder("", blob);
-  void (async () => {
-    await fileBuilder.finalize(unixfsWriter);
-    await unixfsWriter.close();
-  })();
-  return readable;
-}
+  try {
+    // Get block data
+    const bytes = await storage.get(cid);
 
-class UnixFSFileBuilder {
-  #file;
-  readonly name: string;
-  constructor(name: string, file: BlobLike) {
-    this.name = name;
-    this.#file = file;
-  }
+    // Decode data
+    const data = raw.decode(bytes);
 
-  async finalize(writer: View) {
-    const unixfsFileWriter = UnixFS.createFileWriter(writer);
-    await this.#file.stream().pipeTo(
-      new WritableStream({
-        async write(chunk) {
-          await unixfsFileWriter.write(chunk as Uint8Array);
-        },
-      }),
-    );
-    return await unixfsFileWriter.close();
+    // Create File object with the original file metadata
+    return new File([data], "file", {
+      type: meta.type,
+      lastModified: 0,
+    });
+  } catch (error) {
+    console.error("Error decoding file:", error);
+    // Return an empty file if there's an error
+    return new File([], "file", { type: meta.type });
   }
 }
