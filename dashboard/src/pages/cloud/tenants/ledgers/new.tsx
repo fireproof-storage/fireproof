@@ -31,13 +31,13 @@ export function CloudTenantLedgersNew() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-[--foreground] mb-6">Create New Ledger</h1>
+      <h1 className="text-2xl font-bold text-[--foreground] mb-6">Create New Database</h1>
 
       <div className="max-w-xl">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-[--muted-foreground] mb-1">
-              Ledger Name
+              Database Name
             </label>
             <input
               id="name"
@@ -47,7 +47,7 @@ export function CloudTenantLedgersNew() {
                 minLength: { value: 3, message: "Name must be at least 3 characters" },
               })}
               className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent"
-              placeholder="Enter ledger name"
+              placeholder="Enter database name"
               disabled={createLedger.isPending}
               autoFocus
             />
@@ -63,7 +63,7 @@ export function CloudTenantLedgersNew() {
               Cancel
             </Button>
             <Button variation="primary" type="submit" disabled={createLedger.isPending}>
-              {createLedger.isPending ? "Creating..." : "Create Ledger"}
+              {createLedger.isPending ? "Creating..." : "Create Database"}
             </Button>
           </div>
         </form>
