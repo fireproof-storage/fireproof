@@ -3,6 +3,7 @@ import { DocFileMeta } from "../types.js";
 import { BlobLike, AnyLink, AnyBlock } from "../blockstore/index.js";
 import { CID } from "multiformats/cid";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
+import { Result } from "@adviser/cement";
 
 /**
  * Simple implementation to replace UnixFS file handling
@@ -60,8 +61,9 @@ export async function encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks
 
 /**
  * Decode a file from its blocks and CID
+ * Returns a Result containing either the File or an Error
  */
-export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File> {
+export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<Result<File>> {
   // The blocks parameter is expected to be a storage interface with a get method
   const storage = blocks as { get: (cid: AnyLink) => Promise<Uint8Array> };
 
@@ -73,13 +75,11 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
     const data = raw.decode(bytes);
 
     // Create File object with the original file metadata
-    return new File([data], "file", {
+    return Result.Ok(new File([data], "file", {
       type: meta.type,
       lastModified: 0,
-    });
+    }));
   } catch (error) {
-    console.error("Error decoding file:", error);
-    // Return an empty file if there's an error
-    return new File([], "file", { type: meta.type });
+    return Result.Err(error as Error);
   }
 }
