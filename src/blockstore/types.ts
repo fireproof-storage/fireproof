@@ -243,7 +243,7 @@ export interface StoreUrls {
 
 export interface StoreEnDeFile {
   readonly encodeFile: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
-  readonly decodeFile: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
+  readonly decodeFile: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<Result<File>>;
 }
 
 export interface StoreUrlsOpts {
@@ -292,7 +292,7 @@ export interface StoreRuntime {
   makeStores(sfi: StoreFactoryItem): Promise<DataAndMetaAndWalStore>;
 
   encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
-  decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File>;
+  decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<Result<File>>;
 }
 
 export interface CommitOpts {
