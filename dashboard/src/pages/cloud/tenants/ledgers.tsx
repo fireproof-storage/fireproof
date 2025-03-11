@@ -13,8 +13,8 @@ export function CloudTenantLedgers() {
 export function CloudTenantLedgersIndex() {
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-[--foreground] mb-6">Ledgers</h1>
-      <p className="text-[--muted-foreground]">Select a ledger from the sidebar or create a new one.</p>
+      <h1 className="text-2xl font-bold text-[--foreground] mb-6">Databases</h1>
+      <p className="text-[--muted-foreground]">Select a database from the sidebar or create a new one.</p>
     </div>
   );
 }
