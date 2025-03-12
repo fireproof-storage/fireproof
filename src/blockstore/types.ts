@@ -208,19 +208,19 @@ export interface CryptoAction {
   // decode(bytes: Uint8Array | ArrayBuffer): Promise<Uint8Array>;
 }
 
-export interface BlobLike {
-  /**
-   * Returns a ReadableStream which yields the Blob data.
-   */
-  stream: () => ReadableStream;
-}
+// export interface BlobLike {
+//   /**
+//    * Returns a ReadableStream which yields the Blob data.
+//    */
+//   stream: () => ReadableStream;
+// }
 
 export interface StoreFactory {
   // makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
   // makeDataStore?: (loader: Loadable) => Promise<DataStore>;
   // makeWALStore?: (loader: Loadable) => Promise<WALStore>;
 
-  encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  encodeFile?: (blob: Blob) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
 }
 
@@ -242,7 +242,7 @@ export interface StoreUrls {
 // }
 
 export interface StoreEnDeFile {
-  readonly encodeFile: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  readonly encodeFile: (blob: Blob) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   readonly decodeFile: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<Result<File>>;
 }
 
@@ -291,7 +291,7 @@ export interface StoreRuntime {
 
   makeStores(sfi: StoreFactoryItem): Promise<DataAndMetaAndWalStore>;
 
-  encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  encodeFile(blob: Blob): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<Result<File>>;
 }
 
