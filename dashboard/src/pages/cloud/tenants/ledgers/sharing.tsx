@@ -7,7 +7,7 @@ export function LedgerSharing() {
   const { ledgerId } = useParams();
   return (
     <div>
-      <p className="text-[--muted-foreground]">Control who has access to your ledger.</p>
+      <p className="text-[--muted-foreground]">Control who has access to your database.</p>
     </div>
   );
 }
