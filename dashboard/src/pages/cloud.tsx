@@ -46,7 +46,7 @@ function SidebarCloud() {
 
   const navItems = [
     { id: "home", label: "Home", path: `/fp/cloud/tenants/${tenantId}` },
-    { id: "ledgers", label: "Ledgers", path: `/fp/cloud/tenants/${tenantId}/ledgers` },
+    { id: "ledgers", label: "Databases", path: `/fp/cloud/tenants/${tenantId}/ledgers` },
     // { id: "members", label: "Members", path: `/fp/cloud/tenants/${tenantId}/members` },
     // { id: "admin", label: "Admin", path: `/fp/cloud/tenants/${tenantId}/admin` },
   ];
