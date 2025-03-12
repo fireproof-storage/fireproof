@@ -44,7 +44,7 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
     return Result.Ok(
       new File([data], "file", {
         type: meta.type,
-        lastModified: 0,
+        lastModified: meta.lastModified || 0,
       }),
     );
   } catch (error) {
