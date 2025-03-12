@@ -245,10 +245,8 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
             fileMeta.cid,
             fileMeta,
           );
-
           if (result.isErr()) {
-            blocks.logger.Error().Any("error", result.Err()).Any("cid", fileMeta.cid).Msg("Error decoding file");
-            return new File([], "file", { type: fileMeta.type });
+            throw blocks.logger.Error().Any("error", result.Err()).Any("cid", fileMeta.cid).Msg("Error decoding file").AsError();
           }
 
           return result.unwrap();
