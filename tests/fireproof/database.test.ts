@@ -542,6 +542,45 @@ describe("ledger with files input", () => {
     // expect(file.name).toBe('fireproof.png') // see https://github.com/fireproof-storage/fireproof/issues/70
   });
 
+  it("should preserve lastModified timestamp", async () => {
+    // Create a custom timestamp
+    const customTimestamp = Date.now() - 86400000; // 1 day ago
+
+    // Create a new file with the custom timestamp
+    const blob = new Blob(["test content"], { type: "text/plain" });
+    const file = new File([blob], "test.txt", {
+      type: "text/plain",
+      lastModified: customTimestamp,
+    });
+
+    // Store the file in the database
+    const newDoc = {
+      _id: "test-timestamp",
+      type: "files",
+      _files: {
+        test: file,
+      },
+    };
+
+    await db.put(newDoc);
+
+    // Retrieve the file from the database
+    const retrievedDoc = await db.get("test-timestamp");
+    const files = retrievedDoc._files as DocFiles;
+    const fileMeta = files.test as DocFileMeta;
+
+    // Verify the file has the correct metadata
+    expect(fileMeta).toBeTruthy();
+    expect(fileMeta.type).toBe("text/plain");
+    expect(typeof fileMeta.file).toBe("function");
+
+    // Get the actual file
+    const retrievedFile = (await fileMeta.file?.()) as File;
+
+    // Check if lastModified is preserved
+    expect(retrievedFile.lastModified).toBe(customTimestamp);
+  });
+
   it("should update the file document data without changing the files", async () => {
     interface Doc {
       type: string;

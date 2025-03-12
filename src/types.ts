@@ -194,6 +194,7 @@ export interface DocFileMeta {
   readonly size: number;
   readonly cid: AnyLink;
   readonly car?: AnyLink;
+  readonly lastModified?: number;
   url?: string;
   file?: () => Promise<File>;
 }
