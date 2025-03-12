@@ -31,9 +31,7 @@ export function CloudTenantOverview() {
           To connect your database to Fireproof Cloud, use this code:
           <div className="bg-[--background] p-4 rounded-md my-4 overflow-x-auto">
             <code className="text-sm text-[--foreground]">
-            {cloudToken.data && (
-              `await db.attach(toCloud("${tenant.tenantId}", "my-ledger-id", "${cloudToken.data.token}"));`
-            )}
+              {cloudToken.data && `await db.attach(toCloud("${tenant.tenantId}", "my-ledger-id", "${cloudToken.data.token}"));`}
             </code>
           </div>
           To learn more about using Fireproof Cloud, check out our{" "}
