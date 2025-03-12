@@ -177,11 +177,11 @@ async function processFileset(
       for (const block of fileBlocks) {
         t.putSync(block.cid, block.bytes);
       }
-      files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta;
+      files[filename] = { cid, type: file.type, size: file.size, lastModified: file.lastModified } as DocFileMeta;
     } else {
-      const { cid, type, size, car } = files[filename] as DocFileMeta;
+      const { cid, type, size, car, lastModified } = files[filename] as DocFileMeta;
       if (cid && type && size && car) {
-        files[filename] = { cid, type, size, car };
+        files[filename] = { cid, type, size, car, lastModified };
       }
     }
   }
