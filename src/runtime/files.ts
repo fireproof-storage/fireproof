@@ -1,16 +1,14 @@
 import * as raw from "multiformats/codecs/raw";
 import { DocFileMeta } from "../types.js";
-import { BlobLike, AnyLink, AnyBlock } from "../blockstore/index.js";
+import { AnyLink, AnyBlock } from "../blockstore/index.js";
 import { CID } from "multiformats/cid";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { Result, top_uint8 } from "@adviser/cement";
 
-
-
 /**
  * Encode a file into a single block with a CID
  */
-export async function encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }> {
+export async function encodeFile(blob: Blob): Promise<{ cid: AnyLink; blocks: AnyBlock[] }> {
   // Convert blob to Uint8Array
   const data = await top_uint8(blob);
 
