@@ -75,6 +75,14 @@ EOF
 
 pnpm install
 pnpm run test
-rm -rf $tmpDir
-cd $smokeDir
+
+if [ -z "$NO_CLEANUP" ]
+then
+  rm -rf $tmpDir
+else
+  echo $tmpDir
+fi
+#rm -rf $tmpDir
+#cd $smokeDir
 #$dockerCompose down
+
