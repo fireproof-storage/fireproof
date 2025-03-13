@@ -3,7 +3,7 @@ import { DocFileMeta } from "../types.js";
 import { AnyLink, AnyBlock } from "../blockstore/index.js";
 import { CID } from "multiformats/cid";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import { Result, top_uint8 } from "@adviser/cement";
+import { exception2Result, Result, top_uint8 } from "@adviser/cement";
 
 /**
  * Encode a file into a single block with a CID
@@ -25,29 +25,34 @@ export async function encodeFile(blob: Blob): Promise<{ cid: AnyLink; blocks: An
   return { cid, blocks: [block] };
 }
 
+export interface BlockGetter {
+  get(cid: AnyLink): Promise<Uint8Array>;
+}
+
+function isHasBlockAGet(obj: unknown): obj is BlockGetter {
+  return typeof (obj as BlockGetter).get === "function";
+}
+
 /**
  * Decode a file from its blocks and CID
  * Returns a Result containing either the File or an Error
  */
 export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<Result<File>> {
   // The blocks parameter is expected to be a storage interface with a get method
-  const storage = blocks as { get: (cid: AnyLink) => Promise<Uint8Array> };
-
-  try {
+  if (!isHasBlockAGet(blocks)) {
+    return Result.Err(new Error("Invalid block storage"));
+  }
+  return exception2Result(async () => {
     // Get block data
-    const bytes = await storage.get(cid);
+    const bytes = await blocks.get(cid);
 
     // Decode data
     const data = raw.decode(bytes);
 
     // Create File object with the original file metadata
-    return Result.Ok(
-      new File([data], "file", {
-        type: meta.type,
-        lastModified: meta.lastModified || 0,
-      }),
-    );
-  } catch (error) {
-    return Result.Err(error as Error);
-  }
+    return new File([data], "file", {
+      type: meta.type,
+      lastModified: meta.lastModified || 0,
+    });
+  });
 }

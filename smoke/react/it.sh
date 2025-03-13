@@ -26,4 +26,9 @@ cat package.json
 # pnpm install -f "file://$smokeDir/../../dist/use-fireproof/use-fireproof-*.tgz"
 # pnpm run test > /dev/null 2>&1 || true
 npm run test
-rm -rf $tmpDir
+if [ -z "$NO_CLEANUP" ]
+then
+  rm -rf $tmpDir
+else
+  echo $tmpDir
+fi
