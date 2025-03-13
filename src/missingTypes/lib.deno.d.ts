@@ -14605,8 +14605,7 @@ declare namespace Deno {
       [P in Node["type"]]?: (node: Extract<Node, { type: P }>) => void;
     } & {
       [P in Node["type"] as `${P}:exit`]?: (node: Extract<Node, { type: P }>) => void;
-    } & // deno-lint-ignore no-explicit-any // Custom selectors which cannot be typed by us
-      Partial<{ [key: string]: (node: any) => void }>;
+    } & Partial<{ [key: string]: (node: any) => void }>; // deno-lint-ignore no-explicit-any // Custom selectors which cannot be typed by us
 
     /**
      * @category Linter
