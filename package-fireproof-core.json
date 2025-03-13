@@ -60,7 +60,7 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "@adviser/cement": "~0.4.1!",
+    "@adviser/cement": "~0.4.2!",
     "@fireproof/vendor": "~2.0.0!",
     "react": ">=18.0.0!"
   },
@@ -71,12 +71,14 @@
     "@ipld/dag-cbor": "from-package-json",
     "@ipld/dag-json": "from-package-json",
     "cborg": "from-package-json",
+    "jose": "from-package-json",
     "multiformats": "from-package-json",
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
     "idb": "from-package-json",
     "p-limit": "from-package-json",
     "p-map": "from-package-json",
-    "p-retry": "from-package-json"
+    "p-retry": "from-package-json",
+    "ws": "from-package-json"
   }
 }
