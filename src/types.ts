@@ -35,6 +35,8 @@ export type { DbMeta };
 
 export type Falsy = false | null | undefined;
 
+export type Unreg = () => void;
+
 export function isFalsy(value: unknown): value is Falsy {
   return value === false && value === null && value === undefined;
 }
