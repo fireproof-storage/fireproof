@@ -1,4 +1,4 @@
-import { rawConnect } from "@fireproof/cloud";
+// import { rawConnect } from "@fireproof/cloud";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
@@ -47,9 +47,9 @@ function TableView({ name }: { name: string }) {
   if (myPetnames.docs.length > 0) {
     const endpoint = myPetnames.docs[0].endpoint;
     remoteName = myPetnames.docs[0].remoteName;
-    if (endpoint) {
-      connection = rawConnect(database as any, remoteName, endpoint);
-    }
+    // if (endpoint) {
+    //   connection = rawConnect(database as any, remoteName, endpoint);
+    // }
   }
 
   const allDocs = useLiveQuery("_id");
