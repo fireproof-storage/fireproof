@@ -1,16 +1,34 @@
-import { cloudBackendParams, setupBackend } from "./cloud-backend/test-helper.js";
+import { HonoServer } from "./cloud-backend/hono-server.js";
+import { cloudBackendParams, mockJWK, setupBackend } from "./cloud-backend/test-helper.js";
 import { ensureSuperThis } from "./src/utils.js";
 
 const sthis = ensureSuperThis();
+let hs: HonoServer;
 export async function setup() {
+  const keys = await mockJWK({}, sthis);
+
+  process.env['CLOUD_SESSION_TOKEN_PUBLIC'] = keys.keys.strings.publicKey;
+  process.env['STORAGE_URL'] = "http://localhost:9000";
+  process.env['ACCESS_KEY_ID'] = "minioadmin";
+  process.env['SECRET_ACCESS_KEY'] = "minioadmin";
+
   const params = await setupBackend(sthis);
-  process.env[`FP_TEST_CF_BACKEND`] = JSON.stringify(params);
+  hs = params.hs;
+  process.env[`FP_TEST_CLOUD_BACKEND`] = JSON.stringify({
+    port: params.port,
+    pid: params.pid,
+    envName: params.envName,
+  });
+
+  process.env.FP_STORAGE_URL = keys.applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=test&protocol=ws`).toString();
+
   // eslint-disable-next-line no-console
-  console.log("Started wrangler process - ", cloudBackendParams(sthis).pid);
+  console.log("Started node-backend process - ", cloudBackendParams(sthis).pid, "on port", params.port);
 }
 
 export async function teardown() {
   // eslint-disable-next-line no-console
-  console.log("Stopping wrangler process - ", cloudBackendParams(sthis).pid);
-  process.kill(cloudBackendParams(sthis).pid);
+  console.log("Stopping node-backend process - ", cloudBackendParams(sthis).pid);
+  hs.close();
+  // process.kill(cloudBackendParams(sthis).pid);
 }

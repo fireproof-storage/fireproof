@@ -1,40 +1,38 @@
 import { ensureSuperThis } from "@fireproof/core";
 
-import { MockJWK, mockJWK, NodeHonoServerFactory, wsStyle } from "./test-helper.js";
-import { Hono } from "hono";
-import { HonoServer } from "./hono-server.js";
+import { MockJWK, mockJWK, NodeHonoServerFactory } from "./test-helper.js";
 import { Future, Result } from "@adviser/cement";
 import { ps } from "@fireproof/core";
 
-const { MsgIsResChat, Msger, buildReqChat, defaultGestalt, defaultMsgParams } = ps.cloud;
+const { MsgIsResChat, Msger, buildReqChat, } = ps.cloud;
 
 describe("test multiple connections", () => {
   const sthis = ensureSuperThis();
 
   describe.each([
     // dummy
-    NodeHonoServerFactory(),
+    NodeHonoServerFactory(sthis),
     // CFHonoServerFactory(sthis),
-  ])("$name - Gateway", ({ factory, port }) => {
-    const msgP = defaultMsgParams(sthis, { hasPersistent: true });
+  ])("$name - Gateway", ({ port }) => {
+    // const msgP = defaultMsgParams(sthis, { hasPersistent: true });
 
-    const my = defaultGestalt(msgP, { id: "FP-Universal-Client" });
-    let stype;
+    // const my = defaultGestalt(msgP, { id: "FP-Universal-Client" });
+    // let stype;
     const connections = 3;
 
-    let hserv: HonoServer;
+    // let hserv: HonoServer;
 
     let auth: MockJWK;
 
     beforeAll(async () => {
       auth = await mockJWK();
-      stype = wsStyle(sthis, auth.applyAuthToURI, port, msgP, my);
+      //stype = wsStyle(sthis, auth.applyAuthToURI, port, msgP, my);
 
-      const app = new Hono();
-      hserv = await factory(sthis, msgP, stype.remoteGestalt, port, auth.keys.strings.publicKey).then((srv) => srv.once(app, port));
+      // const app = new Hono();
+      // hserv = await factory(sthis, msgP, stype.remoteGestalt, port, auth.keys.strings.publicKey).then((srv) => srv.once(app, port));
     });
     afterAll(async () => {
-      await hserv.close();
+      // await hserv.close();
     });
 
     it("could open multiple connections", async () => {
@@ -42,7 +40,7 @@ describe("test multiple connections", () => {
         Array(connections)
           .fill(0)
           .map(() => {
-            return Msger.connect(sthis, auth.authType, `http://localhost:${port}/fp`);
+            return Msger.connect(sthis, auth.authType, `http://localhost:${port}/fp?protocol=ws`);
           }),
       ).then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
 
