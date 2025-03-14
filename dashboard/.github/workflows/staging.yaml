@@ -1,0 +1,55 @@
+name: Staging Deployment
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+
+jobs:
+  deploy-staging:
+    name: 
+    environment: staging
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    steps:
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 20
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - name: install
+        run: pnpm install
+
+      - name: format-check
+        run: pnpm run format --check
+
+      - name: lint
+        run: pnpm run lint
+
+      - name: build
+        run: pnpm run build
+
+      - name: test
+        run: |
+          pnpm run drizzle:libsql
+          pnpm run test
+
+      - name: deploy to preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_DATABASE_ID: ${{ secrets.CLOUDFLARE_DATABASE_ID }}
+        run: |
+          pnpm run build 
+          pnpm run drizzle:d1-remote --verbose
+          pnpm run deploy:cf

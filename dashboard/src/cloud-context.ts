@@ -141,7 +141,7 @@ export class CloudContext {
 
   sessionReady(condition: boolean) {
     const ret = this._clerkSession?.isLoaded && this._clerkSession?.isSignedIn /*|| !!this._betterAuthSession?.data*/ && condition;
-    console.log("sessionReady", ret);
+    // console.log("sessionReady", ret);
     return ret;
   }
 
@@ -192,7 +192,7 @@ export class CloudContext {
   addTenantToListLedgerByUser(tenantId: string | undefined, action?: () => void) {
     if (tenantId && !this._tenantIdForLedgers.has(tenantId)) {
       this._tenantIdForLedgers.add(tenantId);
-      console.log("addTenantToListLedgerByUser", tenantId, action);
+      // console.log("addTenantToListLedgerByUser", tenantId, action);
       action?.();
     }
   }
