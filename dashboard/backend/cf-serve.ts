@@ -11,7 +11,7 @@ export interface Env {
 export default {
   async fetch(request: CFRequest, env: Env) {
     const ret = await createHandler(drizzle(env.DB), env)(request as unknown as Request);
-    if (ret) {
+    if (ret.ok) {
       return ret;
     }
     // if (!ret) {

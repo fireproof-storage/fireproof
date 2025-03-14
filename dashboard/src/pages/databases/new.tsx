@@ -5,7 +5,7 @@ import { fireproof } from "use-fireproof";
 export async function newDatabaseAction({ request }: { request: Request }) {
   const dbName = (await request.json()).dbName;
   const database = fireproof(dbName);
-  await database.blockstore.loader?.ready();
+  await database.ready();
   return redirect(`/fp/databases/${dbName}`);
 }
 

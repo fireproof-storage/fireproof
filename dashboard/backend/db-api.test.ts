@@ -9,11 +9,12 @@
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { FPApiSQL, FPApiToken, AdminTenant, ReqEnsureUser, ResEnsureUser } from "./api.js";
-import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
+import { ensureSuperThis, SuperThis } from "@fireproof/core";
 import { AuthType, VerifiedAuth } from "./users.ts";
 import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
 import { jwtVerify } from "jose/jwt/verify";
 import { env2jwk } from "./jwk-helper.ts";
+import { Result } from "@adviser/cement";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
 // // import Database from 'better-sqlite3';

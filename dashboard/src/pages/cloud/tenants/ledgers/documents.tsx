@@ -1,4 +1,4 @@
-import { rawConnect } from "@fireproof/cloud";
+// import { rawConnect } from "@fireproof/cloud";
 import { useContext } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
@@ -6,7 +6,7 @@ import { AppContext } from "../../../../app-context.tsx";
 import { Button } from "../../../../components/Button.tsx";
 import { DynamicTable } from "../../../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../../../components/dynamicTableHelpers.ts";
-import { DEFAULT_ENDPOINT } from "../../../../helpers.ts";
+// import { DEFAULT_ENDPOINT } from "../../../../helpers.ts";
 
 interface Document {
   _id: string;
@@ -20,9 +20,9 @@ export function LedgerDocuments() {
 
   const { useLiveQuery, database } = useFireproof(ledgerId || "");
   // Connect to Fireproof Cloud
-  if (database && ledgerId && tenantId) {
-    rawConnect(database as any, `${tenantId}-${ledgerId}`, DEFAULT_ENDPOINT);
-  }
+  // if (database && ledgerId && tenantId) {
+  //   rawConnect(database as any, `${tenantId}-${ledgerId}`, DEFAULT_ENDPOINT);
+  // }
 
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc): doc is Document => doc !== null);

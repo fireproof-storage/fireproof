@@ -1,8 +1,8 @@
 // import { auth } from "./better-auth.ts";
-import { exception2Result, LoggerImpl, URI, utils } from "@adviser/cement";
+import { exception2Result, LoggerImpl, Result, URI, utils } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { Falsy, Result, SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis } from "use-fireproof";
+import { SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis } from "@fireproof/core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
 import { VerifiedAuth } from "./users.ts";
 import type { Env } from "./cf-serve.ts";
@@ -110,10 +110,10 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
     clerk: new ClerkApiToken(sthis),
     // better: new BetterApiToken(sthis),
   });
-  return async (req: Request): Promise<Response | Falsy> => {
+  return async (req: Request): Promise<Response> => {
     const startTime = performance.now();
     if (!["POST", "PUT"].includes(req.method)) {
-      return;
+      return new Response("Invalid request", { status: 404, headers: CORS });
     }
     // const uri = URI.from(req.url);
     // // if (uri.pathname.startsWith("/api/auth/")) {
