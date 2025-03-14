@@ -16,6 +16,13 @@ jobs:
     #runs-on: blacksmith-4vcpu-ubuntu-2204
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
@@ -29,13 +36,6 @@ jobs:
       #      cache: pnpm
 
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-          version: 10
-          cache: "pnpm"
 
       - name: install
         run: pnpm install
