@@ -5,7 +5,7 @@ import { Navigate, NavLink, useLocation, useParams } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
-import { useSession } from "@clerk/clerk-react";
+// import { useSession } from "@clerk/clerk-react";
 import { BuildURI } from "@adviser/cement";
 
 // TODO: This is a temporary loader to ensure the user is logged in with Clerk.
@@ -25,12 +25,13 @@ import { BuildURI } from "@adviser/cement";
 // }
 
 export function Cloud() {
-  const x = useSession();
-  if (!(x.isLoaded && x.isSignedIn)) {
-    console.log(x)
-    const to = BuildURI.from(window.location.href).pathname("/login").setParam("next_url", window.location.pathname).toString()
-    // return <Navigate to={to.replace(/^[^:]+:\/\/[^/]+/, "")} />;
-    return <div>Not logged in</div>;
+  const { cloud } = useContext(AppContext);
+  // const x = useSession();
+  // console.log(">>>>>>>>", cloud.sessionReady(true), cloud._clerkSession?.isLoaded, cloud._clerkSession?.isSignedIn);
+  if (cloud._clerkSession?.isSignedIn === false) {
+    const tos = BuildURI.from(window.location.href).pathname("/login").setParam("next_url", window.location.pathname).toString();
+    return <Navigate to={tos.replace(/^[^:]+:\/\/[^/]+/, "")} />;
+    // return <div>Not logged in:{tos}</div>;
   }
   return <WithSidebar sideBarComponent={<SidebarCloud />} />;
 }

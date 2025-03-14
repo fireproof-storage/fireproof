@@ -97,7 +97,7 @@ export class CloudContext {
     this.api = new CloudApi(this);
   }
 
-  private _clerkSession?: ReturnType<typeof useSession>;
+  _clerkSession?: ReturnType<typeof useSession>;
   // private _betterAuthSession?: ReturnType<typeof _betterAuthClient.useSession>;
   // private _queryClient?: QueryClient;
 

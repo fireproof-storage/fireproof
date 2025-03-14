@@ -32,8 +32,8 @@ export function Login() {
       <div className="relative lg:min-h-screen order-2 lg:order-1">
         <div className="relative flex justify-center flex-col p-10 sm:p-14 lg:p-20 z-10 h-full z-1">
           <div className="flex flex-col gap-10 sm:gap-16 mt-4 sm:mt-[30px]">
-            {slides.map((slide) => (
-              <Slide data={slide} isDarkMode={isDarkMode} />
+            {slides.map((slide, i) => (
+              <Slide key={i} data={slide} isDarkMode={isDarkMode} />
             ))}
           </div>
         </div>
