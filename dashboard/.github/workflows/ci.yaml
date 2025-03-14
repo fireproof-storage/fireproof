@@ -58,6 +58,6 @@ jobs:
       #     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       #     CLOUDFLARE_DATABASE_ID: ${{ secrets.CLOUDFLARE_DATABASE_ID }}
       #   run: |
-      #     pnpm run build 
+      #     pnpm run build
       #     pnpm run drizzle:d1-remote
       #     pnpm run deploy:cf --env production
