@@ -1,0 +1,3 @@
+# Generate with npx tsx backend/create-cloud-session-token-keypair.ts
+CLOUD_SESSION_TOKEN_SECRET=
+CLERK_SECRET_KEY=
