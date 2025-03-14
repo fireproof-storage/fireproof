@@ -44,7 +44,7 @@ export function App() {
         <Route index element={<Index />} loader={indexLoader} />
       </Route>
       {/* <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}> */}
-      <Route path="/fp/cloud" element={<Cloud />} > 
+      <Route path="/fp/cloud" element={<Cloud />}>
         <Route index element={<CloudIndex />} />
         <Route path="tenants">
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />

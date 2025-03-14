@@ -3,13 +3,13 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment'
+        description: "Target environment"
         required: true
-        default: 'staging'
+        default: "staging"
 
 jobs:
   deploy-staging:
-    name: 
+    name:
     environment: staging
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
