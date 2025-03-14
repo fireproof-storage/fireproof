@@ -14,11 +14,12 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      provider: "webdriverio",
-      name: "chrome",
+      provider: "playwright",
+      // provider: "webdriverio",
+      // name: "chrome",
       instances: [
         {
-          browser: "chrome",
+          browser: "chromium",
           //setupFile: './chromium-setup.js',
         },
       ],
