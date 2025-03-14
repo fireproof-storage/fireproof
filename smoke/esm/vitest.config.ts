@@ -6,11 +6,13 @@ export default defineConfig({
     setupFiles: "./setup.js",
     browser: {
       enabled: true,
-      provider: "webdriverio",
+      provider: "playwright",
+      // provider: "webdriverio",
       headless: true,
       instances: [
         {
-          browser: "chrome",
+          // browser: "chrome",
+          browser: "chromium",
         },
       ],
     },
