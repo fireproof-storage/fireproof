@@ -22,12 +22,13 @@
     "@testing-library/react": "^16.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "playwright": "^1.51.0",
+    "playwright-chromium": "^1.51.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "@vitest/browser": "^3.0.5",
-    "@vitest/ui": "^3.0.5",
-    "typescript": "^5.7.0",
-    "vite": "^6.0.11",
-    "vitest": "^3.0.5",
-    "webdriverio": "^8.39.1"
+    "@vitest/browser": "^3.0.8",
+    "@vitest/ui": "^3.0.8",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vitest": "^3.0.8"
   }
 }

@@ -10,24 +10,36 @@ jobs:
   build-test-smoke:
     name: Build Fireproof
 
-    #runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     #steps:
     #  - uses: useblacksmith/setup-node@v5
     #    with:
     #      node-version: 20
-
-    runs-on: ubuntu-24.04
+    #runs-on: ubuntu-24.04
     steps:
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - uses: actions/checkout@v4
+
+      - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
-      - uses: actions/checkout@v4
-        #with:
-        #  fetch-tags: true
-        #  fetch-depth: 1
+          cache: pnpm
+
+      #- uses: actions/setup-node@v4
+      #  with:
+      #    node-version: 20
+      #    cache: pnpm
+
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
@@ -42,12 +54,16 @@ jobs:
           path: .esm-cache
           key: smoke-esm-cache
 
-      - name: cache-kaputt
-        id: cache-kaputt
-        run: |
-          rm -rf .esm-cache/*
-          #chmod -R ogu+wx .esm-cache
-          #find .esm-cache/esm/.esmd/npm -ls
+      #- name: cache-kaputt
+      #  id: cache-kaputt
+      #  run: |
+      #    rm -rf .esm-cache/*
+      #    #chmod -R ogu+wx .esm-cache
+      #    #find .esm-cache/esm/.esmd/npm -ls
+      #- name: test-net
+      #  run: |
+      #    nc -l -p 49490 < /etc/hosts &
+      #    curl http://127.0.0.1:49490 || true
 
       - name: install
         run: pnpm install
