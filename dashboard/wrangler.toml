@@ -3,23 +3,36 @@ main = "backend/cf-serve.ts"
 compatibility_date = "2025-02-24"
 compatibility_flags = ["nodejs_compat"]
 
+vars = { ENVIRONMENT = "dev" }
+routes = [
+  { pattern = "dev.connect.fireproof.direct", custom_domain = true }
+]
+
 [assets]
 directory = "dist/static"
 binding = "ASSETS"
 html_handling = "force-trailing-slash"
 not_found_handling = "single-page-application" 
 
-# upload_source_maps = true
-
-# [durable_objects]
-# bindings = [
-#   { name = "FP_DO", class_name = "FPDurableObject"},
-# ]
-
 [[d1_databases]]
 binding = "DB"
-database_name = "test-auth-db"
-database_id = "ccb4a6c9-a1da-4a3a-9895-86d6eb3ffd26"
+database_name = "fp-connect-dev"
+database_id = "04b54bac-85e4-4a4d-9527-bce490761b12"
+
+[env.dev]
+
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+route = "staging.connect.fireproof.direct/*"
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+route = "connect.fireproof.direct/*"
+
+# [[env.staging.d1_databases]]
+# binding = "DB"
+# database_name = "fp-connect-staging"
+# database_id = "374bd02f-9a9d-41da-84bc-9b8582706f9a"
 
 #[durable_objects]
 #bindings = [
