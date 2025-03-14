@@ -6,7 +6,7 @@ import { WSContext, WSContextInit, WSMessageReceive } from "hono/ws";
 import { metaMerger } from "./meta-merger/meta-merger.js";
 import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
-import { MsgDispatcher, MsgDispatcherCtx, Promisable, WSConnection } from "./msg-dispatch.js";
+import { MsgDispatcher, MsgDispatcherCtx, Promisable, WSConnectionPair } from "./msg-dispatch.js";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { buildMsgDispatcher } from "./msg-dispatcher-impl.js";
 
@@ -66,7 +66,7 @@ export interface WSEventsConnId<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type ConnMiddleware = (conn: WSConnection, c: Context, next: Next) => Promise<Response | void>;
+export type ConnMiddleware = (conn: WSConnectionPair, c: Context, next: Next) => Promise<Response | void>;
 export interface HonoServerImpl {
   validateAuth(ctx: MsgDispatcherCtx, auth: ps.cloud.AuthType): Promise<Result<ps.cloud.FPCloudAuthType>>;
 
@@ -368,7 +368,7 @@ export class HonoServer {
               // console.log('Connection closed')
             },
           };
-        })(new WSConnection(), c, next);
+        })(new WSConnectionPair(), c, next);
       }),
     );
     return this;

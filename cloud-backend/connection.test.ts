@@ -1,7 +1,7 @@
 import { ensureSuperThis, ps } from "@fireproof/core";
 import { Result, URI } from "@adviser/cement";
-import { HonoServer } from "./hono-server.js";
-import { Hono } from "hono";
+// import { HonoServer } from "./hono-server.js";
+// import { Hono } from "hono";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, NodeHonoServerFactory, wsStyle } from "./test-helper.js";
 
@@ -88,7 +88,7 @@ describe("Connection", () => {
 
   describe.each([
     // force multiple lines
-    NodeHonoServerFactory(),
+    NodeHonoServerFactory(sthis),
   ])("$name - Connection", (honoServer) => {
     const port = honoServer.port;
     // const port = +(process.env.FP_WRANGLER_PORT || 0) || 1024 + Math.floor(Math.random() * (65536 - 1024));
@@ -105,19 +105,19 @@ describe("Connection", () => {
 
     describe.each(styles)(`${honoServer.name} - $name`, (styleFn) => {
       let style: ReturnType<typeof wsStyle> | ReturnType<typeof httpStyle>;
-      let server: HonoServer;
+      // let server: HonoServer;
       let qOpen: ReqOpen;
       beforeAll(async () => {
         style = styleFn.action();
-        const app = new Hono();
+        // const app = new Hono();
         qOpen = buildReqOpen(sthis, auth.authType, { reqId: "req-open-test" });
-        server = await honoServer
-          .factory(sthis, msgP, style.remoteGestalt, port, auth.keys.strings.publicKey)
-          .then((srv) => srv.once(app, port));
+        // server = await honoServer
+        //   .factory(sthis, msgP, style.remoteGestalt, port, auth.keys.strings.publicKey)
+        //   .then((srv) => srv.once(app, port));
       });
       afterAll(async () => {
         // console.log("closing server");
-        await server.close();
+        // await server.close();
       });
 
       it(`conn refused`, async () => {
@@ -205,7 +205,7 @@ describe("Connection", () => {
       });
 
       it("open", async () => {
-        const rC = await Msger.connect(sthis, auth.authType, style.ok.url("fp"), msgP, {
+        const rC = await Msger.connect(sthis, auth.authType, style.ok.url(), msgP, {
           reqId: "req-open-testy",
         });
         expect(rC.isOk()).toBeTruthy();
@@ -225,7 +225,7 @@ describe("Connection", () => {
         let gwCtx: GwCtx;
         let conn: MsgConnectedAuth;
         beforeAll(async () => {
-          const rC = await Msger.connect(sthis, auth.authType, `http://localhost:${port}/fp`, msgP, qOpen.conn);
+          const rC = await Msger.connect(sthis, auth.authType, `http://localhost:${port}/`, msgP, qOpen.conn);
           expect(rC.isOk()).toBeTruthy();
           conn = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
           gwCtx = {

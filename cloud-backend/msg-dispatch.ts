@@ -21,7 +21,7 @@ export interface WSPair {
   readonly server: WebSocket;
 }
 
-export class WSConnection {
+export class WSConnectionPair {
   wspair?: WSPair;
 
   attachWSPair(wsp: WSPair) {
@@ -48,7 +48,7 @@ export interface ConnItem<T = unknown> {
 // const connManager = new ConnectionManager();
 
 export interface ConnectionInfo {
-  readonly conn: WSConnection;
+  readonly conn: WSConnectionPair;
   readonly reqId: string;
   readonly resId: string;
 }

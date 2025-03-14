@@ -14,11 +14,28 @@ import {
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
 import { SuperThis } from "../../types.js";
 
+function toHttpProtocol(uri: URI): URI {
+  const protocol = (uri.getParam("protocol") ?? uri.protocol).replace(/:$/, "");
+  const toFix = uri.build();
+  switch (protocol) {
+    case "ws":
+    case "http":
+      toFix.protocol("http");
+      break;
+    case "https":
+    case "wss":
+    default:
+      toFix.protocol("https");
+      break;
+  }
+  return toFix.URI();
+}
+
 export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnection {
   readonly logger: Logger;
   readonly msgP: MsgerParamsWithEnDe;
 
-  readonly baseURIs: URI[];
+  readonly baseURIs: { in: URI, cleaned: URI}[];
 
   readonly #onMsg = new Map<string, OnMsgFn>();
 
@@ -26,7 +43,10 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     super(sthis, exGestalt);
     this.logger = ensureLogger(sthis, "HttpConnection");
     // this.msgParam = msgP;
-    this.baseURIs = uris;
+    this.baseURIs = uris.map((uri) => ({ 
+      in: uri,
+      cleaned: toHttpProtocol(uri)
+    }));
     this.msgP = msgP;
   }
 
@@ -120,20 +140,21 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     }
     headers.Set("Content-Length", rReqBody.Ok().byteLength.toString());
     const url = selectRandom(this.baseURIs);
-    this.logger.Debug().Url(url).Any("body", req).Msg("request");
+    // console.log("request", url.cleaned.toString(), url.in.toString(), req);
+    this.logger.Debug().Any(url).Any("body", req).Msg("request");
     const rRes = await exception2Result(() =>
       timeout(
         this.msgP.timeout,
-        fetch(url.toString(), {
+        fetch(url.cleaned.toString(), {
           method: "PUT",
           headers: headers.AsHeaderInit(),
           body: rReqBody.Ok(),
         }),
       ),
     );
-    this.logger.Debug().Url(url).Any("body", rRes).Msg("response");
+    this.logger.Debug().Any(url).Any("body", rRes).Msg("response");
     if (rRes.isErr()) {
-      return this.toMsg(buildErrorMsg(this, req, this.logger.Error().Err(rRes).Msg("fetch error").AsError()));
+      return this.toMsg(buildErrorMsg(this, req, this.logger.Error().Err(rRes).Any(url).Msg("fetch error").AsError()));
     }
     const res = rRes.Ok();
     if (!res.ok) {
@@ -146,7 +167,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
             req,
             this.logger
               .Error()
-              .Url(url)
+              .Any(url)
               .Str("status", res.status.toString())
               .Str("statusText", res.statusText)
               .Msg("HTTP Error")
