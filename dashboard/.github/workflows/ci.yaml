@@ -23,6 +23,8 @@ jobs:
           version: 10
           cache: "pnpm"
 
+      - uses: actions/checkout@v4
+
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
@@ -34,8 +36,6 @@ jobs:
       #    with:
       #      node-version: 20
       #      cache: pnpm
-
-      - uses: actions/checkout@v4
 
       - name: install
         run: pnpm install
