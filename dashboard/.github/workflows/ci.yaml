@@ -12,7 +12,7 @@ jobs:
   #
   quality-checks:
     name: Testit Runit Buildit
-    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || 'dev' }}
+    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: useblacksmith/setup-node@v5
