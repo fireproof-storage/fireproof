@@ -3,7 +3,8 @@ import { SuperThis, rt, ps, ensureSuperThis } from "@fireproof/core";
 import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { HonoServer } from "./hono-server.js";
 import { BetterSQLDatabase } from "./meta-merger/bettersql-abstract-sql.js";
-import { NodeHonoFactory } from "./node-hono-server.js";
+import { NodeHonoFactory, } from "./node-hono-server.js";
+import { Hono } from "hono";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.cloud.MsgRawConnection<T>;
@@ -40,9 +41,9 @@ export function httpStyle(
     remoteGestalt: remote,
     cInstance: HttpConnection,
     ok: {
-      url: (path = "fp") =>
+      url: () =>
         BuildURI.from(`http://127.0.0.1:${port}`)
-          .pathname(path)
+          // .pathname(path)
           .setParam("capabilities", remote.protocolCapabilities.join(","))
           .URI(),
       open: () =>
@@ -60,11 +61,11 @@ export function httpStyle(
         ),
     },
     connRefused: {
-      url: () => URI.from(`http://127.0.0.1:${port - 1}/fp`),
+      url: () => URI.from(`http://127.0.0.1:${port - 1}/`),
       open: async (): Promise<Result<MsgRawConnection<MsgBase>>> => {
         const ret = await Msger.openHttp(
           sthis,
-          [URI.from(`http://localhost:${port - 1}/fp`)],
+          [URI.from(`http://localhost:${port - 1}/`)],
           {
             ...msgP,
             // protocol: "http",
@@ -76,7 +77,7 @@ export function httpStyle(
           return ret;
         }
 
-        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://localhost:${port - 1}/fp`));
+        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://localhost:${port - 1}/`));
         // should fail
         const res = await ret.Ok().request(buildReqGestalt(sthis, rAuth.Ok(), my), { waitFor: MsgIsResGestalt });
         if (MsgIsError(res)) {
@@ -86,11 +87,11 @@ export function httpStyle(
       },
     },
     timeout: {
-      url: () => URI.from(`http://4.7.1.1:${port}/fp`),
+      url: () => URI.from(`http://4.7.1.1:${port}/`),
       open: async (): Promise<Result<MsgRawConnection<MsgBase>>> => {
         const ret = await Msger.openHttp(
           sthis,
-          [URI.from(`http://4.7.1.1:${port}/fp`)],
+          [URI.from(`http://4.7.1.1:${port}/`)],
           {
             ...msgP,
             // protocol: "http",
@@ -99,7 +100,7 @@ export function httpStyle(
           exGt,
         );
         // should fail
-        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://4.7.1.1:${port}/fp`));
+        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://4.7.1.1:${port}/`));
         const res = await ret.Ok().request(buildReqGestalt(sthis, rAuth.Ok(), my), { waitFor: MsgIsResGestalt });
         if (MsgIsError(res)) {
           return Result.Err(res.message);
@@ -126,9 +127,9 @@ export function wsStyle(
     remoteGestalt: remote,
     cInstance: WSConnection,
     ok: {
-      url: (path = "ws") =>
+      url: () =>
         BuildURI.from(`http://127.0.0.1:${port}`)
-          .pathname(path)
+          // .pathname(path)
           .setParam("capabilities", remote.protocolCapabilities.join(","))
           .URI(),
       open: () =>
@@ -148,11 +149,11 @@ export function wsStyle(
         ),
     },
     connRefused: {
-      url: () => URI.from(`http://127.0.0.1:${port - 1}/ws`),
+      url: () => URI.from(`http://127.0.0.1:${port - 1}/`),
       open: () =>
         Msger.openWS(
           sthis,
-          applyAuthToURI(URI.from(`http://localhost:${port - 1}/ws`)),
+          applyAuthToURI(URI.from(`http://localhost:${port - 1}/`)),
           {
             ...msgP,
             // protocol: "ws",
@@ -162,11 +163,11 @@ export function wsStyle(
         ),
     },
     timeout: {
-      url: () => URI.from(`http://4.7.1.1:${port - 1}/ws`),
+      url: () => URI.from(`http://4.7.1.1:${port - 1}/`),
       open: () =>
         Msger.openWS(
           sthis,
-          applyAuthToURI(URI.from(`http://4.7.1.1:${port - 1}/ws`)),
+          applyAuthToURI(URI.from(`http://4.7.1.1:${port - 1}/`)),
           {
             ...msgP,
             // protocol: "ws",
@@ -178,10 +179,10 @@ export function wsStyle(
   };
 }
 
-export function NodeHonoServerFactory() {
+export function NodeHonoServerFactory(sthis: SuperThis) {
   return {
     name: "NodeHonoServer",
-    port: portRandom(),
+    port: cloudBackendParams(sthis).port,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     factory: async (sthis: SuperThis, msgP: MsgerParams, remoteGestalt: Gestalt, _port: number, pubEnvJWK: string) => {
       // const { env } = await resolveToml();
@@ -279,11 +280,20 @@ export async function setupBackend(
   // backend: "D1" | "DO",
   // key: string,
   port = portRandom(),
-): Promise<{ port: number; pid: number; envName: string }> {
+): Promise<{ port: number; pid: number; envName: string, hs: HonoServer }> {
   const envName = `test`;
   if (process.env.FP_WRANGLER_PORT) {
-    return Promise.resolve({ port: +process.env.FP_WRANGLER_PORT, pid: 0, envName });
+    return Promise.resolve({ port: +process.env.FP_WRANGLER_PORT, pid: 0, envName, hs: {} as HonoServer });
   }
+
+  const nhf = new NodeHonoFactory(sthis, {
+    // msgP,
+    // gs: remoteGestalt,
+    sql: new BetterSQLDatabase("./dist/node-meta.sqlite"),
+  });
+  const app = new Hono(); 
+  const hs = new HonoServer(nhf);
+  await hs.start().then((srv) => srv.once(app, port))
   //   $.verbose = !!process.env.FP_DEBUG;
   //   const auth = await mockJWK({}, sthis);
   //   await writeEnvFile(sthis, tomlFile, envName, auth.keys.strings.publicKey);
@@ -310,5 +320,5 @@ export async function setupBackend(
   //     console.error("!!", chunk.toString());
   //   });
   //   await waitReady.asPromise();
-  return { port, pid: 0, envName };
+  return { port, pid: 0, envName, hs };
 }

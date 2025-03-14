@@ -15,7 +15,7 @@ import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
 import { ConnItem } from "./msg-dispatch.js";
-import { portRandom } from "./test-helper.js";
+import { cloudBackendParams, } from "./test-helper.js";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
 type Gestalt = ps.cloud.Gestalt;
@@ -200,7 +200,7 @@ export class NodeHonoFactory implements HonoServerFactory {
       sthis,
       logger,
       wsRoom: this._wsRoom,
-      port: portRandom(),
+      port: cloudBackendParams(sthis).port,
       stsService,
       gestalt,
       ende,
@@ -208,7 +208,8 @@ export class NodeHonoFactory implements HonoServerFactory {
     };
 
     const nhs = new NodeHonoServer(id, this);
-    return nhs.start(ctx).then((nhs) => fn({ ...ctx, impl: nhs }));
+    // return nhs.start(ctx).then((nhs) => fn({ ...ctx, impl: nhs }));
+    return fn({ ...ctx, impl: nhs });
   }
 
   async start(app: Hono): Promise<void> {

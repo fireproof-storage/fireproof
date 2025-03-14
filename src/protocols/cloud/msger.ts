@@ -258,6 +258,14 @@ export class MsgConnectedAuth implements MsgRawConnection<MsgWithConnAuth> {
   }
 }
 
+function initialFPUri(curl: CoerceURI): URI {
+  let gestaltUrl = URI.from(curl);
+  if (["", "/"].includes(gestaltUrl.pathname)) {
+    gestaltUrl = gestaltUrl.build().appendRelative("/fp").URI();
+  }
+  return gestaltUrl;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Msger {
   static async openHttp(
@@ -279,6 +287,7 @@ export class Msger {
     let ws: WebSocket;
     // const { encode } = jsonEnDe(sthis);
     url = url.build().setParam("random", sthis.nextId().str).URI();
+    // console.log("openWS", url.toString());
     // .setParam("reqOpen", sthis.txt.decode(encode(qOpen)))
     if (runtimeFn().isNodeIsh) {
       const { WebSocket } = await import("ws");
@@ -296,12 +305,12 @@ export class Msger {
   ): Promise<Result<MsgRawConnection>> {
     // initial exchange with JSON encoding
     const jsMsgP = defaultMsgParams(sthis, { ...imsgP, mime: "application/json", ende: jsonEnDe(sthis) });
-    const url = URI.from(curl);
+    const gestaltUrl = initialFPUri(curl);
     const gs = defaultGestalt(defaultMsgParams(sthis, imsgP), { id: "FP-Universal-Client" });
     /*
      * request Gestalt with Http
      */
-    const rHC = await Msger.openHttp(sthis, [url], jsMsgP, { my: gs, remote: gs });
+    const rHC = await Msger.openHttp(sthis, [gestaltUrl], jsMsgP, { my: gs, remote: gs });
     if (rHC.isErr()) {
       return rHC;
     }
@@ -320,16 +329,19 @@ export class Msger {
     const exGt = { my: gs, remote: resGestalt.gestalt } satisfies ExchangedGestalt;
     const msgP = defaultMsgParams(sthis, imsgP);
     if (exGt.remote.protocolCapabilities.includes("reqRes") && !exGt.remote.protocolCapabilities.includes("stream")) {
+      // console.log("openHttp---", exGt.remote.httpEndpoints, curl?.toString(), exGt.remote.httpEndpoints.map((i) => BuildURI.from(curl).resolve(i).URI().toString()));
       return applyStart(
         Msger.openHttp(
           sthis,
-          exGt.remote.httpEndpoints.map((i) => BuildURI.from(url).resolve(i).URI()),
+          exGt.remote.httpEndpoints.map((i) => BuildURI.from(curl).resolve(i).URI()),
           msgP,
           exGt,
         ),
       );
     }
-    return applyStart(Msger.openWS(sthis, BuildURI.from(url).resolve(selectRandom(exGt.remote.wsEndpoints)).URI(), msgP, exGt));
+    const wsUrl = BuildURI.from(gestaltUrl).resolve(selectRandom(exGt.remote.wsEndpoints)).URI()
+    // console.log("openWS---", wsUrl.toString(), "=====", exGt.remote.wsEndpoints);
+    return applyStart(Msger.openWS(sthis, wsUrl, msgP, exGt));
   }
 
   static connect(

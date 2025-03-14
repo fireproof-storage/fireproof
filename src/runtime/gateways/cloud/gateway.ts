@@ -36,6 +36,7 @@ import { ensureLogger, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
 import { registerStoreProtocol } from "../../../blockstore/register-store-protocol.js";
+import { buildReqPutMeta, ReqPutMeta, ResPutMeta } from "../../../protocols/cloud/msg-types-meta.js";
 
 const VERSION = "v0.1-fp-cloud";
 
@@ -56,7 +57,7 @@ abstract class BaseGateway {
   abstract getConn(uri: URI, conn: AuthedConnection): Promise<Result<Uint8Array>>;
   async get(uri: URI, rConn: AuthedConnection): Promise<Result<Uint8Array>> {
     if (rConn.conn.isErr()) {
-      return this.logger.Error().Err(rConn.conn).Msg("Error in getConn").ResultError();
+      return this.logger.Error().Err(rConn.conn).Msg("get").ResultError();
     }
     // this.logger.Debug().Any("conn", conn.key).Msg("get");
     return this.getConn(uri, rConn);
@@ -261,26 +262,29 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async putConn(uri: URI, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>> {
-    // const bodyRes = Result.Ok(body); // await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
-    // if (bodyRes.isErr()) {
-    //   return this.logger.Error().Err(bodyRes).Msg("Error in addCryptoKeyToGatewayMetaPayload").ResultError();
-    // }
+    const bodyRes = Result.Ok(body); // await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
+    if (bodyRes.isErr()) {
+      return this.logger.Error().Err(bodyRes).Msg("Error in addCryptoKeyToGatewayMetaPayload").ResultError();
+    }
+    conn.conn.Ok().request<ResPutMeta, ReqPutMeta>(buildReqPutMeta(this.sthis, conn.conn.Ok().authType, uri.getParams()), {
     // const rsu = this.prepareReqSignedUrl(uri, "PUT", conn.key);
     // if (rsu.isErr()) {
     //   return Result.Err(rsu.Err());
     // }
-    // const dbMetas = JSON.parse(this.sthis.txt.decode(bodyRes.Ok())) as CRDTEntry[];
-    // this.logger.Debug().Any("dbMetas", dbMetas).Msg("putMeta");
-    // const req = buildReqPutMeta(this.sthis, conn.key, rsu.Ok().params, dbMetas);
-    // const res = await conn.request<ResPutMeta>(req, { waitType: "resPutMeta" });
-    // if (res.isErr()) {
-    //   return Result.Err(res.Err());
-    // }
-    // // console.log("putMeta", JSON.stringify({dbMetas, res}));
+
+
+    const dbMetas = JSON.parse(this.sthis.txt.decode(bodyRes.Ok())) as CRDTEntry[];
+    this.logger.Debug().Any("dbMetas", dbMetas).Msg("putMeta");
+    const req = buildReqPutMeta(this.sthis, conn.key, rsu.Ok().params, dbMetas);
+    const res = await conn.request<ResPutMeta>(req, { waitType: "resPutMeta" });
+    if (res.isErr()) {
+      return Result.Err(res.Err());
+    }
+    // console.log("putMeta", JSON.stringify({dbMetas, res}));
     // this.logger.Debug().Any("qs", { req, res: res.Ok() }).Msg("putMeta");
     // this.putObject(uri, res.Ok().signedPutUrl, bodyRes.Ok());
-    // return res;
-    return Result.Ok(undefined);
+    return res;
+    // return Result.Ok(undefined);
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async delConn(uri: URI, conn: AuthedConnection): Promise<Result<void>> {
@@ -425,7 +429,9 @@ export class FireproofCloudGateway implements Gateway {
   }
 
   async get(uri: URI, sthis: SuperThis): Promise<GetResult> {
-    return getStoreTypeGateway(sthis, uri).get(uri, await this.getCloudConnectionItem(uri));
+    const ret = await getStoreTypeGateway(sthis, uri).get(uri, await this.getCloudConnectionItem(uri));
+    // console.log("get>>>>>>>>>>>>>", uri.toString(), ret);
+    return ret;
   }
 
   async put(uri: URI, body: Uint8Array, sthis: SuperThis): Promise<Result<void>> {
@@ -524,10 +530,10 @@ export class FireproofCloudGateway implements Gateway {
 
       const qOpen = buildReqOpen(this.sthis, rAuth.Ok(), {});
 
-      let cUrl = uri.build().protocol(params.protocol).cleanParams().URI();
-      if (cUrl.pathname === "/") {
-        cUrl = cUrl.build().pathname("/fp").URI();
-      }
+      const cUrl = uri.build().protocol(params.protocol).cleanParams().URI();
+      // if (cUrl.pathname === "/") {
+      //   cUrl = cUrl.build().pathname("/fp").URI();
+      // }
       return Msger.connect(this.sthis, rAuth.Ok(), cUrl, qOpen);
     });
     if (conn.isErr()) {
