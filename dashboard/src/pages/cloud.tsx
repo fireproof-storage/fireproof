@@ -1,25 +1,37 @@
-import { Clerk } from "@clerk/clerk-js";
+// import { Clerk } from "@clerk/clerk-js";
+// import { Clerk } from "@clerk/clerk-react";
 import { useContext } from "react";
-import { NavLink, redirect, useLocation, useParams } from "react-router-dom";
+import { Navigate, NavLink, useLocation, useParams } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
+import { useSession } from "@clerk/clerk-react";
+import { BuildURI } from "@adviser/cement";
 
 // TODO: This is a temporary loader to ensure the user is logged in with Clerk.
 // TODO: We should move this to a provider agnostic loader
-export async function cloudLoader({ request }: { request: Request }) {
-  const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// export async function cloudLoader({ request }: { request: Request }) {
+//   const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-  const clerk = new Clerk(publishableKey);
-  await clerk.load({});
-  if (!clerk.user) {
-    const url = new URL(request.url);
-    return redirect(`/login?next_url=${encodeURIComponent(url.pathname)}`);
-  }
-  return null;
-}
+// this line make our code almost +2Mb bigger
+
+//   const clerk = new Clerk(publishableKey);
+//   await clerk.load({});
+//   if (!clerk.user) {
+//     const url = new URL(request.url);
+//     return redirect(`/login?next_url=${encodeURIComponent(url.pathname)}`);
+//   }
+//   return null;
+// }
 
 export function Cloud() {
+  const x = useSession();
+  if (!(x.isLoaded && x.isSignedIn)) {
+    console.log(x)
+    const to = BuildURI.from(window.location.href).pathname("/login").setParam("next_url", window.location.pathname).toString()
+    // return <Navigate to={to.replace(/^[^:]+:\/\/[^/]+/, "")} />;
+    return <div>Not logged in</div>;
+  }
   return <WithSidebar sideBarComponent={<SidebarCloud />} />;
 }
 

@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { WithoutSidebar } from "../layouts/without-sidebar.tsx";
-import { Cloud, cloudLoader } from "../pages/cloud.tsx";
+import { Cloud } from "../pages/cloud.tsx";
 import CloudIndex from "../pages/cloud/index.tsx";
 import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
 import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
@@ -43,7 +43,8 @@ export function App() {
       <Route path="/" element={<WithoutSidebar />}>
         <Route index element={<Index />} loader={indexLoader} />
       </Route>
-      <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}>
+      {/* <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}> */}
+      <Route path="/fp/cloud" element={<Cloud />} > 
         <Route index element={<CloudIndex />} />
         <Route path="tenants">
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
