@@ -34,15 +34,17 @@ import {
 } from "../../../protocols/cloud/msg-types-data.js";
 import { ensureLogger, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
-import { UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
+import { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
 import { registerStoreProtocol } from "../../../blockstore/register-store-protocol.js";
 import { buildReqPutMeta, ReqPutMeta, ResPutMeta } from "../../../protocols/cloud/msg-types-meta.js";
+import { FPEnvelope, FPEnvelopeMeta } from "../../../blockstore/fp-envelope.js";
+import { fpDeserialize } from "../fp-envelope-serialize.js";
 
 const VERSION = "v0.1-fp-cloud";
 
 export interface StoreTypeGateway {
-  get(uri: URI, conn: AuthedConnection): Promise<Result<Uint8Array>>;
-  put(uri: URI, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>>;
+  get<S>(uri: URI, conn: AuthedConnection): Promise<Result<SerdeGetResult<S>>>;
+  put<S>(uri: URI, body: FPEnvelope<S>, conn: AuthedConnection): Promise<Result<void>>;
   delete(uri: URI, conn: AuthedConnection): Promise<Result<void>>;
 }
 
@@ -206,7 +208,7 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
       return this.logger.Error().Err(rResSignedUrl).Msg("Error in buildResSignedUrl").ResultError();
     }
     const { signedUrl: downloadUrl } = rResSignedUrl;
-    return this.getObject(uri, downloadUrl, conn);
+    fpDeserialize(this.sthis, uri, this.getObject(uri, downloadUrl, conn));
   }
   async putConn(uri: URI, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>> {
     const rResSignedUrl = await this.getReqSignedUrl<ResPutData>("reqPutData", "PUT", "data", MsgIsResPutData, uri, conn);
@@ -393,7 +395,7 @@ function connectionURI(uri: URI): URI {
 
 const subscriptions = new Map<string, Subscription[]>();
 // const doServerSubscribe = new KeyedResolvOnce();
-export class FireproofCloudGateway implements Gateway {
+export class FireproofCloudGateway implements SerdeGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   readonly #connectionURIs = new Map<string, ConnectionItem>();
@@ -405,17 +407,17 @@ export class FireproofCloudGateway implements Gateway {
     });
   }
 
-  async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
+  async buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
     return Result.Ok(baseUrl.build().setParam("key", key).URI());
   }
 
-  async start(uri: URI): Promise<Result<URI>> {
+  async start(ctx: SerdeGatewayCtx, uri: URI): Promise<Result<URI>> {
     await this.sthis.start();
-    const ret = uri.build().defParam("version", VERSION);
     const rName = uri.getParamResult("name");
     if (rName.isErr()) {
       return this.logger.Error().Err(rName).Msg("name not found").ResultError();
     }
+    const ret = uri.build().defParam("version", VERSION);
     ret.defParam("protocol", "wss");
     const retURI = ret.URI();
     const matchURI = connectionURI(retURI);
@@ -428,15 +430,15 @@ export class FireproofCloudGateway implements Gateway {
     return Result.Ok(retURI);
   }
 
-  async get(uri: URI, sthis: SuperThis): Promise<GetResult> {
-    const ret = await getStoreTypeGateway(sthis, uri).get(uri, await this.getCloudConnectionItem(uri));
+  async get<S>(ctx: SerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
+    const ret = await getStoreTypeGateway(ctx.loader.sthis, uri).get(uri, await this.getCloudConnectionItem(uri));
     // console.log("get>>>>>>>>>>>>>", uri.toString(), ret);
     return ret;
   }
 
-  async put(uri: URI, body: Uint8Array, sthis: SuperThis): Promise<Result<void>> {
+  async put<T>(ctx: SerdeGatewayCtx, uri: URI, body: FPEnvelope<T>): Promise<VoidResult> {
     const item = await this.getCloudConnectionItem(uri);
-    const ret = await getStoreTypeGateway(sthis, uri).put(uri, body, item);
+    const ret = await getStoreTypeGateway(ctx.loader.sthis, uri).put(uri, body, item);
     if (ret.isOk()) {
       if (uri.getParam("testMode")) {
         item.citem.trackPuts.add(uri.toString());
@@ -445,13 +447,13 @@ export class FireproofCloudGateway implements Gateway {
     return ret;
   }
 
-  async delete(uri: URI, sthis: SuperThis): Promise<VoidResult> {
+  async delete(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
     const item = await this.getCloudConnectionItem(uri);
     item.citem.trackPuts.delete(uri.toString());
-    return getStoreTypeGateway(sthis, uri).delete(uri, item);
+    return getStoreTypeGateway(ctx.loader.sthis, uri).delete(uri, item);
   }
 
-  async close(uri: URI): Promise<VoidResult> {
+  async close(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
     const uriStr = uri.toString();
     // CAUTION here is my happen a mutation of subscriptions caused by unsub
     for (const sub of Array.from(subscriptions.values())) {
@@ -553,7 +555,7 @@ export class FireproofCloudGateway implements Gateway {
   //   }
   // }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async subscribe(uri: URI, callback: (meta: Uint8Array) => void): Promise<UnsubscribeResult> {
+  async subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     return Result.Err(new Error("Not implemented"));
     // const rParams = uri.getParamsResult({
     //   store: 0,
@@ -615,9 +617,9 @@ export class FireproofCloudGateway implements Gateway {
     // return Result.Ok(unsub);
   }
 
-  async destroy(uri: URI, sthis: SuperThis): Promise<Result<void>> {
+  async destroy(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
     const item = await this.getCloudConnectionItem(uri);
-    await Promise.all(Array.from(item.citem.trackPuts).map(async (k) => this.delete(URI.from(k), sthis)));
+    await Promise.all(Array.from(item.citem.trackPuts).map(async (k) => this.delete(ctx, URI.from(k))));
     return Result.Ok(undefined);
   }
 
@@ -641,7 +643,7 @@ export function registerFireproofCloudStoreProtocol(protocol = "fpcloud:") {
       defaultURI() {
         return URI.from("fpcloud://fireproof.cloud/");
       },
-      gateway: async (sthis: SuperThis) => {
+      serdegateway: async (sthis: SuperThis) => {
         return new FireproofCloudGateway(sthis);
       },
     });
