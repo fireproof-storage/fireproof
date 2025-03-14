@@ -12,16 +12,20 @@ jobs:
   #
   quality-checks:
     name: Testit Runit Buildit
-    runs-on: ubuntu-24.04
     environment: dev
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
-      - uses: actions/checkout@v4
-        #with:
-        #  fetch-tags: true
-        #  fetch-depth: 1
-      - uses: actions/setup-node@v4
+      - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
+
+      #runs-on: ubuntu-24.04
+      #steps:
+      #  - uses: actions/setup-node@v4
+      #    with:
+      #      node-version: 20
+
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
