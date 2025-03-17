@@ -136,8 +136,8 @@ importers:
         specifier: ^9.11.0
         version: 9.11.0
       zx:
-        specifier: ^8.4.0
-        version: 8.4.0
+        specifier: ^8.4.1
+        version: 8.4.1
 
 packages:
 
@@ -3439,8 +3439,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zx@8.4.0:
-    resolution: {integrity: sha512-b5+gbUT0akQ5vVuBuHgp0viQx2ZYCuooVD41Z7g47sN0diLsAvB2XteHcp5lec90CNEQ9o7TkXsE3ksaJrZHGw==}
+  zx@8.4.1:
+    resolution: {integrity: sha512-1Cb+Tfwt/daKV6wckBeDbB6h3IMauqj9KWp+EcbYzi9doeJeIHCktxp/yWspXOXRdoUzBCQSKoUgm3g8r9fz5A==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -6911,4 +6911,4 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zx@8.4.0: {}
+  zx@8.4.1: {}
