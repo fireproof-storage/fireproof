@@ -136,7 +136,7 @@ importers:
         specifier: ^9.11.0
         version: 9.15.0(puppeteer-core@21.11.0(encoding@0.1.13))
       zx:
-        specifier: ^8.4.0
+        specifier: ^8.4.1
         version: 8.5.5
 
   examples/next-app:
