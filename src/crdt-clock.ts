@@ -13,9 +13,10 @@ import {
   type BaseBlockstore,
   type CarTransaction,
   PARAM,
+  throwFalsy,
 } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
-import { ensureLogger } from "./utils.js";
+import { arrayFromAsyncIterable, ensureLogger } from "./utils.js";
 
 export class CRDTClockImpl {
   // todo: track local and remote clocks independently, merge on read
@@ -70,8 +71,10 @@ export class CRDTClockImpl {
   async processUpdates(updatesAcc: DocUpdate<DocTypes>[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc;
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince<DocTypes>(this.blockstore, this.head, prevHead, {}, this.logger);
-      internalUpdates = changes.result;
+      const changes = await arrayFromAsyncIterable(
+        clockChangesSince(throwFalsy(this.blockstore), this.head, prevHead, {}, this.logger),
+      );
+      internalUpdates = changes;
     }
     this.zoomers.forEach((fn) => fn());
     this.notifyWatchers(internalUpdates || []);
