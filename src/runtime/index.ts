@@ -17,6 +17,8 @@ export * as gw from "./gateways/index.js";
 
 export * from "./key-bag.js";
 
+export * from "./meta-key-hack.js";
+
 export { FILESTORE_VERSION } from "./gateways/file/version.js";
 export { INDEXEDDB_VERSION } from "./gateways/indexeddb-version.js";
 // export { V0_19SQL_VERSION } from "./store-sql/v0.19/version.js";

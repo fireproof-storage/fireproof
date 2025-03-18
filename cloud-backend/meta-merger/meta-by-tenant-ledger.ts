@@ -1,4 +1,3 @@
-import { ResolveOnce } from "@adviser/cement";
 import { CRDTEntry } from "@fireproof/core";
 import { TenantLedgerSql } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
@@ -139,16 +138,13 @@ export class MetaByTenantLedgerSql {
     return stmt.run(t.tenant, t.ledger, t.reqId, t.resId, t.metaCID, JSON.stringify(t.meta), t.updateAt.toISOString(), t.metaCID);
   }
 
-  readonly #sqlSelectByConnection = new ResolveOnce<SQLStatement>();
   sqlSelectByConnection(): SQLStatement {
-    return this.#sqlSelectByConnection.once(() => {
-      return this.db.prepare(`
+    return this.db.prepare(`
         SELECT tenant, ledger, reqId, resId, metaCID, meta, updatedAt
         FROM MetaByTenantLedger
         WHERE tenant = ? AND ledger = ? AND reqId = ? AND resId = ?
         ORDER BY updatedAt
       `);
-    });
   }
 
   async selectByConnection(conn: ByConnection): Promise<MetaByTenantLedgerRow[]> {

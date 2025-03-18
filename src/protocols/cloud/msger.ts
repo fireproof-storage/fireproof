@@ -15,7 +15,6 @@ import {
   MsgIsConnected,
   MsgIsError,
   MsgIsResOpen,
-  MsgWithOptionalConnAuth,
   QSId,
   MsgIsTid,
   ReqGestalt,
@@ -199,7 +198,7 @@ export class MsgConnectedAuth implements MsgRawConnection<MsgWithConnAuth> {
     this.activeBinds = conn.activeBinds;
   }
 
-  bind<S extends MsgWithConnAuth, Q extends MsgWithOptionalConnAuth>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgWithConnAuth, Q extends MsgWithConnAuth>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     const stream = this.raw.bind({ ...req, conn: req.conn || this.conn }, opts);
     const ts = new TransformStream<MsgWithError<S>, MsgWithError<S>>({
       transform: (chunk, controller) => {
@@ -233,11 +232,11 @@ export class MsgConnectedAuth implements MsgRawConnection<MsgWithConnAuth> {
     });
   }
 
-  request<S extends MsgWithConnAuth, Q extends MsgWithOptionalConnAuth>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
+  request<S extends MsgWithConnAuth, Q extends MsgWithConnAuth>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
     return this.raw.request({ ...req, conn: req.conn || this.conn }, opts);
   }
 
-  send<S extends MsgWithConnAuth, Q extends MsgWithOptionalConnAuth>(msg: Q): Promise<MsgWithError<S>> {
+  send<S extends MsgWithConnAuth, Q extends MsgWithConnAuth>(msg: Q): Promise<MsgWithError<S>> {
     return this.raw.send({ ...msg, conn: msg.conn || this.conn });
   }
 
@@ -339,7 +338,7 @@ export class Msger {
         ),
       );
     }
-    const wsUrl = BuildURI.from(gestaltUrl).resolve(selectRandom(exGt.remote.wsEndpoints)).URI()
+    const wsUrl = BuildURI.from(gestaltUrl).resolve(selectRandom(exGt.remote.wsEndpoints)).URI();
     // console.log("openWS---", wsUrl.toString(), "=====", exGt.remote.wsEndpoints);
     return applyStart(Msger.openWS(sthis, wsUrl, msgP, exGt));
   }

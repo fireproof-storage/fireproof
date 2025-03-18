@@ -3,6 +3,7 @@ import { MetaByTenantLedgerSql } from "./meta-by-tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
 import { CRDTEntry } from "@fireproof/core";
 import { conditionalDrop, SQLDatabase, SQLStatement } from "./abstract-sql.js";
+import { KeyByTenantLedgerSql } from "./key-by-tenant-ledger.js";
 
 export interface MetaSendRow {
   readonly metaCID: string;
@@ -18,6 +19,7 @@ export class MetaSendSql {
   static schema(drop = false) {
     return [
       ...MetaByTenantLedgerSql.schema(drop),
+      ...KeyByTenantLedgerSql.schema(drop),
       ...conditionalDrop(
         drop,
         "MetaSend",

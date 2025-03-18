@@ -338,11 +338,16 @@ describe("Connection", () => {
           });
           it("Put", async () => {
             const sp = sup({ method: "PUT", store: "meta" });
-            const metas = Array(5)
-              .fill({ cid: "x", parents: [], data: "MomRkYXRho" })
-              .map((data) => {
-                return { ...data, cid: sthis.timeOrderedNextId().str };
-              });
+            const metas = {
+              metas: Array(5)
+                .fill({ cid: "x", parents: [], data: "MomRkYXRho" })
+                .map((data) => {
+                  return { ...data, cid: sthis.timeOrderedNextId().str };
+                }),
+              keys: Array(5)
+                .fill("")
+                .map(() => sthis.timeOrderedNextId().str),
+            };
             const res = await conn.request(buildReqPutMeta(sthis, auth.authType, sp.params, metas, gwCtx), {
               waitFor: MsgIsResPutMeta,
             });
