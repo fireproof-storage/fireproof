@@ -7,10 +7,10 @@ let hs: HonoServer;
 export async function setup() {
   const keys = await mockJWK({}, sthis);
 
-  process.env['CLOUD_SESSION_TOKEN_PUBLIC'] = keys.keys.strings.publicKey;
-  process.env['STORAGE_URL'] = "http://localhost:9000";
-  process.env['ACCESS_KEY_ID'] = "minioadmin";
-  process.env['SECRET_ACCESS_KEY'] = "minioadmin";
+  process.env["CLOUD_SESSION_TOKEN_PUBLIC"] = keys.keys.strings.publicKey;
+  process.env["STORAGE_URL"] = "http://localhost:9000";
+  process.env["ACCESS_KEY_ID"] = "minioadmin";
+  process.env["SECRET_ACCESS_KEY"] = "minioadmin";
 
   const params = await setupBackend(sthis);
   hs = params.hs;

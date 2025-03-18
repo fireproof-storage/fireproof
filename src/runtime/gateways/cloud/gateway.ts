@@ -22,6 +22,8 @@ import {
   ReqSignedUrl,
   MsgWithError,
   ResSignedUrl,
+  GwCtx,
+  QSId,
 } from "../../../protocols/cloud/msg-types.js";
 import { MsgConnected, MsgConnectedAuth, Msger, authTypeFromUri } from "../../../protocols/cloud/msger.js";
 import {
@@ -33,19 +35,34 @@ import {
   ResPutData,
 } from "../../../protocols/cloud/msg-types-data.js";
 import { ensureLogger, NotFoundError } from "../../../utils.js";
-import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
 import { registerStoreProtocol } from "../../../blockstore/register-store-protocol.js";
-import { buildReqPutMeta, ReqPutMeta, ResPutMeta } from "../../../protocols/cloud/msg-types-meta.js";
-import { FPEnvelope, FPEnvelopeMeta } from "../../../blockstore/fp-envelope.js";
-import { fpDeserialize } from "../fp-envelope-serialize.js";
+import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeWAL } from "../../../blockstore/fp-envelope.js";
+import { dbMetaEvent2Serialized, fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
+import {
+  BindGetMeta,
+  buildBindGetMeta,
+  buildReqDelMeta,
+  buildReqPutMeta,
+  EventGetMeta,
+  MsgIsBindGetMeta,
+  MsgIsEventGetMeta,
+  MsgIsResPutMeta,
+  ReqDelMeta,
+  ReqPutMeta,
+  ResDelMeta,
+  ResPutMeta,
+} from "../../../protocols/cloud/msg-types-meta.js";
+import { encodeAsV2SerializedMetaKey } from "../../meta-key-hack.js";
 
 const VERSION = "v0.1-fp-cloud";
 
+type ConnectedSerdeGatewayCtx = SerdeGatewayCtx & { conn: AuthedConnection };
+
 export interface StoreTypeGateway {
-  get<S>(uri: URI, conn: AuthedConnection): Promise<Result<SerdeGetResult<S>>>;
-  put<S>(uri: URI, body: FPEnvelope<S>, conn: AuthedConnection): Promise<Result<void>>;
-  delete(uri: URI, conn: AuthedConnection): Promise<Result<void>>;
+  get: <S>(ctx: ConnectedSerdeGatewayCtx, url: URI) => Promise<SerdeGetResult<S>>;
+  put: <T>(ctx: ConnectedSerdeGatewayCtx, url: URI, body: FPEnvelope<T>) => Promise<VoidResult>;
+  delete: (ctx: ConnectedSerdeGatewayCtx, url: URI) => Promise<VoidResult>;
 }
 
 abstract class BaseGateway {
@@ -55,47 +72,6 @@ abstract class BaseGateway {
     this.sthis = sthis;
     this.logger = ensureLogger(sthis, module);
   }
-
-  abstract getConn(uri: URI, conn: AuthedConnection): Promise<Result<Uint8Array>>;
-  async get(uri: URI, rConn: AuthedConnection): Promise<Result<Uint8Array>> {
-    if (rConn.conn.isErr()) {
-      return this.logger.Error().Err(rConn.conn).Msg("get").ResultError();
-    }
-    // this.logger.Debug().Any("conn", conn.key).Msg("get");
-    return this.getConn(uri, rConn);
-  }
-
-  abstract putConn(uri: URI, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>>;
-  async put(uri: URI, body: Uint8Array, rConn: AuthedConnection): Promise<Result<void>> {
-    if (rConn.conn.isErr()) {
-      return this.logger.Error().Err(rConn.conn).Msg("Error in putConn").ResultError();
-    }
-    // this.logger.Debug().Any("conn", conn.key).Msg("put");
-    return this.putConn(uri, body, rConn);
-  }
-
-  abstract delConn(uri: URI, conn: AuthedConnection): Promise<Result<void>>;
-  async delete(uri: URI, rConn: AuthedConnection): Promise<Result<void>> {
-    // const rConn = await prConn;
-    if (rConn.conn.isErr()) {
-      return this.logger.Error().Err(rConn).Msg("Error in deleteConn").ResultError();
-    }
-    // const conn = rConn.Ok();
-    // this.logger.Debug().Any("conn", conn.key).Msg("del");
-    return this.delConn(uri, rConn);
-  }
-
-  // prepareReqSignedUrl(type: string, method: HttpMethods, store: FPStoreTypes, uri: URI, conn: Connection): Result<ReqSignedUrl> {
-
-  //   const sig = {
-  //     conn,
-  //     params: {
-  //       method,
-  //       store,
-  //       key: uri.getParam("
-  //   } satisfies ReqSignedUrl;
-  //   return Result.Ok(buildReqSignedUrl(this.sthis, type, sig, conn))
-  // }
 
   async getReqSignedUrl<S extends ResSignedUrl>(
     type: string,
@@ -128,7 +104,7 @@ abstract class BaseGateway {
       tid: this.sthis.nextId().str,
       auth: rAuth.Ok(),
       type,
-      // conn: conn.conn,
+      conn: conn.conn.Ok().conn,
       tenant: {
         tenant: params.tenant,
         ledger: params.name,
@@ -143,7 +119,7 @@ abstract class BaseGateway {
         key: params.key,
       },
       version: VERSION,
-    } as ReqSignedUrl;
+    } satisfies ReqSignedUrl;
     return conn.conn.Ok().request<S, ReqSignedUrl>(rsu, { waitFor: waitForFn });
   }
 
@@ -201,32 +177,56 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
   constructor(sthis: SuperThis) {
     super(sthis, "DataGateway");
   }
-  async getConn(uri: URI, conn: AuthedConnection): Promise<Result<Uint8Array>> {
+  async get<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
     // type: string, method: HttpMethods, store: FPStoreTypes, waitForFn:
-    const rResSignedUrl = await this.getReqSignedUrl<ResGetData>("reqGetData", "GET", "data", MsgIsResGetData, uri, conn);
+    const rResSignedUrl = await this.getReqSignedUrl<ResGetData>("reqGetData", "GET", "data", MsgIsResGetData, uri, ctx.conn);
     if (MsgIsError(rResSignedUrl)) {
       return this.logger.Error().Err(rResSignedUrl).Msg("Error in buildResSignedUrl").ResultError();
     }
     const { signedUrl: downloadUrl } = rResSignedUrl;
-    fpDeserialize(this.sthis, uri, this.getObject(uri, downloadUrl, conn));
+    return fpDeserialize(this.sthis, uri, this.getObject(uri, downloadUrl, ctx.conn));
   }
-  async putConn(uri: URI, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>> {
-    const rResSignedUrl = await this.getReqSignedUrl<ResPutData>("reqPutData", "PUT", "data", MsgIsResPutData, uri, conn);
+  async put<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI, data: FPEnvelope<S>): Promise<Result<void>> {
+    const rResSignedUrl = await this.getReqSignedUrl<ResPutData>("reqPutData", "PUT", "data", MsgIsResPutData, uri, ctx.conn);
     if (MsgIsError(rResSignedUrl)) {
       return this.logger.Error().Err(rResSignedUrl).Msg("Error in buildResSignedUrl").ResultError();
     }
     const { signedUrl: uploadUrl } = rResSignedUrl;
+    const rBlob = await fpSerialize(ctx.loader.sthis, data);
+    if (rBlob.isErr()) {
+      return rBlob;
+    }
     // console.log("putConn", { uploadUrl });
-    return this.putObject(uri, uploadUrl, body, conn);
+    return this.putObject(uri, uploadUrl, rBlob.Ok(), ctx.conn);
   }
-  async delConn(uri: URI, conn: AuthedConnection): Promise<Result<void>> {
-    const rResSignedUrl = await this.getReqSignedUrl<ResDelData>("reqDelData", "DELETE", "data", MsgIsResDelData, uri, conn);
+  async delete(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<Result<void>> {
+    const rResSignedUrl = await this.getReqSignedUrl<ResDelData>("reqDelData", "DELETE", "data", MsgIsResDelData, uri, ctx.conn);
     if (MsgIsError(rResSignedUrl)) {
       return this.logger.Error().Err(rResSignedUrl).Msg("Error in buildResSignedUrl").ResultError();
     }
     const { signedUrl: deleteUrl } = rResSignedUrl;
-    return this.delObject(uri, deleteUrl, conn);
+    return this.delObject(uri, deleteUrl, ctx.conn);
   }
+}
+
+function getGwCtx(conn: QSId, uri: URI): Result<GwCtx> {
+  const rParams = uri.getParamsResult({
+    tid: param.OPTIONAL,
+    tenant: param.REQUIRED,
+    ledger: param.REQUIRED,
+  });
+  if (rParams.isErr()) {
+    return Result.Err(rParams);
+  }
+  const r = rParams.Ok();
+  return Result.Ok({
+    tid: r.tid,
+    conn,
+    tenant: {
+      tenant: r.tenant,
+      ledger: r.ledger,
+    },
+  });
 }
 
 class MetaGateway extends BaseGateway implements StoreTypeGateway {
@@ -235,83 +235,104 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getConn(uri: URI, conn: AuthedConnection): Promise<Result<Uint8Array>> {
-    // const rkey = uri.getParamResult("key");
-    // if (rkey.isErr()) {
-    //   return Result.Err(rkey.Err());
-    // }
-    // const rsu = buildReqGetMeta(this.sthis, conn.key, {
-    //   ...conn.key,
-    //   method: "GET",
-    //   store: "meta",
-    //   key: rkey.Ok(),
+  async get<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
+    // const sp = sup({ method: "GET", store: "meta" });
+
+    const reqSignedUrl = await this.getReqSignedUrl<ResDelData>("reqGetMeta", "GET", "meta", MsgIsBindGetMeta, uri, ctx.conn);
+    if (MsgIsError(reqSignedUrl)) {
+      return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
+    }
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    if (rGwCtx.isErr()) {
+      return Result.Err(rGwCtx);
+    }
+    const rAuthType = await ctx.conn.conn.Ok().authType();
+    if (rAuthType.isErr()) {
+      return Result.Err(rAuthType);
+    }
+    const res = await ctx.conn.conn
+      .Ok()
+      .request<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rGwCtx.Ok()), {
+        waitFor: MsgIsEventGetMeta,
+      });
+    if (MsgIsError(res)) {
+      return this.logger.Error().Err(res).Msg("Error in buildBindGetMeta").ResultError();
+    }
+
+    // decodeAsToSerializedMeta(ctx, res.
+
+    // addKeyToDbMetaDecoder(ctx).decoder?.meta?(ctx.loader.sthis, res.
+    // encoder?.meta?(ctx.loader.sthis, meta.payload);
+
+    // const reqDelMeta = buildReqPutMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rGwCtx.Ok());
+    // const resMsg = await ctx.conn.conn.Ok().request<ResDelMeta, ReqDelMeta>(reqDelMeta, {
+    //   waitFor: MsgIsResDelData
     // });
-    // const rRes = await conn.request<ResGetMeta>(rsu, {
-    //   waitType: "resGetMeta",
-    // });
-    // if (rRes.isErr()) {
-    //   return Result.Err(rRes.Err());
+    // if (MsgIsError(resMsg)) {
+    //   return this.logger.Error().Err(resMsg).Msg("Error in buildResSignedUrl").ResultError();
     // }
-    // const res = rRes.Ok();
-    // if (MsgIsError(res)) {
-    //   return Result.Err(res);
-    // }
-    // if (res.signedGetUrl) {
-    //   return this.getObject(uri, res.signedGetUrl);
-    // }
-    // return Result.Ok(this.sthis.txt.encode(JSON.stringify(res.metas)));
-    return Result.Ok(new Uint8Array());
+    return Result.Err("xx");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async putConn(uri: URI, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>> {
-    const bodyRes = Result.Ok(body); // await bs.addCryptoKeyToGatewayMetaPayload(uri, this.sthis, body);
-    if (bodyRes.isErr()) {
-      return this.logger.Error().Err(bodyRes).Msg("Error in addCryptoKeyToGatewayMetaPayload").ResultError();
+  async put<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI, imeta: FPEnvelope<S>): Promise<Result<void>> {
+    const meta = imeta as FPEnvelopeMeta;
+    const reqSignedUrl = await this.getReqSignedUrl<ResDelData>("reqPutMeta", "PUT", "meta", MsgIsResPutMeta, uri, ctx.conn);
+    if (MsgIsError(reqSignedUrl)) {
+      return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
     }
-    conn.conn.Ok().request<ResPutMeta, ReqPutMeta>(buildReqPutMeta(this.sthis, conn.conn.Ok().authType, uri.getParams()), {
-    // const rsu = this.prepareReqSignedUrl(uri, "PUT", conn.key);
-    // if (rsu.isErr()) {
-    //   return Result.Err(rsu.Err());
-    // }
-
-
-    const dbMetas = JSON.parse(this.sthis.txt.decode(bodyRes.Ok())) as CRDTEntry[];
-    this.logger.Debug().Any("dbMetas", dbMetas).Msg("putMeta");
-    const req = buildReqPutMeta(this.sthis, conn.key, rsu.Ok().params, dbMetas);
-    const res = await conn.request<ResPutMeta>(req, { waitType: "resPutMeta" });
-    if (res.isErr()) {
-      return Result.Err(res.Err());
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    if (rGwCtx.isErr()) {
+      return Result.Err(rGwCtx);
     }
-    // console.log("putMeta", JSON.stringify({dbMetas, res}));
-    // this.logger.Debug().Any("qs", { req, res: res.Ok() }).Msg("putMeta");
-    // this.putObject(uri, res.Ok().signedPutUrl, bodyRes.Ok());
-    return res;
-    // return Result.Ok(undefined);
+    const rAuthType = await ctx.conn.conn.Ok().authType();
+    if (rAuthType.isErr()) {
+      return Result.Err(rAuthType);
+    }
+
+    const serializedMeta = await dbMetaEvent2Serialized(ctx.loader.sthis, meta.payload);
+
+    const rKeyedMeta = await encodeAsV2SerializedMetaKey(ctx, serializedMeta);
+    if (rKeyedMeta.isErr()) {
+      return rKeyedMeta;
+    }
+
+    const reqPutMeta = buildReqPutMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rKeyedMeta.Ok(), rGwCtx.Ok());
+    const resMsg = await ctx.conn.conn.Ok().request<ResPutMeta, ReqPutMeta>(reqPutMeta, {
+      waitFor: MsgIsResPutMeta,
+    });
+    if (MsgIsError(resMsg)) {
+      return this.logger.Error().Err(resMsg).Msg("Error in buildResSignedUrl").ResultError();
+    }
+    return Result.Ok(undefined);
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async delConn(uri: URI, conn: AuthedConnection): Promise<Result<void>> {
-    // const rsu = this.prepareReqSignedUrl(uri, "DELETE", conn.key);
-    // if (rsu.isErr()) {
-    //   return Result.Err(rsu.Err());
-    // }
-    // const res = await conn.request<ResDelMeta>(buildReqDelMeta(this.sthis, conn.key, rsu.Ok().params), {
-    //   waitType: "resDelMeta",
-    // });
-    // if (res.isErr()) {
-    //   return Result.Err(res.Err());
-    // }
-    // const { signedDelUrl } = res.Ok();
-    // if (signedDelUrl) {
-    //   return this.delObject(uri, signedDelUrl);
-    // }
-    // return Result.Ok(undefined);
+
+  async delete(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<Result<void>> {
+    const reqSignedUrl = await this.getReqSignedUrl<ResDelData>("reqDelMeta", "DELETE", "meta", MsgIsResDelData, uri, ctx.conn);
+    if (MsgIsError(reqSignedUrl)) {
+      return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
+    }
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    if (rGwCtx.isErr()) {
+      return Result.Err(rGwCtx);
+    }
+    const rAuthType = await ctx.conn.conn.Ok().authType();
+    if (rAuthType.isErr()) {
+      return Result.Err(rAuthType);
+    }
+    const reqDelMeta = buildReqDelMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rGwCtx.Ok());
+    const resMsg = await ctx.conn.conn.Ok().request<ResDelMeta, ReqDelMeta>(reqDelMeta, {
+      waitFor: MsgIsResDelData,
+    });
+    if (MsgIsError(resMsg)) {
+      return this.logger.Error().Err(resMsg).Msg("Error in buildResSignedUrl").ResultError();
+    }
     return Result.Ok(undefined);
   }
 }
 
 class WALGateway extends BaseGateway implements StoreTypeGateway {
   // WAL will not pollute to the cloud
-  readonly wals = new Map<string, Uint8Array>();
+  readonly wals = new Map<string, FPEnvelopeWAL>();
   constructor(sthis: SuperThis) {
     super(sthis, "WALGateway");
   }
@@ -326,7 +347,7 @@ class WALGateway extends BaseGateway implements StoreTypeGateway {
     const { name, key } = rKey.Ok();
     return Result.Ok(`${name}:${key}`);
   }
-  async getConn(uri: URI): Promise<Result<Uint8Array>> {
+  async get<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
     const rKey = this.getWalKeyFromUri(uri);
     if (rKey.isErr()) {
       return Result.Err(rKey.Err());
@@ -335,17 +356,17 @@ class WALGateway extends BaseGateway implements StoreTypeGateway {
     if (!wal) {
       return Result.Err(new NotFoundError("Not found"));
     }
-    return Result.Ok(wal);
+    return Result.Ok(wal as FPEnvelope<S>);
   }
-  async putConn(uri: URI, body: Uint8Array): Promise<Result<void>> {
+  async put<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI, body: FPEnvelope<S>): Promise<Result<void>> {
     const rKey = this.getWalKeyFromUri(uri);
     if (rKey.isErr()) {
       return Result.Err(rKey.Err());
     }
-    this.wals.set(rKey.Ok(), body);
+    this.wals.set(rKey.Ok(), body as FPEnvelopeWAL);
     return Result.Ok(undefined);
   }
-  async delConn(uri: URI): Promise<Result<void>> {
+  async delete(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<Result<void>> {
     const rKey = this.getWalKeyFromUri(uri);
     if (rKey.isErr()) {
       return Result.Err(rKey.Err());
@@ -431,26 +452,36 @@ export class FireproofCloudGateway implements SerdeGateway {
   }
 
   async get<S>(ctx: SerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
-    const ret = await getStoreTypeGateway(ctx.loader.sthis, uri).get(uri, await this.getCloudConnectionItem(uri));
+    const conn = await this.getCloudConnectionItem(uri);
+    if (conn.conn.isErr()) {
+      return Result.Err(conn.conn);
+    }
+    const ret = await getStoreTypeGateway(ctx.loader.sthis, uri).get<S>({ ...ctx, conn }, uri);
     // console.log("get>>>>>>>>>>>>>", uri.toString(), ret);
     return ret;
   }
 
   async put<T>(ctx: SerdeGatewayCtx, uri: URI, body: FPEnvelope<T>): Promise<VoidResult> {
-    const item = await this.getCloudConnectionItem(uri);
-    const ret = await getStoreTypeGateway(ctx.loader.sthis, uri).put(uri, body, item);
+    const conn = await this.getCloudConnectionItem(uri);
+    if (conn.conn.isErr()) {
+      return conn.conn;
+    }
+    const ret = await getStoreTypeGateway(ctx.loader.sthis, uri).put<T>({ ...ctx, conn }, uri, body);
     if (ret.isOk()) {
       if (uri.getParam("testMode")) {
-        item.citem.trackPuts.add(uri.toString());
+        conn.citem.trackPuts.add(uri.toString());
       }
     }
     return ret;
   }
 
   async delete(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
-    const item = await this.getCloudConnectionItem(uri);
-    item.citem.trackPuts.delete(uri.toString());
-    return getStoreTypeGateway(ctx.loader.sthis, uri).delete(uri, item);
+    const conn = await this.getCloudConnectionItem(uri);
+    if (conn.conn.isErr()) {
+      return conn.conn;
+    }
+    conn.citem.trackPuts.delete(uri.toString());
+    return getStoreTypeGateway(ctx.loader.sthis, uri).delete({ ...ctx, conn }, uri);
   }
 
   async close(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {

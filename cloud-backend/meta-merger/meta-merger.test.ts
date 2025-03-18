@@ -1,19 +1,34 @@
 // import type { Database } from "better-sqlite3";
-import { Connection, MetaMerger } from "./meta-merger.js";
-import { CRDTEntry, ensureSuperThis } from "@fireproof/core";
+import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
+import { ensureSuperThis } from "@fireproof/core";
 import { SQLDatabase } from "./abstract-sql.js";
+import { V2SerializedMetaKey } from "../../src/runtime/meta-key-hack.js";
 
-function sortCRDTEntries(rows: CRDTEntry[]) {
-  return rows.sort((a, b) => a.cid.localeCompare(b.cid));
+function sortCRDTEntries(rows: V2SerializedMetaKey) {
+  return rows.metas.sort((a, b) => a.cid.localeCompare(b.cid));
+}
+
+function sortKeysEntries(rows: V2SerializedMetaKey) {
+  return rows.keys.sort();
 }
 
 interface MetaConnection {
-  readonly metas: CRDTEntry[];
+  readonly metas: V2SerializedMetaKey;
   readonly connection: Connection;
 }
 
 function toCRDTEntries(rows: MetaConnection[]) {
-  return rows.reduce((r, i) => [...r, ...i.metas], [] as CRDTEntry[]);
+  return rows.reduce(
+    (r, i) => {
+      r.metas.push(...i.metas.metas);
+      r.keys.push(...i.metas.keys);
+      return r;
+    },
+    {
+      metas: [],
+      keys: [],
+    } as V2SerializedMetaKey,
+  );
 }
 
 // function filterConnection(ref: MetaConnection[], connection: Connection) {
@@ -48,89 +63,114 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
     await mm.createSchema();
   });
 
-  let connection: Connection;
+  let metaMerge: MetaMerge;
   beforeEach(() => {
-    connection = {
-      tenant: {
-        tenant: `tenant${sthis.timeOrderedNextId().str}`,
-        ledger: "ledger",
+    metaMerge = {
+      connection: {
+        tenant: {
+          tenant: `tenant${sthis.timeOrderedNextId().str}`,
+          ledger: "ledger",
+        },
+        conn: {
+          reqId: "reqId",
+          resId: `resId-${sthis.timeOrderedNextId().str}`,
+        },
       },
-      conn: {
-        reqId: "reqId",
-        resId: `resId-${sthis.timeOrderedNextId().str}`,
+      metas: {
+        metas: [],
+        keys: [],
       },
-    } satisfies Connection;
+    } satisfies MetaMerge;
   });
 
   afterEach(async () => {
-    await mm.delMeta({
-      connection,
-    });
+    await mm.delMeta(metaMerge);
   });
 
   it("insert nothing", async () => {
     await mm.addMeta({
-      connection,
-      metas: [],
+      ...metaMerge,
+      metas: {
+        metas: [],
+        keys: [],
+      },
       now: new Date(),
     });
-    const rows = await mm.metaToSend(connection);
-    expect(rows).toEqual([]);
+    const rows = await mm.metaToSend(metaMerge.connection);
+    expect(rows).toEqual({
+      metas: [],
+      keys: [],
+    });
   });
 
   it("insert one multiple", async () => {
     const cid = sthis.timeOrderedNextId().str;
     for (let i = 0; i < 10; i++) {
-      const metas = Array(i).fill({
-        cid: cid,
-        parents: [],
-        data: "MomRkYXRho",
-      });
+      const metas = {
+        metas: Array(i).fill({
+          cid,
+          parents: [],
+          data: "MomRkYXRho",
+        }),
+        keys: Array(i).fill("key"),
+      };
+      // console.log("metas", i, metas);
       await mm.addMeta({
-        connection,
+        ...metaMerge,
         metas,
         now: new Date(),
       });
-      const rows = await mm.metaToSend(connection);
+      const rows = await mm.metaToSend(metaMerge.connection);
       if (i === 1) {
         expect(rows).toEqual(metas);
       } else {
-        expect(rows).toEqual([]);
+        expect(rows).toEqual({
+          metas: [],
+          keys: i ? ["key"] : [],
+        });
       }
     }
   });
 
   it("insert multiple", async () => {
     const conns = [];
+    const keys = [] as string[];
     for (let i = 0; i < 10; i++) {
-      const metas = Array(i)
-        .fill({
-          cid: "x",
-          parents: [],
-          data: "MomRkYXRho",
-        })
-        .map((m) => ({ ...m, cid: sthis.timeOrderedNextId().str }));
+      const metas = {
+        metas: Array(i)
+          .fill({
+            cid: "x",
+            parents: [],
+            data: "MomRkYXRho",
+          })
+          .map((m) => ({ ...m, cid: sthis.timeOrderedNextId().str })),
+        keys: Array(i)
+          .fill("key")
+          .map(() => sthis.timeOrderedNextId().str),
+      };
       const conn = {
-        ...connection.conn,
+        ...metaMerge.connection,
         reqId: sthis.timeOrderedNextId().str,
       };
       conns.push(conn);
       await mm.addMeta({
-        connection: {
-          ...connection,
-          conn,
-        } satisfies Connection,
+        ...metaMerge,
         metas,
         now: new Date(),
       });
-      const rows = await mm.metaToSend(connection);
+      const rows = await mm.metaToSend(metaMerge.connection);
       expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(metas));
+      keys.push(...metas.keys);
+      expect(sortKeysEntries(rows)).toEqual(keys.sort());
     }
     await Promise.all(
       conns.map(async (conn) =>
         mm.delMeta({
-          connection: { ...connection, conn },
-          metas: [],
+          connection: conn,
+          metas: {
+            metas: [],
+            keys: [],
+          },
         }),
       ),
     );
@@ -138,17 +178,22 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
 
   it("metaToSend to sink", async () => {
     const connections = Array(2)
-      .fill(connection)
+      .fill(metaMerge.connection)
       .map((c) => ({ ...c, conn: { ...c.conn, reqId: sthis.timeOrderedNextId().str } }));
     const ref: MetaConnection[] = [];
     for (const connection of connections) {
-      const metas = Array(2)
-        .fill({
-          cid: "x",
-          parents: [],
-          data: "MomRkYXRho",
-        })
-        .map((m) => ({ ...m, cid: sthis.timeOrderedNextId().str }));
+      const metas = {
+        metas: Array(2)
+          .fill({
+            cid: "x",
+            parents: [],
+            data: "MomRkYXRho",
+          })
+          .map((m) => ({ ...m, cid: sthis.timeOrderedNextId().str })),
+        keys: Array(2)
+          .fill("key")
+          .map(() => sthis.timeOrderedNextId().str),
+      };
       ref.push({ metas, connection });
       await mm.addMeta({
         connection,
@@ -164,11 +209,12 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
       expect(sortCRDTEntries(rowsEmpty)).toEqual([]);
     }
     const newConnections = Array(2)
-      .fill(connection)
+      .fill(metaMerge.connection)
       .map((c) => ({ ...c, conn: { ...c.conn, reqId: sthis.timeOrderedNextId().str } }));
     for (const connection of newConnections) {
       const rows = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(toCRDTEntries(ref)));
+      expect(sortKeysEntries(rows)).toEqual(sortKeysEntries(toCRDTEntries(ref)));
       const rowsEmpty = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rowsEmpty)).toEqual([]);
     }
@@ -176,7 +222,10 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
       connections.map(async (connection) =>
         mm.delMeta({
           connection,
-          metas: [],
+          metas: {
+            metas: [],
+            keys: [],
+          },
         }),
       ),
     );
@@ -184,29 +233,34 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
 
   it("delMeta", async () => {
     await mm.addMeta({
-      connection,
-      metas: [
-        {
-          cid: `del-${sthis.timeOrderedNextId().str}`,
-          parents: [],
-          data: "MomRkYXRho",
-        },
-        {
-          cid: `del-${sthis.timeOrderedNextId().str}`,
-          parents: [],
-          data: "MomRkYXRho",
-        },
-      ],
+      ...metaMerge,
+      metas: {
+        metas: [
+          {
+            cid: `del-${sthis.timeOrderedNextId().str}`,
+            parents: [],
+            data: "MomRkYXRho",
+          },
+          {
+            cid: `del-${sthis.timeOrderedNextId().str}`,
+            parents: [],
+            data: "MomRkYXRho",
+          },
+        ],
+        keys: ["hello", "world"],
+      },
       now: new Date(),
     });
-    const rows = await mm.metaToSend(connection);
-    expect(rows.length).toBe(2);
+    const rows = await mm.metaToSend(metaMerge.connection);
+    expect(rows.metas.length).toBe(2);
+    expect(rows.keys.length).toBe(2);
     await mm.delMeta({
-      connection,
+      connection: metaMerge.connection,
       metas: rows,
       now: new Date(),
     });
-    const rowsDel = await mm.metaToSend(connection);
-    expect(rowsDel.length).toBe(0);
+    const rowsDel = await mm.metaToSend(metaMerge.connection);
+    expect(rowsDel.metas.length).toBe(0);
+    expect(rowsDel.keys.length).toBe(0);
   });
 });

@@ -15,7 +15,7 @@ import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
 import { ConnItem } from "./msg-dispatch.js";
-import { cloudBackendParams, } from "./test-helper.js";
+import { cloudBackendParams } from "./test-helper.js";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
 type Gestalt = ps.cloud.Gestalt;
