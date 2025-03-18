@@ -155,7 +155,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
     }
     await metaMerger(ctx).addMeta({
       connection: msg,
-      metas: msg.metas,
+      metas: msg.meta.metas,
     });
     return buildResPutMeta(ctx, msg, { ...rUrl, metas: await metaMerger(ctx).metaToSend(msg) });
   }

@@ -135,11 +135,11 @@ type MsgWithConn<T extends MsgBase = MsgBase> = T & { readonly conn: QSId };
 
 export type MsgWithConnAuth<T extends MsgBase = MsgBase> = MsgWithConn<T> & { readonly auth: AuthType };
 
-type MsgWithOptionalConn<T extends MsgBase = MsgBase> = T & { readonly conn?: QSId };
+// type MsgWithOptionalConn<T extends MsgBase = MsgBase> = T & { readonly conn?: QSId };
 
-export type MsgWithOptionalConnAuth<T extends MsgBase = MsgBase> = MsgWithOptionalConn<T> & { readonly auth: AuthType };
+// export type MsgWithOptionalConnAuth<T extends MsgBase = MsgBase> = MsgWithOptionalConn<T> & { readonly auth: AuthType };
 
-export type MsgWithTenantLedger<T extends MsgWithOptionalConnAuth> = T & { readonly tenant: TenantLedger };
+export type MsgWithTenantLedger<T extends MsgWithConnAuth> = T & { readonly tenant: TenantLedger };
 
 export interface ErrorMsg extends MsgBase {
   readonly type: "error";
@@ -461,6 +461,10 @@ export function MsgIsWithConn<T extends MsgBase>(msg: T): msg is MsgWithConn<T> 
   return mwc && !!(mwc as QSId).reqId && !!(mwc as QSId).resId;
 }
 
+export function MsgIsWithConnAuth<T extends MsgBase>(msg: T): msg is MsgWithConnAuth<T> {
+  return MsgIsWithConn(msg) && !!msg.auth && typeof msg.auth.type === "string";
+}
+
 export function MsgIsConnected<T extends MsgBase>(msg: T, qsid: QSId): msg is MsgWithConn<T> {
   return MsgIsWithConn(msg) && msg.conn.reqId === qsid.reqId && msg.conn.resId === qsid.resId;
 }
@@ -569,9 +573,12 @@ export function buildErrorMsg(
   return msg;
 }
 
-export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTenantLedger<T> {
-  const t = (msg as MsgWithTenantLedger<T>).tenant;
-  return !!t && !!t.tenant && !!t.ledger;
+export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTenantLedger<MsgWithConnAuth<T>> {
+  if (MsgIsWithConnAuth(msg)) {
+    const t = (msg as MsgWithTenantLedger<MsgWithConnAuth<T>>).tenant;
+    return !!t && !!t.tenant && !!t.ledger;
+  }
+  return false;
 }
 
 export interface ReqSignedUrl extends ReqSignedUrlWithoutMethodParams {
@@ -579,13 +586,13 @@ export interface ReqSignedUrl extends ReqSignedUrlWithoutMethodParams {
   readonly methodParams: MethodSignedUrlParam;
 }
 
-export interface ReqSignedUrlWithoutMethodParams extends MsgWithTenantLedger<MsgWithOptionalConnAuth> {
+export interface ReqSignedUrlWithoutMethodParams extends MsgWithTenantLedger<MsgWithConnAuth> {
   readonly params: SignedUrlParam;
 }
 
 export interface GwCtx {
   readonly tid?: string;
-  readonly conn?: QSId;
+  readonly conn: QSId;
   readonly tenant: TenantLedger;
 }
 

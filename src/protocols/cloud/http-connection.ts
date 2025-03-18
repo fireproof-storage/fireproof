@@ -35,7 +35,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
   readonly logger: Logger;
   readonly msgP: MsgerParamsWithEnDe;
 
-  readonly baseURIs: { in: URI, cleaned: URI}[];
+  readonly baseURIs: { in: URI; cleaned: URI }[];
 
   readonly #onMsg = new Map<string, OnMsgFn>();
 
@@ -43,9 +43,9 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     super(sthis, exGestalt);
     this.logger = ensureLogger(sthis, "HttpConnection");
     // this.msgParam = msgP;
-    this.baseURIs = uris.map((uri) => ({ 
+    this.baseURIs = uris.map((uri) => ({
       in: uri,
-      cleaned: toHttpProtocol(uri)
+      cleaned: toHttpProtocol(uri),
     }));
     this.msgP = msgP;
   }

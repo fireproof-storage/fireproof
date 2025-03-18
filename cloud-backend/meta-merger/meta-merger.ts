@@ -1,10 +1,12 @@
-import { CRDTEntry, ps } from "@fireproof/core";
+import { ps } from "@fireproof/core";
 import { MetaByTenantLedgerSql } from "./meta-by-tenant-ledger.js";
 import { MetaSendSql } from "./meta-send.js";
 import { TenantLedgerSql } from "./tenant-ledger.js";
 import { TenantSql } from "./tenant.js";
 import { SQLDatabase } from "./abstract-sql.js";
 import { Logger } from "@adviser/cement";
+import { V2SerializedMetaKey } from "../../src/runtime/meta-key-hack.js";
+import { KeyByTenantLedgerSql } from "./key-by-tenant-ledger.js";
 
 type TenantLedger = ps.cloud.TenantLedger;
 type QSId = ps.cloud.QSId;
@@ -17,7 +19,7 @@ export interface Connection {
 export interface MetaMerge {
   // readonly logger Logger;
   readonly connection: Connection;
-  readonly metas: CRDTEntry[];
+  readonly metas: V2SerializedMetaKey;
   readonly now?: Date;
 }
 
@@ -51,6 +53,7 @@ export class MetaMerger {
     readonly tenant: TenantSql;
     readonly tenantLedger: TenantLedgerSql;
     readonly metaByTenantLedger: MetaByTenantLedgerSql;
+    readonly keyByTenantLedger: KeyByTenantLedgerSql;
     readonly metaSend: MetaSendSql;
   };
 
@@ -68,6 +71,7 @@ export class MetaMerger {
       tenant,
       tenantLedger,
       metaByTenantLedger: new MetaByTenantLedgerSql(id, db, tenantLedger),
+      keyByTenantLedger: new KeyByTenantLedgerSql(id, db, tenantLedger),
       metaSend: new MetaSendSql(id, db),
     };
   }
@@ -78,24 +82,27 @@ export class MetaMerger {
     }
   }
 
-  async delMeta(
-    mm: Omit<MetaMerge, "metas"> & { readonly metas?: CRDTEntry[] },
-  ): Promise<{ now: Date; byConnection: ByConnection }> {
+  async delMeta(mm: MetaMerge): Promise<{ now: Date; byConnection: ByConnection }> {
     const now = mm.now || new Date();
     const byConnection = toByConnection(mm.connection);
-    const metaCIDs = (mm.metas ?? []).map((meta) => meta.cid);
+    const metaCIDs = mm.metas.metas.map((meta) => meta.cid);
     const connCIDs = {
       ...byConnection,
       // needs something with is not empty to delete
       metaCIDs: metaCIDs.length ? metaCIDs : [new Date().toISOString()],
     };
+    // need to cleanup keys
+    await this.sql.keyByTenantLedger.deleteByTenantLedgerKey({
+      ...byConnection,
+      keys: mm.metas.keys,
+    });
     await this.sql.metaSend.deleteByConnection(connCIDs);
     await this.sql.metaByTenantLedger.deleteByConnection(connCIDs);
     return { now, byConnection };
   }
 
   async addMeta(mm: MetaMerge) {
-    if (!mm.metas.length) {
+    if (!mm.metas.metas.length) {
       return;
     }
     const { now, byConnection } = await this.delMeta(mm);
@@ -103,7 +110,13 @@ export class MetaMerger {
       ...mm.connection.tenant,
       createdAt: now,
     });
-    for (const meta of mm.metas) {
+    await this.sql.keyByTenantLedger.ensure({
+      ...byConnection,
+      keys: mm.metas.keys,
+      createdAt: now,
+    });
+
+    for (const meta of mm.metas.metas) {
       try {
         await this.sql.metaByTenantLedger.ensure({
           ...byConnection,
@@ -117,7 +130,7 @@ export class MetaMerger {
     }
   }
 
-  async metaToSend(sink: Connection, now = new Date()): Promise<CRDTEntry[]> {
+  async metaToSend(sink: Connection, now = new Date()): Promise<V2SerializedMetaKey> {
     const bySink = toByConnection(sink);
     const rows = await this.sql.metaSend.selectToAddSend({ ...bySink, now });
     await this.sql.metaSend.insert(
@@ -128,6 +141,10 @@ export class MetaMerger {
         sendAt: row.sendAt,
       })),
     );
-    return rows.map((row) => row.meta);
+    const { keys } = await this.sql.keyByTenantLedger.selectKeysByTenantLedger(bySink);
+    return {
+      keys,
+      metas: rows.map((row) => row.meta),
+    };
   }
 }

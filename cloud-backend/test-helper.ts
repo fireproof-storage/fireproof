@@ -3,7 +3,7 @@ import { SuperThis, rt, ps, ensureSuperThis } from "@fireproof/core";
 import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { HonoServer } from "./hono-server.js";
 import { BetterSQLDatabase } from "./meta-merger/bettersql-abstract-sql.js";
-import { NodeHonoFactory, } from "./node-hono-server.js";
+import { NodeHonoFactory } from "./node-hono-server.js";
 import { Hono } from "hono";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
@@ -280,7 +280,7 @@ export async function setupBackend(
   // backend: "D1" | "DO",
   // key: string,
   port = portRandom(),
-): Promise<{ port: number; pid: number; envName: string, hs: HonoServer }> {
+): Promise<{ port: number; pid: number; envName: string; hs: HonoServer }> {
   const envName = `test`;
   if (process.env.FP_WRANGLER_PORT) {
     return Promise.resolve({ port: +process.env.FP_WRANGLER_PORT, pid: 0, envName, hs: {} as HonoServer });
@@ -291,9 +291,9 @@ export async function setupBackend(
     // gs: remoteGestalt,
     sql: new BetterSQLDatabase("./dist/node-meta.sqlite"),
   });
-  const app = new Hono(); 
+  const app = new Hono();
   const hs = new HonoServer(nhf);
-  await hs.start().then((srv) => srv.once(app, port))
+  await hs.start().then((srv) => srv.once(app, port));
   //   $.verbose = !!process.env.FP_DEBUG;
   //   const auth = await mockJWK({}, sthis);
   //   await writeEnvFile(sthis, tomlFile, envName, auth.keys.strings.publicKey);
