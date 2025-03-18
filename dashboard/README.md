@@ -43,4 +43,5 @@ For deployment, you'll need these additional environment variables:
 CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
 CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
 CLOUDFLARE_DATABASE_ID=your_cloudflare_database_id
+VITE_CLERK_PUBLISHABLE_KEY=
 ```
