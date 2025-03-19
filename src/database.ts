@@ -121,6 +121,10 @@ export class DatabaseImpl implements Database {
     return { id, clock: result?.head, name: this.name } as DocResponse;
   }
 
+  async remove(id: string): Promise<DocResponse> {
+    return this.del(id);
+  }
+
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     await this.ready();
     this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");

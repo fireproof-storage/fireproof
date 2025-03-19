@@ -86,6 +86,13 @@ describe("basic Ledger with record", function () {
     const e = await db.get("hello").catch((e) => e);
     expect(e.message).toMatch(/Not found/);
   });
+  it("should remove as an alias for del", async () => {
+    const ok = await db.remove("hello");
+    expect(ok.id).toBe("hello");
+
+    const e = await db.get("hello").catch((e) => e);
+    expect(e.message).toMatch(/Not found/);
+  });
   it("has changes", async () => {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
@@ -192,6 +199,13 @@ describe("named Ledger with record", function () {
   });
   it("should del last record", async () => {
     const ok = await db.del("hello");
+    expect(ok.id).toBe("hello");
+
+    const e = await db.get("hello").catch((e) => e);
+    expect(e.message).toMatch(/Not found/);
+  });
+  it("should remove as an alias for del", async () => {
+    const ok = await db.remove("hello");
     expect(ok.id).toBe("hello");
 
     const e = await db.get("hello").catch((e) => e);
