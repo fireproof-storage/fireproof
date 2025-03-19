@@ -1,4 +1,3 @@
-import rollupReplace from "@rollup/plugin-replace";
 import react from "@vitejs/plugin-react";
 import * as path from "node:path";
 import { defineConfig } from "vite";
