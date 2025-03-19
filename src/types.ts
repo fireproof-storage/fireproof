@@ -542,6 +542,7 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
   bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
   del(id: string): Promise<DocResponse>;
+  remove(id: string): Promise<DocResponse>;
   changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
   allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
   allDocuments<T extends DocTypes>(): Promise<{
