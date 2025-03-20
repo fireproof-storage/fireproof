@@ -17,6 +17,8 @@ export * from "./attachable-store.js";
 
 export * from "./task-manager.js";
 
+export * from "./uri-interceptor.js";
+
 export {
   EncryptedBlockstore,
   BaseBlockstoreImpl,
