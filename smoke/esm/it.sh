@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 projectBase=$(pwd)
+export projectBase
 cd smoke/esm
 smokeDir=$(pwd)
 
@@ -63,7 +64,7 @@ function gthis() {
 function getVersion() {
   let version = "refs/tags/v$(cat $projectBase/dist/fp-version)";
   if ("$GITHUB_REF" && "$GITHUB_REF".startsWith("refs/tags/v")) {
-    version = "GITHUB_REF";
+    version = "$GITHUB_REF";
   }
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
@@ -75,6 +76,7 @@ EOF
 
 pnpm install
 pnpm run test
+deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
 
 if [ -z "$NO_CLEANUP" ]
 then
