@@ -1,24 +1,22 @@
-import { SignIn } from "@clerk/clerk-react";
+import { SignUp } from "@clerk/clerk-react";
 import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
-import { Link } from "react-router-dom";
+
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
-  { text: "Fastest I’ve ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },
+  { text: "Fastest I've ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },
 ];
 
-export async function loginLoader({ request }: { request: Request }) {
+export async function signupLoader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const nextUrl = url.searchParams.get("next_url") || "/";
   return nextUrl;
 }
 
-export function Login() {
-  const [emailPreference, setEmailPreference] = useState(false);
+export function SignUpPage() {
+  const [emailOptIn, setEmailOptIn] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const isDarkMode = useContext(AppContext).sideBar.isDarkMode;
-  // TO-DO remove this line when auth is ready
-  const toggleDarkMode = useContext(AppContext).sideBar.toggleDarkMode;
 
   function incSlide() {
     setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
@@ -49,7 +47,7 @@ export function Login() {
           className={`relative max-w-[445px] p-10 sm:px-[48px] sm:py-[60px] mx-10 my-20 sm:m-14 sm:ml-6 grow-0 rounded-fp-l ${isDarkMode ? "bg-fp-bg-01" : ""}`}
         >
           <svg
-            className="max-w-36 sm:max-w-max my-5"
+            className="max-w-36 sm:max-w-max"
             width="135"
             height="51"
             viewBox="0 0 191 51"
@@ -91,21 +89,91 @@ export function Login() {
               d="M14.6914 38.2124H0L7.35754 50.9338H22.0489C17.6581 48.3943 14.6914 43.6475 14.6914 38.2124ZM44.0978 38.2124H29.4064L22.0489 50.9338H36.7402L44.0978 38.2124Z"
             />
           </svg>
-          <SignIn
+          <h1 className="text-[6.5vw] font-bold xs:text-34 mb-[30px] sm:mb-[46px] mt-[16px] tracking-[0.02em] leading-[1.3]">
+            Create your account
+          </h1>
+          <h2 className="text-11 text-fp-dec-02 mb-4">Email preferences</h2>
+          <p className="text-14 sm:text-16 max-w-[90%] mb-4 text-balance">
+            <b>Would you like to receive emails from us?</b>
+          </p>
+          <div className="flex items-start gap-2 mb-[48px] sm:mb-[68px]">
+            <input
+              type="checkbox"
+              id="emailOptIn"
+              checked={emailOptIn}
+              onChange={(e) => setEmailOptIn(e.target.checked)}
+              className="w-[18px] h-[18px] cursor-pointer mt-[3px] accent-fp-a-02"
+            />
+            <label htmlFor="emailOptIn" className="text-14 sm:text-16 text-fp-s cursor-pointer hover:text-fp-p">
+              Yes, I'd like to receive (occasional, genuinely informative) emails from Fireproof.
+            </label>
+          </div>
+          <SignUp
             appearance={{
               elements: {
                 headerSubtitle: { display: "none" },
                 footer: { display: "none" },
               },
             }}
+            unsafeMetadata={{
+              gclid: new URLSearchParams(window.location.search).get('gclid'),
+              emailOptIn: emailOptIn
+            }}
           />
-          <div className="my-10 text-center">
-            <p className="text-14 sm:text-16 text-fp-s">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-fp-a-02 hover:text-fp-a-01">
-                Sign up
-              </Link>
+
+          <svg
+            className="absolute scale-[0.7] sm:scale-100 right-[-68px] bottom-[60px] sm:right-[-60px] sm:bottom-[95px] text-fp-a-02 pointer-events-none"
+            width="187"
+            height="186"
+            viewBox="0 0 187 186"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              className="animate-stroke-dash-500"
+              d="M44.0833 175.38C119.188 155.145 160.007 78.4817 142.027 1.9999"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeDasharray="500"
+              strokeDashoffset="-500"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              className="animate-stroke-dash-500"
+              d="M59.8737 159.466L44.0832 175.38L67.7991 178.707"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeDasharray="500"
+              strokeDashoffset="-500"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          <div className="absolute scale-[0.85] sm:scale-100 right-[-75px] bottom-[210px] sm:right-[-86px] sm:bottom-[285px]">
+            <p className="animate-show absolute max-w-[120px] top-[16px] left-[18px] text-center text-[14px] font-bold text-fp-a-02 leading-[1.3] tracking-[-0.04em] rotate-[-11deg]">
+              Sign in to see your data live!
             </p>
+            <svg
+              className="text-fp-a-02"
+              width="161"
+              height="67"
+              viewBox="0 0 161 67"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                className="animate-stroke-dash-2000"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeDasharray="2000"
+                strokeDashoffset="-2000"
+                vectorEffect="non-scaling-stroke"
+                d="M73.7212 1C36.2218 13 4.22102 24.001 1.2211 44.501C-3.29427 75.3568 62.2205 69.2017 118.221 50.0015C169.722 32.3441 167.379 13.6053 146.721 7.50098C124.721 1 97.2212 4.00098 62.2205 13.0015"
+              />
+            </svg>
           </div>
         </div>
       </div>
@@ -116,7 +184,7 @@ export function Login() {
 function Slide({ data, isDarkMode }: { data: { text: string; author: string; role: string }; isDarkMode: boolean }) {
   return (
     <div className="flex flex-col text-white">
-      <p className="text-[20px] sm:text-[34px] lg:text-[2vw] text-main font-bold text-balance mb-4 leading-[1.3]">“{data.text}“</p>
+      <p className="text-[20px] sm:text-[34px] lg:text-[2vw] text-main font-bold text-balance mb-4 leading-[1.3]">"{data.text}"</p>
       <div className="">
         <p className="text-14-bold sm:text-16">
           <b>– {data.author}</b>
@@ -125,25 +193,4 @@ function Slide({ data, isDarkMode }: { data: { text: string; author: string; rol
       </div>
     </div>
   );
-}
-
-function SlideButtonIcon({ isDarkMode }: { isDarkMode: boolean }) {
-  return (
-    <svg
-      className={`${isDarkMode ? "text-fp-s hover:text-fp-p" : "text-fp-bg-00 hover:text-fp-dec-01"} active:scale-95 transition-transform`}
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="24" cy="24" r="23.5" stroke="currentColor" />
-      <path
-        d="M33.623 24.5H16.623M16.623 24.5L24.0004 17M16.623 24.5L24.0004 32"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+} 

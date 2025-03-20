@@ -34,12 +34,14 @@ import { DatabasesShow } from "../pages/databases/show.tsx";
 import { DocsShow } from "../pages/docs/show.tsx";
 import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
+import { SignUpPage, signupLoader } from "../pages/signup.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
   const routes = createRoutesFromElements(
     <Route>
       <Route path="/login" element={<Login />} loader={loginLoader} />
+      <Route path="/signup" element={<SignUpPage />} loader={signupLoader} />
       <Route path="/" element={<WithoutSidebar />}>
         <Route index element={<Index />} loader={indexLoader} />
       </Route>
