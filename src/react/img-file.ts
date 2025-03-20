@@ -1,5 +1,5 @@
+import { DocFileMeta } from "@fireproof/core";
 import React, { useState, useEffect, ImgHTMLAttributes } from "react";
-import { DocFileMeta } from "use-fireproof";
 
 const { URL } = window;
 
