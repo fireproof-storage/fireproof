@@ -49,6 +49,11 @@ export interface StoreOpts {
   readonly loader: Loadable;
 }
 
+export interface BaseStoreOpts {
+  readonly gateway: InterceptorGateway;
+  readonly loader: Loadable;
+}
+
 export abstract class BaseStoreImpl {
   // should be injectable
 
@@ -58,13 +63,15 @@ export abstract class BaseStoreImpl {
   private _url: URI;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly gateway: SerdeGateway;
-  readonly realGateway: SerdeGateway;
+  readonly gateway: InterceptorGateway;
+  get realGateway(): SerdeGateway {
+    return this.gateway.innerGW;
+  }
   // readonly keybag: KeyBag;
   readonly opts: StoreOpts;
   readonly loader: Loadable;
   // readonly loader: Loadable;
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
+  constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts, logger: Logger) {
     // this.name = name;
     this._url = url;
     this.opts = opts;
@@ -81,8 +88,8 @@ export abstract class BaseStoreImpl {
       .Ref("url", () => this._url.toString())
       // .Str("name", name)
       .Logger();
-    this.realGateway = opts.gateway;
-    this.gateway = new InterceptorGateway(this.sthis, opts.gateway, opts.gatewayInterceptor);
+    // this.realGateway = opts.gateway;
+    this.gateway = opts.gateway;
   }
 
   url(): URI {
@@ -168,7 +175,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   parents: CarClockHead = [];
   // remote: boolean;
 
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(sthis, url, { ...opts }, ensureLogger(sthis, "MetaStoreImpl"));
@@ -265,7 +272,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 }
 
 abstract class DataStoreImpl extends BaseStoreImpl {
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
+  constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts, logger: Logger) {
     super(sthis, url, { ...opts }, logger);
   }
 
@@ -345,7 +352,7 @@ abstract class DataStoreImpl extends BaseStoreImpl {
 export class CarStoreImpl extends DataStoreImpl implements CarStore {
   readonly storeType = "car";
 
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts) {
     super(sthis, url, { ...opts }, ensureLogger(sthis, "CarStoreImpl"));
   }
 }
@@ -353,7 +360,7 @@ export class CarStoreImpl extends DataStoreImpl implements CarStore {
 export class FileStoreImpl extends DataStoreImpl implements FileStore {
   readonly storeType = "file";
 
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts) {
     super(sthis, url, { ...opts }, ensureLogger(sthis, "FileStoreImpl"));
   }
 }
@@ -370,7 +377,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(sthis, url, { ...opts }, ensureLogger(sthis, "WALStoreImpl"));
@@ -449,6 +456,8 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         onFailedAttempt: (error) => {
           this.logger
             .Warn()
+            .Any("error", error)
+            .Any("fn", fn.toString())
             .Msg(`Attempt ${error.attemptNumber} failed for ${description}. There are ${error.retriesLeft} retries left.`);
         },
       });

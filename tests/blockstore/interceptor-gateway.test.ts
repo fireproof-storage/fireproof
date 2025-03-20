@@ -1,5 +1,5 @@
-import { Result, URI } from "@adviser/cement";
-import { bs, fireproof } from "@fireproof/core";
+import { BuildURI, Result, URI } from "@adviser/cement";
+import { bs, rt, fireproof, SuperThis } from "@fireproof/core";
 
 class TestInterceptor extends bs.PassThroughGateway {
   readonly fn = vitest.fn();
@@ -51,6 +51,72 @@ class TestInterceptor extends bs.PassThroughGateway {
   }
 }
 
+export class URITrackGateway implements bs.Gateway {
+  readonly uris: Set<string>;
+  readonly memgw: rt.gw.memory.MemoryGateway;
+
+  constructor(sthis: SuperThis, memorys: Map<string, Uint8Array>, uris: Set<string>) {
+    this.memgw = new rt.gw.memory.MemoryGateway(sthis, memorys);
+    this.uris = uris;
+  }
+
+  uriAdd(uri: URI) {
+    if (!uri.getParam("itis")) {
+      throw new Error("itis not set");
+    }
+    if (this.uris.has(uri.toString())) {
+      throw new Error(`uri already added:${uri.toString()}`);
+    }
+    this.uris.add(uri.toString());
+  }
+
+  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
+    this.uriAdd(baseUrl);
+    return this.memgw.buildUrl(baseUrl, key);
+  }
+  start(baseUrl: URI): Promise<Result<URI>> {
+    this.uriAdd(baseUrl);
+    return this.memgw.start(baseUrl);
+  }
+  close(uri: URI): Promise<bs.VoidResult> {
+    this.uriAdd(uri);
+    return this.memgw.close(uri);
+  }
+  destroy(baseUrl: URI): Promise<bs.VoidResult> {
+    this.uriAdd(baseUrl);
+    return this.memgw.destroy(baseUrl);
+  }
+
+  put(url: URI, bytes: Uint8Array): Promise<bs.VoidResult> {
+    this.uriAdd(url);
+    return this.memgw.put(url, bytes);
+  }
+
+  get(url: URI): Promise<bs.GetResult> {
+    this.uriAdd(url);
+    return this.memgw.get(url);
+  }
+  delete(url: URI): Promise<bs.VoidResult> {
+    this.uriAdd(url);
+    return this.memgw.delete(url);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  subscribe(url: URI, callback: (meta: Uint8Array) => void, sthis: SuperThis): Promise<bs.UnsubscribeResult> {
+    this.uriAdd(url);
+    return Promise.resolve(
+      Result.Ok(() => {
+        /* noop */
+      }),
+    );
+  }
+
+  async getPlain(url: URI, key: string): Promise<Result<Uint8Array>> {
+    this.uriAdd(url);
+    return this.memgw.getPlain(url, key);
+  }
+}
+
 describe("InterceptorGateway", () => {
   it("passthrough", async () => {
     const gwi = new TestInterceptor();
@@ -70,7 +136,7 @@ describe("InterceptorGateway", () => {
     await db.close();
     await db.destroy();
     // await sleep(1000);
-    expect(gwi.fn.mock.calls.length).toBe(56);
+    expect(gwi.fn.mock.calls.length).toBe(58);
     // might be a stupid test
     expect(gwi.fn.mock.calls.map((i) => i[0]).sort() /* not ok there are some operation */).toEqual(
       [
@@ -130,7 +196,65 @@ describe("InterceptorGateway", () => {
         "destroy",
         "destroy",
         "destroy",
+        "subscribe",
+        "subscribe",
       ].sort() /* not ok there are some operation */,
     );
+  });
+
+  it("use the uri-interceptor", async () => {
+    let callCount = 0;
+    const gwUris = new Set<string>();
+    const unreg = bs.registerStoreProtocol({
+      protocol: "uriTest:",
+      isDefault: false,
+      defaultURI: () => {
+        return BuildURI.from("uriTest://").pathname("ram").URI();
+      },
+      gateway: async (sthis) => {
+        return new URITrackGateway(sthis, new Map<string, Uint8Array>(), gwUris);
+      },
+    });
+    const db = fireproof("interceptor-gateway", {
+      storeUrls: {
+        base: "uriTest://inspector-gateway",
+      },
+      gatewayInterceptor: bs.URIInterceptor.withMapper(async (uri: URI) => {
+        // if (uri.getParam("itis")) {
+        //   return uri;
+        // }
+        return uri
+          .build()
+          .setParam("itis", "" + ++callCount)
+          .URI();
+      }),
+    });
+    await Promise.all(
+      Array(5)
+        .fill(0)
+        .map((_, i) => db.put({ _id: "foo" + i, foo: i })),
+    );
+    expect((await db.allDocs<{ foo: number }>()).rows.map((i) => i.value.foo)).toEqual(
+      Array(5)
+        .fill(0)
+        .map((_, i) => i),
+    );
+    await db.close();
+    // console.log(
+    //   "gwUris",
+    //   Array.from(gwUris).map((i) => URI.from(i).toString()),
+    // );
+    expect(callCount).toBe(gwUris.size);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    expect(
+      Array.from(gwUris)
+        .map((i) => URI.from(i).getParam("itis"))
+        .sort((a, b) => +a! - +b!),
+    ).toEqual(
+      Array(gwUris.size)
+        .fill(1)
+        .map((_, i) => "" + (i + 1)),
+    );
+    unreg();
   });
 });
