@@ -158,7 +158,15 @@ export function MsgIsQSError(rq: ReqRes<MsgBase, MsgBase>): rq is ReqRes<ErrorMs
 }
 
 export type HttpMethods = "GET" | "PUT" | "DELETE";
-export type FPStoreTypes = "meta" | "data" | "wal";
+export type FPStoreTypes = "meta" | "car" | "wal" | "file";
+
+export function coerceFPStoreTypes(s?: string): FPStoreTypes {
+  const x = s?.trim();
+  if (x === "meta" || x === "car" || x === "wal" || x === "file") {
+    return x;
+  }
+  throw new Error(`Invalid FPStoreTypes: ${s}`);
+}
 
 // reqRes is http
 // stream is WebSocket
@@ -256,7 +264,7 @@ export type GestaltParam = Partial<Gestalt> & { readonly id: string };
 
 export function defaultGestalt(msgP: MsgerParams, gestalt: GestaltParam): Gestalt {
   return {
-    storeTypes: ["meta", "data", "wal"],
+    storeTypes: ["meta", "file", "car", "wal"],
     httpEndpoints: ["/fp"],
     wsEndpoints: ["/ws"],
     encodings: ["JSON"],
@@ -287,7 +295,7 @@ export function defaultGestalt(msgP: MsgerParams, gestalt: GestaltParam): Gestal
       // "reqSignedUrl",
       "reqSubscribeMeta",
       "reqPutMeta",
-      "reqGetMeta",
+      "reqBindMeta",
       "reqDelMeta",
       "reqPutData",
       "reqGetData",
@@ -607,10 +615,11 @@ export function buildReqSignedUrl<T extends ReqSignedUrl>(sthis: NextId, type: s
     tid: sthis.nextId().str,
     type,
     auth: rparam.auth,
+    methodParams: rparam.methodParam,
     version: VERSION,
     ...gwCtx,
     params: rparam.params,
-  } as T;
+  } satisfies ReqSignedUrl as T;
 }
 
 export interface ResSignedUrl extends MsgWithTenantLedger<MsgWithConn> {

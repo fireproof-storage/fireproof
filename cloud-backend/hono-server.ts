@@ -155,9 +155,9 @@ export abstract class HonoServerBase implements HonoServerImpl {
     }
     await metaMerger(ctx).addMeta({
       connection: msg,
-      metas: msg.meta.metas,
+      meta: msg.meta,
     });
-    return buildResPutMeta(ctx, msg, { ...rUrl, metas: await metaMerger(ctx).metaToSend(msg) });
+    return buildResPutMeta(ctx, msg, await metaMerger(ctx).metaToSend(msg), rUrl.signedUrl);
   }
 
   async handleReqDelMeta(ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<ReqDelMeta>): Promise<MsgWithError<ResDelMeta>> {
@@ -167,8 +167,9 @@ export abstract class HonoServerBase implements HonoServerImpl {
     }
     await metaMerger(ctx).delMeta({
       connection: msg,
+      meta: msg.meta ?? { metas: [], keys: [] },
     });
-    return buildResDelMeta(msg, rUrl.signedUrl);
+    return buildResDelMeta(msg, rUrl.params, rUrl.signedUrl);
   }
 
   async handleBindGetMeta(
@@ -181,17 +182,9 @@ export abstract class HonoServerBase implements HonoServerImpl {
       return rMsg;
     }
     // console.log("handleBindGetMeta-in", msg, this.id);
-    const metas = await metaMerger(ctx).metaToSend(msg);
-    // console.log("handleBindGetMeta-meta", metas);
-    const res = buildEventGetMeta(
-      ctx,
-      msg,
-      {
-        ...rMsg,
-        metas,
-      },
-      gwCtx,
-    );
+    const meta = await metaMerger(ctx).metaToSend(msg);
+    // console.log("handleBindGetMeta-meta", meta);
+    const res = buildEventGetMeta(ctx, msg, meta, gwCtx, rMsg.signedUrl);
     // console.log("handleBindGetMeta-out", res);
     return res;
   }
@@ -342,7 +335,6 @@ export class HonoServer {
             },
             onMessage: async (event, ws) => {
               const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)) as MsgBase);
-              // console.log("onMessage:inject:", id, rMsg);
               if (rMsg.isErr()) {
                 ws.send(
                   ctx.ende.encode(

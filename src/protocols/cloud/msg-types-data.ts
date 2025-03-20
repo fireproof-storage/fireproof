@@ -45,7 +45,13 @@ export function buildResGetData(
   req: MsgWithConnAuth<ReqGetData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResGetData>> {
-  return buildRes<MsgWithConnAuth<ReqGetData>, ResGetData>({ method: "GET", store: "data" }, "resGetData", msgCtx, req, ctx);
+  return buildRes<MsgWithConnAuth<ReqGetData>, ResGetData>(
+    { method: "GET", store: req.methodParams.store },
+    "resGetData",
+    msgCtx,
+    req,
+    ctx,
+  );
 }
 
 export interface ReqPutData extends ReqSignedUrl {
@@ -74,7 +80,13 @@ export function buildResPutData(
   req: MsgWithConnAuth<ReqPutData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResPutData>> {
-  return buildRes<MsgWithConnAuth<ReqPutData>, ResPutData>({ method: "PUT", store: "data" }, "resPutData", msgCtx, req, ctx);
+  return buildRes<MsgWithConnAuth<ReqPutData>, ResPutData>(
+    { method: "PUT", store: req.methodParams.store },
+    "resPutData",
+    msgCtx,
+    req,
+    ctx,
+  );
 }
 
 export interface ReqDelData extends ReqSignedUrl {
@@ -102,5 +114,11 @@ export function buildResDelData(
   req: MsgWithConnAuth<ReqDelData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResDelData>> {
-  return buildRes<MsgWithConnAuth<ReqDelData>, ResDelData>({ method: "DELETE", store: "data" }, "resDelData", msgCtx, req, ctx);
+  return buildRes<MsgWithConnAuth<ReqDelData>, ResDelData>(
+    { method: "DELETE", store: req.methodParams.store },
+    "resDelData",
+    msgCtx,
+    req,
+    ctx,
+  );
 }

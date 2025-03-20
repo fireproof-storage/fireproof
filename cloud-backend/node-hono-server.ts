@@ -9,13 +9,14 @@ import {
   WSContextWithId,
   WSEventsConnId,
 } from "./hono-server.js";
-import { URI } from "@adviser/cement";
+import { ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
 import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
 import { ConnItem } from "./msg-dispatch.js";
 import { cloudBackendParams } from "./test-helper.js";
+import { MetaMerger } from "./meta-merger/meta-merger.js";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
 type Gestalt = ps.cloud.Gestalt;
@@ -147,6 +148,8 @@ class NodeWSRoom implements WSRoom {
   }
 }
 
+const createDB = new ResolveOnce();
+
 export class NodeHonoFactory implements HonoServerFactory {
   _upgradeWebSocket!: UpgradeWebSocket;
   _injectWebSocket!: (t: unknown) => void;
@@ -214,6 +217,10 @@ export class NodeHonoFactory implements HonoServerFactory {
 
   async start(app: Hono): Promise<void> {
     try {
+      await createDB.once(() => {
+        return new MetaMerger("test", this.sthis.logger, this.params.sql).createSchema();
+      });
+
       const { createNodeWebSocket } = await import("@hono/node-ws");
       const { serve } = await import("@hono/node-server");
       this._serve = serve as serveFn;
