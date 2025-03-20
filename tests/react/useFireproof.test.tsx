@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "use-fireproof";
-import type { Database, LiveQueryResult, UseDocumentResult } from "use-fireproof";
+import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
 
 // Test timeout value for CI
 const TEST_TIMEOUT = 45000;
@@ -306,11 +306,13 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
         docResult.merge({ input: "fresh" });
       });
 
+      let waitForSave: Promise<DocResponse>;
       renderHook(() => {
-        docResult.save();
+        waitForSave = docResult.save();
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
+        await waitForSave;
         expect(docResult.doc.input).toBe("fresh");
         expect(docResult.doc._id).toBeDefined();
       });
