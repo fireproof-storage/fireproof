@@ -9,8 +9,11 @@
   "devDependencies": {
     "playwright": "^1.51.0",
     "playwright-chromium": "^1.51.0",
-    "@vitest/browser": "^3.0.8",
-    "@vitest/ui": "^3.0.8",
-    "vitest": "^3.0.8"
+    "@vitest/browser": "^3.0.9",
+    "@vitest/ui": "^3.0.9",
+    "vitest": "^3.0.9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "msw", "playwright-chromium"]
   }
 }

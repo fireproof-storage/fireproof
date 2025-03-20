@@ -18,7 +18,7 @@ it("esm.sh", async () => {
 //console.log("pre-window-js", window.FP_VERSION)
 import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
 
-console.log("window-js", window.FP_VERSION)
+console.log("SCRIPT FP_VERSION", window.FP_VERSION)
 function invariant(cond, message) {
   if (!cond) {
     throw new Error(message)
