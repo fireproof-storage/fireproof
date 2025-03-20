@@ -219,15 +219,12 @@ describe("InterceptorGateway", () => {
       storeUrls: {
         base: "uriTest://inspector-gateway",
       },
-      gatewayInterceptor: bs.URIInterceptor.withMapper(async (uri: URI) => {
-        // if (uri.getParam("itis")) {
-        //   return uri;
-        // }
-        return uri
+      gatewayInterceptor: bs.URIInterceptor.withMapper(async (uri: URI) =>
+        uri
           .build()
           .setParam("itis", "" + ++callCount)
-          .URI();
-      }),
+          .URI(),
+      ),
     });
     await Promise.all(
       Array(5)
@@ -240,15 +237,11 @@ describe("InterceptorGateway", () => {
         .map((_, i) => i),
     );
     await db.close();
-    // console.log(
-    //   "gwUris",
-    //   Array.from(gwUris).map((i) => URI.from(i).toString()),
-    // );
     expect(callCount).toBe(gwUris.size);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(
       Array.from(gwUris)
         .map((i) => URI.from(i).getParam("itis"))
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         .sort((a, b) => +a! - +b!),
     ).toEqual(
       Array(gwUris.size)
