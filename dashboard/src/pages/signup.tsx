@@ -116,8 +116,8 @@ export function SignUpPage() {
               },
             }}
             unsafeMetadata={{
-              gclid: new URLSearchParams(window.location.search).get('gclid'),
-              emailOptIn: emailOptIn
+              gclid: new URLSearchParams(window.location.search).get("gclid"),
+              emailOptIn: emailOptIn,
             }}
           />
 
@@ -193,4 +193,4 @@ function Slide({ data, isDarkMode }: { data: { text: string; author: string; rol
       </div>
     </div>
   );
-} 
+}
