@@ -13,15 +13,15 @@ function sortKeysEntries(rows: V2SerializedMetaKey) {
 }
 
 interface MetaConnection {
-  readonly metas: V2SerializedMetaKey;
+  readonly meta: V2SerializedMetaKey;
   readonly connection: Connection;
 }
 
 function toCRDTEntries(rows: MetaConnection[]) {
   return rows.reduce(
     (r, i) => {
-      r.metas.push(...i.metas.metas);
-      r.keys.push(...i.metas.keys);
+      r.metas.push(...i.meta.metas);
+      r.keys.push(...i.meta.keys);
       return r;
     },
     {
@@ -76,7 +76,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
           resId: `resId-${sthis.timeOrderedNextId().str}`,
         },
       },
-      metas: {
+      meta: {
         metas: [],
         keys: [],
       },
@@ -90,7 +90,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
   it("insert nothing", async () => {
     await mm.addMeta({
       ...metaMerge,
-      metas: {
+      meta: {
         metas: [],
         keys: [],
       },
@@ -106,7 +106,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
   it("insert one multiple", async () => {
     const cid = sthis.timeOrderedNextId().str;
     for (let i = 0; i < 10; i++) {
-      const metas = {
+      const meta = {
         metas: Array(i).fill({
           cid,
           parents: [],
@@ -117,12 +117,12 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
       // console.log("metas", i, metas);
       await mm.addMeta({
         ...metaMerge,
-        metas,
+        meta,
         now: new Date(),
       });
       const rows = await mm.metaToSend(metaMerge.connection);
       if (i === 1) {
-        expect(rows).toEqual(metas);
+        expect(rows).toEqual(meta);
       } else {
         expect(rows).toEqual({
           metas: [],
@@ -136,7 +136,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
     const conns = [];
     const keys = [] as string[];
     for (let i = 0; i < 10; i++) {
-      const metas = {
+      const meta = {
         metas: Array(i)
           .fill({
             cid: "x",
@@ -155,19 +155,19 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
       conns.push(conn);
       await mm.addMeta({
         ...metaMerge,
-        metas,
+        meta,
         now: new Date(),
       });
       const rows = await mm.metaToSend(metaMerge.connection);
-      expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(metas));
-      keys.push(...metas.keys);
+      expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(meta));
+      keys.push(...meta.keys);
       expect(sortKeysEntries(rows)).toEqual(keys.sort());
     }
     await Promise.all(
       conns.map(async (conn) =>
         mm.delMeta({
           connection: conn,
-          metas: {
+          meta: {
             metas: [],
             keys: [],
           },
@@ -182,7 +182,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
       .map((c) => ({ ...c, conn: { ...c.conn, reqId: sthis.timeOrderedNextId().str } }));
     const ref: MetaConnection[] = [];
     for (const connection of connections) {
-      const metas = {
+      const meta = {
         metas: Array(2)
           .fill({
             cid: "x",
@@ -194,10 +194,10 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
           .fill("key")
           .map(() => sthis.timeOrderedNextId().str),
       };
-      ref.push({ metas, connection });
+      ref.push({ meta, connection });
       await mm.addMeta({
         connection,
-        metas,
+        meta,
         now: new Date(),
       });
     }
@@ -222,7 +222,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
       connections.map(async (connection) =>
         mm.delMeta({
           connection,
-          metas: {
+          meta: {
             metas: [],
             keys: [],
           },
@@ -234,7 +234,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
   it("delMeta", async () => {
     await mm.addMeta({
       ...metaMerge,
-      metas: {
+      meta: {
         metas: [
           {
             cid: `del-${sthis.timeOrderedNextId().str}`,
@@ -256,7 +256,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
     expect(rows.keys.length).toBe(2);
     await mm.delMeta({
       connection: metaMerge.connection,
-      metas: rows,
+      meta: rows,
       now: new Date(),
     });
     const rowsDel = await mm.metaToSend(metaMerge.connection);

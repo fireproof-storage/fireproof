@@ -49,7 +49,7 @@ export class MetaByTenantLedgerSql {
         meta  TEXT NOT NULL,
         updatedAt TEXT NOT NULL,
         PRIMARY KEY (tenant, ledger, reqId, resId, metaCID),
-        UNIQUE(metaCID),
+        UNIQUE (tenant, ledger, metaCID),
         FOREIGN KEY (tenant, ledger) REFERENCES TenantLedger(tenant, ledger)
       )
     `,
@@ -79,7 +79,7 @@ export class MetaByTenantLedgerSql {
     return this.db.prepare(`
         INSERT INTO MetaByTenantLedger(tenant, ledger, reqId, resId, metaCID, meta, updatedAt)
           SELECT ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (
-            SELECT 1 FROM MetaByTenantLedger WHERE metaCID = ?
+            SELECT 1 FROM MetaByTenantLedger WHERE metaCID = ? AND tenant = ? AND ledger = ? 
           )
       `);
     // });
@@ -88,7 +88,7 @@ export class MetaByTenantLedgerSql {
   // readonly #sqlDeleteByConnection = new ResolveOnce();
   sqlDeleteByConnection(): SQLStatement {
     // return this.#sqlDeleteByConnection.once(() => {
-    return this.db.prepare(`
+    const stmt = this.db.prepare(`
         DELETE FROM MetaByTenantLedger
           WHERE
             tenant = ?
@@ -101,6 +101,7 @@ export class MetaByTenantLedgerSql {
           AND
             metaCID NOT IN (SELECT value FROM json_each(?))
       `);
+    return stmt;
     // });
   }
 
@@ -128,14 +129,26 @@ export class MetaByTenantLedgerSql {
   //   } satisfies MetaByTenantLedgerRow))
   // }
 
-  async deleteByConnection(t: ByConnection & { metaCIDs: string[] }) {
+  async deleteByConnection(t: ByConnection, waitingMetaCIDS: string[]) {
     const stmt = this.sqlDeleteByConnection();
-    return stmt.run(t.tenant, t.ledger, t.reqId, t.resId, JSON.stringify(t.metaCIDs));
+    // console.log("deleteByConnection:by:", t);
+    return stmt.run(t.tenant, t.ledger, t.reqId, t.resId, JSON.stringify(waitingMetaCIDS));
   }
 
   async ensure(t: MetaByTenantLedgerRow) {
     const stmt = this.sqlEnsureMetaByTenantLedger();
-    return stmt.run(t.tenant, t.ledger, t.reqId, t.resId, t.metaCID, JSON.stringify(t.meta), t.updateAt.toISOString(), t.metaCID);
+    return stmt.run(
+      t.tenant,
+      t.ledger,
+      t.reqId,
+      t.resId,
+      t.metaCID,
+      JSON.stringify(t.meta),
+      t.updateAt,
+      t.metaCID,
+      t.tenant,
+      t.ledger,
+    );
   }
 
   sqlSelectByConnection(): SQLStatement {

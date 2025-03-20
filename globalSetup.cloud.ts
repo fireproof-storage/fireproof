@@ -8,7 +8,7 @@ export async function setup() {
   const keys = await mockJWK({}, sthis);
 
   process.env["CLOUD_SESSION_TOKEN_PUBLIC"] = keys.keys.strings.publicKey;
-  process.env["STORAGE_URL"] = "http://localhost:9000";
+  process.env["STORAGE_URL"] = "http://localhost:9000/testbucket";
   process.env["ACCESS_KEY_ID"] = "minioadmin";
   process.env["SECRET_ACCESS_KEY"] = "minioadmin";
 
@@ -20,7 +20,9 @@ export async function setup() {
     envName: params.envName,
   });
 
-  process.env.FP_STORAGE_URL = keys.applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=test&protocol=ws`).toString();
+  process.env.FP_STORAGE_URL = keys
+    .applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
+    .toString();
 
   // eslint-disable-next-line no-console
   console.log("Started node-backend process - ", cloudBackendParams(sthis).pid, "on port", params.port);

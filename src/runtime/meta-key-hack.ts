@@ -74,16 +74,14 @@ function toV2SerializedMetaKey(or: NonNullable<unknown>): V2SerializedMetaKey {
   throw new Error("not a valid serialized meta key");
 }
 
-export async function decodeAsToSerializedMeta(ctx: SerdeGatewayCtx, raw: Uint8Array): Promise<Result<V2SerializedMetaKey>> {
+export async function V2SerializedMetaKeyExtractKey(
+  ctx: SerdeGatewayCtx,
+  v2: V2SerializedMetaKey,
+): Promise<Result<SerializedMeta[]>> {
   const kb = await ctx.loader.keyBag();
   if (!kb) {
     return Promise.resolve(Result.Err(new Error("missing keybag")));
   }
-  const rJsObj = exception2Result(() => JSON.parse(ctx.loader.sthis.txt.decode(raw))) as Result<NonNullable<unknown>>;
-  if (rJsObj.isErr()) {
-    return Promise.resolve(Result.Err(rJsObj));
-  }
-  const v2 = toV2SerializedMetaKey(rJsObj.unwrap());
   const dataUrl = await ctx.loader.attachedStores.local().active.car.url();
   const keyName = dataUrl.getParam(PARAM.STORE_KEY);
   if (!keyName) {
@@ -104,7 +102,23 @@ export async function decodeAsToSerializedMeta(ctx: SerdeGatewayCtx, raw: Uint8A
       }
     }
   }
-  return Promise.resolve(Result.Ok(v2));
+  return Promise.resolve(Result.Ok(v2.metas));
+}
+
+export async function decodeAsToSerializedMeta(ctx: SerdeGatewayCtx, raw: Uint8Array): Promise<Result<V2SerializedMetaKey>> {
+  const rJsObj = exception2Result(() => JSON.parse(ctx.loader.sthis.txt.decode(raw))) as Result<NonNullable<unknown>>;
+  if (rJsObj.isErr()) {
+    return Result.Err(rJsObj);
+  }
+  const v2 = toV2SerializedMetaKey(rJsObj.unwrap());
+  const metas = await V2SerializedMetaKeyExtractKey(ctx, v2);
+  if (metas.isErr()) {
+    return Result.Err(metas);
+  }
+  return Result.Ok({
+    metas: metas.Ok(),
+    keys: v2.keys,
+  });
 }
 
 export function addKeyToDbMetaDecoder(

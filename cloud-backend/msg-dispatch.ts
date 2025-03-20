@@ -175,7 +175,7 @@ export class MsgDispatcher {
       const found = Array.from(this.items.values()).find((item) => item.match(msg));
       if (!found) {
         // console.log("dispatch-2", msg);
-        return this.send(ctx, buildErrorMsg(ctx, msg, new Error("unexpected message")));
+        return this.send(ctx, buildErrorMsg(ctx, msg, new Error(`unexpected message`)));
       }
       if (!found.isNotConn) {
         // console.log("dispatch-3");
