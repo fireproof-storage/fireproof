@@ -19,7 +19,7 @@ export interface Connection {
 export interface MetaMerge {
   // readonly logger Logger;
   readonly connection: Connection;
-  readonly metas: V2SerializedMetaKey;
+  readonly meta: V2SerializedMetaKey;
   readonly now?: Date;
 }
 
@@ -85,24 +85,25 @@ export class MetaMerger {
   async delMeta(mm: MetaMerge): Promise<{ now: Date; byConnection: ByConnection }> {
     const now = mm.now || new Date();
     const byConnection = toByConnection(mm.connection);
-    const metaCIDs = mm.metas.metas.map((meta) => meta.cid);
+    const metaCIDs = mm.meta.metas.map((meta) => meta.cid);
     const connCIDs = {
       ...byConnection,
-      // needs something with is not empty to delete
-      metaCIDs: metaCIDs.length ? metaCIDs : [new Date().toISOString()],
+      metaCIDs: metaCIDs,
     };
-    // need to cleanup keys
+    // console.log("delMeta", mm);
     await this.sql.keyByTenantLedger.deleteByTenantLedgerKey({
       ...byConnection,
-      keys: mm.metas.keys,
+      keys: mm.meta.keys,
     });
+
     await this.sql.metaSend.deleteByConnection(connCIDs);
-    await this.sql.metaByTenantLedger.deleteByConnection(connCIDs);
+    const waitingMetaCIDS = await this.sql.metaSend.getToSendMetaCIDs(byConnection.tenant, byConnection.ledger);
+    await this.sql.metaByTenantLedger.deleteByConnection(connCIDs, waitingMetaCIDS);
     return { now, byConnection };
   }
 
   async addMeta(mm: MetaMerge) {
-    if (!mm.metas.metas.length) {
+    if (!mm.meta.metas.length) {
       return;
     }
     const { now, byConnection } = await this.delMeta(mm);
@@ -112,12 +113,13 @@ export class MetaMerger {
     });
     await this.sql.keyByTenantLedger.ensure({
       ...byConnection,
-      keys: mm.metas.keys,
+      keys: mm.meta.keys,
       createdAt: now,
     });
-
-    for (const meta of mm.metas.metas) {
+    // console.log("addMeta", byConnection, mm.meta);
+    for (const meta of mm.meta.metas) {
       try {
+        // console.log("addMeta", byConnection, meta);
         await this.sql.metaByTenantLedger.ensure({
           ...byConnection,
           metaCID: meta.cid,
@@ -125,7 +127,7 @@ export class MetaMerger {
           updateAt: now,
         });
       } catch (e) {
-        this.logger.Warn().Err(e).Str("metaCID", meta.cid).Msg("addMeta");
+        this.logger.Error().Err(e).Str("metaCID", meta.cid).Msg("addMeta");
       }
     }
   }
@@ -133,14 +135,19 @@ export class MetaMerger {
   async metaToSend(sink: Connection, now = new Date()): Promise<V2SerializedMetaKey> {
     const bySink = toByConnection(sink);
     const rows = await this.sql.metaSend.selectToAddSend({ ...bySink, now });
-    await this.sql.metaSend.insert(
-      rows.map((row) => ({
-        metaCID: row.metaCID,
-        reqId: row.reqId,
-        resId: row.resId,
-        sendAt: row.sendAt,
-      })),
-    );
+    // console.log("metaToSend", bySink, rows);
+    if (rows.length) {
+      await this.sql.metaSend.insert(
+        rows.map((row) => ({
+          metaCID: row.metaCID,
+          tenant: row.tenant,
+          ledger: row.ledger,
+          reqId: row.reqId,
+          resId: row.resId,
+          sendAt: row.sendAt,
+        })),
+      );
+    }
     const { keys } = await this.sql.keyByTenantLedger.selectKeysByTenantLedger(bySink);
     return {
       keys,

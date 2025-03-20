@@ -262,7 +262,7 @@ describe("Connection", () => {
         }
         describe("Data", async () => {
           it("Get", async () => {
-            const sp = sup({ method: "GET", store: "data" });
+            const sp = sup({ method: "GET", store: "file" });
             const res = await conn.request(buildReqGetData(sthis, sp, gwCtx), { waitFor: MsgIsResGetData });
             if (MsgIsResGetData(res)) {
               // expect(res.params).toEqual(sp);
@@ -272,7 +272,7 @@ describe("Connection", () => {
             }
           });
           it("Put", async () => {
-            const sp = sup({ method: "PUT", store: "data" });
+            const sp = sup({ method: "PUT", store: "file" });
             const res = await conn.request(buildReqPutData(sthis, sp, gwCtx), { waitFor: MsgIsResPutData });
             if (MsgIsResPutData(res)) {
               // expect(res.params).toEqual(sp);
@@ -282,7 +282,7 @@ describe("Connection", () => {
             }
           });
           it("Del", async () => {
-            const sp = sup({ method: "DELETE", store: "data" });
+            const sp = sup({ method: "DELETE", store: "file" });
             const res = await conn.request(buildReqDelData(sthis, sp, gwCtx), { waitFor: MsgIsResDelData });
             if (MsgIsResDelData(res)) {
               // expect(res.params).toEqual(sp);

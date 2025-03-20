@@ -31,6 +31,7 @@ export class BetterSQLDatabase implements SQLDatabase {
   }
 
   prepare(sql: string): SQLStatement {
-    return new BetterSQLStatement(this.db.prepare(sql));
+    const stmt = this.db.prepare(sql);
+    return new BetterSQLStatement(stmt);
   }
 }
