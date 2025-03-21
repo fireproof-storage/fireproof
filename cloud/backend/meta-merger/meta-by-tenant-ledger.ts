@@ -1,7 +1,9 @@
-import { CRDTEntry } from "@fireproof/core";
-import { TenantLedgerSql } from "./tenant-ledger.js";
+import { CRDTEntry, } from "@fireproof/core";
+import { sqlTenantLedger } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
-import { conditionalDrop, SQLDatabase, SQLStatement } from "./abstract-sql.js";
+import { foreignKey, primaryKey, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { LibSQLDatabase } from "drizzle-orm/libsql";
+import { eq, and, notInArray } from "drizzle-orm";
 
 export interface MetaByTenantLedgerRow {
   readonly tenant: string;
@@ -13,156 +15,149 @@ export interface MetaByTenantLedgerRow {
   readonly updateAt: Date;
 }
 
-interface SQLMetaByTenantLedgerRow {
-  readonly tenant: string;
-  readonly ledger: string;
-  readonly reqId: string;
-  readonly resId: string;
-  readonly metaCID: string;
-  readonly meta: string;
-  readonly updateAt: string;
-}
+// interface SQLMetaByTenantLedgerRow {
+//   readonly tenant: string;
+//   readonly ledger: string;
+//   readonly reqId: string;
+//   readonly resId: string;
+//   readonly metaCID: string;
+//   readonly meta: string;
+//   readonly updateAt: string;
+// }
 
-/*
-SELECT * FROM Mitarbeiter e1
-WHERE NOT EXISTS
-(
-    SELECT 1 FROM Mitarbeiter e2
-    WHERE e1.employee_id=e2.employee_id und e2.employee_name LIKE 'A%'
+
+export const sqlMetaByTenantLedger = sqliteTable(
+  "MetaByTenantLedger",
+  {
+    tenant: text().notNull(),
+    ledger: text().notNull(),
+    metaCID: text().notNull(),
+    meta: text().notNull(),
+    reqId: text().notNull(),
+    resId: text().notNull(),
+    updateAt: text().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tenant, table.ledger, table.metaCID] }),
+    index("MetaByTenantLedger-ReqIdResId").on(table.tenant, table.ledger, table.reqId, table.resId),
+    foreignKey({
+      columns: [table.tenant, table.ledger],
+      foreignColumns: [sqlTenantLedger.tenant, sqlTenantLedger.ledger],
+    }),
+  ],
 );
- */
 
 export class MetaByTenantLedgerSql {
-  static schema(drop = false) {
-    return [
-      ...TenantLedgerSql.schema(drop),
-      ...conditionalDrop(
-        drop,
-        "MetaByTenantLedger",
-        `
-      CREATE TABLE IF NOT EXISTS MetaByTenantLedger(
-        tenant TEXT NOT NULL,
-        ledger TEXT NOT NULL,
-        reqId TEXT NOT NULL,
-        resId TEXT NOT NULL,
-        metaCID TEXT NOT NULL,
-        meta  TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        PRIMARY KEY (tenant, ledger, reqId, resId, metaCID),
-        UNIQUE (tenant, ledger, metaCID),
-        FOREIGN KEY (tenant, ledger) REFERENCES TenantLedger(tenant, ledger)
-      )
-    `,
-      ),
-    ];
-  }
+  // static schema(drop = false) {
+  //   return [
+  //     ...TenantLedgerSql.schema(drop),
+  //     ...conditionalDrop(
+  //       drop,
+  //       "MetaByTenantLedger",
+  //       `
+  //     CREATE TABLE IF NOT EXISTS MetaByTenantLedger(
+  //       tenant TEXT NOT NULL,
+  //       ledger TEXT NOT NULL,
+  //       reqId TEXT NOT NULL,
+  //       resId TEXT NOT NULL,
+  //       metaCID TEXT NOT NULL,
+  //       meta  TEXT NOT NULL,
+  //       updatedAt TEXT NOT NULL,
+  //       PRIMARY KEY (tenant, ledger, reqId, resId, metaCID),
+  //       UNIQUE (tenant, ledger, metaCID),
+  //       FOREIGN KEY (tenant, ledger) REFERENCES TenantLedger(tenant, ledger)
+  //     )
+  //   `,
+  //     ),
+  //   ];
+  // }
 
-  readonly db: SQLDatabase;
-  readonly tenantLedgerSql: TenantLedgerSql;
+  readonly db: LibSQLDatabase;
   readonly id: string;
-  constructor(id: string, db: SQLDatabase, tenantLedgerSql: TenantLedgerSql) {
+  constructor(id: string, db: LibSQLDatabase) {
     this.db = db;
-    this.tenantLedgerSql = tenantLedgerSql;
     this.id = id;
   }
 
   // readonly #sqlCreateMetaByTenantLedger = new ResolveOnce();
-  sqlCreateMetaByTenantLedger(): SQLStatement[] {
-    // return this.#sqlCreateMetaByTenantLedger.once(() => {
-    return MetaByTenantLedgerSql.schema().map((i) => this.db.prepare(i));
-    // });
-  }
+  // sqlCreateMetaByTenantLedger(): SQLStatement[] {
+  //   // return this.#sqlCreateMetaByTenantLedger.once(() => {
+  //   return MetaByTenantLedgerSql.schema().map((i) => this.db.prepare(i));
+  //   // });
+  // }
 
-  // readonly #sqlInsertMetaByTenantLedger = new ResolveOnce();
-  sqlEnsureMetaByTenantLedger(): SQLStatement {
-    // return this.#sqlInsertMetaByTenantLedger.once(() => {
-    return this.db.prepare(`
-        INSERT INTO MetaByTenantLedger(tenant, ledger, reqId, resId, metaCID, meta, updatedAt)
-          SELECT ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (
-            SELECT 1 FROM MetaByTenantLedger WHERE metaCID = ? AND tenant = ? AND ledger = ? 
-          )
-      `);
-    // });
-  }
 
   // readonly #sqlDeleteByConnection = new ResolveOnce();
-  sqlDeleteByConnection(): SQLStatement {
-    // return this.#sqlDeleteByConnection.once(() => {
-    const stmt = this.db.prepare(`
-        DELETE FROM MetaByTenantLedger
-          WHERE
-            tenant = ?
-          AND
-            ledger = ?
-          AND
-            reqId = ?
-          AND
-            resId = ?
-          AND
-            metaCID NOT IN (SELECT value FROM json_each(?))
-      `);
-    return stmt;
-    // });
-  }
-
-  /*
-   * select * from MetaByTenantLedger where tenant = 'tenant' and ledger = 'ledger' group by metaCID
-   */
-
-  // readonly #sqlSelectByMetaCIDs = new ResolveOnce<Statement>()
-  // sqlSelectByMetaCIDs(): Statement<string[], SQLMetaByTenantLedgerRow> {
-  //   return this.#sqlSelectByMetaCIDs.once(() => {
-  //     return this.db.prepare(`
-  //       SELECT tenant, ledger, reqId, resId, metaCID, meta, updatedAt
-  //       FROM MetaByTenantLedger
-  //       WHERE metaCID in ?
+  // sqlDeleteByConnection(): SQLStatement {
+  //   // return this.#sqlDeleteByConnection.once(() => {
+  //   const stmt = this.db.prepare(`
+  //       DELETE FROM MetaByTenantLedger
+  //         WHERE
+  //           tenant = ?
+  //         AND
+  //           ledger = ?
+  //         AND
+  //           reqId = ?
+  //         AND
+  //           resId = ?
+  //         AND
+  //           metaCID NOT IN (SELECT value FROM json_each(?))
   //     `);
-  //   })
-  // }
-  // async selectByMetaCIDs(metaCIDs: string[]): Promise<MetaByTenantLedgerRow[]> {
-  //   const stmt = this.sqlSelectByMetaCIDs();
-  //   const rows = await stmt.all(metaCIDs)
-  //   return rows.map(row => ({
-  //     ...row,
-  //     meta: JSON.parse(row.meta),
-  //     updateAt: new Date(row.updateAt)
-  //   } satisfies MetaByTenantLedgerRow))
+  //   return stmt;
+  //   // });
   // }
 
   async deleteByConnection(t: ByConnection, waitingMetaCIDS: string[]) {
-    const stmt = this.sqlDeleteByConnection();
-    // console.log("deleteByConnection:by:", t);
-    return stmt.run(t.tenant, t.ledger, t.reqId, t.resId, JSON.stringify(waitingMetaCIDS));
+    return this.db.delete(sqlMetaByTenantLedger).where(
+      and(
+        eq(sqlMetaByTenantLedger.tenant, t.tenant),
+        eq(sqlMetaByTenantLedger.ledger, t.ledger),
+        notInArray(sqlMetaByTenantLedger.metaCID, waitingMetaCIDS),
+      ),
+    )
   }
+
+    // readonly #sqlInsertMetaByTenantLedger = new ResolveOnce();
+    // sqlEnsureMetaByTenantLedger(): SQLStatement {
+    //   // return this.#sqlInsertMetaByTenantLedger.once(() => {
+    //   return this.db.prepare(`
+    //       INSERT INTO MetaByTenantLedger(tenant, ledger, reqId, resId, metaCID, meta, updatedAt)
+    //         SELECT ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (
+    //           SELECT 1 FROM MetaByTenantLedger WHERE metaCID = ? AND tenant = ? AND ledger = ? 
+    //         )
+    //     `);
+    //   // });
+    // }
 
   async ensure(t: MetaByTenantLedgerRow) {
-    const stmt = this.sqlEnsureMetaByTenantLedger();
-    return stmt.run(
-      t.tenant,
-      t.ledger,
-      t.reqId,
-      t.resId,
-      t.metaCID,
-      JSON.stringify(t.meta),
-      t.updateAt,
-      t.metaCID,
-      t.tenant,
-      t.ledger,
-    );
+    // const stmt = this.sqlEnsureMetaByTenantLedger();
+    return this.db.insert(sqlMetaByTenantLedger).values([{
+      ...t,
+      meta: JSON.stringify(t.meta),
+      updateAt: t.updateAt.toISOString(),
+    }]).onConflictDoNothing().run();
   }
 
-  sqlSelectByConnection(): SQLStatement {
-    return this.db.prepare(`
-        SELECT tenant, ledger, reqId, resId, metaCID, meta, updatedAt
-        FROM MetaByTenantLedger
-        WHERE tenant = ? AND ledger = ? AND reqId = ? AND resId = ?
-        ORDER BY updatedAt
-      `);
-  }
+  // sqlSelectByConnection(): SQLStatement {
+  //   return this.db.prepare(`
+  //       SELECT tenant, ledger, reqId, resId, metaCID, meta, updatedAt
+  //       FROM MetaByTenantLedger
+  //       WHERE tenant = ? AND ledger = ? AND reqId = ? AND resId = ?
+  //       ORDER BY updatedAt
+  //     `);
+  // }
 
   async selectByConnection(conn: ByConnection): Promise<MetaByTenantLedgerRow[]> {
-    const stmt = this.sqlSelectByConnection();
-    const rows = await stmt.all<SQLMetaByTenantLedgerRow>(conn.tenant, conn.ledger, conn.reqId, conn.resId);
+    // const stmt = this.sqlSelectByConnection();
+    // const rows = await stmt.all<SQLMetaByTenantLedgerRow>(conn.tenant, conn.ledger, conn.reqId, conn.resId);
+    const rows = await this.db.select().from(sqlMetaByTenantLedger).where(
+      and(
+        eq(sqlMetaByTenantLedger.tenant, conn.tenant),
+        eq(sqlMetaByTenantLedger.ledger, conn.ledger),
+        eq(sqlMetaByTenantLedger.reqId, conn.reqId),
+        eq(sqlMetaByTenantLedger.resId, conn.resId),
+      ),
+    ).all();
     return rows.map(
       (row) =>
         ({

@@ -1,23 +1,53 @@
 import { Future, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
 import { CalculatePreSignedUrl } from "./msg-types-data.js";
-import type { JWTPayload } from "jose";
+// import type { JWTPayload } from "jose";
+import zod from "zod";
 // import { PreSignedMsg } from "./pre-signed-url.js";
 
 export const VERSION = "FP-MSG-1.0";
 
-export interface BaseTokenParam {
-  readonly alg: string; // defaults ES256
-  readonly issuer: string;
-  readonly audience: string;
-  readonly validFor: number;
-}
 
-export interface FPCloudClaim extends JWTPayload {
-  readonly userId: string;
-  readonly tenants: { readonly id: string; readonly role: string }[];
-  readonly ledgers: { readonly id: string; readonly role: string; readonly right: string }[];
-}
+const zodBaseTokenParam = zod.object({
+  alg: zod.string(),
+  issuer: zod.string(),
+  audience: zod.string(),
+  validFor: zod.number(),
+});
+
+export type BaseTokenParam = zod.infer<typeof zodBaseTokenParam>;
+
+// export interface BaseTokenParam {
+//   readonly alg: string; // defaults ES256
+//   readonly issuer: string;
+//   readonly audience: string;
+//   readonly validFor: number;
+// }
+const zodJWTPayload = zod.object({
+    iss: zod.string().optional(),
+    sub: zod.string().optional(),
+    aud: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+    jti: zod.string().optional(),
+    nbf: zod.number().optional(),
+    exp: zod.number().optional(),
+    iat: zod.number().optional(),
+})
+
+
+export const zodFPCloudClaim = zod.object({
+  ...zodJWTPayload.shape,
+  userId: zod.string(),
+  tenants: zod.array(zod.object({ id: zod.string(), role: zod.string() })),
+  ledgers: zod.array(zod.object({ id: zod.string(), role: zod.string(), right: zod.string() })),
+})
+
+export type FPCloudClaim = zod.infer<typeof zodFPCloudClaim>;
+
+// export interface FPCloudClaim extends JWTPayload {
+//   readonly userId: string;
+//   readonly tenants: { readonly id: string; readonly role: string }[];
+//   readonly ledgers: { readonly id: string; readonly role: string; readonly right: string }[];
+// }
 
 export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
 
@@ -55,9 +85,65 @@ export interface NextId {
   readonly nextId: SuperThis["nextId"];
 }
 
-export interface AuthType {
-  readonly type: "ucan" | "error" | "fp-cloud-jwk" | "fp-cloud";
-}
+export const zodError = zod.object({
+  type: zod.literal("error"),
+})
+
+export const zodUcanAuth = zod.object({
+  type: zod.literal("ucan"),
+  params: zod.object({
+    tbd: zod.string(),
+  }),
+});
+
+export type UCanAuth = zod.infer<typeof zodUcanAuth>;
+// export interface UCanAuth extends AuthType {
+//   readonly type: "ucan";
+//   readonly params: {
+//     readonly tbd: string;
+//   };
+// }
+
+export const zodFPJWKCloudAuthType = zod.object({
+  type: zod.literal("fp-cloud-jwk"),
+  params: zod.object({
+    jwk: zod.string(),
+  }),
+});
+
+export type FPJWKCloudAuthType = zod.infer<typeof zodFPJWKCloudAuthType>;
+
+// export interface FPJWKCloudAuthType extends AuthType {
+//   readonly type: "fp-cloud-jwk";
+//   readonly params: {
+//     readonly jwk: string;
+//   };
+// }
+
+export const zodFPCloudAuthType = zod.object({
+  type: zod.literal("fp-cloud"),
+  params: zod.object({
+    claim: zodBaseTokenParam,
+    jwk: zod.string(),
+  }),
+});
+export type FPCloudAuthType = zod.infer<typeof zodFPCloudAuthType>;
+
+// export interface FPCloudAuthType extends AuthType {
+//   readonly type: "fp-cloud";
+//   readonly params: {
+//     readonly claim: TokenForParam;
+//     readonly jwk: string; // for reply
+//   };
+// }
+
+export const zodAuthType = zod.union([zodUcanAuth, zodFPJWKCloudAuthType, zodFPCloudAuthType, zodError]);
+
+export type AuthType = zod.infer<typeof zodAuthType>;
+
+// export interface AuthType {
+//   readonly type: "ucan" | "error" | "fp-cloud-jwk" | "fp-cloud";
+// }
 
 export function isAuthTypeFPCloudJWK(a: AuthType): a is FPJWKCloudAuthType {
   return a.type === "fp-cloud-jwk";
@@ -65,27 +151,6 @@ export function isAuthTypeFPCloudJWK(a: AuthType): a is FPJWKCloudAuthType {
 
 export function isAuthTypeFPCloud(a: AuthType): a is FPCloudAuthType {
   return a.type === "fp-cloud";
-}
-
-export interface UCanAuth extends AuthType {
-  readonly type: "ucan";
-  readonly params: {
-    readonly tbd: string;
-  };
-}
-export interface FPJWKCloudAuthType extends AuthType {
-  readonly type: "fp-cloud-jwk";
-  readonly params: {
-    readonly jwk: string;
-  };
-}
-
-export interface FPCloudAuthType extends AuthType {
-  readonly type: "fp-cloud";
-  readonly params: {
-    readonly claim: TokenForParam;
-    readonly jwk: string; // for reply
-  };
 }
 
 export type AuthFactory = (tp?: Partial<TokenForParam>) => Promise<Result<AuthType>>;
@@ -99,10 +164,15 @@ export function keyTenantLedger(t: TenantLedger): string {
   return `${t.tenant}:${t.ledger}`;
 }
 
-export interface QSId {
-  readonly reqId: string;
-  readonly resId: string;
-}
+export const zodQSId = zod.object({
+  reqId: zod.string(),
+  resId: zod.string(),
+});
+// export interface QSId {
+//   readonly reqId: string;
+//   readonly resId: string;
+// }
+export type QSId = zod.infer<typeof zodQSId>;
 
 export function qsidEqual(a: QSId, b: QSId): boolean {
   return a.reqId === b.reqId && a.resId === b.resId;
@@ -120,18 +190,34 @@ export function qsidKey(qsid: QSId): string {
 //   readonly conn: Connection;
 // }
 
-export interface MsgBase {
-  readonly tid: string;
-  readonly type: string;
-  readonly version: string;
-  readonly auth: AuthType;
-}
+export const zodMsgBase = zod.object({
+  tid: zod.string(),
+  type: zod.string(),
+  version: zod.string(),
+  auth: zodAuthType.optional(),
+  conn: zodQSId.optional()
+});
+
+// export interface MsgBase {
+//   readonly tid: string;
+//   readonly type: string;
+//   readonly version: string;
+//   readonly auth: AuthType;
+// }
+
+export type MsgBase = zod.infer<typeof zodMsgBase>;
+
+
 
 export function MsgIsTid(msg: MsgBase, tid: string): boolean {
   return msg.tid === tid;
 }
 
-type MsgWithConn<T extends MsgBase = MsgBase> = T & { readonly conn: QSId };
+const zodMsgWithConn = zod.object({
+  ...zodMsgBase.shape,
+  conn: zodQSId,
+});
+type MsgWithConn<T extends MsgBase = MsgBase> =  zod.infer<typeof zodMsgWithConn>  // T & { readonly conn: QSId };
 
 export type MsgWithConnAuth<T extends MsgBase = MsgBase> = MsgWithConn<T> & { readonly auth: AuthType };
 
@@ -141,13 +227,23 @@ export type MsgWithConnAuth<T extends MsgBase = MsgBase> = MsgWithConn<T> & { re
 
 export type MsgWithTenantLedger<T extends MsgWithConnAuth> = T & { readonly tenant: TenantLedger };
 
-export interface ErrorMsg extends MsgBase {
-  readonly type: "error";
-  readonly src: unknown;
-  readonly message: string;
-  readonly body?: string;
-  readonly stack?: string[];
-}
+export const zodErrorMsg = zod.object({
+  ...zodMsgBase.shape,
+  type: zod.literal("error"),
+  src: zod.unknown(),
+  message: zod.string(),
+  body: zod.string().optional(),
+  stack: zod.array(zod.string()).optional(),
+});
+
+export type ErrorMsg = zod.infer<typeof zodErrorMsg>;
+// export interface ErrorMsg extends MsgBase {
+//   readonly type: "error";
+//   readonly src: unknown;
+//   readonly message: string;
+//   readonly body?: string;
+//   readonly stack?: string[];
+// }
 
 export function MsgIsError(rq: MsgBase): rq is ErrorMsg {
   return rq.type === "error";
@@ -420,30 +516,41 @@ export function MsgIsResGestalt(msg: MsgBase): msg is ResGestalt {
   return msg.type === "resGestalt";
 }
 
-export interface ReqOpenConnection {
-  // readonly key: TenantLedger;
-  readonly reqId?: string;
-  readonly resId?: string; // for double open
-}
+// export interface ReqOpenConnection {
+//   // readonly key: TenantLedger;
+//   readonly reqId?: string;
+//   readonly resId?: string; // for double open
+// }
 
-export interface ReqOpenConn {
-  readonly reqId: string;
-  readonly resId?: string;
-}
 
-export interface ReqOpen extends MsgBase {
-  readonly type: "reqOpen";
-  readonly conn: ReqOpenConn;
-}
+// export interface ReqOpenConn {
+//   readonly reqId: string;
+//   readonly resId?: string;
+// }
+const zodQSidReqOpen = zod.object({
+  reqId: zod.string(),
+  resId: zod.string().optional(),
+});
 
-export function buildReqOpen(sthis: NextId, auth: AuthType, conn: ReqOpenConnection): ReqOpen {
+export const zodReqOpen = zod.object({
+  ...zodMsgBase.shape,
+  type: zod.literal("reqOpen"),
+  conn: zodQSidReqOpen,
+});
+
+export type ReqOpen = zod.infer<typeof zodReqOpen>;
+// export interface ReqOpen extends MsgBase {
+//   readonly type: "reqOpen";
+//   readonly conn: ReqOpenConn;
+// }
+
+export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>): ReqOpen {
   return {
     tid: sthis.nextId().str,
     auth,
     type: "reqOpen",
     version: VERSION,
     conn: {
-      ...conn,
       reqId: conn.reqId || sthis.nextId().str,
     },
   };
