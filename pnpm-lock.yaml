@@ -35,6 +35,9 @@ importers:
       idb:
         specifier: ^8.0.2
         version: 8.0.2
+      jose:
+        specifier: ^6.0.10
+        version: 6.0.10
       multiformats:
         specifier: ^13.3.2
         version: 13.3.2
@@ -120,9 +123,6 @@ importers:
       hono:
         specifier: ^4.7.4
         version: 4.7.4
-      jose:
-        specifier: ^6.0.10
-        version: 6.0.10
       playwright:
         specifier: ^1.51.0
         version: 1.51.0
