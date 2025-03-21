@@ -21,6 +21,7 @@ const external = [
   "node:url",
   "assert",
   "stream",
+  "jose",
   "@fireproof/core",
   "@fireproof/core/node",
   "@fireproof/core/mem",
