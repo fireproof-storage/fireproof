@@ -78,6 +78,7 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          rm -f .npmrc # publish to the world
           git fetch --tags --force
           # we need to have a safe way to store of allowedSigners
           git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
