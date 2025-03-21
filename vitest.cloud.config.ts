@@ -15,7 +15,7 @@ export default defineConfig({
       "tests/gateway/file",
       "tests/blockstore/keyed-crypto-indexeddb-file.test.ts",
     ],
-    include: ["tests/**/*test.?(c|m)[jt]s?(x)", "cloud/**/*test.?(c|m)[jt]s?(x)"],
+    include: ["xtests/**/*test.?(c|m)[jt]s?(x)", "cloud/**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },

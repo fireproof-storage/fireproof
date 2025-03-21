@@ -119,7 +119,7 @@ abstract class BaseGateway {
       },
       version: VERSION,
     } satisfies ReqSignedUrl;
-  } 
+  }
 
   async getReqSignedUrl<S extends ResSignedUrl>(
     type: string,
@@ -213,8 +213,7 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
       return rBlob;
     }
     const r = await this.putObject(uri, uploadUrl, rBlob.Ok(), ctx.conn);
-    return r
-
+    return r;
   }
   async delete(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<Result<void>> {
     const store = coerceFPStoreTypes(uri.getParam("store"));
@@ -539,7 +538,12 @@ export class FireproofCloudGateway implements SerdeGateway {
     }
     if (!bestMatch) {
       return {
-        conn: this.logger.Error().Url(matchURI).Any("conns", Object.fromEntries(this.#connectionURIs.entries())).Msg("No connection found").ResultError(),
+        conn: this.logger
+          .Error()
+          .Url(matchURI)
+          .Any("conns", Object.fromEntries(this.#connectionURIs.entries()))
+          .Msg("No connection found")
+          .ResultError(),
         citem: {} as ConnectionItem,
       };
     }
