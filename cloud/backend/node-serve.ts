@@ -3,8 +3,10 @@ import { HonoServer } from "./hono-server.js";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { serve } from "@hono/node-server";
 import { ensureSuperThis } from "use-fireproof";
-import { BetterSQLDatabase } from "./meta-merger/bettersql-abstract-sql.js";
+// import { BetterSQLDatabase } from "./meta-merger/bettersql-abstract-sql.js";
 import { ps } from "@fireproof/core";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 
 // async function main() {
 //   Deno.serve({
@@ -32,7 +34,8 @@ async function main() {
     new NodeHonoFactory(sthis, {
       msgP,
       gs: gestalt,
-      sql: new BetterSQLDatabase("./dist/node-meta.sqlite"),
+      sql: drizzle(createClient({ url: `file://${process.cwd()}/dist/sqlite.db` }))
+       // new BetterSQLDatabase("./dist/node-meta.sqlite"),
     }),
   ).register(app);
 
