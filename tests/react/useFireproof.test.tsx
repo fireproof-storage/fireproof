@@ -529,11 +529,13 @@ describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
         docResult.merge({ input: "new temp data" });
       });
 
+      let waitForSave: Promise<DocResponse>;
       renderHook(() => {
-        docResult.save();
+        waitForSave = docResult.save();
       });
 
-      await waitFor(() => {
+      await waitFor(async () => {
+        await waitForSave;
         expect(docResult.doc._id).toBeDefined();
         expect(docResult.doc.input).toBe("new temp data");
       });
