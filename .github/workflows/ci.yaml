@@ -54,16 +54,10 @@ jobs:
           path: .esm-cache
           key: smoke-esm-cache
 
-      #- name: cache-kaputt
-      #  id: cache-kaputt
-      #  run: |
-      #    rm -rf .esm-cache/*
-      #    #chmod -R ogu+wx .esm-cache
-      #    #find .esm-cache/esm/.esmd/npm -ls
-      #- name: test-net
-      #  run: |
-      #    nc -l -p 49490 < /etc/hosts &
-      #    curl http://127.0.0.1:49490 || true
+      - name: start-esm + npm
+        run: |
+          bash .github/workflows/setup-local-esm-npm.sh
+          cp ./dist/npmrc-smoke .npmrc
 
       - name: install
         run: pnpm install
