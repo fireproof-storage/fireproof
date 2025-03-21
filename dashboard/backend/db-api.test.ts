@@ -13,7 +13,7 @@ import { ensureSuperThis, SuperThis } from "@fireproof/core";
 import { AuthType, VerifiedAuth } from "./users.ts";
 import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
 import { jwtVerify } from "jose/jwt/verify";
-import { env2jwk } from "./jwk-helper.ts";
+import { rt } from "@fireproof/core";
 import { Result } from "@adviser/cement";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -856,8 +856,9 @@ describe("db-api", () => {
       },
     );
     expect(resSt.isOk()).toBeTruthy();
-    const pub = await env2jwk(
+    const pub = await rt.sts.env2jwk(
       "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
+      "ES256",
     );
     const v = await jwtVerify(resSt.Ok().token, pub);
     expect(v.payload.exp).toBeLessThanOrEqual(new Date().getTime() + 3700000);

@@ -22,11 +22,11 @@
     "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.d1-remote.config.ts"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.2",
+    "@adviser/cement": "^0.4.3",
     "@clerk/backend": "^1.22.0",
     "@clerk/clerk-js": "^5.40.0",
     "@clerk/clerk-react": "^5.19.0",
-    "@fireproof/core": "^0.20.0-dev-preview-54",
+    "@fireproof/core": "^0.20.0-dev-preview-57",
     "@libsql/client": "^0.14.0",
     "@libsql/kysely-libsql": "^0.4.1",
     "@tailwindcss/container-queries": "^0.1.1",
