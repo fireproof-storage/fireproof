@@ -15,9 +15,9 @@ else
   dockerCompose="docker compose"
 fi
 
-mkdir -p $projectRoot/.esm-cache/vd $projectRoot/.esm-cache/esm
-chmod -R oug+w $projectRoot/.esm-cache/vd $projectRoot/.esm-cache/esm
-ls -la $projectRoot/.esm-cache
+mkdir -p $HOME/.cache/vd $HOME/.cache/esm
+chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
+ls -la $HOME/.cache
 
 
 export PROJECT_BASE=$projectRoot
