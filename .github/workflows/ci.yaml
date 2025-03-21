@@ -49,9 +49,9 @@ jobs:
 
       - name: smoke-esm-cache
         id: smoke-esm-cache
-        uses: actions/cache@v4
+        uses: useblacksmith/cache@v5
         with:
-          path: .esm-cache
+          path: ~/.cache
           key: smoke-esm-cache
 
       - name: start-esm + npm

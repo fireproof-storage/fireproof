@@ -8,7 +8,7 @@
     "fppublish": "pnpm run '/publish:/'",
     "fppublish:fireproof-core": "tsx ./publish-package.ts ./dist/fireproof-core/package.json",
     "fppublish:use-fireproof": "tsx ./publish-package.ts ./dist/use-fireproof/package.json",
-    "prebuild": "rm -rf dist",
+    "prebuild": "rm -rf dist/fireproof-core dist/use-fireproof",
     "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
     "build:tsc": "tsc",
     "build:tsup": "tsup",

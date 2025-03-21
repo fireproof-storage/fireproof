@@ -7,7 +7,7 @@ services:
       - "4873:4873"
     # docker run -p 4873:4873 -v $(pwd)/verdaccio.config.yaml:/verdaccio/conf/config.yaml -ti verdaccio/verdaccio
     volumes:
-      - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage/data
+      - ${HOME}/.cache/vd:/verdaccio/storage/data
   esm-sh:
     image: "ghcr.io/esm-dev/esm.sh:v136"
     # image: "ghcr.io/esm-dev/esm.sh:latest"
@@ -15,7 +15,7 @@ services:
     environment:
       NPM_REGISTRY: http://registry:4873/
     volumes:
-      - ${PROJECT_BASE}/.esm-cache/esm:/home/node
+      - ${HOME}/.cache/esm:/home/node
     ports:
       - "4874:8080"
   wait-for-ready:
