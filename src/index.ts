@@ -14,6 +14,9 @@ export * as blockstore from "./blockstore/index.js";
 export * as rt from "./runtime/index.js";
 export * as runtime from "./runtime/index.js";
 
+export * as ps from "./protocols/index.js";
+export * as protocols from "./protocols/index.js";
+
 export * from "./utils.js";
 
 export * from "./version.js";
