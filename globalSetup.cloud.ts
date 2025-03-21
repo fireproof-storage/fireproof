@@ -1,5 +1,5 @@
 import { HonoServer } from "./cloud/backend/hono-server.js";
-import { cloudBackendParams, mockJWK, setupBackend } from "./cloud/backend/test-helper.js";
+import { mockJWK, setupBackend } from "./cloud/backend/test-helper.js";
 import { ensureSuperThis } from "./src/utils.js";
 
 const sthis = ensureSuperThis();
