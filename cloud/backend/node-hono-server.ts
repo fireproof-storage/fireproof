@@ -12,11 +12,12 @@ import {
 import { ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
 import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
-import { SQLDatabase } from "./meta-merger/abstract-sql.js";
+// import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
 import { ConnItem } from "./msg-dispatch.js";
 import { cloudBackendParams } from "./test-helper.js";
 import { MetaMerger } from "./meta-merger/meta-merger.js";
+import { LibSQLDatabase } from "drizzle-orm/libsql";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
 type Gestalt = ps.cloud.Gestalt;
@@ -34,7 +35,7 @@ type serveFn = (options: unknown, listeningListener?: ((info: unknown) => void) 
 export interface NodeHonoFactoryParams {
   readonly msgP?: MsgerParams;
   readonly gs?: Gestalt;
-  readonly sql: SQLDatabase;
+  readonly sql: LibSQLDatabase;
 }
 
 // const wsConnections = new Map<string, WSContextWithId<WSContext>>();
@@ -218,7 +219,7 @@ export class NodeHonoFactory implements HonoServerFactory {
   async start(app: Hono): Promise<void> {
     try {
       await createDB.once(() => {
-        return new MetaMerger("test", this.sthis.logger, this.params.sql).createSchema();
+        return new MetaMerger("test", this.sthis.logger, this.params.sql) // .createSchema();
       });
 
       const { createNodeWebSocket } = await import("@hono/node-ws");
