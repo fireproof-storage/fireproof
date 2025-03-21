@@ -24,13 +24,16 @@ export async function setup() {
     .applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
     .toString();
 
+  /*
   // eslint-disable-next-line no-console
   console.log("Started node-backend process - ", cloudBackendParams(sthis).pid, "on port", params.port);
+  */
 }
 
 export async function teardown() {
+  /*
   // eslint-disable-next-line no-console
   console.log("Stopping node-backend process - ", cloudBackendParams(sthis).pid);
+  */
   hs.close();
-  // process.kill(cloudBackendParams(sthis).pid);
 }
