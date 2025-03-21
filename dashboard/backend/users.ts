@@ -246,22 +246,6 @@ function prepareInsertUsers(req: UserWithoutDate, now = new Date()): typeof sqlU
   return user;
 }
 
-// function sqlToUserRef(sql: typeof users.$inferSelect): UserRef {
-//     return {
-//         userRefId: sql.userRefId,
-//         authUserId: sql.authUserId,
-//         queryProvider: sql.queryProvider as AuthProvider,
-//         queryEmail: toUndef(sql.queryEmail),
-//         queryNick: toUndef(sql.queryNick),
-//         params: JSON.parse(sql.params),
-//         maxTenants: sql.maxTenants,
-//         status: sql.status as Status,
-//         statusReason: toUndef(sql.statusReason),
-//         createdAt: new Date(sql.createdAt),
-//         updatedAt: new Date(sql.updatedAt),
-//     };
-// }
-
 export class UserNotFoundError extends Error {
   constructor() {
     super("user not found");

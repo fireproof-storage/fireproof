@@ -1,4 +1,5 @@
 import { Result } from "@adviser/cement";
+import { rt } from "@fireproof/core";
 import { SuperThis } from "@fireproof/core";
 import { and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
@@ -19,7 +20,6 @@ import {
   queryUser,
   upsetUserByProvider,
 } from "./users.ts";
-import { env2jwk } from "./jwk-helper.ts";
 import { SignJWT } from "jose";
 
 export interface ReqEnsureUser {
@@ -2136,7 +2136,7 @@ export class FPApiSQL implements FPApiInterface {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    const privKey = await env2jwk(ctx.secretToken);
+    const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
     // console.log(">>>>-pre:", ctx, privKey, (privKey as any)[Symbol.toStringTag], privKey.constructor?.name)
     let validFor = ctx.validFor;
     if (!(0 <= validFor && validFor <= 3600000)) {

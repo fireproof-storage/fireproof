@@ -1,6 +1,6 @@
 import { stripper } from "@adviser/cement/utils";
 import { int, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
-import { queryUser, sqlUsers } from "./users.ts";
+import { sqlUsers } from "./users.ts";
 import { sqlTenants } from "./tenants.ts";
 import { sqlLedgers } from "./ledgers.ts";
 import { AuthProvider, queryEmail, queryNick, QueryUser, toUndef } from "./sql-helper.ts";

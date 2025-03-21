@@ -1,4 +1,3 @@
-// deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env  backend/deno-serve.ts
 import { drizzle } from "drizzle-orm/d1";
 import { D1Database, Fetcher, Request as CFRequest } from "@cloudflare/workers-types";
 import { createHandler } from "./create-handler.ts";
@@ -14,9 +13,6 @@ export default {
     if (ret.ok) {
       return ret;
     }
-    // if (!ret) {
-    //   return env.A
-    // }
     return env.ASSETS.fetch(request);
   },
 };

@@ -17,22 +17,6 @@ export const sqlTenants = sqliteTable("Tenants", {
   updatedAt: text().notNull(),
 });
 
-// export const sqlTenantUserRoles = sqliteTable(
-//   "TenantUserRoles",
-//   {
-//     tenantId: text()
-//       .notNull()
-//       .references(() => sqlTenants.tenantId),
-//     userId: text()
-//       .notNull()
-//       .references(() => sqlUsers.userId),
-//   },
-//   (table) => [
-//     primaryKey({ columns: [table.tenantId, table.userId] }),
-//     index("turUserIdx").on(table.userId), // to enable delete by userRefId
-//   ],
-// );
-
 export const sqlTenantUsers = sqliteTable(
   "TenantUsers",
   {
@@ -65,43 +49,3 @@ export interface Tenant {
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
-
-// export interface InsertTenantParam {
-//   readonly tenantId: string;
-//   readonly name: string;
-//   readonly ownerUserRefId: string;
-//   readonly adminUserRefIds?: string[];
-//   readonly memberUserRefIds?: string[];
-//   readonly maxAdminUserRefs?: number;
-//   readonly maxMemberUserRefs?: number;
-//   readonly createdAt?: Date;
-//   readonly updatedAt?: Date;
-// }
-
-// export function prepareInsertTenant(req: InsertTenantParam) {
-//   const now = new Date();
-//   const tenant: typeof tenants.$inferInsert = {
-//     tenantId: req.tenantId,
-//     name: req.name,
-//     ownerUserRefId: req.ownerUserRefId,
-//     // adminUserRefIds: JSON.stringify(req.adminUserRefIds ?? []),
-//     // memberUserRefIds: JSON.stringify(req.adminUserRefIds ?? []),
-//     maxAdminUserRefs: req.maxAdminUserRefs ?? 5,
-//     maxMemberUserRefs: req.maxMemberUserRefs ?? 5,
-//     createdAt: (req.createdAt ?? now).toISOString(),
-//     updatedAt: (req.updatedAt ?? req.createdAt ?? now).toISOString(),
-//   };
-//   return tenant;
-//   // await this.db.insert(tenants).values(tenant).run();
-//   // return Result.Ok({
-//   //     tenantId: tenant.tenantId,
-//   //     name: tenant.name,
-//   //     ownerUserRefId: tenant.ownerUserRefId,
-//   //     adminUserRefIds: JSON.parse(tenant.adminUserRefIds),
-//   //     memberUserRefIds: JSON.parse(tenant.memberUserRefIds),
-//   //     maxAdminUserRefs: tenant.maxAdminUserRefs,
-//   //     maxMemberUserRefs: tenant.maxMemberUserRefs,
-//   //     createdAt: new Date(tenant.createdAt),
-//   //     updatedAt: new Date(tenant.updatedAt),
-//   // });
-// }

@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.2
-        version: 0.4.2(typescript@5.8.2)
+        specifier: ^0.4.3
+        version: 0.4.3(typescript@5.8.2)
       '@clerk/backend':
         specifier: ^1.22.0
         version: 1.25.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -26,8 +26,8 @@ importers:
         specifier: ^5.19.0
         version: 5.24.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fireproof/core':
-        specifier: ^0.20.0-dev-preview-54
-        version: 0.20.0-dev-preview-54(@adviser/cement@0.4.2(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1)
+        specifier: ^0.20.0-dev-preview-57
+        version: 0.20.0-dev-preview-57(@adviser/cement@0.4.3(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1)
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
@@ -81,7 +81,7 @@ importers:
         version: 2.3.3(react@18.3.1)
       use-fireproof:
         specifier: ^0.20.0-dev-preview-54
-        version: 0.20.0-dev-preview-54(@fireproof/core@0.20.0-dev-preview-54(@adviser/cement@0.4.2(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1)
+        version: 0.20.0-dev-preview-54(@fireproof/core@0.20.0-dev-preview-57(@adviser/cement@0.4.3(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1)
       vitest:
         specifier: ^3.0.8
         version: 3.0.8(@types/node@22.13.10)(jiti@1.21.7)(yaml@2.7.0)
@@ -155,8 +155,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.4.2':
-    resolution: {integrity: sha512-12kcfWSvtMZKprMT8gRWSlOuNHi0wZ0uQ95PRscni33kK9+p0WBlRj9KGVl7D6zWnCWnB3tbjJB5wJI6f3OXQw==}
+  '@adviser/cement@0.4.3':
+    resolution: {integrity: sha512-eXslhYG4EbWTqkhvc8nTgfYwvdqACWuE7UQCi/myl//G4QeAfimL3cQxz6hSb4ZiLffdKq690NSUezNLObfJew==}
     engines: {node: '>=20'}
 
   '@alloc/quick-lru@5.2.0':
@@ -1056,10 +1056,10 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.20.0-dev-preview-54':
-    resolution: {integrity: sha512-PrmlA3ghzXrk5Nttp54idiHrvs9ENupHzOs5M+R8+eKVtd+zCtEGHwTgmBbT6YWwxnQn5yMewSppgvKQSLh6wQ==}
+  '@fireproof/core@0.20.0-dev-preview-57':
+    resolution: {integrity: sha512-94Tynud743y+1Oz0hr+sOv7ZWYJpAkaYFYdPMy3WScyCJMkQgxEgiXCRvUk8s5n/6NMxa1puwFBeoPdu8UXCMg==}
     peerDependencies:
-      '@adviser/cement': ~0.4.1
+      '@adviser/cement': ~0.4.2
       '@fireproof/vendor': ~2.0.0
       react: '>=18.0.0'
 
@@ -3694,7 +3694,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.4.2(typescript@5.8.2)':
+  '@adviser/cement@0.4.3(typescript@5.8.2)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.2)
       yaml: 2.7.0
@@ -4376,9 +4376,9 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.20.0-dev-preview-54(@adviser/cement@0.4.2(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1)':
+  '@fireproof/core@0.20.0-dev-preview-57(@adviser/cement@0.4.3(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1)':
     dependencies:
-      '@adviser/cement': 0.4.2(typescript@5.8.2)
+      '@adviser/cement': 0.4.3(typescript@5.8.2)
       '@fireproof/vendor': 2.0.1
       '@ipld/car': 5.4.0
       '@ipld/dag-cbor': 9.2.2
@@ -4386,12 +4386,17 @@ snapshots:
       cborg: 4.2.8
       charwise: 3.0.1
       idb: 8.0.2
+      jose: 6.0.10
       multiformats: 13.3.2
       p-limit: 6.2.0
       p-map: 7.0.3
       p-retry: 6.2.1
       prolly-trees: 1.0.4
       react: 18.3.1
+      ws: 8.18.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@fireproof/vendor@2.0.1':
     dependencies:
@@ -6997,9 +7002,9 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  use-fireproof@0.20.0-dev-preview-54(@fireproof/core@0.20.0-dev-preview-54(@adviser/cement@0.4.2(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1):
+  use-fireproof@0.20.0-dev-preview-54(@fireproof/core@0.20.0-dev-preview-57(@adviser/cement@0.4.3(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@fireproof/core': 0.20.0-dev-preview-54(@adviser/cement@0.4.2(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1)
+      '@fireproof/core': 0.20.0-dev-preview-57(@adviser/cement@0.4.3(typescript@5.8.2))(@fireproof/vendor@2.0.1)(react@18.3.1)
       react: 18.3.1
 
   use-sync-external-store@1.4.0(react@18.3.1):
