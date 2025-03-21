@@ -1,0 +1,62 @@
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- a/package-fireproof-core.json
+-    "@adviser/cement": "~0.4.1!",
+-    "p-retry": "from-package-json"
+--- a/package.json
+-    "prolly-trees": "^1.0.4"
+--- a/pnpm-lock.yaml
+-      react:
+-        specifier: ^18.3.1
+-        version: 18.3.1
+-    optional: true
+-    optional: true
+-    optional: true
+-    optional: true
+-  wrappy@1.0.2:
+-    optional: true
+--- /dev/null
+--- a/src/index.ts
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- /dev/null
+--- a/src/react/img-file.ts
+-const { URL } = window;
+--- /dev/null
+--- a/src/runtime/gateways/index.ts
+--- a/src/runtime/index.ts
+--- /dev/null
+--- /dev/null
+--- a/src/types.ts
+--- /dev/null
+--- a/tsconfig.json
+-  "include": ["src/**/*", "tests/**/*"],
+--- /dev/null
+--- a/vitest.workspace.ts
+-export default defineWorkspace([memory, file, indexeddb]);
