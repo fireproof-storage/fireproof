@@ -28,7 +28,8 @@
     "test:indexeddb": "vitest --config vitest.indexeddb.config.ts --run",
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
-    "lint": "eslint"
+    "lint": "eslint",
+    "drizzle:test": "drizzle-kit push --config ./drizzle.cloud.config.ts"
   },
   "keywords": [
     "ledger",
@@ -63,6 +64,7 @@
     "@vitest/ui": "^3.0.9",
     "aws4fetch": "^1.0.20",
     "better-sqlite3": "^11.9.1",
+    "drizzle-kit": "^0.30.5",
     "esbuild": "^0.24.2",
     "esbuild-plugin-replace": "^1.4.0",
     "eslint": "^9.18.0",
@@ -98,9 +100,11 @@
     "@ipld/car": "^5.4.0",
     "@ipld/dag-cbor": "^9.2.2",
     "@ipld/dag-json": "^10.2.3",
+    "@libsql/client": "^0.15.0",
     "jose": "^6.0.10",
     "cborg": "^4.2.9",
     "charwise": "^3.0.1",
+    "drizzle-orm": "^0.40.1",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.2",
     "multiformats": "^13.3.2",
@@ -110,7 +114,8 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
-    "ws": "^8.18.1"
+    "ws": "^8.18.1",
+    "zod": "^3.24.2"
   },
   "bundle-phobia": {
     "max-size": "390kB",
@@ -120,10 +125,14 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "better-sqlite3",
+      "core-js",
       "edgedriver",
       "esbuild",
       "msw",
       "playwright-chromium"
-    ]
+    ],
+    "patchedDependencies": {
+      "drizzle-kit": "patches/drizzle-kit.patch"
+    }
   }
 }
