@@ -4,7 +4,7 @@ set -e
 
 projectRoot=$(pwd)
 
-if [ \"$FP_CI\" != 'fp_ci' ]
+if [ "$FP_CI" != 'fp_ci' ]
 then
   bash .github/workflows/setup-local-esm-npm.sh
 fi
