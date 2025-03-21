@@ -115,7 +115,7 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*", "cloud-backend/**/*", "tests/**/*"],
+  "include": ["src/**/*", "cloud/**/*", "tests/**/*"],
   "typeRoots": ["ts-types", "node_modules/@types"],
   "ts-node": {
     "compilerOptions": {

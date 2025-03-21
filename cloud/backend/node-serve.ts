@@ -4,8 +4,7 @@ import { NodeHonoFactory } from "./node-hono-server.js";
 import { serve } from "@hono/node-server";
 import { ensureSuperThis } from "use-fireproof";
 import { BetterSQLDatabase } from "./meta-merger/bettersql-abstract-sql.js";
-import { defaultMsgParams } from "../src/protocols/cloud/msger.js";
-import { defaultGestalt } from "../src/protocols/cloud/msg-types.js";
+import { ps } from "@fireproof/core";
 
 // async function main() {
 //   Deno.serve({
@@ -22,10 +21,10 @@ import { defaultGestalt } from "../src/protocols/cloud/msg-types.js";
 async function main() {
   const app = new Hono();
   const sthis = ensureSuperThis();
-  const msgP = defaultMsgParams(sthis, {
+  const msgP = ps.cloud.defaultMsgParams(sthis, {
     hasPersistent: true,
   });
-  const gestalt = defaultGestalt(msgP, {
+  const gestalt = ps.cloud.defaultGestalt(msgP, {
     id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
   });
 

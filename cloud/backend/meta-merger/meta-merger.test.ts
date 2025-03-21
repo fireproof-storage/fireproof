@@ -1,19 +1,18 @@
 // import type { Database } from "better-sqlite3";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
-import { ensureSuperThis } from "@fireproof/core";
+import { ensureSuperThis, rt } from "@fireproof/core";
 import { SQLDatabase } from "./abstract-sql.js";
-import { V2SerializedMetaKey } from "../../src/runtime/meta-key-hack.js";
 
-function sortCRDTEntries(rows: V2SerializedMetaKey) {
+function sortCRDTEntries(rows: rt.V2SerializedMetaKey) {
   return rows.metas.sort((a, b) => a.cid.localeCompare(b.cid));
 }
 
-function sortKeysEntries(rows: V2SerializedMetaKey) {
+function sortKeysEntries(rows: rt.V2SerializedMetaKey) {
   return rows.keys.sort();
 }
 
 interface MetaConnection {
-  readonly meta: V2SerializedMetaKey;
+  readonly meta: rt.V2SerializedMetaKey;
   readonly connection: Connection;
 }
 
@@ -27,7 +26,7 @@ function toCRDTEntries(rows: MetaConnection[]) {
     {
       metas: [],
       keys: [],
-    } as V2SerializedMetaKey,
+    } as rt.V2SerializedMetaKey,
   );
 }
 
