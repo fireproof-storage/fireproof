@@ -140,10 +140,10 @@ export abstract class HonoServerBase implements HonoServerImpl {
   // abstract getConnected(): Connected[];
 
   start(ctx: ExposeCtxItem<WSRoom>): Promise<HonoServerImpl> {
-    metaMerger(ctx)
+    metaMerger(ctx);
     return Promise.resolve(this);
-      // .createSchema(drop)
-      // .then(() => this);
+    // .createSchema(drop)
+    // .then(() => this);
   }
 
   // gestalt(): Gestalt {

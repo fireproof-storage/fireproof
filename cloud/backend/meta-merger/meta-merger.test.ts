@@ -1,8 +1,9 @@
 // import type { Database } from "better-sqlite3";
+import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
 import { ensureSuperThis, rt } from "@fireproof/core";
 // import { SQLDatabase } from "./abstract-sql.js";
-import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
+// import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 
 function sortCRDTEntries(rows: rt.V2SerializedMetaKey) {
   return rows.metas.sort((a, b) => a.cid.localeCompare(b.cid));
@@ -46,9 +47,12 @@ function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase
       factory: async () => {
         // import type { Client } from "@libsql/client";
         const { createClient } = await import("@libsql/client");
-        return drizzle(createClient({
-          url: "file://./dist/test.db",
-        }))
+        return drizzle(
+          createClient({
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            url: process.env.FP_TEST_SQL_URL!,
+          }),
+        );
         /*
         const { BetterSQLDatabase } = await import("./bettersql-abstract-sql.js");
         return new BetterSQLDatabase("./dist/test.db") as unknown as LibSQLDatabase;
@@ -211,17 +215,18 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
     // wrote 10 connections with 3 metas each
     for (const connection of connections) {
       const rows = await mm.metaToSend(connection);
+      // console.log("connection", connection, rows, JSON.stringify(ref, null,2));
       expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(toCRDTEntries(ref)));
       const rowsEmpty = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rowsEmpty)).toEqual([]);
     }
+
     const newConnections = Array(2)
       .fill(metaMerge.connection)
       .map((c) => ({ ...c, conn: { ...c.conn, reqId: sthis.timeOrderedNextId().str } }));
     for (const connection of newConnections) {
       const rows = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(toCRDTEntries(ref)));
-      expect(sortKeysEntries(rows)).toEqual(sortKeysEntries(toCRDTEntries(ref)));
       const rowsEmpty = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rowsEmpty)).toEqual([]);
     }

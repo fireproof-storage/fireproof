@@ -37,8 +37,6 @@ function toByConnection(connection: Connection): ByConnection {
   };
 }
 
-
-
 export function metaMerger(ctx: {
   readonly id: string;
   readonly logger: Logger;
@@ -99,8 +97,8 @@ export class MetaMerger {
     });
 
     await this.sql.metaSend.deleteByConnection(connCIDs);
-    const waitingMetaCIDS = await this.sql.metaSend.getToSendMetaCIDs(byConnection.tenant, byConnection.ledger);
-    await this.sql.metaByTenantLedger.deleteByConnection(connCIDs, waitingMetaCIDS);
+    // const waitingMetaCIDS = await this.sql.metaSend.getToSendMetaCIDs(byConnection.tenant, byConnection.ledger);
+    // await this.sql.metaByTenantLedger.deleteByConnection(connCIDs, waitingMetaCIDS);
     return { now, byConnection };
   }
 
@@ -108,7 +106,15 @@ export class MetaMerger {
     if (!mm.meta.metas.length) {
       return;
     }
-    const { now, byConnection } = await this.delMeta(mm);
+    // const { now, byConnection } = await this.delMeta(mm);
+    const now = mm.now || new Date();
+    const byConnection = toByConnection(mm.connection);
+
+    await this.sql.tenant.ensure({
+      ...mm.connection.tenant,
+      createdAt: now,
+    });
+
     await this.sql.tenantLedger.ensure({
       ...mm.connection.tenant,
       createdAt: now,
@@ -119,25 +125,18 @@ export class MetaMerger {
       createdAt: now,
     });
     // console.log("addMeta", byConnection, mm.meta);
-    for (const meta of mm.meta.metas) {
-      try {
-        // console.log("addMeta", byConnection, meta);
-        await this.sql.metaByTenantLedger.ensure({
-          ...byConnection,
-          metaCID: meta.cid,
-          meta: meta,
-          updateAt: now,
-        });
-      } catch (e) {
-        this.logger.Error().Err(e).Str("metaCID", meta.cid).Msg("addMeta");
-      }
-    }
+    // console.log("addMeta", byConnection, meta);
+    await this.sql.metaByTenantLedger.ensure({
+      ...byConnection,
+      metas: mm.meta.metas,
+      createdAt: now,
+    });
   }
 
   async metaToSend(sink: Connection, now = new Date()): Promise<rt.V2SerializedMetaKey> {
     const bySink = toByConnection(sink);
     const rows = await this.sql.metaSend.selectToAddSend({ ...bySink, now });
-    // console.log("metaToSend", bySink, rows);
+    // console.log("metaToSend", bySink, rows.length);
     if (rows.length) {
       await this.sql.metaSend.insert(
         rows.map((row) => ({

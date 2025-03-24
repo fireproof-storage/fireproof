@@ -55,10 +55,13 @@ export class TenantSql {
   // }
 
   ensure(t: TenantRow) {
-    return this.db.insert(sqlTenant)
-    .values({
-      tenant: t.tenant,
-      createdAt: t.createdAt.toISOString(),
-    }).onConflictDoNothing().run();
+    return this.db
+      .insert(sqlTenant)
+      .values({
+        tenant: t.tenant,
+        createdAt: t.createdAt.toISOString(),
+      })
+      .onConflictDoNothing()
+      .run();
   }
 }

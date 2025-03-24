@@ -219,7 +219,7 @@ export class NodeHonoFactory implements HonoServerFactory {
   async start(app: Hono): Promise<void> {
     try {
       await createDB.once(() => {
-        return new MetaMerger("test", this.sthis.logger, this.params.sql) // .createSchema();
+        return new MetaMerger("test", this.sthis.logger, this.params.sql); // .createSchema();
       });
 
       const { createNodeWebSocket } = await import("@hono/node-ws");

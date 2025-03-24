@@ -34,8 +34,8 @@ async function main() {
     new NodeHonoFactory(sthis, {
       msgP,
       gs: gestalt,
-      sql: drizzle(createClient({ url: `file://${process.cwd()}/dist/sqlite.db` }))
-       // new BetterSQLDatabase("./dist/node-meta.sqlite"),
+      sql: drizzle(createClient({ url: `file://${process.cwd()}/dist/sqlite.db` })),
+      // new BetterSQLDatabase("./dist/node-meta.sqlite"),
     }),
   ).register(app);
 

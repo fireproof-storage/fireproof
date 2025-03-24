@@ -16,19 +16,19 @@ export interface MetaSendRow {
   readonly sendAt: Date;
 }
 
-
 export const sqlMetaSend = sqliteTable(
   "MetaSend",
   {
     metaCID: text().notNull(),
     tenant: text().notNull(),
     ledger: text().notNull(),
+    // my QS
     reqId: text().notNull(),
     resId: text().notNull(),
     sendAt: text().notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.metaCID, table.tenant, table.ledger] }),
+    primaryKey({ columns: [table.metaCID, table.tenant, table.ledger, table.reqId, table.resId] }),
     foreignKey({
       columns: [table.tenant, table.ledger, table.metaCID],
       foreignColumns: [sqlMetaByTenantLedger.tenant, sqlMetaByTenantLedger.ledger, sqlMetaByTenantLedger.metaCID],
@@ -105,57 +105,65 @@ export class MetaSendSql {
     // console.log("selectToAddSend-1");
     // const stmt = this.sqlSelectToAddSend();
     // console.log("selectToAddSend-2");
-    try {
-
-      const rows = await this.db.select().from(sqlMetaByTenantLedger)
+    const rows = await this.db
+      .select()
+      .from(sqlMetaByTenantLedger)
       .where(
         and(
           eq(sqlMetaByTenantLedger.tenant, conn.tenant),
           eq(sqlMetaByTenantLedger.ledger, conn.ledger),
-          notInArray(sqlMetaByTenantLedger.metaCID, this.db.select({ metaCID: sqlMetaSend.metaCID }).from(sqlMetaSend).where(
-            and(
-              eq(sqlMetaSend.tenant, conn.tenant),
-              eq(sqlMetaSend.ledger, conn.ledger),
-              eq(sqlMetaSend.reqId, conn.reqId),
-              eq(sqlMetaSend.resId, conn.resId),
-            )
-          )),
-        )
-      ).all();
-      const now = conn.now;
-      return rows.map(
-        (i) =>
-          ({
-            metaCID: i.metaCID,
-            tenant: i.tenant,
-            ledger: i.ledger,
-            reqId: conn.reqId,
-            resId: conn.resId,
-            sendAt: now,
-            meta: JSON.parse(i.meta) as CRDTEntry,
-          }) satisfies MetaSendRowWithMeta,
-      );
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error("selectToAddSend:error", this.id, e);
-      throw e;
-    }
+          notInArray(
+            sqlMetaByTenantLedger.metaCID,
+            this.db
+              .select({ metaCID: sqlMetaSend.metaCID })
+              .from(sqlMetaSend)
+              .where(
+                and(
+                  eq(sqlMetaSend.tenant, conn.tenant),
+                  eq(sqlMetaSend.ledger, conn.ledger),
+                  eq(sqlMetaSend.reqId, conn.reqId),
+                  eq(sqlMetaSend.resId, conn.resId),
+                ),
+              ),
+          ),
+        ),
+      )
+      .all();
+    const now = conn.now;
+    // console.log("selectToAddSend-3", rows);
+    return rows.map(
+      (i) =>
+        ({
+          metaCID: i.metaCID,
+          tenant: i.tenant,
+          ledger: i.ledger,
+          reqId: conn.reqId,
+          resId: conn.resId,
+          sendAt: now,
+          meta: JSON.parse(i.meta) as CRDTEntry,
+        }) satisfies MetaSendRowWithMeta,
+    );
   }
 
   async insert(t: MetaSendRow[]) {
-    return this.db.insert(sqlMetaSend).values(t.map(i => ({
-      ...i,
-      sendAt: i.sendAt.toISOString(),
-    }))).onConflictDoNothing().run();
+    return this.db
+      .insert(sqlMetaSend)
+      .values(
+        t.map((i) => ({
+          ...i,
+          sendAt: i.sendAt.toISOString(),
+        })),
+      )
+      .onConflictDoNothing()
+      .run();
     // const stmt = this.sqlInsertMetaSend();
     // for (const i of t) {
     //   await stmt.run(i.metaCID, i.tenant, i.ledger, i.reqId, i.resId, i.sendAt);
     // }
   }
 
-
   // readonly #sqlDeleteByConnection = new ResolveOnce<SQLStatement>();
- 
+
   // sqlMetaCIDByTenantLedger(): SQLStatement {
   //   return this.db.prepare(`
   //     select distinct metaCID from MetaSend where tenant = ? and ledger = ?
@@ -163,11 +171,11 @@ export class MetaSendSql {
   // }
 
   async getToSendMetaCIDs(tenant: string, ledger: string): Promise<string[]> {
-    const rows = await this.db.select({ metaCID: sqlMetaSend.metaCID }).from(sqlMetaSend).where(
-      and(
-        eq(sqlMetaSend.tenant, tenant),
-        eq(sqlMetaSend.ledger, ledger),
-      )).all();
+    const rows = await this.db
+      .select({ metaCID: sqlMetaSend.metaCID })
+      .from(sqlMetaSend)
+      .where(and(eq(sqlMetaSend.tenant, tenant), eq(sqlMetaSend.ledger, ledger)))
+      .all();
     //   db
     // .select({
     //   [columnName]: myTable[columnName],
@@ -183,16 +191,16 @@ export class MetaSendSql {
   //   // return this.#sqlDeleteByConnection.once(() => {
 
   //   return this.db.prepare(`
-  //     DELETE FROM MetaSend 
-  //       WHERE 
-  //         tenant = ? 
-  //       AND 
-  //         ledger = ? 
-  //       AND 
-  //         reqId = ? 
-  //       AND 
-  //         resId = ? 
-  //       AND 
+  //     DELETE FROM MetaSend
+  //       WHERE
+  //         tenant = ?
+  //       AND
+  //         ledger = ?
+  //       AND
+  //         reqId = ?
+  //       AND
+  //         resId = ?
+  //       AND
   //         metaCID in (SELECT value FROM json_each(?))
   //     `);
   //   // });
@@ -215,28 +223,38 @@ export class MetaSendSql {
   // }
 
   async deleteByConnection(dmi: ByConnection & { metaCIDs: string[] }) {
-    const metaCIDs = await this.db.select().from(sqlMetaSend).where(
-      and(
-        eq(sqlMetaSend.tenant, dmi.tenant),
-        eq(sqlMetaSend.ledger, dmi.ledger),
-        eq(sqlMetaSend.reqId, dmi.reqId),
-        eq(sqlMetaSend.resId, dmi.resId),
-        notInArray(sqlMetaSend.metaCID, dmi.metaCIDs),
+    const metaCIDs = await this.db
+      .select()
+      .from(sqlMetaSend)
+      .where(
+        and(
+          eq(sqlMetaSend.tenant, dmi.tenant),
+          eq(sqlMetaSend.ledger, dmi.ledger),
+          eq(sqlMetaSend.reqId, dmi.reqId),
+          eq(sqlMetaSend.resId, dmi.resId),
+          notInArray(sqlMetaSend.metaCID, dmi.metaCIDs),
+        ),
       )
-    ).all()
+      .all();
     if (!metaCIDs.length) {
       return;
     }
     // console.log("deleteByConnection:send", dmi, metaCIDs);
     // const stmt = this.sqlDeleteByMetaCID();
-    return this.db.delete(sqlMetaSend).where(
-      and(
-        eq(sqlMetaSend.tenant, dmi.tenant),
-        eq(sqlMetaSend.ledger, dmi.ledger),
-        eq(sqlMetaSend.reqId, dmi.reqId),
-        eq(sqlMetaSend.resId, dmi.resId),
-        inArray(sqlMetaSend.metaCID, metaCIDs.map((i) => i.metaCID)),
+    return this.db
+      .delete(sqlMetaSend)
+      .where(
+        and(
+          eq(sqlMetaSend.tenant, dmi.tenant),
+          eq(sqlMetaSend.ledger, dmi.ledger),
+          eq(sqlMetaSend.reqId, dmi.reqId),
+          eq(sqlMetaSend.resId, dmi.resId),
+          inArray(
+            sqlMetaSend.metaCID,
+            metaCIDs.map((i) => i.metaCID),
+          ),
+        ),
       )
-    ).run() //dmi.tenant, dmi.ledger, dmi.reqId, dmi.resId, JSON.stringify(metaCIDs.map((i) => i.metaCID)));
+      .run(); //dmi.tenant, dmi.ledger, dmi.reqId, dmi.resId, JSON.stringify(metaCIDs.map((i) => i.metaCID)));
   }
 }

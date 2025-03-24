@@ -4,7 +4,7 @@ import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { HonoServer } from "./hono-server.js";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { Hono } from "hono";
-import { drizzle } from "drizzle-orm/libsql";
+import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
@@ -279,6 +279,7 @@ export async function mockJWK(claim: Partial<ps.cloud.TokenForParam> = {}, sthis
 
 export async function setupBackend(
   sthis: SuperThis,
+  dbfile: LibSQLDatabase<Record<string, never>>,
   // backend: "D1" | "DO",
   // key: string,
   port = portRandom(),
@@ -291,7 +292,7 @@ export async function setupBackend(
   const nhf = new NodeHonoFactory(sthis, {
     // msgP,
     // gs: remoteGestalt,
-    sql: drizzle(createClient({ url: `file://./dist/node-meta.sqlite` })),
+    sql: dbfile,
     //new BetterSQLDatabase("./dist/node-meta.sqlite"),
   });
   const app = new Hono();
