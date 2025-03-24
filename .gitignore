@@ -28,7 +28,7 @@ smoke/react/pnpm-lock.yaml
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-smoke/esm/.env
+**/.env
 **/.esm-cache/**
 **/.cache/**
 

@@ -13,9 +13,14 @@ import {
   JSONFormatter,
   YAMLFormatter,
   CoerceURI,
+  param,
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
+import { FPContext } from "./fp-context.js";
 import { base58btc } from "multiformats/bases/base58";
+import { sha256 } from "multiformats/hashes/sha2";
+import { CID } from "multiformats/cid";
+import * as json from "multiformats/codecs/json";
 
 //export type { Logger };
 //export { Result };
@@ -32,7 +37,7 @@ interface superThisOpts {
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
-  readonly ctx: Record<string, unknown>;
+  readonly ctx: FPContext;
   readonly txt: TextEndeCoder;
 }
 
@@ -40,7 +45,7 @@ class SuperThisImpl implements SuperThis {
   readonly logger: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: Record<string, unknown>;
+  readonly ctx: FPContext;
   readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
 
@@ -50,7 +55,7 @@ class SuperThisImpl implements SuperThis {
     this.crypto = opts.crypto;
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
-    this.ctx = { ...opts.ctx };
+    this.ctx = FPContext.merge(opts.ctx);
     // console.log("superThis", this);
   }
 
@@ -87,7 +92,7 @@ class SuperThisImpl implements SuperThis {
       crypto: override.crypto || this.crypto,
       pathOps: override.pathOps || this.pathOps,
       txt: override.txt || this.txt,
-      ctx: { ...this.ctx, ...override.ctx },
+      ctx: FPContext.merge(this.ctx, override.ctx),
     });
   }
 }
@@ -156,7 +161,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),
-    ctx: osthis?.ctx || {},
+    ctx: FPContext.merge(osthis?.ctx),
     pathOps,
     txt: osthis?.txt || txtOps,
   });
@@ -458,7 +463,7 @@ export function storeType2DataMetaWal(store: StoreType) {
 
 export function ensureURIDefaults(
   sthis: SuperThis,
-  name: string,
+  names: { name: string; localURI?: URI },
   curi: CoerceURI | undefined,
   uri: URI,
   store: StoreType,
@@ -468,14 +473,27 @@ export function ensureURIDefaults(
   }>,
 ): URI {
   ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, name);
-  if (!ret.hasParam(PARAM.NAME)) {
-    // const name = sthis.pathOps.basename(ret.URI().pathname);
-    // if (!name) {
-    throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-    // }
-    // ret.setParam(PARAM.NAME, name);
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
+  if (names.localURI) {
+    const rParams = names.localURI.getParamsResult({
+      [PARAM.NAME]: param.OPTIONAL,
+      [PARAM.STORE_KEY]: param.OPTIONAL,
+    });
+    const params = rParams.Ok();
+    if (params[PARAM.NAME]) {
+      ret.defParam(PARAM.LOCAL_NAME, params[PARAM.NAME]);
+    }
+    if (params[PARAM.STORE_KEY]) {
+      ret.defParam(PARAM.STORE_KEY, params[PARAM.STORE_KEY]);
+    }
   }
+  // if (!ret.hasParam(PARAM.NAME)) {
+  //   // const name = sthis.pathOps.basename(ret.URI().pathname);
+  //   // if (!name) {
+  //   throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
+  //   // }
+  //   // ret.setParam(PARAM.NAME, name);
+  // }
   if (ctx.idx) {
     ret.defParam(PARAM.INDEX, "idx");
     ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
@@ -494,5 +512,19 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
   for (const [k, v] of Object.entries(o)) {
     env[k] = v;
   }
+  (globalThis as unknown as Record<symbol, Record<string, string>>)[key] = env;
+  // console.log("setPresetEnv", key, env);
   return env;
+}
+
+export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
+  // toSortedArray should be shallow
+  const bytes = json.encode(toSortedArray(o as unknown as Record<string, unknown>));
+  const hash = await sha256.digest(bytes);
+  const cid = CID.create(1, json.code, hash);
+  return cid.toString();
+}
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

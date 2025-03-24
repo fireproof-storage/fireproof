@@ -90,19 +90,20 @@ export class keysByFingerprint implements KeysByFingerprint {
   static async from(keyBag: KeyBag, named: KeysItem): Promise<KeysByFingerprint> {
     const kbf = new keysByFingerprint(keyBag, named.name);
     // reverse to keep the first key as default
-    for (const i of Object.entries(named.keys).reverse()) {
-      const result = await kbf.upsert(i[1].key, i[1].default, false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for (const [_, v2] of Object.entries(named.keys).reverse()) {
+      const result = await kbf.upsert(v2.key, v2.default);
       if (result.isErr()) {
         throw result;
       }
-      if (result.Ok().modified) {
-        throw keyBag.logger.Error().Msg("KeyBag: keysByFingerprint: mismatch unexpected").AsError();
-      }
-      if (result.Ok().kfp.fingerPrint !== i[1].fingerPrint) {
+      // if (result.Ok().modified) {
+      //   throw keyBag.logger.Error().Msg("KeyBag: keysByFingerprint: mismatch unexpected").AsError();
+      // }
+      if (result.Ok().kfp.fingerPrint !== v2.fingerPrint) {
         throw keyBag.logger
           .Error()
           .Any("fprs", {
-            fromStorage: i[1].fingerPrint,
+            fromStorage: v2.fingerPrint,
             calculated: result.Ok().kfp.fingerPrint,
           })
           .Msg("KeyBag: keysByFingerprint: mismatch")
@@ -130,8 +131,7 @@ export class keysByFingerprint implements KeysByFingerprint {
     }
     throw this.keybag.logger
       .Error()
-      .Str("fpr", fingerPrint)
-      .Any("fprs", Object.keys(this.keys))
+      .Any({ fprs: Object.keys(this.keys), fpr: fingerPrint, name: this.name, id: this.id })
       .Msg("keysByFingerprint: not found")
       .AsError();
   }
@@ -139,6 +139,7 @@ export class keysByFingerprint implements KeysByFingerprint {
   async upsert(materialStrOrUint8: string | Uint8Array, def?: boolean, keyBagAction = true): Promise<Result<KeyUpsertResult>> {
     def = !!def;
     const rKfp = await toKeyWithFingerPrint(this.keybag, materialStrOrUint8);
+    // console.log("upsert", this.id, this.name, rKfp.Ok().fingerPrint)
     if (rKfp.isErr()) {
       return Result.Err(rKfp);
     }
@@ -146,6 +147,7 @@ export class keysByFingerprint implements KeysByFingerprint {
     let found = this.keys[kfp.fingerPrint];
     if (found) {
       if (found.default === def) {
+        // console.log("upsert-def", this.name, found.fingerPrint);
         return Result.Ok({
           modified: false,
           kfp: found,
@@ -159,11 +161,13 @@ export class keysByFingerprint implements KeysByFingerprint {
         (i as { default: boolean }).default = false;
       }
     }
+    // console.log("upsert", this.name, found.fingerPrint, found, keyBagAction);
     this.keys[kfp.fingerPrint] = found;
     if (def) {
       this.keys["*"] = found;
     }
     if (keyBagAction) {
+      // console.log("_upsertNamedKey", this.name, found.fingerPrint);
       this.keybag._upsertNamedKey(this);
     }
     return Result.Ok({

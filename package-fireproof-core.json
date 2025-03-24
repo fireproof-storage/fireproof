@@ -6,6 +6,9 @@
   "module": "./index.js",
   "main": "./index.cjs",
   "types": "./index.d.ts",
+  "bin": {
+    "fp-cli": "./cli/main.js"
+  },
   "exports": {
     ".": {
       "import": "./index.js",
@@ -15,33 +18,39 @@
     },
     "./node": {
       "import": {
-        "browser": "./indexeddb/index.js",
-        "default": "./node/index.js"
+        "browser": "./runtime/gateways/indexeddb/index.js",
+        "default": "./runtime/gateways/file/node/index.js"
       },
-      "browser": "./indexeddb/index.js",
-      "require": "./node/index.cjs",
-      "types": "./node/index.d.ts"
+      "browser": "./runtime/gateways/indexeddb/index.js",
+      "require": "./runtime/gateways/file/node/index.cjs",
+      "types": "./runtime/gateways/file/node/index.d.ts"
     },
     "./deno": {
       "import": {
-        "browser": "./indexeddb/index.js",
-        "default": "./deno/index.js"
+        "browser": "./runtime/gateways/indexeddb/index.js",
+        "default": "./runtime/gateways/file/deno/index.js"
       },
-      "browser": "./indexeddb/index.js",
-      "require": "./deno/index.cjs",
-      "types": "./deno/index.d.ts"
+      "browser": "./runtime/gateways/indexeddb/index.js",
+      "require": "./runtime/gateways/file/deno/index.cjs",
+      "types": "./runtime/gateways/file/deno/index.d.ts"
     },
     "./indexeddb": {
-      "import": "./indexeddb/index.js",
-      "browser": "./indexeddb/index.js",
-      "require": "./indexeddb/index.cjs",
-      "types": "./indexeddb/index.d.ts"
+      "import": "./runtime/gateways/indexeddb/index.js",
+      "browser": "./runtime/gateways/indexeddb/index.js",
+      "require": "./runtime/gateways/indexeddb/index.cjs",
+      "types": "./runtime/gateways/indexeddb/index.d.ts"
     },
     "./react": {
       "import": "./react/index.js",
       "browser": "./react/index.js",
       "require": "./react/index.cjs",
       "types": "./react/index.d.ts"
+    },
+    "./use-fireproof": {
+      "import": "./use-fireproof/index.js",
+      "browser": "./use-fireproof/index.js",
+      "require": "./use-fireproof/index.cjs",
+      "types": "./use-fireproof/index.d.ts"
     }
   },
   "scripts": {},

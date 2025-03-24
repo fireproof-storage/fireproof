@@ -25,7 +25,7 @@ import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
-import { Context } from "./context.js";
+import { FPContext } from "./fp-context.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
@@ -44,8 +44,14 @@ export function isLedger(db: unknown): db is Ledger {
 
 export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   const sthis = ensureSuperThis(opts);
+  const key = keyConfigOpts(sthis, name, opts);
+  const item = ledgers.get(key);
+  // if (!item.ready) {
+  // console.log("LedgerFactory", key);
+  // }
   return new LedgerShell(
-    ledgers.get(keyConfigOpts(sthis, name, opts)).once((key) => {
+    item.once((key) => {
+      // console.log("once-LedgerFactory", key);
       const db = new LedgerImpl(sthis, {
         name,
         meta: opts?.meta,
@@ -87,7 +93,7 @@ export class LedgerShell implements Ledger {
     return this.ref.opts;
   }
 
-  get context(): Context {
+  get context(): FPContext {
     return this.ref.context;
   }
 
@@ -139,7 +145,7 @@ class LedgerImpl implements Ledger {
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  readonly context = new Context();
+  readonly context = new FPContext();
 
   get name(): string {
     return this.opts.name;
@@ -201,7 +207,7 @@ class LedgerImpl implements Ledger {
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
-    this.crdt = new CRDTImpl(this.sthis, this.opts);
+    this.crdt = new CRDTImpl(this.sthis, this.opts, this);
     this.writeQueue = writeQueue(
       this.sthis,
       async (updates: DocUpdate<DocTypes>[]) => this.crdt.bulk(updates),
@@ -286,19 +292,26 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
   // readonly threshold?: number;
   return {
     idx: {
-      car: ensureURIDefaults(sthis, name, sopts.idx?.car ?? sopts.data?.car, base, "car", { idx: true }),
-      file: ensureURIDefaults(sthis, name, sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car, base, "file", {
-        file: true,
-        idx: true,
-      }),
-      meta: ensureURIDefaults(sthis, name, sopts.idx?.meta ?? sopts.data?.meta, base, "meta", { idx: true }),
-      wal: ensureURIDefaults(sthis, name, sopts.idx?.wal ?? sopts.data?.wal, base, "wal", { idx: true }),
+      car: ensureURIDefaults(sthis, { name }, sopts.idx?.car ?? sopts.data?.car, base, "car", { idx: true }),
+      file: ensureURIDefaults(
+        sthis,
+        { name },
+        sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car,
+        base,
+        "file",
+        {
+          file: true,
+          idx: true,
+        },
+      ),
+      meta: ensureURIDefaults(sthis, { name }, sopts.idx?.meta ?? sopts.data?.meta, base, "meta", { idx: true }),
+      wal: ensureURIDefaults(sthis, { name }, sopts.idx?.wal ?? sopts.data?.wal, base, "wal", { idx: true }),
     },
     data: {
-      car: ensureURIDefaults(sthis, name, sopts.data?.car, base, "car"),
-      file: ensureURIDefaults(sthis, name, sopts.data?.file ?? sopts.data?.car, base, "file", { file: true }),
-      meta: ensureURIDefaults(sthis, name, sopts.data?.meta, base, "meta"),
-      wal: ensureURIDefaults(sthis, name, sopts.data?.wal, base, "wal"),
+      car: ensureURIDefaults(sthis, { name }, sopts.data?.car, base, "car"),
+      file: ensureURIDefaults(sthis, { name }, sopts.data?.file ?? sopts.data?.car, base, "file", { file: true }),
+      meta: ensureURIDefaults(sthis, { name }, sopts.data?.meta, base, "meta"),
+      wal: ensureURIDefaults(sthis, { name }, sopts.data?.wal, base, "wal"),
     },
   };
 }

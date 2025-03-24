@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "cli": "fp-cli",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

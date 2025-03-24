@@ -1,4 +1,4 @@
-import { sleep, storageURL } from "../helpers.js";
+import { storageURL } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
@@ -16,6 +16,7 @@ import {
   Database,
   isDatabase,
   PARAM,
+  sleep,
 } from "@fireproof/core";
 import { URI } from "@adviser/cement";
 
@@ -369,10 +370,6 @@ describe("benchmarking a ledger", function () {
     expect(result2.rows.length).toBe(numDocs + 1);
 
     await sleep(1000);
-
-    // console.log("begin compact");
-
-    await sleep(100);
 
     // console.time("COMPACT");
     await db.compact();

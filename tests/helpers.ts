@@ -1,4 +1,4 @@
-import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector } from "@adviser/cement";
+import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger } from "@adviser/cement";
 import {
   ensureSuperThis,
   rt,
@@ -10,14 +10,11 @@ import {
   Attached,
   CarTransaction,
   Falsy,
+  FPContext,
 } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-
-export function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
@@ -57,9 +54,9 @@ export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   return ensureSuperThis({
     ...sthis,
     logger: mockLog.logger,
-    ctx: {
+    ctx: FPContext.merge({
       logCollector: mockLog.logCollector,
-    },
+    }),
   }) as MockSuperThis;
 }
 
@@ -91,6 +88,7 @@ export async function simpleCID(sthis: SuperThis) {
 
 class MockLoader implements bs.Loadable {
   readonly sthis: SuperThis;
+  readonly logger: Logger;
   readonly ebOpts: bs.BlockstoreRuntime;
   readonly carLog: bs.CarLog;
   readonly attachedStores: bs.AttachedStores;
@@ -98,7 +96,17 @@ class MockLoader implements bs.Loadable {
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
-    this.ebOpts = {} as bs.BlockstoreRuntime;
+    this.logger = sthis.logger;
+    this.ebOpts = {
+      // keyBag: sthis.keyBag,
+      // storeRuntime: sthis.storeRuntime,
+      storeUrls: {
+        file: noopUrl("test"),
+        wal: noopUrl("test"),
+        meta: noopUrl("test"),
+        car: noopUrl("test"),
+      },
+    } as bs.BlockstoreRuntime;
     this.carLog = new bs.CarLog();
     this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve(), {
       removeAfter: 3,

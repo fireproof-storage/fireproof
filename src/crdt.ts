@@ -30,6 +30,7 @@ import {
   type CarTransaction,
   type DocTypes,
   PARAM,
+  Ledger,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
@@ -49,45 +50,56 @@ export class CRDTImpl implements CRDT {
   // self reference to fullfill HasCRDT
   readonly crdt: CRDT;
 
-  constructor(sthis: SuperThis, opts: LedgerOpts) {
+  readonly ledgerParent?: Ledger;
+
+  constructor(sthis: SuperThis, opts: LedgerOpts, parent?: Ledger) {
     this.sthis = sthis;
+    this.ledgerParent = parent;
     this.crdt = this;
-    this.logger = ensureLogger(sthis, "CRDT");
+    this.logger = ensureLogger(sthis, "CRDTImpl");
     this.opts = opts;
-    this.blockstore = new EncryptedBlockstore(sthis, {
-      applyMeta: async (meta: TransactionMeta) => {
-        const crdtMeta = meta as CRDTMeta;
-        if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
-        await this.clock.applyHead(crdtMeta.head, []);
+    this.blockstore = new EncryptedBlockstore(
+      sthis,
+      {
+        applyMeta: async (meta: TransactionMeta) => {
+          const crdtMeta = meta as CRDTMeta;
+          if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
+          await this.clock.applyHead(crdtMeta.head, []);
+        },
+        compact: async (blocks: CompactFetcher) => {
+          await doCompact(blocks, this.clock.head, this.logger);
+          return { head: this.clock.head } as TransactionMeta;
+        },
+        gatewayInterceptor: opts.gatewayInterceptor,
+        // autoCompact: this.opts.autoCompact || 100,
+        storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
+        storeUrls: this.opts.storeUrls.data,
+        keyBag: this.opts.keyBag,
+        // public: this.opts.public,
+        meta: this.opts.meta,
+        // threshold: this.opts.threshold,
       },
-      compact: async (blocks: CompactFetcher) => {
-        await doCompact(blocks, this.clock.head, this.logger);
-        return { head: this.clock.head } as TransactionMeta;
+      this,
+    );
+    this.indexBlockstore = new EncryptedBlockstore(
+      sthis,
+      {
+        // name: opts.name,
+        applyMeta: async (meta: TransactionMeta) => {
+          const idxCarMeta = meta as IndexTransactionMeta;
+          if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
+          for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
+            index(this, name, undefined, idx);
+          }
+        },
+        gatewayInterceptor: opts.gatewayInterceptor,
+        storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
+        storeUrls: this.opts.storeUrls.idx,
+        keyBag: this.opts.keyBag,
+        // public: this.opts.public,
       },
-      gatewayInterceptor: opts.gatewayInterceptor,
-      // autoCompact: this.opts.autoCompact || 100,
-      storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
-      storeUrls: this.opts.storeUrls.data,
-      keyBag: this.opts.keyBag,
-      // public: this.opts.public,
-      meta: this.opts.meta,
-      // threshold: this.opts.threshold,
-    });
-    this.indexBlockstore = new EncryptedBlockstore(sthis, {
-      // name: opts.name,
-      applyMeta: async (meta: TransactionMeta) => {
-        const idxCarMeta = meta as IndexTransactionMeta;
-        if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
-        for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index(this, name, undefined, idx);
-        }
-      },
-      gatewayInterceptor: opts.gatewayInterceptor,
-      storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
-      storeUrls: this.opts.storeUrls.idx,
-      keyBag: this.opts.keyBag,
-      // public: this.opts.public,
-    });
+      this,
+    );
     this.clock = new CRDTClockImpl(this.blockstore);
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {

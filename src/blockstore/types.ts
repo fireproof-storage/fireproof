@@ -7,7 +7,7 @@ import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } fr
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager, TaskManagerParams } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { Context } from "../context.js";
+import { FPContext } from "../fp-context.js";
 import { AsyncBlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
@@ -378,7 +378,7 @@ export interface Connection {
 
   // this indicates if a store is completely loaded from a peer
   loaded(): Future<void>;
-  readonly context: Context;
+  readonly context: FPContext;
   connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
@@ -539,7 +539,7 @@ export interface AttachedStores {
   forRemotes(actionFn: (store: ActiveStore) => Promise<unknown>): Promise<void>;
   remotes(): ActiveStore[];
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore;
-  attach(attached: Attachable): Promise<Attached>;
+  attach(attached: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached>;
   detach(): Promise<void>;
 }
 
@@ -565,7 +565,7 @@ export abstract class BaseActiveStore {
   abstract local(): BaseStore;
   abstract remotes(): BaseStore[];
 
-  protected abstract readonly xattached: BaseAttachedStores;
+  protected abstract readonly attached: BaseAttachedStores;
 }
 
 // export abstract class CarActiveStore extends BaseActiveStore {
@@ -583,7 +583,7 @@ export interface FileAttachedStores extends BaseAttachedStores {
 export abstract class CarActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: CarStore;
-  protected abstract readonly xattached: CarAttachedStores;
+  protected abstract readonly attached: CarAttachedStores;
   abstract local(): CarStore;
   abstract remotes(): CarStore[];
 }
@@ -591,7 +591,7 @@ export abstract class CarActiveStore extends BaseActiveStore {
 export abstract class FileActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: FileStore;
-  protected abstract readonly xattached: FileAttachedStores;
+  protected abstract readonly attached: FileAttachedStores;
   abstract local(): FileStore;
   abstract remotes(): FileStore[];
 }
@@ -606,7 +606,7 @@ export interface MetaAttachedStores extends BaseAttachedStores {
 export abstract class MetaActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: MetaStore;
-  protected abstract readonly xattached: MetaAttachedStores;
+  protected abstract readonly attached: MetaAttachedStores;
   abstract local(): MetaStore;
   abstract remotes(): MetaStore[];
 }
@@ -619,7 +619,7 @@ export interface WALAttachedStores extends BaseAttachedStores {
 export abstract class WALActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: WALStore;
-  protected abstract readonly xattached: WALAttachedStores;
+  protected abstract readonly attached: WALAttachedStores;
   abstract local(): WALStore;
   abstract remotes(): WALStore[];
 }
@@ -635,11 +635,13 @@ export interface ActiveStore {
   local(): LocalActiveStore;
   remotes(): ActiveStore[];
 
-  readonly xattached: AttachedStores;
+  readonly attached: AttachedStores;
 }
 
 export interface CarCacheItem {
   readonly type: "car" | "block";
+  readonly status: "ready" | "stale";
+  readonly statusCause?: Error;
   readonly cid: AnyLink;
   readonly blocks: AnyBlock[];
   readonly roots: CID[];
@@ -648,12 +650,10 @@ export interface CarCacheItem {
 export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
+  readonly logger: Logger;
+  readonly blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly carLog: CarLog;
-
-  // xremoteMetaStore?: MetaStore;
-  // xremoteFileStore?: DataStore;
-  // xremoteCarStore?: DataStore;
 
   readonly attachedStores: AttachedStores;
 
@@ -665,10 +665,6 @@ export interface Loadable {
   close(): Promise<void>;
 
   keyBag(): Promise<KeyBag>;
-  // metaStore(): Promise<MetaStore>;
-  // fileStore(): Promise<DataStore>;
-  // WALStore(): Promise<WALStore>;
-  // carStore(): Promise<DataStore>;
 
   handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<void>;
 

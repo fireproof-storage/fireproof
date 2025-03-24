@@ -46,7 +46,7 @@ export function buildResGetData(
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResGetData>> {
   return buildRes<MsgWithConnAuth<ReqGetData>, ResGetData>(
-    { method: "GET", store: req.methodParams.store },
+    { method: "GET", store: req.methodParam.store },
     "resGetData",
     msgCtx,
     req,
@@ -81,7 +81,7 @@ export function buildResPutData(
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResPutData>> {
   return buildRes<MsgWithConnAuth<ReqPutData>, ResPutData>(
-    { method: "PUT", store: req.methodParams.store },
+    { method: "PUT", store: req.methodParam.store },
     "resPutData",
     msgCtx,
     req,
@@ -115,7 +115,7 @@ export function buildResDelData(
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResDelData>> {
   return buildRes<MsgWithConnAuth<ReqDelData>, ResDelData>(
-    { method: "DELETE", store: req.methodParams.store },
+    { method: "DELETE", store: req.methodParam.store },
     "resDelData",
     msgCtx,
     req,

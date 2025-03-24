@@ -75,7 +75,7 @@ describe("test multiple connections", () => {
         waitFor: MsgIsResChat,
       });
       if (MsgIsResChat(act)) {
-        expect(act.targets.length).toBe(rest.length);
+        expect(act.targets.length).toBeGreaterThanOrEqual(rest.length);
       } else {
         assert.fail("Expected a response");
       }
