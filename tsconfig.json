@@ -13,7 +13,9 @@
     /* Language and Environment */
     "target": "es2021" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     // "lib": ["esnext", "deno.ns"],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+    "lib": ["dom"],
     // "jsx": "preserve",                                /* Specify what JSX code is generated. */
+    "jsx": "react-jsx",
     // "experimentalDecorators": true,                   /* Enable experimental support for legacy experimental decorators. */
     // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
     // "jsxFactory": "",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */
@@ -116,10 +118,5 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*", "cloud/**/*", "tests/**/*"],
-  "typeRoots": ["ts-types", "node_modules/@types"],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    }
-  }
+  "typeRoots": ["ts-types", "node_modules/@types"]
 }
