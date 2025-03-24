@@ -106,8 +106,8 @@ importers:
         specifier: ^1.0.20
         version: 1.0.20
       better-sqlite3:
-        specifier: ^11.8.1
-        version: 11.8.1
+        specifier: ^11.9.1
+        version: 11.9.1
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
@@ -1024,11 +1024,14 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@20.17.24':
-    resolution: {integrity: sha512-d7fGCyB96w9BnWQrOsJtpyiSaBcAYYr75bnK6ZRjDbql2cGLj/3GsL5OYmLPNq76l7Gf2q4Rv9J2o6h5CrD9sA==}
+  '@types/node@20.17.25':
+    resolution: {integrity: sha512-bT+r2haIlplJUYtlZrEanFHdPIZTeiMeh/fSOEbOOfWf9uTn+lg8g0KU6Q3iMgjd9FLuuMAgfCNSkjUbxL6E3Q==}
 
   '@types/node@22.10.5':
     resolution: {integrity: sha512-F8Q+SeGimwOo86fiovQh8qiXfFEh2/ocYv7tU5pJ3EXMSSxk1Joj5wefpFK2fHTf/N6HKGSxIDBT9f3gCxXPkQ==}
+
+  '@types/node@22.13.11':
+    resolution: {integrity: sha512-iEUCUJoU0i3VnrCmgoWCXttklWcvoCIx4jzcP22fioIVSdTmjgoEvmAO/QPw6TcS9k5FrNgn4w7q5lGOd1CT5g==}
 
   '@types/prop-types@15.7.12':
     resolution: {integrity: sha512-5zvhXYtRNRluoE/jAp4GVsSduVUzNWKkOZrCDBWYtE7biZywwdC2AcEzg+cSMLFRfVgeAFqpfNabiPjxFddV1Q==}
@@ -1375,8 +1378,8 @@ packages:
     resolution: {integrity: sha512-ilQs4fm/l9eMfWY2dY0WCIUplSUp7U0CT1vrqMg1MUdeZl4fypu5UP0XcDBK5WBQPJAKP1b7XEodISmekH/CEg==}
     engines: {bare: '>=1.7.0'}
 
-  bare-os@3.5.1:
-    resolution: {integrity: sha512-LvfVNDcWLw2AnIw5f2mWUgumW3I3N/WYGiWeimhQC1Ybt71n2FjlS9GJKeCnFeg1MKZHxzIFmpFnBXDI+sBeFg==}
+  bare-os@3.6.0:
+    resolution: {integrity: sha512-BUrFS5TqSBdA0LwHop4OjPJwisqxGy6JsWVqV6qaFoe965qqtaKfDzHY5T2YA1gUL0ZeeQeA+4BBc1FJTcHiPw==}
     engines: {bare: '>=1.14.0'}
 
   bare-path@3.0.0:
@@ -1400,8 +1403,8 @@ packages:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
 
-  better-sqlite3@11.8.1:
-    resolution: {integrity: sha512-9BxNaBkblMjhJW8sMRZxnxVTRgbRmssZW0Oxc1MPBTfiR+WW21e2Mk4qu8CzrcZb1LwPCnFsfDEzq+SNcBU8eg==}
+  better-sqlite3@11.9.1:
+    resolution: {integrity: sha512-Ba0KR+Fzxh2jDRhdg6TSH0SJGzb8C0aBY4hR8w8madIdIzzC6Y1+kx5qR6eS1Z+Gy20h6ZU28aeyg0z1VIrShQ==}
 
   big-integer@1.6.52:
     resolution: {integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==}
@@ -2115,8 +2118,8 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
-  htmlfy@0.6.1:
-    resolution: {integrity: sha512-aXlXhSv/40ZRWSW8auSRgPkF5owlJE2c2EkOKTe3n+I1fa/MKWfiNWP9ukexW4Pnj94k7x8TK5sa44l2ySWQ6w==}
+  htmlfy@0.6.2:
+    resolution: {integrity: sha512-dWRE+TW3QSB5mXsnYCUPLoPmaCu2O7kp6/3xh5fayiGuaNtRL/64SdjhoTBwJ2XvuSkLoMgQDLunrAqwxJj40Q==}
 
   htmlparser2@9.1.0:
     resolution: {integrity: sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==}
@@ -3301,8 +3304,8 @@ packages:
   undici-types@6.20.0:
     resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
 
-  undici@6.21.1:
-    resolution: {integrity: sha512-q/1rj5D0/zayJB2FraXdaWxbhWiNKDvu8naDT2dl1yTlvJp4BLtOcp2a5BvgGNQpYYJzau7tf1WgKv3b+7mqpQ==}
+  undici@6.21.2:
+    resolution: {integrity: sha512-uROZWze0R0itiAKVPsYhFov9LxrPMHLMEQFszeI2gCN6bnIIZ8twzBCJcN2LJrBBLfrP0t1FW0g+JmKVl8Vk1g==}
     engines: {node: '>=18.17'}
 
   universalify@0.2.0:
@@ -4201,7 +4204,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@20.17.24':
+  '@types/node@20.17.25':
     dependencies:
       undici-types: 6.19.8
     optional: true
@@ -4209,6 +4212,11 @@ snapshots:
   '@types/node@22.10.5':
     dependencies:
       undici-types: 6.20.0
+
+  '@types/node@22.13.11':
+    dependencies:
+      undici-types: 6.20.0
+    optional: true
 
   '@types/prop-types@15.7.12': {}
 
@@ -4241,7 +4249,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.10.5
+      '@types/node': 22.13.11
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.26.1(@typescript-eslint/parser@8.26.1(eslint@9.18.0)(typescript@5.8.2))(eslint@9.18.0)(typescript@5.8.2)':
@@ -4476,12 +4484,12 @@ snapshots:
 
   '@wdio/repl@9.4.4':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 20.17.25
     optional: true
 
   '@wdio/types@9.10.1':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 20.17.25
     optional: true
 
   '@wdio/utils@9.11.0':
@@ -4659,12 +4667,12 @@ snapshots:
       - bare-buffer
     optional: true
 
-  bare-os@3.5.1:
+  bare-os@3.6.0:
     optional: true
 
   bare-path@3.0.0:
     dependencies:
-      bare-os: 3.5.1
+      bare-os: 3.6.0
     optional: true
 
   bare-stream@2.6.5(bare-events@2.5.4):
@@ -4679,7 +4687,7 @@ snapshots:
   basic-ftp@5.0.5:
     optional: true
 
-  better-sqlite3@11.8.1:
+  better-sqlite3@11.9.1:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.3
@@ -4798,7 +4806,7 @@ snapshots:
       parse5: 7.2.1
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 6.21.1
+      undici: 6.21.2
       whatwg-mimetype: 4.0.0
     optional: true
 
@@ -5608,7 +5616,7 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
-  htmlfy@0.6.1:
+  htmlfy@0.6.2:
     optional: true
 
   htmlparser2@9.1.0:
@@ -6956,7 +6964,7 @@ snapshots:
 
   undici-types@6.20.0: {}
 
-  undici@6.21.1:
+  undici@6.21.2:
     optional: true
 
   universalify@0.2.0: {}
@@ -7080,7 +7088,7 @@ snapshots:
 
   webdriver@9.11.0:
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 20.17.25
       '@types/ws': 8.18.0
       '@wdio/config': 9.11.0
       '@wdio/logger': 9.4.4
@@ -7088,7 +7096,7 @@ snapshots:
       '@wdio/types': 9.10.1
       '@wdio/utils': 9.11.0
       deepmerge-ts: 7.1.5
-      undici: 6.21.1
+      undici: 6.21.2
       ws: 8.18.1
     transitivePeerDependencies:
       - bare-buffer
@@ -7099,7 +7107,7 @@ snapshots:
 
   webdriverio@9.11.0:
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 20.17.25
       '@types/sinonjs__fake-timers': 8.1.5
       '@wdio/config': 9.11.0
       '@wdio/logger': 9.4.4
@@ -7113,7 +7121,7 @@ snapshots:
       css-shorthand-properties: 1.1.2
       css-value: 0.0.1
       grapheme-splitter: 1.0.4
-      htmlfy: 0.6.1
+      htmlfy: 0.6.2
       is-plain-obj: 4.1.0
       jszip: 3.10.1
       lodash.clonedeep: 4.5.0
