@@ -1,13 +1,13 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { PARAM, SuperThis } from "../types.js";
 import type { SerdeGateway } from "./serde-gateway.js";
-import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
-import { INDEXEDDB_VERSION } from "../runtime/gateways/indexeddb-version.js";
 import type { Gateway } from "./gateway.js";
 import { FileGateway } from "../runtime/gateways/file/gateway-impl.js";
 import { MemoryGateway } from "../runtime/gateways/memory/gateway.js";
-import { sysFileSystemFactory } from "../runtime/gateways/file/sys-file-system-factory.js";
 import { DefSerdeGateway } from "../runtime/gateways/def-serde-gateway.js";
+import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
+import { INDEXEDDB_VERSION } from "../runtime/gateways/indexeddb-version.js";
+import { sysFileSystemFactory } from "../runtime/gateways/file/sys-file-system-factory.js";
 
 export interface SerdeGatewayFactoryItem {
   readonly protocol: string;
@@ -82,6 +82,7 @@ export function registerStoreProtocol(item: SerdeOrGatewayFactoryItem): () => vo
       (items as { isDefault: boolean }).isDefault = false;
     });
   }
+  // console.log("registerStoreProtocol", protocol, item.isDefault);
   storeFactory.set(protocol, {
     ...item,
     serdegateway,

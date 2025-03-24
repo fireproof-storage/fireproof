@@ -132,7 +132,7 @@ export class keysByFingerprint implements KeysByFingerprint {
     throw this.keybag.logger
       .Error()
       .Any({ fprs: Object.keys(this.keys), fpr: fingerPrint, name: this.name, id: this.id })
-      .Msg("keysByFingerprint: not found")
+      .Msg("keysByFingerprint:get: not found")
       .AsError();
   }
 

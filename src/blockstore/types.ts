@@ -1,13 +1,22 @@
 import type { CID, Link, Version } from "multiformats";
-import { Attachable, Attached, CarTransaction, DocFileMeta, Falsy, GatewayUrls, StoreType, SuperThis } from "../types.js";
-import { BlockFetcher } from "./transaction.js";
+import {
+  Attachable,
+  Attached,
+  CarTransaction,
+  CRDT,
+  DocFileMeta,
+  Falsy,
+  GatewayUrls,
+  StoreType,
+  SuperThis,
+  TraceFn,
+} from "../types.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
-import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } from "@adviser/cement";
+import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager, TaskManagerParams } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { FPContext } from "../fp-context.js";
 import { AsyncBlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
@@ -26,7 +35,7 @@ export class CarLog {
     Object.freeze(x);
     return x;
   }
-  xunshift(logs: CarGroup) {
+  unshift(logs: CarGroup) {
     // console.log(
     //   "CarLog-unshift",
     //   logs.map((l) => l.toString()),
@@ -114,8 +123,8 @@ export interface AnyDecodedBlock {
 }
 
 export interface CarMakeable {
-  entries(): AsyncIterable<AnyBlock>;
-  get(cid: AnyLink): Promise<AnyBlock | undefined>;
+  entries(): AsyncIterable<FPBlock>;
+  get(cid: AnyLink): Promise<FPBlock | Falsy>;
 }
 
 export interface CarHeader<T> {
@@ -378,7 +387,7 @@ export interface Connection {
 
   // this indicates if a store is completely loaded from a peer
   loaded(): Future<void>;
-  readonly context: FPContext;
+  readonly context: AppContext;
   connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
@@ -393,6 +402,7 @@ export interface BaseStore {
   readonly logger: Logger;
   // readonly url: URI
   url(): URI;
+  id(): Promise<string>;
   // readonly name: string;
   // onStarted(fn: () => void): void;
   // onClosed(fn: () => void): void;
@@ -427,7 +437,10 @@ export function DbMetaEventsEqual(a: DbMetaEvent[], b: DbMetaEvent[]): boolean {
 
 export interface MetaStore extends BaseStore {
   readonly storeType: "meta";
-  load(branch?: string): Promise<DbMeta[] | Falsy>;
+  // branch defaults to "main"
+  // skipHandle defaults to false
+  // load(branch?: string, skipHandle?: boolean): Promise<DbMeta[] | Falsy>;
+  stream(branch?: string): ReadableStream<DbMeta[]>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
   // onLoad(branch: string, loadHandler: LoadHandler): () => void;
@@ -468,7 +481,7 @@ export interface WALStore extends BaseStore {
   readonly storeType: "wal";
   ready(): Promise<void>;
   readonly processing?: Promise<void> | undefined;
-  readonly processQueue: CommitQueue<void>;
+  readonly processQueue: CommitQueue<unknown>;
 
   process(): Promise<void>;
   enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;
@@ -509,6 +522,7 @@ export type BlockstoreOpts = Partial<BlockstoreParams> & {
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
   readonly storeRuntime: StoreRuntime;
+  readonly tracer: TraceFn;
 };
 
 export interface BlockstoreRuntime {
@@ -638,15 +652,15 @@ export interface ActiveStore {
   readonly attached: AttachedStores;
 }
 
-export interface CarCacheItem {
-  readonly type: "car" | "block";
-  readonly status: "ready" | "stale";
-  readonly statusCause?: Error;
-  readonly cid: AnyLink;
-  readonly blocks: AnyBlock[];
-  readonly roots: CID[];
-}
-
+// export interface CarCacheItem {
+//   readonly type: "car" | "block";
+//   readonly status: "ready" | "stale";
+//   readonly statusCause?: Error;
+//   readonly cid: CID;
+//   readonly blocks: FPBlock[];
+//   readonly roots: CID[];
+// }
+//
 export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
@@ -656,6 +670,7 @@ export interface Loadable {
   readonly carLog: CarLog;
 
   readonly attachedStores: AttachedStores;
+  readonly commitQueue: CommitQueue<unknown>;
 
   attach(attached: Attachable): Promise<Attached>;
 
@@ -666,18 +681,18 @@ export interface Loadable {
 
   keyBag(): Promise<KeyBag>;
 
-  handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<void>;
+  handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<CarGroup>;
 
   commit<T = TransactionMeta>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup>;
   destroy(): Promise<void>;
-  getBlock(cid: AnyLink, store: ActiveStore): Promise<AnyBlock | Falsy>;
-  loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<CarCacheItem>;
-  loadCar(cid: AnyLink, store: ActiveStore): Promise<CarCacheItem>;
+  getBlock(cid: AnyLink, store: ActiveStore): Promise<FPBlock | Falsy>;
+  loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<FPBlock<CarBlockItem>>;
+  loadCar(cid: AnyLink, store: ActiveStore): Promise<FPBlock<CarBlockItem>>;
   commitFiles(
     t: CarTransaction,
     done: TransactionMeta /* opts: CommitOpts = { noLoader: false, compact: false } */,
   ): Promise<CarGroup>;
-  entries(cache?: boolean): AsyncIterableIterator<AnyBlock>;
+  entries(cache?: boolean): AsyncIterableIterator<FPBlock>;
 }
 
 export interface DbMetaBinary {
@@ -686,3 +701,201 @@ export interface DbMetaBinary {
 export type DbMetaEventBlock = EventBlock<DbMetaBinary>;
 export type CarClockLink = Link<DbMetaEventBlock, number, number, Version>;
 export type CarClockHead = CarClockLink[];
+
+export interface BlockItemBase<T> {
+  readonly type: string;
+  readonly status: "ready" | "stale";
+  readonly value: T;
+  // readonly statusCause?: Error;
+  // readonly cid: AnyLink;
+}
+
+export function isDocBlockItem(item: BlockItem): item is DocBlockItem {
+  return item.type === "doc";
+}
+
+interface DocBlockItemValue {
+  readonly _id: string;
+  readonly value: unknown;
+}
+
+export interface DocBlockItem extends BlockItemBase<DocBlockItemValue> {
+  readonly type: "doc";
+  readonly value: DocBlockItemValue;
+}
+
+export function isFPBlockItem<T>(fpb: FPBlock<BlockItem>): fpb is FPBlock<FPBlockItem<T>> {
+  return fpb.item.type === "fp";
+}
+
+interface FPBlockItemValue<T> {
+  readonly fp: CarHeader<T>;
+}
+export interface FPBlockItem<T = unknown> extends BlockItemBase<FPBlockItemValue<T>> {
+  readonly type: "fp";
+  readonly value: FPBlockItemValue<T>;
+}
+
+export function isDataBlockItem(item: BlockItem): item is DataBlockItem {
+  return item.type === "data";
+}
+interface DataBlockItemValue {
+  readonly data: {
+    readonly ops: {
+      readonly key: string;
+      readonly type: "put" | "delete";
+      readonly value: CID;
+    }[];
+    readonly root: CID;
+    readonly type: "batch" | "single";
+  };
+  readonly parents: CID[];
+}
+export interface DataBlockItem extends BlockItemBase<DataBlockItemValue> {
+  readonly type: "data";
+  readonly value: DataBlockItemValue;
+}
+
+interface DelBlockItemValue {
+  readonly del: boolean;
+}
+
+export interface DelBlockItem extends BlockItemBase<DelBlockItemValue> {
+  readonly type: "del";
+  readonly value: DelBlockItemValue;
+}
+
+export interface LeafBlockItemValue {
+  readonly leaf: [string, string[]][];
+  readonly closed: boolean;
+}
+export interface LeafBlockItem extends BlockItemBase<LeafBlockItemValue> {
+  readonly type: "leaf";
+  readonly value: LeafBlockItemValue;
+}
+
+export interface BranchBlockItemValue {
+  branch: [number, [string[], CID], [string[], CID][]];
+  closed: boolean;
+}
+
+export interface BranchBlockItem extends BlockItemBase<BranchBlockItemValue> {
+  readonly type: "branch";
+  readonly value: BranchBlockItemValue;
+}
+
+export interface UnknownBlockItem extends BlockItemBase<unknown> {
+  readonly type: "unknown";
+  readonly value: unknown;
+}
+
+export function isEntriesBlockItem(item: BlockItem): item is EntriesBlockItem {
+  return item.type === "entries";
+}
+
+interface EntriesBlockItemValue {
+  readonly entries: {
+    readonly key: string;
+    readonly value: CID[];
+  }[];
+}
+
+export interface EntriesBlockItem extends BlockItemBase<EntriesBlockItemValue> {
+  readonly type: "entries";
+  readonly value: EntriesBlockItemValue;
+  // readonly keyChars: "ascii";
+  // readonly maxKeySize: number;
+  // readonly prefix: string;
+  // readonly version: 1;
+}
+
+// export function isFileBlockItem(item: BlockItem): item is FileBlockItem {
+//   return item.type === "file";
+// }
+//
+// interface FileBlockItemValue {
+//     readonly file: {
+//         readonly name: string;
+//         readonly size: number;
+//         readonly mimeType: string;
+//         readonly bytes: Uint8Array;
+//     }
+// }
+// export interface FileBlockItem extends BlockItemBase<FileBlockItemValue> {
+//   readonly type: "file";
+//   readonly value: {
+//     readonly file: {
+//       readonly name: string;
+//       readonly size: number;
+//       readonly mimeType: string;
+//       readonly bytes: Uint8Array;
+//     }
+//   };
+// }
+
+// export function isCarBlockItem(item: BlockItem): item is ReadyCarBlockItem {
+//   return item.type === "car" ;
+// }
+//
+export interface StaleCarBlockItem extends BlockItemBase<undefined> {
+  readonly type: "car";
+  readonly status: "stale";
+  readonly statusCause: Error;
+  readonly origin: string;
+}
+interface ReadyCarBlockItemValue {
+  readonly car: {
+    readonly blocks: FPBlock[];
+    readonly roots: CID[];
+  };
+}
+export interface ReadyCarBlockItem extends BlockItemBase<ReadyCarBlockItemValue> {
+  readonly type: "car";
+  readonly status: "ready";
+  readonly origin: string;
+  readonly value: ReadyCarBlockItemValue;
+}
+
+export type CarBlockItem = StaleCarBlockItem | ReadyCarBlockItem;
+
+export function isBlockReady(ifp: unknown): ifp is FPBlock {
+  const fp = ifp as FPBlock;
+  return fp.item && fp.item.status === "ready";
+}
+
+export function isBlockNotReady(ifp: unknown): ifp is FPBlock {
+  const fp = ifp as FPBlock;
+  return fp.item && fp.item.status !== "ready";
+}
+
+export function isCarBlockItemReady(ifp: unknown): ifp is FPBlock<ReadyCarBlockItem> {
+  const fp = ifp as FPBlock<ReadyCarBlockItem>;
+  return fp.item && fp.item.type === "car" && fp.item.status === "ready";
+}
+
+export function isCarBlockItemStale(ifp: unknown): ifp is FPBlock<StaleCarBlockItem> {
+  const fp = ifp as FPBlock<StaleCarBlockItem>;
+  return fp.item && fp.item.type === "car" && fp.item.status === "stale";
+}
+
+export type BlockItem =
+  | UnknownBlockItem
+  | DocBlockItem
+  | DataBlockItem
+  | EntriesBlockItem
+  | FPBlockItem
+  | CarBlockItem
+  | DelBlockItem
+  | LeafBlockItem
+  | BranchBlockItem;
+
+export interface FPBlock<T extends BlockItem = BlockItem> extends AnyBlock {
+  readonly cid: AnyLink;
+  readonly bytes: Uint8Array;
+  readonly item: T;
+}
+
+export interface BlockFetcher {
+  readonly crdtParent?: CRDT;
+  get(link: AnyLink): Promise<FPBlock | Falsy>;
+}

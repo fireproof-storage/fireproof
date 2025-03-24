@@ -1,5 +1,5 @@
-import { BuildURI, CoerceURI, Logger, ResolveOnce, URI } from "@adviser/cement";
-import { Attachable, bs, ensureLogger, Ledger, FPContext, hashObject } from "@fireproof/core";
+import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
+import { Attachable, bs, ensureLogger, Ledger, hashObject } from "@fireproof/core";
 import { decodeJwt } from "jose/jwt/decode";
 
 export interface TokenStrategie {
@@ -21,7 +21,7 @@ interface ToCloudBase {
   readonly name: string; // default "toCloud"
   readonly interval: number; // default 1000 or 1 second
   readonly refreshTokenPreset: number; // default 2 minutes this is the time before the token expires
-  readonly context: FPContext;
+  readonly context: AppContext;
   readonly tenant?: string; // default undefined
   readonly ledger?: string; // default undefined
 }
@@ -64,7 +64,7 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
     interval: 1000,
     refreshTokenPreset: 2 * 60 * 1000, // 2 minutes
     ...opts,
-    context: opts.context ?? new FPContext(),
+    context: opts.context ?? new AppContext(),
     urls: param,
   } satisfies ToCloudOpts;
   return defOpts;

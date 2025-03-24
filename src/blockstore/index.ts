@@ -23,7 +23,7 @@ export {
   EncryptedBlockstore,
   BaseBlockstoreImpl,
   CompactionFetcher,
-  type BlockFetcher,
+  // type BlockFetcher,
   CarTransactionImpl,
   type CarTransactionOpts,
 } from "./transaction.js";

@@ -1,4 +1,4 @@
-import { URI } from "@adviser/cement";
+import { BuildURI, URI } from "@adviser/cement";
 import { rt, bs, fireproof, PARAM, ensureSuperThis, Database } from "@fireproof/core";
 
 describe("MetaKeyHack", () => {
@@ -19,7 +19,7 @@ describe("MetaKeyHack", () => {
   beforeAll(async () => {
     db = fireproof("test", {
       storeUrls: {
-        base: "hack://localhost",
+        base: BuildURI.from("hack://localhost").setParam(PARAM.SELF_REFLECT, "x"),
       },
       keyBag: {
         url: "memory://./dist/kb-dir-partykit?extractKey=_deprecated_internal_api",
@@ -35,7 +35,8 @@ describe("MetaKeyHack", () => {
     const subscribeFn = vitest.fn();
     const unreg = await metaStore.realGateway.subscribe(
       ctx,
-      metaStore.url().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
+      metaStore.url(),
+      // metaStore.url().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
       subscribeFn,
     );
     expect(unreg.isOk()).toBeTruthy();
@@ -51,7 +52,7 @@ describe("MetaKeyHack", () => {
     expect(rDataStoreKeyItem.isOk()).toBeTruthy();
     const rUrl = await memGw.buildUrl(metaStore.url(), "main");
     // console.log(">>>>", rUrl.Ok().toString())
-    const rGet = await memGw.get(rUrl.Ok());
+    const rGet = await memGw.get(rUrl.Ok(), sthis);
     const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as rt.V2SerializedMetaKey;
     const keyMaterials = metas.keys;
     const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asKeysItem();
@@ -87,8 +88,8 @@ describe("MetaKeyHack", () => {
     expect(subscribeFn).toHaveBeenCalledTimes(2);
     const addKeyToDbMetaGateway = metaStore.realGateway as rt.AddKeyToDbMetaGateway;
     expect(
-      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: bs.DbMetaEvent) => i.eventCid.toString()))).flat(),
-    ).toEqual(addKeyToDbMetaGateway.lastDecodedMetas.map((i) => i.metas.map((i) => i.cid)));
+      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: bs.DbMetaEvent) => i.eventCid.toString()))).flat(2),
+    ).toEqual(Array.from(new Set(addKeyToDbMetaGateway.lastDecodedMetas.map((i) => i.metas.map((i) => i.cid)).flat(2))));
     unreg.Ok()();
   });
 });

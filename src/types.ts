@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
-import type { Block, UnknownLink, Version } from "multiformats";
-import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI } from "@adviser/cement";
+import type { Block } from "multiformats";
+import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext } from "@adviser/cement";
 
 import type {
   CarTransactionOpts,
@@ -11,7 +11,6 @@ import type {
   StoreEnDeFile,
   SerdeGatewayInterceptor,
   Loadable,
-  AnyBlock,
   TransactionMeta,
   TransactionWrapper,
   BlockstoreRuntime,
@@ -23,19 +22,17 @@ import type {
   BaseStore,
   FileStore,
   CarStore,
+  FPBlock,
 } from "./blockstore/index.js";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 import type { KeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 import type { WriteQueueParams } from "./write-queue.js";
 import type { Index } from "./indexer.js";
-import type { FPContext } from "./fp-context.js";
 
 export type { DbMeta };
 
 export type Falsy = false | null | undefined;
-
-export type Unreg = () => void;
 
 export function isFalsy(value: unknown): value is Falsy {
   return value === false || value === null || value === undefined;
@@ -134,7 +131,7 @@ export interface SuperThisOpts {
   readonly crypto: CryptoRuntime;
   readonly env: Partial<EnvFactoryOpts>;
   readonly txt: TextEndeCoder;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
 }
 
 export interface SuperThis {
@@ -142,13 +139,42 @@ export interface SuperThis {
   readonly loggerCollector?: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;
 }
+
+export interface IdleEventFromCommitQueue {
+  readonly event: "idleFromCommitQueue";
+}
+export interface IdleEventFromBlockstore {
+  readonly event: "idleFromBlockstore";
+  readonly blockstore: "data" | "index";
+  readonly ledger?: Ledger;
+}
+
+export interface BusyEventFromCommitQueue {
+  readonly event: "busyFromCommitQueue";
+  readonly queueLen: number;
+}
+
+export interface BusyEventFromBlockstore extends Omit<IdleEventFromBlockstore, "event"> {
+  readonly event: "busyFromBlockstore";
+  readonly queueLen: number;
+}
+
+export function EventIsIdleFromBlockstore(event: TraceEvent): event is IdleEventFromBlockstore {
+  return event.event === "idleFromBlockstore";
+}
+
+export function EventIsBusyFromBlockstore(event: TraceEvent): event is BusyEventFromBlockstore {
+  return event.event === "busyFromBlockstore";
+}
+
+export type TraceEvent = IdleEventFromCommitQueue | IdleEventFromBlockstore | BusyEventFromBlockstore | BusyEventFromCommitQueue;
 
 export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly public?: boolean;
@@ -161,6 +187,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
   readonly keyBag?: Partial<KeyBagOpts>;
+  readonly tracer?: TraceFn;
 }
 
 // export interface ToCloudOpts {
@@ -373,17 +400,17 @@ export interface CRDTClock {
 
 export interface CarTransaction {
   readonly parent: BaseBlockstore;
-  get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined>;
+  get(cid: AnyLink): Promise<FPBlock | Falsy>;
 
-  superGet(cid: AnyLink): Promise<AnyBlock | undefined>;
+  superGet(cid: AnyLink): Promise<FPBlock | Falsy>;
 
   // needed for genesis block
-  unshift(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
-  putSync(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
+  unshift(fb: FPBlock): void;
+  putSync(fb: FPBlock): void;
 
-  put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;
+  put(fb: FPBlock): Promise<void>;
 
-  entries(): AsyncIterableIterator<AnyBlock>;
+  entries(): AsyncIterableIterator<FPBlock>;
 }
 
 export interface BaseBlockstore {
@@ -398,8 +425,8 @@ export interface BaseBlockstore {
   compact(): Promise<void>;
   readonly logger: Logger;
 
-  get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined>;
-  put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;
+  get(cid: AnyLink): Promise<FPBlock | Falsy>;
+  put(fp: FPBlock): Promise<void>;
 
   transaction<M extends TransactionMeta>(
     fn: (t: CarTransaction) => Promise<M>,
@@ -419,7 +446,7 @@ export interface BaseBlockstore {
     done: M,
     opts: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>>;
-  entries(): AsyncIterableIterator<AnyBlock>;
+  entries(): AsyncIterableIterator<FPBlock>;
 }
 
 export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRDT {
@@ -431,7 +458,7 @@ export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRD
   readonly clock: CRDTClock;
 
   readonly blockstore: BaseBlockstore;
-  readonly indexBlockstore: BaseBlockstore;
+  readonly indexBlockstore?: BaseBlockstore;
   readonly indexers: Map<string, Index<IndexKeyType, DocTypes>>;
 
   bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta>;
@@ -482,7 +509,7 @@ export interface CoerceURIandInterceptor {
 
 export interface AttachContext {
   detach(): Promise<void>;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
 }
 
 /**
@@ -546,7 +573,7 @@ export interface Attached {
   detach(): Promise<void>;
   status(): "attached" | "loading" | "loaded" | "error" | "detached" | "syncing" | "idle";
 
-  ctx(): FPContext;
+  ctx(): AppContext;
 }
 
 export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
@@ -590,21 +617,26 @@ export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocType
   close(): Promise<void>;
 }
 
-export interface LedgerOpts {
+export type TraceFn = (traceEvent: TraceEvent) => void;
+
+export interface Tracer {
+  readonly tracer: TraceFn;
+}
+
+export interface LedgerOpts extends Tracer {
   readonly name: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
 
+  readonly ctx: AppContext;
   readonly writeQueue: WriteQueueParams;
-  // readonly factoryUnreg?: () => void;
-  // readonly persistIndexes?: boolean;
-  // readonly autoCompact?: number;
   readonly storeUrls: StoreURIRuntime;
   readonly storeEnDe: StoreEnDeFile;
   readonly keyBag: KeyBagRuntime;
-  // readonly threshold?: number;
 }
+
+export type LedgerOptsOptionalTracer = Omit<LedgerOpts, "tracer"> & Partial<Tracer>;
 
 export interface Ledger extends HasCRDT {
   readonly opts: LedgerOpts;
@@ -617,7 +649,7 @@ export interface Ledger extends HasCRDT {
 
   readonly name: string;
 
-  readonly context: FPContext;
+  readonly ctx: AppContext;
 
   onClosed(fn: () => void): () => void;
 

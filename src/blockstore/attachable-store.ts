@@ -1,4 +1,4 @@
-import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI } from "@adviser/cement";
+import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI, AppContext } from "@adviser/cement";
 import { toSortedArray } from "@adviser/cement/utils";
 import { Attached, Attachable, GatewayUrls, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore, AttachContext } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
@@ -25,7 +25,6 @@ import {
   FileStore,
 } from "./types.js";
 import { ensureURIDefaults, hashObject } from "../utils.js";
-import { FPContext } from "../fp-context.js";
 
 class AttachedImpl implements Attached {
   readonly keyed: string;
@@ -40,7 +39,7 @@ class AttachedImpl implements Attached {
       detach: async () => {
         /* noop */
       },
-      ctx: new FPContext(),
+      ctx: new AppContext(),
       ...actx,
     };
   }
@@ -53,7 +52,7 @@ class AttachedImpl implements Attached {
     await Promise.all(toClose);
     this.attachCtx.detach();
   }
-  ctx(): FPContext {
+  ctx(): AppContext {
     return this.attachCtx.ctx;
   }
   status(): ReturnType<Attached["status"]> {

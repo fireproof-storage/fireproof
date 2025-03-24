@@ -14,9 +14,9 @@ import {
   YAMLFormatter,
   CoerceURI,
   param,
+  AppContext,
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
-import { FPContext } from "./fp-context.js";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
@@ -38,7 +38,7 @@ interface superThisOpts {
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
 }
 
@@ -46,7 +46,7 @@ class SuperThisImpl implements SuperThis {
   readonly logger: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
 
@@ -56,7 +56,7 @@ class SuperThisImpl implements SuperThis {
     this.crypto = opts.crypto;
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
-    this.ctx = FPContext.merge(opts.ctx);
+    this.ctx = AppContext.merge(opts.ctx);
     // console.log("superThis", this);
   }
 
@@ -93,7 +93,7 @@ class SuperThisImpl implements SuperThis {
       crypto: override.crypto || this.crypto,
       pathOps: override.pathOps || this.pathOps,
       txt: override.txt || this.txt,
-      ctx: FPContext.merge(this.ctx, override.ctx),
+      ctx: AppContext.merge(this.ctx, override.ctx),
     });
   }
 }
@@ -162,7 +162,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),
-    ctx: FPContext.merge(osthis?.ctx),
+    ctx: AppContext.merge(osthis?.ctx),
     pathOps,
     txt: osthis?.txt || txtOps,
   });
@@ -511,12 +511,21 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
   return env;
 }
 
+export async function hashString(str: string): Promise<string> {
+  const bytes = json.encode(str);
+  const hash = await sha256.digest(bytes);
+  return CID.create(1, json.code, hash).toString();
+}
+
 export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
+  return (await hashObjectCID(o)).cid.toString();
+}
+
+export async function hashObjectCID<T extends NonNullable<S>, S>(o: T): Promise<{ cid: CID; bytes: Uint8Array; obj: T }> {
   // toSortedArray should be shallow
   const bytes = json.encode(toSortedArray(o));
   const hash = await sha256.digest(bytes);
-  const cid = CID.create(1, json.code, hash);
-  return cid.toString();
+  return { cid: CID.create(1, json.code, hash), bytes, obj: o };
 }
 
 export function sleep(ms: number) {

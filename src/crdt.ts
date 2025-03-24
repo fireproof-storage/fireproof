@@ -31,17 +31,26 @@ import {
   type DocTypes,
   PARAM,
   Ledger,
+  TraceEvent,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
 import { CRDTClockImpl } from "./crdt-clock.js";
 
+export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
+  readonly storeUrls: {
+    readonly data: LedgerOpts["storeUrls"]["data"];
+    readonly idx?: LedgerOpts["storeUrls"]["idx"];
+  };
+};
+
 export class CRDTImpl implements CRDT {
-  readonly opts: LedgerOpts;
+  readonly opts: CRDTOpts;
 
   readonly blockstore: BaseBlockstore;
-  readonly indexBlockstore: BaseBlockstore;
+  // we can run without an index instance
+  readonly indexBlockstore?: BaseBlockstore;
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
   readonly clock: CRDTClock;
 
@@ -52,7 +61,7 @@ export class CRDTImpl implements CRDT {
 
   readonly ledgerParent?: Ledger;
 
-  constructor(sthis: SuperThis, opts: LedgerOpts, parent?: Ledger) {
+  constructor(sthis: SuperThis, opts: CRDTOpts, parent?: Ledger) {
     this.sthis = sthis;
     this.ledgerParent = parent;
     this.crdt = this;
@@ -61,10 +70,33 @@ export class CRDTImpl implements CRDT {
     this.blockstore = new EncryptedBlockstore(
       sthis,
       {
+        tracer: (event: TraceEvent) => {
+          switch (event.event) {
+            case "idleFromCommitQueue":
+              opts.tracer({
+                event: "idleFromBlockstore",
+                blockstore: "data",
+                ledger: parent,
+              });
+              break;
+            case "busyFromCommitQueue":
+              opts.tracer({
+                event: "busyFromBlockstore",
+                blockstore: "data",
+                ledger: parent,
+                queueLen: event.queueLen,
+              });
+              break;
+            default:
+              return opts.tracer(event);
+          }
+        },
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as CRDTMeta;
           if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
+          // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
           await this.clock.applyHead(crdtMeta.head, []);
+          // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
         },
         compact: async (blocks: CompactFetcher) => {
           await doCompact(blocks, this.clock.head, this.logger);
@@ -81,25 +113,28 @@ export class CRDTImpl implements CRDT {
       },
       this,
     );
-    this.indexBlockstore = new EncryptedBlockstore(
-      sthis,
-      {
-        // name: opts.name,
-        applyMeta: async (meta: TransactionMeta) => {
-          const idxCarMeta = meta as IndexTransactionMeta;
-          if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
-          for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-            index(this, name, undefined, idx);
-          }
+    if (this.opts.storeUrls.idx) {
+      this.indexBlockstore = new EncryptedBlockstore(
+        sthis,
+        {
+          tracer: opts.tracer,
+          // name: opts.name,
+          applyMeta: async (meta: TransactionMeta) => {
+            const idxCarMeta = meta as IndexTransactionMeta;
+            if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
+            for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
+              index(this, name, undefined, idx);
+            }
+          },
+          gatewayInterceptor: opts.gatewayInterceptor,
+          storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
+          storeUrls: this.opts.storeUrls.idx,
+          keyBag: this.opts.keyBag,
+          // public: this.opts.public,
         },
-        gatewayInterceptor: opts.gatewayInterceptor,
-        storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
-        storeUrls: this.opts.storeUrls.idx,
-        keyBag: this.opts.keyBag,
-        // public: this.opts.public,
-      },
-      this,
-    );
+        this,
+      );
+    }
     this.clock = new CRDTClockImpl(this.blockstore);
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
@@ -152,11 +187,15 @@ export class CRDTImpl implements CRDT {
         // console.log("bs-ready-pre")
         // await this.blockstore.ready();
         // console.log("bs-ready-post-1")
-        // await this.indexBlockstore.ready();
+        // await this.indexBlockstore?.ready();
         // console.log("bs-ready-post-2")
         // await this.clock.ready();
         // console.log("bs-ready-post-3")
-        await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
+        await Promise.all([
+          this.blockstore.ready(),
+          this.indexBlockstore ? this.indexBlockstore.ready() : Promise.resolve(),
+          this.clock.ready(),
+        ]);
       } catch (e) {
         throw this.logger.Error().Err(e).Msg(`CRDT is not ready`).AsError();
       }
@@ -167,11 +206,15 @@ export class CRDTImpl implements CRDT {
     // await this.blockstore.close();
     // await this.indexBlockstore.close();
     // await this.clock.close();
-    await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
+    await Promise.all([
+      this.blockstore.close(),
+      this.indexBlockstore ? this.indexBlockstore.close() : Promise.resolve(),
+      this.clock.close(),
+    ]);
   }
 
   async destroy(): Promise<void> {
-    await Promise.all([this.blockstore.destroy(), this.indexBlockstore.destroy()]);
+    await Promise.all([this.blockstore.destroy(), this.indexBlockstore ? this.indexBlockstore.destroy() : Promise.resolve()]);
   }
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)

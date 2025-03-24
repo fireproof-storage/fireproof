@@ -2,33 +2,7 @@ import { Database, Ledger, LedgerFactory, PARAM, bs, ensureSuperThis, fireproof 
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
-import { Future } from "@adviser/cement";
-
-// import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
-// import { Gateway } from "../../src/blockstore/gateway.js";
-// import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope.js";
-
-// function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
-//   try {
-//     matcher(value);
-//   } catch (error) {
-//     void error;
-//     // console.error(error);
-//     throw new Error(message);
-//   }
-// }
-
-// interface ExtendedGateway extends bs.Gateway {
-//   readonly logger: Logger;
-//   readonly headerSize: number;
-//   readonly fidLength: number;
-// }
-
-// interface ExtendedStore {
-//   readonly gateway: ExtendedGateway;
-//   readonly _url: URI;
-//   readonly name: string;
-// }
+import { BuildURI, Future } from "@adviser/cement";
 
 describe("noop Gateway", function () {
   let db: Ledger;
@@ -381,6 +355,17 @@ describe("noop Gateway subscribe", function () {
   });
   beforeEach(async () => {
     db = fireproof("test-gateway-" + sthis.nextId().str);
+    await db.close();
+
+    db = fireproof("test-gateway-" + sthis.nextId().str, {
+      storeUrls: {
+        ...db.ledger.opts.storeUrls,
+        data: {
+          ...db.ledger.opts.storeUrls.data,
+          meta: BuildURI.from(db.ledger.opts.storeUrls.data.meta).setParam(PARAM.SELF_REFLECT, "x").URI(),
+        },
+      },
+    });
 
     await db.ready();
 

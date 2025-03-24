@@ -159,7 +159,7 @@ async function decode2WalState(sthis: SuperThis, rserializedWAL: Result<Serializ
   return Result.Ok({
     fileOperations: (serializedWAL.fileOperations || []).map((fop) => ({
       cid: toCid(sthis, fop.cid),
-      public: !!fop.public,
+      public: fop.public,
     })),
     noLoaderOps: (serializedWAL.noLoaderOps || []).map((nop) => ({
       cars: (nop.cars || []).map((i) => toCid(sthis, i)),
