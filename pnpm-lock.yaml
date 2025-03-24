@@ -67,7 +67,7 @@ importers:
         specifier: ^9.22.0
         version: 9.28.0
       '@hono/node-server':
-        specifier: ^1.13.8
+        specifier: ^1.14.0
         version: 1.14.3(hono@4.7.11)
       '@hono/node-ws':
         specifier: ^1.1.0
