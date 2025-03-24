@@ -9,7 +9,13 @@ import { WSRoom } from "./ws-room.js";
 import { MsgDispatcher, MsgDispatcherCtx, Promisable, WSConnectionPair } from "./msg-dispatch.js";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { buildMsgDispatcher } from "./msg-dispatcher-impl.js";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
+// import type { LibSQLDatabase } from "drizzle-orm/libsql";
+// import type { drizzle as d1Drizzle } from 'drizzle-orm/d1';
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import type { ResultSet } from "@libsql/client";
+import type { D1Result } from "@cloudflare/workers-types";
+// import type { SelectedFields } from "drizzle-orm
+// import type { drizzle as doDrizzle } from 'drizzle-orm/durable-sqlite';
 
 type BindGetMeta = ps.cloud.BindGetMeta;
 type ReqPutMeta = ps.cloud.ReqPutMeta;
@@ -44,6 +50,9 @@ export class WSContextWithId<T> extends WSContext<T> {
   }
 }
 
+export type DrizzleDatebase = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>; //, ResultSet, TSchema>
+// export type x = LibSQLDatabase | ReturnType<typeof d1Drizzle/* | typeof doDrizzle*/>;
+
 export interface ExposeCtxItem<T extends WSRoom> {
   readonly sthis: SuperThis;
   readonly port: number;
@@ -52,7 +61,7 @@ export interface ExposeCtxItem<T extends WSRoom> {
   readonly ende: ps.cloud.EnDeCoder;
   readonly stsService: rt.sts.SessionTokenService;
   readonly gestalt: ps.cloud.Gestalt;
-  readonly dbFactory: () => LibSQLDatabase;
+  readonly dbFactory: () => DrizzleDatebase;
   // readonly metaMerger: MetaMerger;
   readonly id: string;
 }
@@ -140,10 +149,10 @@ export abstract class HonoServerBase implements HonoServerImpl {
   // abstract getConnected(): Connected[];
 
   start(ctx: ExposeCtxItem<WSRoom>): Promise<HonoServerImpl> {
-    metaMerger(ctx)
+    metaMerger(ctx);
     return Promise.resolve(this);
-      // .createSchema(drop)
-      // .then(() => this);
+    // .createSchema(drop)
+    // .then(() => this);
   }
 
   // gestalt(): Gestalt {
@@ -250,7 +259,7 @@ class NoBackChannel implements MsgDispatcherCtx {
   readonly logger: Logger;
   readonly ende: ps.cloud.EnDeCoder;
   readonly gestalt: ps.cloud.Gestalt;
-  readonly dbFactory: () => LibSQLDatabase;
+  readonly dbFactory: () => DrizzleDatebase;
   readonly id: string;
   readonly stsService: rt.sts.SessionTokenService;
 

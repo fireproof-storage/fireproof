@@ -21,6 +21,7 @@ const opts = tseslint.config(
       "src/missingTypes/lib.deno.d.ts",
       "**/.cache/**",
       "**/.esm-cache/**",
+      "**/.wrangler/**",
     ],
   },
   {

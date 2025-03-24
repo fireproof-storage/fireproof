@@ -8,15 +8,14 @@ import {
   HonoServerImpl,
   WSContextWithId,
   WSEventsConnId,
-} from "./hono-server.js";
+} from "../hono-server.js";
 import { ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
 import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
-import { WSRoom } from "./ws-room.js";
-import { ConnItem } from "./msg-dispatch.js";
-import { cloudBackendParams } from "./test-helper.js";
-import { MetaMerger } from "./meta-merger/meta-merger.js";
+import { WSRoom } from "../ws-room.js";
+import { ConnItem } from "../msg-dispatch.js";
+import { MetaMerger } from "../meta-merger/meta-merger.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
@@ -198,13 +197,16 @@ export class NodeHonoFactory implements HonoServerFactory {
         id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
       });
 
-    const stsService = await rt.sts.SessionTokenService.createFromEnv();
+    // console.log("NodeHonoFactory.inject", sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC"));
+    const stsService = await rt.sts.SessionTokenService.create({
+      token: sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC") ?? "",
+    });
     const ctx: ExposeCtxItem<NodeWSRoom> = {
       id,
       sthis,
       logger,
       wsRoom: this._wsRoom,
-      port: cloudBackendParams(sthis).port,
+      port: +(this.sthis.env.get("ENDPOINT_PORT") ?? "0"),
       stsService,
       gestalt,
       ende,
@@ -219,7 +221,7 @@ export class NodeHonoFactory implements HonoServerFactory {
   async start(app: Hono): Promise<void> {
     try {
       await createDB.once(() => {
-        return new MetaMerger("test", this.sthis.logger, this.params.sql) // .createSchema();
+        return new MetaMerger("test", this.sthis.logger, this.params.sql); // .createSchema();
       });
 
       const { createNodeWebSocket } = await import("@hono/node-ws");
