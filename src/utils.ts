@@ -458,7 +458,7 @@ export function storeType2DataMetaWal(store: StoreType) {
 
 export function ensureURIDefaults(
   sthis: SuperThis,
-  name: string,
+  names: { name: string, local?: string },
   curi: CoerceURI | undefined,
   uri: URI,
   store: StoreType,
@@ -468,14 +468,17 @@ export function ensureURIDefaults(
   }>,
 ): URI {
   ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, name);
-  if (!ret.hasParam(PARAM.NAME)) {
-    // const name = sthis.pathOps.basename(ret.URI().pathname);
-    // if (!name) {
-    throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-    // }
-    // ret.setParam(PARAM.NAME, name);
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name)
+  if (names.local) {
+    ret.defParam(PARAM.LOCAL_NAME, names.local);
   }
+  // if (!ret.hasParam(PARAM.NAME)) {
+  //   // const name = sthis.pathOps.basename(ret.URI().pathname);
+  //   // if (!name) {
+  //   throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
+  //   // }
+  //   // ret.setParam(PARAM.NAME, name);
+  // }
   if (ctx.idx) {
     ret.defParam(PARAM.INDEX, "idx");
     ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
