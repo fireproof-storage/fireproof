@@ -99,7 +99,7 @@
     "@ipld/dag-cbor": "^9.2.2",
     "@ipld/dag-json": "^10.2.3",
     "jose": "^6.0.10",
-    "cborg": "^4.2.8",
+    "cborg": "^4.2.9",
     "charwise": "^3.0.1",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.2",
