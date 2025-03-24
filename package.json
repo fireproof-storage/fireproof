@@ -69,7 +69,7 @@
     "eslint-import-resolver-typescript": "^4.0.0",
     "eslint-plugin-import": "^2.31.0",
     "hono": "^4.7.5",
-    "playwright": "^1.51.0",
+    "playwright": "^1.51.1",
     "playwright-chromium": "^1.51.1",
     "prettier": "^3.4.2",
     "react": "^18.3.1",
