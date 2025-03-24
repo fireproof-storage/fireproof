@@ -107,6 +107,32 @@ export interface UseFireproof {
    * // Or use tuple destructuring for legacy compatibility
    * const [doc, updateDoc, saveDoc, removeDoc] = todo
    * ```
+   * 
+   * ### Create document with custom ID
+   * Custom IDs let you create predictable document identifiers for data that has
+   * a natural unique key, like userIds or email addresses. This makes it easy to
+   * look up and update specific documents without having to query for them first.
+   * For example, storing user profiles by customerId:
+   *
+   * ```tsx
+   * const profile = useDocument({
+   *   _id: `${props.customerId}-profile`, // Predictable ID based on customerId
+   *   name: "",
+   *   company: "",
+   *   startedAt: Date.now()
+   * })
+   * ```
+   *
+   * ## API
+   *
+   * - `doc`: The current document state
+   * - `merge(newDoc)`: Merge new properties into the document
+   * - `replace(newDoc)`: Replace the entire document
+   * - `reset()`: Reset to initial state
+   * - `refresh()`: Refresh from database
+   * - `save()`: Save changes to the document
+   * - `remove()`: Delete the document
+   * - `submit()`: Submit form, save document and reset state
    *
    * ## Overview
    *
@@ -125,6 +151,7 @@ export interface UseFireproof {
    * const result = useLiveQuery('date', { limit: 10, descending: true }) // key + options
    * const result = useLiveQuery<CustomType>("date"); // using generics
    * const result = useLiveQuery((doc) => doc.date)); // using map function
+   * const database = useLiveQuery.database; // underlying database accessor
    * ```
    *
    * ## Overview
@@ -141,6 +168,7 @@ export interface UseFireproof {
    * ```tsx
    * const result = useAllDocs({ limit: 10, descending: true }); // with options
    * const result = useAllDocs(); // without options
+   * const database = useAllDocs.database; // underlying database accessor
    * ```
    *
    * ## Overview
@@ -157,6 +185,7 @@ export interface UseFireproof {
    * ```tsx
    * const result = useChanges(prevresult.clock,{limit:10}); // with options
    * const result = useChanges(); // without options
+   * const database = useChanges.database; // underlying database accessor
    * ```
    *
    * ## Overview
