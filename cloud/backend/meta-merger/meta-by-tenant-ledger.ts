@@ -3,7 +3,7 @@ import { sqlTenantLedger } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
 import { foreignKey, primaryKey, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, and, inArray, notExists } from "drizzle-orm/expressions";
+import { eq, and, inArray } from "drizzle-orm/expressions";
 import { sqlMetaSend } from "./meta-send.js";
 
 export interface MetaByTenantLedgerRow {
