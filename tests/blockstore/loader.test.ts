@@ -1,13 +1,13 @@
 import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
-import { MemoryBlockstore } from "@web3-storage/pail/block";
 import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
+import { FPBlock, isCarBlockItemReady, isCarBlockItemStale } from "../../src/blockstore/index.js";
+import { anyBlock2FPBlock } from "../../src/blockstore/loader-helpers.js";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
-  readonly memblock = new MemoryBlockstore();
+  readonly memblock = new Map<string, FPBlock>();
   loader: bs.Loader;
   constructor(sthis: SuperThis) {
     const ebOpts = simpleBlockOpts(sthis, "MyMemoryBlockStore"); //, "MyMemoryBlockStore");
@@ -27,8 +27,8 @@ class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
 
-  override async put(cid: bs.AnyAnyLink, block: Uint8Array): Promise<void> {
-    return this.memblock.put(cid, block);
+  override async put(fp: FPBlock): Promise<void> {
+    this.memblock.set(fp.cid.toString(), fp);
   }
 
   // transaction<M ext(fn: (t: CarTransaction) => Promise<MetaType>, opts?: { noLoader: boolean }): Promise<MetaType> {
@@ -50,7 +50,7 @@ class MyMemoryBlockStore extends bs.EncryptedBlockstore {
 
 describe("basic Loader simple", function () {
   let loader: bs.Loader;
-  let block: BlockView;
+  let block: FPBlock;
   let t: CarTransaction;
   const sthis = ensureSuperThis();
 
@@ -69,13 +69,15 @@ describe("basic Loader simple", function () {
       public: true,
     });
     await loader.ready();
-    block = await rt.mf.block.encode({
-      value: { hello: "world" },
-      hasher,
-      codec,
-    });
-    await t.put(block.cid, block.bytes);
-    await mockM.put(block.cid, block.bytes);
+    block = await anyBlock2FPBlock(
+      await rt.mf.block.encode({
+        value: { hello: "world" },
+        hasher,
+        codec,
+      }),
+    );
+    await t.put(block);
+    await mockM.put(block);
   });
   it("should have an empty car log", function () {
     expect(loader.carLog.length).toBe(0);
@@ -84,6 +86,7 @@ describe("basic Loader simple", function () {
     const carGroup = await loader.commit(t, { head: [block.cid] });
     expect(loader.carLog.length).toBe(1);
     const reader = await loader.loadCar(carGroup[0], loader.attachedStores.local());
+    assert(isCarBlockItemReady(reader));
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -95,10 +98,10 @@ describe("basic Loader simple", function () {
 
 describe("basic Loader with two commits", function () {
   let loader: bs.Loader;
-  let block: BlockView;
-  let block2: BlockView;
-  let block3: BlockView;
-  let block4: BlockView;
+  let block: FPBlock;
+  let block2: FPBlock;
+  let block3: FPBlock;
+  let block4: FPBlock;
   let t: CarTransaction;
   let carCid: bs.CarGroup;
   let carCid0: bs.CarGroup;
@@ -120,36 +123,44 @@ describe("basic Loader with two commits", function () {
     });
     await loader.ready();
 
-    block = await rt.mf.block.encode({
-      value: { hello: "world" },
-      hasher,
-      codec,
-    });
-    await t.put(block.cid, block.bytes);
+    block = await anyBlock2FPBlock(
+      await rt.mf.block.encode({
+        value: { hello: "world" },
+        hasher,
+        codec,
+      }),
+    );
+    await t.put(block);
     carCid0 = await loader.commit(t, { head: [block.cid] });
 
-    block2 = await rt.mf.block.encode({
-      value: { hello: "universe" },
-      hasher,
-      codec,
-    });
-    await t.put(block2.cid, block2.bytes);
+    block2 = await anyBlock2FPBlock(
+      await rt.mf.block.encode({
+        value: { hello: "universe" },
+        hasher,
+        codec,
+      }),
+    );
+    await t.put(block2);
     carCid = await loader.commit(t, { head: [block2.cid] });
 
-    block3 = await rt.mf.block.encode({
-      value: { hello: "multiverse" },
-      hasher,
-      codec,
-    });
-    await t.put(block3.cid, block3.bytes);
+    block3 = await anyBlock2FPBlock(
+      await rt.mf.block.encode({
+        value: { hello: "multiverse" },
+        hasher,
+        codec,
+      }),
+    );
+    await t.put(block3);
 
-    block4 = await rt.mf.block.encode({
-      value: { hello: "megaverse" },
-      hasher,
-      codec,
-    });
+    block4 = await anyBlock2FPBlock(
+      await rt.mf.block.encode({
+        value: { hello: "megaverse" },
+        hasher,
+        codec,
+      }),
+    );
 
-    await t.put(block4.cid, block4.bytes);
+    await t.put(block4);
   });
 
   it("should have a car log", function () {
@@ -161,6 +172,7 @@ describe("basic Loader with two commits", function () {
   it("should commit", async () => {
     const reader = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(0);
@@ -175,6 +187,7 @@ describe("basic Loader with two commits", function () {
 
     const reader = await loader.loadCar(compactCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(2);
@@ -199,13 +212,14 @@ describe("basic Loader with two commits", function () {
 
     const e = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(e).toBeTruthy();
-    expect(e.status).toBe("stale");
-    expect(e.statusCause?.message).toMatch(/(missing car file)|(not found)/);
+    assert(isCarBlockItemStale(e));
+    expect(e.item.status).toBe("stale");
+    expect(e.item.statusCause.message).toMatch(/(missing car file)|(not found)/);
   }, 10000);
 });
 
 describe("basic Loader with index commits", function () {
-  let block: BlockView;
+  let block: FPBlock;
   let ib: bs.EncryptedBlockstore;
   let indexerResult: IndexTransactionMeta;
   let cid: CID;
@@ -223,11 +237,13 @@ describe("basic Loader with index commits", function () {
     // t = new CarTransaction()
     ib = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
     await ib.ready();
-    block = await rt.mf.block.encode({
-      value: { hello: "world" },
-      hasher,
-      codec,
-    });
+    block = await anyBlock2FPBlock(
+      await rt.mf.block.encode({
+        value: { hello: "world" },
+        hasher,
+        codec,
+      }),
+    );
     // console.log('block', block.cid)
 
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
@@ -253,7 +269,7 @@ describe("basic Loader with index commits", function () {
   it("should commit the index metadata", async () => {
     const { cars: carCid } = await ib.transaction<IndexTransactionMeta>(
       async (t) => {
-        await t.put(block.cid, block.bytes);
+        await t.put(block);
         return indexerResult;
       } /* , indexMap */,
     );
@@ -266,6 +282,7 @@ describe("basic Loader with index commits", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = await ib.loader.loadCar(carCid![0], ib.loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);

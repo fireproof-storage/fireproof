@@ -16,7 +16,7 @@ it("esm.sh", async () => {
 
   script.textContent = `
 //console.log("pre-window-js", window.FP_VERSION)
-import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
+import { fireproof } from 'http://localhost:4874/use-fireproof@${window.FP_VERSION}'
 
 console.log("SCRIPT FP_VERSION", window.FP_VERSION)
 function invariant(cond, message) {

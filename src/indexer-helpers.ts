@@ -32,6 +32,7 @@ import {
 } from "./types.js";
 import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { Logger } from "@adviser/cement";
+import { anyBlock2FPBlock } from "./blockstore/loader-helpers.js";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
@@ -128,7 +129,7 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
         ...opts,
       })) as ProllyNode<K, T>[]) {
         const block = await node.block;
-        await tblocks.put(block.cid, block.bytes);
+        await tblocks.put(await anyBlock2FPBlock(block));
         returnRootBlock = block;
         returnNode = node;
       }
@@ -144,7 +145,7 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
   if (root) {
     logger.Debug().Msg("pre root put bulkIndex");
     for await (const block of newBlocks) {
-      await tblocks.put(block.cid, block.bytes);
+      await tblocks.put(await anyBlock2FPBlock(block));
     }
     return { root, cid: (await root.block).cid };
   } else {

@@ -1,4 +1,4 @@
-import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger } from "@adviser/cement";
+import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger, AppContext } from "@adviser/cement";
 import {
   ensureSuperThis,
   rt,
@@ -10,11 +10,15 @@ import {
   Attached,
   CarTransaction,
   Falsy,
-  FPContext,
 } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
+import { CarBlockItem, CarGroup, FPBlock } from "../src/blockstore/index.js";
+import { CommitQueue } from "../src/blockstore/commit-queue.js";
+
+/* eslint-disable @typescript-eslint/no-empty-function */
+export function tracer() {}
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
@@ -54,7 +58,7 @@ export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   return ensureSuperThis({
     ...sthis,
     logger: mockLog.logger,
-    ctx: FPContext.merge({
+    ctx: AppContext.merge({
       logCollector: mockLog.logCollector,
     }),
   }) as MockSuperThis;
@@ -77,6 +81,7 @@ export function simpleBlockOpts(sthis: SuperThis, name?: string) {
       meta: url,
       car: url,
     },
+    tracer,
   };
 }
 
@@ -85,7 +90,6 @@ export async function simpleCID(sthis: SuperThis) {
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash);
 }
-
 class MockLoader implements bs.Loadable {
   readonly sthis: SuperThis;
   readonly logger: Logger;
@@ -93,6 +97,7 @@ class MockLoader implements bs.Loadable {
   readonly carLog: bs.CarLog;
   readonly attachedStores: bs.AttachedStores;
   readonly taskManager: bs.TaskManager;
+  readonly commitQueue: CommitQueue<unknown>;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -113,6 +118,9 @@ class MockLoader implements bs.Loadable {
       retryTimeout: 50,
     });
     this.attachedStores = new bs.AttachedRemotesImpl(this);
+    this.commitQueue = new CommitQueue({
+      tracer,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -129,9 +137,9 @@ class MockLoader implements bs.Loadable {
     return rt.kb.getKeyBag(this.sthis, {});
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<void> {
+  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<CarGroup> {
     // throw new Error("Method not implemented.");
-    return Promise.resolve();
+    return Promise.resolve([]);
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   commit<T = unknown>(t: CarTransaction, done: T, opts: bs.CommitOpts): Promise<bs.CarGroup> {
@@ -141,15 +149,15 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.AnyBlock | Falsy> {
+  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock | Falsy> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.CarCacheItem> {
+  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock<CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.CarCacheItem> {
+  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock<CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -157,7 +165,7 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  entries(cache?: boolean): AsyncIterableIterator<bs.AnyBlock> {
+  entries(cache?: boolean): AsyncIterableIterator<FPBlock> {
     throw new Error("Method not implemented.");
   }
 }

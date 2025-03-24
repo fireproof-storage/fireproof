@@ -181,10 +181,12 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should load a header", async () => {
-    const loadeds = (await store.load()) as bs.DbMeta[];
-    const loaded = loadeds[0];
-    expect(loaded).toBeTruthy();
-    expect(loaded.cars).toBeTruthy();
-    expect(loaded.cars.toString()).toEqual(cid.toString());
+    const metaStream = store.stream();
+    for await (const cars of metaStream) {
+      // expect(loaded).toBeTruthy();
+      expect(cars).toBeTruthy();
+      expect(cars.map((i) => i.cars.map((i) => i.toString())).flat(2)).toEqual([cid.toString()]);
+      break;
+    }
   });
 });

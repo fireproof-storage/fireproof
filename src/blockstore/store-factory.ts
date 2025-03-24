@@ -127,7 +127,7 @@ async function ensureStart<T extends Pick<BaseStore, "start"> & { logger: Logger
   if (ret.isErr()) {
     throw store.logger.Error().Result("start", ret).Msg("start failed").AsError();
   }
-  store.logger.Debug().Url(ret.Ok(), "prepared").Msg("produced");
+  // store.logger.Debug().Url(ret.Ok(), "prepared").Msg("produced");
   return store;
 }
 

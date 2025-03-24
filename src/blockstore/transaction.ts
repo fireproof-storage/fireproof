@@ -1,9 +1,4 @@
-import { MemoryBlockstore } from "@web3-storage/pail/block";
-import { BlockFetcher as BlockFetcherApi } from "@web3-storage/pail/api";
-
 import {
-  AnyAnyLink,
-  AnyBlock,
   AnyLink,
   CarMakeable,
   TransactionMeta,
@@ -11,16 +6,18 @@ import {
   BlockstoreOpts,
   BlockstoreRuntime,
   Loadable,
+  FPBlock,
+  BlockFetcher,
+  isCarBlockItemReady,
 } from "./types.js";
-
 import { Loader } from "./loader.js";
-import type { Block, Version, UnknownLink } from "multiformats";
-import { BaseBlockstore, CarTransaction, CRDT, falsyToUndef, SuperThis } from "../types.js";
+import { BaseBlockstore, CarTransaction, CRDT, Falsy, falsyToUndef, SuperThis } from "../types.js";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "../utils.js";
+import { anyBlock2FPBlock } from "./loader-helpers.js";
+import { CID } from "multiformats/cid";
 
-export type BlockFetcher = BlockFetcherApi & { readonly crdtParent?: CRDT };
 export interface CarTransactionOpts {
   readonly add: boolean;
   readonly noLoader: boolean;
@@ -28,8 +25,8 @@ export interface CarTransactionOpts {
 
 export class CarTransactionImpl implements CarMakeable, CarTransaction {
   readonly parent: BaseBlockstore;
-  readonly #memblock = new MemoryBlockstore();
-  #hackUnshift?: AnyBlock;
+  readonly #memblock = new Map<string, FPBlock>(); // new MemoryBlockstore();
+  #hackUnshift?: FPBlock;
 
   constructor(parent: BaseBlockstore, opts: CarTransactionOpts = { add: true, noLoader: false }) {
     // super();
@@ -39,34 +36,40 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
     this.parent = parent;
   }
 
-  async get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined> {
-    return ((await this.superGet(cid)) ?? falsyToUndef(await this.parent.get(cid))) as Block<T, C, A, V>;
+  async get(cid: AnyLink): Promise<FPBlock | Falsy> {
+    if (cid.toString() === "bafyreib5b6mxpp5dzrm4no2t5rzjwzq27dqjvft4zuappxzswxzmbidol4") {
+      cid = CID.parse(cid.toString());
+    }
+    const sg = await this.superGet(cid);
+    if (sg) return sg;
+    return await this.parent.get(cid);
   }
 
-  async superGet(cid: AnyLink): Promise<AnyBlock | undefined> {
-    return this.#memblock.get(cid);
+  async superGet(cid: AnyLink): Promise<FPBlock | Falsy> {
+    return this.#memblock.get(cid.toString());
   }
 
-  async put(cid: AnyLink, block: Uint8Array): Promise<void> {
-    await this.#memblock.put(cid, block);
+  async put(fb: FPBlock): Promise<void> {
+    return this.putSync(fb);
   }
 
-  putSync(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void {
-    this.#memblock.putSync(cid, bytes);
+  putSync(fb: FPBlock): void {
+    // console.log("putSync", fb.cid.toString(), fb.bytes.length);
+    this.#memblock.set(fb.cid.toString(), fb);
   }
 
-  unshift(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void {
+  unshift(fb: FPBlock): void {
     if (this.#hackUnshift) {
       throw new Error("unshift already called");
     }
-    this.#hackUnshift = { cid, bytes };
+    this.#hackUnshift = fb;
   }
 
-  async *entries(): AsyncIterableIterator<AnyBlock> {
+  async *entries(): AsyncIterableIterator<FPBlock> {
     if (this.#hackUnshift) {
       yield this.#hackUnshift;
     }
-    for await (const blk of this.#memblock.entries()) {
+    for await (const blk of this.#memblock.values()) {
       yield blk;
     }
   }
@@ -153,16 +156,16 @@ export class BaseBlockstoreImpl implements BlockFetcher {
     this.loader = new Loader(this.sthis, ebOpts, this);
   }
 
-  async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
+  async get(cid: AnyLink): Promise<FPBlock | Falsy> {
     if (!cid) throw this.logger.Error().Msg("required cid").AsError();
     for (const f of this.transactions) {
       // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
       const v = await f.superGet(cid);
-      if (v) return v as Block<T, C, A, V>;
+      if (v) return v;
     }
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
+  async put(fp: FPBlock): Promise<void> {
     throw this.logger.Error().Msg("use a transaction to put").AsError();
   }
 
@@ -202,7 +205,7 @@ export class BaseBlockstoreImpl implements BlockFetcher {
     throw this.logger.Error().Msg("failed to commit car files").AsError();
   }
 
-  async *entries(): AsyncIterableIterator<AnyBlock> {
+  async *entries(): AsyncIterableIterator<FPBlock> {
     const seen = new Set<string>();
     for (const t of this.transactions) {
       for await (const blk of t.entries()) {
@@ -239,13 +242,10 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     });
   }
 
-  async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
+  async get(cid: AnyLink): Promise<FPBlock | Falsy> {
     const got = await super.get(cid);
-    if (got) return got as Block<T, C, A, V>;
-    // if (!this.loader) {
-    //   return;
-    // }
-    const ret = falsyToUndef(await this.loader.getBlock(cid, this.loader.attachedStores.local())) as Block<T, C, A, V>;
+    if (got) return got;
+    const ret = await this.loader.getBlock(cid, this.loader.attachedStores.local());
     return ret;
   }
 
@@ -272,10 +272,10 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
     const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
-    if (reader.status !== "ready") {
+    if (!isCarBlockItemReady(reader)) {
       throw this.logger.Error().Str("cid", car.toString()).Msg("car not ready").AsError();
     }
-    const block = await reader.blocks.find((i) => i.cid.equals(cid));
+    const block = await reader.item.value.car.blocks.find((i) => i.cid.equals(cid));
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;
   }
@@ -305,17 +305,17 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
       throw logger.Error().Msg("no lastTxMeta").AsError();
     }
     for await (const blk of this.loader.entries(false)) {
-      blocks.loggedBlocks.putSync(blk.cid, blk.bytes);
+      blocks.loggedBlocks.putSync(blk);
     }
     for (const t of this.transactions) {
       for await (const blk of t.entries()) {
-        blocks.loggedBlocks.putSync(blk.cid, blk.bytes);
+        blocks.loggedBlocks.putSync(blk);
       }
     }
     return this.lastTxMeta as TransactionMeta;
   }
 
-  async *entries(): AsyncIterableIterator<AnyBlock> {
+  async *entries(): AsyncIterableIterator<FPBlock> {
     // const seen = new Set<string>();
     for await (const blk of this.loader.entries()) {
       // if (seen.has(blk.cid.toString())) continue
@@ -336,9 +336,9 @@ export class CompactionFetcher implements BlockFetcher {
     this.loggedBlocks = new CarTransactionImpl(blocks);
   }
 
-  async get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined> {
+  async get(cid: AnyLink): Promise<FPBlock | Falsy> {
     const block = await this.blockstore.get(cid);
-    if (block) this.loggedBlocks.putSync(cid, block.bytes);
-    return falsyToUndef(block) as Block<T, C, A, V>;
+    if (block) this.loggedBlocks.putSync(await anyBlock2FPBlock({ cid, bytes: block.bytes }));
+    return falsyToUndef(block);
   }
 }

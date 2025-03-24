@@ -1,10 +1,17 @@
 import { Future } from "@adviser/cement";
+import { TraceFn } from "../types.js";
 
 type QueueFunction<T = void> = () => Promise<T>;
 
 export class CommitQueue<T = void> {
   readonly queue: QueueFunction<void>[] = [];
   processing = false;
+
+  readonly traceFn: TraceFn;
+
+  constructor({ tracer }: { tracer: TraceFn }) {
+    this.traceFn = tracer;
+  }
 
   readonly _waitIdleItems: Set<Future<void>> = new Set<Future<void>>();
   waitIdle(): Promise<void> {
@@ -28,6 +35,10 @@ export class CommitQueue<T = void> {
           this.processNext();
         }
       };
+      this.traceFn({
+        event: "busyFromCommitQueue",
+        queueLen: this.queue.length + 1,
+      });
       this.queue.push(queueFn);
       if (!this.processing) {
         this.processNext();
@@ -46,6 +57,9 @@ export class CommitQueue<T = void> {
       }
     }
     if (this.queue.length === 0 && !this.processing) {
+      this.traceFn({
+        event: "idleFromCommitQueue",
+      });
       const toResolve = Array.from(this._waitIdleItems);
       this._waitIdleItems.clear();
       toResolve.map((fn) => fn.resolve());
