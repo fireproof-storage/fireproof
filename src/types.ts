@@ -65,6 +65,7 @@ export const PARAM = {
   CAR_COMPACT_CACHE_SIZE: "carCompactCacheSize",
   CAR_META_CACHE_SIZE: "carMetaCacheSize",
   GENESIS_CID: "baembeiarootfireproofgenesisblockaaaafireproofgenesisblocka",
+  LOCAL_NAME: "localName",
   // FS = "fs",
 };
 export type PARAMS = (typeof PARAM)[keyof typeof PARAM];

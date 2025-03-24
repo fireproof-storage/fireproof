@@ -1,5 +1,5 @@
 import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI } from "@adviser/cement";
-import { Attached, Attachable, GatewayUrls, UnReg, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore } from "../types.js";
+import { Attached, Attachable, GatewayUrls, UnReg, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore, PARAM } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import {
   AttachedStores,
@@ -331,23 +331,49 @@ export class AttachedRemotesImpl implements AttachedStores {
 
   async attach(attached: Attachable): Promise<Attached> {
     const gwp = await attached.prepare();
+    // this._local?.gatewayUrls.car.url.getParam("name");
     const gws: GatewayUrls = {
       car: {
         ...gwp.car,
-        url: ensureURIDefaults(this.loadable.sthis, attached.name, gwp.car.url, URI.from(gwp.car.url), "car"),
+        url: ensureURIDefaults(
+          this.loadable.sthis,
+          { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+          undefined,
+          URI.from(gwp.car.url),
+          "car",
+        ),
       },
       file: {
         ...gwp.file,
-        url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.file.url), "file", { file: true }),
+        url: ensureURIDefaults(
+          this.loadable.sthis,
+          { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+          undefined,
+          URI.from(gwp.file.url),
+          "file",
+          { file: true },
+        ),
       },
       meta: {
         ...gwp.meta,
-        url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.meta.url), "meta"),
+        url: ensureURIDefaults(
+          this.loadable.sthis,
+          { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+          undefined,
+          URI.from(gwp.meta.url),
+          "meta",
+        ),
       },
       wal: gwp.wal
         ? {
             ...gwp.wal,
-            url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.wal.url), "wal"),
+            url: ensureURIDefaults(
+              this.loadable.sthis,
+              { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+              undefined,
+              URI.from(gwp.wal.url),
+              "wal",
+            ),
           }
         : undefined,
     };
