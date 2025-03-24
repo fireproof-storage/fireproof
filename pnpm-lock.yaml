@@ -64,7 +64,7 @@ importers:
         version: 8.18.2
     devDependencies:
       '@eslint/js':
-        specifier: ^9.22.0
+        specifier: ^9.23.0
         version: 9.28.0
       '@hono/node-server':
         specifier: ^1.14.0
@@ -3225,8 +3225,8 @@ packages:
   '@types/mocha@10.0.10':
     resolution: {integrity: sha512-xPyYSz1cMPnJQhl0CLMH68j3gprKZaTjG3s5Vi+fDgx+uhG9NOXwbVt52eFS8ECyXhyKcjDLCBEqBExKuiZb7Q==}
 
-  '@types/node@20.17.25':
-    resolution: {integrity: sha512-bT+r2haIlplJUYtlZrEanFHdPIZTeiMeh/fSOEbOOfWf9uTn+lg8g0KU6Q3iMgjd9FLuuMAgfCNSkjUbxL6E3Q==}
+  '@types/node@20.17.26':
+    resolution: {integrity: sha512-x9T6TLS76RIBGB0X81k+9697cNZel+f/v+BR8gzKNqISC3MhHHWoHY6XIEDY0E8psIJmCEMXqxjw7Np1u/mysA==}
 
   '@types/node@20.19.0':
     resolution: {integrity: sha512-hfrc+1tud1xcdVTABC2JiomZJEklMcXYNTVtZLAeqTVWD+qL5jkHKT+1lOtqDdGxt+mB53DTtiz673vfjU8D1Q==}
@@ -10513,7 +10513,7 @@ snapshots:
 
   '@types/mocha@10.0.10': {}
 
-  '@types/node@20.17.25':
+  '@types/node@20.17.26':
     dependencies:
       undici-types: 6.19.8
 
@@ -17253,7 +17253,7 @@ snapshots:
     dependencies:
       '@peculiar/asn1-schema': 2.3.15
       '@peculiar/json-schema': 1.1.12
-      '@types/node': 20.17.25
+      '@types/node': 20.17.26
       '@types/ws': 8.18.0
       '@wdio/config': 9.11.0
       '@wdio/logger': 9.4.4
