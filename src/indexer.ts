@@ -101,6 +101,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   constructor(sthis: SuperThis, crdt: CRDT, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.logger = ensureLogger(sthis, "Index");
+    if (!crdt.indexBlockstore) {
+      throw sthis.logger.Error().Msg("indexBlockstore not set").AsError();
+    }
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt as CRDT;
     this.applyMapFn(name, mapFn, meta);

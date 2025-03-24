@@ -2,7 +2,7 @@ import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { Logger, ResolveOnce } from "@adviser/cement";
 
-import { clockChangesSince } from "./crdt-helpers.js";
+import { clockChangesSince, toPailFetcher } from "./crdt-helpers.js";
 import {
   type DocUpdate,
   type ClockHead,
@@ -16,6 +16,7 @@ import {
 } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "./utils.js";
+import { anyBlock2FPBlock } from "./blockstore/loader-helpers.js";
 
 export class CRDTClockImpl {
   // todo: track local and remote clocks independently, merge on read
@@ -35,12 +36,12 @@ export class CRDTClockImpl {
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this._ready.once(async () => {
-      await this.blockstore.ready();
+      // await this.blockstore.ready();
     });
   }
 
   async close() {
-    await this.blockstore.close();
+    // await this.blockstore.close();
   }
 
   readonly logger: Logger;
@@ -140,12 +141,12 @@ export class CRDTClockImpl {
     const tblocks = this.transaction;
 
     const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
-    const result = await root(tblocks, advancedHead);
-    for (const { cid, bytes } of [
+    const result = await root(toPailFetcher(tblocks), advancedHead);
+    for (const block of [
       ...result.additions,
       // ...result.removals
     ]) {
-      tblocks.putSync(cid, bytes);
+      tblocks.putSync(await anyBlock2FPBlock(block));
     }
     if (!noLoader) {
       await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
@@ -177,11 +178,11 @@ function compareClockHeads(head1: ClockHead, head2: ClockHead) {
 async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTransaction, head: ClockHead) {
   for (const cid of newHead) {
     try {
-      head = await advance(tblocks, head, cid);
+      head = await advance(toPailFetcher(tblocks), head, cid);
     } catch (e) {
       logger.Error().Err(e).Msg("failed to advance head");
       // console.log('failed to advance head:', cid.toString(), e)
-      continue;
+      // continue;
     }
   }
   return head;

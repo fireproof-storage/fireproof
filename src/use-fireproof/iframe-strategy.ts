@@ -1,13 +1,8 @@
 import { BuildURI, URI, Logger } from "@adviser/cement";
-import { rt, WebCtx, WebToCloudCtx } from "use-fireproof";
+import { rt } from "@fireproof/core";
+import { WebCtx, WebToCloudCtx } from "@fireproof/core/react";
 
 export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
-  //   readonly opts: WebToCloudCtx
-
-  //   constructor(opts: WebToCloudCtx) {
-  //     this.opts = opts;
-  //   }
-
   fpIframeOverlay() {
     const div = document.createElement("div");
     div.id = "fpIframeOverlay";

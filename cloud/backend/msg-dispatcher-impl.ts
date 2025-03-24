@@ -1,6 +1,5 @@
 import { SuperThis, ps } from "@fireproof/core";
 import { MsgDispatcher } from "./msg-dispatch.js";
-import { buildEventGetMeta, MsgIsResPutMeta } from "../../src/protocols/cloud/msg-types-meta.js";
 import { metaMerger } from "./meta-merger/meta-merger.js";
 // import { WSRoom } from "./ws-room.js";
 
@@ -148,7 +147,7 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
       match: MsgIsReqPutMeta,
       fn: async (ctx, req: MsgWithConnAuth<ReqPutMeta>) => {
         const ret = await ctx.impl.handleReqPutMeta(ctx, req);
-        if (!MsgIsResPutMeta(ret)) {
+        if (!ps.cloud.MsgIsResPutMeta(ret)) {
           return ret;
         }
         const conns = ctx.wsRoom.getConns(req.conn);
@@ -170,7 +169,7 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
               ...ctx,
               ws: conn.ws,
             },
-            buildEventGetMeta(
+            ps.cloud.buildEventGetMeta(
               ctx,
               req,
               res,

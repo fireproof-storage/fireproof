@@ -1,0 +1,39 @@
+services:
+  minio:
+    image: minio/minio
+    ports:
+      - 9000:9000
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - /tmp/data:/data
+      - /tmp/config:/root/.minio
+    command: server /data
+
+  create-bucket:
+    image: amazon/aws-cli
+    environment:
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_EC2_METADATA_DISABLED: true
+    entrypoint: ""
+    command: bash -xc 'aws --endpoint-url http://minio:9000/ s3 ls s3://testbucket || aws --endpoint-url http://minio:9000/ s3 mb s3://testbucket'
+    depends_on:
+      wait-for-ready:
+        condition: service_healthy
+
+  wait-for-ready:
+    image: curlimages/curl
+    command: "sh -c 'while [ ! -e healthy ] ; do curl -f http://minio:9000/minio/health/live > minio && echo ready > ready ; ls; sleep 5; done ; sleep 60'"
+    depends_on:
+      minio:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "-c"
+        - "test -e ready && touch healthy"
+      interval: 1s
+      retries: 30
+      timeout: 2s

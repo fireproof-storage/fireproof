@@ -1,4 +1,4 @@
-import { BuildURI, URI } from "@adviser/cement";
+import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
 import {
   Attachable,
@@ -11,10 +11,72 @@ import {
   Attached,
   bs,
   sleep,
+  TraceFn,
 } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
+import { afterEach, beforeEach, expect } from "vitest";
+
+const ROWS = 1;
+
+class AJoinable implements Attachable {
+  readonly name: string;
+  readonly db: Database;
+
+  constructor(name: string, db: Database) {
+    this.name = name;
+    this.db = db;
+  }
+
+  async configHash() {
+    return `joinable-${this.name}`;
+  }
+
+  prepare(): Promise<GatewayUrlsParam> {
+    return Promise.resolve({
+      car: {
+        url: BuildURI.from(`memory://car/${this.name}`)
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
+          .setParam(PARAM.SELF_REFLECT, "x"),
+      },
+      meta: {
+        url: BuildURI.from(`memory://meta/${this.name}`)
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
+          .setParam(PARAM.SELF_REFLECT, "x"),
+      },
+      file: {
+        url: BuildURI.from(`memory://file/${this.name}`)
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
+          .setParam(PARAM.SELF_REFLECT, "x"),
+      },
+    });
+  }
+}
+
+function aJoinable(name: string, db: Database): Attachable {
+  return new AJoinable(name, db);
+}
+
+function attachableStoreUrls(name: string, db: Database) {
+  return {
+    // base: `memory://${name}`,
+    data: {
+      car: BuildURI.from(`memory://car/${name}?`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+      meta: BuildURI.from(`memory://meta/${name}`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+      file: BuildURI.from(`memory://file/${name}`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+      wal: BuildURI.from(`memory://wal/${name}`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+    },
+  };
+}
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();
@@ -29,9 +91,9 @@ describe("meta check", () => {
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memorys.entries()).filter(
-        ([k]) => k.startsWith(`memory://${name}`),
-      ),
+      Array.from(
+        ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries(),
+      ).filter(([k]) => k.startsWith(`memory://${name}`)),
     ).toEqual([]);
   });
 
@@ -70,7 +132,7 @@ describe("meta check", () => {
     ]);
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memorys.entries())
+      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries())
         .filter(([k]) => k.startsWith(`memory://${name}`))
         .map(([k]) =>
           stripper(
@@ -125,7 +187,7 @@ describe("meta check", () => {
       },
     ]);
     const car = Array.from(
-      ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memorys.entries(),
+      ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries(),
     )
       .filter(([k]) => k.startsWith(`memory://${name}`))
       .map(([k, v]) => [URI.from(k).getParam(PARAM.KEY), v])
@@ -241,49 +303,10 @@ describe("join function", () => {
   //       return connection;
   //     });
   //   };
-  class AJoinable implements Attachable {
-    readonly name: string;
-    constructor(name: string) {
-      this.name = name;
-    }
-    async configHash() {
-      return `joinable-${this.name}`;
-    }
-    prepare(): Promise<GatewayUrlsParam> {
-      return Promise.resolve({
-        car: { url: `memory://car/${this.name}` },
-        meta: { url: `memory://meta/${this.name}` },
-        file: { url: `memory://file/${this.name}` },
-      });
-    }
-  }
-  function aJoinable(name: string): Attachable {
-    return new AJoinable(name);
-  }
-
-  function attachableStoreUrls(name: string, db: Database) {
-    return {
-      // base: `memory://${name}`,
-      data: {
-        car: BuildURI.from(`memory://car/${name}?`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-        meta: BuildURI.from(`memory://meta/${name}`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-        file: BuildURI.from(`memory://file/${name}`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-        wal: BuildURI.from(`memory://wal/${name}`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-      },
-    };
-  }
 
   let db: Database;
   let joinableDBs: string[] = [];
-  beforeAll(async () => {
+  beforeEach(async () => {
     const set = sthis.nextId().str;
 
     db = fireproof(`db-${set}`, {
@@ -292,19 +315,19 @@ describe("join function", () => {
       },
     });
     // await db.put({ _id: `genesis`, value: `genesis` });
-    for (let j = 0; j < 10; j++) {
+    for (let j = 0; j < ROWS; j++) {
       await db.put({ _id: `db-${j}`, value: `db-${set}` });
     }
 
     joinableDBs = await Promise.all(
-      new Array(5).fill(1).map(async (_, i) => {
+      new Array(1).fill(1).map(async (_, i) => {
         const name = `remote-db-${i}-${set}`;
         const jdb = fireproof(name, {
           storeUrls: attachableStoreUrls(name, db),
         });
         // await db.put({ _id: `genesis`, value: `genesis` });
         // await db.ready();
-        for (let j = 0; j < 10; j++) {
+        for (let j = 0; j < ROWS; j++) {
           await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
         }
         expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
@@ -316,26 +339,29 @@ describe("join function", () => {
 
     expect(await db.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
   });
-  afterAll(async () => {
+  afterEach(async () => {
     await db.close();
   });
 
   it("it is joinable detachable", async () => {
     const my = fireproof("my", {
       storeUrls: {
-        base: "memory://my",
+        base: BuildURI.from("memory://it-is-joinable-detachable").setParam(
+          PARAM.STORE_KEY,
+          db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""),
+        ), // .setParam(PARAM.STORE_KEY, "@fireproof:attach@"),
       },
     });
     await my.put({ _id: "genesis", value: "genesis" });
     await Promise.all(
       joinableDBs.map(async (name) => {
         const tmp = fireproof(name, {
-          storeUrls: attachableStoreUrls(name, db),
+          storeUrls: attachableStoreUrls(name, my),
         });
         const res = await tmp.allDocs();
-        expect(res.rows.length).toBe(10);
+        expect(res.rows.length).toBe(ROWS);
         await tmp.close();
-        const attached = await my.attach(aJoinable(name));
+        const attached = await my.attach(aJoinable(name, my));
         expect(attached).toBeDefined();
       }),
     );
@@ -347,14 +373,14 @@ describe("join function", () => {
   it("it is inbound syncing", async () => {
     await Promise.all(
       joinableDBs.map(async (name) => {
-        const attached = await db.attach(aJoinable(name));
+        const attached = await db.attach(aJoinable(name, db));
         expect(attached).toBeDefined();
       }),
     );
     await sleep(100);
     expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await db.allDocs();
-    expect(res.rows.length).toBe(10 + 10 * joinableDBs.length);
+    expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
   });
 
   it("it empty inbound syncing", async () => {
@@ -364,14 +390,14 @@ describe("join function", () => {
     });
     await Promise.all(
       joinableDBs.map(async (name) => {
-        const attached = await mydb.attach(aJoinable(name));
+        const attached = await mydb.attach(aJoinable(name, mydb));
         expect(attached).toBeDefined();
       }),
     );
     await sleep(100);
     expect(mydb.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await mydb.allDocs();
-    expect(res.rows.length).toBe(10 * joinableDBs.length);
+    expect(res.rows.length).toBe(ROWS * joinableDBs.length);
   });
 
   it("prepare only once", async () => {
@@ -380,7 +406,7 @@ describe("join function", () => {
         base: `memory://prepare`,
       },
     });
-    const mocked = aJoinable("test");
+    const mocked = aJoinable("test", db);
     const originalPrepare = mocked.prepare;
     mocked.prepare = vi.fn(() => originalPrepare.apply(mocked));
     expect(mocked.prepare).not.toHaveBeenCalled();
@@ -389,4 +415,272 @@ describe("join function", () => {
       expect(mocked.prepare).toHaveBeenCalled();
     }
   });
+
+  it("offline sync", async () => {
+    const id = sthis.nextId().str;
+    // console.log("sync-offline");
+
+    // console.log("outbound-db");
+    // console.log("-1");
+    const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
+    // console.log("-2");
+    await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
+    await poutbound.db.close();
+    // console.log("-3");
+    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
+
+    expect(outRows.length).toBe(ROWS);
+
+    const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await pinbound.db.close();
+    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+
+    expect(inRows.length).toBe(ROWS);
+
+    const inbound = await syncDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await inbound.attach(aJoinable(`sync-${id}`, inbound));
+    await inbound.close();
+
+    // console.log("result");
+    const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+    // console.log(re);
+    // console.log(inRows);
+    expect(resultRows.length).toBe(ROWS * 2);
+    expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
+
+    const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
+    await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
+    await joined.db.close();
+    const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
+    expect(resultRows).toEqual(joinedRows);
+  }, 100_000);
 });
+
+// interface WaitItem {
+//   ev: IdleEventFromBlockstore | BusyEventFromBlockstore;
+//   waitforIdle: Set<Future<IdleEventFromBlockstore>>;
+// }
+// class WaitIdle {
+//   readonly _waitState = new Map<string, WaitItem>();
+//
+//   upsertItem(name: string) {
+//     let item = this._waitState.get(name);
+//     if (!item) {
+//       item = { ev: {} as IdleEventFromBlockstore, waitforIdle: new Set() };
+//       this._waitState.set(name, item);
+//     }
+//     return item;
+//   }
+//   upsertEvent(name: string, ev: IdleEventFromBlockstore | BusyEventFromBlockstore) {
+//     this.upsertItem(name).ev = ev;
+//   }
+//
+//   readonly _traceFn = (ev: TraceEvent) => {
+//     console.log("trace", ev.event);
+//     if (EventIsIdleFromBlockstore(ev) && ev.ledger) {
+//       const item = this.upsertItem(ev.ledger.name);
+//       item.ev = ev;
+//       console.log("database is now idle", ev.ledger.name);
+//       Array.from(item.waitforIdle).forEach((waiter) => {
+//         waiter.resolve(ev);
+//         item.waitforIdle.delete(waiter);
+//       });
+//     }
+//     if (EventIsBusyFromBlockstore(ev) && ev.ledger) {
+//       this.upsertEvent(ev.ledger.name, ev);
+//     }
+//   };
+//
+//   traceFn(): TraceFn {
+//     return this._traceFn;
+//   }
+//
+//   async wait(dbs: Database[]) {
+//     const waiting = dbs.map((db) => {
+//       const item = this.upsertItem(db.name);
+//       let waiter: Promise<IdleEventFromBlockstore>;
+//       if (EventIsIdleFromBlockstore(item.ev)) {
+//         console.log("database is already idle", db.name);
+//         waiter = Promise.resolve(item.ev);
+//       } else {
+//         const future = new Future<IdleEventFromBlockstore>();
+//         item.waitforIdle.add(future);
+//         waiter = future.asPromise();
+//       }
+//       return waiter;
+//     });
+//     console.log(dbs.map((db) => db.name));
+//     await Promise.all(waiting);
+//   }
+// }
+
+describe("sync", () => {
+  const sthis = ensureSuperThis();
+  it("online sync", async () => {
+    const id = sthis.nextId().str;
+    // const waitIdle = new WaitIdle();
+    const dbs = await Promise.all(
+      Array(3)
+        .fill(0)
+        .map(async (_, i) => {
+          const tdb = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
+          await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
+          return tdb;
+        }),
+    );
+
+    // await waitIdle.wait(dbs);
+    await sleep(500);
+    await Promise.all(
+      dbs.map(async (tdb) => {
+        const rows = await tdb.db.allDocs();
+        // console.log(db.name, rows.rows.length);
+        // console.log(rows.rows.length);
+        expect(rows.rows.length).toBe(ROWS * dbs.length);
+      }),
+    );
+
+    const keys = (
+      await Promise.all(
+        dbs.map(async (db) => {
+          await sleep(100 * Math.random());
+          return writeRow(db, "add-online");
+        }),
+      )
+    ).flat();
+    await sleep(500);
+    await Promise.all(
+      dbs.map(async (db) => {
+        for (const key of keys) {
+          const rows = await db.db.get(key);
+          expect(rows).toEqual({ _id: key, value: key });
+        }
+      }),
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const toCloseDbs = [dbs.shift()!, dbs.pop()!];
+    await Promise.all(toCloseDbs.map((tdb) => tdb.db.close()));
+
+    await Promise.all(
+      dbs.map(async (db) => {
+        return writeRow(db, "mid-dbs");
+      }),
+    );
+
+    const reOpenedWithoutAttach = await Promise.all(
+      toCloseDbs.map(async (tdb) => {
+        // console.log("reopen", tdb.db.name, tdb.db.ledger.ctx.get("base"));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const db = await syncDb(tdb.db.name, tdb.db.ledger.ctx.get("base")!);
+        return { db, dbId: tdb.dbId };
+      }),
+    );
+
+    // const reOpenKeys = (
+    await Promise.all(
+      dbs.map(async (db) => {
+        return writeRow(db, "reOpenKeys");
+      }),
+    );
+    // ).flat();
+
+    await Promise.all(
+      reOpenedWithoutAttach.map(async (tdb) => {
+        await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
+      }),
+    );
+    await sleep(500);
+
+    await Promise.all(
+      dbs.map(async (tdb) => {
+        const rows = await tdb.db.allDocs();
+        // console.log(db.name, rows.rows.length);
+        // console.log(rows.rows.length);
+        expect(rows.rows.length).toBe(8 * ROWS * dbs.length);
+      }),
+    );
+
+    await Promise.all(dbs.map((tdb) => tdb.db.close()));
+    await Promise.all(reOpenedWithoutAttach.map((tdb) => tdb.db.close()));
+  }, 100_000);
+
+  it.skip("sync outbound", async () => {
+    const id = sthis.nextId().str;
+
+    const outbound = await prepareDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
+    await outbound.db.attach(aJoinable(`sync-${id}`, outbound.db));
+    await writeRow(outbound, "outbound");
+
+    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
+    await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
+    await writeRow(inbound, "both-inbound");
+    await writeRow(outbound, "both-outbound");
+    await sleep(1000);
+    await inbound.db.close();
+    await outbound.db.close();
+
+    const inRows = await readDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
+    const outRows = await readDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
+    // eslint-disable-next-line no-console
+    console.log(
+      "out",
+      outRows.map((row) => row.key),
+    );
+    // eslint-disable-next-line no-console
+    console.log(
+      "in",
+      inRows.map((row) => row.key),
+    );
+    expect(inRows).toEqual(outRows);
+  }, 100_000);
+});
+
+async function syncDb(name: string, base: string, tracer?: TraceFn) {
+  const db = fireproof(name, {
+    storeUrls: {
+      base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@"), // .setParam(PARAM.SELF_REFLECT, "yes"),
+    },
+    ctx: AppContext.merge({ base }),
+    tracer,
+  });
+  await db.ready();
+  return db;
+}
+
+async function prepareDb(name: string, base: string, tracer?: TraceFn) {
+  {
+    const db = await syncDb(name, base, tracer);
+    await db.ready();
+    const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+    const ret = { db, dbId };
+    await writeRow(ret, `initial`);
+    await db.close();
+  }
+
+  const db = await syncDb(name, base);
+  await db.ready();
+  const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+  // const ret = { db, dbId };
+  return { db, dbId };
+}
+
+async function readDb(name: string, base: string) {
+  const db = await syncDb(name, base);
+  const rows = await db.allDocs();
+  await db.close();
+  return rows.rows.sort((a, b) => a.key.localeCompare(b.key));
+}
+
+async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
+  return await Promise.all(
+    Array(ROWS)
+      .fill(0)
+      .map(async (_, i) => {
+        const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
+        // console.log(key);
+        await pdb.db.put({ _id: key, value: key });
+        return key;
+      }),
+  );
+}

@@ -12,6 +12,8 @@ import {
   Index,
   index,
 } from "@fireproof/core";
+import { tracer } from "../helpers.js";
+import { AppContext } from "@adviser/cement";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;
@@ -28,6 +30,8 @@ describe("Fresh crdt", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     await crdt.ready();
@@ -73,6 +77,8 @@ describe("CRDT with one record", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
@@ -130,6 +136,8 @@ describe("CRDT with a multi-write", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([
@@ -201,6 +209,8 @@ describe("CRDT with two multi-writes", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([
@@ -261,6 +271,8 @@ describe("Compact a named CRDT with writes", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction-${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     for (let i = 0; i < 10; i++) {
@@ -358,6 +370,8 @@ describe("CRDT with an index", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     await crdt.bulk([
@@ -408,6 +422,8 @@ describe("Loader with a committed transaction", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, dbname),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
@@ -433,6 +449,7 @@ describe("Loader with a committed transaction", function () {
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(bs.isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0 + 1 /* genesis */);
@@ -460,6 +477,8 @@ describe("Loader with two committed transactions", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
@@ -487,6 +506,7 @@ describe("Loader with two committed transactions", function () {
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(bs.isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(1 + 1 /* genesis */);
@@ -514,6 +534,8 @@ describe("Loader with many committed transactions", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader-many"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
@@ -538,6 +560,7 @@ describe("Loader with many committed transactions", function () {
     // expect(dones[5].cars).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(bs.isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(7 + 1 /* genesis */);

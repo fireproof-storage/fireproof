@@ -1,7 +1,7 @@
-import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 
 import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
-import type {
+import {
   DocUpdate,
   ConfigOpts,
   DocWithId,
@@ -15,8 +15,9 @@ import type {
   LedgerOpts,
   Attachable,
   Attached,
+  LedgerOptsOptionalTracer,
+  PARAM,
 } from "./types.js";
-import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, ensureURIDefaults } from "./utils.js";
 
@@ -25,7 +26,6 @@ import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
-import { FPContext } from "./fp-context.js";
 import { toSortedArray } from "@adviser/cement/utils";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
@@ -53,6 +53,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   return new LedgerShell(
     item.once((key) => {
       // console.log("once-LedgerFactory", key);
+
       const db = new LedgerImpl(sthis, {
         name,
         meta: opts?.meta,
@@ -60,11 +61,17 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
         storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
         gatewayInterceptor: opts?.gatewayInterceptor,
         writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
+        ctx: opts?.ctx ?? new AppContext(),
         storeEnDe: {
           encodeFile,
           decodeFile,
           ...opts?.storeEnDe,
         },
+        tracer:
+          opts?.tracer ??
+          (() => {
+            /* noop */
+          }),
       });
       db.onClosed(() => {
         ledgers.unget(key);
@@ -94,8 +101,8 @@ export class LedgerShell implements Ledger {
     return this.ref.opts;
   }
 
-  get context(): FPContext {
-    return this.ref.context;
+  get ctx(): AppContext {
+    return this.ref.ctx;
   }
 
   get id(): string {
@@ -146,7 +153,7 @@ class LedgerImpl implements Ledger {
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  readonly context = new FPContext();
+  readonly ctx: AppContext;
 
   get name(): string {
     return this.opts.name;
@@ -202,10 +209,16 @@ class LedgerImpl implements Ledger {
   readonly sthis: SuperThis;
   readonly id: string;
 
-  constructor(sthis: SuperThis, opts: LedgerOpts) {
-    this.opts = opts; // || this.opts;
+  constructor(sthis: SuperThis, opts: LedgerOptsOptionalTracer) {
+    this.opts = {
+      tracer: () => {
+        /* noop */
+      },
+      ...opts,
+    }; // || this.opts;
     // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
     this.sthis = sthis;
+    this.ctx = opts.ctx;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
     this.crdt = new CRDTImpl(this.sthis, this.opts, this);

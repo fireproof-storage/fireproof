@@ -40,7 +40,7 @@ class WebCtxImpl implements WebToCloudCtx {
     } else {
       localStorage.removeItem(this.tokenKey);
     }
-    this.onAction?.(undefined);
+    this.onAction?.();
   }
   setToken(token: string): void {
     const oldToken = this.token();

@@ -87,14 +87,19 @@ export class URITrackGateway implements bs.Gateway {
     return this.memgw.destroy(baseUrl);
   }
 
-  put(url: URI, bytes: Uint8Array): Promise<bs.VoidResult> {
+  put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<bs.VoidResult> {
+    // console.log("put", url.getParam(PARAM.KEY), url.toString());
     this.uriAdd(url);
-    return this.memgw.put(url, bytes);
+    return this.memgw.put(url.build().cleanParams("itis").URI(), bytes, sthis);
   }
 
-  get(url: URI): Promise<bs.GetResult> {
+  async get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
     this.uriAdd(url);
-    return this.memgw.get(url);
+    const ret = await this.memgw.get(url.build().cleanParams("itis").URI(), sthis);
+    // if (ret.isErr()) {
+    //   console.log("get-err", url.getParam(PARAM.KEY), url.toString());
+    // }
+    return ret;
   }
   delete(url: URI): Promise<bs.VoidResult> {
     this.uriAdd(url);
@@ -136,7 +141,7 @@ describe("InterceptorGateway", () => {
     await db.close();
     await db.destroy();
     // await sleep(1000);
-    expect(gwi.fn.mock.calls.length).toBe(58);
+    expect(gwi.fn.mock.calls.length).toBe(54);
     // might be a stupid test
     expect(gwi.fn.mock.calls.map((i) => i[0]).sort() /* not ok there are some operation */).toEqual(
       [
@@ -174,10 +179,6 @@ describe("InterceptorGateway", () => {
         "start",
         "start",
         "start",
-        "close",
-        "close",
-        "close",
-        "close",
         "close",
         "close",
         "close",
