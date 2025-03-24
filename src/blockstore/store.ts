@@ -183,7 +183,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (/*this.remote && */ opts.gateway.subscribe) {
       this.onStarted(async (dam) => {
         this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
-        opts.gateway.subscribe({ loader: this.loader }, this.url(), async ({ payload: dbMetas }: FPEnvelopeMeta) => {
+        await opts.gateway.subscribe({ loader: this.loader }, this.url(), async ({ payload: dbMetas }: FPEnvelopeMeta) => {
           this.logger.Debug().Msg("Received message from gateway");
           await Promise.all(
             dbMetas.map((dbMetaEv) =>
@@ -506,7 +506,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
                 }
               } else {
                 // await throwFalsy(this.loader.xremoteCarStore).save(car);
-                await this.loader.attachedStores.forRemotes((x) => x.active.car.save(car));
+                await this.loader.attachedStores.forRemotes(async (x) => {
+                  await x.active.car.save(car);
+                });
               }
             }
             // Remove from walState after successful upload

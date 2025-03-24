@@ -15,12 +15,12 @@ import {
 
 import { Loader } from "./loader.js";
 import type { Block, Version, UnknownLink } from "multiformats";
-import { BaseBlockstore, CarTransaction, falsyToUndef, SuperThis } from "../types.js";
+import { BaseBlockstore, CarTransaction, CRDT, falsyToUndef, SuperThis } from "../types.js";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "../utils.js";
 
-export type BlockFetcher = BlockFetcherApi;
+export type BlockFetcher = BlockFetcherApi & { readonly crdtParent?: CRDT };
 export interface CarTransactionOpts {
   readonly add: boolean;
   readonly noLoader: boolean;
@@ -122,6 +122,8 @@ export class BaseBlockstoreImpl implements BlockFetcher {
   readonly ebOpts: BlockstoreRuntime;
   readonly sthis: SuperThis;
 
+  readonly crdtParent?: CRDT;
+
   readonly loader: Loadable;
   // readonly name?: string;
 
@@ -143,11 +145,12 @@ export class BaseBlockstoreImpl implements BlockFetcher {
   }
 
   readonly logger: Logger;
-  constructor(ebOpts: BlockstoreOpts) {
+  constructor(ebOpts: BlockstoreOpts, crdt?: CRDT) {
     this.sthis = ensureSuperThis(ebOpts);
+    this.crdtParent = crdt;
     this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.logger = this.ebOpts.logger;
-    this.loader = new Loader(this.sthis, ebOpts);
+    this.loader = new Loader(this.sthis, ebOpts, this);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -229,8 +232,8 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   compacting = false;
   readonly logger: Logger;
 
-  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts) {
-    super(ebOpts);
+  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts, crdt?: CRDT) {
+    super(ebOpts, crdt);
     this.logger = ensureLogger(this.sthis, "EncryptedBlockstore", {
       this: 1,
     });
@@ -269,6 +272,9 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
     const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
+    if (reader.status !== "ready") {
+      throw this.logger.Error().Str("cid", car.toString()).Msg("car not ready").AsError();
+    }
     const block = await reader.blocks.find((i) => i.cid.equals(cid));
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;

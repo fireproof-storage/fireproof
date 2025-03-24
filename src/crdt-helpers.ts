@@ -367,6 +367,7 @@ async function gatherUpdates<T extends DocTypes>(
 export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
+    // console.log("getAllEntries", key, link);
     if (key !== PARAM.GENESIS_CID) {
       const docValue = await getValueFromLink(blocks, link, logger);
       yield { id: key, value: docValue.doc, del: docValue.del } as DocUpdate<T>;
