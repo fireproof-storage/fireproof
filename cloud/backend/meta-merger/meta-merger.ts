@@ -3,9 +3,10 @@ import { MetaByTenantLedgerSql } from "./meta-by-tenant-ledger.js";
 import { MetaSendSql } from "./meta-send.js";
 import { TenantLedgerSql } from "./tenant-ledger.js";
 import { TenantSql } from "./tenant.js";
-import { SQLDatabase } from "./abstract-sql.js";
+// import { SQLDatabase } from "./abstract-sql.js";
 import { Logger } from "@adviser/cement";
 import { KeyByTenantLedgerSql } from "./key-by-tenant-ledger.js";
+import { LibSQLDatabase } from "drizzle-orm/libsql";
 
 type TenantLedger = ps.cloud.TenantLedger;
 type QSId = ps.cloud.QSId;
@@ -36,17 +37,19 @@ function toByConnection(connection: Connection): ByConnection {
   };
 }
 
+
+
 export function metaMerger(ctx: {
   readonly id: string;
   readonly logger: Logger;
-  readonly dbFactory: () => SQLDatabase;
+  readonly dbFactory: () => LibSQLDatabase;
   // readonly sthis: SuperThis;
 }) {
   return new MetaMerger(ctx.id, ctx.logger, ctx.dbFactory());
 }
 
 export class MetaMerger {
-  readonly db: SQLDatabase;
+  readonly db: LibSQLDatabase;
   // readonly sthis: SuperThis;
   readonly sql: {
     readonly tenant: TenantSql;
@@ -59,27 +62,27 @@ export class MetaMerger {
   readonly logger: Logger;
   readonly id: string;
 
-  constructor(id: string, logger: Logger, db: SQLDatabase) {
+  constructor(id: string, logger: Logger, db: LibSQLDatabase) {
     this.db = db;
     this.id = id;
     this.logger = logger;
     // this.sthis = sthis;
     const tenant = new TenantSql(id, db);
-    const tenantLedger = new TenantLedgerSql(id, db, tenant);
+    const tenantLedger = new TenantLedgerSql(id, db);
     this.sql = {
       tenant,
       tenantLedger,
-      metaByTenantLedger: new MetaByTenantLedgerSql(id, db, tenantLedger),
-      keyByTenantLedger: new KeyByTenantLedgerSql(id, db, tenantLedger),
+      metaByTenantLedger: new MetaByTenantLedgerSql(id, db),
+      keyByTenantLedger: new KeyByTenantLedgerSql(id, db),
       metaSend: new MetaSendSql(id, db),
     };
   }
 
-  async createSchema(drop = false) {
-    for (const i of this.sql.metaSend.sqlCreateMetaSend(drop)) {
-      await i.run();
-    }
-  }
+  // async createSchema(drop = false) {
+  //   for (const i of this.sql.metaSend.sqlCreateMetaSend(drop)) {
+  //     await i.run();
+  //   }
+  // }
 
   async delMeta(mm: MetaMerge): Promise<{ now: Date; byConnection: ByConnection }> {
     const now = mm.now || new Date();

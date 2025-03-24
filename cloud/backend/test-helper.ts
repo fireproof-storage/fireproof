@@ -2,9 +2,10 @@ import { BuildURI, CoerceURI, Result, URI } from "@adviser/cement";
 import { SuperThis, rt, ps, ensureSuperThis } from "@fireproof/core";
 import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { HonoServer } from "./hono-server.js";
-import { BetterSQLDatabase } from "./meta-merger/bettersql-abstract-sql.js";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { Hono } from "hono";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.cloud.MsgRawConnection<T>;
@@ -191,7 +192,8 @@ export function NodeHonoServerFactory(sthis: SuperThis) {
       const nhf = new NodeHonoFactory(sthis, {
         msgP,
         gs: remoteGestalt,
-        sql: new BetterSQLDatabase("./dist/node-meta.sqlite"),
+        sql: drizzle(createClient({ url: `file://./dist/node-meta.sqlite` })),
+        // new BetterSQLDatabase("./dist/node-meta.sqlite"),
       });
       return new HonoServer(nhf);
     },
@@ -289,7 +291,8 @@ export async function setupBackend(
   const nhf = new NodeHonoFactory(sthis, {
     // msgP,
     // gs: remoteGestalt,
-    sql: new BetterSQLDatabase("./dist/node-meta.sqlite"),
+    sql: drizzle(createClient({ url: `file://./dist/node-meta.sqlite` })),
+    //new BetterSQLDatabase("./dist/node-meta.sqlite"),
   });
   const app = new Hono();
   const hs = new HonoServer(nhf);

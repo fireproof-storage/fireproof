@@ -4,11 +4,12 @@ import { Context, Hono, Next } from "hono";
 import { WSContext, WSContextInit, WSMessageReceive } from "hono/ws";
 // import { CFExposeCtxItem } from "./cf-hono-server.js";
 import { metaMerger } from "./meta-merger/meta-merger.js";
-import { SQLDatabase } from "./meta-merger/abstract-sql.js";
+// import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
 import { MsgDispatcher, MsgDispatcherCtx, Promisable, WSConnectionPair } from "./msg-dispatch.js";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { buildMsgDispatcher } from "./msg-dispatcher-impl.js";
+import { LibSQLDatabase } from "drizzle-orm/libsql";
 
 type BindGetMeta = ps.cloud.BindGetMeta;
 type ReqPutMeta = ps.cloud.ReqPutMeta;
@@ -51,7 +52,7 @@ export interface ExposeCtxItem<T extends WSRoom> {
   readonly ende: ps.cloud.EnDeCoder;
   readonly stsService: rt.sts.SessionTokenService;
   readonly gestalt: ps.cloud.Gestalt;
-  readonly dbFactory: () => SQLDatabase;
+  readonly dbFactory: () => LibSQLDatabase;
   // readonly metaMerger: MetaMerger;
   readonly id: string;
 }
@@ -138,10 +139,11 @@ export abstract class HonoServerBase implements HonoServerImpl {
   }
   // abstract getConnected(): Connected[];
 
-  start(ctx: ExposeCtxItem<WSRoom>, drop = false): Promise<HonoServerImpl> {
-    return metaMerger(ctx)
-      .createSchema(drop)
-      .then(() => this);
+  start(ctx: ExposeCtxItem<WSRoom>): Promise<HonoServerImpl> {
+    metaMerger(ctx)
+    return Promise.resolve(this);
+      // .createSchema(drop)
+      // .then(() => this);
   }
 
   // gestalt(): Gestalt {
@@ -248,7 +250,7 @@ class NoBackChannel implements MsgDispatcherCtx {
   readonly logger: Logger;
   readonly ende: ps.cloud.EnDeCoder;
   readonly gestalt: ps.cloud.Gestalt;
-  readonly dbFactory: () => SQLDatabase;
+  readonly dbFactory: () => LibSQLDatabase;
   readonly id: string;
   readonly stsService: rt.sts.SessionTokenService;
 

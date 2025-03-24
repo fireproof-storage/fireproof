@@ -1,7 +1,8 @@
 // import type { Database } from "better-sqlite3";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
 import { ensureSuperThis, rt } from "@fireproof/core";
-import { SQLDatabase } from "./abstract-sql.js";
+// import { SQLDatabase } from "./abstract-sql.js";
+import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 
 function sortCRDTEntries(rows: rt.V2SerializedMetaKey) {
   return rows.metas.sort((a, b) => a.cid.localeCompare(b.cid));
@@ -38,13 +39,20 @@ function toCRDTEntries(rows: MetaConnection[]) {
 //       r.connection.conn.resId === connection.conn.resId)))
 // }
 
-function getSQLFlavours(): { name: string; factory: () => Promise<SQLDatabase> }[] {
+function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase> }[] {
   return [
     {
-      name: "bettersql",
+      name: "libsql",
       factory: async () => {
+        // import type { Client } from "@libsql/client";
+        const { createClient } = await import("@libsql/client");
+        return drizzle(createClient({
+          url: "file://./dist/test.db",
+        }))
+        /*
         const { BetterSQLDatabase } = await import("./bettersql-abstract-sql.js");
-        return new BetterSQLDatabase("./dist/test.db");
+        return new BetterSQLDatabase("./dist/test.db") as unknown as LibSQLDatabase;
+        */
       },
     },
   ];
@@ -59,7 +67,7 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
     //    db = new Database(':memory:');
     const db = await flavour.factory();
     mm = new MetaMerger("bong", logger, db);
-    await mm.createSchema();
+    // await mm.createSchema();
   });
 
   let metaMerge: MetaMerge;

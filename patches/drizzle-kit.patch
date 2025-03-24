@@ -1,0 +1,1909 @@
+diff --git a/api.js b/api.js
+index 44ccfaa28b23166c174db6aa8f82c204d5983518..ff42ed7270a486080e531574c7b5bdd2ddd540ab 100644
+--- a/api.js
++++ b/api.js
+@@ -3124,11 +3124,11 @@ var require_hanji = __commonJS({
+     "use strict";
+     var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+       function adopt(value) {
+-        return value instanceof P ? value : new P(function(resolve) {
+-          resolve(value);
++        return value instanceof P ? value : new P(function(resolve2) {
++          resolve2(value);
+         });
+       }
+-      return new (P || (P = Promise))(function(resolve, reject) {
++      return new (P || (P = Promise))(function(resolve2, reject) {
+         function fulfilled(value) {
+           try {
+             step(generator.next(value));
+@@ -3144,7 +3144,7 @@ var require_hanji = __commonJS({
+           }
+         }
+         function step(result) {
+-          result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
++          result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
+         }
+         step((generator = generator.apply(thisArg, _arguments || [])).next());
+       });
+@@ -3218,14 +3218,14 @@ var require_hanji = __commonJS({
+     };
+     exports2.SelectState = SelectState3;
+     var deferred = () => {
+-      let resolve;
++      let resolve2;
+       let reject;
+       const promise = new Promise((res, rej) => {
+-        resolve = res;
++        resolve2 = res;
+         reject = rej;
+       });
+       return {
+-        resolve,
++        resolve: resolve2,
+         reject,
+         promise
+       };
+@@ -3275,8 +3275,8 @@ var require_hanji = __commonJS({
+         };
+         this.stdin.on("keypress", keypress);
+         this.view.attach(this);
+-        const { resolve, promise } = (0, exports2.deferred)();
+-        this.resolve = resolve;
++        const { resolve: resolve2, promise } = (0, exports2.deferred)();
++        this.resolve = resolve2;
+         this.promise = promise;
+         this.renderFunc = (0, lodash_throttle_1.default)((str) => {
+           this.stdout.write(str);
+@@ -22381,7 +22381,7 @@ var version;
+ var init_version = __esm({
+   "../drizzle-orm/dist/version.js"() {
+     "use strict";
+-    version = "0.40.0";
++    version = "0.40.1";
+   }
+ });
+ 
+@@ -22841,7 +22841,7 @@ var init_sql = __esm({
+         return new SQL([new StringChunk(str)]);
+       }
+       sql2.raw = raw;
+-      function join(chunks, separator) {
++      function join2(chunks, separator) {
+         const result = [];
+         for (const [i, chunk] of chunks.entries()) {
+           if (i > 0 && separator !== void 0) {
+@@ -22851,7 +22851,7 @@ var init_sql = __esm({
+         }
+         return new SQL(result);
+       }
+-      sql2.join = join;
++      sql2.join = join2;
+       function identifier(value) {
+         return new Name(value);
+       }
+@@ -27668,7 +27668,7 @@ var init_select2 = __esm({
+         return (table6, on) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -28450,7 +28450,7 @@ var init_update = __esm({
+       createJoin(joinType) {
+         return (table6, on) => {
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (typeof on === "function") {
+@@ -28542,10 +28542,10 @@ var init_update = __esm({
+               const fromFields = this.getTableLikeFields(this.config.from);
+               fields[tableName] = fromFields;
+             }
+-            for (const join of this.config.joins) {
+-              const tableName2 = getTableLikeName(join.table);
+-              if (typeof tableName2 === "string" && !is(join.table, SQL)) {
+-                const fromFields = this.getTableLikeFields(join.table);
++            for (const join2 of this.config.joins) {
++              const tableName2 = getTableLikeName(join2.table);
++              if (typeof tableName2 === "string" && !is(join2.table, SQL)) {
++                const fromFields = this.getTableLikeFields(join2.table);
+                 fields[tableName2] = fromFields;
+               }
+             }
+@@ -33351,7 +33351,7 @@ var init_select3 = __esm({
+         return (table6, on) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -33999,7 +33999,7 @@ var init_update2 = __esm({
+       createJoin(joinType) {
+         return (table6, on) => {
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (typeof on === "function") {
+@@ -35439,27 +35439,26 @@ ${withStyle.errorWarning(
+     fromDatabase2 = async (db, tablesFilter = (table6) => true, progressCallback) => {
+       const result = {};
+       const resultViews = {};
++      const ignoreTableNames = `NOT IN (
++		'sqlite_sequence',
++		'_litestream_seq',
++		'_litestream_lock',
++		'libsql_wasm_func_table',
++		'__drizzle_migrations',
++		'_cf_KV')`;
+       const columns = await db.query(
+         `SELECT 
+     m.name as "tableName", p.name as "columnName", p.type as "columnType", p."notnull" as "notNull", p.dflt_value as "defaultValue", p.pk as pk, p.hidden as hidden, m.sql, m.type as type
+     FROM sqlite_master AS m JOIN pragma_table_xinfo(m.name) AS p
+-    WHERE (m.type = 'table' OR m.type = 'view')
+-    and m.tbl_name != 'sqlite_sequence' 
+-    and m.tbl_name != 'sqlite_stat1' 
+-    and m.tbl_name != '_litestream_seq' 
+-    and m.tbl_name != '_litestream_lock' 
+-    and m.tbl_name != 'libsql_wasm_func_table' 
+-    and m.tbl_name != '__drizzle_migrations' 
+-    and m.tbl_name != '_cf_KV';
++    WHERE (m.type = 'table' OR m.type = 'view') 
++	AND m.tbl_name ${ignoreTableNames};
+     `
+       );
+       const tablesWithSeq = [];
+       const seq = await db.query(
+         `SELECT * FROM sqlite_master WHERE name != 'sqlite_sequence' 
+-    and name != 'sqlite_stat1' 
+-    and name != '_litestream_seq' 
+-    and name != '_litestream_lock' 
+-    and tbl_name != '_cf_KV' 
++    and name ${ignoreTableNames}
++    and tbl_name ${ignoreTableNames}
+     and sql GLOB '*[ *' || CHAR(9) || CHAR(10) || CHAR(13) || ']AUTOINCREMENT[^'']*';`
+       );
+       for (const s of seq) {
+@@ -35558,7 +35557,7 @@ ${withStyle.errorWarning(
+         const fks = await db.query(
+           `SELECT m.name as "tableFrom", f.id as "id", f."table" as "tableTo", f."from", f."to", f."on_update" as "onUpdate", f."on_delete" as "onDelete", f.seq as "seq"
+       FROM sqlite_master m, pragma_foreign_key_list(m.name) as f 
+-      where m.tbl_name != '_cf_KV';`
++      where m.tbl_name ${ignoreTableNames};`
+         );
+         const fkByTableName = {};
+         for (const fkRow of fks) {
+@@ -35618,7 +35617,7 @@ FROM sqlite_master AS m,
+ WHERE 
+     m.type = 'table' 
+     and il.name NOT LIKE 'sqlite_autoindex_%'
+-    and m.tbl_name != '_cf_KV';`
++    and m.tbl_name ${ignoreTableNames};`
+       );
+       for (const idxRow of idxs) {
+         const tableName = idxRow.tableName;
+@@ -35680,7 +35679,7 @@ WHERE
+       const checkConstraints = {};
+       const checks = await db.query(`SELECT name as "tableName", sql as "sql"
+ 		FROM sqlite_master 
+-		WHERE type = 'table' AND name != 'sqlite_sequence';`);
++		WHERE type = 'table' AND name ${ignoreTableNames};`);
+       for (const check of checks) {
+         if (!tablesFilter(check.tableName)) continue;
+         const { tableName, sql: sql2 } = check;
+@@ -38940,7 +38939,7 @@ var init_select4 = __esm({
+         return (table6, on, onIndex) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -44114,7 +44113,7 @@ var init_select5 = __esm({
+         return (table6, on) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -45573,12 +45572,16 @@ __export(sqliteImports_exports, {
+   prepareFromExports: () => prepareFromExports2,
+   prepareFromSqliteImports: () => prepareFromSqliteImports
+ });
+-var prepareFromExports2, prepareFromSqliteImports;
++var esbuild, import_promises, import_path, prepareFromExports2, prepareFromSqliteImports;
+ var init_sqliteImports = __esm({
+   "src/serializer/sqliteImports.ts"() {
+     "use strict";
++    init_source();
+     init_dist();
+     init_sqlite_core();
++    esbuild = __toESM(require("esbuild"));
++    import_promises = require("fs/promises");
++    import_path = require("path");
+     init_utils9();
+     prepareFromExports2 = (exports2) => {
+       const tables = [];
+@@ -45598,13 +45601,20 @@ var init_sqliteImports = __esm({
+       const tables = [];
+       const views = [];
+       const { unregister } = await safeRegister();
+-      for (let i = 0; i < imports.length; i++) {
+-        const it = imports[i];
+-        const i0 = require(`${it}`);
+-        const prepared = prepareFromExports2(i0);
+-        tables.push(...prepared.tables);
+-        views.push(...prepared.views);
+-      }
++      const outDir = await (0, import_promises.mkdtemp)(".drizzle-kit.sqlite-imports-");
++      let outFile = (0, import_path.resolve)((0, import_path.join)(outDir, "schema.js"));
++      console.log(source_default.grey(`Reading schema files '${JSON.stringify(imports)}'`));
++      const res = esbuild.buildSync({
++        entryPoints: imports,
++        bundle: true,
++        format: "cjs",
++        outfile: outFile
++      });
++      const i0 = require(outFile);
++      const prepared = prepareFromExports2(i0);
++      await (0, import_promises.rm)(outDir, { recursive: true });
++      tables.push(...prepared.tables);
++      views.push(...prepared.views);
+       unregister();
+       return { tables: Array.from(new Set(tables)), views };
+     };
+diff --git a/api.mjs b/api.mjs
+index d52ed68b1a8da7e334b1d2e08b4298cd3a9597df..ff343f61495cdb1bfd98c32950b54b320bd535de 100644
+--- a/api.mjs
++++ b/api.mjs
+@@ -3129,11 +3129,11 @@ var require_hanji = __commonJS({
+     "use strict";
+     var __awaiter = exports && exports.__awaiter || function(thisArg, _arguments, P, generator) {
+       function adopt(value) {
+-        return value instanceof P ? value : new P(function(resolve) {
+-          resolve(value);
++        return value instanceof P ? value : new P(function(resolve2) {
++          resolve2(value);
+         });
+       }
+-      return new (P || (P = Promise))(function(resolve, reject) {
++      return new (P || (P = Promise))(function(resolve2, reject) {
+         function fulfilled(value) {
+           try {
+             step(generator.next(value));
+@@ -3149,7 +3149,7 @@ var require_hanji = __commonJS({
+           }
+         }
+         function step(result) {
+-          result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
++          result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
+         }
+         step((generator = generator.apply(thisArg, _arguments || [])).next());
+       });
+@@ -3223,14 +3223,14 @@ var require_hanji = __commonJS({
+     };
+     exports.SelectState = SelectState3;
+     var deferred = () => {
+-      let resolve;
++      let resolve2;
+       let reject;
+       const promise = new Promise((res, rej) => {
+-        resolve = res;
++        resolve2 = res;
+         reject = rej;
+       });
+       return {
+-        resolve,
++        resolve: resolve2,
+         reject,
+         promise
+       };
+@@ -3280,8 +3280,8 @@ var require_hanji = __commonJS({
+         };
+         this.stdin.on("keypress", keypress);
+         this.view.attach(this);
+-        const { resolve, promise } = (0, exports.deferred)();
+-        this.resolve = resolve;
++        const { resolve: resolve2, promise } = (0, exports.deferred)();
++        this.resolve = resolve2;
+         this.promise = promise;
+         this.renderFunc = (0, lodash_throttle_1.default)((str) => {
+           this.stdout.write(str);
+@@ -22386,7 +22386,7 @@ var version;
+ var init_version = __esm({
+   "../drizzle-orm/dist/version.js"() {
+     "use strict";
+-    version = "0.40.0";
++    version = "0.40.1";
+   }
+ });
+ 
+@@ -22846,7 +22846,7 @@ var init_sql = __esm({
+         return new SQL([new StringChunk(str)]);
+       }
+       sql2.raw = raw;
+-      function join(chunks, separator) {
++      function join2(chunks, separator) {
+         const result = [];
+         for (const [i, chunk] of chunks.entries()) {
+           if (i > 0 && separator !== void 0) {
+@@ -22856,7 +22856,7 @@ var init_sql = __esm({
+         }
+         return new SQL(result);
+       }
+-      sql2.join = join;
++      sql2.join = join2;
+       function identifier(value) {
+         return new Name(value);
+       }
+@@ -27673,7 +27673,7 @@ var init_select2 = __esm({
+         return (table6, on) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -28455,7 +28455,7 @@ var init_update = __esm({
+       createJoin(joinType) {
+         return (table6, on) => {
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (typeof on === "function") {
+@@ -28547,10 +28547,10 @@ var init_update = __esm({
+               const fromFields = this.getTableLikeFields(this.config.from);
+               fields[tableName] = fromFields;
+             }
+-            for (const join of this.config.joins) {
+-              const tableName2 = getTableLikeName(join.table);
+-              if (typeof tableName2 === "string" && !is(join.table, SQL)) {
+-                const fromFields = this.getTableLikeFields(join.table);
++            for (const join2 of this.config.joins) {
++              const tableName2 = getTableLikeName(join2.table);
++              if (typeof tableName2 === "string" && !is(join2.table, SQL)) {
++                const fromFields = this.getTableLikeFields(join2.table);
+                 fields[tableName2] = fromFields;
+               }
+             }
+@@ -33356,7 +33356,7 @@ var init_select3 = __esm({
+         return (table6, on) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -34004,7 +34004,7 @@ var init_update2 = __esm({
+       createJoin(joinType) {
+         return (table6, on) => {
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (typeof on === "function") {
+@@ -35444,27 +35444,26 @@ ${withStyle.errorWarning(
+     fromDatabase2 = async (db, tablesFilter = (table6) => true, progressCallback) => {
+       const result = {};
+       const resultViews = {};
++      const ignoreTableNames = `NOT IN (
++		'sqlite_sequence',
++		'_litestream_seq',
++		'_litestream_lock',
++		'libsql_wasm_func_table',
++		'__drizzle_migrations',
++		'_cf_KV')`;
+       const columns = await db.query(
+         `SELECT 
+     m.name as "tableName", p.name as "columnName", p.type as "columnType", p."notnull" as "notNull", p.dflt_value as "defaultValue", p.pk as pk, p.hidden as hidden, m.sql, m.type as type
+     FROM sqlite_master AS m JOIN pragma_table_xinfo(m.name) AS p
+-    WHERE (m.type = 'table' OR m.type = 'view')
+-    and m.tbl_name != 'sqlite_sequence' 
+-    and m.tbl_name != 'sqlite_stat1' 
+-    and m.tbl_name != '_litestream_seq' 
+-    and m.tbl_name != '_litestream_lock' 
+-    and m.tbl_name != 'libsql_wasm_func_table' 
+-    and m.tbl_name != '__drizzle_migrations' 
+-    and m.tbl_name != '_cf_KV';
++    WHERE (m.type = 'table' OR m.type = 'view') 
++	AND m.tbl_name ${ignoreTableNames};
+     `
+       );
+       const tablesWithSeq = [];
+       const seq = await db.query(
+         `SELECT * FROM sqlite_master WHERE name != 'sqlite_sequence' 
+-    and name != 'sqlite_stat1' 
+-    and name != '_litestream_seq' 
+-    and name != '_litestream_lock' 
+-    and tbl_name != '_cf_KV' 
++    and name ${ignoreTableNames}
++    and tbl_name ${ignoreTableNames}
+     and sql GLOB '*[ *' || CHAR(9) || CHAR(10) || CHAR(13) || ']AUTOINCREMENT[^'']*';`
+       );
+       for (const s of seq) {
+@@ -35563,7 +35562,7 @@ ${withStyle.errorWarning(
+         const fks = await db.query(
+           `SELECT m.name as "tableFrom", f.id as "id", f."table" as "tableTo", f."from", f."to", f."on_update" as "onUpdate", f."on_delete" as "onDelete", f.seq as "seq"
+       FROM sqlite_master m, pragma_foreign_key_list(m.name) as f 
+-      where m.tbl_name != '_cf_KV';`
++      where m.tbl_name ${ignoreTableNames};`
+         );
+         const fkByTableName = {};
+         for (const fkRow of fks) {
+@@ -35623,7 +35622,7 @@ FROM sqlite_master AS m,
+ WHERE 
+     m.type = 'table' 
+     and il.name NOT LIKE 'sqlite_autoindex_%'
+-    and m.tbl_name != '_cf_KV';`
++    and m.tbl_name ${ignoreTableNames};`
+       );
+       for (const idxRow of idxs) {
+         const tableName = idxRow.tableName;
+@@ -35685,7 +35684,7 @@ WHERE
+       const checkConstraints = {};
+       const checks = await db.query(`SELECT name as "tableName", sql as "sql"
+ 		FROM sqlite_master 
+-		WHERE type = 'table' AND name != 'sqlite_sequence';`);
++		WHERE type = 'table' AND name ${ignoreTableNames};`);
+       for (const check of checks) {
+         if (!tablesFilter(check.tableName)) continue;
+         const { tableName, sql: sql2 } = check;
+@@ -38945,7 +38944,7 @@ var init_select4 = __esm({
+         return (table6, on, onIndex) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -44119,7 +44118,7 @@ var init_select5 = __esm({
+         return (table6, on) => {
+           const baseTableName = this.tableName;
+           const tableName = getTableLikeName(table6);
+-          if (typeof tableName === "string" && this.config.joins?.some((join) => join.alias === tableName)) {
++          if (typeof tableName === "string" && this.config.joins?.some((join2) => join2.alias === tableName)) {
+             throw new Error(`Alias "${tableName}" is already used in this query`);
+           }
+           if (!this.isPartialSelect) {
+@@ -45578,10 +45577,14 @@ __export(sqliteImports_exports, {
+   prepareFromExports: () => prepareFromExports2,
+   prepareFromSqliteImports: () => prepareFromSqliteImports
+ });
++import * as esbuild from "esbuild";
++import { mkdtemp, rm } from "fs/promises";
++import { join, resolve } from "path";
+ var prepareFromExports2, prepareFromSqliteImports;
+ var init_sqliteImports = __esm({
+   "src/serializer/sqliteImports.ts"() {
+     "use strict";
++    init_source();
+     init_dist();
+     init_sqlite_core();
+     init_utils9();
+@@ -45603,13 +45606,20 @@ var init_sqliteImports = __esm({
+       const tables = [];
+       const views = [];
+       const { unregister } = await safeRegister();
+-      for (let i = 0; i < imports.length; i++) {
+-        const it = imports[i];
+-        const i0 = __require(`${it}`);
+-        const prepared = prepareFromExports2(i0);
+-        tables.push(...prepared.tables);
+-        views.push(...prepared.views);
+-      }
++      const outDir = await mkdtemp(".drizzle-kit.sqlite-imports-");
++      let outFile = resolve(join(outDir, "schema.js"));
++      console.log(source_default.grey(`Reading schema files '${JSON.stringify(imports)}'`));
++      const res = esbuild.buildSync({
++        entryPoints: imports,
++        bundle: true,
++        format: "cjs",
++        outfile: outFile
++      });
++      const i0 = __require(outFile);
++      const prepared = prepareFromExports2(i0);
++      await rm(outDir, { recursive: true });
++      tables.push(...prepared.tables);
++      views.push(...prepared.views);
+       unregister();
+       return { tables: Array.from(new Set(tables)), views };
+     };
+diff --git a/bin.cjs b/bin.cjs
+index 70941f2a5aec6dcd1218e8a699fb5aafb4025f35..d88b84f4cd639d76ff7edcf2611b2ea1963915a7 100755
+--- a/bin.cjs
++++ b/bin.cjs
+@@ -1191,11 +1191,11 @@ var require_hanji = __commonJS({
+     "use strict";
+     var __awaiter3 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+       function adopt(value) {
+-        return value instanceof P ? value : new P(function(resolve2) {
+-          resolve2(value);
++        return value instanceof P ? value : new P(function(resolve3) {
++          resolve3(value);
+         });
+       }
+-      return new (P || (P = Promise))(function(resolve2, reject) {
++      return new (P || (P = Promise))(function(resolve3, reject) {
+         function fulfilled(value) {
+           try {
+             step(generator.next(value));
+@@ -1211,7 +1211,7 @@ var require_hanji = __commonJS({
+           }
+         }
+         function step(result) {
+-          result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
++          result.done ? resolve3(result.value) : adopt(result.value).then(fulfilled, rejected);
+         }
+         step((generator = generator.apply(thisArg, _arguments || [])).next());
+       });
+@@ -1285,14 +1285,14 @@ var require_hanji = __commonJS({
+     };
+     exports2.SelectState = SelectState3;
+     var deferred = () => {
+-      let resolve2;
++      let resolve3;
+       let reject;
+       const promise = new Promise((res, rej) => {
+-        resolve2 = res;
++        resolve3 = res;
+         reject = rej;
+       });
+       return {
+-        resolve: resolve2,
++        resolve: resolve3,
+         reject,
+         promise
+       };
+@@ -1342,8 +1342,8 @@ var require_hanji = __commonJS({
+         };
+         this.stdin.on("keypress", keypress);
+         this.view.attach(this);
+-        const { resolve: resolve2, promise } = (0, exports2.deferred)();
+-        this.resolve = resolve2;
++        const { resolve: resolve3, promise } = (0, exports2.deferred)();
++        this.resolve = resolve3;
+         this.promise = promise;
+         this.renderFunc = (0, lodash_throttle_1.default)((str) => {
+           this.stdout.write(str);
+@@ -7868,7 +7868,7 @@ function unescapeSingleQuotes(str, ignoreFirstAndLastChar) {
+   const regex = ignoreFirstAndLastChar ? /(?<!^)'(?!$)/g : /'/g;
+   return str.replace(/''/g, "'").replace(regex, "\\'");
+ }
+-var import_fs, import_path, import_url, copy, objectValues, assertV1OutFolder, dryJournal, prepareOutFolder, validatorForDialect, validateWithReport, prepareMigrationFolder, prepareMigrationMeta, schemaRenameKey, tableRenameKey, columnRenameKey, normaliseSQLiteUrl, normalisePGliteUrl;
++var import_fs, import_path, import_url, copy, objectValues, assertV1OutFolder, dryJournal, prepareOutFolder, validatorForDialect, validateWithReport, prepareMigrationFolder, prepareMigrationMeta, schemaRenameKey, tableRenameKey, columnRenameKey, mkdirSQLiteUrl, normaliseSQLiteUrl, normalisePGliteUrl;
+ var init_utils2 = __esm({
+   "src/utils.ts"() {
+     "use strict";
+@@ -8050,7 +8050,14 @@ var init_utils2 = __esm({
+       const out = schema6 ? `"${schema6}"."${table6}"."${column11}"` : `"${table6}"."${column11}"`;
+       return out;
+     };
++    mkdirSQLiteUrl = (it) => {
++      if (it.startsWith("file:")) {
++        it = it.substring(5);
++      }
++      (0, import_fs.mkdirSync)((0, import_path.dirname)(it), { recursive: true });
++    };
+     normaliseSQLiteUrl = (it, type) => {
++      mkdirSQLiteUrl(it);
+       if (type === "libsql") {
+         if (it.startsWith("file:")) {
+           return it;
+@@ -14174,7 +14181,7 @@ var require_node2 = __commonJS({
+       function _interopRequireDefault(obj) {
+         return obj && obj.__esModule ? obj : { default: obj };
+       }
+-      function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
++      function asyncGeneratorStep(gen, resolve3, reject, _next, _throw, key, arg) {
+         try {
+           var info2 = gen[key](arg);
+           var value = info2.value;
+@@ -14183,7 +14190,7 @@ var require_node2 = __commonJS({
+           return;
+         }
+         if (info2.done) {
+-          resolve2(value);
++          resolve3(value);
+         } else {
+           Promise.resolve(value).then(_next, _throw);
+         }
+@@ -14191,31 +14198,31 @@ var require_node2 = __commonJS({
+       function _asyncToGenerator(fn) {
+         return function() {
+           var self2 = this, args = arguments;
+-          return new Promise(function(resolve2, reject) {
++          return new Promise(function(resolve3, reject) {
+             var gen = fn.apply(self2, args);
+             function _next(value) {
+-              asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "next", value);
++              asyncGeneratorStep(gen, resolve3, reject, _next, _throw, "next", value);
+             }
+             function _throw(err2) {
+-              asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "throw", err2);
++              asyncGeneratorStep(gen, resolve3, reject, _next, _throw, "throw", err2);
+             }
+             _next(void 0);
+           });
+         };
+       }
+-      var readFile2 = (fp) => new Promise((resolve2, reject) => {
++      var readFile2 = (fp) => new Promise((resolve3, reject) => {
+         _fs.default.readFile(fp, "utf8", (err2, data) => {
+           if (err2)
+             return reject(err2);
+-          resolve2(data);
++          resolve3(data);
+         });
+       });
+       var readFileSync3 = (fp) => {
+         return _fs.default.readFileSync(fp, "utf8");
+       };
+-      var pathExists = (fp) => new Promise((resolve2) => {
++      var pathExists = (fp) => new Promise((resolve3) => {
+         _fs.default.access(fp, (err2) => {
+-          resolve2(!err2);
++          resolve3(!err2);
+         });
+       });
+       var pathExistsSync = _fs.default.existsSync;
+@@ -19997,12 +20004,16 @@ __export(sqliteImports_exports, {
+   prepareFromExports: () => prepareFromExports3,
+   prepareFromSqliteImports: () => prepareFromSqliteImports
+ });
+-var import_drizzle_orm5, import_sqlite_core, prepareFromExports3, prepareFromSqliteImports;
++var import_drizzle_orm5, import_sqlite_core, esbuild, import_promises2, import_path4, prepareFromExports3, prepareFromSqliteImports;
+ var init_sqliteImports = __esm({
+   "src/serializer/sqliteImports.ts"() {
+     "use strict";
++    init_source();
+     import_drizzle_orm5 = require("drizzle-orm");
+     import_sqlite_core = require("drizzle-orm/sqlite-core");
++    esbuild = __toESM(require("esbuild"));
++    import_promises2 = require("fs/promises");
++    import_path4 = require("path");
+     init_utils3();
+     prepareFromExports3 = (exports2) => {
+       const tables = [];
+@@ -20022,13 +20033,20 @@ var init_sqliteImports = __esm({
+       const tables = [];
+       const views = [];
+       const { unregister } = await safeRegister();
+-      for (let i2 = 0; i2 < imports.length; i2++) {
+-        const it = imports[i2];
+-        const i0 = require(`${it}`);
+-        const prepared = prepareFromExports3(i0);
+-        tables.push(...prepared.tables);
+-        views.push(...prepared.views);
+-      }
++      const outDir = await (0, import_promises2.mkdtemp)(".drizzle-kit.sqlite-imports-");
++      let outFile = (0, import_path4.resolve)((0, import_path4.join)(outDir, "schema.js"));
++      console.log(source_default.grey(`Reading schema files '${JSON.stringify(imports)}'`));
++      const res = esbuild.buildSync({
++        entryPoints: imports,
++        bundle: true,
++        format: "cjs",
++        outfile: outFile
++      });
++      const i0 = require(outFile);
++      const prepared = prepareFromExports3(i0);
++      await (0, import_promises2.rm)(outDir, { recursive: true });
++      tables.push(...prepared.tables);
++      views.push(...prepared.views);
+       unregister();
+       return { tables: Array.from(new Set(tables)), views };
+     };
+@@ -20406,27 +20424,26 @@ ${withStyle.errorWarning(
+     fromDatabase3 = async (db, tablesFilter = (table6) => true, progressCallback) => {
+       const result = {};
+       const resultViews = {};
++      const ignoreTableNames = `NOT IN (
++		'sqlite_sequence',
++		'_litestream_seq',
++		'_litestream_lock',
++		'libsql_wasm_func_table',
++		'__drizzle_migrations',
++		'_cf_KV')`;
+       const columns = await db.query(
+         `SELECT 
+     m.name as "tableName", p.name as "columnName", p.type as "columnType", p."notnull" as "notNull", p.dflt_value as "defaultValue", p.pk as pk, p.hidden as hidden, m.sql, m.type as type
+     FROM sqlite_master AS m JOIN pragma_table_xinfo(m.name) AS p
+-    WHERE (m.type = 'table' OR m.type = 'view')
+-    and m.tbl_name != 'sqlite_sequence' 
+-    and m.tbl_name != 'sqlite_stat1' 
+-    and m.tbl_name != '_litestream_seq' 
+-    and m.tbl_name != '_litestream_lock' 
+-    and m.tbl_name != 'libsql_wasm_func_table' 
+-    and m.tbl_name != '__drizzle_migrations' 
+-    and m.tbl_name != '_cf_KV';
++    WHERE (m.type = 'table' OR m.type = 'view') 
++	AND m.tbl_name ${ignoreTableNames};
+     `
+       );
+       const tablesWithSeq = [];
+       const seq = await db.query(
+         `SELECT * FROM sqlite_master WHERE name != 'sqlite_sequence' 
+-    and name != 'sqlite_stat1' 
+-    and name != '_litestream_seq' 
+-    and name != '_litestream_lock' 
+-    and tbl_name != '_cf_KV' 
++    and name ${ignoreTableNames}
++    and tbl_name ${ignoreTableNames}
+     and sql GLOB '*[ *' || CHAR(9) || CHAR(10) || CHAR(13) || ']AUTOINCREMENT[^'']*';`
+       );
+       for (const s2 of seq) {
+@@ -20526,7 +20543,7 @@ ${withStyle.errorWarning(
+         const fks = await db.query(
+           `SELECT m.name as "tableFrom", f.id as "id", f."table" as "tableTo", f."from", f."to", f."on_update" as "onUpdate", f."on_delete" as "onDelete", f.seq as "seq"
+       FROM sqlite_master m, pragma_foreign_key_list(m.name) as f 
+-      where m.tbl_name != '_cf_KV';`
++      where m.tbl_name ${ignoreTableNames};`
+         );
+         const fkByTableName = {};
+         for (const fkRow of fks) {
+@@ -20587,7 +20604,7 @@ FROM sqlite_master AS m,
+ WHERE 
+     m.type = 'table' 
+     and il.name NOT LIKE 'sqlite_autoindex_%'
+-    and m.tbl_name != '_cf_KV';`
++    and m.tbl_name ${ignoreTableNames};`
+       );
+       for (const idxRow of idxs) {
+         const tableName = idxRow.tableName;
+@@ -20650,7 +20667,7 @@ WHERE
+       const checkConstraints = {};
+       const checks = await db.query(`SELECT name as "tableName", sql as "sql"
+ 		FROM sqlite_master 
+-		WHERE type = 'table' AND name != 'sqlite_sequence';`);
++		WHERE type = 'table' AND name ${ignoreTableNames};`);
+       for (const check2 of checks) {
+         if (!tablesFilter(check2.tableName))
+           continue;
+@@ -21199,14 +21216,14 @@ The unique index ${source_default.underline.blue(
+ });
+ 
+ // src/serializer/index.ts
+-var import_fs4, glob, import_path4, serializeMySql, serializePg, serializeSQLite, serializeSingleStore, prepareFilenames;
++var import_fs4, glob, import_path5, serializeMySql, serializePg, serializeSQLite, serializeSingleStore, prepareFilenames;
+ var init_serializer = __esm({
+   "src/serializer/index.ts"() {
+     "use strict";
+     init_source();
+     import_fs4 = __toESM(require("fs"));
+     glob = __toESM(require_glob());
+-    import_path4 = __toESM(require("path"));
++    import_path5 = __toESM(require("path"));
+     init_views();
+     serializeMySql = async (path4, casing2) => {
+       const filenames = prepareFilenames(path4);
+@@ -21259,8 +21276,8 @@ ${filenames.join("\n")}
+       const result = path4.reduce((result2, cur) => {
+         const globbed = glob.sync(`${prefix2}${cur}`);
+         globbed.forEach((it) => {
+-          const fileName = import_fs4.default.lstatSync(it).isDirectory() ? null : import_path4.default.resolve(it);
+-          const filenames = fileName ? [fileName] : import_fs4.default.readdirSync(it).map((file) => import_path4.default.join(import_path4.default.resolve(it), file));
++          const fileName = import_fs4.default.lstatSync(it).isDirectory() ? null : import_path5.default.resolve(it);
++          const filenames = fileName ? [fileName] : import_fs4.default.readdirSync(it).map((file) => import_path5.default.join(import_path5.default.resolve(it), file));
+           filenames.filter((file) => !import_fs4.default.lstatSync(file).isDirectory()).forEach((file) => result2.add(file));
+         });
+         return result2;
+@@ -33430,7 +33447,7 @@ __export(migrate_exports, {
+   viewsResolver: () => viewsResolver,
+   writeResult: () => writeResult
+ });
+-var import_fs6, import_hanji3, import_path5, schemasResolver, tablesResolver, viewsResolver, mySqlViewsResolver, sqliteViewsResolver, sequencesResolver, roleResolver, policyResolver, indPolicyResolver, enumsResolver, columnsResolver, prepareAndMigratePg, prepareAndExportPg, preparePgPush, prepareMySQLPush, prepareAndMigrateMysql, prepareSingleStorePush, prepareAndMigrateSingleStore, prepareAndExportSinglestore, prepareAndExportMysql, prepareAndMigrateSqlite, prepareAndExportSqlite, prepareAndMigrateLibSQL, prepareAndExportLibSQL, prepareSQLitePush, prepareLibSQLPush, promptColumnsConflicts, promptNamedConflict, promptNamedWithSchemasConflict, promptSchemasConflict, BREAKPOINT, writeResult, embeddedMigrations, prepareSnapshotFolderName, two;
++var import_fs6, import_hanji3, import_path6, schemasResolver, tablesResolver, viewsResolver, mySqlViewsResolver, sqliteViewsResolver, sequencesResolver, roleResolver, policyResolver, indPolicyResolver, enumsResolver, columnsResolver, prepareAndMigratePg, prepareAndExportPg, preparePgPush, prepareMySQLPush, prepareAndMigrateMysql, prepareSingleStorePush, prepareAndMigrateSingleStore, prepareAndExportSinglestore, prepareAndExportMysql, prepareAndMigrateSqlite, prepareAndExportSqlite, prepareAndMigrateLibSQL, prepareAndExportLibSQL, prepareSQLitePush, prepareLibSQLPush, promptColumnsConflicts, promptNamedConflict, promptNamedWithSchemasConflict, promptSchemasConflict, BREAKPOINT, writeResult, embeddedMigrations, prepareSnapshotFolderName, two;
+ var init_migrate = __esm({
+   "src/cli/commands/migrate.ts"() {
+     "use strict";
+@@ -33438,7 +33455,7 @@ var init_migrate = __esm({
+     init_migrationPreparator();
+     init_source();
+     import_hanji3 = __toESM(require_hanji());
+-    import_path5 = __toESM(require("path"));
++    import_path6 = __toESM(require("path"));
+     init_singlestoreSchema();
+     init_mysqlSchema();
+     init_pgSchema();
+@@ -34392,10 +34409,10 @@ var init_migrate = __esm({
+       const { prefix: prefix2, tag } = prepareMigrationMetadata(idx, prefixMode, name);
+       const toSave = JSON.parse(JSON.stringify(cur));
+       toSave["_meta"] = _meta;
+-      const metaFolderPath = (0, import_path5.join)(outFolder, "meta");
+-      const metaJournal = (0, import_path5.join)(metaFolderPath, "_journal.json");
++      const metaFolderPath = (0, import_path6.join)(outFolder, "meta");
++      const metaJournal = (0, import_path6.join)(metaFolderPath, "_journal.json");
+       import_fs6.default.writeFileSync(
+-        (0, import_path5.join)(metaFolderPath, `${prefix2}_snapshot.json`),
++        (0, import_path6.join)(metaFolderPath, `${prefix2}_snapshot.json`),
+         JSON.stringify(toSave, null, 2)
+       );
+       const sqlDelimiter = breakpoints ? BREAKPOINT : "\n";
+@@ -34428,7 +34445,7 @@ ${sql}
+         `[${source_default.green(
+           "\u2713"
+         )}] Your SQL migration file \u279C ${source_default.bold.underline.blue(
+-          import_path5.default.join(`${outFolder}/${tag}.sql`)
++          import_path6.default.join(`${outFolder}/${tag}.sql`)
+         )} \u{1F680}`
+       );
+     };
+@@ -36602,8 +36619,8 @@ var require_ponyfill_es2018 = __commonJS({
+         return new TypeError("Cannot " + name + " a stream using a released reader");
+       }
+       function defaultReaderClosedPromiseInitialize(reader) {
+-        reader._closedPromise = newPromise((resolve2, reject) => {
+-          reader._closedPromise_resolve = resolve2;
++        reader._closedPromise = newPromise((resolve3, reject) => {
++          reader._closedPromise_resolve = resolve3;
+           reader._closedPromise_reject = reject;
+         });
+       }
+@@ -36781,8 +36798,8 @@ var require_ponyfill_es2018 = __commonJS({
+           }
+           let resolvePromise;
+           let rejectPromise;
+-          const promise = newPromise((resolve2, reject) => {
+-            resolvePromise = resolve2;
++          const promise = newPromise((resolve3, reject) => {
++            resolvePromise = resolve3;
+             rejectPromise = reject;
+           });
+           const readRequest = {
+@@ -36878,8 +36895,8 @@ var require_ponyfill_es2018 = __commonJS({
+           }
+           let resolvePromise;
+           let rejectPromise;
+-          const promise = newPromise((resolve2, reject) => {
+-            resolvePromise = resolve2;
++          const promise = newPromise((resolve3, reject) => {
++            resolvePromise = resolve3;
+             rejectPromise = reject;
+           });
+           const readRequest = {
+@@ -37712,8 +37729,8 @@ var require_ponyfill_es2018 = __commonJS({
+           }
+           let resolvePromise;
+           let rejectPromise;
+-          const promise = newPromise((resolve2, reject) => {
+-            resolvePromise = resolve2;
++          const promise = newPromise((resolve3, reject) => {
++            resolvePromise = resolve3;
+             rejectPromise = reject;
+           });
+           const readIntoRequest = {
+@@ -38010,10 +38027,10 @@ var require_ponyfill_es2018 = __commonJS({
+           wasAlreadyErroring = true;
+           reason = void 0;
+         }
+-        const promise = newPromise((resolve2, reject) => {
++        const promise = newPromise((resolve3, reject) => {
+           stream._pendingAbortRequest = {
+             _promise: void 0,
+-            _resolve: resolve2,
++            _resolve: resolve3,
+             _reject: reject,
+             _reason: reason,
+             _wasAlreadyErroring: wasAlreadyErroring
+@@ -38030,9 +38047,9 @@ var require_ponyfill_es2018 = __commonJS({
+         if (state === "closed" || state === "errored") {
+           return promiseRejectedWith(new TypeError(`The stream (in ${state} state) is not in the writable state and cannot be closed`));
+         }
+-        const promise = newPromise((resolve2, reject) => {
++        const promise = newPromise((resolve3, reject) => {
+           const closeRequest = {
+-            _resolve: resolve2,
++            _resolve: resolve3,
+             _reject: reject
+           };
+           stream._closeRequest = closeRequest;
+@@ -38045,9 +38062,9 @@ var require_ponyfill_es2018 = __commonJS({
+         return promise;
+       }
+       function WritableStreamAddWriteRequest(stream) {
+-        const promise = newPromise((resolve2, reject) => {
++        const promise = newPromise((resolve3, reject) => {
+           const writeRequest = {
+-            _resolve: resolve2,
++            _resolve: resolve3,
+             _reject: reject
+           };
+           stream._writeRequests.push(writeRequest);
+@@ -38643,8 +38660,8 @@ var require_ponyfill_es2018 = __commonJS({
+         return new TypeError("Cannot " + name + " a stream using a released writer");
+       }
+       function defaultWriterClosedPromiseInitialize(writer) {
+-        writer._closedPromise = newPromise((resolve2, reject) => {
+-          writer._closedPromise_resolve = resolve2;
++        writer._closedPromise = newPromise((resolve3, reject) => {
++          writer._closedPromise_resolve = resolve3;
+           writer._closedPromise_reject = reject;
+           writer._closedPromiseState = "pending";
+         });
+@@ -38680,8 +38697,8 @@ var require_ponyfill_es2018 = __commonJS({
+         writer._closedPromiseState = "resolved";
+       }
+       function defaultWriterReadyPromiseInitialize(writer) {
+-        writer._readyPromise = newPromise((resolve2, reject) => {
+-          writer._readyPromise_resolve = resolve2;
++        writer._readyPromise = newPromise((resolve3, reject) => {
++          writer._readyPromise_resolve = resolve3;
+           writer._readyPromise_reject = reject;
+         });
+         writer._readyPromiseState = "pending";
+@@ -38750,7 +38767,7 @@ var require_ponyfill_es2018 = __commonJS({
+         source._disturbed = true;
+         let shuttingDown = false;
+         let currentWrite = promiseResolvedWith(void 0);
+-        return newPromise((resolve2, reject) => {
++        return newPromise((resolve3, reject) => {
+           let abortAlgorithm;
+           if (signal !== void 0) {
+             abortAlgorithm = () => {
+@@ -38891,7 +38908,7 @@ var require_ponyfill_es2018 = __commonJS({
+             if (isError2) {
+               reject(error2);
+             } else {
+-              resolve2(void 0);
++              resolve3(void 0);
+             }
+           }
+         });
+@@ -39155,8 +39172,8 @@ var require_ponyfill_es2018 = __commonJS({
+         let branch1;
+         let branch2;
+         let resolveCancelPromise;
+-        const cancelPromise = newPromise((resolve2) => {
+-          resolveCancelPromise = resolve2;
++        const cancelPromise = newPromise((resolve3) => {
++          resolveCancelPromise = resolve3;
+         });
+         function pullAlgorithm() {
+           if (reading) {
+@@ -39246,8 +39263,8 @@ var require_ponyfill_es2018 = __commonJS({
+         let branch1;
+         let branch2;
+         let resolveCancelPromise;
+-        const cancelPromise = newPromise((resolve2) => {
+-          resolveCancelPromise = resolve2;
++        const cancelPromise = newPromise((resolve3) => {
++          resolveCancelPromise = resolve3;
+         });
+         function forwardReaderError(thisReader) {
+           uponRejection(thisReader._closedPromise, (r2) => {
+@@ -39936,8 +39953,8 @@ var require_ponyfill_es2018 = __commonJS({
+           const writableHighWaterMark = ExtractHighWaterMark(writableStrategy, 1);
+           const writableSizeAlgorithm = ExtractSizeAlgorithm(writableStrategy);
+           let startPromise_resolve;
+-          const startPromise = newPromise((resolve2) => {
+-            startPromise_resolve = resolve2;
++          const startPromise = newPromise((resolve3) => {
++            startPromise_resolve = resolve3;
+           });
+           InitializeTransformStream(this, startPromise, writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark, readableSizeAlgorithm);
+           SetUpTransformStreamDefaultControllerFromTransformer(this, transformer);
+@@ -40028,8 +40045,8 @@ var require_ponyfill_es2018 = __commonJS({
+         if (stream._backpressureChangePromise !== void 0) {
+           stream._backpressureChangePromise_resolve();
+         }
+-        stream._backpressureChangePromise = newPromise((resolve2) => {
+-          stream._backpressureChangePromise_resolve = resolve2;
++        stream._backpressureChangePromise = newPromise((resolve3) => {
++          stream._backpressureChangePromise_resolve = resolve3;
+         });
+         stream._backpressure = backpressure;
+       }
+@@ -42040,7 +42057,7 @@ var init_abort_error = __esm({
+ 
+ // ../node_modules/.pnpm/node-fetch@3.3.2/node_modules/node-fetch/src/index.js
+ async function fetch2(url, options_) {
+-  return new Promise((resolve2, reject) => {
++  return new Promise((resolve3, reject) => {
+     const request = new Request2(url, options_);
+     const { parsedURL, options } = getNodeRequestOptions(request);
+     if (!supportedSchemas.has(parsedURL.protocol)) {
+@@ -42049,7 +42066,7 @@ async function fetch2(url, options_) {
+     if (parsedURL.protocol === "data:") {
+       const data = dist_default(request.url);
+       const response2 = new Response2(data, { headers: { "Content-Type": data.typeFull } });
+-      resolve2(response2);
++      resolve3(response2);
+       return;
+     }
+     const send = (parsedURL.protocol === "https:" ? import_node_https.default : import_node_http2.default).request;
+@@ -42171,7 +42188,7 @@ async function fetch2(url, options_) {
+             if (responseReferrerPolicy) {
+               requestOptions.referrerPolicy = responseReferrerPolicy;
+             }
+-            resolve2(fetch2(new Request2(locationURL, requestOptions)));
++            resolve3(fetch2(new Request2(locationURL, requestOptions)));
+             finalize();
+             return;
+           }
+@@ -42204,7 +42221,7 @@ async function fetch2(url, options_) {
+       const codings = headers.get("Content-Encoding");
+       if (!request.compress || request.method === "HEAD" || codings === null || response_.statusCode === 204 || response_.statusCode === 304) {
+         response = new Response2(body, responseOptions);
+-        resolve2(response);
++        resolve3(response);
+         return;
+       }
+       const zlibOptions = {
+@@ -42218,7 +42235,7 @@ async function fetch2(url, options_) {
+           }
+         });
+         response = new Response2(body, responseOptions);
+-        resolve2(response);
++        resolve3(response);
+         return;
+       }
+       if (codings === "deflate" || codings === "x-deflate") {
+@@ -42242,12 +42259,12 @@ async function fetch2(url, options_) {
+             });
+           }
+           response = new Response2(body, responseOptions);
+-          resolve2(response);
++          resolve3(response);
+         });
+         raw2.once("end", () => {
+           if (!response) {
+             response = new Response2(body, responseOptions);
+-            resolve2(response);
++            resolve3(response);
+           }
+         });
+         return;
+@@ -42259,11 +42276,11 @@ async function fetch2(url, options_) {
+           }
+         });
+         response = new Response2(body, responseOptions);
+-        resolve2(response);
++        resolve3(response);
+         return;
+       }
+       response = new Response2(body, responseOptions);
+-      resolve2(response);
++      resolve3(response);
+     });
+     writeToStream(request_, request).catch(reject);
+   });
+@@ -42483,10 +42500,10 @@ var require_node_gyp_build = __commonJS({
+         if (debug)
+           return debug;
+       }
+-      var prebuild = resolve2(dir);
++      var prebuild = resolve3(dir);
+       if (prebuild)
+         return prebuild;
+-      var nearby = resolve2(path4.dirname(process.execPath));
++      var nearby = resolve3(path4.dirname(process.execPath));
+       if (nearby)
+         return nearby;
+       var target = [
+@@ -42503,7 +42520,7 @@ var require_node_gyp_build = __commonJS({
+         // eslint-disable-line
+       ].filter(Boolean).join(" ");
+       throw new Error("No native build was found for " + target + "\n    loaded from: " + dir + "\n");
+-      function resolve2(dir2) {
++      function resolve3(dir2) {
+         var tuples = readdirSync2(path4.join(dir2, "prebuilds")).map(parseTuple);
+         var tuple = tuples.filter(matchTuple(platform, arch)).sort(compareTuples)[0];
+         if (!tuple)
+@@ -48176,13 +48193,13 @@ var require_dist_cjs13 = __commonJS({
+         ...data.default && { default: data.default }
+       }
+     ), "getConfigData");
+-    var import_path8 = require("path");
++    var import_path9 = require("path");
+     var import_getHomeDir = require_getHomeDir();
+     var ENV_CONFIG_PATH = "AWS_CONFIG_FILE";
+-    var getConfigFilepath = /* @__PURE__ */ __name(() => process.env[ENV_CONFIG_PATH] || (0, import_path8.join)((0, import_getHomeDir.getHomeDir)(), ".aws", "config"), "getConfigFilepath");
++    var getConfigFilepath = /* @__PURE__ */ __name(() => process.env[ENV_CONFIG_PATH] || (0, import_path9.join)((0, import_getHomeDir.getHomeDir)(), ".aws", "config"), "getConfigFilepath");
+     var import_getHomeDir2 = require_getHomeDir();
+     var ENV_CREDENTIALS_PATH = "AWS_SHARED_CREDENTIALS_FILE";
+-    var getCredentialsFilepath = /* @__PURE__ */ __name(() => process.env[ENV_CREDENTIALS_PATH] || (0, import_path8.join)((0, import_getHomeDir2.getHomeDir)(), ".aws", "credentials"), "getCredentialsFilepath");
++    var getCredentialsFilepath = /* @__PURE__ */ __name(() => process.env[ENV_CREDENTIALS_PATH] || (0, import_path9.join)((0, import_getHomeDir2.getHomeDir)(), ".aws", "credentials"), "getCredentialsFilepath");
+     var prefixKeyRegex = /^([\w-]+)\s(["'])?([\w-@\+\.%:/]+)\2$/;
+     var profileNameBlockList = ["__proto__", "profile __proto__"];
+     var parseIni = /* @__PURE__ */ __name((iniData) => {
+@@ -49336,7 +49353,7 @@ var require_dist_cjs20 = __commonJS({
+         this.refillTokenBucket();
+         if (amount > this.currentCapacity) {
+           const delay = (amount - this.currentCapacity) / this.fillRate * 1e3;
+-          await new Promise((resolve2) => setTimeout(resolve2, delay));
++          await new Promise((resolve3) => setTimeout(resolve3, delay));
+         }
+         this.currentCapacity = this.currentCapacity - amount;
+       }
+@@ -50304,18 +50321,18 @@ var require_dist_cjs28 = __commonJS({
+       let hasError = false;
+       if (expect === "100-continue") {
+         await Promise.race([
+-          new Promise((resolve2) => {
+-            timeoutId = Number(setTimeout(resolve2, Math.max(MIN_WAIT_TIME, maxContinueTimeoutMs)));
++          new Promise((resolve3) => {
++            timeoutId = Number(setTimeout(resolve3, Math.max(MIN_WAIT_TIME, maxContinueTimeoutMs)));
+           }),
+-          new Promise((resolve2) => {
++          new Promise((resolve3) => {
+             httpRequest.on("continue", () => {
+               clearTimeout(timeoutId);
+-              resolve2();
++              resolve3();
+             });
+             httpRequest.on("error", () => {
+               hasError = true;
+               clearTimeout(timeoutId);
+-              resolve2();
++              resolve3();
+             });
+           })
+         ]);
+@@ -50351,13 +50368,13 @@ var require_dist_cjs28 = __commonJS({
+       constructor(options) {
+         this.socketWarningTimestamp = 0;
+         this.metadata = { handlerProtocol: "http/1.1" };
+-        this.configProvider = new Promise((resolve2, reject) => {
++        this.configProvider = new Promise((resolve3, reject) => {
+           if (typeof options === "function") {
+             options().then((_options) => {
+-              resolve2(this.resolveDefaultConfig(_options));
++              resolve3(this.resolveDefaultConfig(_options));
+             }).catch(reject);
+           } else {
+-            resolve2(this.resolveDefaultConfig(options));
++            resolve3(this.resolveDefaultConfig(options));
+           }
+         });
+       }
+@@ -50437,7 +50454,7 @@ var require_dist_cjs28 = __commonJS({
+         let socketCheckTimeoutId;
+         return new Promise((_resolve, _reject) => {
+           let writeRequestBodyPromise = void 0;
+-          const resolve2 = /* @__PURE__ */ __name(async (arg) => {
++          const resolve3 = /* @__PURE__ */ __name(async (arg) => {
+             await writeRequestBodyPromise;
+             clearTimeout(socketCheckTimeoutId);
+             _resolve(arg);
+@@ -50494,7 +50511,7 @@ var require_dist_cjs28 = __commonJS({
+               headers: getTransformedHeaders(res.headers),
+               body: res
+             });
+-            resolve2({ response: httpResponse });
++            resolve3({ response: httpResponse });
+           });
+           req.on("error", (err2) => {
+             if (NODEJS_TIMEOUT_ERROR_CODES.includes(err2.code)) {
+@@ -50671,13 +50688,13 @@ var require_dist_cjs28 = __commonJS({
+       constructor(options) {
+         this.metadata = { handlerProtocol: "h2" };
+         this.connectionManager = new NodeHttp2ConnectionManager({});
+-        this.configProvider = new Promise((resolve2, reject) => {
++        this.configProvider = new Promise((resolve3, reject) => {
+           if (typeof options === "function") {
+             options().then((opts) => {
+-              resolve2(opts || {});
++              resolve3(opts || {});
+             }).catch(reject);
+           } else {
+-            resolve2(options || {});
++            resolve3(options || {});
+           }
+         });
+       }
+@@ -50707,7 +50724,7 @@ var require_dist_cjs28 = __commonJS({
+           var _a;
+           let fulfilled = false;
+           let writeRequestBodyPromise = void 0;
+-          const resolve2 = /* @__PURE__ */ __name(async (arg) => {
++          const resolve3 = /* @__PURE__ */ __name(async (arg) => {
+             await writeRequestBodyPromise;
+             _resolve(arg);
+           }, "resolve");
+@@ -50763,7 +50780,7 @@ var require_dist_cjs28 = __commonJS({
+               body: req
+             });
+             fulfilled = true;
+-            resolve2({ response: httpResponse });
++            resolve3({ response: httpResponse });
+             if (disableConcurrentStreams) {
+               session.close();
+               this.connectionManager.deleteSession(authority, session);
+@@ -50846,7 +50863,7 @@ var require_dist_cjs28 = __commonJS({
+       if (isReadableStreamInstance(stream)) {
+         return collectReadableStream(stream);
+       }
+-      return new Promise((resolve2, reject) => {
++      return new Promise((resolve3, reject) => {
+         const collector = new Collector();
+         stream.pipe(collector);
+         stream.on("error", (err2) => {
+@@ -50856,7 +50873,7 @@ var require_dist_cjs28 = __commonJS({
+         collector.on("error", reject);
+         collector.on("finish", function() {
+           const bytes = new Uint8Array(Buffer.concat(this.bufferedBytes));
+-          resolve2(bytes);
++          resolve3(bytes);
+         });
+       });
+     }, "streamCollector");
+@@ -50917,7 +50934,7 @@ var require_dist_cjs29 = __commonJS({
+     var import_protocol_http = require_dist_cjs2();
+     var import_querystring_builder = require_dist_cjs27();
+     function requestTimeout(timeoutInMs = 0) {
+-      return new Promise((resolve2, reject) => {
++      return new Promise((resolve3, reject) => {
+         if (timeoutInMs) {
+           setTimeout(() => {
+             const timeoutError = new Error(`Request did not complete within ${timeoutInMs} ms`);
+@@ -51026,7 +51043,7 @@ var require_dist_cjs29 = __commonJS({
+         ];
+         if (abortSignal) {
+           raceOfPromises.push(
+-            new Promise((resolve2, reject) => {
++            new Promise((resolve3, reject) => {
+               abortSignal.onabort = () => {
+                 const abortError = new Error("Request aborted");
+                 abortError.name = "AbortError";
+@@ -51086,7 +51103,7 @@ var require_dist_cjs29 = __commonJS({
+     }
+     __name(collectStream, "collectStream");
+     function readToBase64(blob) {
+-      return new Promise((resolve2, reject) => {
++      return new Promise((resolve3, reject) => {
+         const reader = new FileReader();
+         reader.onloadend = () => {
+           if (reader.readyState !== 2) {
+@@ -51095,7 +51112,7 @@ var require_dist_cjs29 = __commonJS({
+           const result = reader.result ?? "";
+           const commaIndex = result.indexOf(",");
+           const dataOffset = commaIndex > -1 ? commaIndex + 1 : result.length;
+-          resolve2(result.substring(dataOffset));
++          resolve3(result.substring(dataOffset));
+         };
+         reader.onabort = () => reject(new Error("Read aborted"));
+         reader.onerror = () => reject(reader.error);
+@@ -52674,7 +52691,7 @@ var require_dist_cjs33 = __commonJS({
+               const delayFromResponse = getDelayFromRetryAfterHeader(err2.$response);
+               const delay = Math.max(delayFromResponse || 0, delayFromDecider);
+               totalDelay += delay;
+-              await new Promise((resolve2) => setTimeout(resolve2, delay));
++              await new Promise((resolve3) => setTimeout(resolve3, delay));
+               continue;
+             }
+             if (!err2.$metadata) {
+@@ -52842,7 +52859,7 @@ var require_dist_cjs33 = __commonJS({
+             attempts = retryToken.getRetryCount();
+             const delay = retryToken.getRetryDelay();
+             totalRetryDelay += delay;
+-            await new Promise((resolve2) => setTimeout(resolve2, delay));
++            await new Promise((resolve3) => setTimeout(resolve3, delay));
+           }
+         }
+       } else {
+@@ -53545,11 +53562,11 @@ function __metadata(metadataKey, metadataValue) {
+ }
+ function __awaiter(thisArg, _arguments, P, generator) {
+   function adopt(value) {
+-    return value instanceof P ? value : new P(function(resolve2) {
+-      resolve2(value);
++    return value instanceof P ? value : new P(function(resolve3) {
++      resolve3(value);
+     });
+   }
+-  return new (P || (P = Promise))(function(resolve2, reject) {
++  return new (P || (P = Promise))(function(resolve3, reject) {
+     function fulfilled(value) {
+       try {
+         step(generator.next(value));
+@@ -53565,7 +53582,7 @@ function __awaiter(thisArg, _arguments, P, generator) {
+       }
+     }
+     function step(result) {
+-      result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
++      result.done ? resolve3(result.value) : adopt(result.value).then(fulfilled, rejected);
+     }
+     step((generator = generator.apply(thisArg, _arguments || [])).next());
+   });
+@@ -53779,14 +53796,14 @@ function __asyncValues(o) {
+   }, i2);
+   function verb(n) {
+     i2[n] = o[n] && function(v) {
+-      return new Promise(function(resolve2, reject) {
+-        v = o[n](v), settle(resolve2, reject, v.done, v.value);
++      return new Promise(function(resolve3, reject) {
++        v = o[n](v), settle(resolve3, reject, v.done, v.value);
+       });
+     };
+   }
+-  function settle(resolve2, reject, d, v) {
++  function settle(resolve3, reject, d, v) {
+     Promise.resolve(v).then(function(v2) {
+-      resolve2({ value: v2, done: d });
++      resolve3({ value: v2, done: d });
+     }, reject);
+   }
+ }
+@@ -56904,11 +56921,11 @@ function __metadata2(metadataKey, metadataValue) {
+ }
+ function __awaiter2(thisArg, _arguments, P, generator) {
+   function adopt(value) {
+-    return value instanceof P ? value : new P(function(resolve2) {
+-      resolve2(value);
++    return value instanceof P ? value : new P(function(resolve3) {
++      resolve3(value);
+     });
+   }
+-  return new (P || (P = Promise))(function(resolve2, reject) {
++  return new (P || (P = Promise))(function(resolve3, reject) {
+     function fulfilled(value) {
+       try {
+         step(generator.next(value));
+@@ -56924,7 +56941,7 @@ function __awaiter2(thisArg, _arguments, P, generator) {
+       }
+     }
+     function step(result) {
+-      result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
++      result.done ? resolve3(result.value) : adopt(result.value).then(fulfilled, rejected);
+     }
+     step((generator = generator.apply(thisArg, _arguments || [])).next());
+   });
+@@ -57130,14 +57147,14 @@ function __asyncValues2(o) {
+   }, i2);
+   function verb(n) {
+     i2[n] = o[n] && function(v) {
+-      return new Promise(function(resolve2, reject) {
+-        v = o[n](v), settle(resolve2, reject, v.done, v.value);
++      return new Promise(function(resolve3, reject) {
++        v = o[n](v), settle(resolve3, reject, v.done, v.value);
+       });
+     };
+   }
+-  function settle(resolve2, reject, d, v) {
++  function settle(resolve3, reject, d, v) {
+     Promise.resolve(v).then(function(v2) {
+-      resolve2({ value: v2, done: d });
++      resolve3({ value: v2, done: d });
+     }, reject);
+   }
+ }
+@@ -57521,7 +57538,7 @@ var require_dist_cjs39 = __commonJS({
+     var import_buffer2 = require("buffer");
+     var import_http3 = require("http");
+     function httpRequest(options) {
+-      return new Promise((resolve2, reject) => {
++      return new Promise((resolve3, reject) => {
+         var _a;
+         const req = (0, import_http3.request)({
+           method: "GET",
+@@ -57551,7 +57568,7 @@ var require_dist_cjs39 = __commonJS({
+             chunks.push(chunk);
+           });
+           res.on("end", () => {
+-            resolve2(import_buffer2.Buffer.concat(chunks));
++            resolve3(import_buffer2.Buffer.concat(chunks));
+             req.destroy();
+           });
+         });
+@@ -57983,7 +58000,7 @@ var require_retry_wrapper = __commonJS({
+           try {
+             return await toRetry();
+           } catch (e2) {
+-            await new Promise((resolve2) => setTimeout(resolve2, delayMs));
++            await new Promise((resolve3) => setTimeout(resolve3, delayMs));
+           }
+         }
+         return await toRetry();
+@@ -59352,9 +59369,9 @@ var require_dist_cjs46 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/auth/httpAuthSchemeProvider.js
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/auth/httpAuthSchemeProvider.js
+ var require_httpAuthSchemeProvider3 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/auth/httpAuthSchemeProvider.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/auth/httpAuthSchemeProvider.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.resolveHttpAuthSchemeConfig = exports2.defaultSSOOIDCHttpAuthSchemeProvider = exports2.defaultSSOOIDCHttpAuthSchemeParametersProvider = void 0;
+@@ -59421,9 +59438,9 @@ var require_httpAuthSchemeProvider3 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/package.json
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/package.json
+ var require_package4 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/package.json"(exports2, module2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/package.json"(exports2, module2) {
+     module2.exports = {
+       name: "@aws-sdk/client-sso-oidc",
+       description: "AWS SDK for JavaScript Sso Oidc Client for Node.js, Browser and React Native",
+@@ -59527,9 +59544,9 @@ var require_package4 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/ruleset.js
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/ruleset.js
+ var require_ruleset2 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/ruleset.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/ruleset.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.ruleSet = void 0;
+@@ -59562,9 +59579,9 @@ var require_ruleset2 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/endpointResolver.js
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/endpointResolver.js
+ var require_endpointResolver2 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/endpointResolver.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/endpoint/endpointResolver.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.defaultEndpointResolver = void 0;
+@@ -59582,9 +59599,9 @@ var require_endpointResolver2 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.shared.js
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.shared.js
+ var require_runtimeConfig_shared2 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.shared.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.shared.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.getRuntimeConfig = void 0;
+@@ -59628,9 +59645,9 @@ var require_runtimeConfig_shared2 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.js
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.js
+ var require_runtimeConfig2 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/runtimeConfig.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.getRuntimeConfig = void 0;
+@@ -59681,9 +59698,9 @@ var require_runtimeConfig2 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/index.js
++// ../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/index.js
+ var require_dist_cjs47 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0_@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/index.js"(exports2, module2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sso-oidc/dist-cjs/index.js"(exports2, module2) {
+     "use strict";
+     var __defProp3 = Object.defineProperty;
+     var __getOwnPropDesc3 = Object.getOwnPropertyDescriptor;
+@@ -61029,9 +61046,9 @@ Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.ht
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthSchemeProvider.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthSchemeProvider.js
+ var require_httpAuthSchemeProvider4 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthSchemeProvider.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthSchemeProvider.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.resolveHttpAuthSchemeConfig = exports2.resolveStsAuthConfig = exports2.defaultSTSHttpAuthSchemeProvider = exports2.defaultSTSHttpAuthSchemeParametersProvider = void 0;
+@@ -61101,9 +61118,9 @@ var require_httpAuthSchemeProvider4 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/EndpointParameters.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/EndpointParameters.js
+ var require_EndpointParameters = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/EndpointParameters.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/EndpointParameters.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.commonParams = exports2.resolveClientEndpointParameters = void 0;
+@@ -61127,9 +61144,9 @@ var require_EndpointParameters = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/package.json
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/package.json
+ var require_package5 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/package.json"(exports2, module2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/package.json"(exports2, module2) {
+     module2.exports = {
+       name: "@aws-sdk/client-sts",
+       description: "AWS SDK for JavaScript Sts Client for Node.js, Browser and React Native",
+@@ -61235,9 +61252,9 @@ var require_package5 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/ruleset.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/ruleset.js
+ var require_ruleset3 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/ruleset.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/ruleset.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.ruleSet = void 0;
+@@ -61282,9 +61299,9 @@ var require_ruleset3 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/endpointResolver.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/endpointResolver.js
+ var require_endpointResolver3 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/endpointResolver.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/endpoint/endpointResolver.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.defaultEndpointResolver = void 0;
+@@ -61302,9 +61319,9 @@ var require_endpointResolver3 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.shared.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.shared.js
+ var require_runtimeConfig_shared3 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.shared.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.shared.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.getRuntimeConfig = void 0;
+@@ -61348,9 +61365,9 @@ var require_runtimeConfig_shared3 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.js
+ var require_runtimeConfig3 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeConfig.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.getRuntimeConfig = void 0;
+@@ -61414,9 +61431,9 @@ var require_runtimeConfig3 = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthExtensionConfiguration.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthExtensionConfiguration.js
+ var require_httpAuthExtensionConfiguration = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthExtensionConfiguration.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/auth/httpAuthExtensionConfiguration.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.resolveHttpAuthRuntimeConfig = exports2.getHttpAuthExtensionConfiguration = void 0;
+@@ -61462,9 +61479,9 @@ var require_httpAuthExtensionConfiguration = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeExtensions.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeExtensions.js
+ var require_runtimeExtensions = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeExtensions.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/runtimeExtensions.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.resolveRuntimeExtensions = void 0;
+@@ -61493,9 +61510,9 @@ var require_runtimeExtensions = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/STSClient.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/STSClient.js
+ var require_STSClient = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/STSClient.js"(exports2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/STSClient.js"(exports2) {
+     "use strict";
+     Object.defineProperty(exports2, "__esModule", { value: true });
+     exports2.STSClient = exports2.__Client = void 0;
+@@ -61557,9 +61574,9 @@ var require_STSClient = __commonJS({
+   }
+ });
+ 
+-// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/index.js
++// ../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/index.js
+ var require_dist_cjs50 = __commonJS({
+-  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/index.js"(exports2, module2) {
++  "../node_modules/.pnpm/@aws-sdk+client-sts@3.583.0_@aws-sdk+client-sso-oidc@3.583.0/node_modules/@aws-sdk/client-sts/dist-cjs/index.js"(exports2, module2) {
+     "use strict";
+     var __defProp3 = Object.defineProperty;
+     var __getOwnPropDesc3 = Object.getOwnPropertyDescriptor;
+@@ -72545,14 +72562,14 @@ var require_event = __commonJS({
+         this._done = false;
+         let futReject = null;
+         let futResolve = null;
+-        this._promise = new Promise((resolve2, reject) => {
++        this._promise = new Promise((resolve3, reject) => {
+           futReject = (reason) => {
+             this._done = true;
+             reject(reason);
+           };
+           futResolve = (value) => {
+             this._done = true;
+-            resolve2(value);
++            resolve3(value);
+           };
+         });
+         if (!futReject || !futResolve) {
+@@ -72583,8 +72600,8 @@ var require_queues = __commonJS({
+         this._promises = [];
+       }
+       _add() {
+-        this._promises.push(new Promise((resolve2, reject) => {
+-          this._resolvers.push(resolve2);
++        this._promises.push(new Promise((resolve3, reject) => {
++          this._resolvers.push(resolve3);
+           this._rejecters.push(reject);
+         }));
+       }
+@@ -72592,12 +72609,12 @@ var require_queues = __commonJS({
+         if (!this._resolvers.length) {
+           this._add();
+         }
+-        const resolve2 = this._resolvers.shift();
++        const resolve3 = this._resolvers.shift();
+         this._rejecters.shift();
+-        if (!resolve2) {
++        if (!resolve3) {
+           throw new errors_1.InternalClientError("resolve function was null or undefined when attempting to push.");
+         }
+-        resolve2(item);
++        resolve3(item);
+       }
+       get() {
+         if (!this._promises.length) {
+@@ -73644,10 +73661,10 @@ var require_systemUtils = __commonJS({
+         input: node_process_1.default.stdin,
+         output
+       });
+-      return new Promise((resolve2) => {
++      return new Promise((resolve3) => {
+         rl.question(message, (val2) => {
+           rl.close();
+-          resolve2(val2);
++          resolve3(val2);
+         });
+         silent = true;
+       });
+@@ -82010,18 +82027,17 @@ var init_push = __esm({
+           (0, import_hanji13.render)(`
+ [${source_default.blue("i")}] No changes detected`);
+         } else {
+-          if (!("driver" in credentials2)) {
+-            await db.run("begin");
+-            try {
+-              for (const dStmnt of statementsToExecute) {
+-                await db.run(dStmnt);
+-              }
+-              await db.run("commit");
+-            } catch (e2) {
+-              console.error(e2);
+-              await db.run("rollback");
+-              process.exit(1);
++          const isNotD1 = !("driver" in credentials2 && credentials2.driver === "d1-http");
++          isNotD1 ?? await db.run("begin");
++          try {
++            for (const dStmnt of statementsToExecute) {
++              await db.run(dStmnt);
+             }
++            isNotD1 ?? await db.run("commit");
++          } catch (e2) {
++            console.error(e2);
++            isNotD1 ?? await db.run("rollback");
++            process.exit(1);
+           }
+           (0, import_hanji13.render)(`[${source_default.green("\u2713")}] Changes applied`);
+         }
+@@ -85654,7 +85670,7 @@ __export(introspect_exports, {
+   introspectSqlite: () => introspectSqlite,
+   relationsToTypeScript: () => relationsToTypeScript
+ });
+-var import_fs11, import_hanji14, import_path7, import_pluralize, introspectPostgres, introspectGel, introspectMysql, introspectSingleStore, introspectSqlite, introspectLibSQL, withCasing4, relationsToTypeScript;
++var import_fs11, import_hanji14, import_path8, import_pluralize, introspectPostgres, introspectGel, introspectMysql, introspectSingleStore, introspectSqlite, introspectLibSQL, withCasing4, relationsToTypeScript;
+ var init_introspect = __esm({
+   "src/cli/commands/introspect.ts"() {
+     "use strict";
+@@ -85662,7 +85678,7 @@ var init_introspect = __esm({
+     import_fs11 = require("fs");
+     import_hanji14 = __toESM(require_hanji());
+     init_mjs();
+-    import_path7 = require("path");
++    import_path8 = require("path");
+     import_pluralize = __toESM(require_pluralize());
+     init_singlestoreSchema();
+     init_global();
+@@ -85725,9 +85741,9 @@ var init_introspect = __esm({
+       const ts = schemaToTypeScript4(schema6, casing2);
+       const relationsTs = relationsToTypeScript(schema6, casing2);
+       const { internal, ...schemaWithoutInternals } = schema6;
+-      const schemaFile = (0, import_path7.join)(out, "schema.ts");
++      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+       (0, import_fs11.writeFileSync)(schemaFile, ts.file);
+-      const relationsFile = (0, import_path7.join)(out, "relations.ts");
++      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+       (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
+       console.log();
+       const { snapshots, journal } = prepareOutFolder(out, "postgresql");
+@@ -85820,9 +85836,9 @@ var init_introspect = __esm({
+       const ts = schemaToTypeScript2(schema6, casing2);
+       const relationsTs = relationsToTypeScript(schema6, casing2);
+       const { internal, ...schemaWithoutInternals } = schema6;
+-      const schemaFile = (0, import_path7.join)(out, "schema.ts");
++      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+       (0, import_fs11.writeFileSync)(schemaFile, ts.file);
+-      const relationsFile = (0, import_path7.join)(out, "relations.ts");
++      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+       (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
+       console.log();
+       (0, import_hanji14.render)(
+@@ -85875,9 +85891,9 @@ var init_introspect = __esm({
+       const ts = schemaToTypeScript3(schema6, casing2);
+       const relationsTs = relationsToTypeScript(schema6, casing2);
+       const { internal, ...schemaWithoutInternals } = schema6;
+-      const schemaFile = (0, import_path7.join)(out, "schema.ts");
++      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+       (0, import_fs11.writeFileSync)(schemaFile, ts.file);
+-      const relationsFile = (0, import_path7.join)(out, "relations.ts");
++      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+       (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
+       console.log();
+       const { snapshots, journal } = prepareOutFolder(out, "mysql");
+@@ -85957,7 +85973,7 @@ var init_introspect = __esm({
+       const schema6 = { id: originUUID, prevId: "", ...res };
+       const ts = schemaToTypeScript5(schema6, casing2);
+       const { internal, ...schemaWithoutInternals } = schema6;
+-      const schemaFile = (0, import_path7.join)(out, "schema.ts");
++      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+       (0, import_fs11.writeFileSync)(schemaFile, ts.file);
+       console.log();
+       const { snapshots, journal } = prepareOutFolder(out, "postgresql");
+@@ -86030,9 +86046,9 @@ var init_introspect = __esm({
+       const schema6 = { id: originUUID, prevId: "", ...res };
+       const ts = schemaToTypeScript(schema6, casing2);
+       const relationsTs = relationsToTypeScript(schema6, casing2);
+-      const schemaFile = (0, import_path7.join)(out, "schema.ts");
++      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+       (0, import_fs11.writeFileSync)(schemaFile, ts.file);
+-      const relationsFile = (0, import_path7.join)(out, "relations.ts");
++      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+       (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
+       console.log();
+       const { snapshots, journal } = prepareOutFolder(out, "sqlite");
+@@ -86112,9 +86128,9 @@ var init_introspect = __esm({
+       const schema6 = { id: originUUID, prevId: "", ...res };
+       const ts = schemaToTypeScript(schema6, casing2);
+       const relationsTs = relationsToTypeScript(schema6, casing2);
+-      const schemaFile = (0, import_path7.join)(out, "schema.ts");
++      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+       (0, import_fs11.writeFileSync)(schemaFile, ts.file);
+-      const relationsFile = (0, import_path7.join)(out, "relations.ts");
++      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+       (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
+       console.log();
+       const { snapshots, journal } = prepareOutFolder(out, "sqlite");
+@@ -90144,9 +90160,9 @@ var require_clone = __commonJS2({
+           } else if (_instanceof(parent2, nativeSet)) {
+             child = new nativeSet();
+           } else if (_instanceof(parent2, nativePromise)) {
+-            child = new nativePromise(function(resolve2, reject) {
++            child = new nativePromise(function(resolve3, reject) {
+               parent2.then(function(value) {
+-                resolve2(_clone(value, depth2 - 1));
++                resolve3(_clone(value, depth2 - 1));
+               }, function(err2) {
+                 reject(_clone(err2, depth2 - 1));
+               });
+@@ -91610,9 +91626,9 @@ var import_promises = require("fs/promises");
+ var import_node_child_process = require("node:child_process");
+ var import_path2 = require("path");
+ function runCommand(command, options = {}) {
+-  return new Promise((resolve2) => {
++  return new Promise((resolve3) => {
+     (0, import_node_child_process.exec)(command, options, (error2) => {
+-      return resolve2({ exitCode: (error2 == null ? void 0 : error2.code) ?? 0 });
++      return resolve3({ exitCode: (error2 == null ? void 0 : error2.code) ?? 0 });
+     });
+   });
+ }
+@@ -91681,14 +91697,14 @@ init_source();
+ var import_fs7 = require("fs");
+ var import_fs8 = __toESM(require("fs"));
+ var import_hanji4 = __toESM(require_hanji());
+-var import_path6 = require("path");
++var import_path7 = require("path");
+ init_views();
+ init_migrate();
+ var dropMigration = async ({
+   out,
+   bundle
+ }) => {
+-  const metaFilePath = (0, import_path6.join)(out, "meta", "_journal.json");
++  const metaFilePath = (0, import_path7.join)(out, "meta", "_journal.json");
+   const journal = JSON.parse((0, import_fs7.readFileSync)(metaFilePath, "utf-8"));
+   if (journal.entries.length === 0) {
+     console.log(
+@@ -91704,8 +91720,8 @@ var dropMigration = async ({
+     ...journal,
+     entries: journal.entries.filter(Boolean)
+   };
+-  const sqlFilePath = (0, import_path6.join)(out, `${result.data.tag}.sql`);
+-  const snapshotFilePath = (0, import_path6.join)(
++  const sqlFilePath = (0, import_path7.join)(out, `${result.data.tag}.sql`);
++  const snapshotFilePath = (0, import_path7.join)(
+     out,
+     "meta",
+     `${result.data.tag.split("_")[0]}_snapshot.json`
+@@ -91715,7 +91731,7 @@ var dropMigration = async ({
+   (0, import_fs7.writeFileSync)(metaFilePath, JSON.stringify(resultJournal, null, 2));
+   if (bundle) {
+     import_fs8.default.writeFileSync(
+-      (0, import_path6.join)(out, `migrations.js`),
++      (0, import_path7.join)(out, `migrations.js`),
+       embeddedMigrations(resultJournal)
+     );
+   }
+diff --git a/utils.js b/utils.js
+index 7138fccccb595df131ddb9ad36deb33dc8717b63..26110c69c876779641eaa582e4fa722fb2f18361 100644
+--- a/utils.js
++++ b/utils.js
+@@ -6211,7 +6211,14 @@ var kloudMeta = () => {
+     sqlite: []
+   };
+ };
++var mkdirSQLiteUrl = (it) => {
++  if (it.startsWith("file:")) {
++    it = it.substring(5);
++  }
++  (0, import_fs.mkdirSync)((0, import_path.dirname)(it), { recursive: true });
++};
+ var normaliseSQLiteUrl = (it, type) => {
++  mkdirSQLiteUrl(it);
+   if (type === "libsql") {
+     if (it.startsWith("file:")) {
+       return it;
+diff --git a/utils.mjs b/utils.mjs
+index 8551a871b73287ffb7640536eb803e416f73d8fc..0415dec8ab1c944507534c2681c3339e8e553d0e 100644
+--- a/utils.mjs
++++ b/utils.mjs
+@@ -1053,7 +1053,7 @@ var source_default = chalk;
+ 
+ // src/utils.ts
+ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs";
+-import { join } from "path";
++import { dirname, join } from "path";
+ import { parse } from "url";
+ 
+ // src/cli/views.ts
+@@ -6188,7 +6188,14 @@ var kloudMeta = () => {
+     sqlite: []
+   };
+ };
++var mkdirSQLiteUrl = (it) => {
++  if (it.startsWith("file:")) {
++    it = it.substring(5);
++  }
++  mkdirSync(dirname(it), { recursive: true });
++};
+ var normaliseSQLiteUrl = (it, type) => {
++  mkdirSQLiteUrl(it);
+   if (type === "libsql") {
+     if (it.startsWith("file:")) {
+       return it;
