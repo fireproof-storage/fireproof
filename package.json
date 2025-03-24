@@ -70,7 +70,7 @@
     "eslint-plugin-import": "^2.31.0",
     "hono": "^4.7.4",
     "playwright": "^1.51.0",
-    "playwright-chromium": "^1.51.0",
+    "playwright-chromium": "^1.51.1",
     "prettier": "^3.4.2",
     "react": "^18.3.1",
     "semver": "^7.7.1",
