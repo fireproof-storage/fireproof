@@ -139,7 +139,6 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
     {
       match: MsgIsBindGetMeta,
       fn: (ctx, msg: MsgWithConnAuth<BindGetMeta>) => {
-        // console.log("MsgIsBindGetMeta", msg);
         return ctx.impl.handleBindGetMeta(ctx, msg);
       },
     },

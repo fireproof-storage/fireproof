@@ -3,8 +3,8 @@ import { ByConnection } from "./meta-merger.js";
 // import { TenantLedgerSql } from "./tenant-ledger.js";
 import { foreignKey, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sqlTenantLedger } from "./tenant-ledger.js";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, inArray } from "drizzle-orm/expressions";
+import { DrizzleDatebase } from "../hono-server.js";
 
 export interface KeysForTenantLedger {
   readonly tenant: string;
@@ -57,10 +57,10 @@ export class KeyByTenantLedgerSql {
   //   ];
   // }
 
-  readonly db: LibSQLDatabase;
+  readonly db: DrizzleDatebase;
   // readonly tenantLedgerSql: TenantLedgerSql;
   readonly id: string;
-  constructor(id: string, db: LibSQLDatabase) {
+  constructor(id: string, db: DrizzleDatebase) {
     this.db = db;
     this.id = id;
   }
@@ -90,6 +90,9 @@ export class KeyByTenantLedgerSql {
   // }
 
   async deleteByTenantLedgerKey(t: Omit<KeysForTenantLedger, "createdAt">) {
+    if (!t.keys.length) {
+      return;
+    }
     return this.db
       .delete(sqlKeyByTenantLedger)
       .where(

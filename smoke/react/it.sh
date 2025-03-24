@@ -19,13 +19,13 @@ cp package-template.json package.json
 #env | sort > $projectRoot/dist/smoke.react.env
 unset npm_config_registry
 # pnpm install
-npm install use-fireproof@$(cat $projectRoot/dist/fp-version)
-npm why react
+pnpm install use-fireproof@$(cat $projectRoot/dist/fp-version)
+pnpm why react
 cat package.json
 # pnpm install -f "file://$smokeDir/../../dist/fireproof-core/fireproof-core-*.tgz"
 # pnpm install -f "file://$smokeDir/../../dist/use-fireproof/use-fireproof-*.tgz"
 # pnpm run test > /dev/null 2>&1 || true
-npm run test
+pnpm run test
 if [ -z "$NO_CLEANUP" ]
 then
   rm -rf $tmpDir

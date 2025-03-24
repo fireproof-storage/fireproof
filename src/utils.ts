@@ -93,15 +93,21 @@ class SuperThisImpl implements SuperThis {
 }
 
 // const pathOps =
-function presetEnv() {
+function presetEnv(ipreset?: Map<string, string> | Record<string, string>): Map<string, string> {
+  let preset: Record<string, string> = {};
+  if (ipreset instanceof Map) {
+    preset = Object.fromEntries<string>(ipreset.entries());
+  } else if (typeof ipreset === "object" && ipreset !== null) {
+    preset = ipreset;
+  }
   const penv = new Map([
     // ["FP_DEBUG", "xxx"],
     // ["FP_ENV", "development"],
     ...Array.from(
-      Object.entries(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ((globalThis as any)[Symbol.for("FP_PRESET_ENV")] || {}) as Record<string, string>,
-      ),
+      Object.entries({
+        ...setPresetEnv({}),
+        ...preset,
+      }),
     ), // .map(([k, v]) => [k, v as string])
   ]);
   // console.log(">>>>>>", penv)
@@ -144,7 +150,7 @@ export function onSuperThis(fn: (sthis: SuperThis) => void): () => void {
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
   const env = envFactory({
     symbol: osthis?.env?.symbol || "FP_ENV",
-    presetEnv: osthis?.env?.presetEnv || presetEnv(),
+    presetEnv: presetEnv(osthis?.env?.presetEnv),
   });
   const ret = new SuperThisImpl({
     logger: osthis?.logger || globalLogger(),
@@ -480,4 +486,13 @@ export function ensureURIDefaults(
     ret.defParam(PARAM.SUFFIX, ".car");
   }
   return ret.URI();
+}
+
+export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV") {
+  const key = Symbol.for(symbol);
+  const env = (globalThis as unknown as Record<symbol, Record<string, string>>)[key] ?? {};
+  for (const [k, v] of Object.entries(o)) {
+    env[k] = v;
+  }
+  return env;
 }

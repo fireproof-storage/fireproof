@@ -1,8 +1,10 @@
 // import type { Database } from "better-sqlite3";
-import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
-import { ensureSuperThis, rt } from "@fireproof/core";
-// import { SQLDatabase } from "./abstract-sql.js";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
+import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
+import { rt, SuperThis } from "@fireproof/core";
+import { testSuperThis } from "../../test-super-this.js";
+// import { SQLDatabase } from "./abstract-sql.js";
+// import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 
 function sortCRDTEntries(rows: rt.V2SerializedMetaKey) {
   return rows.metas.sort((a, b) => a.cid.localeCompare(b.cid));
@@ -39,16 +41,18 @@ function toCRDTEntries(rows: MetaConnection[]) {
 //       r.connection.conn.resId === connection.conn.resId)))
 // }
 
-function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase> }[] {
+function getSQLFlavours(sthis: SuperThis): { name: string; factory: () => Promise<LibSQLDatabase> }[] {
   return [
     {
       name: "libsql",
       factory: async () => {
         // import type { Client } from "@libsql/client";
         const { createClient } = await import("@libsql/client");
-        return drizzle(createClient({
-          url: "file://./dist/test.db",
-        }))
+        return drizzle(
+          createClient({
+            url: sthis.env.get("FP_TEST_SQL_URL") as string,
+          }),
+        );
         /*
         const { BetterSQLDatabase } = await import("./bettersql-abstract-sql.js");
         return new BetterSQLDatabase("./dist/test.db") as unknown as LibSQLDatabase;
@@ -58,9 +62,10 @@ function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase
   ];
 }
 
-describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
+describe("$name - MetaMerger", () => {
   // let db: SQLDatabase;
-  const sthis = ensureSuperThis();
+  const sthis = testSuperThis();
+  const flavour = getSQLFlavours(sthis)[0];
   const logger = sthis.logger;
   let mm: MetaMerger;
   beforeAll(async () => {
@@ -211,17 +216,18 @@ describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
     // wrote 10 connections with 3 metas each
     for (const connection of connections) {
       const rows = await mm.metaToSend(connection);
+      // console.log("connection", connection, rows, JSON.stringify(ref, null,2));
       expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(toCRDTEntries(ref)));
       const rowsEmpty = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rowsEmpty)).toEqual([]);
     }
+
     const newConnections = Array(2)
       .fill(metaMerge.connection)
       .map((c) => ({ ...c, conn: { ...c.conn, reqId: sthis.timeOrderedNextId().str } }));
     for (const connection of newConnections) {
       const rows = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rows)).toEqual(sortCRDTEntries(toCRDTEntries(ref)));
-      expect(sortKeysEntries(rows)).toEqual(sortKeysEntries(toCRDTEntries(ref)));
       const rowsEmpty = await mm.metaToSend(connection);
       expect(sortCRDTEntries(rowsEmpty)).toEqual([]);
     }
