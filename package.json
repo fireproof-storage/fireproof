@@ -29,7 +29,10 @@
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
     "lint": "eslint",
-    "drizzle:test": "drizzle-kit push --config ./drizzle.cloud.config.ts"
+    "drizzle:libsql": "drizzle-kit push --config ./cloud/backend/node/drizzle.cloud.libsql.config.ts",
+    "drizzle:d1-local": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts",
+    "drizzle:d1-remote": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-remote.config.ts",
+    "wrangler:cf-d1": "wrangler deploy -c cloud/backend/cf-d1/wrangler.toml --env dev"
   },
   "keywords": [
     "ledger",
@@ -49,6 +52,7 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250321.0",
     "@eslint/js": "^9.23.0",
     "@hono/node-server": "^1.14.0",
     "@hono/node-ws": "^1.1.0",
@@ -64,6 +68,8 @@
     "@vitest/ui": "^3.0.9",
     "aws4fetch": "^1.0.20",
     "better-sqlite3": "^11.9.1",
+    "cmd-ts": "^0.13.0",
+    "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.5",
     "esbuild": "^0.24.2",
     "esbuild-plugin-replace": "^1.4.0",
@@ -84,6 +90,7 @@
     "uuidv7": "^1.0.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.9",
+    "wrangler": "^4.4.1",
     "zx": "^8.4.1"
   },
   "repository": {
@@ -95,18 +102,18 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "~0.4.3",
+    "@adviser/cement": "~0.4.4",
     "@fireproof/vendor": "~2.0.2",
     "@ipld/car": "^5.4.0",
     "@ipld/dag-cbor": "^9.2.2",
     "@ipld/dag-json": "^10.2.3",
     "@libsql/client": "^0.15.0",
-    "jose": "^6.0.10",
     "cborg": "^4.2.9",
     "charwise": "^3.0.1",
-    "drizzle-orm": "^0.40.1",
+    "drizzle-orm": "^0.41.0",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.2",
+    "jose": "^6.0.10",
     "multiformats": "^13.3.2",
     "p-limit": "^6.2.0",
     "p-map": "^7.0.3",
@@ -114,8 +121,7 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
-    "ws": "^8.18.1",
-    "zod": "^3.24.2"
+    "ws": "^8.18.1"
   },
   "bundle-phobia": {
     "max-size": "390kB",
@@ -129,7 +135,9 @@
       "edgedriver",
       "esbuild",
       "msw",
-      "playwright-chromium"
+      "playwright-chromium",
+      "sharp",
+      "workerd"
     ],
     "patchedDependencies": {
       "drizzle-kit": "patches/drizzle-kit.patch"

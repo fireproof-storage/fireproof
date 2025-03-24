@@ -131,7 +131,7 @@ export interface SuperThisOpts {
   readonly logger: Logger;
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
-  readonly env: EnvFactoryOpts;
+  readonly env: Partial<EnvFactoryOpts>;
   readonly txt: TextEndeCoder;
   readonly ctx: Record<string, unknown>;
 }

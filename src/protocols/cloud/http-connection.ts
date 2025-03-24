@@ -31,6 +31,15 @@ function toHttpProtocol(uri: URI): URI {
   return toFix.URI();
 }
 
+export function ensurePath(uri: URI, fp: string): string {
+  const path = uri.pathname.replace(/\/$/, "").replace(/^\//, "");
+  const buri = uri.build();
+  if (path === "") {
+    buri.appendRelative(fp);
+  }
+  return buri.toString();
+}
+
 export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnection {
   readonly logger: Logger;
   readonly msgP: MsgerParamsWithEnDe;
@@ -145,7 +154,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     const rRes = await exception2Result(() =>
       timeout(
         this.msgP.timeout,
-        fetch(url.cleaned.toString(), {
+        fetch(ensurePath(url.cleaned, "fp"), {
           method: "PUT",
           headers: headers.AsHeaderInit(),
           body: rReqBody.Ok(),

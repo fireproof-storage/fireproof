@@ -9,6 +9,6 @@ export default defineConfig({
     exclude: ["tests/react/**", "examples/**", "tests/gateway/indexeddb"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     globals: true,
-    setupFiles: "./setup.file.js",
+    setupFiles: "./tests/setup.file.ts",
   },
 });

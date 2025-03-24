@@ -16,13 +16,17 @@ else
 fi
 
 mkdir -p $HOME/.cache/vd $HOME/.cache/esm
-chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
-ls -la $HOME/.cache
-
+id
+if [ "$FP_CI" = "fp_ci" ]
+then
+  sudo chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
+else
+  chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
+fi
 
 export PROJECT_BASE=$projectRoot
 # $dockerCompose down || exit 0
-$dockerCompose -f .github/workflows/docker-compose.yaml up -d --wait
+$dockerCompose -f .github/docker-compose.yaml up -d --wait
 
 mkdir -p $projectRoot/dist
 

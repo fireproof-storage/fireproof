@@ -20,6 +20,6 @@ export default defineConfig({
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },
     globals: true,
-    setupFiles: "./setup.memory.js",
+    setupFiles: "./tests/setup.memory.ts",
   },
 });

@@ -113,6 +113,7 @@ export class MsgDispatcher {
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {
     const isError = MsgIsError(msg);
     const str = ctx.ende.encode(msg);
+    // console.log("send", msg, ctx.ws.send.toString());
     ctx.ws.send(str);
     return new Response(str, {
       status: isError ? 500 : 200,
@@ -140,7 +141,6 @@ export class MsgDispatcher {
     fn: (msg: T) => Promisable<MsgWithError<MsgBase>>,
   ): Promise<MsgWithError<MsgBase>> {
     if (msg.auth) {
-      // console.log("validateAuth-1", msg.auth);
       const rAuth = await ctx.impl.validateAuth(ctx, msg.auth);
       if (rAuth.isErr()) {
         return buildErrorMsg(ctx, msg, rAuth.Err());
@@ -170,8 +170,9 @@ export class MsgDispatcher {
   }
 
   async dispatch(ctx: MsgDispatcherCtx, msg: MsgBase): Promise<Response> {
+    // const id = this.sthis.nextId(12).str;
     try {
-      // console.log("dispatch-1", msg);
+      // console.log("dispatch-1", id);
       const found = Array.from(this.items.values()).find((item) => item.match(msg));
       if (!found) {
         // console.log("dispatch-2", msg);
@@ -181,10 +182,12 @@ export class MsgDispatcher {
         // console.log("dispatch-3");
         return this.validateConn(ctx, msg, (msg) => found.fn(ctx, msg));
       }
-      // console.log("dispatch-4", msg);
       return this.send(ctx, await this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg)));
     } catch (e) {
+      // console.log("dispatch-4", id);
       return this.send(ctx, buildErrorMsg(ctx, msg, e as Error));
+      // } finally {
+      //   console.log("dispatch-5", id);
     }
   }
 }

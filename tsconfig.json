@@ -41,7 +41,7 @@
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
     "typeRoots": ["src/missingTypes", "node_modules/@types", "node_modules"],
     // "types": [],                                      /* Specify type package names to be included without being referenced in a source file. */
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "@cloudflare/workers-types"],
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
     // "allowImportingTsExtensions": true,               /* Allow imports to include TypeScript file extensions. Requires '--moduleResolution bundler' and either '--noEmit' or '--emitDeclarationOnly' to be set. */

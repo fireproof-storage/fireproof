@@ -1,16 +1,17 @@
 // import { ResolveOnce } from "@adviser/cement";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sqlTenant } from "./tenant.js";
+import { DrizzleDatebase } from "../hono-server.js";
 
-export const sqlTenantLedger = sqliteTable("TenantLedger", {
-  tenant: text().references(() => sqlTenant.tenant),
-  ledger: text(),
-  createdAt: text().notNull(),
-},
-(table) => [
-  primaryKey({ columns: [table.tenant, table.ledger] }),
-]);
+export const sqlTenantLedger = sqliteTable(
+  "TenantLedger",
+  {
+    tenant: text().references(() => sqlTenant.tenant),
+    ledger: text(),
+    createdAt: text().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.tenant, table.ledger] })],
+);
 
 export interface TenantLedgerRow {
   readonly tenant: string;
@@ -38,9 +39,9 @@ export class TenantLedgerSql {
   //   ];
   // }
 
-  readonly db: LibSQLDatabase;
+  readonly db: DrizzleDatebase;
   readonly id: string;
-  constructor(id: string, db: LibSQLDatabase) {
+  constructor(id: string, db: DrizzleDatebase) {
     this.db = db;
     this.id = id;
   }
@@ -64,11 +65,14 @@ export class TenantLedgerSql {
   // }
 
   async ensure(t: TenantLedgerRow) {
-    this.db.insert(sqlTenantLedger)
-    .values({
-      tenant: t.tenant,
-      ledger: t.ledger,
-      createdAt: t.createdAt.toISOString(),
-    }).onConflictDoNothing().run();
+    this.db
+      .insert(sqlTenantLedger)
+      .values({
+        tenant: t.tenant,
+        ledger: t.ledger,
+        createdAt: t.createdAt.toISOString(),
+      })
+      .onConflictDoNothing()
+      .run();
   }
 }

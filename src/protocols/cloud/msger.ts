@@ -24,7 +24,7 @@ import {
   AuthType,
   FPJWKCloudAuthType,
 } from "./msg-types.js";
-import { HttpConnection } from "./http-connection.js";
+import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
 import { SuperThis } from "../../types.js";
 
@@ -288,11 +288,12 @@ export class Msger {
     url = url.build().setParam("random", sthis.nextId().str).URI();
     // console.log("openWS", url.toString());
     // .setParam("reqOpen", sthis.txt.decode(encode(qOpen)))
+    const wsUrl = ensurePath(url, "ws");
     if (runtimeFn().isNodeIsh) {
       const { WebSocket } = await import("ws");
-      ws = new WebSocket(url.toString()) as unknown as WebSocket;
+      ws = new WebSocket(wsUrl) as unknown as WebSocket;
     } else {
-      ws = new WebSocket(url.toString());
+      ws = new WebSocket(wsUrl);
     }
     return Result.Ok(new WSConnection(sthis, ws, msgP, exGestalt));
   }

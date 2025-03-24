@@ -32,6 +32,6 @@ export default defineConfig({
       // ],
     },
     globals: true,
-    setupFiles: "./setup.indexeddb.ts",
+    setupFiles: "./tests/setup.indexeddb.ts",
   },
 });
