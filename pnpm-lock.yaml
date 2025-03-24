@@ -24,8 +24,8 @@ importers:
         specifier: ^10.2.3
         version: 10.2.3
       cborg:
-        specifier: ^4.2.8
-        version: 4.2.8
+        specifier: ^4.2.9
+        version: 4.2.9
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -1482,8 +1482,8 @@ packages:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
 
-  cborg@4.2.8:
-    resolution: {integrity: sha512-z9M+TZCWQbf89Gl8ulpYThM9fqmkjBDdMiq+wS72OAK2zqDaXNquoAWFDrAKHQAukVtPspmadB9chuFC0ut7ew==}
+  cborg@4.2.9:
+    resolution: {integrity: sha512-HG8GprGhfzkbzDAIQApqYcN1BJAyf8vDQbzclAwaqrm3ATFnB7ygiWLr+YID+GBdfTJ+yHtzPi06218xULpZrg==}
     hasBin: true
 
   chai@5.2.0:
@@ -3997,18 +3997,18 @@ snapshots:
   '@ipld/car@5.4.0':
     dependencies:
       '@ipld/dag-cbor': 9.2.2
-      cborg: 4.2.8
+      cborg: 4.2.9
       multiformats: 13.3.2
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.2':
     dependencies:
-      cborg: 4.2.8
+      cborg: 4.2.9
       multiformats: 13.3.2
 
   '@ipld/dag-json@10.2.3':
     dependencies:
-      cborg: 4.2.8
+      cborg: 4.2.9
       multiformats: 13.3.2
 
   '@isaacs/cliui@8.0.2':
@@ -4803,7 +4803,7 @@ snapshots:
 
   callsites@3.1.0: {}
 
-  cborg@4.2.8: {}
+  cborg@4.2.9: {}
 
   chai@5.2.0:
     dependencies:
