@@ -1,9 +1,20 @@
-import { URI } from "@adviser/cement";
+import { BuildURI, URI } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
-import { Attachable, Database, ensureSuperThis, fireproof, GatewayUrlsParam, PARAM, rt, Attached, bs } from "@fireproof/core";
+import {
+  Attachable,
+  Database,
+  ensureSuperThis,
+  fireproof,
+  GatewayUrlsParam,
+  PARAM,
+  rt,
+  Attached,
+  bs,
+  sleep,
+} from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
-import { sleep, mockLoader } from "../helpers.js";
+import { mockLoader } from "../helpers.js";
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();
@@ -154,29 +165,37 @@ describe("activate store", () => {
   let secondAttached: Attached;
   beforeEach(async () => {
     attach = new bs.AttachedRemotesImpl(mockLoader(sthis));
-    firstAttached = await attach.attach({
-      name: "first",
-      prepare: async () => ({
-        car: { url: "memory://first?store=car" },
-        meta: { url: "memory://first?store=meta" },
-        file: { url: "memory://first" },
-        wal: { url: "memory://first?store=wal" },
-      }),
-    });
+    firstAttached = await attach.attach(
+      {
+        name: "first",
+        configHash: async () => "first",
+        prepare: async () => ({
+          car: { url: "memory://first?store=car" },
+          meta: { url: "memory://first?store=meta" },
+          file: { url: "memory://first" },
+          wal: { url: "memory://first?store=wal" },
+        }),
+      },
+      (at) => Promise.resolve(at),
+    );
 
-    secondAttached = await attach.attach({
-      name: "second",
-      prepare: async () => ({
-        car: { url: "memory://second?store=car" },
-        meta: { url: "memory://second?store=meta" },
-        file: { url: "memory://second?store=file" },
-      }),
-    });
+    secondAttached = await attach.attach(
+      {
+        name: "second",
+        configHash: async () => "second",
+        prepare: async () => ({
+          car: { url: "memory://second?store=car" },
+          meta: { url: "memory://second?store=meta" },
+          file: { url: "memory://second?store=file" },
+        }),
+      },
+      (at) => Promise.resolve(at),
+    );
   });
 
   it("activate by store", async () => {
     expect(attach.activate(secondAttached.stores).active.car.url().toString()).toBe(
-      "memory://second?name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate(firstAttached.stores).local().active.car.url().toString()).toBe(
       "memory://first?name=first&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
@@ -188,10 +207,10 @@ describe("activate store", () => {
 
   it("activate by store", async () => {
     expect(attach.activate("memory://second").active.car.url().toString()).toBe(
-      "memory://second?name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate("memory://second").remotes()[0].active.car.url().toString()).toEqual(
-      "memory://second?name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate("memory://first?store=meta").active.car.url().toString()).toBe(
       "memory://first?name=first&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
@@ -227,6 +246,9 @@ describe("join function", () => {
     constructor(name: string) {
       this.name = name;
     }
+    async configHash() {
+      return `joinable-${this.name}`;
+    }
     prepare(): Promise<GatewayUrlsParam> {
       return Promise.resolve({
         car: { url: `memory://car/${this.name}` },
@@ -239,35 +261,30 @@ describe("join function", () => {
     return new AJoinable(name);
   }
 
+  function attachableStoreUrls(name: string, db: Database) {
+    return {
+      // base: `memory://${name}`,
+      data: {
+        car: BuildURI.from(`memory://car/${name}?`)
+          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""))
+          .URI(),
+        meta: BuildURI.from(`memory://meta/${name}`)
+          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, ""))
+          .URI(),
+        file: BuildURI.from(`memory://file/${name}`)
+          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, ""))
+          .URI(),
+        wal: BuildURI.from(`memory://wal/${name}`)
+          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, ""))
+          .URI(),
+      },
+    };
+  }
+
   let db: Database;
   let joinableDBs: string[] = [];
   beforeAll(async () => {
     const set = sthis.nextId().str;
-    joinableDBs = await Promise.all(
-      new Array(10).fill(1).map(async (_, i) => {
-        const name = `remote-db-${i}-${set}`;
-        const db = fireproof(name, {
-          storeUrls: {
-            // base: `memory://${name}`,
-            data: {
-              car: `memory://car/${name}`,
-              meta: `memory://meta/${name}`,
-              file: `memory://file/${name}`,
-              wal: `memory://wal/${name}`,
-            },
-          },
-        });
-        // await db.put({ _id: `genesis`, value: `genesis` });
-        // await db.ready();
-        for (let j = 0; j < 10; j++) {
-          await db.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
-        }
-        expect(await db.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
-        await db.close();
-        return name;
-      }),
-    );
-    // await new Promise((resolve) => setTimeout(resolve, 1000));
 
     db = fireproof(`db-${set}`, {
       storeUrls: {
@@ -278,6 +295,25 @@ describe("join function", () => {
     for (let j = 0; j < 10; j++) {
       await db.put({ _id: `db-${j}`, value: `db-${set}` });
     }
+
+    joinableDBs = await Promise.all(
+      new Array(5).fill(1).map(async (_, i) => {
+        const name = `remote-db-${i}-${set}`;
+        const jdb = fireproof(name, {
+          storeUrls: attachableStoreUrls(name, db),
+        });
+        // await db.put({ _id: `genesis`, value: `genesis` });
+        // await db.ready();
+        for (let j = 0; j < 10; j++) {
+          await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
+        }
+        expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
+        await jdb.close();
+        return name;
+      }),
+    );
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
     expect(await db.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
   });
   afterAll(async () => {
@@ -294,14 +330,7 @@ describe("join function", () => {
     await Promise.all(
       joinableDBs.map(async (name) => {
         const tmp = fireproof(name, {
-          storeUrls: {
-            data: {
-              car: `memory://car/${name}`,
-              meta: `memory://meta/${name}`,
-              file: `memory://file/${name}`,
-              wal: `memory://wal/${name}`,
-            },
-          },
+          storeUrls: attachableStoreUrls(name, db),
         });
         const res = await tmp.allDocs();
         expect(res.rows.length).toBe(10);
@@ -330,26 +359,34 @@ describe("join function", () => {
 
   it("it empty inbound syncing", async () => {
     const name = `empty-db-${sthis.nextId().str}`;
-    const db = fireproof(name, {
-      storeUrls: {
-        // base: `memory://${name}`,
-        data: {
-          car: `memory://car/${name}`,
-          meta: `memory://meta/${name}`,
-          file: `memory://file/${name}`,
-          wal: `memory://wal/${name}`,
-        },
-      },
+    const mydb = fireproof(name, {
+      storeUrls: attachableStoreUrls(name, db),
     });
     await Promise.all(
       joinableDBs.map(async (name) => {
-        const attached = await db.attach(aJoinable(name));
+        const attached = await mydb.attach(aJoinable(name));
         expect(attached).toBeDefined();
       }),
     );
     await sleep(100);
-    expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
-    const res = await db.allDocs();
+    expect(mydb.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
+    const res = await mydb.allDocs();
     expect(res.rows.length).toBe(10 * joinableDBs.length);
+  });
+
+  it("prepare only once", async () => {
+    const db = fireproof(`db-${sthis.nextId().str}`, {
+      storeUrls: {
+        base: `memory://prepare`,
+      },
+    });
+    const mocked = aJoinable("test");
+    const originalPrepare = mocked.prepare;
+    mocked.prepare = vi.fn(() => originalPrepare.apply(mocked));
+    expect(mocked.prepare).not.toHaveBeenCalled();
+    for (let i = 0; i < 10; i++) {
+      await db.attach(mocked);
+      expect(mocked.prepare).toHaveBeenCalled();
+    }
   });
 });

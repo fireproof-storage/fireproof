@@ -19,7 +19,8 @@ import { mockLoader, noopUrl } from "../helpers.js";
 describe("CarStore", function () {
   let store: bs.CarStore;
   const sthis = ensureSuperThis();
-  const loader = mockLoader(sthis);
+
+  let loader: bs.Loadable;
 
   afterEach(async () => {
     await store.close();
@@ -27,6 +28,7 @@ describe("CarStore", function () {
   });
 
   beforeEach(async () => {
+    loader = mockLoader(sthis);
     await sthis.start();
     const at = await bs.createAttachedStores(noopUrl("test"), loader);
     store = at.stores.car;
@@ -51,9 +53,9 @@ describe("CarStore", function () {
 describe("CarStore with a saved car", function () {
   let store: bs.CarStore;
   let car: bs.AnyBlock;
+  let loader: bs.Loadable;
 
   const sthis = ensureSuperThis();
-  const loader = mockLoader(sthis);
 
   afterEach(async () => {
     await store.close();
@@ -61,6 +63,7 @@ describe("CarStore with a saved car", function () {
   });
 
   beforeEach(async () => {
+    loader = mockLoader(sthis);
     await sthis.start();
 
     const at = await bs.createAttachedStores(noopUrl("test2"), loader);
@@ -95,7 +98,7 @@ describe("CarStore with a saved car", function () {
 describe("MetaStore", function () {
   let store: bs.MetaStore;
   const sthis = ensureSuperThis();
-  const loader = mockLoader(sthis);
+  let loader: bs.Loadable;
 
   afterEach(async () => {
     await store.close();
@@ -103,6 +106,7 @@ describe("MetaStore", function () {
   });
 
   beforeEach(async () => {
+    loader = mockLoader(sthis);
     await sthis.start();
     const at = await bs.createAttachedStores(noopUrl("test"), loader);
     store = at.stores.meta;
@@ -135,7 +139,7 @@ describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
   let cid: CID;
   const sthis = ensureSuperThis();
-  const loader = mockLoader(sthis);
+  let loader: bs.Loadable;
 
   afterEach(async () => {
     await store.close();
@@ -143,6 +147,7 @@ describe("MetaStore with a saved header", function () {
   });
 
   beforeEach(async () => {
+    loader = mockLoader(sthis);
     await sthis.start();
     const at = await bs.createAttachedStores(noopUrl("test3-meta"), loader);
     store = at.stores.meta;
