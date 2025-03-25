@@ -1,9 +1,10 @@
-import { ensureSuperThis, ps } from "@fireproof/core";
+import { ps, SuperThis } from "@fireproof/core";
 import { Result, URI } from "@adviser/cement";
 // import { HonoServer } from "./hono-server.js";
 // import { Hono } from "hono";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, wsStyle } from "./node/test-helper.js";
+import { testSuperThis } from "../test-super-this.js";
 
 const {
   buildReqGestalt,
@@ -48,22 +49,22 @@ type BindGetMeta = ps.cloud.BindGetMeta;
 type EventGetMeta = ps.cloud.EventGetMeta;
 type MsgConnectedAuth = ps.cloud.MsgConnectedAuth;
 
-async function refURL(sp: ResOptionalSignedUrl) {
-  const { env } = {
-    env: process.env as {
-      STORAGE_URL: string;
-      ACCESS_KEY_ID: string;
-      SECRET_ACCESS_KEY: string;
-      REGION: string;
-    },
-  };
+async function refURL(sthis: SuperThis, sp: ResOptionalSignedUrl) {
+  // const { env } = {
+  //   env: process.env as {
+  //     STORAGE_URL: string;
+  //     ACCESS_KEY_ID: string;
+  //     SECRET_ACCESS_KEY: string;
+  //     REGION: string;
+  //   },
+  // };
   return (
     await calculatePreSignedUrl(sp, {
-      storageUrl: URI.from(env.STORAGE_URL),
+      storageUrl: URI.from(sthis.env.get("STORAGE_URL")),
       aws: {
-        accessKeyId: env.ACCESS_KEY_ID,
-        secretAccessKey: env.SECRET_ACCESS_KEY,
-        region: env.REGION,
+        accessKeyId: sthis.env.get("ACCESS_KEY_ID") as string,
+        secretAccessKey: sthis.env.get("SECRET_ACCESS_KEY") as string,
+        region: sthis.env.get("REGION"),
       },
       test: {
         amzDate: URI.from(sp.signedUrl).getParam("X-Amz-Date"),
@@ -75,18 +76,18 @@ async function refURL(sp: ResOptionalSignedUrl) {
 }
 
 describe("Connection", () => {
-  const sthis = ensureSuperThis();
+  const sthis = testSuperThis();
   const msgP = defaultMsgParams(sthis, { hasPersistent: true });
   let auth: MockJWK;
   // let privEnvJWK: string
   const honoServer = {
-    port: parseInt(URI.from(process.env.FP_STORAGE_URL).port, 10),
+    port: parseInt(URI.from(sthis.env.get("FP_STORAGE_URL")).port, 10),
     name: "HoneServer",
   };
 
   beforeAll(async () => {
     // sthis.env.sets((await resolveToml()).env as unknown as Record<string, string>);
-    auth = await mockJWK();
+    auth = await mockJWK(sthis);
     // privEnvJWK = await jwk2env(keyPair.privateKey, sthis);
   });
 
@@ -270,7 +271,7 @@ describe("Connection", () => {
           const res = await conn.request(buildReqGetData(sthis, sp, gwCtx), { waitFor: MsgIsResGetData });
           if (MsgIsResGetData(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResGetData", JSON.stringify(res));
           }
@@ -280,7 +281,7 @@ describe("Connection", () => {
           const res = await conn.request(buildReqPutData(sthis, sp, gwCtx), { waitFor: MsgIsResPutData });
           if (MsgIsResPutData(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResPutData", JSON.stringify(res));
           }
@@ -290,7 +291,7 @@ describe("Connection", () => {
           const res = await conn.request(buildReqDelData(sthis, sp, gwCtx), { waitFor: MsgIsResDelData });
           if (MsgIsResDelData(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResDelData", JSON.stringify(res));
           }
@@ -317,7 +318,7 @@ describe("Connection", () => {
               }
               if (MsgIsEventGetMeta(msg)) {
                 // expect(msg.params).toEqual(sp);
-                expect(URI.from(msg.signedUrl).asObj()).toEqual(await refURL(msg));
+                expect(URI.from(msg.signedUrl).asObj()).toEqual(await refURL(sthis, msg));
               } else {
                 assert.fail("expected MsgEventGetMeta", JSON.stringify(msg));
               }
@@ -335,7 +336,7 @@ describe("Connection", () => {
           });
           if (MsgIsEventGetMeta(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgIsEventGetMeta", JSON.stringify(res));
           }
@@ -357,7 +358,7 @@ describe("Connection", () => {
           });
           if (MsgIsResPutMeta(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgIsResPutMeta", JSON.stringify(res));
           }
@@ -369,7 +370,7 @@ describe("Connection", () => {
           });
           if (MsgIsResDelMeta(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResDelWAL", JSON.stringify(res));
           }
@@ -381,7 +382,7 @@ describe("Connection", () => {
           const res = await conn.request(buildReqGetWAL(sthis, sp, gwCtx), { waitFor: MsgIsResGetWAL });
           if (MsgIsResGetWAL(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResGetWAL", JSON.stringify(res));
           }
@@ -391,7 +392,7 @@ describe("Connection", () => {
           const res = await conn.request(buildReqPutWAL(sthis, sp, gwCtx), { waitFor: MsgIsResPutWAL });
           if (MsgIsResPutWAL(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResPutWAL", JSON.stringify(res));
           }
@@ -401,7 +402,7 @@ describe("Connection", () => {
           const res = await conn.request(buildReqDelWAL(sthis, sp, gwCtx), { waitFor: MsgIsResDelWAL });
           if (MsgIsResDelWAL(res)) {
             // expect(res.params).toEqual(sp);
-            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(res));
+            expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResDelWAL", JSON.stringify(res));
           }

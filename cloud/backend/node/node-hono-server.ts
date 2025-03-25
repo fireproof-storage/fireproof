@@ -15,7 +15,6 @@ import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "../ws-room.js";
 import { ConnItem } from "../msg-dispatch.js";
-import { cloudBackendParams } from "./test-helper.js";
 import { MetaMerger } from "../meta-merger/meta-merger.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 
@@ -198,13 +197,16 @@ export class NodeHonoFactory implements HonoServerFactory {
         id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
       });
 
-    const stsService = await rt.sts.SessionTokenService.createFromEnv();
+    // console.log("NodeHonoFactory.inject", sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC"));
+    const stsService = await rt.sts.SessionTokenService.create({
+      token: sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC") ?? "",
+    });
     const ctx: ExposeCtxItem<NodeWSRoom> = {
       id,
       sthis,
       logger,
       wsRoom: this._wsRoom,
-      port: cloudBackendParams(sthis).port,
+      port: +(this.sthis.env.get("ENDPOINT_PORT") ?? "0"),
       stsService,
       gestalt,
       ende,

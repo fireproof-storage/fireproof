@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    name: "cloud:libsql",
+    name: "memory",
     exclude: [
       "tests/react/**",
       "**/smoke/**",
@@ -15,12 +15,11 @@ export default defineConfig({
       "tests/gateway/file",
       "tests/blockstore/keyed-crypto-indexeddb-file.test.ts",
     ],
-    include: ["xtests/**/*test.?(c|m)[jt]s?(x)", "cloud/**/*test.?(c|m)[jt]s?(x)"],
+    include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },
     globals: true,
-    globalSetup: "./cloud/backend/node/globalSetup.cloud.libsql.ts",
-    setupFiles: "./cloud/backend/node/setup.cloud.libsql.js",
+    setupFiles: "./tests/setup.memory.ts",
   },
 });

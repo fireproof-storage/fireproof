@@ -140,7 +140,6 @@ export class MsgDispatcher {
     fn: (msg: T) => Promisable<MsgWithError<MsgBase>>,
   ): Promise<MsgWithError<MsgBase>> {
     if (msg.auth) {
-      // console.log("validateAuth-1", msg.auth);
       const rAuth = await ctx.impl.validateAuth(ctx, msg.auth);
       if (rAuth.isErr()) {
         return buildErrorMsg(ctx, msg, rAuth.Err());

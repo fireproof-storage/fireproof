@@ -1,7 +1,8 @@
 // import type { Database } from "better-sqlite3";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
-import { ensureSuperThis, rt } from "@fireproof/core";
+import { rt, SuperThis } from "@fireproof/core";
+import { testSuperThis } from "../../test-super-this.js";
 // import { SQLDatabase } from "./abstract-sql.js";
 // import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 
@@ -40,7 +41,7 @@ function toCRDTEntries(rows: MetaConnection[]) {
 //       r.connection.conn.resId === connection.conn.resId)))
 // }
 
-function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase> }[] {
+function getSQLFlavours(sthis: SuperThis): { name: string; factory: () => Promise<LibSQLDatabase> }[] {
   return [
     {
       name: "libsql",
@@ -49,8 +50,7 @@ function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase
         const { createClient } = await import("@libsql/client");
         return drizzle(
           createClient({
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            url: process.env.FP_TEST_SQL_URL!,
+            url: sthis.env.get("FP_TEST_SQL_URL") as string,
           }),
         );
         /*
@@ -62,9 +62,10 @@ function getSQLFlavours(): { name: string; factory: () => Promise<LibSQLDatabase
   ];
 }
 
-describe.each(getSQLFlavours())("$name - MetaMerger", (flavour) => {
+describe("$name - MetaMerger", () => {
   // let db: SQLDatabase;
-  const sthis = ensureSuperThis();
+  const sthis = testSuperThis();
+  const flavour = getSQLFlavours(sthis)[0];
   const logger = sthis.logger;
   let mm: MetaMerger;
   beforeAll(async () => {

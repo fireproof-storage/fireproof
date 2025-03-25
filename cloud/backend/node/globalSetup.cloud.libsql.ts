@@ -1,50 +1,40 @@
 import fs from "fs/promises";
 import { drizzle } from "drizzle-orm/libsql";
-import { HonoServer } from "../hono-server.js";
-import { mockJWK, setupBackend } from "../node/test-helper.js";
-import { ensureSuperThis } from "@fireproof/core";
+import { mockJWK, portRandom, setupBackendNode } from "../node/test-helper.js";
 import { createClient } from "@libsql/client";
 import { $ } from "zx";
+import { ensureSuperThis, rt } from "@fireproof/core";
+import type { TestProject } from "vitest/node";
+import { setTestEnv } from "../../test-global-helper.js";
 
-const sthis = ensureSuperThis();
-let hs: HonoServer;
-export async function setup() {
-  const keys = await mockJWK({}, sthis);
-
-  process.env["CLOUD_SESSION_TOKEN_PUBLIC"] = keys.keys.strings.publicKey;
-  process.env["STORAGE_URL"] = "http://localhost:9000/testbucket";
-  process.env["ACCESS_KEY_ID"] = "minioadmin";
-  process.env["SECRET_ACCESS_KEY"] = "minioadmin";
+export async function setup(project: TestProject) {
+  const sthis = ensureSuperThis();
+  const keys = await mockJWK(sthis);
 
   await fs.mkdir("dist", { recursive: true });
 
-  $.verbose = true;
   await $`npx drizzle-kit push --config ./cloud/backend/node/drizzle.cloud.libsql.config.ts`;
 
-  process.env["FP_TEST_SQL_URL"] = `file://${process.cwd()}/dist/node-meta.sqlite`;
+  const port = portRandom(sthis);
+  const env = {
+    FP_STORAGE_URL: keys
+      .applyAuthToURI(`fpcloud://localhost:${port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
+      .toString(),
+    [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
+    [rt.sts.envKeyDefaults.SECRET]: keys.keys.strings.privateKey,
+    STORAGE_URL: "http://localhost:9000/testbucket",
+    ACCESS_KEY_ID: "minioadmin",
+    ENDPOINT_PORT: "" + port,
+    SECRET_ACCESS_KEY: "minioadmin",
+  };
+  setTestEnv(project, env);
 
-  const params = await setupBackend(sthis, drizzle(createClient({ url: process.env["FP_TEST_SQL_URL"] })));
-  hs = params.hs;
-  process.env[`FP_TEST_CLOUD_BACKEND`] = JSON.stringify({
-    port: params.port,
-    pid: params.pid,
-    envName: params.envName,
-  });
+  sthis.env.sets(env);
+  const params = await setupBackendNode(
+    sthis,
+    drizzle(createClient({ url: `file://${process.cwd()}/dist/node-meta.sqlite` })),
+    port,
+  );
 
-  process.env.FP_STORAGE_URL = keys
-    .applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
-    .toString();
-
-  /*
-  // eslint-disable-next-line no-console
-  console.log("Started node-backend process - ", cloudBackendParams(sthis).pid, "on port", params.port);
-  */
-}
-
-export async function teardown() {
-  /*
-  // eslint-disable-next-line no-console
-  console.log("Stopping node-backend process - ", cloudBackendParams(sthis).pid);
-  */
-  hs.close();
+  return () => params.hs.close();
 }

@@ -378,7 +378,9 @@ export class CFHonoFactory implements HonoServerFactory {
       // break;
     }
 
-    const stsService = await rt.sts.SessionTokenService.createFromEnv();
+    const stsService = await rt.sts.SessionTokenService.create({
+      token: sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC") ?? "",
+    });
 
     const wsRoom = new CFWSRoom(sthis);
     const item = CFExposeCtx.attach(c.env, id, sthis, logger, NaN, ende, gs, stsService, db, wsRoom);

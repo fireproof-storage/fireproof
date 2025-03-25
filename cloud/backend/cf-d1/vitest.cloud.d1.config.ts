@@ -14,7 +14,9 @@ export default defineConfig({
       "tests/gateway/indexeddb",
       "tests/gateway/file",
       "tests/blockstore/keyed-crypto-indexeddb-file.test.ts",
+      "cloud/backend/meta-merger/**",
     ],
+    // WARNING TODO the hole suite is not working
     include: ["xtests/**/*test.?(c|m)[jt]s?(x)", "cloud/**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],

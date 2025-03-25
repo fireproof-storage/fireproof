@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 8840807a95176f3fce5def1375b3ba14ed7b7bbb70f4aed75a07dcdb25b92df9
+    hash: 5c1fb937eb4ab5690e721a8c5e4cd79093efe8f8ad3bf1f81c3592d619f00d03
     path: patches/drizzle-kit.patch
 
 importers:
@@ -38,8 +38,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       drizzle-orm:
-        specifier: ^0.40.1
-        version: 0.40.1(@cloudflare/workers-types@4.20250321.0)(@libsql/client@0.15.0)(@types/better-sqlite3@7.6.12)(better-sqlite3@11.9.1)(gel@2.0.1)
+        specifier: ^0.41.0
+        version: 0.41.0(@cloudflare/workers-types@4.20250321.0)(@libsql/client@0.15.0)(@types/better-sqlite3@7.6.12)(better-sqlite3@11.9.1)(gel@2.0.1)
       esbuild-plugin-replace:
         specifier: ^1.4.0
         version: 1.4.0
@@ -124,7 +124,7 @@ importers:
         version: 11.9.1
       drizzle-kit:
         specifier: ^0.30.5
-        version: 0.30.5(patch_hash=8840807a95176f3fce5def1375b3ba14ed7b7bbb70f4aed75a07dcdb25b92df9)
+        version: 0.30.5(patch_hash=5c1fb937eb4ab5690e721a8c5e4cd79093efe8f8ad3bf1f81c3592d619f00d03)
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
@@ -2242,8 +2242,8 @@ packages:
     resolution: {integrity: sha512-l6dMSE100u7sDaTbLczibrQZjA35jLsHNqIV+jmhNVO3O8jzM6kywMOmV9uOz9ZVSCMPQhAZEFjL/qDPVrqpUA==}
     hasBin: true
 
-  drizzle-orm@0.40.1:
-    resolution: {integrity: sha512-aPNhtiJiPfm3qxz1czrnIDkfvkSdKGXYeZkpG55NPTVI186LmK2fBLMi4dsHpPHlJrZeQ92D322YFPHADBALew==}
+  drizzle-orm@0.41.0:
+    resolution: {integrity: sha512-7A4ZxhHk9gdlXmTdPj/lREtP+3u8KvZ4yEN6MYVxBzZGex5Wtdc+CWSbu7btgF6TB0N+MNPrvW7RKBbxJchs/Q==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -6129,7 +6129,7 @@ snapshots:
       domhandler: 5.0.3
     optional: true
 
-  drizzle-kit@0.30.5(patch_hash=8840807a95176f3fce5def1375b3ba14ed7b7bbb70f4aed75a07dcdb25b92df9):
+  drizzle-kit@0.30.5(patch_hash=5c1fb937eb4ab5690e721a8c5e4cd79093efe8f8ad3bf1f81c3592d619f00d03):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -6139,7 +6139,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.40.1(@cloudflare/workers-types@4.20250321.0)(@libsql/client@0.15.0)(@types/better-sqlite3@7.6.12)(better-sqlite3@11.9.1)(gel@2.0.1):
+  drizzle-orm@0.41.0(@cloudflare/workers-types@4.20250321.0)(@libsql/client@0.15.0)(@types/better-sqlite3@7.6.12)(better-sqlite3@11.9.1)(gel@2.0.1):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20250321.0
       '@libsql/client': 0.15.0

@@ -8,7 +8,7 @@ export async function setupBackendD1(
   keys: MockJWK,
   wranglerToml: string,
   env: string,
-  port = portRandom(),
+  port = portRandom(sthis),
 ): Promise<{ port: number; pid?: number; envName: string }> {
   const envName = `test`;
   if (process.env.FP_WRANGLER_PORT) {
@@ -27,7 +27,8 @@ export async function setupBackendD1(
   $.verbose = !!process.env.FP_DEBUG;
   await writeEnvFile(sthis, wranglerToml, env, keys.keys.strings.publicKey);
   // .dev.vars.<environment-name>
-  $.verbose = true;
+  // $.verbose = true;
+
   const runningWrangler = $`
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &
                    waitPid=$!

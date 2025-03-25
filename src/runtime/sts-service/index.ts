@@ -54,7 +54,7 @@ export class SessionTokenService {
     };
   }
 
-  static async createFromEnv(sp: SessionTokenServiceFromEnvParam = {}, sthis: SuperThis = ensureSuperThis()) {
+  static async createFromEnv(sthis: SuperThis, sp: SessionTokenServiceFromEnvParam = {}) {
     let envToken = sthis.env.get(sp.privateEnvKey ?? envKeyDefaults.SECRET);
     if (!envToken) {
       envToken = sthis.env.get(sp.publicEnvKey ?? envKeyDefaults.PUBLIC);

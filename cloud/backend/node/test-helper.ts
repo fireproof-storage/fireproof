@@ -1,18 +1,17 @@
 import { BuildURI, CoerceURI, Result, URI } from "@adviser/cement";
-import { SuperThis, rt, ps, ensureSuperThis } from "@fireproof/core";
+import { SuperThis, rt, ps } from "@fireproof/core";
 import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { HonoServer } from "../hono-server.js";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { Hono } from "hono";
-import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
+import { LibSQLDatabase } from "drizzle-orm/libsql";
 import fs from "fs/promises";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.cloud.MsgRawConnection<T>;
 type MsgBase = ps.cloud.MsgBase;
 type Gestalt = ps.cloud.Gestalt;
-type MsgerParams = ps.cloud.MsgerParams;
+// type MsgerParams = ps.cloud.MsgerParams;
 
 const {
   defaultGestalt,
@@ -181,46 +180,29 @@ export function wsStyle(
   };
 }
 
-export function NodeHonoServerFactory(sthis: SuperThis) {
-  return {
-    name: "NodeHonoServer",
-    port: cloudBackendParams(sthis).port,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    factory: async (sthis: SuperThis, msgP: MsgerParams, remoteGestalt: Gestalt, _port: number, pubEnvJWK: string) => {
-      // const { env } = await resolveToml();
-      // sthis.env.set(envKeyDefaults.PUBLIC, pubEnvJWK);
-      // sthis.env.sets(env as unknown as Record<string, string>);
-      const nhf = new NodeHonoFactory(sthis, {
-        msgP,
-        gs: remoteGestalt,
-        sql: drizzle(createClient({ url: `file://./dist/node-meta.sqlite` })),
-        // new BetterSQLDatabase("./dist/node-meta.sqlite"),
-      });
-      return new HonoServer(nhf);
-    },
-  };
-}
+// export function NodeHonoServerFactory(sthis: SuperThis) {
+//   return {
+//     name: "NodeHonoServer",
+//     port: cloudBackendParams(sthis).port,
+//     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//     factory: async (sthis: SuperThis, msgP: MsgerParams, remoteGestalt: Gestalt, _port: number, pubEnvJWK: string) => {
+//       // const { env } = await resolveToml();
+//       // sthis.env.set(envKeyDefaults.PUBLIC, pubEnvJWK);
+//       // sthis.env.sets(env as unknown as Record<string, string>);
+//       const nhf = new NodeHonoFactory(sthis, {
+//         msgP,
+//         gs: remoteGestalt,
+//         sql: drizzle(createClient({ url: `file://./dist/node-meta.sqlite` })),
+//         // new BetterSQLDatabase("./dist/node-meta.sqlite"),
+//       });
+//       return new HonoServer(nhf);
+//     },
+//   };
+// }
 
-export function portRandom(): number {
-  return process.env.FP_WRANGLER_PORT ? +process.env.FP_WRANGLER_PORT : 1024 + Math.floor(Math.random() * (65536 - 1024));
-}
-
-export interface BackendParams {
-  readonly port: number;
-  readonly pid: number;
-  readonly envName: string;
-}
-
-export function cloudBackendParams(sthis: SuperThis): BackendParams {
-  const cf_backend = sthis.env.get("FP_TEST_CLOUD_BACKEND");
-  if (!cf_backend) {
-    return {
-      port: 0,
-      pid: 0,
-      envName: "not-set",
-    };
-  }
-  return JSON.parse(cf_backend) as BackendParams;
+export function portRandom(sthis: SuperThis): number {
+  const envPort = sthis.env.get("FP_WRANGLER_PORT");
+  return envPort ? +envPort : 1024 + Math.floor(Math.random() * (65536 - 1024));
 }
 
 export interface MockJWK {
@@ -229,18 +211,19 @@ export interface MockJWK {
   applyAuthToURI: (uri: CoerceURI) => URI;
 }
 
-export async function mockJWK(claim: Partial<ps.cloud.TokenForParam> = {}, sthis = ensureSuperThis()): Promise<MockJWK> {
+export async function mockJWK(sthis: SuperThis, claim: Partial<ps.cloud.TokenForParam> = {}): Promise<MockJWK> {
+  const publicJWKStr =
+    sthis.env.get(rt.sts.envKeyDefaults.PUBLIC) ??
+    "zeWndr5LEoaySgKSo2aZniYqaZvsKKu1RhfpL2R3hjarNgfXfN7CvR1cAiT74TMB9MQtMvh4acC759Xf8rTwCgxXvGHCBjHngThNtYpK2CoysiAMRJFUi9irMY9H7WApJkfxB15n8ss8iaEojcGB7voQVyk2T6aFPRnNdkoB6v5zk";
   // that could be solved better now with globalSetup.v2-cloud.ts
-  const publicJWK = await rt.sts.env2jwk(
-    "zeWndr5LEoaySgKSo2aZniYqaZvsKKu1RhfpL2R3hjarNgfXfN7CvR1cAiT74TMB9MQtMvh4acC759Xf8rTwCgxXvGHCBjHngThNtYpK2CoysiAMRJFUi9irMY9H7WApJkfxB15n8ss8iaEojcGB7voQVyk2T6aFPRnNdkoB6v5zk",
-    "ES256",
-    sthis,
-  );
-  const privateJWK = await rt.sts.env2jwk(
-    "z33KxHvFS3jLz72v9DeyGBqo79qkbpv5KNP43VKUKSh1fcLb629pFTFyiJEosZ9jCrr8r9TE44KXCPZ2z1FeWGsV1N5gKjGWmZvubUwNHPynxNjCYy4GeYoQ8ukBiKjcPG22pniWCnRMwZvueUBkVk6NdtNY1uwyPk2HAGTsfrw5CBJvTcYsaFeG11SKZ9Q55Xk1W2p4gtZQHzkYHdfQQhgZ73Ttq7zmFoms73kh7MsudYzErx",
-    "ES256",
-    sthis,
-  );
+  const publicJWK = await rt.sts.env2jwk(publicJWKStr, "ES256", sthis);
+  const privateJWKStr =
+    sthis.env.get(rt.sts.envKeyDefaults.SECRET) ??
+    "z33KxHvFS3jLz72v9DeyGBqo79qkbpv5KNP43VKUKSh1fcLb629pFTFyiJEosZ9jCrr8r9TE44KXCPZ2z1FeWGsV1N5gKjGWmZvubUwNHPynxNjCYy4GeYoQ8ukBiKjcPG22pniWCnRMwZvueUBkVk6NdtNY1uwyPk2HAGTsfrw5CBJvTcYsaFeG11SKZ9Q55Xk1W2p4gtZQHzkYHdfQQhgZ73Ttq7zmFoms73kh7MsudYzErx";
+  const privateJWK = await rt.sts.env2jwk(privateJWKStr, "ES256", sthis);
+
+  sthis.env.set(rt.sts.envKeyDefaults.PUBLIC, publicJWKStr);
+  sthis.env.set(rt.sts.envKeyDefaults.SECRET, privateJWKStr);
 
   const keys = await rt.sts.SessionTokenService.generateKeyPair(
     "ES256",
@@ -284,12 +267,12 @@ export async function writeEnvFile(sthis: SuperThis, tomlFile: string, env: stri
   await fs.writeFile(fname, `${rt.sts.envKeyDefaults.PUBLIC}=${envJWK}\n`);
 }
 
-export async function setupBackend(
+export async function setupBackendNode(
   sthis: SuperThis,
   dbfile: LibSQLDatabase<Record<string, never>>,
   // backend: "D1" | "DO",
   // key: string,
-  port = portRandom(),
+  port = portRandom(sthis),
 ): Promise<{ port: number; pid: number; envName: string; hs: HonoServer }> {
   const envName = `test`;
   if (process.env.FP_WRANGLER_PORT) {
@@ -333,3 +316,34 @@ export async function setupBackend(
   //   await waitReady.asPromise();
   return { port, pid: 0, envName, hs };
 }
+
+// export interface BackendParams {
+//   readonly port: number;
+//   readonly pid: number;
+//   readonly envName: string;
+// }
+
+// export function cloudBackendParams(sthis: SuperThis, envName: string): BackendParams {
+//   const cf_backend = JSON.parse(sthis.env.get("FP_TEST_CLOUD_BACKEND") ?? "{}");
+//   const ret = cf_backend[envName];
+//   if (!ret) {
+//     throw new Error(`No backend for ${envName}`);
+//   }
+//   return ret;
+// }
+
+// export function setGlobalBackendParams(params: BackendParams) {
+//   const prevStr = process.env[`FP_TEST_CLOUD_BACKEND`];
+//   const prev: Record<string, BackendParams> = {};
+//   if (prevStr) {
+//     Object.assign(prev, JSON.parse(prevStr));
+//   }
+//   process.env[`FP_TEST_CLOUD_BACKEND`] = JSON.stringify({
+//     ...prev,
+//     [params.envName]: {
+//       port: params.port,
+//       pid: params.pid,
+//       envName: params.envName,
+//     },
+//   });
+// }
