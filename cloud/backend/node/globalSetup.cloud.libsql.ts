@@ -32,7 +32,7 @@ export async function setup(project: TestProject) {
   sthis.env.sets(env);
   const params = await setupBackendNode(
     sthis,
-    drizzle(createClient({ url: `file://${process.cwd()}/dist/node-meta.sqlite` })),
+    drizzle(createClient({ url: `file://${process.cwd()}/dist/cloud-backend-node.sqlite` })),
     port,
   );
 
