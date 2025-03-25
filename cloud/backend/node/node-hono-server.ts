@@ -8,15 +8,15 @@ import {
   HonoServerImpl,
   WSContextWithId,
   WSEventsConnId,
-} from "./hono-server.js";
+} from "../hono-server.js";
 import { ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
 import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
-import { WSRoom } from "./ws-room.js";
-import { ConnItem } from "./msg-dispatch.js";
+import { WSRoom } from "../ws-room.js";
+import { ConnItem } from "../msg-dispatch.js";
 import { cloudBackendParams } from "./test-helper.js";
-import { MetaMerger } from "./meta-merger/meta-merger.js";
+import { MetaMerger } from "../meta-merger/meta-merger.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;

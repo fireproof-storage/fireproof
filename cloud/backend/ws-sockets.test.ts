@@ -1,6 +1,6 @@
 import { ensureSuperThis } from "@fireproof/core";
 
-import { MockJWK, mockJWK, NodeHonoServerFactory } from "./test-helper.js";
+import { MockJWK, mockJWK, NodeHonoServerFactory } from "./node/test-helper.js";
 import { Future, Result } from "@adviser/cement";
 import { ps } from "@fireproof/core";
 

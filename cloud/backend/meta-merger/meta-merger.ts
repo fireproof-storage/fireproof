@@ -6,7 +6,7 @@ import { TenantSql } from "./tenant.js";
 // import { SQLDatabase } from "./abstract-sql.js";
 import { Logger } from "@adviser/cement";
 import { KeyByTenantLedgerSql } from "./key-by-tenant-ledger.js";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
+import { DrizzleDatebase } from "../hono-server.js";
 
 type TenantLedger = ps.cloud.TenantLedger;
 type QSId = ps.cloud.QSId;
@@ -40,14 +40,14 @@ function toByConnection(connection: Connection): ByConnection {
 export function metaMerger(ctx: {
   readonly id: string;
   readonly logger: Logger;
-  readonly dbFactory: () => LibSQLDatabase;
+  readonly dbFactory: () => DrizzleDatebase;
   // readonly sthis: SuperThis;
 }) {
   return new MetaMerger(ctx.id, ctx.logger, ctx.dbFactory());
 }
 
 export class MetaMerger {
-  readonly db: LibSQLDatabase;
+  readonly db: DrizzleDatebase;
   // readonly sthis: SuperThis;
   readonly sql: {
     readonly tenant: TenantSql;
@@ -60,7 +60,7 @@ export class MetaMerger {
   readonly logger: Logger;
   readonly id: string;
 
-  constructor(id: string, logger: Logger, db: LibSQLDatabase) {
+  constructor(id: string, logger: Logger, db: DrizzleDatebase) {
     this.db = db;
     this.id = id;
     this.logger = logger;
@@ -90,12 +90,13 @@ export class MetaMerger {
       ...byConnection,
       metaCIDs: metaCIDs,
     };
-    // console.log("delMeta", mm);
+    // console.log("delMeta-1", mm.meta.keys.length);
     await this.sql.keyByTenantLedger.deleteByTenantLedgerKey({
       ...byConnection,
       keys: mm.meta.keys,
     });
 
+    // console.log("delMeta-2", mm.meta.metas.length);
     await this.sql.metaSend.deleteByConnection(connCIDs);
     // const waitingMetaCIDS = await this.sql.metaSend.getToSendMetaCIDs(byConnection.tenant, byConnection.ledger);
     // await this.sql.metaByTenantLedger.deleteByConnection(connCIDs, waitingMetaCIDS);
@@ -137,18 +138,16 @@ export class MetaMerger {
     const bySink = toByConnection(sink);
     const rows = await this.sql.metaSend.selectToAddSend({ ...bySink, now });
     // console.log("metaToSend", bySink, rows.length);
-    if (rows.length) {
-      await this.sql.metaSend.insert(
-        rows.map((row) => ({
-          metaCID: row.metaCID,
-          tenant: row.tenant,
-          ledger: row.ledger,
-          reqId: row.reqId,
-          resId: row.resId,
-          sendAt: row.sendAt,
-        })),
-      );
-    }
+    await this.sql.metaSend.insert(
+      rows.map((row) => ({
+        metaCID: row.metaCID,
+        tenant: row.tenant,
+        ledger: row.ledger,
+        reqId: row.reqId,
+        resId: row.resId,
+        sendAt: row.sendAt,
+      })),
+    );
     const { keys } = await this.sql.keyByTenantLedger.selectKeysByTenantLedger(bySink);
     return {
       keys,

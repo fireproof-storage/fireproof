@@ -1,8 +1,8 @@
 // import { ResolveOnce } from "@adviser/cement";
 // import { SQLStatement } from "./abstract-sql.js";
 
-import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { DrizzleDatebase } from "../hono-server.js";
 
 export const sqlTenant = sqliteTable("Tenant", {
   tenant: text().primaryKey(),
@@ -30,9 +30,9 @@ export class TenantSql {
   //   ];
   // }
 
-  readonly db: LibSQLDatabase;
+  readonly db: DrizzleDatebase;
   readonly id: string;
-  constructor(id: string, db: LibSQLDatabase) {
+  constructor(id: string, db: DrizzleDatebase) {
     this.db = db;
     this.id = id;
   }

@@ -2,7 +2,8 @@ import { defineWorkspace } from "vitest/config";
 
 import file from "./vitest.file.config.ts";
 import memory from "./vitest.memory.config.ts";
-import cloud from "./vitest.cloud.config.ts";
+import cloudLibsql from "./vitest.cloud.libsql.config.ts";
+import cloudD1 from "./vitest.cloud.d1.config.ts";
 import indexeddb from "./vitest.indexeddb.config.ts";
 
 export default defineWorkspace([
@@ -10,5 +11,6 @@ export default defineWorkspace([
   memory,
   file,
   indexeddb,
-  cloud,
+  cloudD1,
+  cloudLibsql,
 ]);

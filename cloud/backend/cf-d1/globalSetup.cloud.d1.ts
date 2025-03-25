@@ -1,13 +1,10 @@
 import fs from "fs/promises";
-import { drizzle } from "drizzle-orm/libsql";
-import { HonoServer } from "./cloud/backend/hono-server.js";
-import { mockJWK, setupBackend } from "./cloud/backend/test-helper.js";
-import { ensureSuperThis } from "./src/utils.js";
-import { createClient } from "@libsql/client";
+import { cloudBackendParams, mockJWK } from "../node/test-helper.js";
+import { ensureSuperThis } from "@fireproof/core";
 import { $ } from "zx";
+import { setupBackendD1 } from "./setup-backend-d1.js";
 
 const sthis = ensureSuperThis();
-let hs: HonoServer;
 export async function setup() {
   const keys = await mockJWK({}, sthis);
 
@@ -19,12 +16,14 @@ export async function setup() {
   await fs.mkdir("dist", { recursive: true });
 
   $.verbose = true;
-  await $`npx drizzle-kit push --config ./drizzle.cloud.config.ts`;
+  // create db
+  await $`wrangler -c cloud/backend/cf-d1/wrangler.toml -e test d1  execute test-meta-merge --local --command "select 'meno'"`;
+  // setup sql
+  await $`npx drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1.config.ts --force`;
 
   process.env["FP_TEST_SQL_URL"] = `file://${process.cwd()}/dist/node-meta.sqlite`;
 
-  const params = await setupBackend(sthis, drizzle(createClient({ url: process.env["FP_TEST_SQL_URL"] })));
-  hs = params.hs;
+  const params = await setupBackendD1(sthis, keys, "cloud/backend/cf-d1/wrangler.toml", "test");
   process.env[`FP_TEST_CLOUD_BACKEND`] = JSON.stringify({
     port: params.port,
     pid: params.pid,
@@ -42,9 +41,7 @@ export async function setup() {
 }
 
 export async function teardown() {
-  /*
   // eslint-disable-next-line no-console
-  console.log("Stopping node-backend process - ", cloudBackendParams(sthis).pid);
-  */
-  hs.close();
+  console.log("Stopping wrangler-backend process - ", cloudBackendParams(sthis).pid);
+  process.kill(cloudBackendParams(sthis).pid);
 }

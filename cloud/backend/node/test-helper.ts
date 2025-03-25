@@ -1,11 +1,12 @@
 import { BuildURI, CoerceURI, Result, URI } from "@adviser/cement";
 import { SuperThis, rt, ps, ensureSuperThis } from "@fireproof/core";
 import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
-import { HonoServer } from "./hono-server.js";
+import { HonoServer } from "../hono-server.js";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { Hono } from "hono";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
+import fs from "fs/promises";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.cloud.MsgRawConnection<T>;
@@ -275,6 +276,12 @@ export async function mockJWK(claim: Partial<ps.cloud.TokenForParam> = {}, sthis
     },
     applyAuthToURI: (uri: CoerceURI) => BuildURI.from(uri).setParam("authJWK", jwk).URI(),
   };
+}
+
+export async function writeEnvFile(sthis: SuperThis, tomlFile: string, env: string, envJWK: string) {
+  const fname = sthis.pathOps.join(sthis.pathOps.dirname(tomlFile), `.dev.vars.${env}`);
+  // console.log("Writing to", fname);
+  await fs.writeFile(fname, `${rt.sts.envKeyDefaults.PUBLIC}=${envJWK}\n`);
 }
 
 export async function setupBackend(

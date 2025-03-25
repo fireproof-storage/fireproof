@@ -4,8 +4,8 @@ import { ByConnection } from "./meta-merger.js";
 import { CRDTEntry } from "@fireproof/core";
 // import { SQLDatabase, SQLStatement } from "./abstract-sql.js";
 import { foreignKey, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { and, eq, inArray, notInArray } from "drizzle-orm";
+import { DrizzleDatebase } from "../hono-server.js";
 
 export interface MetaSendRow {
   readonly metaCID: string;
@@ -63,9 +63,9 @@ export class MetaSendSql {
   //   ];
   // }
 
-  readonly db: LibSQLDatabase;
+  readonly db: DrizzleDatebase;
   readonly id: string;
-  constructor(id: string, db: LibSQLDatabase) {
+  constructor(id: string, db: DrizzleDatebase) {
     this.db = db;
     this.id = id;
   }
@@ -146,16 +146,31 @@ export class MetaSendSql {
   }
 
   async insert(t: MetaSendRow[]) {
-    return this.db
-      .insert(sqlMetaSend)
-      .values(
-        t.map((i) => ({
+    if (!t.length) {
+      return;
+    }
+    // cloudflare D1 don't like [] in VALUES
+    for (const i of t) {
+      this.db
+        .insert(sqlMetaSend)
+        .values({
           ...i,
           sendAt: i.sendAt.toISOString(),
-        })),
-      )
-      .onConflictDoNothing()
-      .run();
+        })
+        .onConflictDoNothing()
+        .run();
+    }
+    // console.log("insert:send", t.length);
+    // return this.db
+    //   .insert(sqlMetaSend)
+    //   .values(
+    //     t.map((i) => ({
+    //       ...i,
+    //       sendAt: i.sendAt.toISOString(),
+    //     })),
+    //   )
+    //   .onConflictDoNothing()
+    //   .run();
     // const stmt = this.sqlInsertMetaSend();
     // for (const i of t) {
     //   await stmt.run(i.metaCID, i.tenant, i.ledger, i.reqId, i.resId, i.sendAt);
@@ -223,6 +238,9 @@ export class MetaSendSql {
   // }
 
   async deleteByConnection(dmi: ByConnection & { metaCIDs: string[] }) {
+    if (!dmi.metaCIDs.length) {
+      return;
+    }
     const metaCIDs = await this.db
       .select()
       .from(sqlMetaSend)

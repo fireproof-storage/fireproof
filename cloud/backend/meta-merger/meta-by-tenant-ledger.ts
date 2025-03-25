@@ -2,9 +2,9 @@ import { CRDTEntry } from "@fireproof/core";
 import { sqlTenantLedger } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
 import { foreignKey, primaryKey, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, inArray } from "drizzle-orm/expressions";
 import { sqlMetaSend } from "./meta-send.js";
+import { DrizzleDatebase } from "../hono-server.js";
 
 export interface MetaByTenantLedgerRow {
   readonly tenant: string;
@@ -82,9 +82,9 @@ export class MetaByTenantLedgerSql {
   //   ];
   // }
 
-  readonly db: LibSQLDatabase;
+  readonly db: DrizzleDatebase;
   readonly id: string;
-  constructor(id: string, db: LibSQLDatabase) {
+  constructor(id: string, db: DrizzleDatebase) {
     this.db = db;
     this.id = id;
   }
