@@ -15,14 +15,14 @@ jobs:
     name: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           run_install: false
           version: 10
           cache: "pnpm"
-
-      - uses: actions/checkout@v4
 
       - uses: useblacksmith/setup-node@v5
         with:
@@ -38,18 +38,17 @@ jobs:
       #   with:
       #     deno-version: v2.x
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-          version: 10
-          cache: "pnpm"
-
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
+
+      - name: Sticky-disk-cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-cache
+          path: ~/.cache
 
       # - name: smoke-esm-cache
       #   id: smoke-esm-cache
@@ -81,6 +80,20 @@ jobs:
     needs: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
@@ -107,6 +120,26 @@ jobs:
     needs: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Sticky-disk-cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-cache
+          path: ~/.cache
+
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
@@ -125,6 +158,25 @@ jobs:
     needs: ["test-node", "build"]
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Sticky-disk-cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-cache
+          path: ~/.cache
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
@@ -157,6 +209,20 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
@@ -188,6 +254,20 @@ jobs:
     environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+          cache: "pnpm"
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
