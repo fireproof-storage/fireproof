@@ -15,20 +15,8 @@ export async function setupBackendD1(
     return Promise.resolve({ port: +process.env.FP_WRANGLER_PORT, pid: 0, envName });
   }
 
-  // const nhf = new NodeHonoFactory(sthis, {
-  //   // msgP,
-  //   // gs: remoteGestalt,
-  //   sql: dbfile,
-  //   //new BetterSQLDatabase("./dist/node-meta.sqlite"),
-  // });
-  // const app = new Hono();
-  // const hs = new HonoServer(nhf);
-  // await hs.start().then((srv) => srv.once(app, port));
-  $.verbose = !!process.env.FP_DEBUG;
-  await writeEnvFile(sthis, wranglerToml, env, keys.keys.strings.publicKey);
-  // .dev.vars.<environment-name>
   $.verbose = !!sthis.env.get("FP_DEBUG");
-
+  await writeEnvFile(sthis, wranglerToml, env, keys.keys.strings.publicKey);
   const runningWrangler = $`
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &
                    waitPid=$!
