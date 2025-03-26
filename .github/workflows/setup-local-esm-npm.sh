@@ -16,8 +16,10 @@ else
 fi
 
 mkdir -p $HOME/.cache/vd $HOME/.cache/esm
-chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
+id
+sudo id
 ls -la $HOME/.cache
+chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
 
 
 export PROJECT_BASE=$projectRoot
