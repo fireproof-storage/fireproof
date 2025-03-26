@@ -132,7 +132,7 @@ jobs:
         run: pnpm install
 
       - name: playwright
-        run: pnpm exec playwright install chrome
+        run: pnpm exec playwright install chromium
 
       - uses: denoland/setup-deno@v2
         with:
@@ -175,7 +175,7 @@ jobs:
           path: ./dist
 
       - name: playwright
-        run: pnpm exec playwright install chrome
+        run: pnpm exec playwright install chromium
 
       - name: start-esm + npm
         run: |
