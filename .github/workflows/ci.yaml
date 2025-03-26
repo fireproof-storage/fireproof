@@ -10,7 +10,7 @@ jobs:
   build-test-smoke:
     name: Build Fireproof
 
-    runs-on: blacksmith-8vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     #steps:
     #  - uses: useblacksmith/setup-node@v5
     #    with:

@@ -113,6 +113,7 @@ export class MsgDispatcher {
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {
     const isError = MsgIsError(msg);
     const str = ctx.ende.encode(msg);
+    // console.log("send", msg, ctx.ws.send.toString());
     ctx.ws.send(str);
     return new Response(str, {
       status: isError ? 500 : 200,
@@ -181,7 +182,6 @@ export class MsgDispatcher {
         // console.log("dispatch-3");
         return this.validateConn(ctx, msg, (msg) => found.fn(ctx, msg));
       }
-      // console.log("dispatch-4", msg);
       return this.send(ctx, await this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg)));
     } catch (e) {
       // console.log("dispatch-4", id);

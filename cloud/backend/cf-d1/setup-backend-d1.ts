@@ -27,7 +27,7 @@ export async function setupBackendD1(
   $.verbose = !!process.env.FP_DEBUG;
   await writeEnvFile(sthis, wranglerToml, env, keys.keys.strings.publicKey);
   // .dev.vars.<environment-name>
-  // $.verbose = true;
+  $.verbose = !!sthis.env.get("FP_DEBUG");
 
   const runningWrangler = $`
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &

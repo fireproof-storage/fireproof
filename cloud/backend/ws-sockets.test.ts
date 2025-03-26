@@ -1,5 +1,5 @@
 import { MockJWK, mockJWK } from "./node/test-helper.js";
-import { Future, Result } from "@adviser/cement";
+import { Future, Result, URI } from "@adviser/cement";
 import { ps } from "@fireproof/core";
 import { testSuperThis } from "../test-super-this.js";
 
@@ -7,7 +7,7 @@ const { MsgIsResChat, Msger, buildReqChat } = ps.cloud;
 
 describe("test multiple connections", () => {
   const sthis = testSuperThis();
-  const port = +(sthis.env.get("ENDPOINT_PORT") ?? "0");
+  const fpUrl = URI.from(sthis.env.get("FP_ENDPOINT"));
 
   // describe.each([
   //   // dummy
@@ -40,7 +40,12 @@ describe("test multiple connections", () => {
       Array(connections)
         .fill(0)
         .map(() => {
-          return Msger.connect(sthis, auth.authType, `http://localhost:${port}/fp?protocol=ws`);
+          const url = fpUrl
+            .build()
+            .pathname("fp")
+            .setParam("protocol", fpUrl.protocol.startsWith("https") ? "wss" : "ws")
+            .setParam("random", sthis.nextId(12).str);
+          return Msger.connect(sthis, auth.authType, url);
         }),
     ).then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
 

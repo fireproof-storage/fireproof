@@ -12,6 +12,7 @@ export async function setup(project: TestProject) {
 
   await fs.mkdir("dist", { recursive: true });
 
+  $.verbose = !!sthis.env.get("FP_DEBUG");
   // create db
   await $`wrangler -c cloud/backend/cf-d1/wrangler.toml -e test d1  execute test-meta-merge --local --command "select 'meno'"`;
   // setup sql
@@ -25,6 +26,7 @@ export async function setup(project: TestProject) {
     ACCESS_KEY_ID: "minioadmin",
     SECRET_ACCESS_KEY: "minioadmin",
     ENDPOINT_PORT: "" + params.port,
+    FP_ENDPOINT: sthis.env.get("FP_ENDPOINT") ?? `http://localhost:${params.port}`,
     FP_STORAGE_URL: keys
       .applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
       .toString(),
