@@ -159,6 +159,10 @@ jobs:
           node-version: 20
           cache: pnpm
 
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: install
         run: pnpm install
 
@@ -274,6 +278,7 @@ jobs:
     name: clean-sticky-cache
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     needs: [build, test-node, smoke, publish, cf-deploy]
+    if: always()
     steps:
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
