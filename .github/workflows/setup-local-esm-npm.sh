@@ -17,10 +17,12 @@ fi
 
 mkdir -p $HOME/.cache/vd $HOME/.cache/esm
 id
-sudo id
-ls -la $HOME/.cache
-chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
-
+if [ "$FP_CI" != "fp_ci" ]
+then
+  sudo chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
+else
+  chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
+fi
 
 export PROJECT_BASE=$projectRoot
 # $dockerCompose down || exit 0

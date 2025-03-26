@@ -287,5 +287,4 @@ jobs:
           path: ./dist
       - name: wipe-sticky-cache
         run: |
-          (cd node_modules && rm -rf $(ls -A))
           (cd dist && rm -rf $(ls -A))
