@@ -42,13 +42,13 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
 
       - name: Sticky-disk-cache
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-cache
-          path: ~/.cache
+          path: ./.cache
 
       # - name: smoke-esm-cache
       #   id: smoke-esm-cache
@@ -98,13 +98,13 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
 
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ~/dist
+          path: ./dist
 
       - name: build
         run: pnpm run build
@@ -144,7 +144,7 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -181,12 +181,12 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ~/dist
+          path: ./dist
 
       - name: Sticky-disk-esm-cache
         uses: useblacksmith/stickydisk@v1
@@ -227,12 +227,12 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ~/dist
+          path: ./dist
       - name: publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -272,7 +272,7 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
       - name: deploy cloud/backend/cf-d1
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
@@ -297,12 +297,12 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ~/node_modules
+          path: ./node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ~/dist
+          path: ./dist
       - name: wipe-sticky-cache
         run: |
           (cd node_modules && rm -rf $(ls -A))
