@@ -14,11 +14,6 @@ jobs:
   pre-build:
     name: Build Fireproof
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
-    #steps:
-    #  - uses: useblacksmith/setup-node@v5
-    #    with:
-    #      node-version: 20
-    #runs-on: ubuntu-24.04
     steps:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -209,7 +204,6 @@ jobs:
           FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
-          env
           pnpm run drizzle:d1-remote
           pnpm run wrangler:cf-d1
           pnpm run test --project cloud:D1
