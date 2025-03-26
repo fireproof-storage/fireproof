@@ -38,11 +38,11 @@ jobs:
       #   with:
       #     deno-version: v2.x
 
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
+      # - name: Sticky-disk-node_modules
+      #   uses: useblacksmith/stickydisk@v1
+      #   with:
+      #     key: ${{ github.repository }}-${{ github.ref }}-node_modules
+      #     path: ./node_modules
 
       - name: Sticky-disk-cache
         uses: useblacksmith/stickydisk@v1
