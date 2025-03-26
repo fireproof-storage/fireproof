@@ -48,7 +48,7 @@ jobs:
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-cache
-          path: ./.cache
+          path: ~/.cache
 
       # - name: smoke-esm-cache
       #   id: smoke-esm-cache
