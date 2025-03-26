@@ -12,7 +12,7 @@ env:
 
 jobs:
   pre-build:
-    name: Build Fireproof
+    name: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
       - uses: pnpm/action-setup@v4
@@ -48,7 +48,7 @@ jobs:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
 
       # - name: smoke-esm-cache
@@ -77,20 +77,20 @@ jobs:
       #     path: node_modules/
 
   build:
-    name: Build
+    name: build
     needs: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
 
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ~/dist
 
       - name: build
@@ -110,7 +110,7 @@ jobs:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
       - uses: denoland/setup-deno@v2
         with:
@@ -122,18 +122,18 @@ jobs:
 
   smoke:
     name: smoke
-    needs: build
+    needs: ["test-node", "build"]
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ~/dist
 
       - name: Sticky-disk-esm-cache
@@ -152,7 +152,7 @@ jobs:
 
   publish:
     name: publish
-    needs: build
+    needs: test-node
     environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     if: startsWith(github.ref, 'refs/tags/v')
@@ -160,12 +160,12 @@ jobs:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ~/dist
       - name: publish
         env:
@@ -183,15 +183,15 @@ jobs:
           pnpm run fppublish
 
   cf-deploy:
-    name: publish
-    needs: pre-build
+    name: cf-deploy
+    needs: test-node
     environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
       - name: deploy cloud/backend/cf-d1
         env:
@@ -216,12 +216,12 @@ jobs:
       - name: Sticky-disk-node_modules
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          key: ${{ github.repository }}-${{ github.ref }}-node_modules
           path: ~/node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
-          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ~/dist
       - name: wipe-sticky-cache
         run: |
