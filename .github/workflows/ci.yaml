@@ -94,6 +94,11 @@ jobs:
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
           SECRET_ACCESS_KEY: ${{ secrets.CF_SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
+          STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
           env
           pnpm run drizzle:d1-remote
