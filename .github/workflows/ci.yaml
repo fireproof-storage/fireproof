@@ -22,7 +22,6 @@ jobs:
         with:
           run_install: false
           version: 10
-          cache: "pnpm"
 
       - uses: useblacksmith/setup-node@v5
         with:
@@ -87,18 +86,14 @@ jobs:
         with:
           run_install: false
           version: 10
-          cache: "pnpm"
 
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      # - name: Sticky-disk-node_modules
-      #   uses: useblacksmith/stickydisk@v1
-      #   with:
-      #     key: ${{ github.repository }}-${{ github.ref }}-node_modules
-      #     path: ./node_modules
+      - name: install
+        run: pnpm install
 
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
@@ -109,12 +104,6 @@ jobs:
       - name: build
         run: pnpm run build
 
-      - name: Upload dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
   test-node:
     name: test-node
     needs: pre-build
@@ -122,17 +111,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10
+
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: true
-          version: 10
-          cache: "pnpm"
+      - name: install
+        run: pnpm install
 
       - name: Sticky-disk-cache
         uses: useblacksmith/stickydisk@v1
@@ -155,35 +145,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sticky-disk-cache
-        uses: useblacksmith/stickydisk@v1
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          key: ${{ github.repository }}-cache
-          path: ~/.cache
+          version: 10
 
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: install
+        run: pnpm install
+
+      - name: Sticky-disk-cache
+        uses: useblacksmith/stickydisk@v1
         with:
-          run_install: true
-          version: 10
-          cache: "pnpm"
+          key: ${{ github.repository }}-cache
+          path: ~/.cache
 
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ./dist
-
-      - name: Sticky-disk-esm-cache
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-esm-cache
-          path: ~/esm-cache
 
       - name: start-esm + npm
         run: |
@@ -202,29 +187,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sticky-disk-cache
-        uses: useblacksmith/stickydisk@v1
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          key: ${{ github.repository }}-cache
-          path: ~/.cache
+          version: 10
 
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: true
-          version: 10
-          cache: "pnpm"
+      - name: install
+        run: pnpm install
 
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ./dist
+
       - name: publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -248,23 +229,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sticky-disk-cache
-        uses: useblacksmith/stickydisk@v1
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          key: ${{ github.repository }}-cache
-          path: ~/.cache
+          version: 10
 
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: install
+        run: pnpm install
+
+      - name: Sticky-disk-dist
+        uses: useblacksmith/stickydisk@v1
         with:
-          run_install: true
-          version: 10
-          cache: "pnpm"
+          key: ${{ github.repository }}-${{ github.ref }}-dist
+          path: ./dist
 
       - name: deploy cloud/backend/cf-d1
         env:
