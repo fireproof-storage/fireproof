@@ -94,11 +94,11 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
+      # - name: Sticky-disk-node_modules
+      #   uses: useblacksmith/stickydisk@v1
+      #   with:
+      #     key: ${{ github.repository }}-${{ github.ref }}-node_modules
+      #     path: ./node_modules
 
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
@@ -122,17 +122,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-          version: 10
-          cache: "pnpm"
-
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: true
+          version: 10
+          cache: "pnpm"
 
       - name: Sticky-disk-cache
         uses: useblacksmith/stickydisk@v1
@@ -140,11 +140,6 @@ jobs:
           key: ${{ github.repository }}-cache
           path: ~/.cache
 
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -166,22 +161,18 @@ jobs:
           key: ${{ github.repository }}-cache
           path: ~/.cache
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-          version: 10
-          cache: "pnpm"
-
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
+          run_install: true
+          version: 10
+          cache: "pnpm"
+
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
@@ -211,23 +202,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Sticky-disk-cache
+        uses: useblacksmith/stickydisk@v1
         with:
-          run_install: false
-          version: 10
-          cache: "pnpm"
+          key: ${{ github.repository }}-cache
+          path: ~/.cache
 
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
+          run_install: true
+          version: 10
+          cache: "pnpm"
+
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
@@ -256,23 +248,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Sticky-disk-cache
+        uses: useblacksmith/stickydisk@v1
         with:
-          run_install: false
-          version: 10
-          cache: "pnpm"
+          key: ${{ github.repository }}-cache
+          path: ~/.cache
 
       - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
 
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
+          run_install: true
+          version: 10
+          cache: "pnpm"
+
       - name: deploy cloud/backend/cf-d1
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
@@ -293,11 +286,6 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     needs: [build, test-node, smoke, publish, cf-deploy]
     steps:
-      - name: Sticky-disk-node_modules
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-node_modules
-          path: ./node_modules
       - name: Sticky-disk-dist
         uses: useblacksmith/stickydisk@v1
         with:
