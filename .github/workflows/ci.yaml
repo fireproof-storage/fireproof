@@ -9,6 +9,7 @@ concurrency:
 
 env:
   FP_CI: "fp_ci"
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: "true"
 
 jobs:
   pre-build:
@@ -121,14 +122,17 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - name: install
-        run: pnpm install
-
       - name: Sticky-disk-cache
         uses: useblacksmith/stickydisk@v1
         with:
           key: ${{ github.repository }}-cache
           path: ~/.cache
+
+      - name: install
+        run: pnpm install
+
+      - name: playwright
+        run: pnpm exec playwright install chrome
 
       - uses: denoland/setup-deno@v2
         with:
@@ -169,6 +173,9 @@ jobs:
         with:
           key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ./dist
+
+      - name: playwright
+        run: pnpm exec playwright install chrome
 
       - name: start-esm + npm
         run: |
