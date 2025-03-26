@@ -9,6 +9,6 @@ export default defineConfig({
     include: ["cloud/backend/meta-merger/*test.?(c|m)[jt]s?(x)"],
     globals: true,
     globalSetup: "./cloud/backend/meta-merger/globalSetup.cloud.meta-merger.ts",
-    setupFiles: "./cloud/backend/meta-merger/setup.cloud.meta-merger.js",
+    setupFiles: "./cloud/backend/meta-merger/setup.cloud.meta-merger.ts",
   },
 });
