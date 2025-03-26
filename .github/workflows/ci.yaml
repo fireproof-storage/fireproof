@@ -11,10 +11,8 @@ env:
   FP_CI: "fp_ci"
 
 jobs:
-  build-test-smoke:
+  pre-build:
     name: Build Fireproof
-    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
-
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     #steps:
     #  - uses: useblacksmith/setup-node@v5
@@ -41,9 +39,9 @@ jobs:
       #    node-version: 20
       #    cache: pnpm
 
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
+      # - uses: denoland/setup-deno@v2
+      #   with:
+      #     deno-version: v2.x
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -52,17 +50,23 @@ jobs:
           version: 10
           cache: "pnpm"
 
-      - name: smoke-esm-cache
-        id: smoke-esm-cache
-        uses: useblacksmith/cache@v5
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
         with:
-          path: ~/.cache
-          key: smoke-esm-cache
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
 
-      - name: start-esm + npm
-        run: |
-          bash .github/workflows/setup-local-esm-npm.sh
-          cp ./dist/npmrc-smoke .npmrc
+      # - name: smoke-esm-cache
+      #   id: smoke-esm-cache
+      #   uses: useblacksmith/cache@v5
+      #   with:
+      #     path: ~/.cache
+      #     key: smoke-esm-cache
+
+      # - name: start-esm + npm
+      #   run: |
+      #     bash .github/workflows/setup-local-esm-npm.sh
+      #     cp ./dist/npmrc-smoke .npmrc
 
       - name: install
         run: pnpm install
@@ -70,16 +74,105 @@ jobs:
         run: pnpm run format --check
       - name: lint
         run: pnpm run lint
+
+      # - name: Upload node_modules
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: node_modules
+      #     path: node_modules/
+
+  build:
+    name: Build
+    needs: pre-build
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    steps:
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
+
+      - name: Sticky-disk-dist
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          path: ~/dist
+
       - name: build
         run: pnpm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test-node:
+    name: test-node
+    needs: pre-build
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    steps:
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
       - name: test
         run: pnpm run test
       - name: test:deno
         run: pnpm run test:deno
+
+  smoke:
+    name: smoke
+    needs: build
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    steps:
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
+      - name: Sticky-disk-dist
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          path: ~/dist
+
+      - name: Sticky-disk-esm-cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-esm-cache
+          path: ~/esm-cache
+
+      - name: start-esm + npm
+        run: |
+          bash .github/workflows/setup-local-esm-npm.sh
+          cp ./dist/npmrc-smoke .npmrc
+
       - name: smoke
         run: pnpm run smoke
+
+  publish:
+    name: publish
+    needs: build
+    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
+      - name: Sticky-disk-dist
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          path: ~/dist
       - name: publish
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -94,6 +187,17 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           pnpm run fppublish
 
+  cf-deploy:
+    name: publish
+    needs: pre-build
+    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    steps:
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
       - name: deploy cloud/backend/cf-d1
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
@@ -109,3 +213,23 @@ jobs:
           pnpm run drizzle:d1-remote
           pnpm run wrangler:cf-d1
           pnpm run test --project cloud:D1
+
+  clean-sticky-cache:
+    name: clean-sticky-cache
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    needs: [build, test-node, smoke, publish, cf-deploy]
+    steps:
+      - name: Sticky-disk-node_modules
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-node_modules
+          path: ~/node_modules
+      - name: Sticky-disk-dist
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ gitub.ref }}-dist
+          path: ~/dist
+      - name: wipe-sticky-cache
+        run: |
+          (cd node_modules && rm -rf $(ls -A))
+          (cd dist && rm -rf $(ls -A))
