@@ -17,7 +17,7 @@ fi
 
 mkdir -p $HOME/.cache/vd $HOME/.cache/esm
 id
-if [ "$FP_CI" != "fp_ci" ]
+if [ "$FP_CI" = "fp_ci" ]
 then
   sudo chmod -R oug+w $HOME/.cache/vd $HOME/.cache/esm
 else
