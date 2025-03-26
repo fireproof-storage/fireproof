@@ -77,7 +77,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   byKey: IndexTree<K, R> = new IndexTree<K, R>();
   byId: IndexTree<K, R> = new IndexTree<K, R>();
   indexHead?: ClockHead;
-  includeDocsDefault = false;
+  includeDocsDefault = true;
   initError?: Error;
 
   ready(): Promise<void> {
