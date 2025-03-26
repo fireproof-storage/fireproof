@@ -9,6 +9,7 @@ env:
 jobs:
   build-test-smoke:
     name: Build Fireproof
+    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
 
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     #steps:
@@ -88,3 +89,13 @@ jobs:
           # should only run if a tag is set
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           pnpm run fppublish
+
+      - name: deploy cloud/backend/cf-d1
+        env:
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          SECRET_ACCESS_KEY: ${{ secrets.CF_SECRET_ACCESS_KEY }}
+        run: |
+          env
+          pnpm run drizzle:d1-remote
+          pnpm run wrangler:cf-d1
+          pnpm run test --project cloud:D1

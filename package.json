@@ -29,7 +29,10 @@
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
     "lint": "eslint",
-    "drizzle:test": "drizzle-kit push --config ./drizzle.cloud.config.ts"
+    "drizzle:libsql": "drizzle-kit push --config ./cloud/backend/node/drizzle.cloud.libsql.config.ts",
+    "drizzle:d1-local": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts",
+    "drizzle:d1-remote": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-remote.config.ts",
+    "wrangler:cf-d1": "wrangler deploy -c cloud/backend/cf-d1/wrangler.toml --env dev"
   },
   "keywords": [
     "ledger",
@@ -87,7 +90,7 @@
     "uuidv7": "^1.0.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.9",
-    "wrangler": "^4.4.0",
+    "wrangler": "^4.4.1",
     "zx": "^8.4.1"
   },
   "repository": {

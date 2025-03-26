@@ -81,7 +81,7 @@ describe("Connection", () => {
   let auth: MockJWK;
   // let privEnvJWK: string
   const honoServer = {
-    port: parseInt(URI.from(sthis.env.get("FP_STORAGE_URL")).port, 10),
+    // port: parseInt(URI.from(sthis.env.get("FP_STORAGE_URL")).port, 10),
     name: "HoneServer",
   };
 
@@ -95,16 +95,17 @@ describe("Connection", () => {
   //   // force multiple lines
   //   NodeHonoServerFactory(sthis),
   // ])("$name - Connection", (honoServer) => {
-  const port = honoServer.port;
+  // const port = honoServer.port;
   // const port = +(process.env.FP_WRANGLER_PORT || 0) || 1024 + Math.floor(Math.random() * (65536 - 1024));
   const my = defaultGestalt(msgP, { id: "FP-Universal-Client" });
 
+  const endpoint = sthis.env.get("FP_ENDPOINT") as string;
   const styles: { name: string; action: () => ReturnType<typeof wsStyle> | ReturnType<typeof httpStyle> }[] =
     // honoServer.name === "NodeHonoServer"
     [
       // force multiple lines
-      { name: "http", action: () => httpStyle(sthis, auth.applyAuthToURI, port, msgP, my) },
-      { name: "ws", action: () => wsStyle(sthis, auth.applyAuthToURI, port, msgP, my) },
+      { name: "http", action: () => httpStyle(sthis, auth.applyAuthToURI, endpoint, msgP, my) },
+      { name: "ws", action: () => wsStyle(sthis, auth.applyAuthToURI, endpoint, msgP, my) },
     ];
   // : [];
 
@@ -401,7 +402,6 @@ describe("Connection", () => {
           const sp = sup({ method: "DELETE", store: "wal" });
           const res = await conn.request(buildReqDelWAL(sthis, sp, gwCtx), { waitFor: MsgIsResDelWAL });
           if (MsgIsResDelWAL(res)) {
-            // expect(res.params).toEqual(sp);
             expect(URI.from(res.signedUrl).asObj()).toEqual(await refURL(sthis, res));
           } else {
             assert.fail("expected MsgResDelWAL", JSON.stringify(res));

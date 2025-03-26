@@ -29,7 +29,7 @@ const {
 export function httpStyle(
   sthis: SuperThis,
   applyAuthToURI: (uri: CoerceURI) => URI,
-  port: number,
+  endpoint: string,
   msgP: MsgerParamsWithEnDe,
   my: Gestalt,
 ) {
@@ -43,7 +43,7 @@ export function httpStyle(
     cInstance: HttpConnection,
     ok: {
       url: () =>
-        BuildURI.from(`http://127.0.0.1:${port}`)
+        BuildURI.from(endpoint)
           // .pathname(path)
           .setParam("capabilities", remote.protocolCapabilities.join(","))
           .URI(),
@@ -51,7 +51,7 @@ export function httpStyle(
         applyStart(
           Msger.openHttp(
             sthis,
-            [BuildURI.from(`http://127.0.0.1:${port}/fp`).setParam("capabilities", remote.protocolCapabilities.join(",")).URI()],
+            [BuildURI.from(endpoint).setParam("capabilities", remote.protocolCapabilities.join(",")).URI()],
             {
               ...msgP,
               // protocol: "http",
@@ -62,11 +62,11 @@ export function httpStyle(
         ),
     },
     connRefused: {
-      url: () => URI.from(`http://127.0.0.1:${port - 1}/`),
+      url: () => URI.from(`http://127.0.0.1:1023/`),
       open: async (): Promise<Result<MsgRawConnection<MsgBase>>> => {
         const ret = await Msger.openHttp(
           sthis,
-          [URI.from(`http://localhost:${port - 1}/`)],
+          [URI.from(`http://localhost:1023/`)],
           {
             ...msgP,
             // protocol: "http",
@@ -78,7 +78,7 @@ export function httpStyle(
           return ret;
         }
 
-        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://localhost:${port - 1}/`));
+        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://localhost:1023/`));
         // should fail
         const res = await ret.Ok().request(buildReqGestalt(sthis, rAuth.Ok(), my), { waitFor: MsgIsResGestalt });
         if (MsgIsError(res)) {
@@ -88,11 +88,11 @@ export function httpStyle(
       },
     },
     timeout: {
-      url: () => URI.from(`http://4.7.1.1:${port}/`),
+      url: () => URI.from(`http://4.7.1.1/`),
       open: async (): Promise<Result<MsgRawConnection<MsgBase>>> => {
         const ret = await Msger.openHttp(
           sthis,
-          [URI.from(`http://4.7.1.1:${port}/`)],
+          [URI.from(`http://4.7.1.1/`)],
           {
             ...msgP,
             // protocol: "http",
@@ -101,7 +101,7 @@ export function httpStyle(
           exGt,
         );
         // should fail
-        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://4.7.1.1:${port}/`));
+        const rAuth = await authTypeFromUri(sthis.logger, applyAuthToURI(`http://4.7.1.1/`));
         const res = await ret.Ok().request(buildReqGestalt(sthis, rAuth.Ok(), my), { waitFor: MsgIsResGestalt });
         if (MsgIsError(res)) {
           return Result.Err(res.message);
@@ -115,7 +115,7 @@ export function httpStyle(
 export function wsStyle(
   sthis: SuperThis,
   applyAuthToURI: (uri: CoerceURI) => URI,
-  port: number,
+  endpoint: string,
   msgP: MsgerParamsWithEnDe,
   my: Gestalt,
 ) {
@@ -129,7 +129,7 @@ export function wsStyle(
     cInstance: WSConnection,
     ok: {
       url: () =>
-        BuildURI.from(`http://127.0.0.1:${port}`)
+        BuildURI.from(endpoint)
           // .pathname(path)
           .setParam("capabilities", remote.protocolCapabilities.join(","))
           .URI(),
@@ -137,9 +137,7 @@ export function wsStyle(
         applyStart(
           Msger.openWS(
             sthis,
-            applyAuthToURI(
-              BuildURI.from(`http://127.0.0.1:${port}/ws`).setParam("capabilities", remote.protocolCapabilities.join(",")).URI(),
-            ),
+            applyAuthToURI(BuildURI.from(endpoint).setParam("capabilities", remote.protocolCapabilities.join(",")).URI()),
             {
               ...msgP,
               // protocol: "ws",
@@ -150,11 +148,11 @@ export function wsStyle(
         ),
     },
     connRefused: {
-      url: () => URI.from(`http://127.0.0.1:${port - 1}/`),
+      url: () => URI.from(`http://127.0.0.1:1023/`),
       open: () =>
         Msger.openWS(
           sthis,
-          applyAuthToURI(URI.from(`http://localhost:${port - 1}/`)),
+          applyAuthToURI(URI.from(`http://localhost:1023/`)),
           {
             ...msgP,
             // protocol: "ws",
@@ -164,11 +162,11 @@ export function wsStyle(
         ),
     },
     timeout: {
-      url: () => URI.from(`http://4.7.1.1:${port - 1}/`),
+      url: () => URI.from(`http://4.7.1.1/`),
       open: () =>
         Msger.openWS(
           sthis,
-          applyAuthToURI(URI.from(`http://4.7.1.1:${port - 1}/`)),
+          applyAuthToURI(URI.from(`http://4.7.1.1/`)),
           {
             ...msgP,
             // protocol: "ws",

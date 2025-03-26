@@ -10,32 +10,39 @@ export async function setup(project: TestProject) {
   const sthis = ensureSuperThis();
   const keys = await mockJWK(sthis);
 
-  await fs.mkdir("dist", { recursive: true });
+  let params: { port: number; pid?: number };
+  let FP_ENDPOINT = sthis.env.get("FP_ENDPOINT");
+  if (FP_ENDPOINT) {
+    params = { port: 0 };
+  } else {
+    await fs.mkdir("dist", { recursive: true });
 
-  $.verbose = !!sthis.env.get("FP_DEBUG");
-  // create db
-  await $`wrangler -c cloud/backend/cf-d1/wrangler.toml -e test d1  execute test-meta-merge --local --command "select 'meno'"`;
-  // setup sql
-  await $`npx drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1.config.ts --force`;
+    $.verbose = !!sthis.env.get("FP_DEBUG");
+    // create db
+    await $`wrangler -c cloud/backend/cf-d1/wrangler.toml -e test d1  execute test-meta-merge --local --command "select 'meno'"`;
+    // setup sql
+    await $`npx drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts --force`;
 
-  const params = await setupBackendD1(sthis, keys, "cloud/backend/cf-d1/wrangler.toml", "test");
+    params = await setupBackendD1(sthis, keys, "cloud/backend/cf-d1/wrangler.toml", "test");
+    FP_ENDPOINT = `http://localhost:${params.port}`;
+  }
 
   setTestEnv(project, {
     [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
-    STORAGE_URL: "http://localhost:9000/testbucket",
-    ACCESS_KEY_ID: "minioadmin",
-    SECRET_ACCESS_KEY: "minioadmin",
-    ENDPOINT_PORT: "" + params.port,
-    FP_ENDPOINT: sthis.env.get("FP_ENDPOINT") ?? `http://localhost:${params.port}`,
+    STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://localhost:9000/testbucket",
+    ACCESS_KEY_ID: sthis.env.get("ACCESS_KEY_ID") ?? "minioadmin",
+    SECRET_ACCESS_KEY: sthis.env.get("SECRET_ACCESS_KEY") ?? "minioadmin",
+    FP_ENDPOINT,
     FP_STORAGE_URL: keys
       .applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
       .toString(),
   });
 
   return () => {
-    // eslint-disable-next-line no-console
-    console.log("Stopping wrangler-backend process - ", params.pid);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    process.kill(params.pid!);
+    if (params.pid) {
+      // eslint-disable-next-line no-console
+      console.log("Stopping wrangler-backend process - ", params.pid);
+      process.kill(params.pid);
+    }
   };
 }
