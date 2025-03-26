@@ -97,6 +97,7 @@ jobs:
       - name: deploy cloud/backend/cf-d1
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ vars.CLOUDFLARE_API_TOKEN }}
           SECRET_ACCESS_KEY: ${{ secrets.CF_SECRET_ACCESS_KEY }}
           ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

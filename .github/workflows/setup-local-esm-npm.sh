@@ -22,7 +22,7 @@ ls -la $HOME/.cache
 
 export PROJECT_BASE=$projectRoot
 # $dockerCompose down || exit 0
-$dockerCompose -f .github/workflows/docker-compose.yaml up -d --wait
+$dockerCompose -f .github/docker-compose.yaml up -d --wait
 
 mkdir -p $projectRoot/dist
 
