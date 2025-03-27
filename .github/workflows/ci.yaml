@@ -136,8 +136,8 @@ jobs:
 
       - name: test Attempt 1
         id: attempt1
-        run: pnpm run test
         continue-on-error: true
+        run: pnpm run test
 
       - name: test Attempt 2
         if: steps.attempt1.outcome == 'failure'
@@ -196,8 +196,8 @@ jobs:
 
       - name: smoke Attempt 1
         id: attempt1
-        run: pnpm run smoke
         continue-on-error: true
+        run: pnpm run smoke
 
       - name: smoke Attempt 2
         if: steps.attempt1.outcome == 'failure'
@@ -275,6 +275,7 @@ jobs:
 
       - name: deploy cloud/backend/cf-d1 - 1
         id: attempt1
+        continue-on-error: true
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
