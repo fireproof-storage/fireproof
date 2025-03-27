@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.4
-        version: 0.4.4(typescript@5.8.2)
+        specifier: ~0.4.5
+        version: 0.4.5(typescript@5.8.2)
       '@fireproof/vendor':
         specifier: ~2.0.2
         version: 2.0.2(@vitest/browser@3.0.9)(vitest@3.0.9)
@@ -183,8 +183,8 @@ importers:
         specifier: ^3.0.9
         version: 3.0.9(@types/node@22.10.5)(@vitest/browser@3.0.9)(@vitest/ui@3.0.9)(happy-dom@14.12.3)(msw@2.7.3(@types/node@22.10.5)(typescript@5.8.2))(tsx@4.19.3)(yaml@2.7.0)
       wrangler:
-        specifier: ^4.4.1
-        version: 4.4.1(@cloudflare/workers-types@4.20250321.0)
+        specifier: ^4.5.0
+        version: 4.5.0(@cloudflare/workers-types@4.20250321.0)
       zx:
         specifier: ^8.4.1
         version: 8.4.1
@@ -195,8 +195,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.4.4':
-    resolution: {integrity: sha512-JEh7ttPe0RjcbKOSTek6ehSJT/xeUH8AqwHq6Fud66ixtPop5uU41eCCpblrB0wYQvYVOnsxtQDjrQoTlUDElg==}
+  '@adviser/cement@0.4.5':
+    resolution: {integrity: sha512-2HM3lV1yAme5B02A1iPg3iBUt6fnz4Mu17TiRoTA0aE+eR7TFXiAOGdqwUNn3regkVF9mAAgk+dwpiH4uEoCgA==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -249,11 +249,11 @@ packages:
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
     engines: {node: '>=18.0.0'}
 
-  '@cloudflare/unenv-preset@2.3.0':
-    resolution: {integrity: sha512-AaKYnbFpHaVDZGh3Hjy3oLYd12+LZw9aupAOudYJ+tjekahxcIqlSAr0zK9kPOdtgn10tzaqH7QJFUWcLE+k7g==}
+  '@cloudflare/unenv-preset@2.3.1':
+    resolution: {integrity: sha512-Xq57Qd+ADpt6hibcVBO0uLG9zzRgyRhfCUgBT9s+g3+3Ivg5zDyVgLFy40ES1VdNcu8rPNSivm9A+kGP5IVaPg==}
     peerDependencies:
       unenv: 2.0.0-rc.15
-      workerd: ^1.20250311.0
+      workerd: ^1.20250320.0
     peerDependenciesMeta:
       workerd:
         optional: true
@@ -4268,8 +4268,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@4.4.1:
-    resolution: {integrity: sha512-EFwr7hiVeAmPOuOGQ7HFfeaLKLxEXQMJ86kyn6RFB8pGjMEUtvZMsVa9cPubKkKgNi3WcDEFeFLalclGyq+tGA==}
+  wrangler@4.5.0:
+    resolution: {integrity: sha512-avu5ob9B8aVkC4N8b3f0QVcD8oehz3Y4zRkrsiTHbbaCgXNaa2uFU00YYip9DLNZCYM8aCupsGBuWqe1cBB09Q==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -4368,7 +4368,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.4.4(typescript@5.8.2)':
+  '@adviser/cement@0.4.5(typescript@5.8.2)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.2)
       yaml: 2.7.0
@@ -4426,7 +4426,7 @@ snapshots:
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/unenv-preset@2.3.0(unenv@2.0.0-rc.15)(workerd@1.20250321.0)':
+  '@cloudflare/unenv-preset@2.3.1(unenv@2.0.0-rc.15)(workerd@1.20250321.0)':
     dependencies:
       unenv: 2.0.0-rc.15
     optionalDependencies:
@@ -8593,10 +8593,10 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20250321.0
       '@cloudflare/workerd-windows-64': 1.20250321.0
 
-  wrangler@4.4.1(@cloudflare/workers-types@4.20250321.0):
+  wrangler@4.5.0(@cloudflare/workers-types@4.20250321.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
-      '@cloudflare/unenv-preset': 2.3.0(unenv@2.0.0-rc.15)(workerd@1.20250321.0)
+      '@cloudflare/unenv-preset': 2.3.1(unenv@2.0.0-rc.15)(workerd@1.20250321.0)
       blake3-wasm: 2.1.5
       esbuild: 0.24.2
       miniflare: 4.20250321.0
