@@ -17,6 +17,7 @@ import { WSRoom } from "../ws-room.js";
 import { ConnItem } from "../msg-dispatch.js";
 import { MetaMerger } from "../meta-merger/meta-merger.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
+import { envKeyDefaults } from "../../../src/runtime/sts-service/index.js";
 
 const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
 type Gestalt = ps.cloud.Gestalt;
@@ -197,9 +198,8 @@ export class NodeHonoFactory implements HonoServerFactory {
         id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
       });
 
-    // console.log("NodeHonoFactory.inject", sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC"));
     const stsService = await rt.sts.SessionTokenService.create({
-      token: sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC") ?? "",
+      token: sthis.env.get(envKeyDefaults.PUBLIC) ?? "",
     });
     const ctx: ExposeCtxItem<NodeWSRoom> = {
       id,

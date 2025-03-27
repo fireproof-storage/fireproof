@@ -14,7 +14,7 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.4
+        specifier: ~0.4.5
         version: 0.4.15(typescript@5.8.3)
       '@fireproof/vendor':
         specifier: ~2.0.2
@@ -183,7 +183,7 @@ importers:
         specifier: ^3.0.9
         version: 3.2.2(@types/node@22.15.30)(@vitest/browser@3.2.2)(@vitest/ui@3.2.2)(happy-dom@14.12.3)(jiti@1.21.7)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(terser@5.41.0)(tsx@4.19.3)(yaml@2.8.0)
       wrangler:
-        specifier: ^4.4.1
+        specifier: ^4.5.0
         version: 4.19.1(@cloudflare/workers-types@4.20250606.0)
       zx:
         specifier: ^8.4.1

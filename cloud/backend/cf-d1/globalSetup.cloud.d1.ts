@@ -12,6 +12,14 @@ export async function setup(project: TestProject) {
 
   let params: { port: number; pid?: number };
   let FP_ENDPOINT = sthis.env.get("FP_ENDPOINT");
+
+  const testEnv = {
+    [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
+    STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://localhost:9000/testbucket",
+    ACCESS_KEY_ID: sthis.env.get("ACCESS_KEY_ID") ?? "minioadmin",
+    SECRET_ACCESS_KEY: sthis.env.get("SECRET_ACCESS_KEY") ?? "minioadmin",
+  };
+
   if (FP_ENDPOINT) {
     params = { port: 0 };
   } else {
@@ -23,19 +31,13 @@ export async function setup(project: TestProject) {
     // setup sql
     await $`npx drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts --force`;
 
-    params = await setupBackendD1(sthis, keys, "cloud/backend/cf-d1/wrangler.toml", "test");
+    params = await setupBackendD1(sthis, "cloud/backend/cf-d1/wrangler.toml", "test");
     FP_ENDPOINT = `http://localhost:${params.port}`;
   }
 
   setTestEnv(project, {
-    [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
-    STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://localhost:9000/testbucket",
-    ACCESS_KEY_ID: sthis.env.get("ACCESS_KEY_ID") ?? "minioadmin",
-    SECRET_ACCESS_KEY: sthis.env.get("SECRET_ACCESS_KEY") ?? "minioadmin",
+    ...testEnv,
     FP_ENDPOINT,
-    FP_STORAGE_URL: keys
-      .applyAuthToURI(`fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
-      .toString(),
   });
 
   return () => {

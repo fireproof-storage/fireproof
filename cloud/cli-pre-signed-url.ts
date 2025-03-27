@@ -25,13 +25,13 @@ import { ensureSuperThis } from "@fireproof/core";
       accessKeyId: option({
         long: "accessKeyId",
         type: string,
-        defaultValue: () => sthis.env.get("CF_ACCESS_KEY_ID") || "accessKeyId",
+        defaultValue: () => sthis.env.get("ACCESS_KEY_ID") || "accessKeyId",
         defaultValueIsSerializable: true,
       }),
       secretAccessKey: option({
         long: "secretAccessKey",
         type: string,
-        defaultValue: () => sthis.env.get("CF_SECRET_ACCESS_KEY") || "secretAccessKey",
+        defaultValue: () => sthis.env.get("SECRET_ACCESS_KEY") || "secretAccessKey",
         defaultValueIsSerializable: true,
       }),
       region: option({
@@ -49,7 +49,7 @@ import { ensureSuperThis } from "@fireproof/core";
       storageURL: option({
         long: "storageURL",
         type: string,
-        defaultValue: () => sthis.env.get("CF_STORAGE_URL") || "https://bucket.example.com/db/main",
+        defaultValue: () => sthis.env.get("STORAGE_URL") || "https://bucket.example.com/db/main",
         defaultValueIsSerializable: true,
       }),
       path: option({

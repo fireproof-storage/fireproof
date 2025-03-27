@@ -1,6 +1,7 @@
 name = "fireproof-v2-cloud"
 main = "server.ts"
 compatibility_date = "2025-02-24"
+# not really needed, but there are some warning of type imports
 compatibility_flags = ["nodejs_compat"]
 # upload_source_maps = true
 
@@ -34,9 +35,9 @@ head_sampling_rate = 1
 
 [env.test.vars]
 VERSION = "FP-MSG-1.0"
-STORAGE_URL = "http://localhost:9000/testbucket"
-ACCESS_KEY_ID = "minioadmin"
-SECRET_ACCESS_KEY = "minioadmin"
+#STORAGE_URL = "http://localhost:9000/testbucket"
+#ACCESS_KEY_ID = "minioadmin"
+#SECRET_ACCESS_KEY = "minioadmin"
 #FP_DEBUG = "FPMetaGroups"
 
 # [[env.test.migrations]]
@@ -56,7 +57,7 @@ database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
 
 [env.dev.vars]
 VERSION = "FP-MSG-1.0"
-STORAGE_URL = "https://f031392067b661e91963881fb76b4ea3.r2.cloudflarestorage.com"
+# STORAGE_URL = "https://f031392067b661e91963881fb76b4ea3.r2.cloudflarestorage.com"
 #FP_DEBUG = "FPMetaGroups"
 
 [[env.dev.migrations]]
