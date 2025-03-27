@@ -168,7 +168,8 @@ export abstract class HonoServerBase implements HonoServerImpl {
       connection: msg,
       meta: msg.meta,
     });
-    return buildResPutMeta(ctx, msg, await metaMerger(ctx).metaToSend(msg), rUrl.signedUrl);
+    const res = await metaMerger(ctx).metaToSend(msg);
+    return buildResPutMeta(ctx, msg, res, rUrl.signedUrl);
   }
 
   async handleReqDelMeta(ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<ReqDelMeta>): Promise<MsgWithError<ResDelMeta>> {

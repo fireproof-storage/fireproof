@@ -69,7 +69,6 @@
     "aws4fetch": "^1.0.20",
     "better-sqlite3": "^11.9.1",
     "cmd-ts": "^0.13.0",
-    "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.5",
     "esbuild": "^0.24.2",
     "esbuild-plugin-replace": "^1.4.0",

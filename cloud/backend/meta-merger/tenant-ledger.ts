@@ -65,7 +65,7 @@ export class TenantLedgerSql {
   // }
 
   async ensure(t: TenantLedgerRow) {
-    this.db
+    return this.db
       .insert(sqlTenantLedger)
       .values({
         tenant: t.tenant,

@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import { dotenv } from "zx";
 import { command, run, option, string, flag, optional } from "cmd-ts";
 import { ensureSuperThis, rt, SuperThis } from "@fireproof/core";
 import { param } from "@adviser/cement";
@@ -37,7 +37,7 @@ export async function writeEnvFile(
 }
 
 (async () => {
-  dotenv.config();
+  dotenv.config(process.env.FP_ENV ?? ".env");
   const sthis = ensureSuperThis();
   const cmd = command({
     name: "cli-write-env",
