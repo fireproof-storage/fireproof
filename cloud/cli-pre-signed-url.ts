@@ -3,13 +3,13 @@
 // curl -X PUT --data-binary @/etc/protocols  $(npx tsx src/cloud/client/cli-pre-signed-url.ts)
 import { BuildURI } from "@adviser/cement";
 import { AwsClient } from "aws4fetch";
-import dotenv from "dotenv";
+import { dotenv } from "zx";
 import { command, run, option, oneOf, string } from "cmd-ts";
 import { ensureSuperThis } from "@fireproof/core";
 // import * as t from 'io-ts';
 
 (async () => {
-  dotenv.config();
+  dotenv.config(process.env.FP_ENV ?? ".env");
   const sthis = ensureSuperThis();
   const cmd = command({
     name: "cli-pre-signed-url",

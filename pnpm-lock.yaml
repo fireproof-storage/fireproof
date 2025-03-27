@@ -125,9 +125,6 @@ importers:
       cmd-ts:
         specifier: ^0.13.0
         version: 0.13.0
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
       drizzle-kit:
         specifier: ^0.30.5
         version: 0.30.5(patch_hash=5c1fb937eb4ab5690e721a8c5e4cd79093efe8f8ad3bf1f81c3592d619f00d03)
@@ -2249,10 +2246,6 @@ packages:
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
 
   drizzle-kit@0.30.5:
     resolution: {integrity: sha512-l6dMSE100u7sDaTbLczibrQZjA35jLsHNqIV+jmhNVO3O8jzM6kywMOmV9uOz9ZVSCMPQhAZEFjL/qDPVrqpUA==}
@@ -6155,8 +6148,6 @@ snapshots:
       domelementtype: 2.3.0
       domhandler: 5.0.3
     optional: true
-
-  dotenv@16.4.7: {}
 
   drizzle-kit@0.30.5(patch_hash=5c1fb937eb4ab5690e721a8c5e4cd79093efe8f8ad3bf1f81c3592d619f00d03):
     dependencies:
