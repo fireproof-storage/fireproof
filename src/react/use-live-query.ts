@@ -17,11 +17,11 @@ export function createUseLiveQuery(database: Database) {
         rows: initialRows,
         docs,
         length: docs.length,
-        map: (fn) => docs.map(fn),
-        filter: (fn) => docs.filter(fn),
-        forEach: (fn) => docs.forEach(fn),
+        map: <U>(fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U) => docs.map(fn),
+        filter: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean) => docs.filter(fn),
+        forEach: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void) => docs.forEach(fn),
         [Symbol.iterator]: () => docs[Symbol.iterator](),
-      };
+      } as LiveQueryResult<T, K, R>;
     });
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
@@ -34,11 +34,11 @@ export function createUseLiveQuery(database: Database) {
         ...res,
         docs,
         length: docs.length,
-        map: (fn) => docs.map(fn),
-        filter: (fn) => docs.filter(fn),
-        forEach: (fn) => docs.forEach(fn),
+        map: <U>(fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U) => docs.map(fn),
+        filter: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean) => docs.filter(fn),
+        forEach: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void) => docs.forEach(fn),
         [Symbol.iterator]: () => docs[Symbol.iterator](),
-      });
+      } as LiveQueryResult<T, K, R>);
     }, [mapFnString, queryString]);
 
     useEffect(() => {
