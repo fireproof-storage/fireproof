@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { DocSet, DocTypes, DocWithId, Database } from "@fireproof/core";
 import { deepClone } from "./utils.js";
-import type {
-  DeleteDocFn,
-  StoreDocFn,
-  UseDocumentInitialDocOrFn,
-  UseDocumentResult
-} from "./types.js";
+import type { DeleteDocFn, StoreDocFn, UseDocumentInitialDocOrFn, UseDocumentResult } from "./types.js";
 
 /**
  * Implementation of the useDocument hook

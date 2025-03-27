@@ -3,7 +3,7 @@ import { parse } from "multiformats/link";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 import { put, get, entries, root } from "@fireproof/vendor/@web3-storage/pail/crdt";
-import { EventBlockView, EventLink, Operation, PutOperation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
+import { EventBlockView, EventLink, Operation, PutOperation, Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@fireproof/vendor/@web3-storage/pail/clock";
 import * as Batch from "@fireproof/vendor/@web3-storage/pail/crdt/batch";
 import {
@@ -31,7 +31,6 @@ import {
   BaseBlockstore,
   PARAM,
 } from "./types.js";
-import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
 import { CarTransactionImpl } from "./blockstore/transaction.js";
 

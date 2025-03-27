@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
+import importPlugin from "eslint-plugin-import";
 
 const opts = tseslint.config(
   eslint.configs.recommended,
@@ -23,8 +24,12 @@ const opts = tseslint.config(
     ],
   },
   {
+    plugins: {
+      import: importPlugin,
+    },
     rules: {
       "no-console": ["warn"],
+      "import/no-duplicates": ["error"],
     },
   },
   {
