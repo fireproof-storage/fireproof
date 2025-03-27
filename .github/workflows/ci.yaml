@@ -308,8 +308,6 @@ jobs:
           FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
-          pnpm run drizzle:d1-remote
-          pnpm run wrangler:cf-d1
           pnpm run test --project cloud:D1
 
   clean-sticky-cache:
