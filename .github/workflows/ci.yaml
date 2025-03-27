@@ -273,7 +273,24 @@ jobs:
           key: ${{ github.repository }}-${{ github.ref }}-dist
           path: ./dist
 
-      - name: deploy cloud/backend/cf-d1
+      - name: deploy cloud/backend/cf-d1 - 1
+        id: attempt1
+        env:
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
+          STORAGE_URL: ${{ vars.STORAGE_URL }}
+        run: |
+          pnpm run drizzle:d1-remote
+          pnpm run wrangler:cf-d1
+          pnpm run test --project cloud:D1
+
+      - name: deploy cloud/backend/cf-d1 - 2
+        if: steps.attempt1.outcome == 'failure'
         env:
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
