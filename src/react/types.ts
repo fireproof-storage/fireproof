@@ -17,16 +17,11 @@ import type {
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
   readonly rows: IndexRow<K, T, R>[];
-  /** @internal */
-  readonly length: number;
-  /** @internal */
-  map<U>(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U): U[];
-  /** @internal */
-  filter(predicate: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean): DocWithId<T>[];
-  /** @internal */
-  forEach(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void): void;
-  /** @internal */
-  [Symbol.iterator](): Iterator<DocWithId<T>>;
+  private readonly length: number;
+  private map<U>(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U): U[];
+  private filter(predicate: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean): DocWithId<T>[];
+  private forEach(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void): void;
+  private [Symbol.iterator](): Iterator<DocWithId<T>>;
 }
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
@@ -47,10 +42,10 @@ export type UseAllDocs = <T extends DocTypes>(query?: AllDocsQueryOpts) => AllDo
 
 export type UseChanges = <T extends DocTypes>(since: ClockHead, opts: ChangesOptions) => ChangesResult<T>;
 
-export interface UpdateDocFnOptions {
-  readonly replace?: boolean;
-  readonly reset?: boolean;
-}
+export type UpdateDocFnOptions = Partial<{
+  replace: boolean;
+  reset: boolean;
+}>;
 
 export type UpdateDocFn<T extends DocTypes> = (newDoc?: DocSet<T>, options?: UpdateDocFnOptions) => void;
 
@@ -61,14 +56,14 @@ export type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Pr
 export type UseDocumentResultTuple<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
 
 export interface UseDocumentResultObject<T extends DocTypes> {
-  doc: DocWithId<T>;
-  merge: (newDoc: Partial<T>) => void;
-  replace: (newDoc: T) => void;
-  reset: () => void;
-  refresh: () => Promise<void>;
-  save: StoreDocFn<T>;
-  remove: DeleteDocFn<T>;
-  submit: (e?: Event) => Promise<void>;
+  readonly doc: DocWithId<T>;
+  readonly merge: (newDoc: Partial<T>) => void;
+  readonly replace: (newDoc: T) => void;
+  readonly reset: () => void;
+  readonly refresh: () => Promise<void>;
+  readonly save: StoreDocFn<T>;
+  readonly remove: DeleteDocFn<T>;
+  readonly submit: (e?: Event) => Promise<void>;
 }
 
 export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
