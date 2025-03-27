@@ -37,10 +37,10 @@ export type UseAllDocs = <T extends DocTypes>(query?: AllDocsQueryOpts) => AllDo
 
 export type UseChanges = <T extends DocTypes>(since: ClockHead, opts: ChangesOptions) => ChangesResult<T>;
 
-export type UpdateDocFnOptions = Partial<{
-  replace: boolean;
-  reset: boolean;
-}>;
+export interface UpdateDocFnOptions {
+  replace?: boolean;
+  reset?: boolean;
+}
 
 export type UpdateDocFn<T extends DocTypes> = (newDoc?: DocSet<T>, options?: UpdateDocFnOptions) => void;
 
@@ -52,13 +52,13 @@ export type UseDocumentResultTuple<T extends DocTypes> = [DocWithId<T>, UpdateDo
 
 export interface UseDocumentResultObject<T extends DocTypes> {
   readonly doc: DocWithId<T>;
-  readonly merge: (newDoc: Partial<T>) => void;
-  readonly replace: (newDoc: T) => void;
-  readonly reset: () => void;
-  readonly refresh: () => Promise<void>;
-  readonly save: StoreDocFn<T>;
-  readonly remove: DeleteDocFn<T>;
-  readonly submit: (e?: Event) => Promise<void>;
+  merge(newDoc: Partial<T>): void;
+  replace(newDoc: T): void;
+  reset(): void;
+  refresh(): Promise<void>;
+  save(existingDoc?: DocWithId<T>): Promise<DocResponse>;
+  remove(existingDoc?: DocWithId<T>): Promise<DocResponse>;
+  submit(e?: Event): Promise<void>;
 }
 
 export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
