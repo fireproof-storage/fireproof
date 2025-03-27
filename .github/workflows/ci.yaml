@@ -289,9 +289,8 @@ jobs:
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
           pnpm run drizzle:d1-remote
-          echo $ACCESS_KEY_ID | pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml  secret put --env dev ACCESS_KEY_ID
-          echo $SECRET_ACCESS_KEY | pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml  secret put --env dev SECRET_ACCESS_KEY
-          pnpm exec tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ./cloud/backend/cf-d1/wrangler.toml --env dev --excludeSecrets
+          pnpm exec tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ./cloud/backend/cf-d1/wrangler.toml --env dev --fname /dev/stdout --json | \
+            pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml secret --env dev bulk
           pnpm run wrangler:cf-d1
           pnpm run test --project cloud:D1
 
