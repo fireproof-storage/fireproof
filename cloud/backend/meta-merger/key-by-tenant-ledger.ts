@@ -117,7 +117,7 @@ export class KeyByTenantLedgerSql {
   // }
 
   async ensure(t: KeysForTenantLedger) {
-    return this.db
+    const ret = await this.db
       .insert(sqlKeyByTenantLedger)
       .values(
         t.keys.map((key) => ({
@@ -129,6 +129,7 @@ export class KeyByTenantLedgerSql {
       )
       .onConflictDoNothing()
       .run();
+    return ret;
   }
 
   // sqlSelectByTenantLedger(): SQLStatement {

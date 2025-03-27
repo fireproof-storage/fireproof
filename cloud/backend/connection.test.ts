@@ -50,14 +50,6 @@ type EventGetMeta = ps.cloud.EventGetMeta;
 type MsgConnectedAuth = ps.cloud.MsgConnectedAuth;
 
 async function refURL(sthis: SuperThis, sp: ResOptionalSignedUrl) {
-  // const { env } = {
-  //   env: process.env as {
-  //     STORAGE_URL: string;
-  //     ACCESS_KEY_ID: string;
-  //     SECRET_ACCESS_KEY: string;
-  //     REGION: string;
-  //   },
-  // };
   return (
     await calculatePreSignedUrl(sp, {
       storageUrl: URI.from(sthis.env.get("STORAGE_URL")),
@@ -116,7 +108,7 @@ describe("Connection", () => {
     beforeAll(async () => {
       style = styleFn.action();
       // const app = new Hono();
-      qOpen = buildReqOpen(sthis, auth.authType, { reqId: "req-open-test" });
+      qOpen = buildReqOpen(sthis, auth.authType, { reqId: `req-open-test-${sthis.nextId().str}` });
       // server = await honoServer
       //   .factory(sthis, msgP, style.remoteGestalt, port, auth.keys.strings.publicKey)
       //   .then((srv) => srv.once(app, port));
@@ -237,7 +229,7 @@ describe("Connection", () => {
         gwCtx = {
           conn: conn.conn,
           tenant: {
-            tenant: "Tenant",
+            tenant: `Tenant-${sthis.nextId(12).str}`,
             ledger: "Ledger",
           },
         };

@@ -181,7 +181,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
               .Str("statusText", res.statusText)
               .Msg("HTTP Error")
               .AsError(),
-            await res.text(),
+            await res.text().catch(() => "no body"),
           ),
         );
       }

@@ -1,12 +1,17 @@
 import fs from "fs/promises";
 import { mockJWK } from "../node/test-helper.js";
 import { ensureSuperThis, rt } from "@fireproof/core";
-import { $ } from "zx";
+import { $, dotenv } from "zx";
 import { setupBackendD1 } from "./setup-backend-d1.js";
 import type { TestProject } from "vitest/node";
 import { setTestEnv } from "../../test-global-helper.js";
 
 export async function setup(project: TestProject) {
+  if (typeof process.env.FP_ENV === "string") {
+    dotenv.config(process.env.FP_ENV ?? ".env");
+    // eslint-disable-next-line no-console
+    console.log("Loaded env from", process.env.FP_ENV);
+  }
   const sthis = ensureSuperThis();
   const keys = await mockJWK(sthis);
 

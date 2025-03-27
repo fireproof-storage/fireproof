@@ -1,4 +1,3 @@
-import { VERSION } from "@adviser/cement";
 import {
   AuthType,
   GwCtx,
@@ -11,6 +10,7 @@ import {
   SignedUrlParam,
   MethodSignedUrlParam,
   ResSignedUrl,
+  VERSION,
 } from "./msg-types.js";
 import { V2SerializedMetaKey } from "../../runtime/meta-key-hack.js";
 

@@ -3,7 +3,7 @@ import { defineConfig } from "drizzle-kit";
 
 import { dotenv } from "zx";
 
-dotenv.config(".dev.env");
+dotenv.config(process.env.FP_ENV ?? ".dev.env");
 
 function dbCredentials() {
   const env = envFactory();
