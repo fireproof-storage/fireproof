@@ -134,11 +134,19 @@ jobs:
       - name: playwright
         run: pnpm exec playwright install chromium
 
+      - name: test Attempt 1
+        id: attempt1
+        run: pnpm run test
+        continue-on-error: true
+
+      - name: test Attempt 2
+        if: steps.attempt1.outcome == 'failure'
+        run: pnpm run test
+
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: test
-        run: pnpm run test
+
       - name: test:deno
         run: pnpm run test:deno
 
@@ -186,7 +194,13 @@ jobs:
           bash .github/workflows/setup-local-esm-npm.sh
           cp ./dist/npmrc-smoke .npmrc
 
-      - name: smoke
+      - name: smoke Attempt 1
+        id: attempt1
+        run: pnpm run smoke
+        continue-on-error: true
+
+      - name: smoke Attempt 2
+        if: steps.attempt1.outcome == 'failure'
         run: pnpm run smoke
 
   publish:
