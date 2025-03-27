@@ -1,7 +1,17 @@
-import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt, CRDTImpl } from "@fireproof/core";
-import { bs } from "@fireproof/core";
-import { CRDTMeta, DocValue } from "@fireproof/core";
-import { Index, index } from "@fireproof/core";
+import {
+  CRDT,
+  defaultWriteQueueOpts,
+  ensureSuperThis,
+  LedgerOpts,
+  toStoreURIRuntime,
+  rt,
+  CRDTImpl,
+  bs,
+  CRDTMeta,
+  DocValue,
+  Index,
+  index,
+} from "@fireproof/core";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;
