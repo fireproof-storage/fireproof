@@ -1,10 +1,10 @@
 import type { ConfigOpts, Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import type { UseFireproof } from "./types.js";
-import { createUseDocument } from "./useDocument.js";
-import { createUseLiveQuery } from "./useLiveQuery.js";
-import { createUseAllDocs } from "./useAllDocs.js";
-import { createUseChanges } from "./useChanges.js";
+import { createUseDocument } from "./use-document.js";
+import { createUseLiveQuery } from "./use-live-query.js";
+import { createUseAllDocs } from "./use-all-docs.js";
+import { createUseChanges } from "./use-changes.js";
 
 /**
  * @deprecated Use the `useFireproof` hook instead
