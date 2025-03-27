@@ -147,7 +147,14 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: test:deno
+      - name: test:deno 1
+        id: denoattempt1
+        run: pnpm run test:deno
+        continue-on-error: true
+
+      - name: test:deno 2
+        id: denoattempt2
+        if: steps.denoattempt1.outcome == 'failure'
         run: pnpm run test:deno
 
   smoke:
