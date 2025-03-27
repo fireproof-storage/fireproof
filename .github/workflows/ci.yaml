@@ -277,6 +277,8 @@ jobs:
         id: attempt1
         continue-on-error: true
         env:
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
@@ -287,12 +289,17 @@ jobs:
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
           pnpm run drizzle:d1-remote
+          echo $ACCESS_KEY_ID | pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml  secret put --env dev ACCESS_KEY_ID
+          echo $SECRET_ACCESS_KEY | pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml  secret put --env dev SECRET_ACCESS_KEY
+          pnpm exec tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ./cloud/backend/cf-d1/wrangler.toml --env dev --excludeSecrets
           pnpm run wrangler:cf-d1
           pnpm run test --project cloud:D1
 
       - name: deploy cloud/backend/cf-d1 - 2
         if: steps.attempt1.outcome == 'failure'
         env:
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}

@@ -1,11 +1,10 @@
 import { SuperThis } from "@fireproof/core";
-import { MockJWK, portRandom, writeEnvFile } from "../node/test-helper.js";
+import { portRandom } from "../node/test-helper.js";
 import { $ } from "zx";
 import { Future } from "@adviser/cement";
 
 export async function setupBackendD1(
   sthis: SuperThis,
-  keys: MockJWK,
   wranglerToml: string,
   env: string,
   port = portRandom(sthis),
@@ -16,7 +15,8 @@ export async function setupBackendD1(
   }
 
   $.verbose = !!sthis.env.get("FP_DEBUG");
-  await writeEnvFile(sthis, wranglerToml, env, keys.keys.strings.publicKey);
+  await $`npx tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
+
   const runningWrangler = $`
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &
                    waitPid=$!

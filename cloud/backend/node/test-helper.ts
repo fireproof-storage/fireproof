@@ -5,7 +5,6 @@ import { HonoServer } from "../hono-server.js";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { Hono } from "hono";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import fs from "fs/promises";
 
 type MsgerParamsWithEnDe = ps.cloud.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.cloud.MsgRawConnection<T>;
@@ -257,12 +256,6 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<ps.cloud.TokenFor
     },
     applyAuthToURI: (uri: CoerceURI) => BuildURI.from(uri).setParam("authJWK", jwk).URI(),
   };
-}
-
-export async function writeEnvFile(sthis: SuperThis, tomlFile: string, env: string, envJWK: string) {
-  const fname = sthis.pathOps.join(sthis.pathOps.dirname(tomlFile), `.dev.vars.${env}`);
-  // console.log("Writing to", fname);
-  await fs.writeFile(fname, `${rt.sts.envKeyDefaults.PUBLIC}=${envJWK}\n`);
 }
 
 export async function setupBackendNode(
