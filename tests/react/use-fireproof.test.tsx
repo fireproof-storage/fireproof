@@ -96,13 +96,13 @@ describe("HOOK: useFireproof useLiveQuery supports array-like behavior", () => {
     async () => {
       let arrayLikeQuery: LiveQueryResult<{ foo: string }, string>;
       let destructuredDocs: DocWithId<{ foo: string }>[];
-      
+
       renderHook(() => {
         const result = useFireproof(dbName);
         database = result.database;
         useLiveQuery = result.useLiveQuery;
         arrayLikeQuery = useLiveQuery<{ foo: string }>("foo");
-        
+
         // Test destructuring the docs property
         const { docs } = arrayLikeQuery;
         destructuredDocs = docs;
@@ -111,8 +111,8 @@ describe("HOOK: useFireproof useLiveQuery supports array-like behavior", () => {
       await waitFor(() => {
         // Verify destructured docs
         expect(destructuredDocs.length).toBe(3);
-        expect(destructuredDocs.map(doc => doc.foo)).toEqual(["aha", "bar", "caz"]);
-        
+        expect(destructuredDocs.map((doc) => doc.foo)).toEqual(["aha", "bar", "caz"]);
+
         // Verify array-like behavior - need to use type assertions since our interface doesn't include these methods
         const arrayLike = arrayLikeQuery as unknown as {
           length: number;
@@ -121,29 +121,29 @@ describe("HOOK: useFireproof useLiveQuery supports array-like behavior", () => {
           filter(fn: (doc: DocWithId<{ foo: string }>) => boolean): DocWithId<{ foo: string }>[];
           forEach(fn: (doc: DocWithId<{ foo: string }>) => void): void;
         };
-        
+
         // Test length property
         expect(arrayLike.length).toBe(3);
-        
+
         // Test iteration
         const values: string[] = [];
         for (const doc of arrayLike) {
           values.push(doc.foo);
         }
         expect(values).toEqual(["aha", "bar", "caz"]);
-        
+
         // Test map
-        const mappedValues = arrayLike.map(doc => doc.foo.toUpperCase());
+        const mappedValues = arrayLike.map((doc) => doc.foo.toUpperCase());
         expect(mappedValues).toEqual(["AHA", "BAR", "CAZ"]);
-        
+
         // Test filter
-        const filtered = arrayLike.filter(doc => doc.foo.includes('a'));
+        const filtered = arrayLike.filter((doc) => doc.foo.includes("a"));
         expect(filtered.length).toBe(3);
-        expect(filtered.map(doc => doc.foo)).toEqual(["aha", "bar", "caz"]);
-        
+        expect(filtered.map((doc) => doc.foo)).toEqual(["aha", "bar", "caz"]);
+
         // Test forEach
         const forEachValues: string[] = [];
-        arrayLike.forEach(doc => {
+        arrayLike.forEach((doc) => {
           forEachValues.push(doc.foo);
         });
         expect(forEachValues).toEqual(["aha", "bar", "caz"]);

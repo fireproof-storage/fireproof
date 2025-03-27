@@ -25,9 +25,7 @@ import type {
   Attachable,
   Attached,
 } from "./types.js";
-import { ensureLogger, NotFoundError } from "./utils.js";
-
-import { makeName } from "./utils.js";
+import { ensureLogger, NotFoundError, makeName } from "./utils.js";
 
 export function isDatabase(db: unknown): db is Database {
   return db instanceof DatabaseImpl;

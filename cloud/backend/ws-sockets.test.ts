@@ -1,8 +1,7 @@
-import { ensureSuperThis } from "@fireproof/core";
+import { ensureSuperThis, ps } from "@fireproof/core";
 
 import { MockJWK, mockJWK, NodeHonoServerFactory } from "./test-helper.js";
 import { Future, Result } from "@adviser/cement";
-import { ps } from "@fireproof/core";
 
 const { MsgIsResChat, Msger, buildReqChat } = ps.cloud;
 
