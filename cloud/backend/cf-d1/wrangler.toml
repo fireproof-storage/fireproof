@@ -57,6 +57,10 @@ database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
 
 [env.dev.vars]
 VERSION = "FP-MSG-1.0"
+#CLOUD_SESSION_TOKEN_PUBLIC = "should-be-set-by-dot-dev"
+#STORAGE_URL = "should-be-set-by-dot-dev"
+
+
 # STORAGE_URL = "https://f031392067b661e91963881fb76b4ea3.r2.cloudflarestorage.com"
 #FP_DEBUG = "FPMetaGroups"
 

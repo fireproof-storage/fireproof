@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { command, run, option, string, flag } from "cmd-ts";
+import { command, run, option, string, flag, optional } from "cmd-ts";
 import { ensureSuperThis, rt, SuperThis } from "@fireproof/core";
 import { param } from "@adviser/cement";
 import fs from "fs/promises";
@@ -7,9 +7,11 @@ import fs from "fs/promises";
 export async function writeEnvFile(
   sthis: SuperThis,
   envFname: string,
+  outFname: string | undefined,
   env: string,
   vals: Record<string, string>,
   doNotOverwrite: boolean,
+  json: boolean,
 ) {
   const fname = sthis.pathOps.join(sthis.pathOps.dirname(envFname), `.dev.vars.${env}`);
   if (
@@ -21,11 +23,16 @@ export async function writeEnvFile(
   ) {
     return fname;
   }
-  // console.log("Writing to", fname);
-  const render = Object.entries(vals)
-    .map(([k, v]) => `${k}=${v}`)
-    .join("\n");
-  await fs.writeFile(fname, render);
+  let render: string;
+  if (json) {
+    render = JSON.stringify(vals, null, 2);
+  } else {
+    // console.log("Writing to", fname);
+    render = Object.entries(vals)
+      .map(([k, v]) => `${k}=${v}`)
+      .join("\n");
+  }
+  await fs.writeFile(outFname ?? fname, render);
   return fname;
 }
 
@@ -55,6 +62,13 @@ export async function writeEnvFile(
       excludeSecrets: flag({
         long: "excludeSecrets",
       }),
+      out: option({
+        long: "out",
+        type: optional(string),
+      }),
+      json: flag({
+        long: "json",
+      }),
     },
     handler: async (args) => {
       const vals = {
@@ -71,8 +85,11 @@ export async function writeEnvFile(
       if (rVal.isErr()) {
         throw rVal.Err();
       }
-      // eslint-disable-next-line no-console
-      console.log("Wrote: ", await writeEnvFile(sthis, args.wranglerToml, args.env, rVal.Ok(), args.doNotOverwrite));
+      const fname = await writeEnvFile(sthis, args.wranglerToml, args.out, args.env, rVal.Ok(), args.doNotOverwrite, args.json);
+      if (!(args.json || args.out)) {
+        // eslint-disable-next-line no-console
+        console.log("Wrote: ", fname);
+      }
     },
   });
 
