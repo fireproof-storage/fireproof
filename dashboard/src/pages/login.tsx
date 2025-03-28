@@ -10,7 +10,7 @@ const slides = [
 
 export async function loginLoader({ request }: { request: Request }) {
   const url = URI.from(request.url);
-  const hashes = Object.fromEntries(Array.from(url.getParams))
+  const hashes = Object.fromEntries(Array.from(url.getParams));
   console.log("login", hashes, url.toString());
   // if (hashes.redirect_url) {
   //   const ret = BuildURI.from(window.location.href).URI()
@@ -27,7 +27,7 @@ export function Login() {
   // TO-DO remove this line when auth is ready
   const toggleDarkMode = useContext(AppContext).sideBar.toggleDarkMode;
 
-  const app = useContext(AppContext)
+  const app = useContext(AppContext);
 
   function incSlide() {
     setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
@@ -39,14 +39,13 @@ export function Login() {
 
   if (app.cloud._clerkSession?.isSignedIn === true) {
     const buri = URI.from(window.location.href);
-    const tos = buri.getParam("redirect_url")
+    const tos = buri.getParam("redirect_url");
     if (!tos) {
       return <Navigate to="/fp/cloud" />;
     } else {
       return <Navigate to={URI.from(tos).withoutHostAndSchema} />;
     }
   }
-
 
   // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")
   const redirect_url = URI.from(window.location.href).withoutHostAndSchema;

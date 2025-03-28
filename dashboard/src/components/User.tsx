@@ -69,7 +69,7 @@ export function User() {
     <>
       <SignedIn>
         {/* Login */}
-        <UserButton  />
+        <UserButton />
       </SignedIn>
       <SignedOut>
         {/* LoggedIn */}

@@ -54,11 +54,7 @@ export function App() {
 
       <Route path="/fp/cloud" element={<Cloud />}>
         <Route index element={<CloudIndex />} />
-        <Route
-          path="api/token"
-          element={<ApiToken />}
-          loader={redirectBackUrl}
-        />
+        <Route path="api/token" element={<ApiToken />} loader={redirectBackUrl} />
 
         <Route path="tenants">
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
