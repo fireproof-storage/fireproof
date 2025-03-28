@@ -1,8 +1,11 @@
 import { useContext } from "react";
 import {
+  BrowserRouter,
   Navigate,
+  Outlet,
   Route,
   RouterProvider,
+  Routes,
   createBrowserRouter,
   createMemoryRouter,
   createRoutesFromElements,
@@ -35,9 +38,11 @@ import { DocsShow } from "../pages/docs/show.tsx";
 import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
 import { SignUpPage, signupLoader } from "../pages/signup.tsx";
+import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
+  // console.log(">>>>>>>>>>>>>>", window.location.href);
   const routes = createRoutesFromElements(
     <Route>
       <Route path="/login" element={<Login />} loader={loginLoader} />
@@ -46,8 +51,15 @@ export function App() {
         <Route index element={<Index />} loader={indexLoader} />
       </Route>
       {/* <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}> */}
+
       <Route path="/fp/cloud" element={<Cloud />}>
         <Route index element={<CloudIndex />} />
+        <Route
+          path="api/token"
+          element={<ApiToken />}
+          loader={redirectBackUrl}
+        />
+
         <Route path="tenants">
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
           <Route path=":tenantId">

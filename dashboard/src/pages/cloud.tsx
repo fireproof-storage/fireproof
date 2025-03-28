@@ -6,7 +6,7 @@ import { AppContext } from "../app-context.tsx";
 import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 // import { useSession } from "@clerk/clerk-react";
-import { BuildURI } from "@adviser/cement";
+import { URI } from "@adviser/cement";
 
 // TODO: This is a temporary loader to ensure the user is logged in with Clerk.
 // TODO: We should move this to a provider agnostic loader
@@ -29,8 +29,13 @@ export function Cloud() {
   // const x = useSession();
   // console.log(">>>>>>>>", cloud.sessionReady(true), cloud._clerkSession?.isLoaded, cloud._clerkSession?.isSignedIn);
   if (cloud._clerkSession?.isSignedIn === false) {
-    const tos = BuildURI.from(window.location.href).pathname("/login").setParam("next_url", window.location.pathname).toString();
-    return <Navigate to={tos.replace(/^[^:]+:\/\/[^/]+/, "")} />;
+    const buri = URI.from(window.location.href);
+    const tos = buri.build().pathname("/login").cleanParams().setParam(
+      "redirect_url", buri.toString()
+    ).URI().withoutHostAndSchema
+    console.log("cloud-tos", tos);
+    // return <><div>{tos}</div></>
+    return <Navigate to={tos} />;
     // return <div>Not logged in:{tos}</div>;
   }
   return <WithSidebar sideBarComponent={<SidebarCloud />} />;

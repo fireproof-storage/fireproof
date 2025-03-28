@@ -1,16 +1,23 @@
 import { SignIn } from "@clerk/clerk-react";
 import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { BuildURI, param, URI } from "@adviser/cement";
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
   { text: "Fastest I’ve ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },
 ];
 
 export async function loginLoader({ request }: { request: Request }) {
-  const url = new URL(request.url);
-  const nextUrl = url.searchParams.get("next_url") || "/";
-  return nextUrl;
+  const url = URI.from(request.url);
+  const hashes = Object.fromEntries(Array.from(url.getParams))
+  console.log("login", hashes, url.toString());
+  // if (hashes.redirect_url) {
+  //   const ret = BuildURI.from(window.location.href).URI()
+  //   // console.log("login", hashes, ret);
+  //   // return ret;
+  // }
+  // return "/";
 }
 
 export function Login() {
@@ -20,6 +27,8 @@ export function Login() {
   // TO-DO remove this line when auth is ready
   const toggleDarkMode = useContext(AppContext).sideBar.toggleDarkMode;
 
+  const app = useContext(AppContext)
+
   function incSlide() {
     setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
   }
@@ -27,6 +36,21 @@ export function Login() {
   function decSlide() {
     setActiveSlide((cur) => (cur === 0 ? slides.length - 1 : --cur));
   }
+
+  if (app.cloud._clerkSession?.isSignedIn === true) {
+    const buri = URI.from(window.location.href);
+    const tos = buri.getParam("redirect_url")
+    if (!tos) {
+      return <Navigate to="/fp/cloud" />;
+    } else {
+      return <Navigate to={URI.from(tos).withoutHostAndSchema} />;
+    }
+  }
+
+
+  // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")
+  const redirect_url = URI.from(window.location.href).withoutHostAndSchema;
+  console.log("login-redirect_url", window.location.href);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] min-h-screen overflow-hidden">
@@ -92,6 +116,7 @@ export function Login() {
             />
           </svg>
           <SignIn
+            forceRedirectUrl={redirect_url}
             appearance={{
               elements: {
                 headerSubtitle: { display: "none" },

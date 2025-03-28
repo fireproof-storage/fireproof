@@ -9,7 +9,7 @@ const slides = [
 
 export async function signupLoader({ request }: { request: Request }) {
   const url = new URL(request.url);
-  const nextUrl = url.searchParams.get("next_url") || "/";
+  const nextUrl = url.searchParams.get("redirect_url") || "/";
   return nextUrl;
 }
 

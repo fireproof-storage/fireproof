@@ -1,3 +1,4 @@
+import { URI } from "@adviser/cement";
 import { SignedIn, SignedOut, SignInButton, UserButton, useSession } from "@clerk/clerk-react";
 
 // let user;
@@ -68,7 +69,7 @@ export function User() {
     <>
       <SignedIn>
         {/* Login */}
-        <UserButton />
+        <UserButton  />
       </SignedIn>
       <SignedOut>
         {/* LoggedIn */}

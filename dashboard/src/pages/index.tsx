@@ -1,6 +1,7 @@
 import { redirect } from "react-router-dom";
 
 export async function indexLoader(/*{ request }*/) {
+  console.log("indexLoader", window.location.href);
   return redirect("/fp/cloud");
 }
 
