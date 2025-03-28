@@ -1,7 +1,7 @@
 import { BuildURI, to_uint8, URI } from "@adviser/cement";
 import { AppContext } from "../../../app-context.tsx";
 import { Navigate, replace, useNavigate } from "react-router-dom";
-import {  useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { base58btc } from "multiformats/bases/base58";
 
 export function redirectBackUrl() {
@@ -33,13 +33,17 @@ export function ApiToken() {
     // return <div>Not logged in:{tos}</div>;
   }
   useEffect(() => {
-    if (cloud._clerkSession?.isSignedIn === true && !buri.hasParam("token") ) {
+    if (cloud._clerkSession?.isSignedIn === true && !buri.hasParam("token")) {
       if (cloudToken.data) {
         const back_url = BuildURI.from(buri.getParam("back_url")).setParam("fpToken", cloudToken.data.token).URI();
-        const redirectTo = buri.build().setParam("token", "ready").setParam("back_url", back_url.toString()).URI().withoutHostAndSchema;
+        const redirectTo = buri
+          .build()
+          .setParam("token", "ready")
+          .setParam("back_url", back_url.toString())
+          .URI().withoutHostAndSchema;
         console.log("set-redirectTo", back_url, redirectTo);
         // window.location.assign(back_url);
-        // window.location.replace(redirectTo); 
+        // window.location.replace(redirectTo);
         // setRedirectTo(back_url.toString());
         navigate(redirectTo.toString(), { replace: true });
       }
@@ -49,13 +53,15 @@ export function ApiToken() {
   console.log("is to nav", buri.hasParam("token"));
   if (buri.hasParam("token")) {
     const url = BuildURI.from(window.location.href).pathname("/fp/cloud/api/token").cleanParams("token").URI().withoutHostAndSchema;
-    console.log("nav-redirectUrl", url)
-     return <Navigate to={url} />;
+    console.log("nav-redirectUrl", url);
+    return <Navigate to={url} />;
   }
 
   return (
     <>
-      <div>Waiting for Fireproof Backend token for: {buri.getParam("back_url")} - {window.location.href}</div>
+      <div>
+        Waiting for Fireproof Backend token for: {buri.getParam("back_url")} - {window.location.href}
+      </div>
     </>
   );
 }

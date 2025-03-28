@@ -30,9 +30,7 @@ export function Cloud() {
   // console.log(">>>>>>>>", cloud.sessionReady(true), cloud._clerkSession?.isLoaded, cloud._clerkSession?.isSignedIn);
   if (cloud._clerkSession?.isSignedIn === false) {
     const buri = URI.from(window.location.href);
-    const tos = buri.build().pathname("/login").cleanParams().setParam(
-      "redirect_url", buri.toString()
-    ).URI().withoutHostAndSchema
+    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", buri.toString()).URI().withoutHostAndSchema;
     console.log("cloud-tos", tos);
     // return <><div>{tos}</div></>
     return <Navigate to={tos} />;
