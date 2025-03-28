@@ -1,8 +1,8 @@
 import { Attachable, DocWithId, useFireproof, bs } from "use-fireproof";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
-import { useEffect } from "react";
-import { ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, ResolveOnce, URI } from "@adviser/cement";
+import { ne } from "drizzle-orm";
 
 const needsAttach = new ResolveOnce();
 
@@ -31,32 +31,54 @@ function App() {
 
   const [token, setToken] = useState("");
 
+  const [triggerAttach, setTriggerAttach] = useState(false);
+
   useEffect(() => {
     database.allDocs<DocWithId<{ value: string }>>().then((rows) => {
       setRows(rows.rows.map((i) => i.value));
     });
-    needsAttach
-      .once(async () => {
-        try {
-          database.attach(toCloud());
-        } catch (e) {
-          console.error("Error attaching", e);
-        }
+    if (triggerAttach) {
+      needsAttach
+        .once(async () => {
+          try {
+            database.attach(toCloud());
+          } catch (e) {
+            console.error("Error attaching", e);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [database, triggerAttach]);
 
-        const uri = URI.from(window.location.href);
-        if (!uri.hasParam("token")) {
-          window.location.href = "http://localhost:3002?backUrl=" + window.location.href;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        setToken(uri.getParam("token")!);
+  useEffect(() => {
+    const uri = URI.from(window.location.href);
+    if (uri.hasParam("fpToken")) {
+      setToken(uri.getParam("fpToken", ""));
+    }
+  }, [window.location.href]);
 
-      })
-      .catch(console.error);
-  }, [database]);
+  if (triggerAttach) {
+    const uri = URI.from(window.location.href);
+    if (!uri.hasParam("fpToken")) {
+      window.location.href = BuildURI.from("http://localhost:3002/fp/cloud/api/token")
+        .setParam("back_url", window.location.href)
+        .toString();
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 
   return (
     <>
       <h1>FireProof Party of the 3rd</h1>
+      <div
+        className="card"
+        onClick={() => {
+          setTriggerAttach(true);
+        }}
+      >
+        Do Attach
+      </div>
       <div
         className="card"
         onClick={() => {
