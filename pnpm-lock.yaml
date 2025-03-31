@@ -126,7 +126,7 @@ importers:
         specifier: ^0.13.0
         version: 0.13.0
       drizzle-kit:
-        specifier: ^0.30.5
+        specifier: ^0.30.6
         version: 0.30.6(patch_hash=5c1fb937eb4ab5690e721a8c5e4cd79093efe8f8ad3bf1f81c3592d619f00d03)
       esbuild:
         specifier: ^0.24.2
