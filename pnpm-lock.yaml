@@ -75,7 +75,7 @@ importers:
         version: 8.18.2
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20250321.0
+        specifier: ^4.20250327.0
         version: 4.20250606.0
       '@eslint/js':
         specifier: ^9.23.0
