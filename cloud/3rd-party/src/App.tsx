@@ -60,7 +60,8 @@ function App() {
   if (triggerAttach) {
     const uri = URI.from(window.location.href);
     if (!uri.hasParam("fpToken")) {
-      window.location.href = BuildURI.from("http://localhost:3002/fp/cloud/api/token")
+      // window.location.href = BuildURI.from("http://localhost:3002/fp/cloud/api/token")
+      window.location.href = BuildURI.from("https://dev.connect.fireproof.direct/fp/cloud/api/token")
         .setParam("back_url", window.location.href)
         .toString();
     }
