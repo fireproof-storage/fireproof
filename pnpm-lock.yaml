@@ -29,7 +29,7 @@ importers:
         specifier: ^10.2.3
         version: 10.2.5
       '@libsql/client':
-        specifier: ^0.15.0
+        specifier: ^0.15.1
         version: 0.15.8
       cborg:
         specifier: ^4.2.9
