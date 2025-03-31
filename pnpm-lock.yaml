@@ -126,8 +126,8 @@ importers:
         specifier: ^0.13.0
         version: 0.13.0
       drizzle-kit:
-        specifier: ^0.30.5
-        version: 0.30.5(patch_hash=w2ftydq4uid5xh4fp3qzpvcsga)
+        specifier: ^0.30.6
+        version: 0.30.6(patch_hash=w2ftydq4uid5xh4fp3qzpvcsga)
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
@@ -2406,8 +2406,8 @@ packages:
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
 
-  drizzle-kit@0.30.5:
-    resolution: {integrity: sha512-l6dMSE100u7sDaTbLczibrQZjA35jLsHNqIV+jmhNVO3O8jzM6kywMOmV9uOz9ZVSCMPQhAZEFjL/qDPVrqpUA==}
+  drizzle-kit@0.30.6:
+    resolution: {integrity: sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g==}
     hasBin: true
 
   drizzle-orm@0.41.0:
@@ -6394,7 +6394,7 @@ snapshots:
       domhandler: 5.0.3
     optional: true
 
-  drizzle-kit@0.30.5(patch_hash=w2ftydq4uid5xh4fp3qzpvcsga):
+  drizzle-kit@0.30.6(patch_hash=w2ftydq4uid5xh4fp3qzpvcsga):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
