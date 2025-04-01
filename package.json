@@ -18,6 +18,7 @@
     "presmoke": "if [ \"$FP_CI\" != 'fp_ci' ] ; then pnpm run build; fi; pnpm run presmoke:publish",
     "presmoke:publish": "bash -x smoke/publish-local-registry.sh",
     "smoke": "pnpm run '/^smoke:/'",
+    "smoke-retry": "pnpm run '/^smoke:/'",
     "smoke:esm": "sh smoke/esm/it.sh",
     "smoke:node": "sh smoke/npm/it.sh",
     "smoke:react": "sh smoke/react/it.sh",
