@@ -1,5 +1,5 @@
 import { defineConfig, Options } from "tsup";
-// import resolve from "esbuild-plugin-resolve";
+// import replace from "@rollup/plugin-replace"
 import { replace } from "esbuild-plugin-replace";
 
 const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
@@ -256,6 +256,36 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     dts: {
       footer: "declare module 'use-fireproof'",
     },
+  },
+
+  {
+    //    ...LIBRARY_BUNDLE_OPTIONS,
+    // external: [...external, "cmd-ts", "zx", "jose", "@fireproof/core"],
+    external: [...external, "jose", "@fireproof/core"],
+    bundle: true,
+    format: ["esm"],
+    target: "es2022",
+    name: "fp-cli",
+    entry: ["cli/main.ts"],
+    platform: "node",
+    outDir: "dist/fireproof-core/cli",
+    banner: {
+      js: `import { createRequire } from 'module';
+           const require = createRequire(import.meta.url);
+           const __dirname = new URL('.', import.meta.url).pathname;
+           const __filename = new URL(import.meta.url).pathname;
+           `,
+    },
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+      // resolve({
+      //   ...ourMultiformat,
+      // }),
+    ],
   },
 ];
 

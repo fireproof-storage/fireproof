@@ -75,7 +75,7 @@
     "better-sqlite3": "^11.9.1",
     "cmd-ts": "^0.13.0",
     "drizzle-kit": "^0.30.6",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.25.1",
     "esbuild-plugin-replace": "^1.4.0",
     "eslint": "^9.18.0",
     "eslint-import-resolver-typescript": "^4.3.1",
