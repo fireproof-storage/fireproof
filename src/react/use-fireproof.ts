@@ -15,7 +15,7 @@ export const FireproofCtx = {} as UseFireproof;
  *
  * ## Summary
  *
- * React hook to create a custom-named Fireproof database and provides the utility hooks to query against it.
+ * React hook to use a custom-named Fireproof database.
  *
  * ## Usage
  * ```tsx
@@ -25,7 +25,7 @@ export const FireproofCtx = {} as UseFireproof;
  *
  * ## Overview
  *
- * `useFireproof` takes the name of your database and returns back to React hooks: `useLiveQuery` and `useDocument`.
+ * `useFireproof` takes the name of your database and returns React hooks: `useLiveQuery` and `useDocument`.
  *
  * `useLiveQuery` is the recommended way to query Fireproof in React and subscribe to changes.
  * `useDocument` is useful for things like forms where documents are being created from an initial state, saved, and updated.
