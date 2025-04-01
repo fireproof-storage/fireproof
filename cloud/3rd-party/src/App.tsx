@@ -2,7 +2,6 @@ import { Attachable, DocWithId, useFireproof, bs } from "use-fireproof";
 import { useState, useEffect } from "react";
 import "./App.css";
 import { BuildURI, ResolveOnce, URI } from "@adviser/cement";
-import { ne } from "drizzle-orm";
 
 const needsAttach = new ResolveOnce();
 
@@ -10,9 +9,9 @@ function toCloud(): Attachable {
   return {
     name: "toCloud",
     prepare: async () => {
-      console.log("Attaching to cloud");
+      // console.log("Attaching to cloud");
       const gatewayInterceptor = bs.URIInterceptor.withMapper((uri) => {
-        console.log("Intercepting", uri.toString());
+        // console.log("Intercepting", uri.toString());
         return uri.build().setParam("authJWK", "the-token").URI();
       });
       return {
@@ -43,9 +42,11 @@ function App() {
           try {
             database.attach(toCloud());
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.error("Error attaching", e);
           }
         })
+        // eslint-disable-next-line no-console
         .catch(console.error);
     }
   }, [database, triggerAttach]);
@@ -66,8 +67,6 @@ function App() {
         .toString();
     }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 
   return (
     <>
