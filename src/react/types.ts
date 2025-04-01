@@ -19,15 +19,11 @@ export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R e
   readonly rows: IndexRow<K, T, R>[];
 }
 
-// Shadow type for array-like behavior
-export type ArrayLikeQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = LiveQueryResult<T, K, R> &
-  DocWithId<T>[];
-
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   mapFn: string | MapFn<T>,
   query?: QueryOpts<K>,
   initialRows?: IndexRow<K, T, R>[],
-) => ArrayLikeQueryResult<T, K, R>;
+) => LiveQueryResult<T, K, R>;
 
 export interface AllDocsResult<T extends DocTypes> {
   readonly docs: DocWithId<T>[];

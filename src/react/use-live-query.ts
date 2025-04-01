@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DocFragment, DocTypes, DocWithId, IndexKeyType, IndexRow, MapFn, Database } from "@fireproof/core";
-import type { ArrayLikeQueryResult } from "./types.js";
+import type { LiveQueryResult } from "./types.js";
+
+// Internal shadow type for array-like behavior
+type ArrayLikeQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = LiveQueryResult<T, K, R> &
+  DocWithId<T>[];
 
 /**
  * Implementation of the useLiveQuery hook
@@ -10,7 +14,7 @@ export function createUseLiveQuery(database: Database) {
     mapFn: MapFn<T> | string,
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],
-  ): ArrayLikeQueryResult<T, K, R> {
+  ): LiveQueryResult<T, K, R> {
     const [result, setResult] = useState<ArrayLikeQueryResult<T, K, R>>(() => {
       const docs = initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r);
       return Object.assign(
