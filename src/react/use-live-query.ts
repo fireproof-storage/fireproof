@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DocFragment, DocTypes, DocWithId, IndexKeyType, IndexRow, MapFn, Database } from "@fireproof/core";
-import type { LiveQueryResult } from "./types.js";
+import type { ArrayLikeQueryResult } from "./types.js";
 
 /**
  * Implementation of the useLiveQuery hook
@@ -10,19 +10,21 @@ export function createUseLiveQuery(database: Database) {
     mapFn: MapFn<T> | string,
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],
-  ): LiveQueryResult<T, K, R> {
-    const [result, setResult] = useState<LiveQueryResult<T, K, R>>(() => {
+  ): ArrayLikeQueryResult<T, K, R> {
+    const [result, setResult] = useState<ArrayLikeQueryResult<T, K, R>>(() => {
       const docs = initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r);
-      // @ts-expect-error - shadow array-like behavior
-      return Object.assign({ 
-        docs, 
-        rows: initialRows, 
-        length: docs.length,
-        [Symbol.iterator]: () => docs[Symbol.iterator](),
-        map: <U>(fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U) => docs.map(fn),
-        filter: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean) => docs.filter(fn),
-        forEach: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void) => docs.forEach(fn)
-      }, docs);
+      return Object.assign(
+        {
+          docs,
+          rows: initialRows,
+          length: docs.length,
+          [Symbol.iterator]: () => docs[Symbol.iterator](),
+          map: <U>(fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U) => docs.map(fn),
+          filter: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean) => docs.filter(fn),
+          forEach: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void) => docs.forEach(fn),
+        },
+        docs,
+      );
     });
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
@@ -31,16 +33,20 @@ export function createUseLiveQuery(database: Database) {
     const refreshRows = useCallback(async () => {
       const res = await database.query<K, T, R>(mapFn, query);
       const docs = res.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r);
-      // @ts-expect-error - shadow array-like behavior
-      setResult(Object.assign({ 
-        docs, 
-        rows: res.rows, 
-        length: docs.length,
-        [Symbol.iterator]: () => docs[Symbol.iterator](),
-        map: <U>(fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U) => docs.map(fn),
-        filter: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean) => docs.filter(fn),
-        forEach: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void) => docs.forEach(fn)
-      }, docs));
+      setResult(
+        Object.assign(
+          {
+            docs,
+            rows: res.rows,
+            length: docs.length,
+            [Symbol.iterator]: () => docs[Symbol.iterator](),
+            map: <U>(fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U) => docs.map(fn),
+            filter: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean) => docs.filter(fn),
+            forEach: (fn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void) => docs.forEach(fn),
+          },
+          docs,
+        ),
+      );
     }, [database, mapFnString, queryString]);
 
     useEffect(() => {

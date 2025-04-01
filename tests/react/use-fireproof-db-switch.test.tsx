@@ -18,7 +18,7 @@ describe("HOOK: useFireproof database switching", () => {
 
     // Add data to db1
     await db1.put({ foo: "db1-data" });
-    
+
     // Add different data to db2
     await db2.put({ foo: "db2-data" });
   });
@@ -39,14 +39,14 @@ describe("HOOK: useFireproof database switching", () => {
           query = result.useLiveQuery<{ foo: string }>("foo");
           return result;
         },
-        { initialProps: { dbName: db1Name } }
+        { initialProps: { dbName: db1Name } },
       );
 
       // Verify initial state with db1
       await waitFor(() => {
         expect(currentDbName).toBe(db1Name);
         expect(currentDb.name).toBe(db1Name);
-        expect(query.rows.map(row => row.doc?.foo)).toEqual(["db1-data"]);
+        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["db1-data"]);
       });
 
       // Switch to db2
@@ -56,7 +56,7 @@ describe("HOOK: useFireproof database switching", () => {
       await waitFor(() => {
         expect(currentDbName).toBe(db2Name);
         expect(currentDb.name).toBe(db2Name);
-        expect(query.rows.map(row => row.doc?.foo)).toEqual(["db2-data"]);
+        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["db2-data"]);
       });
 
       // Switch back to db1
@@ -66,7 +66,7 @@ describe("HOOK: useFireproof database switching", () => {
       await waitFor(() => {
         expect(currentDbName).toBe(db1Name);
         expect(currentDb.name).toBe(db1Name);
-        expect(query.rows.map(row => row.doc?.foo)).toEqual(["db1-data"]);
+        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["db1-data"]);
       });
 
       // Test that changes to the new database are reflected
@@ -76,10 +76,10 @@ describe("HOOK: useFireproof database switching", () => {
       await waitFor(() => {
         expect(currentDbName).toBe(db2Name);
         expect(currentDb.name).toBe(db2Name);
-        expect(query.rows.map(row => row.doc?.foo)).toEqual(["db2-data", "db2-updated"]);
+        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["db2-data", "db2-updated"]);
       });
     },
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
   );
 
   afterEach(async () => {
@@ -88,4 +88,4 @@ describe("HOOK: useFireproof database switching", () => {
     await db2.close();
     await db2.destroy();
   });
-}); 
+});
