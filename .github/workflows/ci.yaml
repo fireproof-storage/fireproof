@@ -208,7 +208,7 @@ jobs:
 
       - name: smoke Attempt 2
         if: steps.attempt1.outcome == 'failure'
-        run: pnpm run smoke
+        run: pnpm run smoke-retry
 
   publish:
     name: publish
