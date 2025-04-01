@@ -25,14 +25,18 @@ export const FireproofCtx = {} as UseFireproof;
  *
  * ## Overview
  *
- * TL;DR: Only use this hook if you need to configure a database name other than the default `useFireproof`.
+ * `useFireproof` takes the name of your database and returns back to React hooks: `useLiveQuery` and `useDocument`.
  *
- * For most applications, using the `useLiveQuery` or `useDocument` hooks exported from `use-fireproof` should
- * suffice for the majority of use-cases. Under the hood, they act against a database named `useFireproof` instantiated with
- * default configurations. However, if you need to do a custom database setup or configure a database name more to your liking
- * than the default `useFireproof`, then use `useFireproof` as it exists for that purpose. It will provide you with the
- * custom database accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
- * custom database.
+ * `useLiveQuery` is the recommended way to query Fireproof in React and subscribe to changes.
+ * `useDocument` is useful for things like forms where documents are being created from an initial state, saved, and updated.
+ * `useFireproof` will also return a `database` instance with the usual methods like `put` and `query`.
+ * 
+ * Everything that `useFireproof` returns is scoped to the database with that name. If you're working with multiple
+ * databases you may want to destructure like this:
+ * ```tsx
+ * const { useLiveQuery: useLiveDucksQuery } = useFireproof("ducks");
+ * const { useLiveQuery: useLiveGeeseQuery } = useFireproof("geese");
+ * ```
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
