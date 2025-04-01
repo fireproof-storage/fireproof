@@ -6,6 +6,9 @@
   "module": "./index.js",
   "main": "./index.cjs",
   "types": "./index.d.ts",
+  "bin": {
+    "fp-cli": "./cli/main.js"
+  },
   "exports": {
     ".": {
       "import": "./index.js",

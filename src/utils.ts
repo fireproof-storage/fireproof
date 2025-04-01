@@ -458,7 +458,7 @@ export function storeType2DataMetaWal(store: StoreType) {
 
 export function ensureURIDefaults(
   sthis: SuperThis,
-  names: { name: string, local?: string },
+  names: { name: string; local?: string },
   curi: CoerceURI | undefined,
   uri: URI,
   store: StoreType,
@@ -468,7 +468,7 @@ export function ensureURIDefaults(
   }>,
 ): URI {
   ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name)
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
   if (names.local) {
     ret.defParam(PARAM.LOCAL_NAME, names.local);
   }

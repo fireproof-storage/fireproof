@@ -27,7 +27,16 @@ import { parseCarFile } from "./loader-helpers.js";
 
 import { defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import { PARAM, type Attachable, type Attached, type CarTransaction, type DbMeta, type Falsy, type SuperThis } from "../types.js";
+import {
+  isFalsy,
+  PARAM,
+  type Attachable,
+  type Attached,
+  type CarTransaction,
+  type DbMeta,
+  type Falsy,
+  type SuperThis,
+} from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
@@ -94,10 +103,12 @@ export class Loader implements Loadable {
       try {
         // remote Store need to kick off the sync by requesting the latest meta
         const dbMeta = await at.stores.meta.load();
-        if (!Array.isArray(dbMeta)) {
-          throw this.logger.Error().Msg("missing dbMeta").AsError();
+        // console.log("attach", dbMeta);
+        if (Array.isArray(dbMeta)) {
+          await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
+        } else if (!isFalsy(dbMeta)) {
+          throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
         }
-        await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
       } catch (e) {
         this.logger.Error().Err(e).Msg("error attaching store");
         at.detach();

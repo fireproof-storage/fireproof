@@ -5,6 +5,17 @@ import { MEMORY_VERSION } from "./version.js";
 import { NotFoundError } from "../../../utils.js";
 import { VoidResult } from "../../../blockstore/serde-gateway.js";
 
+function cleanURI(uri: URI): URI {
+  return uri
+    .build()
+    .cleanParams(
+      PARAM.VERSION,
+      // PARAM.STORE,
+      PARAM.LOCAL_NAME,
+    )
+    .URI();
+}
+
 export class MemoryGateway implements Gateway {
   readonly memorys: Map<string, Uint8Array>;
   readonly sthis: SuperThis;
@@ -27,26 +38,27 @@ export class MemoryGateway implements Gateway {
     return Promise.resolve(Result.Ok(undefined));
   }
   destroy(baseUrl: URI): Promise<VoidResult> {
-    const keyUrl = baseUrl.toString();
+    const keyUrl = cleanURI(baseUrl);
+    const match = keyUrl.match(keyUrl);
     for (const key of this.memorys.keys()) {
-      if (key.startsWith(keyUrl)) {
+      if (keyUrl.match(key).score >= match.score) {
         this.memorys.delete(key);
       }
     }
-    this.memorys.clear();
+    // this.memorys.clear();
     return Promise.resolve(Result.Ok(undefined));
   }
 
   async put(url: URI, bytes: Uint8Array): Promise<VoidResult> {
     // ensureLogger(sthis, "MemoryGateway").Debug().Str("url", url.toString()).Msg("put");
     // this.sthis.logger.Warn().Url(url).Msg("put");
-    this.memorys.set(url.toString(), bytes);
+    this.memorys.set(cleanURI(url).toString(), bytes);
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
   get(url: URI): Promise<GetResult> {
     // ensureLogger(sthis, "MemoryGateway").Debug().Str("url", url.toString()).Msg("put");
-    const x = this.memorys.get(url.toString());
+    const x = this.memorys.get(cleanURI(url).toString());
     if (!x) {
       // const possible = Array.from(this.memorys.keys()).filter(i => i.startsWith(url.build().cleanParams().toString()))
       // this.sthis.logger.Warn().Any("possible", possible).Url(url).Msg("not found");
@@ -55,12 +67,12 @@ export class MemoryGateway implements Gateway {
     return Promise.resolve(Result.Ok(x));
   }
   delete(url: URI): Promise<VoidResult> {
-    this.memorys.delete(url.toString());
+    this.memorys.delete(cleanURI(url).toString());
     return Promise.resolve(Result.Ok(undefined));
   }
 
   async getPlain(url: URI, key: string): Promise<Result<Uint8Array>> {
-    const x = this.memorys.get(url.build().setParam(PARAM.KEY, key).toString());
+    const x = this.memorys.get(cleanURI(url).build().setParam(PARAM.KEY, key).toString());
     if (!x) {
       return Result.Err(new NotFoundError("not found"));
     }

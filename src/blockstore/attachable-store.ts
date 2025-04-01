@@ -347,7 +347,7 @@ export class AttachedRemotesImpl implements AttachedStores {
         ...gwp.file,
         url: ensureURIDefaults(
           this.loadable.sthis,
-          { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+          { name: attached.name, local: this._local?.gatewayUrls.file.url.getParam(PARAM.NAME) },
           undefined,
           URI.from(gwp.file.url),
           "file",
@@ -358,7 +358,7 @@ export class AttachedRemotesImpl implements AttachedStores {
         ...gwp.meta,
         url: ensureURIDefaults(
           this.loadable.sthis,
-          { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+          { name: attached.name, local: this._local?.gatewayUrls.meta.url.getParam(PARAM.NAME) },
           undefined,
           URI.from(gwp.meta.url),
           "meta",
@@ -369,7 +369,7 @@ export class AttachedRemotesImpl implements AttachedStores {
             ...gwp.wal,
             url: ensureURIDefaults(
               this.loadable.sthis,
-              { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+              { name: attached.name, local: this._local?.gatewayUrls.wal?.url.getParam(PARAM.NAME) },
               undefined,
               URI.from(gwp.wal.url),
               "wal",
@@ -400,7 +400,11 @@ export class AttachedRemotesImpl implements AttachedStores {
       );
       if (result.stores.wal) {
         if (this._local) {
-          throw this.loadable.sthis.logger.Error().Msg("local store could only set once").AsError();
+          throw this.loadable.sthis.logger
+            .Error()
+            .Any({ urls: result.gatewayUrls })
+            .Msg("local store could only set once")
+            .AsError();
         }
         this._local = result;
       }

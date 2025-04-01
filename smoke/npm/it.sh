@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -ex
 projectRoot=$(pwd)
 cd smoke/npm
 smokeDir=$(pwd)
@@ -16,6 +16,9 @@ npx tsx ./node-test.ts
 command -v deno && \
   deno run --allow-read --allow-write --allow-env --unstable-sloppy-imports ./node-test.ts
   # deno run --config node_modules/@fireproof/core/deno.json --allow-read --allow-write --allow-env --unstable-sloppy-imports ./node-test.ts
+
+pnpm run cli writeEnv --fromEnv HOME --out - --json
+
 if [ -z "$NO_CLEANUP" ]
 then
   rm -rf $tmpDir
