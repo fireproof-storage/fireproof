@@ -98,45 +98,24 @@ export class Loader implements Loadable {
 
   readonly attachedStores: AttachedStores;
 
-  async attach(attachable: Attachable): Promise<Attached> {
-    return await this.attachedStores.attach(attachable, async (at) => {
-      if (!at.stores.wal) {
-        try {
-          const stores = this.attachedStores.activate(at.stores);
-          await Promise.all(
-            this.cidCache.values().map(async ({ value: rvalue }) => {
-              if (rvalue.isErr()) {
-                this.logger.Error().Err(rvalue).Msg("error loading car");
-                return;
-              }
-              const value = rvalue.Ok();
-              if (value.status !== "stale") {
-                return;
-              }
-              if (value.type === "car") {
-                this.cidCache.unget(value.cid.toString());
-                await this.loadCar(value.cid, stores);
-              } else {
-                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.type }).Msg("should not type");
-              }
-            }),
-          );
-          // remote Store need to kick off the sync by requesting the latest meta
-          const dbMeta = await at.stores.meta.load();
-          if (Array.isArray(dbMeta)) {
-            if (dbMeta.length !== 0) {
-              await this.handleDbMetasFromStore(dbMeta, stores);
-            }
-          } else if (!isFalsy(dbMeta)) {
-            throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
-          }
-        } catch (e) {
-          this.logger.Error().Err(e).Msg("error attaching store");
-          at.detach();
+  async attach(attached: Attachable): Promise<Attached> {
+    const at = await this.attachedStores.attach(attached);
+    if (!at.stores.wal) {
+      try {
+        // remote Store need to kick off the sync by requesting the latest meta
+        const dbMeta = await at.stores.meta.load();
+        // console.log("attach", dbMeta);
+        if (Array.isArray(dbMeta)) {
+          await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
+        } else if (!isFalsy(dbMeta)) {
+          throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
         }
+      } catch (e) {
+        this.logger.Error().Err(e).Msg("error attaching store");
+        at.detach();
       }
-      return at;
-    });
+    }
+    return at;
   }
 
   // private getBlockCache = new Map<string, AnyBlock>();
