@@ -77,7 +77,7 @@ jobs:
             --fromEnv CLERK_PUB_JWT_KEY \
             --fromEnv CLOUD_SESSION_TOKEN_SECRET \
             --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
-            pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml secret --env dev bulk
+            pnpm exec wrangler -c ./wrangler.toml secret --env dev bulk
           pnpm run deploy:cf --env dev
 
       # - name: deploy to production
