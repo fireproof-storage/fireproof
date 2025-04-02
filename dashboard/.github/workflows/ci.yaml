@@ -65,7 +65,7 @@ jobs:
           CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
           # need in CF to be Env
           CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
-          CLOUD_SESSION_TOKEN_SECRET: ${{ vars.CLOUD_SESSION_TOKEN_SECRET }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
           CLERK_PUB_JWT_KEY: ${{ vars.CLERK_PUB_JWT_KEY }}
           # need during build
