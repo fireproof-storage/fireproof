@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: e842e5ee98d7a6a91378449de34dccdb4bbc11f8ab9b57ae05ce9a042f1ac3fb
+    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
     path: patches/drizzle-kit.patch
 
 importers:
@@ -105,8 +105,8 @@ importers:
         specifier: ^16.4.7
         version: 16.4.7
       drizzle-kit:
-        specifier: ^0.30.5
-        version: 0.30.5(patch_hash=e842e5ee98d7a6a91378449de34dccdb4bbc11f8ab9b57ae05ce9a042f1ac3fb)
+        specifier: ^0.30.6
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.40.0
         version: 0.40.0(@cloudflare/workers-types@4.20250327.0)(@libsql/client@0.14.0)(gel@2.0.1)(kysely@0.27.6)
@@ -1943,8 +1943,8 @@ packages:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
-  drizzle-kit@0.30.5:
-    resolution: {integrity: sha512-l6dMSE100u7sDaTbLczibrQZjA35jLsHNqIV+jmhNVO3O8jzM6kywMOmV9uOz9ZVSCMPQhAZEFjL/qDPVrqpUA==}
+  drizzle-kit@0.30.6:
+    resolution: {integrity: sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g==}
     hasBin: true
 
   drizzle-orm@0.40.0:
@@ -5213,7 +5213,7 @@ snapshots:
 
   dotenv@16.4.7: {}
 
-  drizzle-kit@0.30.5(patch_hash=e842e5ee98d7a6a91378449de34dccdb4bbc11f8ab9b57ae05ce9a042f1ac3fb):
+  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
