@@ -2,9 +2,9 @@ import { defineConfig, Options } from "tsup";
 // import replace from "@rollup/plugin-replace"
 import { replace } from "esbuild-plugin-replace";
 
-const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
+// const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
 // const webInternals = ["./web/gateway-impl.js"];
-const webInternals = [];
+// const webInternals = [];
 
 const external = [
   "path",
@@ -29,33 +29,33 @@ const external = [
   "@fireproof/core/react",
 ];
 
-function skipper(suffix: string[], target: string) {
-  function intercept(build) {
-    const filter = new RegExp(`(${suffix.join("|")})`);
-    build.onResolve({ filter }, async (args) => {
-      if (target.startsWith("/")) {
-        return build.resolve(target, { kind: args.kind, resolveDir: `/Users/menabe/Software/fproof/fireproof` });
-      } else {
-        return build.resolve(target, { kind: args.kind, resolveDir: args.resolveDir });
-      }
-      // const external = Boolean(build.initialOptions.external?.includes(args.path));
-      // if (external) {
-      // return { path: args.path, external };
-      // }
-      // if (args.resolveDir === '') {
-      // return;
-      // }
-    });
-  }
-  return {
-    name: "skipper",
-    setup: (build) => {
-      // for (const moduleName of Object.keys(options)) {
-      intercept(build);
-      // }
-    },
-  };
-}
+// function skipper(suffix: string[], target: string) {
+//   function intercept(build) {
+//     const filter = new RegExp(`(${suffix.join("|")})`);
+//     build.onResolve({ filter }, async (args) => {
+//       if (target.startsWith("/")) {
+//         return build.resolve(target, { kind: args.kind, resolveDir: `/Users/menabe/Software/fproof/fireproof` });
+//       } else {
+//         return build.resolve(target, { kind: args.kind, resolveDir: args.resolveDir });
+//       }
+//       // const external = Boolean(build.initialOptions.external?.includes(args.path));
+//       // if (external) {
+//       // return { path: args.path, external };
+//       // }
+//       // if (args.resolveDir === '') {
+//       // return;
+//       // }
+//     });
+//   }
+//   return {
+//     name: "skipper",
+//     setup: (build) => {
+//       // for (const moduleName of Object.keys(options)) {
+//       intercept(build);
+//       // }
+//     },
+//   };
+// }
 
 // const skipIife = {
 //   // "node-filesystem@skip-iife": "../../../bundle-not-impl.js",
@@ -73,16 +73,16 @@ function skipper(suffix: string[], target: string) {
 
 // const ourMultiformat = {};
 
-const LIBRARY_BUNDLE_OPTIONS: Options = {
-  format: ["esm", "cjs", "iife"],
-  target: ["esnext", "node18"],
-  globalName: "Fireproof",
-  external,
-  clean: true,
-  sourcemap: true,
-  metafile: true,
-  minify: false,
-};
+// const LIBRARY_BUNDLE_OPTIONS: Options = {
+//   format: ["esm", "cjs", "iife"],
+//   target: ["esnext", "node18"],
+//   globalName: "Fireproof",
+//   external,
+//   clean: true,
+//   sourcemap: true,
+//   metafile: true,
+//   minify: false,
+// };
 
 function packageVersion() {
   // return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf-8")).version);
@@ -97,166 +97,166 @@ function packageVersion() {
 }
 
 const LIBRARY_BUNDLES: readonly Options[] = [
+  // // {
+  // //   ...LIBRARY_BUNDLE_OPTIONS,
+  // //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
+  // //   format: ["iife"],
+  // //   name: "@fireproof/core",
+  // //   entry: ["src/index.ts"],
+  // //   platform: "browser",
+  // //   outDir: "dist/fireproof-core",
+  // //   minify: true,
+  // //   esbuildPlugins: [
+  // //     replace({
+  // //       __packageVersion__: packageVersion(),
+  // //       include: /version/,
+  // //     }),
+  // //     skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
+  // //     skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+  // //     // skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
+  // //     resolve({
+  // //       ...skipIife,
+  // //       ...ourMultiformat,
+  // //     }),
+  // //   ],
+  // //   dts: {
+  // //     footer: "declare module '@fireproof/core'",
+  // //   },
+  // // },
   // {
   //   ...LIBRARY_BUNDLE_OPTIONS,
-  //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
-  //   format: ["iife"],
+  //   format: ["esm", "cjs"],
   //   name: "@fireproof/core",
   //   entry: ["src/index.ts"],
   //   platform: "browser",
   //   outDir: "dist/fireproof-core",
-  //   minify: true,
+  //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
+  //     // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+  //     // resolve({
+  //     //   ...ourMultiformat,
+  //     // }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/core'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["esm", "cjs"],
+  //   name: "@fireproof/core/node",
+  //   entry: ["src/runtime/gateways/file/node/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/fireproof-core/node",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+  //     // resolve({
+  //     //   ...ourMultiformat,
+  //     // }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/core/node'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["esm"],
+  //   name: "@fireproof/core/deno",
+  //   entry: ["src/runtime/gateways/file/deno/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/fireproof-core/deno",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+  //     // resolve({
+  //     //   ...ourMultiformat,
+  //     // }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/core/deno'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   format: ["esm", "cjs"],
+  //   name: "@fireproof/core/indexeddb",
+  //   entry: ["src/runtime/gateways/indexeddb/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/fireproof-core/indexeddb",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     // resolve({
+  //     //   ...ourMultiformat,
+  //     // }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/core/indexeddb'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core"],
+  //   format: ["esm", "cjs"],
+  //   name: "@fireproof/core/react",
+  //   entry: ["src/react/index.ts"],
+  //   platform: "browser",
+  //   outDir: "dist/fireproof-core/react",
+  //   esbuildPlugins: [
+  //     replace({
+  //       __packageVersion__: packageVersion(),
+  //       include: /version/,
+  //     }),
+  //     // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+  //     // resolve({
+  //     //   ...ourMultiformat,
+  //     // }),
+  //   ],
+  //   dts: {
+  //     footer: "declare module '@fireproof/core/react'",
+  //   },
+  // },
+  // {
+  //   ...LIBRARY_BUNDLE_OPTIONS,
+  //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core/react"],
+  //   treeshake: true,
+  //   format: ["esm", "cjs"],
+  //   //    minify: true,
+  //   name: "use-fireproof",
+  //   entry: ["src/use-fireproof/index.ts"],
+  //   target: ["esnext"],
+  //   platform: "browser",
+  //   outDir: "dist/use-fireproof",
   //   esbuildPlugins: [
   //     replace({
   //       __packageVersion__: packageVersion(),
   //       include: /version/,
   //     }),
   //     skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
-  //     skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
-  //     // skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
-  //     resolve({
-  //       ...skipIife,
-  //       ...ourMultiformat,
-  //     }),
+  //     // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+  //     // resolve({
+  //     //   ...skipEsm,
+  //     //   ...ourMultiformat,
+  //     // }),
   //   ],
   //   dts: {
-  //     footer: "declare module '@fireproof/core'",
+  //     footer: "declare module 'use-fireproof'",
   //   },
   // },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
-    name: "@fireproof/core",
-    entry: ["src/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core",
-    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
-      // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
-      // resolve({
-      //   ...ourMultiformat,
-      // }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
-    name: "@fireproof/core/node",
-    entry: ["src/runtime/gateways/file/node/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core/node",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      // resolve({
-      //   ...ourMultiformat,
-      // }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core/node'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm"],
-    name: "@fireproof/core/deno",
-    entry: ["src/runtime/gateways/file/deno/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core/deno",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      // resolve({
-      //   ...ourMultiformat,
-      // }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core/deno'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
-    name: "@fireproof/core/indexeddb",
-    entry: ["src/runtime/gateways/indexeddb/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core/indexeddb",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      // resolve({
-      //   ...ourMultiformat,
-      // }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core/indexeddb'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core"],
-    format: ["esm", "cjs"],
-    name: "@fireproof/core/react",
-    entry: ["src/react/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core/react",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      // resolve({
-      //   ...ourMultiformat,
-      // }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core/react'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core/react"],
-    treeshake: true,
-    format: ["esm", "cjs"],
-    //    minify: true,
-    name: "use-fireproof",
-    entry: ["src/use-fireproof/index.ts"],
-    target: ["esnext"],
-    platform: "browser",
-    outDir: "dist/use-fireproof",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
-      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      // resolve({
-      //   ...skipEsm,
-      //   ...ourMultiformat,
-      // }),
-    ],
-    dts: {
-      footer: "declare module 'use-fireproof'",
-    },
-  },
 
   {
     //    ...LIBRARY_BUNDLE_OPTIONS,
