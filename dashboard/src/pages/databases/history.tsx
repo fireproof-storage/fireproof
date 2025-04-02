@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { type DocBase, DocTypes, DocWithId, useFireproof } from "use-fireproof";
+import { type DocBase, DocTypes, DocWithId } from "@fireproof/core";
+import { useFireproof } from "@fireproof/core/react";
 import { DynamicTable, TableRow } from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 

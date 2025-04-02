@@ -8,7 +8,6 @@ export default defineConfig({
   schema: "./backend/db-api-schema.ts",
   out: "./dist",
   driver: "d1-http",
-  // tablesFilter: ['!_cf_KV'],
   dbCredentials: {
     accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
     databaseId: process.env.CLOUDFLARE_DATABASE_ID!,

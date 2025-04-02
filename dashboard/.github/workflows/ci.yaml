@@ -51,19 +51,33 @@ jobs:
 
       - name: test
         run: |
-          pnpm run drizzle:libsql
           pnpm run test
 
-      - name: deploy to preview
+      - name: deploy cloud/backend/cf-d1 - 1
+        id: attempt1
+        continue-on-error: true
         env:
+          # need for drizzle
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
-          CLOUDFLARE_DATABASE_ID: ${{ secrets.CLOUDFLARE_DATABASE_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          # need in CF to be Env
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ vars.CLOUD_SESSION_TOKEN_SECRET }}
+          CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+          CLERK_PUB_JWT_KEY: ${{ vars.CLERK_PUB_JWT_KEY }}
+          # need during build
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
         run: |
           pnpm run build 
-          pnpm run drizzle:d1-remote --verbose
+          pnpm run drizzle:d1-remote
+          pnpm exec fp-cli writeEnv --env dev  --out /dev/stdout --json \
+            --fromEnv CLERK_PUBLISHABLE_KEY \
+            --fromEnv CLERK_PUB_JWT_KEY \
+            --fromEnv CLOUD_SESSION_TOKEN_SECRET \
+            --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
+            pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml secret --env dev bulk
           pnpm run deploy:cf --env dev
 
       # - name: deploy to production

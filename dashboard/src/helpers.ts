@@ -1,3 +1,4 @@
+import { BuildURI, URI } from "@adviser/cement";
 import { UserTenant } from "../backend/api.ts";
 
 export function truncateDbName(name: string, maxLength: number) {
@@ -12,7 +13,9 @@ export function tenantName(tenant: UserTenant) {
   return tenant.user.name || tenant.tenant.name || tenant.tenantId;
 }
 
-export const DEFAULT_ENDPOINT = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
+export const DEFAULT_ENDPOINT = BuildURI.from("fireproof://cloud.fireproof.direct")
+  .setParam("getBaseUrl", "https://storage.fireproof.direct/")
+  .URI();
 export const SYNC_DB_NAME = "fp_sync";
 
 export const API_URL = import.meta.env.VITE_API_URL ?? "/api";

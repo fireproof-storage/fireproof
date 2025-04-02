@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import type { SuperThis } from "use-fireproof";
-import { ensureSuperThis } from "use-fireproof";
+import type { SuperThis } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core";
 import { CloudContext } from "./cloud-context.ts";
 
 export interface AppContextType {

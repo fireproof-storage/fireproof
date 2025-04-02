@@ -1,18 +1,27 @@
 import react from "@vitejs/plugin-react";
 import * as path from "node:path";
 import { defineConfig } from "vite";
-// import { visualizer } from 'rollup-plugin-visualizer';
+import { visualizer } from "rollup-plugin-visualizer";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), cloudflare()],
+  plugins: [
+    // multilines
+    react(),
+    cloudflare(),
+    visualizer(),
+  ],
   build: {
     sourcemap: true,
     target: "esnext",
     outDir: "./dist/static",
     emptyOutDir: true, // also necessary
+    manifest: true,
+    rollupOptions: {
+      external: [".dev.vars"],
+    },
   },
   server: {
     port: 3000,

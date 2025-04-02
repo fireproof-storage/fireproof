@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "use-fireproof";
+import { useFireproof } from "@fireproof/core/react";
 
 import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
 

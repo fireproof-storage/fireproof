@@ -320,13 +320,13 @@ class CloudApi {
       ...req,
       auth: rAuth.Ok(),
     });
-    // console.log(API_URL, reqBody);
+    console.log(API_URL, API_URL, reqBody);
     const res = await fetch(API_URL, {
-      method: "POST",
-      // headers: {
-      // "Content-Type": "application/json",
-      // "Accept": "application/json",
-      // },
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: reqBody,
     });
     if (res.ok) {

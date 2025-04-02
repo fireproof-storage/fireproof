@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { Form, redirect, SubmitTarget, useSubmit } from "react-router-dom";
-import { fireproof } from "use-fireproof";
+import { fireproof } from "@fireproof/core";
 
 export async function newDatabaseAction({ request }: { request: Request }) {
   const dbName = (await request.json()).dbName;
