@@ -1,6 +1,6 @@
 import React from "react";
 import { redirect } from "react-router-dom";
-import { fireproof } from "use-fireproof";
+import { fireproof } from "@fireproof/core";
 import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "../../helpers.ts";
 
 export async function connectDatabasesLoader({ request }: { request: Request }) {

@@ -9,7 +9,7 @@ import type { Env } from "./cf-serve.ts";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
-const CORS = {
+export const CORS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
@@ -40,21 +40,16 @@ class ClerkApiToken implements FPApiToken {
     this.sthis = sthis;
   }
   async verify(token: string): Promise<Result<VerifiedAuth>> {
-    const secretKey = this.sthis.env.get("CLERK_SECRET_KEY");
-    if (!secretKey) {
-      return Result.Err("Invalid CLERK_SECRET_KEY");
+    const jwtKey = this.sthis.env.get("CLERK_PUB_JWT_KEY");
+    if (!jwtKey) {
+      return Result.Err("Invalid CLERK_PUB_JWT_KEY");
     }
     const rt = await exception2Result(async () => {
-      return (await verifyToken(token, {
-        // audience: "http://localhost:5173",
-        // issuer: 'https://trusted-glowworm-5.clerk.accounts.dev',
-        secretKey,
-      })) as unknown as ClerkTemplate;
+      return (await verifyToken(token, { jwtKey })) as unknown as ClerkTemplate;
     });
     if (rt.isErr()) {
       return Result.Err(rt.Err());
     }
-    // console.log(t);
     const t = rt.Ok();
     return Result.Ok({
       type: "clerk",
@@ -100,7 +95,7 @@ class ClerkApiToken implements FPApiToken {
 // }
 
 export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<string, string> | Env) {
-  const stream = new utils.ConsoleWriterStream();
+  // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),
   } as unknown as SuperThisOpts);
@@ -115,19 +110,6 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
     if (!["POST", "PUT"].includes(req.method)) {
       return new Response("Invalid request", { status: 404, headers: CORS });
     }
-    // const uri = URI.from(req.url);
-    // // if (uri.pathname.startsWith("/api/auth/")) {
-    // //   const res = await auth.handler(req);
-    // //   // for (const [key, value] of Object.entries(CORS)) {
-    // //   //   res.headers.set(key, value);
-    // //   // }
-    // //   console.log("Request", uri.pathname, res.status, res.statusText);
-    // //   return res;
-    // // }
-    // const out = {} as {
-    //   ensureUserRef: unknown;
-    //   listTenantsByUser: unknown;
-    // };
     const rJso = await exception2Result(async () => await req.json());
     if (rJso.isErr()) {
       logger.Error().Err(rJso.Err()).Msg("Error");

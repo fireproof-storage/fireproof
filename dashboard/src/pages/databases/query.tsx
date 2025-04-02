@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { MapFn, useFireproof } from "use-fireproof";
+import { MapFn } from "@fireproof/core";
+import { useFireproof } from "@fireproof/core/react";
 import { EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
 import { DynamicTable, TableRow } from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";

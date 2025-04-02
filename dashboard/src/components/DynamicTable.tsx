@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useNavigate } from "react-router-dom";
-import { DocBase, DocTypes, DocWithId } from "use-fireproof";
+import { DocBase, DocTypes, DocWithId } from "@fireproof/core";
 
 // export interface TableRow extends DocBase {
 //   // readonly _id: string;

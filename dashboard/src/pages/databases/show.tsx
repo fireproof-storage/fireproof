@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
-import { useFireproof } from "use-fireproof";
+import { useFireproof } from "@fireproof/core/react";
 import { TableRow, DynamicTable } from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 import { SYNC_DB_NAME, truncateDbName } from "../../helpers.ts";
@@ -175,7 +175,7 @@ function TableView({ name }: { name: string }) {
               {activeTab === "react" && (
                 <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
                   {`
-import { useFireproof } from "use-fireproof";
+import { useFireproof } from "@fireproof/core/react";
 import { connect } from "@fireproof/cloud";
 
 export default function App() {

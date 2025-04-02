@@ -1,7 +1,7 @@
 // import { rawConnect } from "@fireproof/cloud";
 import { useContext } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "use-fireproof";
+import { useFireproof } from "@fireproof/core/react";
 import { AppContext } from "../../../../app-context.tsx";
 import { Button } from "../../../../components/Button.tsx";
 import { DynamicTable } from "../../../../components/DynamicTable.tsx";

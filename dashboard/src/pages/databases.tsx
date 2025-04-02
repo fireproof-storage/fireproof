@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLoaderData, useNavigate } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { useContext } from "react";
 import { SYNC_DB_NAME, truncateDbName } from "../helpers.ts";
-import { fireproof } from "use-fireproof";
+import { fireproof } from "@fireproof/core";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 
 const reservedDbNames: string[] = [`fp.${SYNC_DB_NAME}`, "fp.petname_mappings", "fp.fp_sync"];
