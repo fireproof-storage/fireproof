@@ -47,15 +47,16 @@ jobs:
         run: pnpm run lint
 
       - name: build
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
         run: pnpm run build
 
       - name: test
         run: |
           pnpm run test
 
-      - name: deploy cloud/backend/cf-d1 - 1
+      - name: deploy cf
         id: attempt1
-        continue-on-error: true
         env:
           # need for drizzle
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -70,7 +71,7 @@ jobs:
           # need during build
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
         run: |
-          pnpm run build 
+          # pnpm run build
           pnpm run drizzle:d1-remote
           pnpm exec fp-cli writeEnv --env dev  --out /dev/stdout --json \
             --fromEnv CLERK_PUBLISHABLE_KEY \
