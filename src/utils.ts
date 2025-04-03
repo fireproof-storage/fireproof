@@ -16,6 +16,9 @@ import {
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
+import { sha256 } from "multiformats/hashes/sha2";
+import { CID } from "multiformats/cid";
+import * as json from "multiformats/codecs/json";
 
 //export type { Logger };
 //export { Result };
@@ -498,4 +501,12 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
     env[k] = v;
   }
   return env;
+}
+
+export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
+  // toSortedArray should be shallow
+  const bytes = json.encode(toSortedArray(o as unknown as Record<string, unknown>));
+  const hash = await sha256.digest(bytes);
+  const cid = CID.create(1, json.code, hash);
+  return cid.toString();
 }

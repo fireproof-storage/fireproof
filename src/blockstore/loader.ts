@@ -25,7 +25,7 @@ import {
 
 import { parseCarFile } from "./loader-helpers.js";
 
-import { defaultedBlockstoreRuntime } from "./transaction.js";
+import { BlockFetcher, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import {
   isFalsy,
@@ -76,6 +76,7 @@ function uniqueCids(list: FroozenCarLog, remove = new LRUSet<string>()): Froozen
 
 export class Loader implements Loadable {
   // readonly name: string;
+  readonly blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly logger: Logger;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
@@ -97,8 +98,8 @@ export class Loader implements Loadable {
 
   readonly attachedStores: AttachedStores;
 
-  async attach(attached: Attachable): Promise<Attached> {
-    const at = await this.attachedStores.attach(attached);
+  async attach(attachable: Attachable): Promise<Attached> {
+    const at = await this.attachedStores.attach(attachable);
     if (!at.stores.wal) {
       try {
         // remote Store need to kick off the sync by requesting the latest meta
@@ -163,9 +164,10 @@ export class Loader implements Loadable {
     );
   }
 
-  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts) {
+  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts, blockstore?: BlockFetcher) {
     // this.name = name;
     this.sthis = sthis;
+    this.blockstoreParent = blockstore;
     this.ebOpts = defaultedBlockstoreRuntime(
       sthis,
       {

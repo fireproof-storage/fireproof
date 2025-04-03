@@ -201,7 +201,7 @@ class LedgerImpl implements Ledger {
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
-    this.crdt = new CRDTImpl(this.sthis, this.opts);
+    this.crdt = new CRDTImpl(this.sthis, this.opts, this);
     this.writeQueue = writeQueue(
       this.sthis,
       async (updates: DocUpdate<DocTypes>[]) => this.crdt.bulk(updates),

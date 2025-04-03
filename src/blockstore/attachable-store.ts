@@ -23,7 +23,7 @@ import {
   FileAttachedStores,
   FileStore,
 } from "./types.js";
-import { ensureURIDefaults, toSortedArray } from "../utils.js";
+import { ensureURIDefaults, hashObject, toSortedArray } from "../utils.js";
 
 class AttachedImpl implements Attached {
   readonly gatewayUrls: GatewayUrls;
@@ -50,38 +50,38 @@ class AttachedImpl implements Attached {
 class FileActiveStoreImpl extends FileActiveStore {
   readonly ref: ActiveStore;
   readonly active: FileStore;
-  protected readonly xattached: FileAttachedStores;
+  protected readonly attached: FileAttachedStores;
 
   constructor(ref: ActiveStore, active: FileStore, attached: FileAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
   local(): FileStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): FileStore[] {
-    return this.xattached.remotes();
+    return this.attached.remotes();
   }
 }
 
 class CarActiveStoreImpl extends CarActiveStore {
   readonly ref: ActiveStore;
   readonly active: CarStore;
-  protected readonly xattached: CarAttachedStores;
+  protected readonly attached: CarAttachedStores;
 
   constructor(ref: ActiveStore, active: CarStore, attached: CarAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
   local(): CarStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): CarStore[] {
-    return [this.active, ...this.xattached.remotes().filter((i) => i !== this.active)];
+    return [this.active, ...this.attached.remotes().filter((i) => i !== this.active)];
   }
 }
 
@@ -114,19 +114,19 @@ class FileAttachedStoresImpl implements FileAttachedStores {
 class MetaActiveStoreImpl extends MetaActiveStore {
   readonly ref: ActiveStore;
   readonly active: MetaStore;
-  protected readonly xattached: MetaAttachedStores;
+  protected readonly attached: MetaAttachedStores;
 
   constructor(ref: ActiveStore, active: MetaStore, attached: MetaAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
   local(): MetaStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): MetaStore[] {
-    return [this.active, ...this.xattached.remotes().filter((i) => i !== this.active)];
+    return [this.active, ...this.attached.remotes().filter((i) => i !== this.active)];
   }
 }
 
@@ -146,20 +146,20 @@ class MetaAttachedStoresImpl implements MetaAttachedStores {
 class WALActiveStoreImpl extends WALActiveStore {
   readonly ref: ActiveStore;
   readonly active: WALStore;
-  protected readonly xattached: WALAttachedStores;
+  protected readonly attached: WALAttachedStores;
 
   constructor(ref: ActiveStore, active: WALStore, attached: WALAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
 
   local(): WALStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): WALStore[] {
-    return this.xattached.remotes();
+    return this.attached.remotes();
   }
 }
 
@@ -184,18 +184,18 @@ class WALAttachedStoresImpl implements WALAttachedStores {
 
 class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
   readonly active: T;
-  readonly xattached: AttachedRemotesImpl;
+  readonly attached: AttachedRemotesImpl;
 
   constructor(active: T, attached: AttachedRemotesImpl) {
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
 
   local(): LocalActiveStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): ActiveStore[] {
-    return this.xattached.remotes();
+    return this.attached.remotes();
     // return  [
     //   this.attached.remotes().filter(i => i !== this.active)
     // ]
@@ -209,19 +209,19 @@ class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
     return bs;
   }
   carStore(): CarActiveStore {
-    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.xattached));
+    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.attached));
   }
   fileStore(): FileActiveStore {
-    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.xattached));
+    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.attached));
   }
   metaStore(): MetaActiveStore {
-    return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.xattached));
+    return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.attached));
   }
   walStore(): WALActiveStore {
     if (!this.active.wal) {
-      throw this.xattached.loadable.sthis.logger.Error().Msg("wal store not set").AsError();
+      throw this.attached.loadable.sthis.logger.Error().Msg("wal store not set").AsError();
     }
-    return new WALActiveStoreImpl(this, this.active.wal, new WALAttachedStoresImpl(this.xattached));
+    return new WALActiveStoreImpl(this, this.active.wal, new WALAttachedStoresImpl(this.attached));
   }
 }
 
@@ -255,8 +255,12 @@ export async function createAttachedStores(
   } else {
     gup = urlOrGup;
   }
+
+  const cfgId = await hashObject(gup);
+
   return await ar.attach({
     name,
+    configHash: () => cfgId,
     prepare: async () => gup,
   });
 }
@@ -329,86 +333,90 @@ export class AttachedRemotesImpl implements AttachedStores {
     );
   }
 
+  // needed for React Statemanagement
+  readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
   async attach(attached: Attachable): Promise<Attached> {
-    const gwp = await attached.prepare();
-    // this._local?.gatewayUrls.car.url.getParam("name");
-    const gws: GatewayUrls = {
-      car: {
-        ...gwp.car,
-        url: ensureURIDefaults(
-          this.loadable.sthis,
-          { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
-          undefined,
-          URI.from(gwp.car.url),
-          "car",
-        ),
-      },
-      file: {
-        ...gwp.file,
-        url: ensureURIDefaults(
-          this.loadable.sthis,
-          { name: attached.name, local: this._local?.gatewayUrls.file.url.getParam(PARAM.NAME) },
-          undefined,
-          URI.from(gwp.file.url),
-          "file",
-          { file: true },
-        ),
-      },
-      meta: {
-        ...gwp.meta,
-        url: ensureURIDefaults(
-          this.loadable.sthis,
-          { name: attached.name, local: this._local?.gatewayUrls.meta.url.getParam(PARAM.NAME) },
-          undefined,
-          URI.from(gwp.meta.url),
-          "meta",
-        ),
-      },
-      wal: gwp.wal
-        ? {
-            ...gwp.wal,
-            url: ensureURIDefaults(
-              this.loadable.sthis,
-              { name: attached.name, local: this._local?.gatewayUrls.wal?.url.getParam(PARAM.NAME) },
-              undefined,
-              URI.from(gwp.wal.url),
-              "wal",
-            ),
-          }
-        : undefined,
-    };
-    const key = JSON.stringify(
-      toSortedArray({
-        carUrl: gws.car.url.toString(),
-        filesUrl: gws.file.url.toString(),
-        metaUrl: gws.meta.url.toString(),
-        walUrl: gws.wal?.url.toString(),
-      }),
-    );
-
-    return this._remotes.get(key).once(async () => {
-      const rt = toStoreRuntime(this.loadable.sthis);
-      const result = new AttachedImpl(
-        gws,
-        await rt.makeStores({
-          byStore: gws,
-          loader: this.loadable,
-        }),
-        () => {
-          this._remotes.unget(key);
+    return this._keyedAttachable.get(attached.configHash()).once(async () => {
+      const gwp = await attached.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
+      // this._local?.gatewayUrls.car.url.getParam("name");
+      const gws: GatewayUrls = {
+        car: {
+          ...gwp.car,
+          url: ensureURIDefaults(
+            this.loadable.sthis,
+            { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+            undefined,
+            URI.from(gwp.car.url),
+            "car",
+          ),
         },
+        file: {
+          ...gwp.file,
+          url: ensureURIDefaults(
+            this.loadable.sthis,
+            { name: attached.name, local: this._local?.gatewayUrls.file.url.getParam(PARAM.NAME) },
+            undefined,
+            URI.from(gwp.file.url),
+            "file",
+            { file: true },
+          ),
+        },
+        meta: {
+          ...gwp.meta,
+          url: ensureURIDefaults(
+            this.loadable.sthis,
+            { name: attached.name, local: this._local?.gatewayUrls.meta.url.getParam(PARAM.NAME) },
+            undefined,
+            URI.from(gwp.meta.url),
+            "meta",
+          ),
+        },
+        wal: gwp.wal
+          ? {
+              ...gwp.wal,
+              url: ensureURIDefaults(
+                this.loadable.sthis,
+                { name: attached.name, local: this._local?.gatewayUrls.wal?.url.getParam(PARAM.NAME) },
+                undefined,
+                URI.from(gwp.wal.url),
+                "wal",
+              ),
+            }
+          : undefined,
+      };
+      const key = JSON.stringify(
+        toSortedArray({
+          carUrl: gws.car.url.toString(),
+          filesUrl: gws.file.url.toString(),
+          metaUrl: gws.meta.url.toString(),
+          walUrl: gws.wal?.url.toString(),
+        }),
       );
-      if (result.stores.wal) {
-        if (this._local) {
-          throw this.loadable.sthis.logger
-            .Error()
-            .Any({ urls: result.gatewayUrls })
-            .Msg("local store could only set once")
-            .AsError();
+
+      return this._remotes.get(key).once(async () => {
+        const rt = toStoreRuntime(this.loadable.sthis);
+        const result = new AttachedImpl(
+          gws,
+          await rt.makeStores({
+            byStore: gws,
+            loader: this.loadable,
+          }),
+          () => {
+            this._remotes.unget(key);
+          },
+        );
+        if (result.stores.wal) {
+          if (this._local) {
+            throw this.loadable.sthis.logger
+              .Error()
+              .Any({ urls: result.gatewayUrls })
+              .Msg("local store could only set once")
+              .AsError();
+          }
+          this._local = result;
         }
-        this._local = result;
-      }
-      return result;
+        return result;
+      });
     });
   }
 }

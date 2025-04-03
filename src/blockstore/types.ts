@@ -565,7 +565,7 @@ export abstract class BaseActiveStore {
   abstract local(): BaseStore;
   abstract remotes(): BaseStore[];
 
-  protected abstract readonly xattached: BaseAttachedStores;
+  protected abstract readonly attached: BaseAttachedStores;
 }
 
 // export abstract class CarActiveStore extends BaseActiveStore {
@@ -583,7 +583,7 @@ export interface FileAttachedStores extends BaseAttachedStores {
 export abstract class CarActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: CarStore;
-  protected abstract readonly xattached: CarAttachedStores;
+  protected abstract readonly attached: CarAttachedStores;
   abstract local(): CarStore;
   abstract remotes(): CarStore[];
 }
@@ -591,7 +591,7 @@ export abstract class CarActiveStore extends BaseActiveStore {
 export abstract class FileActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: FileStore;
-  protected abstract readonly xattached: FileAttachedStores;
+  protected abstract readonly attached: FileAttachedStores;
   abstract local(): FileStore;
   abstract remotes(): FileStore[];
 }
@@ -606,7 +606,7 @@ export interface MetaAttachedStores extends BaseAttachedStores {
 export abstract class MetaActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: MetaStore;
-  protected abstract readonly xattached: MetaAttachedStores;
+  protected abstract readonly attached: MetaAttachedStores;
   abstract local(): MetaStore;
   abstract remotes(): MetaStore[];
 }
@@ -619,7 +619,7 @@ export interface WALAttachedStores extends BaseAttachedStores {
 export abstract class WALActiveStore extends BaseActiveStore {
   // readonly ref: ActiveStore;
   // readonly active: WALStore;
-  protected abstract readonly xattached: WALAttachedStores;
+  protected abstract readonly attached: WALAttachedStores;
   abstract local(): WALStore;
   abstract remotes(): WALStore[];
 }
@@ -635,7 +635,7 @@ export interface ActiveStore {
   local(): LocalActiveStore;
   remotes(): ActiveStore[];
 
-  readonly xattached: AttachedStores;
+  readonly attached: AttachedStores;
 }
 
 export interface CarCacheItem {
@@ -648,12 +648,9 @@ export interface CarCacheItem {
 export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
+  readonly blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly carLog: CarLog;
-
-  // xremoteMetaStore?: MetaStore;
-  // xremoteFileStore?: DataStore;
-  // xremoteCarStore?: DataStore;
 
   readonly attachedStores: AttachedStores;
 
@@ -665,10 +662,6 @@ export interface Loadable {
   close(): Promise<void>;
 
   keyBag(): Promise<KeyBag>;
-  // metaStore(): Promise<MetaStore>;
-  // fileStore(): Promise<DataStore>;
-  // WALStore(): Promise<WALStore>;
-  // carStore(): Promise<DataStore>;
 
   handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<void>;
 

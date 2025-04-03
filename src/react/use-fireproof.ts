@@ -1,16 +1,18 @@
-import type { ConfigOpts, Database } from "@fireproof/core";
+import type { Attachable, Attached, ConfigOpts, Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import { useMemo } from "react";
 import type { UseFireproof } from "./types.js";
 import { createUseDocument } from "./use-document.js";
 import { createUseLiveQuery } from "./use-live-query.js";
 import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
+import { useEffect, useState, useMemo } from "react";
 
 /**
  * @deprecated Use the `useFireproof` hook instead
  */
 export const FireproofCtx = {} as UseFireproof;
+
+export type UseFPConfig = ConfigOpts & { readonly attach?: Attachable };
 
 /**
  *
@@ -26,10 +28,19 @@ export const FireproofCtx = {} as UseFireproof;
  *
  *
  */
-export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
+export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
   // Use useMemo to ensure stable references across renders
   return useMemo(() => {
     const database = typeof name === "string" ? fireproof(name, config) : name;
+
+    const [attached, setAttached] = useState<Attached>();
+    useEffect(() => {
+      if (config.attach && !attached) {
+        database.attach(config.attach).then((a) => {
+          setAttached(a);
+        });
+      }
+    }, [database, config.attach, attached]);
 
     const useDocument = createUseDocument(database);
     const useLiveQuery = createUseLiveQuery(database);
