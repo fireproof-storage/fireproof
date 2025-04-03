@@ -1,83 +1,35 @@
-import { Attachable, DocWithId, useFireproof, bs } from "use-fireproof";
+import { DocWithId, useFireproof, toCloud } from "use-fireproof";
 import { useState, useEffect } from "react";
 import "./App.css";
-import { BuildURI, ResolveOnce, URI } from "@adviser/cement";
-
-const needsAttach = new ResolveOnce();
-
-function toCloud(): Attachable {
-  return {
-    name: "toCloud",
-    prepare: async () => {
-      // console.log("Attaching to cloud");
-      const gatewayInterceptor = bs.URIInterceptor.withMapper((uri) => {
-        // console.log("Intercepting", uri.toString());
-        return uri.build().setParam("authJWK", "the-token").URI();
-      });
-      return {
-        car: { url: "memory://car", gatewayInterceptor },
-        file: { url: "memory://file", gatewayInterceptor },
-        meta: { url: "memory://meta", gatewayInterceptor },
-        // wal: { url: "memory://wal" },
-      };
-    },
-  };
-}
+// import { URI } from "@adviser/cement";
 
 function App() {
-  const { database } = useFireproof("fireproof-party");
+  const attach = toCloud();
+  const { database, attached } = useFireproof("fireproof-party", {
+    attach,
+  });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
-
-  const [token, setToken] = useState("");
-
-  const [triggerAttach, setTriggerAttach] = useState(false);
+  // const [token, setToken] = useState("");
 
   useEffect(() => {
     database.allDocs<DocWithId<{ value: string }>>().then((rows) => {
       setRows(rows.rows.map((i) => i.value));
     });
-    if (triggerAttach) {
-      needsAttach
-        .once(async () => {
-          try {
-            database.attach(toCloud());
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error("Error attaching", e);
-          }
-        })
-        // eslint-disable-next-line no-console
-        .catch(console.error);
-    }
-  }, [database, triggerAttach]);
+  });
 
-  useEffect(() => {
-    const uri = URI.from(window.location.href);
-    if (uri.hasParam("fpToken")) {
-      setToken(uri.getParam("fpToken", ""));
-    }
-  }, [window.location.href]);
-
-  if (triggerAttach) {
-    const uri = URI.from(window.location.href);
-    if (!uri.hasParam("fpToken")) {
-      // window.location.href = BuildURI.from("http://localhost:3002/fp/cloud/api/token")
-      window.location.href = BuildURI.from("https://dev.connect.fireproof.direct/fp/cloud/api/token")
-        .setParam("back_url", window.location.href)
-        .toString();
-    }
-  }
+  // useEffect(() => {
+  //   const uri = URI.from(window.location.href);
+  //   if (uri.hasParam("fpToken")) {
+  //     setToken(uri.getParam("fpToken", ""));
+  //   }
+  // }, [window.location.href]);
 
   return (
     <>
       <h1>FireProof Party of the 3rd</h1>
-      <div
-        className="card"
-        onClick={() => {
-          setTriggerAttach(true);
-        }}
-      >
-        Do Attach
+      <div>{attached ? "Attached" : "waiting to attach"}</div>
+      <div className="card" onClick={() => attach.resetToken()}>
+        Reset Token
       </div>
       <div
         className="card"
@@ -89,7 +41,7 @@ function App() {
           });
         }}
       >
-        Add - {token}
+        Add - {attach.token}
       </div>
       <div className="read-the-docs">
         {rows.map((row) => {
