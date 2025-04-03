@@ -98,8 +98,8 @@ export class Loader implements Loadable {
 
   readonly attachedStores: AttachedStores;
 
-  async attach(attached: Attachable): Promise<Attached> {
-    const at = await this.attachedStores.attach(attached);
+  async attach(attachable: Attachable): Promise<Attached> {
+    const at = await this.attachedStores.attach(attachable);
     if (!at.stores.wal) {
       try {
         // remote Store need to kick off the sync by requesting the latest meta
