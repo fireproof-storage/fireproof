@@ -163,6 +163,10 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly keyBag?: Partial<KeyBagOpts>;
 }
 
+export interface ToCloudOpts {
+  readonly ledger: string;
+}
+
 export type ClockLink = EventLink<Operation>;
 
 export type ClockHead = ClockLink[];
@@ -383,6 +387,7 @@ export interface CarTransaction {
 }
 
 export interface BaseBlockstore {
+  readonly crdtParent?: CRDT;
   readonly transactions: Set<CarTransaction>;
   readonly sthis: SuperThis;
   readonly loader: Loadable;
@@ -418,6 +423,7 @@ export interface BaseBlockstore {
 }
 
 export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRDT {
+  readonly ledgerParent?: Ledger;
   readonly logger: Logger;
   readonly sthis: SuperThis;
   // self reference to fullfill HasCRDT
@@ -483,6 +489,8 @@ export interface GatewayUrlsParam {
   readonly meta: CoerceURIandInterceptor;
   // if set this is a local Attachment
   readonly wal?: CoerceURIandInterceptor;
+
+  readonly teardown?: UnReg;
 }
 
 export interface GatewayUrls {
@@ -498,7 +506,12 @@ export interface Attachable {
    * @description prepare allows the Attable to register the gateways and
    * then return the urls of the gateways
    */
-  prepare(): Promise<GatewayUrlsParam>;
+  prepare(db?: Ledger): Promise<GatewayUrlsParam>;
+  /**
+   * @description configHash is called on every attach to avoid multiple
+   * calls to prepare with the same config.
+   */
+  configHash(): string;
 }
 
 export class DataAndMetaAndWalAndBaseStore implements DataAndMetaAndWalStore {
