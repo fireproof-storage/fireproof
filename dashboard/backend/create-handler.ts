@@ -10,7 +10,6 @@ import type { Env } from "./cf-serve.ts";
 // import { JWK } from "jose";
 
 export const CORS = {
-  "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
   "Access-Control-Max-Age": "86400",
@@ -208,6 +207,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
         status: 200,
         headers: {
           ...CORS,
+          "Content-Type": "application/json",
           "Server-Timing": `total;dur=${duration.toFixed(2)}`,
         },
       });
@@ -224,6 +224,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
           status: 500,
           headers: {
             ...CORS,
+            "Content-Type": "application/json",
             "Server-Timing": `total;dur=${duration.toFixed(2)}`,
           },
         },
