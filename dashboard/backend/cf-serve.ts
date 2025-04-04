@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/d1";
-import { D1Database, Fetcher, Request as CFRequest } from "@cloudflare/workers-types";
-import { createHandler } from "./create-handler.ts";
+import { D1Database, Fetcher, Request as CFRequest, Response as CFResponse } from "@cloudflare/workers-types";
+import { CORS, createHandler } from "./create-handler.ts";
 import { URI } from "@adviser/cement";
 
 export interface Env {
@@ -11,18 +11,28 @@ export interface Env {
 export default {
   async fetch(request: Request, env: Env) {
     const uri = URI.from(request.url);
+    let ares: Promise<CFResponse>;
     switch (true) {
       case uri.pathname.startsWith("/api"):
         console.log("cf-serve", request.url, env);
-        const ret = await createHandler(drizzle(env.DB), env)(request);
-        if (ret.ok) {
-          return ret;
-        }
+        ares = createHandler(drizzle(env.DB), env)(request) as unknown as Promise<CFResponse>;
+        break;
+
       case uri.pathname.startsWith("/fp-logo.svg"):
       case uri.pathname.startsWith("/assets/"):
-        return env.ASSETS.fetch(request as unknown as CFRequest);
+        ares = env.ASSETS.fetch(request as unknown as CFRequest);
+        break;
       default:
-        return env.ASSETS.fetch(uri.build().pathname("/").asURL(), request as unknown as CFRequest);
+        ares = env.ASSETS.fetch(uri.build().pathname("/").asURL(), request as unknown as CFRequest);
     }
+    const res = await ares;
+    return new Response(res.body as ReadableStream<Uint8Array>, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: {
+        ...res.headers,
+        ...CORS,
+      },
+    });
   },
 };
