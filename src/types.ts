@@ -494,8 +494,6 @@ export interface GatewayUrlsParam extends Partial<AttachContext> {
   readonly meta: CoerceURIandInterceptor;
   // if set this is a local Attachment
   readonly wal?: CoerceURIandInterceptor;
-
-  readonly teardown?: UnReg;
 }
 
 export interface GatewayUrls {

@@ -167,7 +167,7 @@ describe("activate store", () => {
     attach = new bs.AttachedRemotesImpl(mockLoader(sthis));
     firstAttached = await attach.attach({
       name: "first",
-      configHash: () => "first",
+      configHash: async () => "first",
       prepare: async () => ({
         car: { url: "memory://first?store=car" },
         meta: { url: "memory://first?store=meta" },
@@ -178,7 +178,7 @@ describe("activate store", () => {
 
     secondAttached = await attach.attach({
       name: "second",
-      configHash: () => "second",
+      configHash: async () => "second",
       prepare: async () => ({
         car: { url: "memory://second?store=car" },
         meta: { url: "memory://second?store=meta" },
@@ -240,7 +240,7 @@ describe("join function", () => {
     constructor(name: string) {
       this.name = name;
     }
-    configHash(): string {
+    async configHash() {
       return `joinable-${this.name}`;
     }
     prepare(): Promise<GatewayUrlsParam> {
