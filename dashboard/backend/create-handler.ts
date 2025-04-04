@@ -14,6 +14,7 @@ export const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
   "Access-Control-Max-Age": "86400",
+  "X-Frame-Options": "ALLOW-FROM *",
 };
 
 interface ClerkTemplate {
