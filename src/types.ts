@@ -29,7 +29,7 @@ import type {
 import type { KeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 import type { WriteQueueParams } from "./write-queue.js";
 import type { Index } from "./indexer.js";
-import type { Context } from "./context.js";
+import type { FPContext } from "./fp-context.js";
 
 export type { DbMeta };
 
@@ -480,17 +480,20 @@ export interface CoerceURIandInterceptor {
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
 }
 
+export interface AttachContext {
+  detach(): Promise<void>;
+  readonly ctx: FPContext;
+}
+
 /**
  * @description used by an attachable do define the urls of the attached gateways
  */
-export interface GatewayUrlsParam {
+export interface GatewayUrlsParam extends Partial<AttachContext> {
   readonly car: CoerceURIandInterceptor;
   readonly file: CoerceURIandInterceptor;
   readonly meta: CoerceURIandInterceptor;
   // if set this is a local Attachment
   readonly wal?: CoerceURIandInterceptor;
-
-  readonly teardown?: UnReg;
 }
 
 export interface GatewayUrls {
@@ -511,7 +514,7 @@ export interface Attachable {
    * @description configHash is called on every attach to avoid multiple
    * calls to prepare with the same config.
    */
-  configHash(): string;
+  configHash(): Promise<string>;
 }
 
 export class DataAndMetaAndWalAndBaseStore implements DataAndMetaAndWalStore {
@@ -540,6 +543,8 @@ export interface Attached {
 
   detach(): Promise<void>;
   status(): "attached" | "loading" | "loaded" | "error" | "detached" | "syncing" | "idle";
+
+  ctx(): FPContext;
 }
 
 export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
@@ -610,7 +615,7 @@ export interface Ledger extends HasCRDT {
 
   readonly name: string;
 
-  readonly context: Context;
+  readonly context: FPContext;
 
   onClosed(fn: () => void): () => void;
 

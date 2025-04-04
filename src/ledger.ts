@@ -25,7 +25,7 @@ import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
-import { Context } from "./context.js";
+import { FPContext } from "./fp-context.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
@@ -87,7 +87,7 @@ export class LedgerShell implements Ledger {
     return this.ref.opts;
   }
 
-  get context(): Context {
+  get context(): FPContext {
     return this.ref.context;
   }
 
@@ -139,7 +139,7 @@ class LedgerImpl implements Ledger {
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  readonly context = new Context();
+  readonly context = new FPContext();
 
   get name(): string {
     return this.opts.name;
