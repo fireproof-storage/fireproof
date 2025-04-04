@@ -1,17 +1,6 @@
 // import PartySocket, { PartySocketOptions } from "partysocket";
-import {
-  Result,
-  URI,
-  KeyedResolvOnce,
-  exception2Result,
-  Logger,
-  param,
-  MatchResult,
-  ResolveOnce,
-  to_uint8,
-  CoerceURI,
-} from "@adviser/cement";
-import type { Attachable, GatewayUrlsParam, SuperThis } from "../../../types.js";
+import { Result, URI, KeyedResolvOnce, exception2Result, Logger, param, MatchResult, ResolveOnce, to_uint8 } from "@adviser/cement";
+import type { SuperThis } from "../../../types.js";
 import {
   buildErrorMsg,
   buildReqOpen,
@@ -705,23 +694,27 @@ export function registerFireproofCloudStoreProtocol(protocol = "fpcloud:") {
 
 registerFireproofCloudStoreProtocol();
 
-export function toCloud(url: CoerceURI): Attachable {
-  const urlObj = URI.from(url);
-  if (urlObj.protocol !== "fpcloud:") {
-    throw new Error("url must have fireproof protocol");
-  }
-  // const existingName = urlObj.getParam("name");
-  // urlObj.defParam("name", remoteDbName || existingName || dbName);
-  // urlObj.defParam("localName", dbName);
-  // urlObj.defParam("storekey", `@${dbName}:data@`);
-  return {
-    name: urlObj.protocol,
-    prepare(): Promise<GatewayUrlsParam> {
-      return Promise.resolve({
-        car: { url: urlObj },
-        file: { url: urlObj },
-        meta: { url: urlObj },
-      });
-    },
-  };
-}
+// export function toCloud(url: CoerceURI): Attachable {
+//   const urlObj = URI.from(url);
+//   if (urlObj.protocol !== "fpcloud:") {
+//     throw new Error("url must have fireproof protocol");
+//   }
+//   // const existingName = urlObj.getParam("name");
+//   // urlObj.defParam("name", remoteDbName || existingName || dbName);
+//   // urlObj.defParam("localName", dbName);
+//   // urlObj.defParam("storekey", `@${dbName}:data@`);
+//   const cfgId =
+//   return {
+//     name: urlObj.protocol,
+//     configHash: () => {
+
+//     },
+//     prepare(): Promise<GatewayUrlsParam> {
+//       return Promise.resolve({
+//         car: { url: urlObj },
+//         file: { url: urlObj },
+//         meta: { url: urlObj },
+//       });
+//     },
+//   };
+// }

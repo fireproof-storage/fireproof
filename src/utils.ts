@@ -16,6 +16,9 @@ import {
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
+import { sha256 } from "multiformats/hashes/sha2";
+import { CID } from "multiformats/cid";
+import * as json from "multiformats/codecs/json";
 
 //export type { Logger };
 //export { Result };
@@ -458,7 +461,7 @@ export function storeType2DataMetaWal(store: StoreType) {
 
 export function ensureURIDefaults(
   sthis: SuperThis,
-  name: string,
+  names: { name: string; local?: string },
   curi: CoerceURI | undefined,
   uri: URI,
   store: StoreType,
@@ -468,14 +471,17 @@ export function ensureURIDefaults(
   }>,
 ): URI {
   ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, name);
-  if (!ret.hasParam(PARAM.NAME)) {
-    // const name = sthis.pathOps.basename(ret.URI().pathname);
-    // if (!name) {
-    throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-    // }
-    // ret.setParam(PARAM.NAME, name);
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
+  if (names.local) {
+    ret.defParam(PARAM.LOCAL_NAME, names.local);
   }
+  // if (!ret.hasParam(PARAM.NAME)) {
+  //   // const name = sthis.pathOps.basename(ret.URI().pathname);
+  //   // if (!name) {
+  //   throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
+  //   // }
+  //   // ret.setParam(PARAM.NAME, name);
+  // }
   if (ctx.idx) {
     ret.defParam(PARAM.INDEX, "idx");
     ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
@@ -495,4 +501,12 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
     env[k] = v;
   }
   return env;
+}
+
+export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
+  // toSortedArray should be shallow
+  const bytes = json.encode(toSortedArray(o as unknown as Record<string, unknown>));
+  const hash = await sha256.digest(bytes);
+  const cid = CID.create(1, json.code, hash);
+  return cid.toString();
 }

@@ -29,7 +29,7 @@ import type {
 import type { KeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 import type { WriteQueueParams } from "./write-queue.js";
 import type { Index } from "./indexer.js";
-import type { Context } from "./context.js";
+import type { FPContext } from "./fp-context.js";
 
 export type { DbMeta };
 
@@ -38,7 +38,7 @@ export type Falsy = false | null | undefined;
 export type Unreg = () => void;
 
 export function isFalsy(value: unknown): value is Falsy {
-  return value === false && value === null && value === undefined;
+  return value === false || value === null || value === undefined;
 }
 
 export const PARAM = {
@@ -65,6 +65,7 @@ export const PARAM = {
   CAR_COMPACT_CACHE_SIZE: "carCompactCacheSize",
   CAR_META_CACHE_SIZE: "carMetaCacheSize",
   GENESIS_CID: "baembeiarootfireproofgenesisblockaaaafireproofgenesisblocka",
+  LOCAL_NAME: "localName",
   // FS = "fs",
 };
 export type PARAMS = (typeof PARAM)[keyof typeof PARAM];
@@ -160,6 +161,10 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
   readonly keyBag?: Partial<KeyBagOpts>;
+}
+
+export interface ToCloudOpts {
+  readonly ledger: string;
 }
 
 export type ClockLink = EventLink<Operation>;
@@ -382,6 +387,7 @@ export interface CarTransaction {
 }
 
 export interface BaseBlockstore {
+  readonly crdtParent?: CRDT;
   readonly transactions: Set<CarTransaction>;
   readonly sthis: SuperThis;
   readonly loader: Loadable;
@@ -417,6 +423,7 @@ export interface BaseBlockstore {
 }
 
 export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRDT {
+  readonly ledgerParent?: Ledger;
   readonly logger: Logger;
   readonly sthis: SuperThis;
   // self reference to fullfill HasCRDT
@@ -473,10 +480,15 @@ export interface CoerceURIandInterceptor {
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
 }
 
+export interface AttachContext {
+  detach(): Promise<void>;
+  readonly ctx: FPContext;
+}
+
 /**
  * @description used by an attachable do define the urls of the attached gateways
  */
-export interface GatewayUrlsParam {
+export interface GatewayUrlsParam extends Partial<AttachContext> {
   readonly car: CoerceURIandInterceptor;
   readonly file: CoerceURIandInterceptor;
   readonly meta: CoerceURIandInterceptor;
@@ -497,7 +509,12 @@ export interface Attachable {
    * @description prepare allows the Attable to register the gateways and
    * then return the urls of the gateways
    */
-  prepare(): Promise<GatewayUrlsParam>;
+  prepare(db?: Ledger): Promise<GatewayUrlsParam>;
+  /**
+   * @description configHash is called on every attach to avoid multiple
+   * calls to prepare with the same config.
+   */
+  configHash(): Promise<string>;
 }
 
 export class DataAndMetaAndWalAndBaseStore implements DataAndMetaAndWalStore {
@@ -526,6 +543,8 @@ export interface Attached {
 
   detach(): Promise<void>;
   status(): "attached" | "loading" | "loaded" | "error" | "detached" | "syncing" | "idle";
+
+  ctx(): FPContext;
 }
 
 export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
@@ -596,7 +615,7 @@ export interface Ledger extends HasCRDT {
 
   readonly name: string;
 
-  readonly context: Context;
+  readonly context: FPContext;
 
   onClosed(fn: () => void): () => void;
 
