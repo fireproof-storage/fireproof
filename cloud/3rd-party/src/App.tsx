@@ -1,12 +1,11 @@
-import { DocWithId, useFireproof, toCloud } from "use-fireproof";
+import { DocWithId, useFireproof, toCloud, ToCloudName, ToCloudCtx } from "use-fireproof";
 import { useState, useEffect } from "react";
 import "./App.css";
 // import { URI } from "@adviser/cement";
 
 function App() {
-  const attach = toCloud();
   const { database, attached } = useFireproof("fireproof-party", {
-    attach,
+    attach: toCloud(),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
   // const [token, setToken] = useState("");
@@ -23,12 +22,13 @@ function App() {
   //     setToken(uri.getParam("fpToken", ""));
   //   }
   // }, [window.location.href]);
+  const attach = attached?.ctx().get<ToCloudCtx>(ToCloudName);
 
   return (
     <>
       <h1>FireProof Party of the 3rd</h1>
       <div>{attached ? "Attached" : "waiting to attach"}</div>
-      <div className="card" onClick={() => attach.resetToken()}>
+      <div className="card" onClick={() => attach?.resetToken()}>
         Reset Token
       </div>
       <div
@@ -41,7 +41,7 @@ function App() {
           });
         }}
       >
-        Add - {attach.token}
+        Add - {attach?.token()}
       </div>
       <div className="read-the-docs">
         {rows.map((row) => {

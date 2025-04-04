@@ -11,7 +11,12 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   server: {
     port: 3000,
-    hmr: false,
+    // hmr: false,
+    headers: {
+      // "x-frame-options" : "ALLOW-FROM https://github.com",
+      // "Content-Security-Policy": "frame-ancestors 'self' https://dev.connect.fireproof.direct"
+      // "Content-Security-Policy": "frame-ancestors 'self' https://dev.connect.fireproof.direct https://github.com https://accounts.google.com"
+    },
   },
   build: {
     sourcemap: true,

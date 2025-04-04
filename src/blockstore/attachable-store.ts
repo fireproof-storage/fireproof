@@ -1,5 +1,13 @@
 import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI } from "@adviser/cement";
-import { Attached, Attachable, GatewayUrls, UnReg, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore, PARAM } from "../types.js";
+import {
+  Attached,
+  Attachable,
+  GatewayUrls,
+  GatewayUrlsParam,
+  DataAndMetaAndWalAndBaseStore,
+  PARAM,
+  AttachContext,
+} from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import {
   AttachedStores,
@@ -24,15 +32,22 @@ import {
   FileStore,
 } from "./types.js";
 import { ensureURIDefaults, hashObject, toSortedArray } from "../utils.js";
+import { FPContext } from "../fp-context.js";
 
 class AttachedImpl implements Attached {
   readonly gatewayUrls: GatewayUrls;
   readonly stores: DataAndMetaAndWalAndBaseStore;
-  private readonly unreg: UnReg;
-  constructor(gws: GatewayUrls, stores: DataAndMetaAndWalStore, unreg: UnReg) {
+  private readonly attachCtx: AttachContext;
+  constructor(gws: GatewayUrls, stores: DataAndMetaAndWalStore, actx: Partial<AttachContext>) {
     this.gatewayUrls = gws;
     this.stores = new DataAndMetaAndWalAndBaseStore(stores);
-    this.unreg = unreg;
+    this.attachCtx = {
+      detach: async () => {
+        /* noop */
+      },
+      ctx: new FPContext(),
+      ...actx,
+    };
   }
   async detach(): Promise<void> {
     const toClose = [this.stores.car.close(), this.stores.file.close(), this.stores.meta.close()];
@@ -40,7 +55,10 @@ class AttachedImpl implements Attached {
       toClose.push(this.stores.wal.close());
     }
     await Promise.all(toClose);
-    this.unreg();
+    this.attachCtx.detach();
+  }
+  ctx(): FPContext {
+    return this.attachCtx.ctx;
   }
   status(): ReturnType<Attached["status"]> {
     return "attached";
@@ -260,7 +278,7 @@ export async function createAttachedStores(
 
   return await ar.attach({
     name,
-    configHash: () => cfgId,
+    configHash: async () => cfgId,
     prepare: async () => gup,
   });
 }
@@ -335,16 +353,16 @@ export class AttachedRemotesImpl implements AttachedStores {
 
   // needed for React Statemanagement
   readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
-  async attach(attached: Attachable): Promise<Attached> {
-    return this._keyedAttachable.get(attached.configHash()).once(async () => {
-      const gwp = await attached.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
+  async attach(attachable: Attachable): Promise<Attached> {
+    return this._keyedAttachable.get(await attachable.configHash()).once(async () => {
+      const gwp = await attachable.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
       // this._local?.gatewayUrls.car.url.getParam("name");
       const gws: GatewayUrls = {
         car: {
           ...gwp.car,
           url: ensureURIDefaults(
             this.loadable.sthis,
-            { name: attached.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
+            { name: attachable.name, local: this._local?.gatewayUrls.car.url.getParam(PARAM.NAME) },
             undefined,
             URI.from(gwp.car.url),
             "car",
@@ -354,7 +372,7 @@ export class AttachedRemotesImpl implements AttachedStores {
           ...gwp.file,
           url: ensureURIDefaults(
             this.loadable.sthis,
-            { name: attached.name, local: this._local?.gatewayUrls.file.url.getParam(PARAM.NAME) },
+            { name: attachable.name, local: this._local?.gatewayUrls.file.url.getParam(PARAM.NAME) },
             undefined,
             URI.from(gwp.file.url),
             "file",
@@ -365,7 +383,7 @@ export class AttachedRemotesImpl implements AttachedStores {
           ...gwp.meta,
           url: ensureURIDefaults(
             this.loadable.sthis,
-            { name: attached.name, local: this._local?.gatewayUrls.meta.url.getParam(PARAM.NAME) },
+            { name: attachable.name, local: this._local?.gatewayUrls.meta.url.getParam(PARAM.NAME) },
             undefined,
             URI.from(gwp.meta.url),
             "meta",
@@ -376,7 +394,7 @@ export class AttachedRemotesImpl implements AttachedStores {
               ...gwp.wal,
               url: ensureURIDefaults(
                 this.loadable.sthis,
-                { name: attached.name, local: this._local?.gatewayUrls.wal?.url.getParam(PARAM.NAME) },
+                { name: attachable.name, local: this._local?.gatewayUrls.wal?.url.getParam(PARAM.NAME) },
                 undefined,
                 URI.from(gwp.wal.url),
                 "wal",
@@ -401,8 +419,9 @@ export class AttachedRemotesImpl implements AttachedStores {
             byStore: gws,
             loader: this.loadable,
           }),
-          () => {
-            this._remotes.unget(key);
+          {
+            detach: async () => this._remotes.unget(key),
+            ctx: gwp.ctx,
           },
         );
         if (result.stores.wal) {
