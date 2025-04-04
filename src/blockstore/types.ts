@@ -7,7 +7,7 @@ import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } fr
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager, TaskManagerParams } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { Context } from "../context.js";
+import { FPContext } from "../fp-context.js";
 import { AsyncBlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
@@ -378,7 +378,7 @@ export interface Connection {
 
   // this indicates if a store is completely loaded from a peer
   loaded(): Future<void>;
-  readonly context: Context;
+  readonly context: FPContext;
   connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;

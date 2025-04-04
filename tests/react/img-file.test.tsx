@@ -5,15 +5,6 @@ import { createElement } from "react";
 import type { DocFileMeta } from "use-fireproof";
 
 // Extend HTMLElement to include querySelector for TypeScript
-declare global {
-  interface HTMLElement {
-    querySelector(selectors: string): HTMLElement | null;
-    getAttribute(name: string): string | null;
-    classList: {
-      contains(token: string): boolean;
-    };
-  }
-}
 
 // Simple SVG content for testing
 const SVG_CONTENT = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
