@@ -4,7 +4,7 @@ import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } from "@adviser/cement";
-import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
+import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager, TaskManagerParams } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
 import { Context } from "../context.js";

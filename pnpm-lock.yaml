@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: a928f075b97e842e4bee9a98954ccfc2f2c1f744cbc95981a53804197964c2dd
+    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
     path: patches/drizzle-kit.patch
 
 importers:
@@ -14,11 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.8
+        specifier: ~0.4.10
         version: 0.4.15(typescript@5.8.3)
-      '@fireproof/vendor':
-        specifier: ~2.0.2
-        version: 2.0.2(@vitest/browser@3.2.2)(vitest@3.2.2)
       '@ipld/car':
         specifier: ^5.4.0
         version: 5.4.2
@@ -31,6 +28,9 @@ importers:
       '@libsql/client':
         specifier: ^0.15.2
         version: 0.15.8
+      '@web3-storage/pail':
+        specifier: ^0.6.2
+        version: 0.6.2
       cborg:
         specifier: ^4.2.9
         version: 4.2.11
@@ -121,7 +121,7 @@ importers:
         version: 0.13.0
       drizzle-kit:
         specifier: ^0.30.6
-        version: 0.30.6(patch_hash=a928f075b97e842e4bee9a98954ccfc2f2c1f744cbc95981a53804197964c2dd)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
@@ -2759,9 +2759,6 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
-
-  '@fireproof/vendor@2.0.2':
-    resolution: {integrity: sha512-kwsVSmKspItkajvSnjgLWzJgApKc4cqOi03hBKE7BF+S2eKQugsJ9FW9Ob9ZPVD2XMypYVndemZfunMy+Bd1kw==}
 
   '@gerrit0/mini-shiki@3.2.2':
     resolution: {integrity: sha512-vaZNGhGLKMY14HbF53xxHNgFO9Wz+t5lTlGNpl2N9xFiKQ0I5oIe0vKjU9dh7Nb3Dw6lZ7wqUE0ri+zcdpnK+Q==}
@@ -7069,9 +7066,6 @@ packages:
     resolution: {integrity: sha512-eajQ/ZH7qXZQR2AgtfpmSMizQzmyYVmCql7pdhldPuYQi4atACekbJaQplk6dWyIi10jCaFnd6pqvcEFXjbaJw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  multiformats@13.3.2:
-    resolution: {integrity: sha512-qbB0CQDt3QKfiAzZ5ZYjLFOs+zW43vA4uyM8g27PeEuXZybUOFyjrVdP93HPBHMoglibwfkdVwbzfUq8qGcH6g==}
-
   multiformats@13.3.6:
     resolution: {integrity: sha512-yakbt9cPYj8d3vi/8o/XWm61MrOILo7fsTL0qxNx6zS0Nso6K5JqqS2WV7vK/KSuDBvrW3KfCwAdAgarAgOmww==}
 
@@ -10497,16 +10491,6 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/vendor@2.0.2(@vitest/browser@3.2.2)(vitest@3.2.2)':
-    dependencies:
-      '@ipld/dag-cbor': 9.2.4
-      '@vitest/coverage-v8': 3.2.2(@vitest/browser@3.2.2)(vitest@3.2.2)
-      multiformats: 13.3.2
-    transitivePeerDependencies:
-      - '@vitest/browser'
-      - supports-color
-      - vitest
-
   '@gerrit0/mini-shiki@3.2.2':
     dependencies:
       '@shikijs/engine-oniguruma': 3.2.1
@@ -13406,7 +13390,7 @@ snapshots:
     dependencies:
       type-fest: 2.19.0
 
-  drizzle-kit@0.30.6(patch_hash=a928f075b97e842e4bee9a98954ccfc2f2c1f744cbc95981a53804197964c2dd):
+  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -15890,8 +15874,6 @@ snapshots:
   multiformats@11.0.2: {}
 
   multiformats@12.1.3: {}
-
-  multiformats@13.3.2: {}
 
   multiformats@13.3.6: {}
 

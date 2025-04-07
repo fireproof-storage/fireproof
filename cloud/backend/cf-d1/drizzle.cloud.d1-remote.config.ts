@@ -1,7 +1,7 @@
-import { envFactory, param } from "@adviser/cement";
 import { defineConfig } from "drizzle-kit";
 
 import { dotenv } from "zx";
+import { envFactory, param } from "@adviser/cement";
 
 dotenv.config(process.env.FP_ENV ?? ".dev.env");
 
