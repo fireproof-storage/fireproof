@@ -102,7 +102,7 @@ importers:
         specifier: ^18.3.12
         version: 18.3.23
       '@types/ws':
-        specifier: ^8.18.0
+        specifier: ^8.18.1
         version: 8.18.1
       '@typescript-eslint/typescript-estree':
         specifier: ^8.29.0
