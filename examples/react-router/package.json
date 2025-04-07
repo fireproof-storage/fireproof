@@ -10,12 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fireproof/core": "^0.19",
+    "@fireproof/core":  "0.20.0-dev-preview-63",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.22.3",
-    "use-fireproof": "^0.19"
+    "use-fireproof": "0.20.0-dev-preview-63"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

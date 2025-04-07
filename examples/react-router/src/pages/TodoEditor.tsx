@@ -11,9 +11,7 @@ export function TodoEditor() {
   const { useDocument } = useFireproof(DATABASE_CONFIG.name);
   const [last_ms, setLast] = useState(0);
   const emptyWithId = getEmptyTodo(todoId || '');
-  const [todo, setTodo, storeTodo] = useDocument<TodoStorage>(
-    () => emptyWithId
-  );
+  const { doc, merge, submit } = useDocument<TodoStorage>(() => emptyWithId);
 
   if (!todoId) {
     navigate('/');
@@ -23,13 +21,11 @@ export function TodoEditor() {
   const doUpdate = async (updatedTodo: Partial<TodoStorage>) => {
     try {
       const updated = {
-        ...todo,
         ...updatedTodo,
         updatedAt: new Date().toISOString(),
       };
       console.log('Updating todo to ', updated);
-      setTodo(updated);
-      await storeTodo(updated);
+      await merge(updated);
     } catch (err) {
       console.error('Failed to save', err);
     }
@@ -42,15 +38,15 @@ export function TodoEditor() {
   const milliseconds = performance.now();
   const elapsed = last_ms ? Math.round(milliseconds - last_ms) : 0;
 
-  if (todo.type !== 'todo') {
-    console.log(elapsed, 'Not rendering, document still loading.', todo);
+  if (doc.type !== 'todo') {
+    console.log(elapsed, 'Not rendering, document still loading.', doc);
     if (!last_ms) setLast(milliseconds);
   } else {
-    console.log(elapsed, 'Document loaded', todo);
+    console.log(elapsed, 'Document loaded', doc);
   }
 
   return (
-    todo.type === 'todo' && (
+    doc.type === 'todo' && (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
           <div className="mb-6">
@@ -59,7 +55,7 @@ export function TodoEditor() {
             </label>
             <input
               type="text"
-              value={todo.title || ''}
+              value={doc.title || ''}
               onChange={(e) => doUpdate({ title: e.target.value })}
               className="w-full p-2 border rounded-md"
             />
@@ -70,7 +66,7 @@ export function TodoEditor() {
               Description
             </label>
             <textarea
-              value={todo.description || ''}
+              value={doc.description || ''}
               onChange={(e) => doUpdate({ description: e.target.value })}
               className="w-full p-2 border rounded-md h-32"
             />
@@ -81,7 +77,7 @@ export function TodoEditor() {
               Priority
             </label>
             <select
-              value={todo.priority || 'medium'}
+              value={doc.priority || 'medium'}
               onChange={(e) =>
                 doUpdate({
                   priority: e.target.value as TodoStorage['priority'],
@@ -99,7 +95,7 @@ export function TodoEditor() {
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
-                checked={todo.completed || false}
+                checked={doc.completed || false}
                 onChange={(e) => doUpdate({ completed: e.target.checked })}
                 className="h-4 w-4 text-blue-600 rounded"
               />
@@ -116,7 +112,7 @@ export function TodoEditor() {
             </button>
             <button
               onClick={async () => {
-                await doUpdate({ completed: true });
+                await submit();
                 navigateToTodos();
               }}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
