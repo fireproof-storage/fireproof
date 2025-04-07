@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: a928f075b97e842e4bee9a98954ccfc2f2c1f744cbc95981a53804197964c2dd
+    hash: 5u24eera53aql2z5baax64delu
     path: patches/drizzle-kit.patch
 
 importers:
@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.7
-        version: 0.4.7(typescript@5.8.2)
+        specifier: ~0.4.8
+        version: 0.4.8(typescript@5.8.2)
       '@fireproof/vendor':
         specifier: ~2.0.2
         version: 2.0.2(@vitest/browser@3.0.9)(vitest@3.0.9)
@@ -127,7 +127,7 @@ importers:
         version: 0.13.0
       drizzle-kit:
         specifier: ^0.30.6
-        version: 0.30.6(patch_hash=a928f075b97e842e4bee9a98954ccfc2f2c1f744cbc95981a53804197964c2dd)
+        version: 0.30.6(patch_hash=5u24eera53aql2z5baax64delu)
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
@@ -192,8 +192,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.4.7':
-    resolution: {integrity: sha512-KBGpVuZ1IMH9MQqE0gnpzTnNJfGjjSmBYBNJhuVu1vy6V51Fvo3GJY7JRhepBU5AzLEDij9gZ5I5qGa5/Qt4Cw==}
+  '@adviser/cement@0.4.8':
+    resolution: {integrity: sha512-R+35d10ws9MEH/bV0nX7HqckyuysJxQJkutQGpvCz0TK4DDDEn3R0DFIheahWLB0jZgsrWOjws4k2nSdKPTW0w==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -1537,8 +1537,8 @@ packages:
   '@promptbook/utils@0.69.5':
     resolution: {integrity: sha512-xm5Ti/Hp3o4xHrsK9Yy3MS6KbDxYbq485hDsFvxqaNA7equHLPdo8H8faTitTeb14QCDfLW4iwCxdVYu5sn6YQ==}
 
-  '@puppeteer/browsers@2.8.0':
-    resolution: {integrity: sha512-yTwt2KWRmCQAfhvbCRjebaSX8pV1//I0Y3g+A7f/eS7gf0l4eRJoUCvcYdVtboeU4CTOZQuqYbZNS8aBYb8ROQ==}
+  '@puppeteer/browsers@2.9.0':
+    resolution: {integrity: sha512-8+xM+cFydYET4X/5/3yZMHs7sjS6c9I6H5I3xJdb6cinzxWUT/I2QVw4avxCQ8QDndwdHkG/FiSZIrCjAbaKvQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1701,14 +1701,14 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@20.17.28':
-    resolution: {integrity: sha512-DHlH/fNL6Mho38jTy7/JT7sn2wnXI+wULR6PV4gy4VHLVvnrV/d3pHAMQHhc4gjdLmK2ZiPoMxzp6B3yRajLSQ==}
+  '@types/node@20.17.30':
+    resolution: {integrity: sha512-7zf4YyHA+jvBNfVrk2Gtvs6x7E8V+YDW05bNfG2XkWDJfYRXrTiP/DsB2zSYTaHX0bGIujTBQdMVAhb+j7mwpg==}
 
   '@types/node@22.10.5':
     resolution: {integrity: sha512-F8Q+SeGimwOo86fiovQh8qiXfFEh2/ocYv7tU5pJ3EXMSSxk1Joj5wefpFK2fHTf/N6HKGSxIDBT9f3gCxXPkQ==}
 
-  '@types/node@22.13.14':
-    resolution: {integrity: sha512-Zs/Ollc1SJ8nKUAgc7ivOEdIBM8JAKgrqqUYi2J997JuKO7/tpQC+WCetQ1sypiKCQWHdvdg9wBNpUPEWZae7w==}
+  '@types/node@22.14.0':
+    resolution: {integrity: sha512-Kmpl+z84ILoG+3T/zQFyAJsU6EPTmOCj8/2+83fSN6djd6I4o7uOuGIH6vq3PrjY5BGitSbFuMN18j3iknubbA==}
 
   '@types/prop-types@15.7.12':
     resolution: {integrity: sha512-5zvhXYtRNRluoE/jAp4GVsSduVUzNWKkOZrCDBWYtE7biZywwdC2AcEzg+cSMLFRfVgeAFqpfNabiPjxFddV1Q==}
@@ -1739,6 +1739,9 @@ packages:
 
   '@types/ws@8.18.0':
     resolution: {integrity: sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -2078,8 +2081,8 @@ packages:
   bare-events@2.5.4:
     resolution: {integrity: sha512-+gFfDkR8pj4/TrWCGUGWmJIkBwuxPS5F+a5yWjOHQt2hHvNZd5YLzadjmDUtFmMM4y429bnKLa8bYBMHcYdnQA==}
 
-  bare-fs@4.0.2:
-    resolution: {integrity: sha512-S5mmkMesiduMqnz51Bfh0Et9EX0aTCJxhsI4bvzFFLs8Z1AV8RDHadfY5CyLwdoLHgXbNBEN1gQcbEtGwuvixw==}
+  bare-fs@4.1.2:
+    resolution: {integrity: sha512-8wSeOia5B7LwD4+h465y73KOdj5QHsbbuoUfPBi+pXgFJIPuG7SsiOdJuijWMyfid49eD+WivpfY7KT8gbAzBA==}
     engines: {bare: '>=1.16.0'}
     peerDependencies:
       bare-buffer: '*'
@@ -2995,8 +2998,8 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
-  htmlfy@0.6.5:
-    resolution: {integrity: sha512-2idle1yo+Ft3ttDc4cZkVPaWBS5F15Pyrq4XGecSxF2ksqZVUzuCTd0OXar1vxq9UDQX/lzfr/iDwYo3aRuOTA==}
+  htmlfy@0.6.6:
+    resolution: {integrity: sha512-NsJ/YV/FQ9XpU0t+TkCMqXVsedNqSSImrI1E4aRBX8uDSaXzF7FOBl/8HKnnqm50RngNfLIoAVLyPQbyVi8EaQ==}
 
   htmlparser2@9.1.0:
     resolution: {integrity: sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==}
@@ -3257,6 +3260,7 @@ packages:
 
   libsql@0.5.3:
     resolution: {integrity: sha512-S3WR8WNCJV1VXraBFUKjDA6+8LcNDJMLm+83qohm1O3YM1iVqV2+/XN3SXOxpxVjuL4g/rLrjO5kzygkPefCFQ==}
+    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   lie@3.3.0:
@@ -4235,6 +4239,9 @@ packages:
   undici-types@6.20.0:
     resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
 
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
   undici@5.29.0:
     resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
     engines: {node: '>=14.0'}
@@ -4547,7 +4554,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.4.7(typescript@5.8.2)':
+  '@adviser/cement@0.4.8(typescript@5.8.2)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.2)
       yaml: 2.7.1
@@ -5450,7 +5457,7 @@ snapshots:
       spacetrim: 0.11.59
     optional: true
 
-  '@puppeteer/browsers@2.8.0':
+  '@puppeteer/browsers@2.9.0':
     dependencies:
       debug: 4.4.0
       extract-zip: 2.0.1
@@ -5585,7 +5592,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@20.17.28':
+  '@types/node@20.17.30':
     dependencies:
       undici-types: 6.19.8
     optional: true
@@ -5594,9 +5601,9 @@ snapshots:
     dependencies:
       undici-types: 6.20.0
 
-  '@types/node@22.13.14':
+  '@types/node@22.14.0':
     dependencies:
-      undici-types: 6.20.0
+      undici-types: 6.21.0
     optional: true
 
   '@types/prop-types@15.7.12': {}
@@ -5628,9 +5635,14 @@ snapshots:
     dependencies:
       '@types/node': 22.10.5
 
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 22.14.0
+    optional: true
+
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.13.14
+      '@types/node': 22.14.0
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.28.0(@typescript-eslint/parser@8.28.0(eslint@9.18.0)(typescript@5.8.2))(eslint@9.18.0)(typescript@5.8.2)':
@@ -5877,17 +5889,17 @@ snapshots:
 
   '@wdio/repl@9.4.4':
     dependencies:
-      '@types/node': 20.17.28
+      '@types/node': 20.17.30
     optional: true
 
   '@wdio/types@9.10.1':
     dependencies:
-      '@types/node': 20.17.28
+      '@types/node': 20.17.30
     optional: true
 
   '@wdio/utils@9.11.0':
     dependencies:
-      '@puppeteer/browsers': 2.8.0
+      '@puppeteer/browsers': 2.9.0
       '@wdio/logger': 9.4.4
       '@wdio/types': 9.10.1
       decamelize: 6.0.0
@@ -6057,7 +6069,7 @@ snapshots:
   bare-events@2.5.4:
     optional: true
 
-  bare-fs@4.0.2:
+  bare-fs@4.1.2:
     dependencies:
       bare-events: 2.5.4
       bare-path: 3.0.0
@@ -6422,7 +6434,7 @@ snapshots:
       domhandler: 5.0.3
     optional: true
 
-  drizzle-kit@0.30.6(patch_hash=a928f075b97e842e4bee9a98954ccfc2f2c1f744cbc95981a53804197964c2dd):
+  drizzle-kit@0.30.6(patch_hash=5u24eera53aql2z5baax64delu):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -7173,7 +7185,7 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
-  htmlfy@0.6.5:
+  htmlfy@0.6.6:
     optional: true
 
   htmlparser2@9.1.0:
@@ -8376,7 +8388,7 @@ snapshots:
       pump: 3.0.2
       tar-stream: 3.1.7
     optionalDependencies:
-      bare-fs: 4.0.2
+      bare-fs: 4.1.2
       bare-path: 3.0.0
     transitivePeerDependencies:
       - bare-buffer
@@ -8596,6 +8608,9 @@ snapshots:
 
   undici-types@6.20.0: {}
 
+  undici-types@6.21.0:
+    optional: true
+
   undici@5.29.0:
     dependencies:
       '@fastify/busboy': 2.1.1
@@ -8749,8 +8764,8 @@ snapshots:
 
   webdriver@9.11.0:
     dependencies:
-      '@types/node': 20.17.28
-      '@types/ws': 8.18.0
+      '@types/node': 20.17.30
+      '@types/ws': 8.18.1
       '@wdio/config': 9.11.0
       '@wdio/logger': 9.4.4
       '@wdio/protocols': 9.7.0
@@ -8768,7 +8783,7 @@ snapshots:
 
   webdriverio@9.11.0:
     dependencies:
-      '@types/node': 20.17.28
+      '@types/node': 20.17.30
       '@types/sinonjs__fake-timers': 8.1.5
       '@wdio/config': 9.11.0
       '@wdio/logger': 9.4.4
@@ -8782,7 +8797,7 @@ snapshots:
       css-shorthand-properties: 1.1.2
       css-value: 0.0.1
       grapheme-splitter: 1.0.4
-      htmlfy: 0.6.5
+      htmlfy: 0.6.6
       is-plain-obj: 4.1.0
       jszip: 3.10.1
       lodash.clonedeep: 4.5.0
