@@ -1,4 +1,3 @@
-// import type { Database } from "better-sqlite3";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
 import { rt, SuperThis } from "@fireproof/core";
@@ -53,10 +52,6 @@ function getSQLFlavours(sthis: SuperThis): { name: string; factory: () => Promis
             url: sthis.env.get("FP_TEST_SQL_URL") as string,
           }),
         );
-        /*
-        const { BetterSQLDatabase } = await import("./bettersql-abstract-sql.js");
-        return new BetterSQLDatabase("./dist/test.db") as unknown as LibSQLDatabase;
-        */
       },
     },
   ];
