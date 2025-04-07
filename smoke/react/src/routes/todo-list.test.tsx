@@ -77,7 +77,6 @@ describe("<TodoList />", () => {
 
     await waitFor(() => {
       expect(checkBox.checked).toBe(true);
-    
     });
     // await new Promise((r) => setTimeout(r, 20));
     // console.log("pre-4");
