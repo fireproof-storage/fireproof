@@ -11,7 +11,7 @@ export function Home() {
   const { database, useLiveQuery } = useFireproof(DATABASE_CONFIG.name);
   const empty = getEmptyTodo();
 
-  const { docs: todos } = useLiveQuery<TodoStorage, [number]>('priority');
+  const { docs: todos } = useLiveQuery<TodoStorage>('type');
   console.log('All todos', todos);
 
   const groupedTodos = todos.reduce((acc, todo) => {
@@ -34,10 +34,11 @@ export function Home() {
     console.log('Created new todo: ', newTodo, 'with id of', result);
     navigate(`/edit/${result.id}`);
   };
+
   const mapping = {
-    '1': 'High',
-    '2': 'Medium',
-    '3': 'Low',
+    'high': 'High',
+    'medium': 'Medium',
+    'low': 'Low',
   };
 
   return (

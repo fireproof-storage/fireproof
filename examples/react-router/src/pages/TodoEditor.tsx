@@ -9,15 +9,16 @@ export function TodoEditor() {
   const navigate = useNavigate();
   const { todoId } = useParams();
   const { useDocument } = useFireproof(DATABASE_CONFIG.name);
+  const [last_ms, setLast] = useState(0);
+  const emptyWithId = getEmptyTodo(todoId || '');
+  const [todo, setTodo, storeTodo] = useDocument<TodoStorage>(
+    () => emptyWithId
+  );
 
   if (!todoId) {
     navigate('/');
     return null;
   }
-  const emptyWithId = getEmptyTodo(todoId!);
-  const [todo, setTodo, storeTodo] = useDocument<TodoStorage>(
-    () => emptyWithId
-  );
 
   const doUpdate = async (updatedTodo: Partial<TodoStorage>) => {
     try {
@@ -38,7 +39,6 @@ export function TodoEditor() {
     navigate('/');
   };
 
-  const [last_ms, setLast] = useState(0);
   const milliseconds = performance.now();
   const elapsed = last_ms ? Math.round(milliseconds - last_ms) : 0;
 
@@ -81,7 +81,7 @@ export function TodoEditor() {
               Priority
             </label>
             <select
-              value={todo.priority || '2'}
+              value={todo.priority || 'medium'}
               onChange={(e) =>
                 doUpdate({
                   priority: e.target.value as TodoStorage['priority'],
@@ -89,9 +89,9 @@ export function TodoEditor() {
               }
               className="w-full p-2 border rounded-md"
             >
-              <option value="1">High</option>
-              <option value="2">Medium</option>
-              <option value="3">Low</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
             </select>
           </div>
 
@@ -101,20 +101,27 @@ export function TodoEditor() {
                 type="checkbox"
                 checked={todo.completed || false}
                 onChange={(e) => doUpdate({ completed: e.target.checked })}
-                className="rounded"
+                className="h-4 w-4 text-blue-600 rounded"
               />
-              <span className="text-sm font-medium text-gray-700">
-                Completed
-              </span>
+              <span className="text-sm text-gray-700">Completed</span>
             </label>
           </div>
 
           <div className="flex justify-end space-x-4">
             <button
               onClick={navigateToTodos}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 bg-blue-600 text-white hover:text-white"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
             >
-              Back to Todos
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                await doUpdate({ completed: true });
+                navigateToTodos();
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Save
             </button>
           </div>
         </div>
