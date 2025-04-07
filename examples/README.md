@@ -2,14 +2,13 @@
 
 Visit [Vibes DIY](https://vibes.diy) to generate apps instantly.
 
-## Get started 
+## Get started
 
 ```bash
 npm install fireproof
 ```
 
 And then follow the [React tutorial](https://use-fireproof.com/docs/react-tutorial) or the [quick start for vanilla JS](https://use-fireproof.com/docs/getting-started).
-
 
 ## In The Wild
 
