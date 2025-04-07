@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Home } from './pages/Home';
-import { TodoEditor } from './pages/TodoEditor';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Home } from "./pages/Home";
+import { TodoEditor } from "./pages/TodoEditor";
 function App() {
   return (
     <BrowserRouter>

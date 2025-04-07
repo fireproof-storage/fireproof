@@ -20,9 +20,7 @@ export default function TodoList() {
   });
 
   // Handle the editing of existing todos
-  const { doc: editingTodo, merge, submit } = useDocument<Todo>(
-    editingTodoId ? { _id: editingTodoId } : null
-  );
+  const { doc: editingTodo, merge, submit } = useDocument<Todo>(editingTodoId ? { _id: editingTodoId } : null);
 
   const handleToggleComplete = async (todo: Todo & { _id: string }) => {
     await database.put({
@@ -33,7 +31,7 @@ export default function TodoList() {
 
   const handleAddTodo = async () => {
     if (!newTodo.text) return;
-    
+
     try {
       await saveNewTodo();
       setNewTodo({ text: "", date: Date.now(), completed: false });
@@ -81,11 +79,7 @@ export default function TodoList() {
             {editingTodoId === todo._id ? (
               // Edit mode
               <div className="todo-edit-form">
-                <input
-                  type="text"
-                  value={editingTodo.text || ""}
-                  onChange={(e) => merge({ text: e.target.value.trim() })}
-                />
+                <input type="text" value={editingTodo.text || ""} onChange={(e) => merge({ text: e.target.value.trim() })} />
                 <input
                   type="checkbox"
                   checked={editingTodo.completed || false}

@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fireproof/core":  "0.20.0-dev-preview-63",
+    "@fireproof/core": "0.20.0-dev-preview-63",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

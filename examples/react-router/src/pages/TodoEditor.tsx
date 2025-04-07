@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useFireproof } from 'use-fireproof';
-import { TodoStorage } from '../types/todo';
-import { getEmptyTodo } from '../utils/todoUtils';
-import { DATABASE_CONFIG } from '../config/database';
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useFireproof } from "use-fireproof";
+import { TodoStorage } from "../types/todo";
+import { getEmptyTodo } from "../utils/todoUtils";
+import { DATABASE_CONFIG } from "../config/database";
 
 export function TodoEditor() {
   const navigate = useNavigate();
   const { todoId } = useParams();
   const { useDocument } = useFireproof(DATABASE_CONFIG.name);
   const [last_ms, setLast] = useState(0);
-  const emptyWithId = getEmptyTodo(todoId || '');
+  const emptyWithId = getEmptyTodo(todoId || "");
   const { doc, merge, submit } = useDocument<TodoStorage>(() => emptyWithId);
 
   if (!todoId) {
-    navigate('/');
+    navigate("/");
     return null;
   }
 
@@ -24,63 +24,57 @@ export function TodoEditor() {
         ...updatedTodo,
         updatedAt: new Date().toISOString(),
       };
-      console.log('Updating todo to ', updated);
+      console.log("Updating todo to ", updated);
       await merge(updated);
     } catch (err) {
-      console.error('Failed to save', err);
+      console.error("Failed to save", err);
     }
   };
 
   const navigateToTodos = () => {
-    navigate('/');
+    navigate("/");
   };
 
   const milliseconds = performance.now();
   const elapsed = last_ms ? Math.round(milliseconds - last_ms) : 0;
 
-  if (doc.type !== 'todo') {
-    console.log(elapsed, 'Not rendering, document still loading.', doc);
+  if (doc.type !== "todo") {
+    console.log(elapsed, "Not rendering, document still loading.", doc);
     if (!last_ms) setLast(milliseconds);
   } else {
-    console.log(elapsed, 'Document loaded', doc);
+    console.log(elapsed, "Document loaded", doc);
   }
 
   return (
-    doc.type === 'todo' && (
+    doc.type === "todo" && (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
             <input
               type="text"
-              value={doc.title || ''}
+              value={doc.title || ""}
               onChange={(e) => doUpdate({ title: e.target.value })}
               className="w-full p-2 border rounded-md"
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
-              value={doc.description || ''}
+              value={doc.description || ""}
               onChange={(e) => doUpdate({ description: e.target.value })}
               className="w-full p-2 border rounded-md h-32"
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Priority
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
             <select
-              value={doc.priority || 'medium'}
+              value={doc.priority || "medium"}
               onChange={(e) =>
                 doUpdate({
-                  priority: e.target.value as TodoStorage['priority'],
+                  priority: e.target.value as TodoStorage["priority"],
                 })
               }
               className="w-full p-2 border rounded-md"

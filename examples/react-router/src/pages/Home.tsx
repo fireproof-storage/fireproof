@@ -1,44 +1,47 @@
-import { useNavigate } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
-import { useFireproof } from 'use-fireproof';
-import { TodoStorage } from '../types/todo';
-import { TodoCard } from '../components/TodoCard';
-import { DATABASE_CONFIG } from '../config/database';
-import { getEmptyTodo } from '../utils/todoUtils';
+import { useNavigate } from "react-router-dom";
+import { PlusCircle } from "lucide-react";
+import { useFireproof } from "use-fireproof";
+import { TodoStorage } from "../types/todo";
+import { TodoCard } from "../components/TodoCard";
+import { DATABASE_CONFIG } from "../config/database";
+import { getEmptyTodo } from "../utils/todoUtils";
 
 export function Home() {
   const navigate = useNavigate();
   const { database, useLiveQuery } = useFireproof(DATABASE_CONFIG.name);
   const empty = getEmptyTodo();
 
-  const { docs: todos } = useLiveQuery<TodoStorage>('type');
-  console.log('All todos', todos);
+  const { docs: todos } = useLiveQuery<TodoStorage>("type");
+  console.log("All todos", todos);
 
-  const groupedTodos = todos.reduce((acc, todo) => {
-    if (!acc[todo.priority]) {
-      acc[todo.priority] = [];
-    }
-    acc[todo.priority].push(todo);
-    return acc;
-  }, {} as Record<string, TodoStorage[]>);
+  const groupedTodos = todos.reduce(
+    (acc, todo) => {
+      if (!acc[todo.priority]) {
+        acc[todo.priority] = [];
+      }
+      acc[todo.priority].push(todo);
+      return acc;
+    },
+    {} as Record<string, TodoStorage[]>,
+  );
 
   const createTodo = async () => {
     const newTodo: TodoStorage = {
       ...empty,
-      type: 'todo',
+      type: "todo",
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
 
     const result = await database.put(newTodo);
-    console.log('Created new todo: ', newTodo, 'with id of', result);
+    console.log("Created new todo: ", newTodo, "with id of", result);
     navigate(`/edit/${result.id}`);
   };
 
   const mapping = {
-    'high': 'High',
-    'medium': 'Medium',
-    'low': 'Low',
+    high: "High",
+    medium: "Medium",
+    low: "Low",
   };
 
   return (
@@ -48,13 +51,9 @@ export function Home() {
 
         {Object.entries(mapping).map(([priority, label]) => (
           <div key={priority} className="mb-8">
-            <h2 className="text-xl font-semibold capitalize mb-4">
-              {label} Priority
-            </h2>
+            <h2 className="text-xl font-semibold capitalize mb-4">{label} Priority</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTodos[priority]?.map((todo) => (
-                <TodoCard key={todo._id} todo={todo} />
-              ))}
+              {groupedTodos[priority]?.map((todo) => <TodoCard key={todo._id} todo={todo} />)}
             </div>
           </div>
         ))}
