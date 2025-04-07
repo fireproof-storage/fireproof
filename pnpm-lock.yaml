@@ -102,8 +102,8 @@ importers:
         specifier: ^18.3.12
         version: 18.3.12
       '@types/ws':
-        specifier: ^8.18.0
-        version: 8.18.0
+        specifier: ^8.18.1
+        version: 8.18.1
       '@typescript-eslint/typescript-estree':
         specifier: ^8.29.0
         version: 8.29.0(typescript@5.8.2)
@@ -1742,9 +1742,6 @@ packages:
 
   '@types/which@2.0.2':
     resolution: {integrity: sha512-113D3mDkZDjo+EeUEHCFy0qniNc1ZpecGiAU7WSo7YDoSzolZIQKpYFHrPpjkB2nuyahcKfrmLXeQlh7gqJYdw==}
-
-  '@types/ws@8.18.0':
-    resolution: {integrity: sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==}
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
@@ -5654,10 +5651,6 @@ snapshots:
 
   '@types/which@2.0.2':
     optional: true
-
-  '@types/ws@8.18.0':
-    dependencies:
-      '@types/node': 22.10.5
 
   '@types/ws@8.18.1':
     dependencies:
