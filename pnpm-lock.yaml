@@ -84,7 +84,7 @@ importers:
         specifier: ^1.14.0
         version: 1.14.3(hono@4.7.11)
       '@hono/node-ws':
-        specifier: ^1.1.0
+        specifier: ^1.1.1
         version: 1.1.6(@hono/node-server@1.14.3(hono@4.7.11))(hono@4.7.11)
       '@testing-library/react':
         specifier: ^16.1.0
