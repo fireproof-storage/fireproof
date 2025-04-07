@@ -77,10 +77,13 @@ describe("<TodoList />", () => {
 
     await waitFor(() => {
       expect(checkBox.checked).toBe(true);
+    
     });
+    // await new Promise((r) => setTimeout(r, 20));
     // console.log("pre-4");
-    expect(item.attributeStyleMap.get("text-decoration")?.toString()).toBe("line-through");
+    await waitFor(() => {
+      expect(item.attributeStyleMap.get("text-decoration")?.toString()).toBe("line-through");
+    });
     // console.log("post-last");
-    // await new Promise((r) => setTimeout(r, 2000));
   });
 });
