@@ -180,7 +180,7 @@ index 24f82ccc03dde45b0c23cb2422345c22dc200a16..ea31782603804531e9ddc2c2efc83622
 +      const res = esbuild.buildSync({
 +        entryPoints: imports,
 +        bundle: true,
-+        format: "cjs",
++        format: "esm",
 +        outfile: outFile
 +      });
 +      const i0 = require(outFile);
@@ -367,7 +367,7 @@ index e95ffbb6d3b90b01cbfdaaee13e9ed5a6a979a56..1660a9de5dcd39155027e9debfc4eb9c
 +      const res = esbuild.buildSync({
 +        entryPoints: imports,
 +        bundle: true,
-+        format: "cjs",
++        format: "esm",
 +        outfile: outFile
 +      });
 +      const i0 = __require(outFile);
@@ -553,7 +553,7 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
 +      const res = esbuild.buildSync({
 +        entryPoints: imports,
 +        bundle: true,
-+        format: "cjs",
++        format: "esm",
 +        outfile: outFile
 +      });
 +      const i0 = require(outFile);
