@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.7
-        version: 0.4.7(typescript@5.8.2)
+        specifier: ~0.4.8
+        version: 0.4.8(typescript@5.8.2)
       '@fireproof/vendor':
         specifier: ~2.0.2
         version: 2.0.2(@vitest/browser@3.0.9)(vitest@3.0.9)
@@ -192,8 +192,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.4.7':
-    resolution: {integrity: sha512-KBGpVuZ1IMH9MQqE0gnpzTnNJfGjjSmBYBNJhuVu1vy6V51Fvo3GJY7JRhepBU5AzLEDij9gZ5I5qGa5/Qt4Cw==}
+  '@adviser/cement@0.4.8':
+    resolution: {integrity: sha512-R+35d10ws9MEH/bV0nX7HqckyuysJxQJkutQGpvCz0TK4DDDEn3R0DFIheahWLB0jZgsrWOjws4k2nSdKPTW0w==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -4554,7 +4554,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.4.7(typescript@5.8.2)':
+  '@adviser/cement@0.4.8(typescript@5.8.2)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.2)
       yaml: 2.7.1
