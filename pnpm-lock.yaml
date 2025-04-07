@@ -183,7 +183,7 @@ importers:
         specifier: ^4.6.0
         version: 4.19.1(@cloudflare/workers-types@4.20250606.0)
       zx:
-        specifier: ^8.4.1
+        specifier: ^8.5.0
         version: 8.5.5
 
   examples/next-app:
