@@ -53,7 +53,7 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250327.0",
+    "@cloudflare/workers-types": "^4.20250407.0",
     "@eslint/js": "^9.23.0",
     "@hono/node-server": "^1.14.0",
     "@hono/node-ws": "^1.1.0",
