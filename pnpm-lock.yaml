@@ -84,8 +84,8 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0(hono@4.7.5)
       '@hono/node-ws':
-        specifier: ^1.1.0
-        version: 1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(hono@4.7.5)
+        specifier: ^1.1.1
+        version: 1.1.1(@hono/node-server@1.14.0(hono@4.7.5))(hono@4.7.5)
       '@testing-library/react':
         specifier: ^16.1.0
         version: 16.1.0(@testing-library/dom@10.4.0)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1242,8 +1242,8 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/node-ws@1.1.0':
-    resolution: {integrity: sha512-uHaz1EPguJqsUmA+Jmhdi/DTRAMs2Fvcy7qno9E48rlK3WBtyGQw4u4DKlc+o18Nh1DGz2oA1n9hCzEyhVBeLw==}
+  '@hono/node-ws@1.1.1':
+    resolution: {integrity: sha512-iFJrAw5GuBTstehBzLY2FyW5rRlXmO3Uwpijpm4Liv75owNP/UjZe3KExsLuEK4w+u+xhvHqOoQUyEKWUvyghw==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       '@hono/node-server': ^1.11.1
@@ -5176,7 +5176,7 @@ snapshots:
     dependencies:
       hono: 4.7.5
 
-  '@hono/node-ws@1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(hono@4.7.5)':
+  '@hono/node-ws@1.1.1(@hono/node-server@1.14.0(hono@4.7.5))(hono@4.7.5)':
     dependencies:
       '@hono/node-server': 1.14.0(hono@4.7.5)
       hono: 4.7.5
