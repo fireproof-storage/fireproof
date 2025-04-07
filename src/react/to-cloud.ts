@@ -5,7 +5,7 @@ import { Attachable, bs, ensureLogger, Ledger, FPContext, hashObject, falsyToUnd
 import { sleep } from "../../tests/helpers.js";
 import { decodeJwt } from "jose/jwt/decode";
 
-interface DashBoardUIStrategie {
+export interface DashBoardUIStrategie {
   open(logger: Logger, deviceId: string): void;
 
   gatherToken(logger: Logger, tokenKey: string): Promise<string | undefined>;
@@ -24,7 +24,7 @@ interface ToCloudOpts {
   readonly strategy: DashBoardUIStrategie;
 }
 
-class RedirectStrategy implements DashBoardUIStrategie {
+export class RedirectStrategy implements DashBoardUIStrategie {
   readonly opts: Omit<ToCloudOpts, "strategy">;
 
   constructor(opts: Omit<ToCloudOpts, "strategy">) {
@@ -57,90 +57,99 @@ class RedirectStrategy implements DashBoardUIStrategie {
   }
 }
 
-// export class IframeStrategy implements DashBoardUIStrategie {
-//   readonly opts: Omit<ToCloudOpts, "strategy">;
+export class IframeStrategy implements DashBoardUIStrategie {
+  readonly opts: Omit<ToCloudOpts, "strategy">;
 
-//   constructor(opts: Omit<ToCloudOpts, "strategy">) {
-//     this.opts = opts;
-//   }
+  constructor(opts: Omit<ToCloudOpts, "strategy">) {
+    this.opts = opts;
+  }
 
-//   fpIframeOverlay() {
-//     const div = document.createElement("div");
-//     div.id = "fpIframeOverlay";
-//     div.style.position = "fixed";
-//     // div.style.padding = "5px";
-//     div.style.top = "0";
-//     div.style.left = "0";
-//     div.style.width = "100%";
-//     div.style.height = "100%";
-//     div.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-//     div.style.zIndex = "9999";
-//     div.style.justifyContent = "center";
-//     div.style.alignItems = "center";
-//     div.style.color = "black";
-//     div.style.overflow = "hidden";
-//     return div;
-//   }
-//   nestedDiv() {
-//     const div = document.createElement("div");
-//     div.style.backgroundColor = "#444";
-//     div.style.padding = "5px";
-//     div.style.borderRadius = "10px";
-//     div.style.color = "block";
-//     div.style.width = "100%";
-//     div.style.height = "100%";
-//     return div;
-//   }
+  fpIframeOverlay() {
+    const div = document.createElement("div");
+    div.id = "fpIframeOverlay";
+    div.style.position = "fixed";
+    // div.style.padding = "5px";
+    div.style.top = "0";
+    div.style.left = "0";
+    div.style.width = "100%";
+    div.style.height = "100%";
+    div.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    div.style.zIndex = "9999";
+    div.style.justifyContent = "center";
+    div.style.alignItems = "center";
+    div.style.color = "black";
+    div.style.overflow = "hidden";
+    return div;
+  }
+  nestedDiv() {
+    const div = document.createElement("div");
+    div.style.backgroundColor = "#444";
+    div.style.padding = "5px";
+    div.style.borderRadius = "10px";
+    div.style.color = "block";
+    div.style.width = "100%";
+    div.style.height = "100%";
+    return div;
+  }
 
-//   closeButton() {
-//     const button = document.createElement("button");
-//     button.innerText = "Close";
-//     button.style.position = "absolute";
-//     button.style.top = "10px";
-//     button.style.right = "10px";
-//     button.style.padding = "10px 15px";
-//     button.style.backgroundColor = "#f0f0f0";
-//     button.style.border = "1px solid #ccc";
-//     button.style.cursor = "pointer";
-//     button.style.zIndex = "10000"; // Ensure it's above the overlay
-//     button.onclick = () => {
-//       console.log("close");
-//     };
-//     return button;
-//   }
+  closeButton() {
+    const button = document.createElement("button");
+    button.innerText = "Close";
+    button.style.position = "absolute";
+    button.style.top = "10px";
+    button.style.right = "10px";
+    button.style.padding = "10px 15px";
+    button.style.backgroundColor = "#f0f0f0";
+    button.style.border = "1px solid #ccc";
+    button.style.cursor = "pointer";
+    button.style.zIndex = "10000"; // Ensure it's above the overlay
+    button.onclick = () => {
+      console.log("close");
+    };
+    return button;
+  }
 
-//   overlayIframe(src: string) {
-//     const iframe = document.createElement("iframe");
-//     iframe.src = src;
-//     iframe.style.width = "100%";
-//     iframe.style.height = "100%";
-//     iframe.style.border = "none";
-//     iframe.style.zIndex = "9999";
-//     return iframe;
-//   }
+  overlayIframe(src: string) {
+    const iframe = document.createElement("iframe");
+    iframe.src = src;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.zIndex = "9999";
+    return iframe;
+  }
 
-//   overlayDiv(deviceId: string) {
-//     const nestedDiv = this.nestedDiv();
-//     nestedDiv.appendChild(this.closeButton());
-//     nestedDiv.appendChild(this.overlayIframe(BuildURI.from(this.opts.dashboardURI).setParam("deviceId", deviceId).toString()));
-//     const ret = this.fpIframeOverlay();
-//     ret.appendChild(nestedDiv);
-//     return ret;
-//   }
+  overlayDiv(deviceId: string) {
+    const nestedDiv = this.nestedDiv();
+    nestedDiv.appendChild(this.closeButton());
+    nestedDiv.appendChild(this.overlayIframe(BuildURI.from(this.opts.dashboardURI).setParam("deviceId", deviceId).toString()));
+    const ret = this.fpIframeOverlay();
+    ret.appendChild(nestedDiv);
+    return ret;
+  }
 
-//   open(_logger: Logger, deviceId: string) {
-//     document.body.appendChild(this.overlayDiv(deviceId));
-//   }
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   gatherToken(_logger: Logger): Promise<string | undefined> {
-//     throw new Error("Not implemented");
-//   }
+  open(_logger: Logger, deviceId: string) {
+    document.body.appendChild(this.overlayDiv(deviceId));
+  }
+  async gatherToken(logger: Logger): Promise<string | undefined> {
+    const uri = URI.from(window.location.href);
+    const uriFpToken = uri.getParam(this.opts.tokenKey);
+    if (uriFpToken) {
+      localStorage.setItem(this.opts.tokenKey, uriFpToken);
+      logger.Debug().Any({ uriFpToken }).Msg("Token set");
+      window.location.href = uri.build().delParam(this.opts.tokenKey).toString();
+    }
+    return falsyToUndef(localStorage.getItem(this.opts.tokenKey));
+  }
 
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   async waitForToken(logger: Logger, deviceId: string): Promise<string | undefined> {
-//     throw new Error("waitForToken not implemented");
-//   }
-// }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async waitForToken(logger: Logger, deviceId: string): Promise<string | undefined> {
+    // throw new Error("waitForToken not implemented");
+    return new Promise(() => {
+      /* */
+    });
+  }
+}
 
 function defaultOpts(opts: Partial<ToCloudOpts>): ToCloudOpts {
   const defOpts = {
