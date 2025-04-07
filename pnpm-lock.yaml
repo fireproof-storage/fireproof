@@ -14,7 +14,7 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.7
+        specifier: ~0.4.8
         version: 0.4.15(typescript@5.8.3)
       '@fireproof/vendor':
         specifier: ~2.0.2
