@@ -58,7 +58,7 @@
     "@hono/node-server": "^1.14.0",
     "@hono/node-ws": "^1.1.1",
     "@testing-library/react": "^16.1.0",
-    "@types/better-sqlite3": "^7.6.12",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.5",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.12",
