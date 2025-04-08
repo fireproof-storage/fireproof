@@ -28,38 +28,28 @@ export function createUseDocument(database: Database) {
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        try {
-          updateHappenedRef.current = false;
-          const toSave = existingDoc ?? doc;
-          const res = await database.put(toSave);
+        updateHappenedRef.current = false;
+        const toSave = existingDoc ?? doc;
+        const res = await database.put(toSave);
 
-          if (!updateHappenedRef.current && !doc._id && !existingDoc) {
-            setDoc((d) => ({ ...d, _id: res.id }));
-          }
-
-          return res;
-        } catch (error) {
-          console.error("Error saving document:", error);
-          throw error; // Re-throw to allow callers to handle the error
+        if (!updateHappenedRef.current && !doc._id && !existingDoc) {
+          setDoc((d) => ({ ...d, _id: res.id }));
         }
+
+        return res;
       },
       [doc],
     );
 
     const remove: DeleteDocFn<T> = useCallback(
       async (existingDoc) => {
-        try {
-          const id = existingDoc?._id ?? doc._id;
-          if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
-          const gotDoc = await database.get<T>(id).catch(() => undefined);
-          if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
-          const res = await database.del(id);
-          setDoc(initialDoc);
-          return res;
-        } catch (error) {
-          console.error("Error removing document:", error);
-          throw error; // Re-throw to allow callers to handle the error
-        }
+        const id = existingDoc?._id ?? doc._id;
+        if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
+        const gotDoc = await database.get<T>(id).catch(() => undefined);
+        if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
+        const res = await database.del(id);
+        setDoc(initialDoc);
+        return res;
       },
       [doc, initialDoc],
     );
