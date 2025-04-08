@@ -510,3 +510,7 @@ export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<str
   const cid = CID.create(1, json.code, hash);
   return cid.toString();
 }
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

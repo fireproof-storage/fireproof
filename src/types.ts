@@ -163,9 +163,9 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly keyBag?: Partial<KeyBagOpts>;
 }
 
-export interface ToCloudOpts {
-  readonly ledger: string;
-}
+// export interface ToCloudOpts {
+//   readonly ledger: string;
+// }
 
 export type ClockLink = EventLink<Operation>;
 

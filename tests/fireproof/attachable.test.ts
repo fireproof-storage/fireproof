@@ -1,9 +1,9 @@
 import { URI } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
-import { Attachable, Database, ensureSuperThis, fireproof, GatewayUrlsParam, PARAM, rt, Attached, bs } from "@fireproof/core";
+import { Attachable, Database, ensureSuperThis, fireproof, GatewayUrlsParam, PARAM, rt, Attached, bs, sleep } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
-import { sleep, mockLoader } from "../helpers.js";
+import { mockLoader } from "../helpers.js";
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();

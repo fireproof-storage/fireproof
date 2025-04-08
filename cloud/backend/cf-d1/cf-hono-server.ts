@@ -11,6 +11,8 @@ import {
   ExposeCtxItem,
   ExposeCtxItemWithImpl,
   DrizzleDatebase,
+  CORS,
+  toHeadersInit,
 } from "../hono-server.js";
 import { SendOptions, WSContextInit, WSMessageReceive, WSReadyState } from "hono/ws";
 // import { RequestInfo as CFRequestInfo } from "@cloudflare/workers-types";
@@ -341,6 +343,7 @@ export class CFHonoServer extends HonoServerBase {
       cfCtx.ctx.wsRoom.events.onOpen(this.id, {} as Event, server);
       return new Response(null, {
         status: 101,
+        headers: CORS.AsHeaderInit(),
         webSocket: client,
       });
     };

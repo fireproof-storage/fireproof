@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 
 import { BuildURI, Logger, ResolveOnce, URI } from "@adviser/cement";
-import { Attachable, bs, ensureLogger, Ledger, FPContext, hashObject, falsyToUndef } from "@fireproof/core";
-import { sleep } from "../../tests/helpers.js";
+import { Attachable, bs, ensureLogger, Ledger, FPContext, hashObject, falsyToUndef, sleep } from "@fireproof/core";
+import { log } from "console";
 import { decodeJwt } from "jose/jwt/decode";
 
 export interface DashBoardUIStrategie {
@@ -14,24 +14,44 @@ export interface DashBoardUIStrategie {
 }
 
 export const ToCloudName = "toCloud";
-interface ToCloudOpts {
+
+export interface FPCloudRef {
+  readonly base: string;
+  readonly car: string;
+  readonly file: string;
+  readonly meta: string;
+}
+
+interface ToCloudBase {
   readonly name: string; // default "toCloud"
   readonly interval: number; // default 1000 or 1 second
   readonly tokenKey: string; // default "fpToken"
   readonly refreshTokenPreset: number; // default 2 minutes this is the time before the token expires
   readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
 
+  readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
+}
+
+export interface ToCloudOpts extends ToCloudBase {
+  readonly fpCloud: Partial<FPCloudRef>;
+  /*
+    readonly base?: string; // default "https://dev.connect.fireproof.direct/fp/cloud"
+    readonly car?: string; // default "https://dev.connect.fireproof.direct/fp/cloud"
+    readonly file?: string; // default "https://dev.connect.fireproof.direct/fp/cloud"
+    readonly meta?: string; // default "https://dev.connect.fireproof.direct/fp/cloud"
+  */
   readonly strategy: DashBoardUIStrategie;
 }
 
 export class RedirectStrategy implements DashBoardUIStrategie {
-  readonly opts: Omit<ToCloudOpts, "strategy">;
+  readonly opts: Omit<ToCloudParam, "strategy">;
 
-  constructor(opts: Omit<ToCloudOpts, "strategy">) {
+  constructor(opts: Omit<ToCloudParam, "strategy">) {
     this.opts = opts;
   }
 
-  open(_logger: Logger, deviceId: string) {
+  open(logger: Logger, deviceId: string) {
+    logger.Debug().Url(this.opts.dashboardURI).Msg("open redirect");
     const url = BuildURI.from(this.opts.dashboardURI)
       .setParam("back_url", window.location.href)
       .setParam("local_ledger_name", deviceId)
@@ -57,10 +77,40 @@ export class RedirectStrategy implements DashBoardUIStrategie {
   }
 }
 
-export class IframeStrategy implements DashBoardUIStrategie {
-  readonly opts: Omit<ToCloudOpts, "strategy">;
+// export class NeedLoginStrategy implements DashBoardUIStrategie {
+//   readonly opts: Omit<ToCloudOpts, "strategy">;
 
-  constructor(opts: Omit<ToCloudOpts, "strategy">) {
+//   constructor(opts: Omit<ToCloudOpts, "strategy">) {
+//     this.opts = opts;
+//   }
+
+//   open(_logger: Logger, deviceId: string) {
+//     fetch("https://dev.connect.fireproof.direct/api", {
+//     })
+//   }
+
+//   async gatherToken(logger: Logger, tokenKey: string): Promise<string | undefined> {
+//     const uri = URI.from(window.location.href);
+//     const uriFpToken = uri.getParam(tokenKey);
+//     if (uriFpToken) {
+//       localStorage.setItem(this.opts.tokenKey, uriFpToken);
+//       logger.Debug().Any({ uriFpToken }).Msg("Token set");
+//       window.location.href = uri.build().delParam(tokenKey).toString();
+//     }
+//     return falsyToUndef(localStorage.getItem(this.opts.tokenKey));
+//   }
+
+//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//   async waitForToken(logger: Logger, deviceId: string): Promise<string | undefined> {
+//     await sleep(10000);
+//     throw new Error("waitForToken not working on redirect strategy");
+//   }
+// }
+
+export class IframeStrategy implements DashBoardUIStrategie {
+  readonly opts: Omit<ToCloudParam, "strategy">;
+
+  constructor(opts: Omit<ToCloudParam, "strategy">) {
     this.opts = opts;
   }
 
@@ -151,18 +201,36 @@ export class IframeStrategy implements DashBoardUIStrategie {
   }
 }
 
-function defaultOpts(opts: Partial<ToCloudOpts>): ToCloudOpts {
+export interface FPCloudUri {
+  readonly car: string;
+  readonly file: string;
+  readonly meta: string;
+}
+
+export interface ToCloudParam extends ToCloudBase {
+  readonly strategy: DashBoardUIStrategie;
+  readonly fpCloud: FPCloudUri;
+}
+function defaultOpts(opts: Partial<ToCloudOpts>): ToCloudParam {
+  const base = opts.fpCloud?.base ?? "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev";
+  const param = {
+    car: opts.fpCloud?.car ?? base,
+    file: opts.fpCloud?.file ?? base,
+    meta: opts.fpCloud?.meta ?? base,
+  } satisfies FPCloudUri;
   const defOpts = {
     name: ToCloudName,
     interval: 1000,
     refreshTokenPreset: 2 * 60 * 1000, // 2 minutes
     tokenKey: "fpToken",
     dashboardURI: "https://dev.connect.fireproof.direct/fp/cloud/api/token",
+    uiURI: "https://dev.connect.fireproof.direct/api/ui",
     ...opts,
-  };
+    fpCloud: param,
+  } satisfies Omit<ToCloudParam, "strategy">;
   return {
     ...defOpts,
-    strategy: defOpts.strategy || new RedirectStrategy(defOpts),
+    strategy: opts.strategy || new RedirectStrategy(defOpts),
   };
 }
 
@@ -222,7 +290,7 @@ class TokenObserver {
       }
       const tc = toTokenAndClaims(token);
       if (!this.currentToken) {
-        logger.Debug().Msg("set current token");
+        logger.Debug().Any({tc}).Msg("set current token");
         this.currentToken = tc;
         return tc;
       }
@@ -254,7 +322,7 @@ class TokenObserver {
 }
 
 class ToCloud implements ToCloudAttachable {
-  readonly opts: ToCloudOpts;
+  readonly opts: ToCloudParam;
   currentToken?: string;
 
   constructor(opts: Partial<ToCloudOpts>) {
@@ -303,13 +371,13 @@ class ToCloud implements ToCloudAttachable {
       // wait for the token
       // console.log("waiting intercepting uri", uri);
       const token = await this._tokenObserver.getToken(logger, ledger);
-      // console.log("intercepting with ", token);
+      // console.log("intercepting with ", uri.toString(), token);
       return uri.build().setParam("authJWK", token).URI();
     });
     return {
-      car: { url: "memory://car", gatewayInterceptor },
-      file: { url: "memory://file", gatewayInterceptor },
-      meta: { url: "memory://meta", gatewayInterceptor },
+      car: { url: this.opts.fpCloud.car, gatewayInterceptor },
+      file: { url: this.opts.fpCloud.file, gatewayInterceptor },
+      meta: { url: this.opts.fpCloud.meta, gatewayInterceptor },
       teardown: () => {
         this._tokenObserver.stop();
       },
