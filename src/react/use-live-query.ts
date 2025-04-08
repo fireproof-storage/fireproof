@@ -29,10 +29,12 @@ export function createUseLiveQuery(database: Database) {
     const refreshRows = useCallback(async () => {
       const res = await database.query<K, T, R>(mapFn, query);
       const docs = res.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r);
-      setResult(Object.assign(docs, {
-        docs,
-        rows: res.rows,
-      }));
+      setResult(
+        Object.assign(docs, {
+          docs,
+          rows: res.rows,
+        }),
+      );
     }, [database, mapFnString, queryString]);
 
     useEffect(() => {
