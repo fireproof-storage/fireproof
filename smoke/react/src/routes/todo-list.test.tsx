@@ -43,25 +43,49 @@ describe("<TodoList />", () => {
     expect(input.value).toBe("");
   });
 
-  // Skip the problematic test for now since 2/3 pass
-  it.skip("will mark a todo as completed", async () => {
+  it("will mark a todo as completed", async () => {
     render(<TodoList />);
 
     // Add a new todo
     const input = await screen.findByPlaceholderText("new todo here");
     const button = await screen.findByText("Add Todo");
-    const todoText = `ToComplete-${Math.random()}`;
-
-    fireEvent.change(input, { target: { value: todoText } });
+    const value = `ToComplete(${Math.random()})`;
+    fireEvent.change(input, { target: { value } });
     fireEvent.click(button);
 
-    // Wait for todo to appear
+    // Find the todo item that was added
+    const item = await screen.findByText(value);
+    expect(item).not.toBeNull();
+    
+    // Find and click the radio button
+    const radio = item.parentNode?.querySelector("input[type=radio]") as HTMLInputElement;
+    expect(radio).not.toBeNull();
+    fireEvent.click(radio);
+
+    // Find the editor and checkbox
+    const textInput = await screen.findByDisplayValue(value);
+    const checkBox = textInput.parentNode?.querySelector("input[type=checkbox]") as HTMLInputElement;
+    expect(checkBox.checked).toBe(false);
+    
+    // Check off todo
+    fireEvent.click(checkBox);
+
+    // Verify checkbox is checked
     await waitFor(() => {
-      expect(screen.getByText(todoText)).not.toBeNull();
+      expect(checkBox.checked).toBe(true);
     });
 
-    // For now, just verify the todo is visible (not completing it)
-    const todoElement = screen.getByText(todoText);
-    expect(todoElement).not.toBeNull();
+    // Click save
+    const saveButton = screen.getByText("Save Changes");
+    fireEvent.click(saveButton);
+
+    // Wait for the item to get updated with line-through style
+    await waitFor(() => {
+      // After the save, we need to find the item again
+      const updatedItem = screen.getByText(value);
+      
+      // Check the element's style decoration
+      expect(updatedItem.style.textDecoration).toBe("line-through");
+    });
   });
 });
