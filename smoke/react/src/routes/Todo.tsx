@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useFireproof } from "use-fireproof";
 
 // Define default values for a new todo to avoid undefined
@@ -19,6 +19,17 @@ interface TodoData {
 // Use Partial type for components that might have incomplete data
 type Todo = Partial<TodoData>;
 
+// Ensure no undefined values are persisted to the database
+function sanitizeTodo(todo: Partial<TodoData>): TodoData {
+  return {
+    text: todo.text || "",
+    date: todo.date || Date.now(),
+    completed: !!todo.completed,
+    // Only include _id if it actually exists
+    ...(todo._id ? { _id: todo._id } : {})
+  };
+}
+
 export default function TodoList() {
   const { useDocument, useLiveQuery } = useFireproof("TodoDB");
   const [selectedTodo, setSelectedTodo] = useState<string>("");
@@ -26,7 +37,15 @@ export default function TodoList() {
   const { doc: todo, merge, submit } = useDocument<TodoData>({
     ...DEFAULT_TODO // Use default values to avoid undefined
   });
-  // console.log("todos", todo, todos.docs.length) //todos.docs.map((t) => t.text));
+
+  const handleAddTodo = async () => {
+    try {
+      // Make sure we never save undefined values
+      await submit(sanitizeTodo(todo));
+    } catch (e) {
+      console.error("Add-Todo Error:", e);
+    }
+  };
 
   return (
     <>
@@ -36,19 +55,10 @@ export default function TodoList() {
           value={todo.text || ""}
           placeholder="new todo here"
           onChange={(e) => {
-            // Merge preserves other fields while setting text
             merge({ text: e.target.value.trim() });
           }}
         />
-        <button
-          onClick={() => {
-            // console.log(`saving todo-0: ${todo.text}`);
-            // console.log(`saving todo-1: ${todo.text}`);
-            // console.log("saving todo", todo, save.toString());
-            submit()
-              .catch((e: Error) => console.error("Add-Todo Error:", e));
-          }}
-        >
+        <button onClick={handleAddTodo}>
           Add Todo
         </button>
       </div>
@@ -58,11 +68,11 @@ export default function TodoList() {
             type="radio"
             checked={selectedTodo === todo._id}
             onChange={() => {
-              // console.log("selected todo", todo._id);
-              setSelectedTodo(todo._id as string);
+              setSelectedTodo(todo._id || "");
             }}
           />
           <span
+            data-testid={`todo-item-${todo._id}`}
             style={{
               textDecoration: todo.completed ? "line-through" : "none",
             }}
@@ -84,84 +94,71 @@ interface TodoEditorProps {
 function TodoEditor({ id, onClose }: TodoEditorProps) {
   const { useDocument } = useFireproof("TodoDB");
   // When loading an existing document, ensure default values for all fields
-  const { doc: todo, merge, save, reset, del } = useDocument<TodoData>({
+  const { doc: todo, merge, save, submit, reset, del } = useDocument<TodoData>({
     _id: id,
     ...DEFAULT_TODO // Use defaults for all fields to guarantee they are defined
   });
-  // console.log("editing todo", todo);
 
-  // Create a guaranteed complete todo object
-  const ensureCompleteTodo = (): TodoData => ({
-    text: todo.text || "",
-    date: todo.date || Date.now(),
-    completed: !!todo.completed,
-    _id: todo._id
-  });
-
-  // Clean up when component unmounts
-  useEffect(() => {
-    // Return cleanup function
-    return () => {
-      try {
-        // Reset the document to avoid pending changes when unmounting
-        reset();
-      } catch (e) {
-        console.error("Cleanup error:", e);
+  const handleToggle = async () => {
+    try {
+      // Create a complete todo object with the toggled completed state
+      const updatedTodo = {
+        ...todo,
+        completed: !todo.completed,
+      };
+      
+      // Save the complete todo object rather than using merge+save
+      const result = await save(sanitizeTodo(updatedTodo));
+      
+      if (result.ok) {
+        // Force a clean update of the document state
+        merge(updatedTodo);
       }
-    };
-  }, [id]); // Re-run when id changes
+    } catch (e) {
+      console.error("TodoEditor toggle error:", e);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      // Save a sanitized version of the todo
+      await submit(sanitizeTodo(todo));
+      if (onClose) onClose();
+    } catch (e) {
+      console.error("TodoEditor save error:", e);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await del();
+      // Reset to a clean default state with no undefined values
+      await reset(DEFAULT_TODO);
+      if (onClose) onClose();
+    } catch (e) {
+      console.error("TodoEditor delete error:", e);
+    }
+  };
 
   return (
-    <div id="todo-editor">
+    <div id="todo-editor" data-testid="todo-editor">
       <input
         type="checkbox"
         checked={!!todo.completed}
-        onChange={async () => {
-          try {
-            // Toggle the completed state while preserving all other values
-            await save({
-              _id: todo._id,
-              text: todo.text || "",
-              date: todo.date || Date.now(),
-              completed: !todo.completed
-            });
-          } catch (e) {
-            console.error("TodoEditor toggle error:", e);
-          }
-        }}
+        onChange={handleToggle}
       />
       <input
         type="text"
         value={todo.text || ""}
         placeholder="update todo here"
         onChange={(e) => {
-          // Just update the text field
           merge({ text: e.target.value.trim() });
         }}
       />
-      <button
-        onClick={async () => {
-          try {
-            // Save a complete todo object
-            await save(ensureCompleteTodo());
-            if (onClose) onClose();
-          } catch (e) {
-            console.error("TodoEditor save error:", e);
-          }
-        }}
-      >
+      <button onClick={handleSave}>
         Save Changes
       </button>
-      <button
-        onClick={async () => {
-          try {
-            await del();
-            if (onClose) onClose();
-          } catch (e) {
-            console.error("TodoEditor delete error:", e);
-          }
-        }}
-      >
+      <button onClick={handleDelete}>
         Delete
       </button>
     </div>
