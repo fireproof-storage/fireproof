@@ -16,6 +16,7 @@ import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
 
+
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
     file: new File([new Blob([buffer])], name, opts),
@@ -85,7 +86,6 @@ export async function simpleCID(sthis: SuperThis) {
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash);
 }
-
 class MockLoader implements bs.Loadable {
   readonly sthis: SuperThis;
   readonly logger: Logger;
