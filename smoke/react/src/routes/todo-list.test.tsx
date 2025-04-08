@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TodoList from "./Todo.js";
 
-import { expect, describe, it } from "vitest";
+import { expect, describe, it, beforeEach, afterEach } from "vitest";
 import { Ledger, fireproof } from "use-fireproof";
 
 describe("<TodoList />", () => {
