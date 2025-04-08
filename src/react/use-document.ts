@@ -28,28 +28,38 @@ export function createUseDocument(database: Database) {
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        updateHappenedRef.current = false;
-        const toSave = existingDoc ?? doc;
-        const res = await database.put(toSave);
+        try {
+          updateHappenedRef.current = false;
+          const toSave = existingDoc ?? doc;
+          const res = await database.put(toSave);
 
-        if (!updateHappenedRef.current && !doc._id && !existingDoc) {
-          setDoc((d) => ({ ...d, _id: res.id }));
+          if (!updateHappenedRef.current && !doc._id && !existingDoc) {
+            setDoc((d) => ({ ...d, _id: res.id }));
+          }
+
+          return res;
+        } catch (error) {
+          console.error("Error saving document:", error);
+          throw error; // Re-throw to allow callers to handle the error
         }
-
-        return res;
       },
       [doc],
     );
 
     const remove: DeleteDocFn<T> = useCallback(
       async (existingDoc) => {
-        const id = existingDoc?._id ?? doc._id;
-        if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
-        const gotDoc = await database.get<T>(id).catch(() => undefined);
-        if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
-        const res = await database.del(id);
-        setDoc(initialDoc);
-        return res;
+        try {
+          const id = existingDoc?._id ?? doc._id;
+          if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
+          const gotDoc = await database.get<T>(id).catch(() => undefined);
+          if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
+          const res = await database.del(id);
+          setDoc(initialDoc);
+          return res;
+        } catch (error) {
+          console.error("Error removing document:", error);
+          throw error; // Re-throw to allow callers to handle the error
+        }
       },
       [doc, initialDoc],
     );
@@ -99,9 +109,15 @@ export function createUseDocument(database: Database) {
 
     const submit = useCallback(
       async (e?: Event) => {
-        if (e?.preventDefault) e.preventDefault();
-        await save();
-        reset();
+        try {
+          if (e?.preventDefault) e.preventDefault();
+          await save();
+          reset();
+        } catch (error) {
+          console.error("Error in document submission:", error);
+          // We don't re-throw here since submit is often used in UI handlers
+          // and we don't want unhandled rejections
+        }
       },
       [save, reset],
     );

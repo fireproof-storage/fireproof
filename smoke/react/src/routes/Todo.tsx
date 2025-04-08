@@ -41,7 +41,7 @@ export default function TodoList() {
               .then(() => {
                 // console.log(`saving todo-2: ${todo.text}`);
                 // console.log("saved todo", todo.text);
-                setTodo({ text: "", _id: undefined });
+                setTodo({ text: "" });
               })
               .catch((e) => console.error("Add-Todo Error:", e));
           }}
