@@ -15,7 +15,7 @@ export async function setupBackendD1(
   }
 
   $.verbose = !!sthis.env.get("FP_DEBUG");
-  await $`npx tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
+  await $`npx tsx cli/main.ts writeEnv --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
 
   const runningWrangler = $`
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &

@@ -12,6 +12,7 @@ import type {
   AllDocsQueryOpts,
   ChangesOptions,
   ClockHead,
+  Attached,
 } from "@fireproof/core";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
@@ -72,4 +73,5 @@ export interface UseFireproof {
   readonly useLiveQuery: UseLiveQuery;
   readonly useAllDocs: UseAllDocs;
   readonly useChanges: UseChanges;
+  readonly attached?: Attached;
 }

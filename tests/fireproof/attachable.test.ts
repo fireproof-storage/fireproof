@@ -156,6 +156,7 @@ describe("activate store", () => {
     attach = new bs.AttachedRemotesImpl(mockLoader(sthis));
     firstAttached = await attach.attach({
       name: "first",
+      configHash: async () => "first",
       prepare: async () => ({
         car: { url: "memory://first?store=car" },
         meta: { url: "memory://first?store=meta" },
@@ -166,6 +167,7 @@ describe("activate store", () => {
 
     secondAttached = await attach.attach({
       name: "second",
+      configHash: async () => "second",
       prepare: async () => ({
         car: { url: "memory://second?store=car" },
         meta: { url: "memory://second?store=meta" },
@@ -176,7 +178,7 @@ describe("activate store", () => {
 
   it("activate by store", async () => {
     expect(attach.activate(secondAttached.stores).active.car.url().toString()).toBe(
-      "memory://second?name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate(firstAttached.stores).local().active.car.url().toString()).toBe(
       "memory://first?name=first&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
@@ -188,10 +190,10 @@ describe("activate store", () => {
 
   it("activate by store", async () => {
     expect(attach.activate("memory://second").active.car.url().toString()).toBe(
-      "memory://second?name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate("memory://second").remotes()[0].active.car.url().toString()).toEqual(
-      "memory://second?name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate("memory://first?store=meta").active.car.url().toString()).toBe(
       "memory://first?name=first&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
@@ -226,6 +228,9 @@ describe("join function", () => {
     readonly name: string;
     constructor(name: string) {
       this.name = name;
+    }
+    async configHash() {
+      return `joinable-${this.name}`;
     }
     prepare(): Promise<GatewayUrlsParam> {
       return Promise.resolve({
@@ -351,5 +356,21 @@ describe("join function", () => {
     expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await db.allDocs();
     expect(res.rows.length).toBe(10 * joinableDBs.length);
+  });
+
+  it("prepare only once", async () => {
+    const db = fireproof(`db-${sthis.nextId().str}`, {
+      storeUrls: {
+        base: `memory://prepare`,
+      },
+    });
+    const mocked = aJoinable("test");
+    const originalPrepare = mocked.prepare;
+    mocked.prepare = vi.fn(() => originalPrepare.apply(mocked));
+    expect(mocked.prepare).not.toHaveBeenCalled();
+    for (let i = 0; i < 10; i++) {
+      await db.attach(mocked);
+      expect(mocked.prepare).toHaveBeenCalled();
+    }
   });
 });

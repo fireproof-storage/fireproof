@@ -25,9 +25,18 @@ import {
 
 import { parseCarFile } from "./loader-helpers.js";
 
-import { defaultedBlockstoreRuntime } from "./transaction.js";
+import { BlockFetcher, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import { PARAM, type Attachable, type Attached, type CarTransaction, type DbMeta, type Falsy, type SuperThis } from "../types.js";
+import {
+  isFalsy,
+  PARAM,
+  type Attachable,
+  type Attached,
+  type CarTransaction,
+  type DbMeta,
+  type Falsy,
+  type SuperThis,
+} from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
@@ -67,6 +76,7 @@ function uniqueCids(list: FroozenCarLog, remove = new LRUSet<string>()): Froozen
 
 export class Loader implements Loadable {
   // readonly name: string;
+  readonly blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly logger: Logger;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
@@ -88,16 +98,18 @@ export class Loader implements Loadable {
 
   readonly attachedStores: AttachedStores;
 
-  async attach(attached: Attachable): Promise<Attached> {
-    const at = await this.attachedStores.attach(attached);
+  async attach(attachable: Attachable): Promise<Attached> {
+    const at = await this.attachedStores.attach(attachable);
     if (!at.stores.wal) {
       try {
         // remote Store need to kick off the sync by requesting the latest meta
         const dbMeta = await at.stores.meta.load();
-        if (!Array.isArray(dbMeta)) {
-          throw this.logger.Error().Msg("missing dbMeta").AsError();
+        // console.log("attach", dbMeta);
+        if (Array.isArray(dbMeta)) {
+          await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
+        } else if (!isFalsy(dbMeta)) {
+          throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
         }
-        await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
       } catch (e) {
         this.logger.Error().Err(e).Msg("error attaching store");
         at.detach();
@@ -152,9 +164,10 @@ export class Loader implements Loadable {
     );
   }
 
-  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts) {
+  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts, blockstore?: BlockFetcher) {
     // this.name = name;
     this.sthis = sthis;
+    this.blockstoreParent = blockstore;
     this.ebOpts = defaultedBlockstoreRuntime(
       sthis,
       {
