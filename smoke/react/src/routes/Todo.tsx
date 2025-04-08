@@ -5,7 +5,7 @@ import { useFireproof } from "use-fireproof";
 const DEFAULT_TODO = {
   text: "",
   date: Date.now(),
-  completed: false
+  completed: false,
 };
 
 // Create a non-partial interface for required fields
@@ -26,7 +26,7 @@ function sanitizeTodo(todo: Partial<TodoData>): TodoData {
     date: todo.date || Date.now(),
     completed: !!todo.completed,
     // Only include _id if it actually exists
-    ...(todo._id ? { _id: todo._id } : {})
+    ...(todo._id ? { _id: todo._id } : {}),
   };
 }
 
@@ -34,8 +34,12 @@ export default function TodoList() {
   const { useDocument, useLiveQuery } = useFireproof("TodoDB");
   const [selectedTodo, setSelectedTodo] = useState<string>("");
   const todos = useLiveQuery<Todo>("date", { limit: 1000, descending: true });
-  const { doc: todo, merge, submit } = useDocument<TodoData>({
-    ...DEFAULT_TODO // Use default values to avoid undefined
+  const {
+    doc: todo,
+    merge,
+    submit,
+  } = useDocument<TodoData>({
+    ...DEFAULT_TODO, // Use default values to avoid undefined
   });
 
   const handleAddTodo = async () => {
@@ -58,9 +62,7 @@ export default function TodoList() {
             merge({ text: e.target.value.trim() });
           }}
         />
-        <button onClick={handleAddTodo}>
-          Add Todo
-        </button>
+        <button onClick={handleAddTodo}>Add Todo</button>
       </div>
       {todos.docs.map((todo: Todo) => (
         <div key={todo._id}>
@@ -94,9 +96,16 @@ interface TodoEditorProps {
 function TodoEditor({ id, onClose }: TodoEditorProps) {
   const { useDocument } = useFireproof("TodoDB");
   // When loading an existing document, ensure default values for all fields
-  const { doc: todo, merge, save, submit, reset, del } = useDocument<TodoData>({
+  const {
+    doc: todo,
+    merge,
+    save,
+    submit,
+    reset,
+    del,
+  } = useDocument<TodoData>({
     _id: id,
-    ...DEFAULT_TODO // Use defaults for all fields to guarantee they are defined
+    ...DEFAULT_TODO, // Use defaults for all fields to guarantee they are defined
   });
 
   const handleToggle = async () => {
@@ -106,10 +115,10 @@ function TodoEditor({ id, onClose }: TodoEditorProps) {
         ...todo,
         completed: !todo.completed,
       };
-      
+
       // Save the complete todo object rather than using merge+save
       const result = await save(sanitizeTodo(updatedTodo));
-      
+
       if (result.ok) {
         // Force a clean update of the document state
         merge(updatedTodo);
@@ -142,11 +151,7 @@ function TodoEditor({ id, onClose }: TodoEditorProps) {
 
   return (
     <div id="todo-editor" data-testid="todo-editor">
-      <input
-        type="checkbox"
-        checked={!!todo.completed}
-        onChange={handleToggle}
-      />
+      <input type="checkbox" checked={!!todo.completed} onChange={handleToggle} />
       <input
         type="text"
         value={todo.text || ""}
@@ -155,12 +160,8 @@ function TodoEditor({ id, onClose }: TodoEditorProps) {
           merge({ text: e.target.value.trim() });
         }}
       />
-      <button onClick={handleSave}>
-        Save Changes
-      </button>
-      <button onClick={handleDelete}>
-        Delete
-      </button>
+      <button onClick={handleSave}>Save Changes</button>
+      <button onClick={handleDelete}>Delete</button>
     </div>
   );
 }
