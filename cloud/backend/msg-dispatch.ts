@@ -1,6 +1,6 @@
 import { SuperThis, UnReg, ps, rt } from "@fireproof/core";
 
-import { ExposeCtxItemWithImpl, HonoServerImpl, WSContextWithId } from "./hono-server.js";
+import { CORS, ExposeCtxItemWithImpl, HonoServerImpl, WSContextWithId } from "./hono-server.js";
 import { WSRoom } from "./ws-room.js";
 
 type MsgBase = ps.cloud.MsgBase;
@@ -117,6 +117,7 @@ export class MsgDispatcher {
     ctx.ws.send(str);
     return new Response(str, {
       status: isError ? 500 : 200,
+      headers: CORS.AsHeaderInit(),
       statusText: isError ? "error" : "ok",
     });
   }

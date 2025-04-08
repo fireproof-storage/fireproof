@@ -5,7 +5,9 @@ import "./App.css";
 
 function App() {
   const { database, attached } = useFireproof("fireproof-party", {
-    attach: toCloud(),
+    attach: toCloud({
+      fpCloud: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev?tenant=test-tenant&ledger=test-ledger" }
+    }),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
   // const [token, setToken] = useState("");
@@ -28,7 +30,10 @@ function App() {
     <>
       <h1>FireProof Party of the 3rd</h1>
       <div>{attached ? "Attached" : "waiting to attach"}</div>
-      <div className="card" onClick={() => attach?.resetToken()}>
+      <div className="card" onClick={() => {
+        console.log("reset", attach?.token());
+        attach?.resetToken()
+      }}>
         Reset Token
       </div>
       <div
