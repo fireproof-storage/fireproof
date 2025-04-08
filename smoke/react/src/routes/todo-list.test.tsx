@@ -56,7 +56,7 @@ describe("<TodoList />", () => {
     // Find the todo item that was added
     const item = await screen.findByText(value);
     expect(item).not.toBeNull();
-    
+
     // Find and click the radio button
     const radio = item.parentNode?.querySelector("input[type=radio]") as HTMLInputElement;
     expect(radio).not.toBeNull();
@@ -66,7 +66,7 @@ describe("<TodoList />", () => {
     const textInput = await screen.findByDisplayValue(value);
     const checkBox = textInput.parentNode?.querySelector("input[type=checkbox]") as HTMLInputElement;
     expect(checkBox.checked).toBe(false);
-    
+
     // Check off todo
     fireEvent.click(checkBox);
 
@@ -83,7 +83,7 @@ describe("<TodoList />", () => {
     await waitFor(() => {
       // After the save, we need to find the item again
       const updatedItem = screen.getByText(value);
-      
+
       // Check the element's style decoration
       expect(updatedItem.style.textDecoration).toBe("line-through");
     });
