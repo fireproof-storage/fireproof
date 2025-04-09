@@ -7,6 +7,12 @@ import { createUseLiveQuery } from "./use-live-query.js";
 import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
 
+// Global registry to ensure database singletons per name
+const databaseRegistry: Record<string, Database> = {};
+
+// Global registry to ensure hook singletons per database
+const hooksRegistry = new Map<Database, ReturnType<typeof createHooks>>();
+
 /**
  * @deprecated Use the `useFireproof` hook instead
  */
@@ -37,28 +43,52 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  // Create stable dependency values for memoization
-  const dbName = typeof name === "string" ? name : name.name;
-  const configStr = JSON.stringify(config);
-  
-  // Memoize the database instance with coarse-grained dependencies
-  const database = useMemo(() => {
-    return typeof name === "string" ? fireproof(name, config) : name;
-  }, [dbName, configStr]);
-
-  // Memoize the hook factory functions together to ensure they don't recreate on every render
-  const hooks = useMemo(() => {
+  // Use useMemo to ensure stable references across renders
+  return useMemo(() => {
+    // Handle the case where a database is passed directly
+    if (typeof name !== "string") {
+      // Get or create hooks for this database instance
+      if (!hooksRegistry.has(name)) {
+        hooksRegistry.set(name, createHooks(name));
+      }
+      
+      // Return the database and its hooks
+      return {
+        database: name,
+        ...(hooksRegistry.get(name) as ReturnType<typeof createHooks>)
+      };
+    }
+    
+    // For string names, get or create a database from the registry
+    if (!databaseRegistry[name]) {
+      databaseRegistry[name] = fireproof(name, config);
+    }
+    
+    // Get the database instance
+    const database = databaseRegistry[name];
+    
+    // Get or create hooks for this database
+    if (!hooksRegistry.has(database)) {
+      hooksRegistry.set(database, createHooks(database));
+    }
+    
+    // Return the database and its hooks with stable references
     return {
-      useDocument: createUseDocument(database),
-      useLiveQuery: createUseLiveQuery(database),
-      useAllDocs: createUseAllDocs(database),
-      useChanges: createUseChanges(database),
+      database,
+      ...(hooksRegistry.get(database) as ReturnType<typeof createHooks>)
     };
-  }, [database]);
+  }, [name, JSON.stringify(config)]); // Only recreate if name or stringified config changes
 
-  const { useDocument, useLiveQuery, useAllDocs, useChanges } = hooks;
+}
 
-  return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
+// Helper function to create hooks with a stable reference
+function createHooks(database: Database) {
+  return {
+    useDocument: createUseDocument(database),
+    useLiveQuery: createUseLiveQuery(database),
+    useAllDocs: createUseAllDocs(database),
+    useChanges: createUseChanges(database),
+  };
 }
 
 // Export types
