@@ -37,7 +37,10 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  const database = typeof name === "string" ? fireproof(name, config) : name;
+  // Memoize the database instance to prevent re-creation on every render
+  const database = useMemo(() => {
+    return typeof name === "string" ? fireproof(name, config) : name;
+  }, [typeof name === "string" ? name : name.name, config]);
 
   // Memoize the hook factory functions together to ensure they don't recreate on every render
   const hooks = useMemo(() => {
