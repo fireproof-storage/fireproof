@@ -99,15 +99,9 @@ export function createUseDocument(database: Database) {
 
     const submit = useCallback(
       async (e?: Event) => {
-        try {
-          if (e?.preventDefault) e.preventDefault();
-          await save();
-          reset();
-        } catch (error) {
-          console.error("Error in document submission:", error);
-          // We don't re-throw here since submit is often used in UI handlers
-          // and we don't want unhandled rejections
-        }
+        if (e?.preventDefault) e.preventDefault();
+        await save();
+        reset();
       },
       [save, reset],
     );
