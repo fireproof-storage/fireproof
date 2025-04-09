@@ -1,5 +1,6 @@
 import type { ConfigOpts, Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
+import { useMemo } from "react";
 import type { UseFireproof } from "./types.js";
 import { createUseDocument } from "./use-document.js";
 import { createUseLiveQuery } from "./use-live-query.js";
@@ -23,27 +24,20 @@ export const FireproofCtx = {} as UseFireproof;
  * const { database, useLiveQuery, useDocument } = useFireproof("dbname", { ...options });
  * ```
  *
- * ## Overview
- *
- * TL;DR: Only use this hook if you need to configure a database name other than the default `useFireproof`.
- *
- * For most applications, using the `useLiveQuery` or `useDocument` hooks exported from `use-fireproof` should
- * suffice for the majority of use-cases. Under the hood, they act against a database named `useFireproof` instantiated with
- * default configurations. However, if you need to do a custom database setup or configure a database name more to your liking
- * than the default `useFireproof`, then use `useFireproof` as it exists for that purpose. It will provide you with the
- * custom database accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
- * custom database.
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  const database = typeof name === "string" ? fireproof(name, config) : name;
+  // Use useMemo to ensure stable references across renders
+  return useMemo(() => {
+    const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  const useDocument = createUseDocument(database);
-  const useLiveQuery = createUseLiveQuery(database);
-  const useAllDocs = createUseAllDocs(database);
-  const useChanges = createUseChanges(database);
+    const useDocument = createUseDocument(database);
+    const useLiveQuery = createUseLiveQuery(database);
+    const useAllDocs = createUseAllDocs(database);
+    const useChanges = createUseChanges(database);
 
-  return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
+    return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
+  }, [name, JSON.stringify(config)]); // Only recreate if name or stringified config changes
 }
 
 // Export types
