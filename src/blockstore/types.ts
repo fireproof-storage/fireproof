@@ -539,7 +539,7 @@ export interface AttachedStores {
   forRemotes(actionFn: (store: ActiveStore) => Promise<unknown>): Promise<void>;
   remotes(): ActiveStore[];
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore;
-  attach(attached: Attachable): Promise<Attached>;
+  attach(attached: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached>;
   detach(): Promise<void>;
 }
 
@@ -648,6 +648,7 @@ export interface CarCacheItem {
 export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
+  readonly logger: Logger;
   readonly blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly carLog: CarLog;

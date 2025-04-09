@@ -80,6 +80,7 @@ export function writeEnvCmd(sthis: SuperThis) {
         vals = {
           [rt.sts.envKeyDefaults.PUBLIC]: param.REQUIRED,
           STORAGE_URL: "http://localhost:9000/testbucket",
+          FP_STORAGE_URL: param.OPTIONAL,
         };
 
         if (!args.excludeSecrets) {

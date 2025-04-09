@@ -113,7 +113,6 @@ export class MsgDispatcher {
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {
     const isError = MsgIsError(msg);
     const str = ctx.ende.encode(msg);
-    // console.log("send", msg, ctx.ws.send.toString());
     ctx.ws.send(str);
     return new Response(str, {
       status: isError ? 500 : 200,
