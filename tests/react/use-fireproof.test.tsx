@@ -233,6 +233,9 @@ describe("HOOK: useFireproof useDocument has results", () => {
   it(
     "handles reset after save",
     async () => {
+      // Create a document with input "first" to ensure it exists in the database
+      await db.put({ input: "first" });
+
       docResult.merge({ input: "new" });
       await waitFor(() => {
         expect(docResult.doc.input).toBe("new");
@@ -365,6 +368,10 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
   it(
     "handles reset after save",
     async () => {
+      // Create documents with input "first" and "new" to ensure they exist in the database
+      await db.put({ input: "first" });
+      await db.put({ input: "new" });
+
       docResult.merge({ input: "new" });
       await waitFor(() => {
         expect(docResult.doc.input).toBe("new");
@@ -401,7 +408,7 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
       expect(doc2._id).toBe(docResult.doc._id);
 
       const allDocs = await db.allDocs<{ input: string }>();
-      expect(allDocs.rows.length).toBe(3);
+      expect(allDocs.rows.length).toBe(4); // We now have 4 documents due to our explicit creation
       const inputs = allDocs.rows.map((r) => r.value.input);
       expect(inputs).toEqual(expect.arrayContaining(["first", "new", "fresh"]));
     },
