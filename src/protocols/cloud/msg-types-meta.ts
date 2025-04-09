@@ -96,8 +96,8 @@ export interface EventGetMeta extends MsgWithTenantLedger<MsgWithConnAuth>, ResS
 export function buildBindGetMeta(sthis: NextId, auth: AuthType, params: SignedUrlParam, gwCtx: GwCtx): BindGetMeta {
   return {
     auth,
-    tid: sthis.nextId().str,
     ...gwCtx,
+    tid: gwCtx.tid ?? sthis.nextId().str,
     type: "bindGetMeta",
     version: VERSION,
     params,

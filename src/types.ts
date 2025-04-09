@@ -537,6 +537,8 @@ export class DataAndMetaAndWalAndBaseStore implements DataAndMetaAndWalStore {
 }
 
 export interface Attached {
+  readonly keyed: string;
+
   readonly gatewayUrls: GatewayUrls;
 
   readonly stores: DataAndMetaAndWalAndBaseStore;

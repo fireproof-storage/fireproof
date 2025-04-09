@@ -99,23 +99,26 @@ export class Loader implements Loadable {
   readonly attachedStores: AttachedStores;
 
   async attach(attachable: Attachable): Promise<Attached> {
-    const at = await this.attachedStores.attach(attachable);
-    if (!at.stores.wal) {
-      try {
-        // remote Store need to kick off the sync by requesting the latest meta
-        const dbMeta = await at.stores.meta.load();
-        // console.log("attach", dbMeta);
-        if (Array.isArray(dbMeta)) {
-          await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
-        } else if (!isFalsy(dbMeta)) {
-          throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
+    return await this.attachedStores.attach(attachable, async (at) => {
+      if (!at.stores.wal) {
+        try {
+          // remote Store need to kick off the sync by requesting the latest meta
+          const dbMeta = await at.stores.meta.load();
+          if (Array.isArray(dbMeta)) {
+            if (dbMeta.length !== 0) {
+              await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
+            }
+          } else if (!isFalsy(dbMeta)) {
+            throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
+          }
+        } catch (e) {
+          this.logger.Error().Err(e).Msg("error attaching store");
+          at.detach();
         }
-      } catch (e) {
-        this.logger.Error().Err(e).Msg("error attaching store");
-        at.detach();
       }
-    }
-    return at;
+      console.log("leave-attach");
+      return at;
+    });
   }
 
   // private getBlockCache = new Map<string, AnyBlock>();
@@ -136,6 +139,7 @@ export class Loader implements Loadable {
           wal: { url: this.ebOpts.storeUrls.wal, gatewayInterceptor: this.ebOpts.gatewayInterceptor },
         },
         this.attachedStores,
+        this.blockstoreParent?.crdtParent?.ledgerParent?.name,
       );
       const local = this.attachedStores.local();
       const metas = await local.active.meta.load();

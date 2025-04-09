@@ -1,5 +1,5 @@
 // import PartySocket, { PartySocketOptions } from "partysocket";
-import { Result, URI, KeyedResolvOnce, exception2Result, Logger, param, MatchResult, ResolveOnce, to_uint8 } from "@adviser/cement";
+import { Result, URI, KeyedResolvOnce, exception2Result, Logger, param, ResolveOnce, to_uint8, BuildURI } from "@adviser/cement";
 import type { SuperThis } from "../../../types.js";
 import {
   buildErrorMsg,
@@ -391,13 +391,13 @@ function getStoreTypeGateway(sthis: SuperThis, uri: URI): StoreTypeGateway {
 }
 
 interface ConnectionItem {
-  readonly uri: URI;
-  readonly matchRes: MatchResult;
+  // readonly uri: URI;
+  // readonly matchRes: MatchResult;
   readonly connection: ResolveOnce<Result<MsgConnected>>;
   readonly trackPuts: Set<string>;
 }
 
-interface AuthedConnection {
+export interface AuthedConnection {
   readonly conn: Result<MsgConnectedAuth>;
   readonly citem: ConnectionItem;
 }
@@ -409,16 +409,16 @@ interface Subscription {
   readonly callback: (msg: Uint8Array) => void;
   readonly unsub: () => void;
 }
-function connectionURI(uri: URI): URI {
-  return uri.build().delParam("authJWK").delParam("key").delParam("store").delParam("suffix").delParam("storekey").URI();
-}
+// function connectionURI(uri: URI): URI {
+//   return uri.build().delParam("authJWK").delParam("key").delParam("store").delParam("suffix").delParam("storekey").URI();
+// }
 
 const subscriptions = new Map<string, Subscription[]>();
 // const doServerSubscribe = new KeyedResolvOnce();
 export class FireproofCloudGateway implements SerdeGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly #connectionURIs = new Map<string, ConnectionItem>();
+  readonly #connectionURIs = new KeyedResolvOnce<ConnectionItem>();
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -434,26 +434,22 @@ export class FireproofCloudGateway implements SerdeGateway {
 
   async start(ctx: SerdeGatewayCtx, uri: URI): Promise<Result<URI>> {
     await this.sthis.start();
-    const rName = uri.getParamResult("name");
-    if (rName.isErr()) {
-      return this.logger.Error().Err(rName).Msg("name not found").ResultError();
-    }
+    // const rName = uri.getParamResult("name");
+    // if (rName.isErr()) {
+    //   return this.logger.Error().Err(rName).Msg("name not found").ResultError();
+    // }
     const ret = uri.build().defParam("version", VERSION);
     ret.defParam("protocol", "wss");
     const retURI = ret.URI();
-    const matchURI = connectionURI(retURI);
-    // console.log("start", matchURI.toString());
-    this.#connectionURIs.set(matchURI.toString(), {
-      uri: matchURI,
-      matchRes: matchURI.match(matchURI),
+    this.registerConnectionURI(retURI, () => ({
       connection: new ResolveOnce<Result<MsgConnected>>(),
       trackPuts: new Set<string>(),
-    });
+    }));
     return Result.Ok(retURI);
   }
 
   async get<S>(ctx: SerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
-    const conn = await this.getCloudConnectionItem(uri);
+    const conn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
     if (conn.conn.isErr()) {
       return Result.Err(conn.conn);
     }
@@ -463,7 +459,7 @@ export class FireproofCloudGateway implements SerdeGateway {
   }
 
   async put<T>(ctx: SerdeGatewayCtx, uri: URI, body: FPEnvelope<T>): Promise<VoidResult> {
-    const conn = await this.getCloudConnectionItem(uri);
+    const conn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
     if (conn.conn.isErr()) {
       // console.log("put-conn-err", conn.conn);
       return conn.conn;
@@ -479,7 +475,7 @@ export class FireproofCloudGateway implements SerdeGateway {
   }
 
   async delete(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
-    const conn = await this.getCloudConnectionItem(uri);
+    const conn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
     if (conn.conn.isErr()) {
       return conn.conn;
     }
@@ -497,91 +493,78 @@ export class FireproofCloudGateway implements SerdeGateway {
         }
       }
     }
-    const rConn = await this.getCloudConnectionItem(uri);
+    const rConn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
     if (rConn.conn.isErr()) {
       return this.logger.Error().Err(rConn).Msg("Error in getCloudConnection").ResultError();
     }
     const conn = rConn.conn.Ok();
     const rAuth = await conn.msgConnAuth();
     await conn.close(rAuth.Ok());
-    this.#connectionURIs.delete(rConn.citem.uri.toString());
+    this.#connectionURIs.unget(this.matchURI(uri)());
     return Result.Ok(undefined);
   }
 
   // fireproof://localhost:1999/?name=test-public-api&protocol=ws&store=meta
-  async getCloudConnection(uri: URI): Promise<Result<MsgConnectedAuth>> {
-    return this.getCloudConnectionItem(uri).then((r) => {
-      return r.conn;
-    });
+  // async getCloudConnection(uri: URI): Promise<Result<MsgConnectedAuth>> {
+  //   return this.getCloudConnectionItem(uri).then((r) => {
+  //     return r.conn;
+  //   });
+  // }
+
+  matchURI(uri: URI): () => string {
+    // console.log("getCloudConnectionItem", uri);
+    let protocol = uri.getParam("protocol", "https");
+    switch (protocol) {
+      case "wss":
+        protocol = "https";
+        break;
+      case "ws":
+        protocol = "http";
+        break;
+      case "http":
+        break;
+      case "https":
+      default:
+        protocol = "https";
+        break;
+    }
+    const matchURI = BuildURI.from(uri).cleanParams().protocol(protocol).URI().toString();
+    return () => {
+      return matchURI;
+    };
   }
 
-  async getCloudConnectionItem(uri: URI): Promise<AuthedConnection> {
-    const matchURI = connectionURI(uri);
-    let bestMatch: ConnectionItem | undefined;
-    for (const ci of this.#connectionURIs.values()) {
-      const mci = ci.uri.match(matchURI);
-      if (mci.score >= ci.matchRes.score) {
-        bestMatch = ci;
-        break;
-      }
-    }
-    if (!bestMatch) {
-      return {
-        conn: this.logger
-          .Error()
-          .Url(matchURI)
-          .Any("conns", Object.fromEntries(this.#connectionURIs.entries()))
-          .Msg("No connection found")
-          .ResultError(),
-        citem: {} as ConnectionItem,
-      };
+  registerConnectionURI(uri: URI, itemFactory: () => ConnectionItem): void {
+    this.#connectionURIs.get(this.matchURI(uri)).once(itemFactory);
+  }
+
+  async getCloudConnectionItem(logger: Logger, uri: URI): Promise<AuthedConnection> {
+    const item = this.#connectionURIs.get(this.matchURI(uri));
+    const bestMatch = item.value;
+    if (!item.ready || !bestMatch) {
+      return { conn: logger.Error().Url(uri).Msg("Connection not ready").ResultError(), citem: {} as ConnectionItem };
     }
     const conn = await bestMatch.connection.once(async () => {
       const rParams = uri.getParamsResult({
-        name: param.REQUIRED,
         protocol: "https",
-        store: param.REQUIRED,
-        storekey: param.OPTIONAL,
-        tenant: param.REQUIRED,
       });
       if (rParams.isErr()) {
         return this.logger.Error().Url(uri).Err(rParams).Msg("getCloudConnection:err").ResultError<MsgConnected>();
       }
       const params = rParams.Ok();
-      // let tenant: string;
-      // if (params.tenant) {
-      //   tenant = params.tenant;
-      // } else {
-      //   if (!params.storekey) {
-      //     return this.logger.Error().Url(uri).Msg("no tendant or storekey given").ResultError();
-      //   }
-      //   const dataKey = params.storekey.replace(/:(meta|wal)@$/, `:data@`);
-      //   const kb = await rt.kb.getKeyBag(this.sthis);
-      //   const rfingerprint = await kb.getNamedKey(dataKey);
-      //   if (rfingerprint.isErr()) {
-      //     return this.logger.Error().Err(rfingerprint).Msg("Error in getNamedKey").ResultError();
-      //   }
-      //   tenant = rfingerprint.Ok().fingerPrint;
-      // }
-
       const rAuth = await authTypeFromUri(this.logger, uri);
       if (rAuth.isErr()) {
         return Result.Err<MsgConnected>(rAuth);
       }
-
       const qOpen = buildReqOpen(this.sthis, rAuth.Ok(), {});
 
       const cUrl = uri.build().protocol(params.protocol).cleanParams().URI();
-      // if (cUrl.pathname === "/") {
-      //   cUrl = cUrl.build().pathname("/fp").URI();
-      // }
       return Msger.connect(this.sthis, rAuth.Ok(), cUrl, qOpen);
     });
     if (conn.isErr()) {
       return { conn: Result.Err(conn), citem: bestMatch };
     }
     return { conn: Result.Ok(conn.Ok().attachAuth(() => authTypeFromUri(this.logger, uri))), citem: bestMatch };
-    //  keyedConnections.get(keyTenantLedger(qOpen.conn.key)).once(async () => Msger.open(this.sthis, cUrl, qOpen));
   }
 
   // private notifySubscribers(data: Uint8Array, callbacks: ((msg: Uint8Array) => void)[] = []): void {
@@ -657,7 +640,7 @@ export class FireproofCloudGateway implements SerdeGateway {
   }
 
   async destroy(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
-    const item = await this.getCloudConnectionItem(uri);
+    const item = await this.getCloudConnectionItem(ctx.loader.logger, uri);
     if (item.conn.isErr()) {
       return item.conn;
     }

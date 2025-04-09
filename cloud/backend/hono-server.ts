@@ -1,4 +1,4 @@
-import { exception2Result, HttpHeader, Logger, param, ResolveOnce, Result, top_uint8, URI } from "@adviser/cement";
+import { exception2Result, HttpHeader, Logger, param, Result, top_uint8, URI } from "@adviser/cement";
 import { SuperThis, ps, rt } from "@fireproof/core";
 import { Context, Hono, Next } from "hono";
 import { WSContext, WSContextInit, WSMessageReceive } from "hono/ws";
@@ -366,6 +366,7 @@ export class HonoServer {
               ctx.logger.Error().Err(error).Msg("WebSocket error");
             },
             onMessage: async (event, ws) => {
+              console.log("onMessage:inject:", ctx.id, event.data);
               const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)) as MsgBase);
               if (rMsg.isErr()) {
                 ws.send(

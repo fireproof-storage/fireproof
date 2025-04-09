@@ -1,4 +1,4 @@
-import { exception2Result, Future, Logger, Result, to_uint8, top_uint8 } from "@adviser/cement";
+import { exception2Result, Future, Logger, Result, top_uint8 } from "@adviser/cement";
 import { MsgBase, MsgIsError, buildErrorMsg, ReqOpen, WaitForTid, MsgWithError, RequestOpts, MsgIsTid } from "./msg-types.js";
 import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, MsgRawConnection, OnMsgFn, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
@@ -82,9 +82,13 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   }
 
   readonly #wsOnMessage = async (event: MessageEvent) => {
-    const rMsg = await exception2Result(async () => this.msgP.ende.decode(await top_uint8(event.data)) as MsgBase);
+    const rMsg = await exception2Result(async () => {
+      const msg = this.msgP.ende.decode(await top_uint8(event.data)) as MsgBase;
+      // console.log("wsOnMessage", msg);
+      return msg;
+    });
     if (rMsg.isErr()) {
-      this.logger.Error().Err(rMsg).Any({event}).Msg("Invalid message");
+      this.logger.Error().Err(rMsg).Any({ event }).Msg("Invalid message");
       return;
     }
     const msg = rMsg.Ok();

@@ -1,4 +1,4 @@
-import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector } from "@adviser/cement";
+import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger } from "@adviser/cement";
 import {
   ensureSuperThis,
   rt,
@@ -14,7 +14,6 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
@@ -88,6 +87,7 @@ export async function simpleCID(sthis: SuperThis) {
 
 class MockLoader implements bs.Loadable {
   readonly sthis: SuperThis;
+  readonly logger: Logger;
   readonly ebOpts: bs.BlockstoreRuntime;
   readonly carLog: bs.CarLog;
   readonly attachedStores: bs.AttachedStores;
@@ -95,6 +95,7 @@ class MockLoader implements bs.Loadable {
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
+    this.logger = sthis.logger;
     this.ebOpts = {} as bs.BlockstoreRuntime;
     this.carLog = new bs.CarLog();
     this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve(), {

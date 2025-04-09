@@ -40,8 +40,11 @@ export async function setup(project: TestProject) {
     FP_ENDPOINT = `http://localhost:${params.port}`;
   }
 
+  const FP_STORAGE_URL = `fpcloud://localhost:${params.port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`;
+
   setTestEnv(project, {
     ...testEnv,
+    FP_STORAGE_URL,
     FP_ENDPOINT,
   });
 

@@ -44,9 +44,17 @@ export function useFireproof(name: string | Database = "useFireproof", config: U
   const [attached, setAttached] = useState<Attached>();
   useEffect(() => {
     if (config.attach && !attached) {
-      database.attach(config.attach).then((a) => {
-        setAttached(a);
-      });
+      // console.log("Attaching to database", config.attach);
+      database
+        .attach(config.attach)
+        .then((a) => {
+          // console.log("Attached to database", config.attach, a);
+          setAttached(a);
+        })
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error("Error attaching to database", config.attach, err);
+        });
     }
   }, [database, config.attach, attached]);
 

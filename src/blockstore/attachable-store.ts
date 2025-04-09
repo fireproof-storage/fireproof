@@ -35,10 +35,12 @@ import { ensureURIDefaults, hashObject, toSortedArray } from "../utils.js";
 import { FPContext } from "../fp-context.js";
 
 class AttachedImpl implements Attached {
+  readonly keyed: string;
   readonly gatewayUrls: GatewayUrls;
   readonly stores: DataAndMetaAndWalAndBaseStore;
   private readonly attachCtx: AttachContext;
-  constructor(gws: GatewayUrls, stores: DataAndMetaAndWalStore, actx: Partial<AttachContext>) {
+  constructor(keyed: string, gws: GatewayUrls, stores: DataAndMetaAndWalStore, actx: Partial<AttachContext>) {
+    this.keyed = keyed;
     this.gatewayUrls = gws;
     this.stores = new DataAndMetaAndWalAndBaseStore(stores);
     this.attachCtx = {
@@ -274,13 +276,17 @@ export async function createAttachedStores(
     gup = urlOrGup;
   }
 
+  // console.log("createAttachedStores", JSON.stringify(gup), name);
   const cfgId = await hashObject(gup);
 
-  return await ar.attach({
-    name,
-    configHash: async () => cfgId,
-    prepare: async () => gup,
-  });
+  return await ar.attach(
+    {
+      name,
+      configHash: async () => cfgId,
+      prepare: async () => gup,
+    },
+    (at) => Promise.resolve(at),
+  );
 }
 
 export class AttachedRemotesImpl implements AttachedStores {
@@ -353,8 +359,11 @@ export class AttachedRemotesImpl implements AttachedStores {
 
   // needed for React Statemanagement
   readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
-  async attach(attachable: Attachable): Promise<Attached> {
-    return this._keyedAttachable.get(await attachable.configHash()).once(async () => {
+  async attach(attachable: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached> {
+    const keyed = await attachable.configHash();
+    console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    const ret = await this._keyedAttachable.get(keyed).once(async () => {
+      // console.log("keyed-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const gwp = await attachable.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
       // this._local?.gatewayUrls.car.url.getParam("name");
       const gws: GatewayUrls = {
@@ -410,10 +419,12 @@ export class AttachedRemotesImpl implements AttachedStores {
           walUrl: gws.wal?.url.toString(),
         }),
       );
+      // console.log("keyed-preleaving", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
 
-      return this._remotes.get(key).once(async () => {
+      const ret = await this._remotes.get(key).once(async () => {
         const rt = toStoreRuntime(this.loadable.sthis);
         const result = new AttachedImpl(
+          keyed,
           gws,
           await rt.makeStores({
             byStore: gws,
@@ -436,6 +447,12 @@ export class AttachedRemotesImpl implements AttachedStores {
         }
         return result;
       });
+      console.log("keyed-preOnAttach", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      const rex = await onAttach?.(ret);
+      console.log("keyed-postOnAttach", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      return rex;
     });
+    console.log("attach-leave", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    return ret;
   }
 }
