@@ -7,9 +7,8 @@ import type { DeleteDocFn, StoreDocFn, UseDocumentInitialDocOrFn, UseDocumentRes
  * Implementation of the useDocument hook
  */
 export function createUseDocument(database: Database) {
-  const updateHappenedRef = useRef(false);
-
   return function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
+    const updateHappenedRef = useRef(false);
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
