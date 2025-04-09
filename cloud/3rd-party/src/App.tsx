@@ -34,10 +34,13 @@ function App() {
         }}
       >
       <div>{attached ? "Attached" : "waiting to attach"}</div>
-      <div className="card" onClick={() => {
-        console.log("reset", attach?.token());
-        attach?.resetToken()
-      }}>
+      <div
+        className="card"
+        onClick={() => {
+          console.log("reset", attach?.token());
+          attach?.resetToken();
+        }}
+      >
         Reset Token
       </div>
       <div

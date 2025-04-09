@@ -165,26 +165,32 @@ describe("activate store", () => {
   let secondAttached: Attached;
   beforeEach(async () => {
     attach = new bs.AttachedRemotesImpl(mockLoader(sthis));
-    firstAttached = await attach.attach({
-      name: "first",
-      configHash: async () => "first",
-      prepare: async () => ({
-        car: { url: "memory://first?store=car" },
-        meta: { url: "memory://first?store=meta" },
-        file: { url: "memory://first" },
-        wal: { url: "memory://first?store=wal" },
-      }),
-    });
+    firstAttached = await attach.attach(
+      {
+        name: "first",
+        configHash: async () => "first",
+        prepare: async () => ({
+          car: { url: "memory://first?store=car" },
+          meta: { url: "memory://first?store=meta" },
+          file: { url: "memory://first" },
+          wal: { url: "memory://first?store=wal" },
+        }),
+      },
+      (at) => Promise.resolve(at),
+    );
 
-    secondAttached = await attach.attach({
-      name: "second",
-      configHash: async () => "second",
-      prepare: async () => ({
-        car: { url: "memory://second?store=car" },
-        meta: { url: "memory://second?store=meta" },
-        file: { url: "memory://second?store=file" },
-      }),
-    });
+    secondAttached = await attach.attach(
+      {
+        name: "second",
+        configHash: async () => "second",
+        prepare: async () => ({
+          car: { url: "memory://second?store=car" },
+          meta: { url: "memory://second?store=meta" },
+          file: { url: "memory://second?store=file" },
+        }),
+      },
+      (at) => Promise.resolve(at),
+    );
   });
 
   it("activate by store", async () => {

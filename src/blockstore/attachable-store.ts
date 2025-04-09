@@ -431,9 +431,7 @@ export class AttachedRemotesImpl implements AttachedStores {
       );
       // console.log("keyed-preleaving", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
 
-      // console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const ret = await this._remotes.get(key).once(async () => {
-        // console.log("keyed-enter-2", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
         const rt = toStoreRuntime(this.loadable.sthis);
         const result = new AttachedImpl(
           keyed,

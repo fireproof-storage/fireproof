@@ -12,7 +12,6 @@ import {
   ExposeCtxItemWithImpl,
   DrizzleDatebase,
   CORS,
-  toHeadersInit,
 } from "../hono-server.js";
 import { SendOptions, WSContextInit, WSMessageReceive, WSReadyState } from "hono/ws";
 // import { RequestInfo as CFRequestInfo } from "@cloudflare/workers-types";

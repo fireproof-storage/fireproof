@@ -16,7 +16,6 @@ import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
 
-
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
     file: new File([new Blob([buffer])], name, opts),
