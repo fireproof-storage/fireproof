@@ -1,5 +1,6 @@
 import type { ConfigOpts, Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
+import { useMemo } from "react";
 import type { UseFireproof } from "./types.js";
 import { createUseDocument } from "./use-document.js";
 import { createUseLiveQuery } from "./use-live-query.js";
@@ -38,10 +39,17 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  const useDocument = createUseDocument(database);
-  const useLiveQuery = createUseLiveQuery(database);
-  const useAllDocs = createUseAllDocs(database);
-  const useChanges = createUseChanges(database);
+  // Memoize the hook factory functions together to ensure they don't recreate on every render
+  const hooks = useMemo(() => {
+    return {
+      useDocument: createUseDocument(database),
+      useLiveQuery: createUseLiveQuery(database),
+      useAllDocs: createUseAllDocs(database),
+      useChanges: createUseChanges(database),
+    };
+  }, [database]);
+
+  const { useDocument, useLiveQuery, useAllDocs, useChanges } = hooks;
 
   return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
 }
