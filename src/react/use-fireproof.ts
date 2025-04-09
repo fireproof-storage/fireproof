@@ -24,16 +24,6 @@ export const FireproofCtx = {} as UseFireproof;
  * const { database, useLiveQuery, useDocument } = useFireproof("dbname", { ...options });
  * ```
  *
- * ## Overview
- *
- * TL;DR: Only use this hook if you need to configure a database name other than the default `useFireproof`.
- *
- * For most applications, using the `useLiveQuery` or `useDocument` hooks exported from `use-fireproof` should
- * suffice for the majority of use-cases. Under the hood, they act against a database named `useFireproof` instantiated with
- * default configurations. However, if you need to do a custom database setup or configure a database name more to your liking
- * than the default `useFireproof`, then use `useFireproof` as it exists for that purpose. It will provide you with the
- * custom database accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
- * custom database.
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
