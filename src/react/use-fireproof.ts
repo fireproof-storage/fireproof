@@ -13,8 +13,6 @@ import { createUseLiveQuery } from "./use-live-query.js";
  */
 export const FireproofCtx = {} as UseFireproof;
 
-export type UseFPConfig = ConfigOpts & { readonly attach?: Attachable };
-
 /**
  *
  * ## Summary

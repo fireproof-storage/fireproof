@@ -37,8 +37,8 @@ function App() {
       <div
         className="card"
         onClick={() => {
-          console.log("reset", attach?.token());
-          attach?.resetToken();
+          console.log("reset", webCtx?.token());
+          webCtx?.resetToken();
         }}
       >
         Reset Token
