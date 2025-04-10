@@ -1,8 +1,12 @@
 import { FPContext, rt } from "@fireproof/core";
-import { defaultWebToCloudOpts, RedirectStrategy, WebCtx, WebToCloudCtx } from "@fireproof/core/react";
+import { defaultWebToCloudOpts, WebCtx, WebToCloudCtx } from "@fireproof/core/react";
 
 export * from "@fireproof/core/react";
 export * from "@fireproof/core";
+export * from "./iframe-strategy.js";
+export * from "./redirect-strategy.js";
+
+import { RedirectStrategy } from "./redirect-strategy.js";
 
 export function toCloud(
   opts: Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy"> &
