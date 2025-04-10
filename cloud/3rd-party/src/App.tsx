@@ -4,7 +4,7 @@ import "./App.css";
 // import { URI } from "@adviser/cement";
 
 function App() {
-  const { database, attached } = useFireproof("fireproof-party", {
+  const { database, attach } = useFireproof("fireproof-party", {
     attach: toCloud({
       fpCloud: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev?tenant=test-tenant&ledger=test-ledger" },
     }),
@@ -18,17 +18,17 @@ function App() {
     });
   });
 
-  const attach = attached?.ctx().get<WebToCloudCtx>(WebCtx);
+  const webCtx = attach.state === "attached" ? attach.attached.ctx().get<WebToCloudCtx>(WebCtx) : undefined;
 
   return (
     <>
       <h1>FireProof Party of the 3rd</h1>
-      <div>{attached ? "Attached" : "waiting to attach"}</div>
+      <div>{attach.state}</div>
       <div
         className="card"
         onClick={() => {
-          console.log("reset", attach?.token());
-          attach?.resetToken();
+          console.log("reset", webCtx?.token());
+          webCtx?.resetToken();
         }}
       >
         Reset Token
@@ -43,7 +43,7 @@ function App() {
           });
         }}
       >
-        Add - {attach?.token()}
+        Add - {webCtx?.token()}
       </div>
       <div className="read-the-docs">
         {rows.map((row) => {

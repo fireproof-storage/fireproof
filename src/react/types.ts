@@ -12,6 +12,8 @@ import type {
   AllDocsQueryOpts,
   ChangesOptions,
   ClockHead,
+  ConfigOpts,
+  Attachable,
   Attached,
 } from "@fireproof/core";
 
@@ -62,6 +64,26 @@ export interface UseDocumentResultObject<T extends DocTypes> {
   submit(e?: Event): Promise<void>;
 }
 
+export interface InitialAttachState {
+  readonly state: "initial";
+}
+
+export interface AttachingAttachState {
+  readonly state: "attaching";
+}
+
+export interface AttachedAttachState {
+  readonly state: "attached";
+  readonly attached: Attached;
+}
+
+export interface ErrorAttachState {
+  readonly state: "error";
+  readonly error: Error;
+}
+
+export type AttachState = InitialAttachState | AttachingAttachState | AttachedAttachState | ErrorAttachState;
+
 export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
 
 export type UseDocumentInitialDocOrFn<T extends DocTypes> = DocSet<T> | (() => DocSet<T>);
@@ -73,5 +95,16 @@ export interface UseFireproof {
   readonly useLiveQuery: UseLiveQuery;
   readonly useAllDocs: UseAllDocs;
   readonly useChanges: UseChanges;
-  readonly attached?: Attached;
+  readonly attach: AttachState;
 }
+export interface WebToCloudCtx {
+  readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
+  readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
+  readonly tokenKey: string;
+  onTokenChange(on: (token?: string) => void): void;
+  resetToken(): void;
+  setToken(token: string): void;
+  token(): string | undefined;
+}
+
+export type UseFPConfig = ConfigOpts & { readonly attach?: Attachable };

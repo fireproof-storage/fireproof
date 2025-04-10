@@ -1,18 +1,17 @@
-import type { Attachable, Attached, ConfigOpts, Database } from "@fireproof/core";
+import type { Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import type { UseFireproof } from "./types.js";
+import type { UseFireproof, UseFPConfig } from "./types.js";
 import { createUseDocument } from "./use-document.js";
 import { createUseLiveQuery } from "./use-live-query.js";
 import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
-import { useEffect, useState, useMemo } from "react";
+import { createAttach } from "./create-attach.js";
+import { useMemo } from "react";
 
 /**
  * @deprecated Use the `useFireproof` hook instead
  */
 export const FireproofCtx = {} as UseFireproof;
-
-export type UseFPConfig = ConfigOpts & { readonly attach?: Attachable };
 
 /**
  *
@@ -33,21 +32,14 @@ export function useFireproof(name: string | Database = "useFireproof", config: U
   return useMemo(() => {
     const database = typeof name === "string" ? fireproof(name, config) : name;
 
-    const [attached, setAttached] = useState<Attached>();
-    useEffect(() => {
-      if (config.attach && !attached) {
-        database.attach(config.attach).then((a) => {
-          setAttached(a);
-        });
-      }
-    }, [database, config.attach, attached]);
+    const attach = createAttach(database, config);
 
     const useDocument = createUseDocument(database);
     const useLiveQuery = createUseLiveQuery(database);
     const useAllDocs = createUseAllDocs(database);
     const useChanges = createUseChanges(database);
 
-    return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
+    return { database, useLiveQuery, useDocument, useAllDocs, useChanges, attach };
   }, [name, JSON.stringify(config)]); // Only recreate if name or stringified config changes
 }
 

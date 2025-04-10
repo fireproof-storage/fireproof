@@ -134,7 +134,7 @@ export interface SuperThisOpts {
   readonly crypto: CryptoRuntime;
   readonly env: Partial<EnvFactoryOpts>;
   readonly txt: TextEndeCoder;
-  readonly ctx: Record<string, unknown>;
+  readonly ctx: FPContext;
 }
 
 export interface SuperThis {
@@ -142,7 +142,7 @@ export interface SuperThis {
   readonly loggerCollector?: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: Record<string, unknown>;
+  readonly ctx: FPContext;
   readonly txt: TextEndeCoder;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };

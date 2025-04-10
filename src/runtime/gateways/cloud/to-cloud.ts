@@ -54,11 +54,8 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
     ...opts,
     context: opts.context ?? new FPContext(),
     fpCloud: param,
-  } satisfies Omit<ToCloudOpts, "strategy">;
-  return {
-    ...defOpts,
-    strategy: opts.strategy,
-  };
+  } satisfies ToCloudOpts;
+  return defOpts;
 }
 
 export interface ToCloudAttachable extends Attachable {
@@ -197,7 +194,7 @@ class ToCloud implements ToCloudAttachable {
       // wait for the token
       // console.log("waiting intercepting uri", uri);
       const token = await this._tokenObserver.getToken(logger, ledger);
-      // console.log("intercepting with ", uri.toString(), token);
+      console.log("intercepting with ", uri.toString(), token);
       return uri.build().setParam("authJWK", token).URI();
     });
     return {

@@ -19,6 +19,7 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
+import { FPContext } from "use-fireproof";
 
 //export type { Logger };
 //export { Result };
@@ -35,7 +36,7 @@ interface superThisOpts {
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
-  readonly ctx: Record<string, unknown>;
+  readonly ctx: FPContext;
   readonly txt: TextEndeCoder;
 }
 
@@ -43,7 +44,7 @@ class SuperThisImpl implements SuperThis {
   readonly logger: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: Record<string, unknown>;
+  readonly ctx: FPContext;
   readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
 
@@ -53,7 +54,7 @@ class SuperThisImpl implements SuperThis {
     this.crypto = opts.crypto;
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
-    this.ctx = { ...opts.ctx };
+    this.ctx = FPContext.merge(opts.ctx);
     // console.log("superThis", this);
   }
 
@@ -90,7 +91,7 @@ class SuperThisImpl implements SuperThis {
       crypto: override.crypto || this.crypto,
       pathOps: override.pathOps || this.pathOps,
       txt: override.txt || this.txt,
-      ctx: { ...this.ctx, ...override.ctx },
+      ctx: FPContext.merge(this.ctx, override.ctx),
     });
   }
 }
@@ -159,7 +160,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),
-    ctx: osthis?.ctx || {},
+    ctx: FPContext.merge(osthis?.ctx),
     pathOps,
     txt: osthis?.txt || txtOps,
   });

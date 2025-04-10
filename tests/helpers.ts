@@ -10,6 +10,7 @@ import {
   Attached,
   CarTransaction,
   Falsy,
+  FPContext,
 } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
@@ -53,9 +54,9 @@ export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   return ensureSuperThis({
     ...sthis,
     logger: mockLog.logger,
-    ctx: {
+    ctx: FPContext.merge({
       logCollector: mockLog.logCollector,
-    },
+    }),
   }) as MockSuperThis;
 }
 
