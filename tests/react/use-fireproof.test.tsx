@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "use-fireproof";
 import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
 
-// Test timeout value for CI
 const TEST_TIMEOUT = 45000;
 
 describe("HOOK: useFireproof", () => {
