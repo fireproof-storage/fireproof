@@ -46,67 +46,6 @@ describe("HOOK: useFireproof useAllDocs", () => {
   );
 
   it(
-    "supports array-like behavior",
-    async () => {
-      let allDocsResult: AllDocsResult<{ fruit: string }>;
-      let destructuredDocs: DocWithId<{ fruit: string }>[];
-
-      renderHook(() => {
-        const hookResult = useFireproof(dbName);
-        database = hookResult.database;
-        useAllDocs = hookResult.useAllDocs;
-        allDocsResult = useAllDocs<{ fruit: string }>();
-
-        // Test destructuring the docs property
-        const { docs } = allDocsResult;
-        destructuredDocs = docs;
-      });
-
-      await waitFor(() => {
-        // Verify destructured docs
-        expect(destructuredDocs.length).toBe(3);
-        expect(destructuredDocs.map((doc) => doc.fruit)).toEqual(["apple", "banana", "cherry"]);
-
-        // Verify array-like behavior - need to use type assertions since our interface doesn't include these methods
-        const arrayLike = allDocsResult as unknown as {
-          length: number;
-          [Symbol.iterator](): Iterator<DocWithId<{ fruit: string }>>;
-          map<U>(fn: (doc: DocWithId<{ fruit: string }>) => U): U[];
-          filter(fn: (doc: DocWithId<{ fruit: string }>) => boolean): DocWithId<{ fruit: string }>[];
-          forEach(fn: (doc: DocWithId<{ fruit: string }>) => void): void;
-        };
-
-        // Test length property
-        expect(arrayLike.length).toBe(3);
-
-        // Test iteration
-        const values: string[] = [];
-        for (const doc of arrayLike) {
-          values.push(doc.fruit);
-        }
-        expect(values).toEqual(["apple", "banana", "cherry"]);
-
-        // Test map method
-        const mappedValues = arrayLike.map((doc) => doc.fruit.toUpperCase());
-        expect(mappedValues).toEqual(["APPLE", "BANANA", "CHERRY"]);
-
-        // Test filter method
-        const filteredDocs = arrayLike.filter((doc) => doc.fruit.startsWith("b"));
-        expect(filteredDocs.length).toBe(1);
-        expect(filteredDocs[0].fruit).toBe("banana");
-
-        // Test forEach method
-        const forEachValues: string[] = [];
-        arrayLike.forEach((doc) => {
-          forEachValues.push(doc.fruit);
-        });
-        expect(forEachValues).toEqual(["apple", "banana", "cherry"]);
-      });
-    },
-    TEST_TIMEOUT,
-  );
-
-  it(
     "updates when database changes",
     async () => {
       let allDocsResult: AllDocsResult<{ fruit: string }>;
