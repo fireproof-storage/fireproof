@@ -2,7 +2,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "use-fireproof";
 import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
-import { DocWithId } from "@fireproof/core";
 
 // Test timeout value for CI
 const TEST_TIMEOUT = 45000;
