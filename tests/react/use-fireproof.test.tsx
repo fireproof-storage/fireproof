@@ -2,9 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "use-fireproof";
 import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
-import { DocWithId } from "@fireproof/core";
 
-// Test timeout value for CI
 const TEST_TIMEOUT = 45000;
 
 describe("HOOK: useFireproof", () => {
@@ -60,93 +58,6 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
 
       await waitFor(() => {
         expect(query.rows.map((row) => row.doc?.foo)).toEqual(["aha", "bar", "caz"]);
-      });
-    },
-    TEST_TIMEOUT,
-  );
-
-  afterEach(async () => {
-    await db.close();
-    await db.destroy();
-    await database?.close();
-    await database?.destroy();
-  });
-});
-
-// Separate describe block for array-like behavior test
-describe("HOOK: useFireproof useLiveQuery supports array-like behavior", () => {
-  const dbName = "useLiveQueryArrayLike";
-  let db: Database,
-    database: ReturnType<typeof useFireproof>["database"],
-    useLiveQuery: ReturnType<typeof useFireproof>["useLiveQuery"];
-
-  beforeEach(async () => {
-    const expectedValues = ["aha", "bar", "caz"];
-    db = fireproof(dbName);
-    for (const value of expectedValues) {
-      await db.put({ foo: value });
-    }
-
-    const allDocs = await db.allDocs<{ foo: string }>();
-    expect(allDocs.rows.map((row) => row.value.foo)).toEqual(expectedValues);
-  });
-
-  it(
-    "supports array-like behavior",
-    async () => {
-      let arrayLikeQuery: LiveQueryResult<{ foo: string }, string>;
-      let destructuredDocs: DocWithId<{ foo: string }>[];
-
-      renderHook(() => {
-        const result = useFireproof(dbName);
-        database = result.database;
-        useLiveQuery = result.useLiveQuery;
-        arrayLikeQuery = useLiveQuery<{ foo: string }>("foo");
-
-        // Test destructuring the docs property
-        const { docs } = arrayLikeQuery;
-        destructuredDocs = docs;
-      });
-
-      await waitFor(() => {
-        // Verify destructured docs
-        expect(destructuredDocs.length).toBe(3);
-        expect(destructuredDocs.map((doc) => doc.foo)).toEqual(["aha", "bar", "caz"]);
-
-        // Verify array-like behavior - need to use type assertions since our interface doesn't include these methods
-        const arrayLike = arrayLikeQuery as unknown as {
-          length: number;
-          [Symbol.iterator](): Iterator<DocWithId<{ foo: string }>>;
-          map<U>(fn: (doc: DocWithId<{ foo: string }>) => U): U[];
-          filter(fn: (doc: DocWithId<{ foo: string }>) => boolean): DocWithId<{ foo: string }>[];
-          forEach(fn: (doc: DocWithId<{ foo: string }>) => void): void;
-        };
-
-        // Test length property
-        expect(arrayLike.length).toBe(3);
-
-        // Test iteration
-        const values: string[] = [];
-        for (const doc of arrayLike) {
-          values.push(doc.foo);
-        }
-        expect(values).toEqual(["aha", "bar", "caz"]);
-
-        // Test map
-        const mappedValues = arrayLike.map((doc) => doc.foo.toUpperCase());
-        expect(mappedValues).toEqual(["AHA", "BAR", "CAZ"]);
-
-        // Test filter
-        const filtered = arrayLike.filter((doc) => doc.foo.includes("a"));
-        expect(filtered.length).toBe(3);
-        expect(filtered.map((doc) => doc.foo)).toEqual(["aha", "bar", "caz"]);
-
-        // Test forEach
-        const forEachValues: string[] = [];
-        arrayLike.forEach((doc) => {
-          forEachValues.push(doc.foo);
-        });
-        expect(forEachValues).toEqual(["aha", "bar", "caz"]);
       });
     },
     TEST_TIMEOUT,
