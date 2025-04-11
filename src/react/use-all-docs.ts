@@ -16,6 +16,7 @@ export function createUseAllDocs(database: Database) {
     const refreshRows = useCallback(async () => {
       const res = await database.allDocs<T>(query);
       setResult({
+        ...res,
         docs: res.rows.map((r) => r.value as DocWithId<T>),
       });
     }, [database, queryString]);
