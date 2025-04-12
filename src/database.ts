@@ -66,18 +66,19 @@ export class DatabaseImpl implements Database {
   get name() {
     return this.ledger.name;
   }
-
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
     if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
 
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("get");
-    const got = await this.ledger.crdt.get(id).catch((e) => {
-      throw new NotFoundError(`Not found: ${id} - ${e.message}`);
-    });
-    if (!got) throw new NotFoundError(`Not found: ${id}`);
-    const { doc } = got;
-    return { ...(doc as unknown as DocWithId<T>), _id: id };
+    try {
+      const got = await this.ledger.crdt.get(id);
+      if (!got) throw new NotFoundError(`Not found: ${id}`);
+      const { doc } = got;
+      return { ...(doc as unknown as DocWithId<T>), _id: id };
+    } catch (e) {
+      throw new NotFoundError(`Not found: ${id} - ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
