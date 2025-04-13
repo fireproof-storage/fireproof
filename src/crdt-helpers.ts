@@ -33,6 +33,7 @@ import {
 } from "./types.js";
 import { Logger } from "@adviser/cement";
 import { CarTransactionImpl } from "./blockstore/transaction.js";
+import { NotFoundError } from "./utils.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
@@ -210,7 +211,10 @@ export async function getValueFromCrdt<T extends DocTypes>(
   // console.log("getValueFromCrdt-1", head, key)
   const link = await get(blocks, head, key);
   // console.log("getValueFromCrdt-2", key)
-  if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
+  if (!link) {
+    // Use NotFoundError instead of logging an error
+    throw new NotFoundError(`Not found: ${key}`);
+  }
   const ret = await getValueFromLink<T>(blocks, link, logger);
   // console.log("getValueFromCrdt-3", key)
   return ret;

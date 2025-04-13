@@ -77,7 +77,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   byKey: IndexTree<K, R> = new IndexTree<K, R>();
   byId: IndexTree<K, R> = new IndexTree<K, R>();
   indexHead?: ClockHead;
-  includeDocsDefault = true;
+
   initError?: Error;
 
   ready(): Promise<void> {
@@ -124,6 +124,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     if (this.name && this.name !== name) throw this.logger.Error().Msg("cannot change name").AsError();
     // this.name = name;
     try {
+      let mapFnChanged = false;
+
       if (meta) {
         // hydrating from header
         if (this.indexHead && this.indexHead.map((c) => c.toString()).join() !== meta.head.map((c) => c.toString()).join()) {
@@ -133,15 +135,13 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         if (this.mapFnString) {
           // we already initialized from application code
           if (this.mapFnString !== meta.map) {
-            this.logger
-              .Warn()
-              .Msg(`cannot apply different mapFn meta: old mapFnString ${this.mapFnString} new mapFnString ${meta.map}`);
-            // throw new Error('cannot apply different mapFn meta')
-          } else {
-            this.byId.cid = meta.byId;
-            this.byKey.cid = meta.byKey;
-            this.indexHead = meta.head;
+            this.mapFnString = meta.map;
+            mapFnChanged = true;
           }
+          // Always apply the metadata
+          this.byId.cid = meta.byId;
+          this.byKey.cid = meta.byKey;
+          this.indexHead = meta.head;
         } else {
           // we are first
           this.mapFnString = meta.map;
@@ -154,7 +154,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           // we already initialized from application code
           if (mapFn) {
             if (this.mapFn.toString() !== mapFn.toString()) {
-              this.logger.Error().Msg("cannot apply different mapFn app2");
+              this.mapFn = mapFn;
+              this.mapFnString = mapFn.toString();
+              mapFnChanged = true;
             }
           }
         } else {
@@ -165,11 +167,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (this.mapFnString) {
             // we already loaded from a header
             if (this.mapFnString !== mapFn.toString()) {
-              this.logger
-                .Error()
-                .Str("mapFnString", this.mapFnString)
-                .Str("mapFn", mapFn.toString())
-                .Msg("cannot apply different mapFn app");
+              mapFnChanged = true;
             }
           } else {
             // we are first
@@ -178,8 +176,11 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           this.mapFn = mapFn;
         }
       }
-      const matches = /=>\s*(.*)/.test(this.mapFnString);
-      this.includeDocsDefault = matches;
+
+      // If the map function changed, reset the index for correctness
+      if (mapFnChanged) {
+        this._resetIndex();
+      }
     } catch (e) {
       this.initError = e as Error;
     }
@@ -197,7 +198,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     if (!this.byKey.root) {
       return await applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
     }
-    if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
+    if (opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       const eRange = encodeRange(opts.range);
       return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
