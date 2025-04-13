@@ -48,27 +48,15 @@ describe("HOOK: useDocument with non-existent ID", () => {
   it(
     "should initialize with the provided _id even if document doesn't exist",
     async () => {
-      // eslint-disable-next-line no-console
-      console.log("Initial document state:", JSON.stringify(settingsResult.doc));
-      // eslint-disable-next-line no-console
-      console.log("Document state properties:", Object.keys(settingsResult));
-
       // Try to refresh the document to see if we get the error
       try {
-        // eslint-disable-next-line no-console
-        console.log("Attempting to refresh document...");
         await settingsResult.refresh();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log("Error during refresh:", error);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_) {
+        // Expected error when document doesn't exist yet
       }
 
       await waitFor(() => {
-        // eslint-disable-next-line no-console
-        console.log("After waitFor - document state:", JSON.stringify(settingsResult.doc));
-        // eslint-disable-next-line no-console
-        console.log("After waitFor - document state properties:", Object.keys(settingsResult));
-
         expect(settingsResult.doc._id).toBe(testId);
         expect(settingsResult.doc.testField).toBe("test");
         // Other properties should be undefined
@@ -79,26 +67,21 @@ describe("HOOK: useDocument with non-existent ID", () => {
 
       // Try to get the document directly from the database
       try {
-        // eslint-disable-next-line no-console
-        console.log("Attempting to get document from DB...");
         const docFromDb = await db.get(testId);
-        // eslint-disable-next-line no-console
-        console.log("Document from DB:", docFromDb);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log("Error getting document from DB:", error);
+        // This should not happen as the document doesn't exist yet
+        expect(docFromDb).toBeUndefined();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_) {
+        // Expected error when document doesn't exist yet
       }
 
       // Try to save the document and see what happens
       try {
-        // eslint-disable-next-line no-console
-        console.log("Attempting to save document...");
         await settingsResult.save();
-        // eslint-disable-next-line no-console
-        console.log("Document saved successfully");
+        // Document should be saved successfully
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log("Error saving document:", error);
+        // This should not happen
+        expect(error).toBeUndefined();
       }
     },
     TEST_TIMEOUT,
