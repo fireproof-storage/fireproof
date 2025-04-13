@@ -135,9 +135,6 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         if (this.mapFnString) {
           // we already initialized from application code
           if (this.mapFnString !== meta.map) {
-            this.logger
-              .Warn()
-              .Msg(`applying different mapFn meta: old mapFnString ${this.mapFnString} new mapFnString ${meta.map}`);
             this.mapFnString = meta.map;
             mapFnChanged = true;
           }
@@ -157,7 +154,6 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           // we already initialized from application code
           if (mapFn) {
             if (this.mapFn.toString() !== mapFn.toString()) {
-              this.logger.Warn().Msg("applying different mapFn, resetting index");
               this.mapFn = mapFn;
               this.mapFnString = mapFn.toString();
               mapFnChanged = true;
@@ -171,11 +167,6 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (this.mapFnString) {
             // we already loaded from a header
             if (this.mapFnString !== mapFn.toString()) {
-              this.logger
-                .Warn()
-                .Str("old mapFnString", this.mapFnString)
-                .Str("new mapFn", mapFn.toString())
-                .Msg("applying different mapFn, resetting index");
               mapFnChanged = true;
             }
           } else {
