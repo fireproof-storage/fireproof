@@ -51,7 +51,7 @@ describe("HOOK: useDocument with non-existent ID", () => {
       // Try to refresh the document to see if we get the error
       try {
         await settingsResult.refresh();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_) {
         // Expected error when document doesn't exist yet
       }
@@ -70,7 +70,7 @@ describe("HOOK: useDocument with non-existent ID", () => {
         const docFromDb = await db.get(testId);
         // This should not happen as the document doesn't exist yet
         expect(docFromDb).toBeUndefined();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (_) {
         // Expected error when document doesn't exist yet
       }
