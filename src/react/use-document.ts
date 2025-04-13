@@ -21,8 +21,16 @@ export function createUseDocument(database: Database) {
     const [doc, setDoc] = useState(initialDoc);
 
     const refresh = useCallback(async () => {
-      const gotDoc = doc._id ? await database.get<T>(doc._id).catch(() => initialDoc) : initialDoc;
-      setDoc(gotDoc);
+      if (doc._id) {
+        try {
+          const gotDoc = await database.get<T>(doc._id);
+          setDoc(gotDoc);
+        } catch {
+          setDoc(initialDoc);
+        }
+      } else {
+        setDoc(initialDoc);
+      }
     }, [doc._id]);
 
     const save: StoreDocFn<T> = useCallback(
