@@ -82,10 +82,10 @@ importers:
         version: 9.24.0
       '@hono/node-server':
         specifier: ^1.14.1
-        version: 1.14.1(hono@4.7.5)
+        version: 1.14.1(hono@4.7.6)
       '@hono/node-ws':
         specifier: ^1.1.1
-        version: 1.1.1(@hono/node-server@1.14.1(hono@4.7.5))(hono@4.7.5)
+        version: 1.1.1(@hono/node-server@1.14.1(hono@4.7.6))(hono@4.7.6)
       '@testing-library/react':
         specifier: ^16.1.0
         version: 16.1.0(@testing-library/dom@10.4.0)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -135,8 +135,8 @@ importers:
         specifier: ^2.31.0
         version: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.24.0)(typescript@5.8.3))(eslint-import-resolver-typescript@4.3.2)(eslint@9.24.0)
       hono:
-        specifier: ^4.7.5
-        version: 4.7.5
+        specifier: ^4.7.6
+        version: 4.7.6
       playwright:
         specifier: ^1.51.1
         version: 1.51.1
@@ -2720,8 +2720,8 @@ packages:
   headers-polyfill@4.0.3:
     resolution: {integrity: sha512-IScLbePpkvO846sIwOtOTDjutRMWdXdJmXdMvk6gCBHxFO8d+QKOQedyZSxFTTFYRSmlgSTDtXqqq4pcenBXLQ==}
 
-  hono@4.7.5:
-    resolution: {integrity: sha512-fDOK5W2C1vZACsgLONigdZTRZxuBqFtcKh7bUQ5cVSbwI2RWjloJDcgFOVzbQrlI6pCmhlTsVYZ7zpLj4m4qMQ==}
+  hono@4.7.6:
+    resolution: {integrity: sha512-564rVzELU+9BRqqx5k8sT2NFwGD3I3Vifdb6P7CmM6FiarOSY+fDC+6B+k9wcCb86ReoayteZP2ki0cRLN1jbw==}
     engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
@@ -4766,14 +4766,14 @@ snapshots:
       '@shikijs/types': 3.2.1
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@hono/node-server@1.14.1(hono@4.7.5)':
+  '@hono/node-server@1.14.1(hono@4.7.6)':
     dependencies:
-      hono: 4.7.5
+      hono: 4.7.6
 
-  '@hono/node-ws@1.1.1(@hono/node-server@1.14.1(hono@4.7.5))(hono@4.7.5)':
+  '@hono/node-ws@1.1.1(@hono/node-server@1.14.1(hono@4.7.6))(hono@4.7.6)':
     dependencies:
-      '@hono/node-server': 1.14.1(hono@4.7.5)
-      hono: 4.7.5
+      '@hono/node-server': 1.14.1(hono@4.7.6)
+      hono: 4.7.6
       ws: 8.18.1
     transitivePeerDependencies:
       - bufferutil
@@ -6821,7 +6821,7 @@ snapshots:
   headers-polyfill@4.0.3:
     optional: true
 
-  hono@4.7.5: {}
+  hono@4.7.6: {}
 
   html-escaper@2.0.2: {}
 
