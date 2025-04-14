@@ -104,7 +104,7 @@
     "@ipld/car": "^5.4.0",
     "@ipld/dag-cbor": "^9.2.2",
     "@ipld/dag-json": "^10.2.3",
-    "@libsql/client": "^0.15.2",
+    "@libsql/client": "^0.15.3",
     "@web3-storage/pail": "^0.6.2",
     "cborg": "^4.2.9",
     "charwise": "^3.0.1",

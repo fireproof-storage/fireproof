@@ -26,7 +26,7 @@ importers:
         specifier: ^10.2.3
         version: 10.2.5
       '@libsql/client':
-        specifier: ^0.15.2
+        specifier: ^0.15.3
         version: 0.15.8
       '@web3-storage/pail':
         specifier: ^0.6.2
