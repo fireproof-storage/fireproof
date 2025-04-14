@@ -102,11 +102,28 @@ export class Loader implements Loadable {
     return await this.attachedStores.attach(attachable, async (at) => {
       if (!at.stores.wal) {
         try {
+          const stores = this.attachedStores.activate(at.stores)
+          await Promise.all(this.cidCache.values().map(async ({value:rvalue}) => {
+            if (rvalue.isErr()) {
+              this.logger.Error().Err(rvalue).Msg("error loading car");
+              return;
+            }
+            const value = rvalue.Ok();
+            if (value.status !== "stale") {
+              return
+            }
+            if (value.type === "car") {
+              this.cidCache.unget(value.cid.toString());
+              await this.loadCar(value.cid, stores)
+            } else {
+              this.logger.Warn().Any({cid: value.cid.toString(), type: value.type}).Msg("should not type");
+            }
+          }))
           // remote Store need to kick off the sync by requesting the latest meta
           const dbMeta = await at.stores.meta.load();
           if (Array.isArray(dbMeta)) {
             if (dbMeta.length !== 0) {
-              await this.handleDbMetasFromStore(dbMeta, this.attachedStores.activate(at.stores));
+              await this.handleDbMetasFromStore(dbMeta, stores);
             }
           } else if (!isFalsy(dbMeta)) {
             throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
@@ -116,7 +133,6 @@ export class Loader implements Loadable {
           at.detach();
         }
       }
-      console.log("leave-attach");
       return at;
     });
   }
