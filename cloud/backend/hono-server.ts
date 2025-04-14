@@ -181,7 +181,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
       connection: msg,
       meta: msg.meta ?? { metas: [], keys: [] },
     });
-    return buildResDelMeta(msg, rUrl.params, rUrl.signedUrl);
+    return buildResDelMeta(msg, rUrl.urlParam, rUrl.signedUrl);
   }
 
   async handleBindGetMeta(

@@ -13,13 +13,14 @@ import {
   JSONFormatter,
   YAMLFormatter,
   CoerceURI,
+  param,
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
+import { FPContext } from "./fp-context.js";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
-import { FPContext } from "use-fireproof";
 
 //export type { Logger };
 //export { Result };
@@ -462,7 +463,7 @@ export function storeType2DataMetaWal(store: StoreType) {
 
 export function ensureURIDefaults(
   sthis: SuperThis,
-  names: { name: string; local?: string },
+  names: { name: string; localURI?: URI },
   curi: CoerceURI | undefined,
   uri: URI,
   store: StoreType,
@@ -473,8 +474,18 @@ export function ensureURIDefaults(
 ): URI {
   ctx = ctx || {};
   const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
-  if (names.local) {
-    ret.defParam(PARAM.LOCAL_NAME, names.local);
+  if (names.localURI) {
+    const rParams = names.localURI.getParamsResult({
+      [PARAM.NAME]: param.OPTIONAL,
+      [PARAM.STORE_KEY]: param.OPTIONAL,
+    });
+    const params = rParams.Ok();
+    if (params[PARAM.NAME]) {
+      ret.defParam(PARAM.LOCAL_NAME, params[PARAM.NAME]);
+    }
+    if (params[PARAM.STORE_KEY]) {
+      ret.defParam(PARAM.STORE_KEY, params[PARAM.STORE_KEY]);
+    }
   }
   // if (!ret.hasParam(PARAM.NAME)) {
   //   // const name = sthis.pathOps.basename(ret.URI().pathname);

@@ -272,6 +272,9 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
     const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
+    if (reader.status !== "ready") {
+      throw this.logger.Error().Str("cid", car.toString()).Msg("car not ready").AsError();
+    }
     const block = await reader.blocks.find((i) => i.cid.equals(cid));
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;

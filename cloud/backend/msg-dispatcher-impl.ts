@@ -1,5 +1,7 @@
 import { SuperThis, ps } from "@fireproof/core";
 import { MsgDispatcher } from "./msg-dispatch.js";
+import { buildEventGetMeta, MsgIsResPutMeta } from "../../src/protocols/cloud/msg-types-meta.js";
+import { metaMerger } from "./meta-merger/meta-merger.js";
 // import { WSRoom } from "./ws-room.js";
 
 const {
@@ -144,8 +146,37 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
     },
     {
       match: MsgIsReqPutMeta,
-      fn: (ctx, msg: MsgWithConnAuth<ReqPutMeta>) => {
-        return ctx.impl.handleReqPutMeta(ctx, msg);
+      fn: async (ctx, req: MsgWithConnAuth<ReqPutMeta>) => {
+        const ret = await ctx.impl.handleReqPutMeta(ctx, req);
+        if (!MsgIsResPutMeta(ret)) {
+          return ret;
+        }
+        const conns = ctx.wsRoom.getConns(req.conn);
+        for (const conn of conns) {
+          if (qsidEqual(conn.conn, req.conn)) {
+            continue;
+          }
+          // pretty bad but ok for now we should be able to
+          // filter by tenant and ledger on a connection level
+          const res = await metaMerger(ctx).metaToSend({
+            conn: conn.conn,
+            tenant: req.tenant,
+          });
+          if (res.metas.length === 0) {
+            continue;
+          }
+          dp.send(
+            {
+              ...ctx,
+              ws: conn.ws,
+            },
+            buildEventGetMeta(ctx, req, res, {
+              conn: conn.conn,
+              tenant: req.tenant,
+            }, ret.signedUrl),
+          );
+        }
+        return ret;
       },
     },
     {

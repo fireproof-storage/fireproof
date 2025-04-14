@@ -1,4 +1,4 @@
-import { CoerceURI, Logger, ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, CoerceURI, Logger, ResolveOnce, URI } from "@adviser/cement";
 import { Attachable, bs, ensureLogger, Ledger, FPContext, hashObject } from "@fireproof/core";
 import { decodeJwt } from "jose/jwt/decode";
 
@@ -22,10 +22,12 @@ interface ToCloudBase {
   readonly interval: number; // default 1000 or 1 second
   readonly refreshTokenPreset: number; // default 2 minutes this is the time before the token expires
   readonly context: FPContext;
+  readonly tenant?: string; // default undefined
+  readonly ledger?: string; // default undefined
 }
 
 export interface ToCloudRequiredOpts {
-  readonly fpCloud: Partial<FPCloudRef>;
+  readonly urls: Partial<FPCloudRef>;
   readonly strategy: UITokenStrategie;
 }
 
@@ -39,21 +41,31 @@ export interface FPCloudUri {
   readonly meta: URI;
 }
 
+function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
+  const buri = BuildURI.from(uri);
+  if (opts.tenant) {
+    buri.setParam("tenant", opts.tenant);
+  }
+  if (opts.ledger) {
+    buri.setParam("ledger", opts.ledger);
+  }
+  return buri.URI();
+}
+
 function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
-  const base = opts.fpCloud?.base ?? "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev";
+  const base = opts.urls?.base ?? "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev";
   const param = {
-    car: URI.from(opts.fpCloud?.car ?? base),
-    file: URI.from(opts.fpCloud?.file ?? base),
-    meta: URI.from(opts.fpCloud?.meta ?? base),
+    car: addTenantAndLedger(opts, opts.urls?.car ?? base),
+    file: addTenantAndLedger(opts, opts.urls?.file ?? base),
+    meta: addTenantAndLedger(opts, opts.urls?.meta ?? base),
   } satisfies FPCloudUri;
   const defOpts = {
     name: ToCloudName,
     interval: 1000,
     refreshTokenPreset: 2 * 60 * 1000, // 2 minutes
-
     ...opts,
     context: opts.context ?? new FPContext(),
-    fpCloud: param,
+    urls: param,
   } satisfies ToCloudOpts;
   return defOpts;
 }
@@ -66,6 +78,8 @@ interface TokenAndClaims {
   readonly token: string;
   readonly claims: {
     readonly exp: number;
+    readonly tenant?: string;
+    readonly ledger?: string;
   };
 }
 
@@ -99,7 +113,7 @@ class TokenObserver {
   }
 
   readonly _token = new ResolveOnce<TokenAndClaims>();
-  async getToken(logger: Logger, ledger: Ledger): Promise<string> {
+  async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
     // console.log("getToken", this.opts.tokenKey);
     const tc = await this._token.once(async () => {
       const token = await this.opts.strategy.gatherToken(logger, this.opts);
@@ -138,7 +152,7 @@ class TokenObserver {
       // this.currentToken = tc;
       // return tc;
     });
-    return tc.token;
+    return tc;
   }
 
   reset() {
@@ -194,13 +208,25 @@ class ToCloud implements ToCloudAttachable {
       // wait for the token
       // console.log("waiting intercepting uri", uri);
       const token = await this._tokenObserver.getToken(logger, ledger);
-      console.log("intercepting with ", uri.toString(), token);
-      return uri.build().setParam("authJWK", token).URI();
+      const buri = BuildURI.from(uri).setParam("authJWK", token.token);
+      if (this.opts.tenant) {
+        buri.setParam("tenant", this.opts.tenant);
+      }
+      if (this.opts.ledger) {
+        buri.setParam("ledger", this.opts.ledger);
+      }
+      if (token.claims.tenant && !buri.hasParam("tenant")) {
+        buri.setParam("tenant", token.claims.tenant);
+      }
+      if (token.claims.ledger && !buri.hasParam("ledger")) {
+        buri.setParam("ledger", token.claims.ledger);
+      }
+      return uri.build().setParam("authJWK", token.token).URI();
     });
     return {
-      car: { url: this.opts.fpCloud.car, gatewayInterceptor },
-      file: { url: this.opts.fpCloud.file, gatewayInterceptor },
-      meta: { url: this.opts.fpCloud.meta, gatewayInterceptor },
+      car: { url: this.opts.urls.car, gatewayInterceptor },
+      file: { url: this.opts.urls.file, gatewayInterceptor },
+      meta: { url: this.opts.urls.meta, gatewayInterceptor },
       teardown: () => {
         this._tokenObserver.stop();
       },

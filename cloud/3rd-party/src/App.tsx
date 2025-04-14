@@ -4,9 +4,11 @@ import "./App.css";
 // import { URI } from "@adviser/cement";
 
 function App() {
-  const { database, attach } = useFireproof("fireproof-party", {
+  const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
-      fpCloud: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev?tenant=test-tenant&ledger=test-ledger" },
+      urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
+      tenant: "3rd-party",
+      ledger: "have-four-drinks",
     }),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
@@ -37,7 +39,9 @@ function App() {
         className="card"
         onClick={() => {
           database.put({ value: `3rd-${rows.length}` }).then(() => {
+            console.log("added", rows.length);
             database.allDocs<DocWithId<{ value: string }>>().then((rows) => {
+              console.log("rows", rows);
               setRows(rows.rows.map((i) => i.value));
             });
           });

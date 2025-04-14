@@ -84,7 +84,6 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   readonly #wsOnMessage = async (event: MessageEvent) => {
     const rMsg = await exception2Result(async () => {
       const msg = this.msgP.ende.decode(await top_uint8(event.data)) as MsgBase;
-      // console.log("wsOnMessage", msg);
       return msg;
     });
     if (rMsg.isErr()) {
@@ -92,6 +91,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       return;
     }
     const msg = rMsg.Ok();
+    console.log("wsOnMessage", msg, this.#onMsg.size);
     const waitFor = this.waitForTid.get(msg.tid);
     Array.from(this.#onMsg.values()).forEach((cb) => {
       // console.log("cb-onmessage", this.id, msg, cb.toString());

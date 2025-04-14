@@ -1,5 +1,16 @@
 // import PartySocket, { PartySocketOptions } from "partysocket";
-import { Result, URI, KeyedResolvOnce, exception2Result, Logger, param, ResolveOnce, to_uint8, BuildURI } from "@adviser/cement";
+import {
+  Result,
+  URI,
+  KeyedResolvOnce,
+  exception2Result,
+  Logger,
+  param,
+  ResolveOnce,
+  to_uint8,
+  BuildURI,
+  Future,
+} from "@adviser/cement";
 import type { SuperThis } from "../../../types.js";
 import {
   buildErrorMsg,
@@ -14,6 +25,7 @@ import {
   GwCtx,
   QSId,
   coerceFPStoreTypes,
+  AuthType,
 } from "../../../protocols/cloud/msg-types.js";
 import { MsgConnected, MsgConnectedAuth, Msger, authTypeFromUri } from "../../../protocols/cloud/msger.js";
 import {
@@ -24,7 +36,7 @@ import {
   ResGetData,
   ResPutData,
 } from "../../../protocols/cloud/msg-types-data.js";
-import { ensureLogger, NotFoundError } from "../../../utils.js";
+import { ensureLogger, hashObject, NotFoundError } from "../../../utils.js";
 import { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
 import { registerStoreProtocol } from "../../../blockstore/register-store-protocol.js";
 import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeWAL } from "../../../blockstore/fp-envelope.js";
@@ -98,11 +110,11 @@ abstract class BaseGateway {
         ledger: params.name,
       },
       // tenant: conn.tenant,
-      methodParams: {
+      methodParam: {
         method,
         store,
       },
-      params: {
+      urlParam: {
         ...params,
         key: params.key,
       },
@@ -235,9 +247,95 @@ function getGwCtx(conn: QSId, uri: URI): Result<GwCtx> {
   });
 }
 
+class CurrentMeta {
+  readonly boundGetMeta = new KeyedResolvOnce<ReadableStream<MsgWithError<EventGetMeta>>>();
+
+  readonly currentMeta = new KeyedResolvOnce<FPEnvelopeMeta>();
+
+  private valueReady = new Future<void>();
+  private value: Result<FPEnvelopeMeta> | undefined;
+
+  private readonly subscriptions: Map<string, (meta: FPEnvelopeMeta) => Promise<void>>;
+  constructor(subscriptions: Map<string, (meta: FPEnvelopeMeta) => Promise<void>>) {
+    this.subscriptions = subscriptions;
+  }
+
+  async get(
+    ctx: ConnectedSerdeGatewayCtx,
+    authType: AuthType,
+    reqSignedUrl: ReqSignedUrl,
+    gwCtx: GwCtx,
+  ): Promise<Result<FPEnvelopeMeta>> {
+    // console.log("cloud-get-1")
+    const key = await hashObject(ctx.conn.conn.Ok().conn);
+    // register bind updates
+    const item = this.boundGetMeta.get(key);
+    // console.log("cloud-get-2")
+    item.once(async () => {
+      const res = await ctx.conn.conn
+        .Ok()
+        .bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, authType, reqSignedUrl, gwCtx), {
+          waitFor: MsgIsEventGetMeta,
+        });
+      for await (const msg of res) {
+        if (MsgIsEventGetMeta(msg)) {
+          const rV2Meta = await V2SerializedMetaKeyExtractKey(ctx, msg.meta);
+          const r = await decode2DbMetaEvents(ctx.loader.sthis, rV2Meta);
+          let value: Result<FPEnvelopeMeta>;
+          if (r.isErr()) {
+            value = Result.Err(r);
+          } else {
+            value = Result.Ok({
+              type: "meta",
+              payload: r.Ok(),
+            } satisfies FPEnvelopeMeta);
+          }
+          // console.log("cloud-set-value", value);
+          this.value = value;
+          this.valueReady.resolve()
+          this.valueReady = new Future();
+          this.currentMeta.get(key).reset();
+          if (value.isOk()) {
+            for (const cb of this.subscriptions.values()) {
+              await cb(value.Ok());
+            }
+          }
+        }
+      }
+      ctx.loader.logger.Error().Msg("Error bind should not end");
+    }).catch((err) => {
+      ctx.loader.logger.Error().Err(err).Msg("Error in bindGetMeta");
+    });
+    // console.log("cloud-get-3")
+    return this.currentMeta.get(key).once(async () => {
+      if (!this.value) {
+        // console.log("cloud-get-4")
+        await this.valueReady.asPromise();
+        // console.log("cloud-get-5")
+      }
+      const rDbMeta = this.value;
+      if (!rDbMeta) {
+        return ctx.loader.logger.Error().Msg("No value").ResultError();
+      }
+      return rDbMeta;
+    });
+  }
+}
+
 class MetaGateway extends BaseGateway implements StoreTypeGateway {
+  readonly subscriptions = new Map<string, (meta: FPEnvelopeMeta) => Promise<void>>();
+  readonly currentMeta = new CurrentMeta(this.subscriptions);
+
   constructor(sthis: SuperThis) {
     super(sthis, "MetaGateway");
+  }
+  async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
+    const key = ctx.loader.sthis.nextId().str;
+    const unsub = () => {
+      this.subscriptions.delete(key);
+    };
+    this.subscriptions.set(key, callback);
+    return Result.Ok(unsub);
   }
 
   async get<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
@@ -255,23 +353,11 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (rAuthType.isErr()) {
       return Result.Err(rAuthType);
     }
-    const res = await ctx.conn.conn
-      .Ok()
-      .request<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rGwCtx.Ok()), {
-        waitFor: MsgIsEventGetMeta,
-      });
-    if (MsgIsError(res)) {
-      return this.logger.Error().Err(res).Msg("Error in buildBindGetMeta").ResultError();
-    }
-    const rV2Meta = await V2SerializedMetaKeyExtractKey(ctx, res.meta);
-    const rMeta = await decode2DbMetaEvents(ctx.loader.sthis, rV2Meta);
+    const rMeta = await this.currentMeta.get(ctx, rAuthType.Ok(), reqSignedUrl, rGwCtx.Ok());
     if (rMeta.isErr()) {
       return Result.Err(rMeta);
     }
-    return Result.Ok({
-      type: "meta",
-      payload: rMeta.Ok(),
-    } satisfies FPEnvelopeMeta as FPEnvelope<S>);
+    return Result.Ok(rMeta.Ok() as FPEnvelope<S>);
   }
   async put<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI, imeta: FPEnvelope<S>): Promise<Result<void>> {
     const meta = imeta as FPEnvelopeMeta;
@@ -294,7 +380,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (rKeyedMeta.isErr()) {
       return rKeyedMeta;
     }
-    const reqPutMeta = buildReqPutMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rKeyedMeta.Ok(), rGwCtx.Ok());
+    const reqPutMeta = buildReqPutMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.urlParam, rKeyedMeta.Ok(), rGwCtx.Ok());
     const resMsg = await ctx.conn.conn.Ok().request<ResPutMeta, ReqPutMeta>(reqPutMeta, {
       waitFor: MsgIsResPutMeta,
     });
@@ -317,7 +403,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (rAuthType.isErr()) {
       return Result.Err(rAuthType);
     }
-    const reqDelMeta = buildReqDelMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.params, rGwCtx.Ok());
+    const reqDelMeta = buildReqDelMeta(ctx.loader.sthis, rAuthType.Ok(), reqSignedUrl.urlParam, rGwCtx.Ok());
     const resMsg = await ctx.conn.conn.Ok().request<ResDelMeta, ReqDelMeta>(reqDelMeta, {
       waitFor: MsgIsResDelData,
     });
@@ -577,8 +663,18 @@ export class FireproofCloudGateway implements SerdeGateway {
   //   }
   // }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
-    return Result.Err(new Error("Not implemented"));
+  async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
+    const metaGw = getStoreTypeGateway(ctx.loader.sthis, uri) as MetaGateway;
+
+    return metaGw.subscribe(ctx, uri, callback);
+
+    // const conn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
+    // if (conn.conn.isErr()) {
+    //   return Result.Err(conn.conn);
+    // }
+
+    // ctx.loader.logger.Error().Url(url).Msg("subscribe");
+    // return Result.Err(new Error("Not implemented"));
     // const rParams = uri.getParamsResult({
     //   store: 0,
     //   storekey: 0,

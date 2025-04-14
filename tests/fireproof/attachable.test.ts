@@ -195,7 +195,7 @@ describe("activate store", () => {
 
   it("activate by store", async () => {
     expect(attach.activate(secondAttached.stores).active.car.url().toString()).toBe(
-      "memory://second?localName=first&name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate(firstAttached.stores).local().active.car.url().toString()).toBe(
       "memory://first?name=first&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
@@ -207,10 +207,10 @@ describe("activate store", () => {
 
   it("activate by store", async () => {
     expect(attach.activate("memory://second").active.car.url().toString()).toBe(
-      "memory://second?localName=first&name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate("memory://second").remotes()[0].active.car.url().toString()).toEqual(
-      "memory://second?localName=first&name=second&store=car&storekey=%40second-data%40&suffix=.car&version=v0.19-memory",
+      "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
     expect(attach.activate("memory://first?store=meta").active.car.url().toString()).toBe(
       "memory://first?name=first&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",

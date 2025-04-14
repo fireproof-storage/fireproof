@@ -252,7 +252,7 @@ describe("Connection", () => {
         return {
           auth: auth.authType,
           methodParam: mp,
-          params: {
+          urlParam: {
             path: "test/me",
             key: "key-test",
           },
@@ -298,7 +298,7 @@ describe("Connection", () => {
           const streams: ReadableStream<MsgWithError<EventGetMeta>>[] = Array(5)
             .fill(0)
             .map(() => {
-              return conn.bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(sthis, auth.authType, sp.params, gwCtx), {
+              return conn.bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(sthis, auth.authType, sp, gwCtx), {
                 waitFor: MsgIsEventGetMeta,
               });
             });
@@ -324,7 +324,7 @@ describe("Connection", () => {
 
         it("Get", async () => {
           const sp = sup({ method: "GET", store: "meta" });
-          const res = await conn.request(buildBindGetMeta(sthis, auth.authType, sp.params, gwCtx), {
+          const res = await conn.request(buildBindGetMeta(sthis, auth.authType, sp, gwCtx), {
             waitFor: MsgIsEventGetMeta,
           });
           if (MsgIsEventGetMeta(res)) {
@@ -346,7 +346,7 @@ describe("Connection", () => {
               .fill("")
               .map(() => sthis.timeOrderedNextId().str),
           };
-          const res = await conn.request(buildReqPutMeta(sthis, auth.authType, sp.params, metas, gwCtx), {
+          const res = await conn.request(buildReqPutMeta(sthis, auth.authType, sp.urlParam, metas, gwCtx), {
             waitFor: MsgIsResPutMeta,
           });
           if (MsgIsResPutMeta(res)) {
@@ -358,7 +358,7 @@ describe("Connection", () => {
         });
         it("Del", async () => {
           const sp = sup({ method: "DELETE", store: "meta" });
-          const res = await conn.request<ResDelMeta, ReqDelMeta>(buildReqDelMeta(sthis, auth.authType, sp.params, gwCtx), {
+          const res = await conn.request<ResDelMeta, ReqDelMeta>(buildReqDelMeta(sthis, auth.authType, sp.urlParam, gwCtx), {
             waitFor: MsgIsResDelMeta,
           });
           if (MsgIsResDelMeta(res)) {

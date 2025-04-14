@@ -50,7 +50,7 @@ describe("fp-cloud", () => {
         .map(() => {
           const x = db.attach(
             toCloud({
-              fpCloud: { base: BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam("tenant", tenant) },
+              urls: { base: BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam("tenant", tenant) },
               strategy: new SimpleTokenStrategy(auth.authType.params.jwk),
             }),
           );

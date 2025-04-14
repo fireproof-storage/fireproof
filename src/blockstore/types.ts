@@ -640,6 +640,8 @@ export interface ActiveStore {
 
 export interface CarCacheItem {
   readonly type: "car" | "block";
+  readonly status: "ready" | "stale"
+  readonly statusCause?: Error
   readonly cid: AnyLink;
   readonly blocks: AnyBlock[];
   readonly roots: CID[];
