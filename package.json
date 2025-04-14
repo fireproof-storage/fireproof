@@ -71,7 +71,7 @@
     "drizzle-kit": "^0.30.6",
     "esbuild": "^0.25.2",
     "esbuild-plugin-replace": "^1.4.0",
-    "eslint": "^9.18.0",
+    "eslint": "^9.24.0",
     "eslint-import-resolver-typescript": "^4.3.2",
     "eslint-plugin-import": "^2.31.0",
     "hono": "^4.7.5",
