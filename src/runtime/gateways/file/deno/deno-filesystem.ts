@@ -1,4 +1,5 @@
 import type { FPStats, SysFileSystem } from "@fireproof/core";
+import { to_uint8 } from "@adviser/cement";
 
 export class DenoFileSystem implements SysFileSystem {
   fs?: {
@@ -61,6 +62,6 @@ export class DenoFileSystem implements SysFileSystem {
     return this.fs?.remove(path);
   }
   async writefile(path: string, data: Uint8Array | string): Promise<void> {
-    return this.fs?.writeFile(path, Buffer.from(data));
+    return this.fs?.writeFile(path, to_uint8(data));
   }
 }
