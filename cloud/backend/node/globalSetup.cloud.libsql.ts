@@ -17,9 +17,9 @@ export async function setup(project: TestProject) {
 
   const port = portRandom(sthis);
   const env = {
-    FP_STORAGE_URL: keys
-      .applyAuthToURI(`fpcloud://localhost:${port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
-      .toString(),
+    // FP_STORAGE_URL: keys
+    //   .applyAuthToURI(`fpcloud://localhost:${port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
+    //   .toString(),
     [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
     [rt.sts.envKeyDefaults.SECRET]: keys.keys.strings.privateKey,
     STORAGE_URL: "http://localhost:9000/testbucket",

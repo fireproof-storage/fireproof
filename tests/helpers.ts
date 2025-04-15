@@ -97,7 +97,16 @@ class MockLoader implements bs.Loadable {
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
     this.logger = sthis.logger;
-    this.ebOpts = {} as bs.BlockstoreRuntime;
+    this.ebOpts = {
+      // keyBag: sthis.keyBag,
+      // storeRuntime: sthis.storeRuntime,
+      storeUrls: {
+        file: noopUrl("test"),
+        wal: noopUrl("test"),
+        meta: noopUrl("test"),
+        car: noopUrl("test"),
+      },
+    } as bs.BlockstoreRuntime;
     this.carLog = new bs.CarLog();
     this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve(), {
       removeAfter: 3,

@@ -2,7 +2,7 @@ import { BuildURI, Logger, URI } from "@adviser/cement";
 import { rt, sleep } from "@fireproof/core";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core/react";
 
-export class RedirectStrategy implements rt.gw.cloud.UITokenStrategie {
+export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
   open(logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     logger.Debug().Url(redirectCtx.dashboardURI).Msg("open redirect");

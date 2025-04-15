@@ -10,7 +10,7 @@ import { RedirectStrategy } from "./redirect-strategy.js";
 
 export function toCloud(
   opts: Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy"> &
-    Partial<WebToCloudCtx> & { readonly strategy?: rt.gw.cloud.UITokenStrategie },
+    Partial<WebToCloudCtx> & { readonly strategy?: rt.gw.cloud.TokenStrategie },
 ): rt.gw.cloud.ToCloudAttachable {
   return rt.gw.cloud.toCloud({
     ...opts,

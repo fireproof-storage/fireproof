@@ -1,19 +1,29 @@
-import { ensureSuperThis, fireproof } from "@fireproof/core";
+import { fireproof } from "@fireproof/core";
 import { FireproofCloudGateway } from "../../src/runtime/gateways/cloud/gateway.js";
 import { BuildURI, URI } from "@adviser/cement";
 import { SerdeGatewayCtx } from "../../src/blockstore/serde-gateway.js";
 import { MockJWK, mockJWK } from "./node/test-helper.js";
-import { toCloud } from "use-fireproof";
-import { SimpleTokenStrategy } from "../../src/runtime/gateways/cloud/to-cloud.js";
+import { SimpleTokenStrategy, toCloud } from "../../src/runtime/gateways/cloud/to-cloud.js";
+import { testSuperThis } from "../test-super-this.js";
 
 describe("fp-cloud", () => {
-  const sthis = ensureSuperThis();
+  const sthis = testSuperThis();
   let fpgw: FireproofCloudGateway;
   let auth: MockJWK;
+
+  let fpGwUrl: URI;
 
   beforeAll(async () => {
     fpgw = new FireproofCloudGateway(sthis);
     auth = await mockJWK(sthis);
+
+    fpGwUrl = BuildURI.from(sthis.env.get("FP_ENDPOINT"))
+      .protocol("fpcloud")
+      .setParam("tenant", sthis.nextId().str)
+      .setParam("ledger", "test-l")
+      .setParam("protocol", "ws")
+      .URI();
+    // console.log("KEYS", sthis.env.get("FP_KEYBAG_URL"));
   });
 
   // describe.each([
@@ -24,15 +34,15 @@ describe("fp-cloud", () => {
   // const port = +(process.env.FP_WRANGLER_PORT || 0) || 1024 + Math.floor(Math.random() * (65536 - 1024));
 
   it("not ready getCloudConnectionItem", async () => {
-    const ret = await fpgw.start({} as SerdeGatewayCtx, BuildURI.from(sthis.env.get("FP_STORAGE_URL")).hostname("kaputt").URI());
+    const ret = await fpgw.start({} as SerdeGatewayCtx, fpGwUrl.build().hostname("kaputt").URI());
     expect(ret.isErr()).toBeFalsy();
-    const item = await fpgw.getCloudConnectionItem(sthis.logger, URI.from(sthis.env.get("FP_STORAGE_URL")));
+    const item = await fpgw.getCloudConnectionItem(sthis.logger, fpGwUrl);
     expect(item).toBeDefined();
     expect(item.conn.isErr()).toBeTruthy();
   });
 
   it("ready getCloudConnectionItem", async () => {
-    const url = BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam("authJWK", auth.authType.params.jwk).URI();
+    const url = fpGwUrl.build().setParam("authJWK", auth.authType.params.jwk).URI();
     const ret = await fpgw.start({} as SerdeGatewayCtx, url);
     expect(ret.isErr()).toBeFalsy();
     const item = await fpgw.getCloudConnectionItem(sthis.logger, BuildURI.from(url).setParam("store", "test").URI());
@@ -41,7 +51,11 @@ describe("fp-cloud", () => {
   });
 
   it("only connect once", async () => {
-    const db = fireproof(`hello: `);
+    const db = fireproof(`hello:world`, {
+      storeUrls: {
+        base: "memory://connect/once",
+      },
+    });
 
     const tenant = `tenant-${sthis.nextId().str}`;
     const attachs = await Promise.all(
@@ -50,7 +64,7 @@ describe("fp-cloud", () => {
         .map(() => {
           const x = db.attach(
             toCloud({
-              urls: { base: BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam("tenant", tenant) },
+              urls: { base: fpGwUrl.build().setParam("tenant", tenant) },
               strategy: new SimpleTokenStrategy(auth.authType.params.jwk),
             }),
           );

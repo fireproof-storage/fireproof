@@ -512,6 +512,8 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
   for (const [k, v] of Object.entries(o)) {
     env[k] = v;
   }
+  (globalThis as unknown as Record<symbol, Record<string, string>>)[key] = env;
+  // console.log("setPresetEnv", key, env);
   return env;
 }
 

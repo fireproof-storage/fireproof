@@ -131,7 +131,7 @@ export class keysByFingerprint implements KeysByFingerprint {
     }
     throw this.keybag.logger
       .Error()
-      .Any({ fprs: Object.keys(this.keys), fpr: fingerPrint, name: this.name })
+      .Any({ fprs: Object.keys(this.keys), fpr: fingerPrint, name: this.name, id: this.id })
       .Msg("keysByFingerprint: not found")
       .AsError();
   }
@@ -139,6 +139,7 @@ export class keysByFingerprint implements KeysByFingerprint {
   async upsert(materialStrOrUint8: string | Uint8Array, def?: boolean, keyBagAction = true): Promise<Result<KeyUpsertResult>> {
     def = !!def;
     const rKfp = await toKeyWithFingerPrint(this.keybag, materialStrOrUint8);
+    // console.log("upsert", this.id, this.name, rKfp.Ok().fingerPrint)
     if (rKfp.isErr()) {
       return Result.Err(rKfp);
     }

@@ -2,7 +2,7 @@ import { BuildURI, CoerceURI, Logger, ResolveOnce, URI } from "@adviser/cement";
 import { Attachable, bs, ensureLogger, Ledger, FPContext, hashObject } from "@fireproof/core";
 import { decodeJwt } from "jose/jwt/decode";
 
-export interface UITokenStrategie {
+export interface TokenStrategie {
   open(logger: Logger, deviceId: string, opts: ToCloudOpts): void;
   gatherToken(logger: Logger, opts: ToCloudOpts): Promise<string | undefined>;
   waitForToken(logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<string | undefined>;
@@ -28,7 +28,7 @@ interface ToCloudBase {
 
 export interface ToCloudRequiredOpts {
   readonly urls: Partial<FPCloudRef>;
-  readonly strategy: UITokenStrategie;
+  readonly strategy: TokenStrategie;
 }
 
 export type ToCloudOpts = ToCloudRequiredOpts & ToCloudBase;
@@ -114,7 +114,7 @@ class TokenObserver {
 
   readonly _token = new ResolveOnce<TokenAndClaims>();
   async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
-    // console.log("getToken", this.opts.tokenKey);
+    // console.log("getToken", this._token.ready);
     const tc = await this._token.once(async () => {
       const token = await this.opts.strategy.gatherToken(logger, this.opts);
       if (!token) {
@@ -167,6 +167,7 @@ class ToCloud implements ToCloudAttachable {
   currentToken?: string;
 
   constructor(opts: ToCloudOptionalOpts) {
+    // console.log("ToCloud", opts);
     this.opts = defaultOpts(opts);
   }
 
@@ -178,6 +179,7 @@ class ToCloud implements ToCloudAttachable {
 
   async configHash() {
     const hash = await hashObject(this.opts);
+    // console.log("to-cloud-configHash", this.opts, hash);
     // console.log("to-cloud-configHash", hash, this.opts);
     return hash;
   }
@@ -195,6 +197,7 @@ class ToCloud implements ToCloudAttachable {
   }
 
   async prepare(ledger?: Ledger) {
+    // console.log("prepare-1");
     if (!ledger) {
       throw new Error("Ledger is required");
     }
@@ -204,10 +207,11 @@ class ToCloud implements ToCloudAttachable {
     this._tokenObserver = new TokenObserver(this.opts);
     await this._tokenObserver.start();
 
+    // console.log("prepare");
     const gatewayInterceptor = bs.URIInterceptor.withMapper(async (uri) => {
       // wait for the token
-      // console.log("waiting intercepting uri", uri);
       const token = await this._tokenObserver.getToken(logger, ledger);
+      // console.log("getToken", token)
       const buri = BuildURI.from(uri).setParam("authJWK", token.token);
       if (this.opts.tenant) {
         buri.setParam("tenant", this.opts.tenant);
@@ -241,21 +245,25 @@ class ToCloud implements ToCloudAttachable {
 // }
 
 export function toCloud(iopts: ToCloudOptionalOpts): ToCloudAttachable {
+  // console.log("toCloud", iopts);
   return new ToCloud(iopts);
 }
 
-export class SimpleTokenStrategy implements UITokenStrategie {
+export class SimpleTokenStrategy implements TokenStrategie {
   private jwk: string;
   constructor(jwk: string) {
     this.jwk = jwk;
   }
   open(): void {
+    // console.log("SimpleTokenStrategy open");
     return;
   }
   async gatherToken(): Promise<string | undefined> {
+    // console.log("SimpleTokenStrategy gatherToken");
     return this.jwk;
   }
   async waitForToken(): Promise<string | undefined> {
+    // console.log("SimpleTokenStrategy waitForToken");
     return this.jwk;
   }
 }

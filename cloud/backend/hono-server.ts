@@ -366,7 +366,7 @@ export class HonoServer {
               ctx.logger.Error().Err(error).Msg("WebSocket error");
             },
             onMessage: async (event, ws) => {
-              console.log("onMessage:inject:", ctx.id, event.data);
+              // console.log("onMessage:inject:", ctx.id, event.data);
               const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)) as MsgBase);
               if (rMsg.isErr()) {
                 ws.send(

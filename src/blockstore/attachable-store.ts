@@ -44,7 +44,7 @@ class AttachedImpl implements Attached {
     };
   }
   async detach(): Promise<void> {
-    console.log("detach", this.keyed, this.attachCtx.ctx);
+    // console.log("detach", this.keyed, this.attachCtx.ctx);
     const toClose = [this.stores.car.close(), this.stores.file.close(), this.stores.meta.close()];
     if (this.stores.wal) {
       toClose.push(this.stores.wal.close());
@@ -297,12 +297,12 @@ export class AttachedRemotesImpl implements AttachedStores {
   constructor(loadable: Loadable) {
     this.loadable = loadable;
     this.id = loadable.sthis.nextId().str;
-    console.log(
-      "AttachedRemotesImpl",
-      this.id,
-      loadable.ebOpts.storeUrls.car.getParam("index", "noidx"),
-      loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
-    );
+    // console.log(
+    //   "AttachedRemotesImpl",
+    //   this.id,
+    //   loadable.ebOpts.storeUrls.car.getParam("index", "noidx"),
+    //   loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
+    // );
   }
 
   forRemotes(action: (store: ActiveStore) => Promise<unknown>): Promise<void> {
@@ -325,13 +325,13 @@ export class AttachedRemotesImpl implements AttachedStores {
   }
 
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore {
-    console.log(
-      "activate",
-      this.id,
-      this._local?.gatewayUrls.car.url.toString(),
-      this._remotes.values().map((i) => i.value.Ok().gatewayUrls.car.url.toString()),
-      this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
-    );
+    // console.log(
+    //   "activate",
+    //   this.id,
+    //   this._local?.gatewayUrls.car.url.toString(),
+    //   this._remotes.values().map((i) => i.value.Ok().gatewayUrls.car.url.toString()),
+    //   this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
+    // );
     // if (isLoadable(store)) {
     if (isCoerceURI(store)) {
       const activateUrl = URI.from(store);
@@ -371,9 +371,8 @@ export class AttachedRemotesImpl implements AttachedStores {
   readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
   async attach(attachable: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached> {
     const keyed = await attachable.configHash();
-    console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    // console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
     const ret = await this._keyedAttachable.get(keyed).once(async () => {
-      console.log("keyed-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const gwp = await attachable.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
       // this._local?.gatewayUrls.car.url.getParam("name");
       const gws: GatewayUrls = {
@@ -431,9 +430,9 @@ export class AttachedRemotesImpl implements AttachedStores {
       );
       // console.log("keyed-preleaving", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
 
-      console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      // console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const ret = await this._remotes.get(key).once(async () => {
-        console.log("keyed-enter-2", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+        // console.log("keyed-enter-2", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
         const rt = toStoreRuntime(this.loadable.sthis);
         const result = new AttachedImpl(
           keyed,
@@ -457,15 +456,15 @@ export class AttachedRemotesImpl implements AttachedStores {
           }
           this._local = result;
         }
-        console.log("keyed-postRemotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+        // console.log("keyed-postRemotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
         return result;
       });
-      console.log("keyed-preOnAttach", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      // console.log("keyed-preOnAttach", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const rex = await onAttach?.(ret);
-      console.log("keyed-postOnAttach", key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      // console.log("keyed-postOnAttach", key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       return rex;
     });
-    console.log("attach-leave", this.id, keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    // console.log("attach-leave", this.id, keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
     return ret;
   }
 }

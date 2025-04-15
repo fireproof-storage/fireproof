@@ -243,7 +243,7 @@ export class Loader implements Loadable {
     //   activeStore.active.car.url().toString(),
     //   metas.map((m) => m.cars.map((c) => c.toString())).flat(),
     // );
-    console.log("handleDbMetasFromStore", metas);
+    // console.log("handleDbMetasFromStore", metas);
     this.logger.Debug().Any("metas", metas).Url(activeStore.active.car.url()).Msg("handleDbMetasFromStore");
     for (const meta of metas) {
       await this.maxConcurrentWrite(async () => {
@@ -594,7 +594,7 @@ export class Loader implements Loadable {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
       }
       for (const remote of store.remotes() as CarStore[]) {
-        console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
+        // console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
         try {
           const remoteCar = await remote.load(carCid);
           if (remoteCar) {

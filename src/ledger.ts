@@ -46,12 +46,12 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   const sthis = ensureSuperThis(opts);
   const key = keyConfigOpts(sthis, name, opts);
   const item = ledgers.get(key);
-  if (!item.ready) {
-    console.log("LedgerFactory", key);
-  }
+  // if (!item.ready) {
+  // console.log("LedgerFactory", key);
+  // }
   return new LedgerShell(
     item.once((key) => {
-      console.log("once-LedgerFactory", key);
+      // console.log("once-LedgerFactory", key);
       const db = new LedgerImpl(sthis, {
         name,
         meta: opts?.meta,
