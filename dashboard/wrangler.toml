@@ -56,6 +56,6 @@ routes = [{pattern = "connect.fireproof.direct/*", custom_domain = true}]
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "fp-connect-production"
-database_id = "we-need-a-id-here"
+database_id = "cb0638e7-27e4-445a-9070-9fa081f331e6"
 
 
