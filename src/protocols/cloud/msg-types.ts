@@ -24,8 +24,8 @@ export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
 export type MsgWithError<T extends MsgBase> = T | ErrorMsg;
 
 export interface PreSignedMsg extends MsgWithTenantLedger<MsgWithConnAuth> {
-  readonly methodParams: MethodSignedUrlParam;
-  readonly params: SignedUrlParam;
+  readonly methodParam: MethodSignedUrlParam;
+  readonly urlParam: SignedUrlParam;
 }
 
 export interface RequestOpts {
@@ -128,7 +128,7 @@ export interface MsgBase {
 }
 
 export function MsgIsTid(msg: MsgBase, tid: string): boolean {
-  return msg.tid === tid;
+  return !msg.tid || msg.tid === tid;
 }
 
 type MsgWithConn<T extends MsgBase = MsgBase> = T & { readonly conn: QSId };
@@ -547,7 +547,7 @@ export interface MethodSignedUrlParam {
 export interface ReqSignedUrlParam {
   readonly auth: AuthType;
   readonly methodParam: MethodSignedUrlParam;
-  readonly params: SignedUrlParam;
+  readonly urlParam: SignedUrlParam;
 }
 
 export interface UpdateReqRes<Q extends MsgBase, S extends MsgBase> {
@@ -589,14 +589,18 @@ export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTena
   return false;
 }
 
-export interface ReqSignedUrl extends ReqSignedUrlWithoutMethodParams {
-  // readonly type: "reqSignedUrl";
-  readonly methodParams: MethodSignedUrlParam;
+export interface MethodParams {
+  readonly methodParam: MethodSignedUrlParam;
 }
 
-export interface ReqSignedUrlWithoutMethodParams extends MsgWithTenantLedger<MsgWithConnAuth> {
-  readonly params: SignedUrlParam;
+export interface SignedUrlParams {
+  readonly urlParam: SignedUrlParam;
 }
+
+export type MethodSignedUrlParams = MethodParams & SignedUrlParams;
+
+export type ReqSignedUrlWithoutMethodParams = SignedUrlParams & MsgWithTenantLedger<MsgWithConnAuth>;
+export type ReqSignedUrl = MethodSignedUrlParams & MsgWithTenantLedger<MsgWithConnAuth>;
 
 export interface GwCtx {
   readonly tid?: string;
@@ -615,24 +619,24 @@ export function buildReqSignedUrl<T extends ReqSignedUrl>(sthis: NextId, type: s
     tid: sthis.nextId().str,
     type,
     auth: rparam.auth,
-    methodParams: rparam.methodParam,
     version: VERSION,
     ...gwCtx,
-    params: rparam.params,
+    methodParam: rparam.methodParam,
+    urlParam: rparam.urlParam,
   } satisfies ReqSignedUrl as T;
 }
 
 export interface ResSignedUrl extends MsgWithTenantLedger<MsgWithConn> {
   // readonly type: "resSignedUrl";
-  readonly methodParams: MethodSignedUrlParam;
-  readonly params: SignedUrlParam;
+  readonly methodParam: MethodSignedUrlParam;
+  readonly urlParam: SignedUrlParam;
   readonly signedUrl: string;
 }
 
 export interface ResOptionalSignedUrl extends MsgWithTenantLedger<MsgWithConn> {
   // readonly type: "resSignedUrl";
-  readonly params: SignedUrlParam;
-  readonly methodParams: MethodSignedUrlParam;
+  readonly urlParam: SignedUrlParam;
+  readonly methodParam: MethodSignedUrlParam;
   readonly signedUrl?: string;
 }
 
@@ -661,7 +665,7 @@ export function resAuth(msg: MsgBase): Promise<AuthType> {
 }
 
 export async function buildRes<Q extends MsgWithTenantLedger<MsgWithConn<ReqSignedUrlWithoutMethodParams>>, S extends ResSignedUrl>(
-  methodParams: MethodSignedUrlParam,
+  methodParam: MethodSignedUrlParam,
   type: string,
   msgCtx: MsgTypesCtx,
   req: Q,
@@ -671,9 +675,9 @@ export async function buildRes<Q extends MsgWithTenantLedger<MsgWithConn<ReqSign
     type: "reqSignedUrl",
     auth: await resAuth(req),
     version: req.version,
-    methodParams,
-    params: {
-      ...req.params,
+    methodParam,
+    urlParam: {
+      ...req.urlParam,
     },
     conn: req.conn,
     tenant: req.tenant,
@@ -685,8 +689,8 @@ export async function buildRes<Q extends MsgWithTenantLedger<MsgWithConn<ReqSign
   }
   return {
     ...req,
-    params: psm.params,
-    methodParams,
+    urlParam: psm.urlParam,
+    methodParam,
     type,
     signedUrl: rSignedUrl.Ok().toString(),
   } as unknown as MsgWithError<S>;

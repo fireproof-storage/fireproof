@@ -197,10 +197,10 @@ describe("basic Loader with two commits", function () {
     await loader.commit(t, { head: [block4.cid] }, { compact: false });
     expect(loader.carLog.length).toBe(2);
 
-    const e = await loader.loadCar(carCid[0], loader.attachedStores.local()).catch((e) => e);
+    const e = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(e).toBeTruthy();
-    expect(e instanceof Error).toBeTruthy();
-    expect(e.message).toMatch(/(missing car file)|(not found)/);
+    expect(e.status).toBe("stale");
+    expect(e.statusCause?.message).toMatch(/(missing car file)|(not found)/);
   }, 10000);
 });
 

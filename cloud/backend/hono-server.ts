@@ -181,7 +181,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
       connection: msg,
       meta: msg.meta ?? { metas: [], keys: [] },
     });
-    return buildResDelMeta(msg, rUrl.params, rUrl.signedUrl);
+    return buildResDelMeta(msg, rUrl.urlParam, rUrl.signedUrl);
   }
 
   async handleBindGetMeta(
@@ -237,8 +237,16 @@ export const CORS = HttpHeader.from({
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
+  "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
   "Access-Control-Max-Age": "86400", // Cache pre-flight response for 24 hours
 });
+
+// export function toHeadersInit(val: HttpHeader): HeadersInit {
+//   return val.Items().reduce((headers, [k, v]) => {
+//     headers[k] = v.join(", ");
+//     return headers;
+//   }, {} as Record<string, string>);
+// }
 
 class NoBackChannel implements MsgDispatcherCtx {
   readonly ctx: ExposeCtxItemWithImpl<WSRoom>;
@@ -278,6 +286,13 @@ class NoBackChannel implements MsgDispatcherCtx {
   }
 }
 
+// function addCorsHeaders(c: Context): Context {
+//   for (const [k, v] of Object.entries(CORS)) {
+//     c.header(k, v);
+//   }
+//   return c;
+// }
+
 export class HonoServer {
   // readonly sthis: SuperThis;
   // readonly msgP: MsgerParams;
@@ -310,6 +325,12 @@ export class HonoServer {
   }
   // readonly _register = new ResolveOnce<HonoServer>();
   register(app: Hono): HonoServer {
+    app.options("*", () => {
+      return new Response(null, {
+        status: 200,
+        headers: CORS.AsHeaderInit(),
+      });
+    });
     // return this._register.once(async () => {
     // console.log("register-1");
     //   await this.factory.start(app);
@@ -321,8 +342,7 @@ export class HonoServer {
         Object.entries(c.req.header()).forEach(([k, v]) => c.res.headers.set(k, v[0]));
         const rMsg = await exception2Result(() => c.req.json() as Promise<MsgBase>);
         if (rMsg.isErr()) {
-          c.status(400);
-          return c.json(buildErrorMsg(ctx, { tid: "internal" }, rMsg.Err()));
+          return c.json(buildErrorMsg(ctx, { tid: "internal" }, rMsg.Err()), 400, CORS.AsRecordStringString());
         }
         const dispatcher = buildMsgDispatcher(ctx.sthis);
         return dispatcher.dispatch(new NoBackChannel(ctx), rMsg.Ok());
@@ -346,6 +366,7 @@ export class HonoServer {
               ctx.logger.Error().Err(error).Msg("WebSocket error");
             },
             onMessage: async (event, ws) => {
+              // console.log("onMessage:inject:", ctx.id, event.data);
               const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)) as MsgBase);
               if (rMsg.isErr()) {
                 ws.send(

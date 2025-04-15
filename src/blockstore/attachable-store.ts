@@ -1,5 +1,5 @@
 import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI } from "@adviser/cement";
-import { Attached, Attachable, GatewayUrls, UnReg, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore } from "../types.js";
+import { Attached, Attachable, GatewayUrls, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore, AttachContext } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import {
   AttachedStores,
@@ -23,24 +23,37 @@ import {
   FileAttachedStores,
   FileStore,
 } from "./types.js";
-import { ensureURIDefaults, toSortedArray } from "../utils.js";
+import { ensureURIDefaults, hashObject, toSortedArray } from "../utils.js";
+import { FPContext } from "../fp-context.js";
 
 class AttachedImpl implements Attached {
+  readonly keyed: string;
   readonly gatewayUrls: GatewayUrls;
   readonly stores: DataAndMetaAndWalAndBaseStore;
-  private readonly unreg: UnReg;
-  constructor(gws: GatewayUrls, stores: DataAndMetaAndWalStore, unreg: UnReg) {
+  private readonly attachCtx: AttachContext;
+  constructor(keyed: string, gws: GatewayUrls, stores: DataAndMetaAndWalStore, actx: Partial<AttachContext>) {
+    this.keyed = keyed;
     this.gatewayUrls = gws;
     this.stores = new DataAndMetaAndWalAndBaseStore(stores);
-    this.unreg = unreg;
+    this.attachCtx = {
+      detach: async () => {
+        /* noop */
+      },
+      ctx: new FPContext(),
+      ...actx,
+    };
   }
   async detach(): Promise<void> {
+    // console.log("detach", this.keyed, this.attachCtx.ctx);
     const toClose = [this.stores.car.close(), this.stores.file.close(), this.stores.meta.close()];
     if (this.stores.wal) {
       toClose.push(this.stores.wal.close());
     }
     await Promise.all(toClose);
-    this.unreg();
+    this.attachCtx.detach();
+  }
+  ctx(): FPContext {
+    return this.attachCtx.ctx;
   }
   status(): ReturnType<Attached["status"]> {
     return "attached";
@@ -50,38 +63,38 @@ class AttachedImpl implements Attached {
 class FileActiveStoreImpl extends FileActiveStore {
   readonly ref: ActiveStore;
   readonly active: FileStore;
-  protected readonly xattached: FileAttachedStores;
+  protected readonly attached: FileAttachedStores;
 
   constructor(ref: ActiveStore, active: FileStore, attached: FileAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
   local(): FileStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): FileStore[] {
-    return this.xattached.remotes();
+    return this.attached.remotes();
   }
 }
 
 class CarActiveStoreImpl extends CarActiveStore {
   readonly ref: ActiveStore;
   readonly active: CarStore;
-  protected readonly xattached: CarAttachedStores;
+  protected readonly attached: CarAttachedStores;
 
   constructor(ref: ActiveStore, active: CarStore, attached: CarAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
   local(): CarStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): CarStore[] {
-    return [this.active, ...this.xattached.remotes().filter((i) => i !== this.active)];
+    return [this.active, ...this.attached.remotes().filter((i) => i !== this.active)];
   }
 }
 
@@ -114,19 +127,19 @@ class FileAttachedStoresImpl implements FileAttachedStores {
 class MetaActiveStoreImpl extends MetaActiveStore {
   readonly ref: ActiveStore;
   readonly active: MetaStore;
-  protected readonly xattached: MetaAttachedStores;
+  protected readonly attached: MetaAttachedStores;
 
   constructor(ref: ActiveStore, active: MetaStore, attached: MetaAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
   local(): MetaStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): MetaStore[] {
-    return [this.active, ...this.xattached.remotes().filter((i) => i !== this.active)];
+    return [this.active, ...this.attached.remotes().filter((i) => i !== this.active)];
   }
 }
 
@@ -146,20 +159,20 @@ class MetaAttachedStoresImpl implements MetaAttachedStores {
 class WALActiveStoreImpl extends WALActiveStore {
   readonly ref: ActiveStore;
   readonly active: WALStore;
-  protected readonly xattached: WALAttachedStores;
+  protected readonly attached: WALAttachedStores;
 
   constructor(ref: ActiveStore, active: WALStore, attached: WALAttachedStores) {
     super();
     this.ref = ref;
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
 
   local(): WALStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): WALStore[] {
-    return this.xattached.remotes();
+    return this.attached.remotes();
   }
 }
 
@@ -184,18 +197,18 @@ class WALAttachedStoresImpl implements WALAttachedStores {
 
 class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
   readonly active: T;
-  readonly xattached: AttachedRemotesImpl;
+  readonly attached: AttachedRemotesImpl;
 
   constructor(active: T, attached: AttachedRemotesImpl) {
     this.active = active;
-    this.xattached = attached;
+    this.attached = attached;
   }
 
   local(): LocalActiveStore {
-    return this.xattached.local();
+    return this.attached.local();
   }
   remotes(): ActiveStore[] {
-    return this.xattached.remotes();
+    return this.attached.remotes();
     // return  [
     //   this.attached.remotes().filter(i => i !== this.active)
     // ]
@@ -209,19 +222,19 @@ class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
     return bs;
   }
   carStore(): CarActiveStore {
-    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.xattached));
+    return new CarActiveStoreImpl(this, this.active.car, new CarAttachedStoresImpl(this.attached));
   }
   fileStore(): FileActiveStore {
-    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.xattached));
+    return new FileActiveStoreImpl(this, this.active.file, new FileAttachedStoresImpl(this.attached));
   }
   metaStore(): MetaActiveStore {
-    return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.xattached));
+    return new MetaActiveStoreImpl(this, this.active.meta, new MetaAttachedStoresImpl(this.attached));
   }
   walStore(): WALActiveStore {
     if (!this.active.wal) {
-      throw this.xattached.loadable.sthis.logger.Error().Msg("wal store not set").AsError();
+      throw this.attached.loadable.sthis.logger.Error().Msg("wal store not set").AsError();
     }
-    return new WALActiveStoreImpl(this, this.active.wal, new WALAttachedStoresImpl(this.xattached));
+    return new WALActiveStoreImpl(this, this.active.wal, new WALAttachedStoresImpl(this.attached));
   }
 }
 
@@ -255,10 +268,18 @@ export async function createAttachedStores(
   } else {
     gup = urlOrGup;
   }
-  return await ar.attach({
-    name,
-    prepare: async () => gup,
-  });
+
+  // console.log("createAttachedStores", JSON.stringify(gup), name);
+  const cfgId = await hashObject(gup);
+
+  return await ar.attach(
+    {
+      name,
+      configHash: async () => cfgId,
+      prepare: async () => gup,
+    },
+    (at) => Promise.resolve(at),
+  );
 }
 
 export class AttachedRemotesImpl implements AttachedStores {
@@ -271,8 +292,17 @@ export class AttachedRemotesImpl implements AttachedStores {
 
   _local?: Attached;
 
+  readonly id: string;
+
   constructor(loadable: Loadable) {
     this.loadable = loadable;
+    this.id = loadable.sthis.nextId().str;
+    // console.log(
+    //   "AttachedRemotesImpl",
+    //   this.id,
+    //   loadable.ebOpts.storeUrls.car.getParam("index", "noidx"),
+    //   loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
+    // );
   }
 
   forRemotes(action: (store: ActiveStore) => Promise<unknown>): Promise<void> {
@@ -295,6 +325,14 @@ export class AttachedRemotesImpl implements AttachedStores {
   }
 
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore {
+    // console.log(
+    //   "activate",
+    //   this.id,
+    //   this._local?.gatewayUrls.car.url.toString(),
+    //   this._remotes.values().map((i) => i.value.Ok().gatewayUrls.car.url.toString()),
+    //   this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
+    // );
+    // if (isLoadable(store)) {
     if (isCoerceURI(store)) {
       const activateUrl = URI.from(store);
       let maxScore = 0;
@@ -329,56 +367,104 @@ export class AttachedRemotesImpl implements AttachedStores {
     );
   }
 
-  async attach(attached: Attachable): Promise<Attached> {
-    const gwp = await attached.prepare();
-    const gws: GatewayUrls = {
-      car: {
-        ...gwp.car,
-        url: ensureURIDefaults(this.loadable.sthis, attached.name, gwp.car.url, URI.from(gwp.car.url), "car"),
-      },
-      file: {
-        ...gwp.file,
-        url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.file.url), "file", { file: true }),
-      },
-      meta: {
-        ...gwp.meta,
-        url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.meta.url), "meta"),
-      },
-      wal: gwp.wal
-        ? {
-            ...gwp.wal,
-            url: ensureURIDefaults(this.loadable.sthis, attached.name, undefined, URI.from(gwp.wal.url), "wal"),
-          }
-        : undefined,
-    };
-    const key = JSON.stringify(
-      toSortedArray({
-        carUrl: gws.car.url.toString(),
-        filesUrl: gws.file.url.toString(),
-        metaUrl: gws.meta.url.toString(),
-        walUrl: gws.wal?.url.toString(),
-      }),
-    );
-
-    return this._remotes.get(key).once(async () => {
-      const rt = toStoreRuntime(this.loadable.sthis);
-      const result = new AttachedImpl(
-        gws,
-        await rt.makeStores({
-          byStore: gws,
-          loader: this.loadable,
-        }),
-        () => {
-          this._remotes.unget(key);
+  // needed for React Statemanagement
+  readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
+  async attach(attachable: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached> {
+    const keyed = await attachable.configHash();
+    // console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    const ret = await this._keyedAttachable.get(keyed).once(async () => {
+      const gwp = await attachable.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
+      // this._local?.gatewayUrls.car.url.getParam("name");
+      const gws: GatewayUrls = {
+        car: {
+          ...gwp.car,
+          url: ensureURIDefaults(
+            this.loadable.sthis,
+            { name: attachable.name, localURI: this._local?.gatewayUrls.car.url },
+            undefined,
+            URI.from(gwp.car.url),
+            "car",
+          ),
         },
+        file: {
+          ...gwp.file,
+          url: ensureURIDefaults(
+            this.loadable.sthis,
+            { name: attachable.name, localURI: this._local?.gatewayUrls.file.url },
+            undefined,
+            URI.from(gwp.file.url),
+            "file",
+            { file: true },
+          ),
+        },
+        meta: {
+          ...gwp.meta,
+          url: ensureURIDefaults(
+            this.loadable.sthis,
+            { name: attachable.name, localURI: this._local?.gatewayUrls.meta.url },
+            undefined,
+            URI.from(gwp.meta.url),
+            "meta",
+          ),
+        },
+        wal: gwp.wal
+          ? {
+              ...gwp.wal,
+              url: ensureURIDefaults(
+                this.loadable.sthis,
+                { name: attachable.name, localURI: this._local?.gatewayUrls.wal?.url },
+                undefined,
+                URI.from(gwp.wal.url),
+                "wal",
+              ),
+            }
+          : undefined,
+      };
+      const key = JSON.stringify(
+        toSortedArray({
+          carUrl: gws.car.url.toString(),
+          filesUrl: gws.file.url.toString(),
+          metaUrl: gws.meta.url.toString(),
+          walUrl: gws.wal?.url.toString(),
+        }),
       );
-      if (result.stores.wal) {
-        if (this._local) {
-          throw this.loadable.sthis.logger.Error().Msg("local store could only set once").AsError();
+      // console.log("keyed-preleaving", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+
+      // console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      const ret = await this._remotes.get(key).once(async () => {
+        // console.log("keyed-enter-2", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+        const rt = toStoreRuntime(this.loadable.sthis);
+        const result = new AttachedImpl(
+          keyed,
+          gws,
+          await rt.makeStores({
+            byStore: gws,
+            loader: this.loadable,
+          }),
+          {
+            detach: async () => this._remotes.unget(key),
+            ctx: gwp.ctx,
+          },
+        );
+        if (result.stores.wal) {
+          if (this._local) {
+            throw this.loadable.sthis.logger
+              .Error()
+              .Any({ urls: result.gatewayUrls })
+              .Msg("local store could only set once")
+              .AsError();
+          }
+          this._local = result;
         }
-        this._local = result;
-      }
-      return result;
+        // console.log("keyed-postRemotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+        return result;
+      });
+      // console.log("keyed-preOnAttach", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      const rex = await onAttach?.(ret);
+      // console.log("keyed-postOnAttach", key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+      return rex;
     });
+    // console.log("attach-leave", this.id, keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    return ret;
   }
 }

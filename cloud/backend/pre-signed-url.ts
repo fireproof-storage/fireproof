@@ -8,8 +8,8 @@ type MsgWithTenantLedger<T extends ps.cloud.MsgWithConnAuth> = ps.cloud.MsgWithT
 type MsgWithConnAuth = ps.cloud.MsgWithConnAuth;
 
 export interface PreSignedMsg extends MsgWithTenantLedger<MsgWithConnAuth> {
-  readonly methodParams: MethodSignedUrlParam;
-  readonly params: SignedUrlParam;
+  readonly methodParam: MethodSignedUrlParam;
+  readonly urlParam: SignedUrlParam;
 }
 
 // export interface PreSignedConnMsg {
@@ -37,11 +37,11 @@ export async function calculatePreSignedUrl(psm: PreSignedMsg, env: PreSignedEnv
   // const psm = ipsm as PreSignedConnMsg;
 
   // verify if you are not overriding
-  let store: string = psm.methodParams.store;
-  if (psm.params.index?.length) {
-    store = `${store}-${psm.params.index}`;
+  let store: string = psm.methodParam.store;
+  if (psm.urlParam.index?.length) {
+    store = `${store}-${psm.urlParam.index}`;
   }
-  const expiresInSeconds = psm.params.expires || 60 * 60;
+  const expiresInSeconds = psm.urlParam.expires || 60 * 60;
 
   const suffix = "";
   // switch (psm.params.store) {
@@ -61,7 +61,7 @@ export async function calculatePreSignedUrl(psm: PreSignedMsg, env: PreSignedEnv
     .appendRelative(psm.tenant.tenant)
     .appendRelative(psm.tenant.ledger)
     .appendRelative(store)
-    .appendRelative(`${psm.params.key}${suffix}`)
+    .appendRelative(`${psm.urlParam.key}${suffix}`)
     .URI();
   const a4f = new AwsClient({
     ...env.aws,
@@ -71,7 +71,7 @@ export async function calculatePreSignedUrl(psm: PreSignedMsg, env: PreSignedEnv
   const signedUrl = await a4f
     .sign(
       new Request(opUrl.toString(), {
-        method: psm.methodParams.method,
+        method: psm.methodParam.method,
       }),
       {
         aws: {

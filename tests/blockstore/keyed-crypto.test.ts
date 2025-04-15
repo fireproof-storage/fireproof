@@ -1,5 +1,5 @@
 import { bs, ensureSuperThis, PARAM, rt, StoreType, storeType2DataMetaWal } from "@fireproof/core";
-import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
+import { BuildURI, LogCollector, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 // import { sha256 as hasher } from "multiformats/hashes/sha2";
 // import * as dagCodec from "@ipld/dag-cbor";
@@ -64,7 +64,7 @@ describe("KeyBag", () => {
     });
     sthis.env.set("FP_KEYBAG_URL", old);
     await sthis.logger.Flush();
-    expect(sthis.ctx.logCollector.Logs()).toEqual([
+    expect(sthis.ctx.get<LogCollector>("logCollector")?.Logs()).toEqual([
       {
         level: "warn",
         module: "KeyBag",
