@@ -174,7 +174,7 @@ importers:
         specifier: ^3.1.1
         version: 3.2.2(@types/node@22.15.30)(@vitest/browser@3.2.2)(@vitest/ui@3.2.2)(happy-dom@14.12.3)(jiti@1.21.7)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(terser@5.41.0)(tsx@4.19.3)(yaml@2.8.0)
       wrangler:
-        specifier: ^4.8.0
+        specifier: ^4.10.0
         version: 4.19.1(@cloudflare/workers-types@4.20250606.0)
       zx:
         specifier: ^8.5.2
