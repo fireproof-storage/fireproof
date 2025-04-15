@@ -271,41 +271,43 @@ class CurrentMeta {
     // register bind updates
     const item = this.boundGetMeta.get(key);
     // console.log("cloud-get-2")
-    item.once(async () => {
-      const res = await ctx.conn.conn
-        .Ok()
-        .bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, authType, reqSignedUrl, gwCtx), {
-          waitFor: MsgIsEventGetMeta,
-        });
-      for await (const msg of res) {
-        if (MsgIsEventGetMeta(msg)) {
-          const rV2Meta = await V2SerializedMetaKeyExtractKey(ctx, msg.meta);
-          const r = await decode2DbMetaEvents(ctx.loader.sthis, rV2Meta);
-          let value: Result<FPEnvelopeMeta>;
-          if (r.isErr()) {
-            value = Result.Err(r);
-          } else {
-            value = Result.Ok({
-              type: "meta",
-              payload: r.Ok(),
-            } satisfies FPEnvelopeMeta);
-          }
-          // console.log("cloud-set-value", value);
-          this.value = value;
-          this.valueReady.resolve()
-          this.valueReady = new Future();
-          this.currentMeta.get(key).reset();
-          if (value.isOk()) {
-            for (const cb of this.subscriptions.values()) {
-              await cb(value.Ok());
+    item
+      .once(async () => {
+        const res = await ctx.conn.conn
+          .Ok()
+          .bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, authType, reqSignedUrl, gwCtx), {
+            waitFor: MsgIsEventGetMeta,
+          });
+        for await (const msg of res) {
+          if (MsgIsEventGetMeta(msg)) {
+            const rV2Meta = await V2SerializedMetaKeyExtractKey(ctx, msg.meta);
+            const r = await decode2DbMetaEvents(ctx.loader.sthis, rV2Meta);
+            let value: Result<FPEnvelopeMeta>;
+            if (r.isErr()) {
+              value = Result.Err(r);
+            } else {
+              value = Result.Ok({
+                type: "meta",
+                payload: r.Ok(),
+              } satisfies FPEnvelopeMeta);
+            }
+            // console.log("cloud-set-value", value);
+            this.value = value;
+            this.valueReady.resolve();
+            this.valueReady = new Future();
+            this.currentMeta.get(key).reset();
+            if (value.isOk()) {
+              for (const cb of this.subscriptions.values()) {
+                await cb(value.Ok());
+              }
             }
           }
         }
-      }
-      ctx.loader.logger.Error().Msg("Error bind should not end");
-    }).catch((err) => {
-      ctx.loader.logger.Error().Err(err).Msg("Error in bindGetMeta");
-    });
+        ctx.loader.logger.Error().Msg("Error bind should not end");
+      })
+      .catch((err) => {
+        ctx.loader.logger.Error().Err(err).Msg("Error in bindGetMeta");
+      });
     // console.log("cloud-get-3")
     return this.currentMeta.get(key).once(async () => {
       if (!this.value) {
@@ -662,7 +664,6 @@ export class FireproofCloudGateway implements SerdeGateway {
   //     }
   //   }
   // }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     const metaGw = getStoreTypeGateway(ctx.loader.sthis, uri) as MetaGateway;
 

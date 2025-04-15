@@ -102,23 +102,25 @@ export class Loader implements Loadable {
     return await this.attachedStores.attach(attachable, async (at) => {
       if (!at.stores.wal) {
         try {
-          const stores = this.attachedStores.activate(at.stores)
-          await Promise.all(this.cidCache.values().map(async ({value:rvalue}) => {
-            if (rvalue.isErr()) {
-              this.logger.Error().Err(rvalue).Msg("error loading car");
-              return;
-            }
-            const value = rvalue.Ok();
-            if (value.status !== "stale") {
-              return
-            }
-            if (value.type === "car") {
-              this.cidCache.unget(value.cid.toString());
-              await this.loadCar(value.cid, stores)
-            } else {
-              this.logger.Warn().Any({cid: value.cid.toString(), type: value.type}).Msg("should not type");
-            }
-          }))
+          const stores = this.attachedStores.activate(at.stores);
+          await Promise.all(
+            this.cidCache.values().map(async ({ value: rvalue }) => {
+              if (rvalue.isErr()) {
+                this.logger.Error().Err(rvalue).Msg("error loading car");
+                return;
+              }
+              const value = rvalue.Ok();
+              if (value.status !== "stale") {
+                return;
+              }
+              if (value.type === "car") {
+                this.cidCache.unget(value.cid.toString());
+                await this.loadCar(value.cid, stores);
+              } else {
+                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.type }).Msg("should not type");
+              }
+            }),
+          );
           // remote Store need to kick off the sync by requesting the latest meta
           const dbMeta = await at.stores.meta.load();
           if (Array.isArray(dbMeta)) {
@@ -305,7 +307,7 @@ export class Loader implements Loadable {
     //Call loadCar for every cid
     const reader = await this.loadCar(dbm.cars[0], astore);
     if (reader.status !== "ready") {
-      this.logger.Warn().Str("cid", dbm.cars[0].toString()).Msg("stale loadCarHeaderFromMeta")
+      this.logger.Warn().Str("cid", dbm.cars[0].toString()).Msg("stale loadCarHeaderFromMeta");
     }
     return await parseCarFile(reader, this.logger);
   }
@@ -564,8 +566,8 @@ export class Loader implements Loadable {
       };
     });
     if (!(ci.type === "block" && ci.blocks.length === 1)) {
-      this.logger.Error().Str("cid", cidStr).Any("block", ci).Msg("missing block")
-      return undefined
+      this.logger.Error().Str("cid", cidStr).Any("block", ci).Msg("missing block");
+      return undefined;
     }
     return ci.blocks[0];
   }

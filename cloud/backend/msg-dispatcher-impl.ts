@@ -170,10 +170,16 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
               ...ctx,
               ws: conn.ws,
             },
-            buildEventGetMeta(ctx, req, res, {
-              conn: conn.conn,
-              tenant: req.tenant,
-            }, ret.signedUrl),
+            buildEventGetMeta(
+              ctx,
+              req,
+              res,
+              {
+                conn: conn.conn,
+                tenant: req.tenant,
+              },
+              ret.signedUrl,
+            ),
           );
         }
         return ret;

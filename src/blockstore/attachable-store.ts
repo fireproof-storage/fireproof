@@ -297,7 +297,12 @@ export class AttachedRemotesImpl implements AttachedStores {
   constructor(loadable: Loadable) {
     this.loadable = loadable;
     this.id = loadable.sthis.nextId().str;
-    console.log("AttachedRemotesImpl", this.id, loadable.ebOpts.storeUrls.car.getParam("index", "noidx"), loadable.blockstoreParent?.crdtParent?.ledgerParent?.name, );
+    console.log(
+      "AttachedRemotesImpl",
+      this.id,
+      loadable.ebOpts.storeUrls.car.getParam("index", "noidx"),
+      loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
+    );
   }
 
   forRemotes(action: (store: ActiveStore) => Promise<unknown>): Promise<void> {
@@ -320,9 +325,13 @@ export class AttachedRemotesImpl implements AttachedStores {
   }
 
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore {
-    console.log("activate", this.id, this._local?.gatewayUrls.car.url.toString(), 
-      this._remotes.values().map((i) => i.value.Ok().gatewayUrls.car.url.toString()), 
-      this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
+    console.log(
+      "activate",
+      this.id,
+      this._local?.gatewayUrls.car.url.toString(),
+      this._remotes.values().map((i) => i.value.Ok().gatewayUrls.car.url.toString()),
+      this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name,
+    );
     // if (isLoadable(store)) {
     if (isCoerceURI(store)) {
       const activateUrl = URI.from(store);
@@ -422,7 +431,7 @@ export class AttachedRemotesImpl implements AttachedStores {
       );
       // console.log("keyed-preleaving", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
 
-      console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name); 
+      console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const ret = await this._remotes.get(key).once(async () => {
         console.log("keyed-enter-2", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
         const rt = toStoreRuntime(this.loadable.sthis);
