@@ -512,12 +512,16 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
 }
 
 export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
+  return (await hashObjectCID(o)).cid.toString();
+}
+
+export async function hashObjectCID<T extends NonNullable<S>, S>(o: T): Promise<{ cid: CID, bytes: Uint8Array, obj: T }> {
   // toSortedArray should be shallow
   const bytes = json.encode(toSortedArray(o));
   const hash = await sha256.digest(bytes);
-  const cid = CID.create(1, json.code, hash);
-  return cid.toString();
+  return { cid: CID.create(1, json.code, hash), bytes, obj: o }; 
 }
+
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
