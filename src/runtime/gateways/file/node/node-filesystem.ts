@@ -2,7 +2,6 @@ import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } fro
 import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { toArrayBuffer } from "./to-array-buffer.js";
 import type { SysFileSystem } from "@fireproof/core";
-import { runtimeFn } from "@adviser/cement";
 
 export class NodeFileSystem implements SysFileSystem {
   fs?: {
@@ -43,10 +42,7 @@ export class NodeFileSystem implements SysFileSystem {
     return this.fs?.unlink(path);
   }
   async writefile(path: PathLike, data: Uint8Array | string): Promise<void> {
-    if (runtimeFn().isDeno) {
-      return this.fs?.writeFile(path, data);
-    }
-    return this.fs?.writeFile(path, Buffer.from(data));
+    return this.fs?.writeFile(path, data);
   }
 }
 
