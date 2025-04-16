@@ -431,7 +431,7 @@ export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRD
   readonly clock: CRDTClock;
 
   readonly blockstore: BaseBlockstore;
-  readonly indexBlockstore: BaseBlockstore;
+  readonly indexBlockstore?: BaseBlockstore;
   readonly indexers: Map<string, Index<IndexKeyType, DocTypes>>;
 
   bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta>;
@@ -597,13 +597,9 @@ export interface LedgerOpts {
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
 
   readonly writeQueue: WriteQueueParams;
-  // readonly factoryUnreg?: () => void;
-  // readonly persistIndexes?: boolean;
-  // readonly autoCompact?: number;
   readonly storeUrls: StoreURIRuntime;
   readonly storeEnDe: StoreEnDeFile;
   readonly keyBag: KeyBagRuntime;
-  // readonly threshold?: number;
 }
 
 export interface Ledger extends HasCRDT {

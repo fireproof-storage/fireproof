@@ -201,7 +201,7 @@ export class Loader implements Loadable {
     this.logger = ensureLogger(sthis, "Loader");
     this.cidCache = new KeyedResolvOnce({
       lru: {
-        maxEntries: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_CACHE_SIZE, "1000"), 10),
+        maxEntries: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_CACHE_SIZE, "1000000"), 10),
       },
     });
     this.seenMeta = new LRUSet({
@@ -588,6 +588,7 @@ export class Loader implements Loadable {
       //loadedCar now is an array of AnyBlocks
       this.logger.Debug().Any("cid", carCidStr).Msg("loading car");
       loadedCar = await store.local().load(carCid);
+      // console.log("loadedCar", carCid);
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
       if (!isNotFoundError(e)) {
@@ -634,6 +635,7 @@ export class Loader implements Loadable {
     for await (const block of rawReader.blocks()) {
       const sBlock = block.cid.toString();
       blocks.push(block);
+      // console.log("loadBlock", block.cid);
       this.cidCache.get(sBlock).once<CarCacheItem>(() => ({
         type: "block",
         status: "ready",
@@ -663,7 +665,6 @@ export class Loader implements Loadable {
   //What if instead it returns an Array of CarHeader
   protected async storesLoadCar(carCid: AnyLink, store: CIDActiveStore): Promise<CarCacheItem> {
     const carCidStr = carCid.toString();
-    // console.log("storesLoadCar", carCidStr);
     return this.cidCache.get(carCidStr).once(async () => {
       return this.maxConcurrentCarReader(() => this.makeDecoderAndCarReader(carCid, store));
     });

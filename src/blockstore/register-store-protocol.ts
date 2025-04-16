@@ -82,6 +82,7 @@ export function registerStoreProtocol(item: SerdeOrGatewayFactoryItem): () => vo
       (items as { isDefault: boolean }).isDefault = false;
     });
   }
+  // console.log("registerStoreProtocol", protocol, item.isDefault);
   storeFactory.set(protocol, {
     ...item,
     serdegateway,
