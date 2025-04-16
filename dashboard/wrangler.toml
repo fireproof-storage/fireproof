@@ -40,7 +40,7 @@ database_id = "04b54bac-85e4-4a4d-9527-bce490761b12"
 
 [env.staging]
 vars = { ENVIRONMENT = "staging" }
-routes = [{pattern = "staging.connect.fireproof.direct/*", custom_domain = true}]
+routes = [{pattern = "staging.connect.fireproof.direct", custom_domain = true}]
 
 
 [[env.staging.d1_databases]]
@@ -50,7 +50,7 @@ database_id = "88b9e2e8-8ad6-4820-9ff8-e11c8208a5e5"
 
 [env.production]
 vars = { ENVIRONMENT = "production" }
-routes = [{pattern = "connect.fireproof.direct/*", custom_domain = true}]
+routes = [{pattern = "connect.fireproof.direct", custom_domain = true}]
 
 
 [[env.production.d1_databases]]
