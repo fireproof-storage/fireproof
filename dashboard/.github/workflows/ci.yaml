@@ -73,13 +73,13 @@ jobs:
         run: |
           # pnpm run build
           pnpm run drizzle:d1-remote
-          pnpm exec fp-cli writeEnv --env dev  --out /dev/stdout --json \
+          pnpm exec fp-cli writeEnv --env ${{vars.CLOUDFLARE_ENV}}  --out /dev/stdout --json \
             --fromEnv CLERK_PUBLISHABLE_KEY \
             --fromEnv CLERK_PUB_JWT_KEY \
             --fromEnv CLOUD_SESSION_TOKEN_SECRET \
             --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
-            pnpm exec wrangler -c ./wrangler.toml secret --env dev bulk
-          pnpm run deploy:cf --env dev
+            pnpm exec wrangler -c ./wrangler.toml secret --env ${{vars.CLOUDFLARE_ENV}} bulk
+          pnpm run deploy:cf --env ${{vars.CLOUDFLARE_ENV}}
 
       # - name: deploy to production
       #   if: github.ref == 'refs/heads/main'
