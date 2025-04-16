@@ -19,6 +19,5 @@ export * as protocols from "./protocols/index.js";
 
 export * from "./fp-context.js";
 export * from "./utils.js";
-export * from "./cid-peer.js"
 
 export * from "./version.js";

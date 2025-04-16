@@ -71,7 +71,6 @@ export function createAttach(database: Database, config: UseFPConfig): AttachSta
             .ctx()
             .get<WebToCloudCtx>(WebCtx)
             ?.onTokenChange((token) => {
-              console.log("Token changed", token);
               if (!token) {
                 setAttachState({ state: "initial" });
                 return;
