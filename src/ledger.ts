@@ -1,4 +1,4 @@
-import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 
 import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
 import type {
@@ -25,7 +25,6 @@ import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
-import { FPContext } from "./fp-context.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
@@ -93,7 +92,7 @@ export class LedgerShell implements Ledger {
     return this.ref.opts;
   }
 
-  get context(): FPContext {
+  get context(): AppContext {
     return this.ref.context;
   }
 
@@ -145,7 +144,7 @@ class LedgerImpl implements Ledger {
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  readonly context = new FPContext();
+  readonly context = new AppContext();
 
   get name(): string {
     return this.opts.name;

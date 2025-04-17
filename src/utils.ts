@@ -14,9 +14,9 @@ import {
   YAMLFormatter,
   CoerceURI,
   param,
+  AppContext,
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
-import { FPContext } from "./fp-context.js";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
@@ -37,7 +37,7 @@ interface superThisOpts {
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
 }
 
@@ -45,7 +45,7 @@ class SuperThisImpl implements SuperThis {
   readonly logger: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
 
@@ -55,7 +55,7 @@ class SuperThisImpl implements SuperThis {
     this.crypto = opts.crypto;
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
-    this.ctx = FPContext.merge(opts.ctx);
+    this.ctx = AppContext.merge(opts.ctx);
     // console.log("superThis", this);
   }
 
@@ -92,7 +92,7 @@ class SuperThisImpl implements SuperThis {
       crypto: override.crypto || this.crypto,
       pathOps: override.pathOps || this.pathOps,
       txt: override.txt || this.txt,
-      ctx: FPContext.merge(this.ctx, override.ctx),
+      ctx: AppContext.merge(this.ctx, override.ctx),
     });
   }
 }
@@ -161,7 +161,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),
-    ctx: FPContext.merge(osthis?.ctx),
+    ctx: AppContext.merge(osthis?.ctx),
     pathOps,
     txt: osthis?.txt || txtOps,
   });

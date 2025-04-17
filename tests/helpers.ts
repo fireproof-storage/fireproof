@@ -1,4 +1,4 @@
-import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger } from "@adviser/cement";
+import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger, AppContext } from "@adviser/cement";
 import {
   ensureSuperThis,
   rt,
@@ -10,7 +10,6 @@ import {
   Attached,
   CarTransaction,
   Falsy,
-  FPContext,
 } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
@@ -54,7 +53,7 @@ export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   return ensureSuperThis({
     ...sthis,
     logger: mockLog.logger,
-    ctx: FPContext.merge({
+    ctx: AppContext.merge({
       logCollector: mockLog.logCollector,
     }),
   }) as MockSuperThis;
