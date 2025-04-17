@@ -1,9 +1,17 @@
-import { encode, decode, Block } from "./runtime/wait-pr-multiformats/block.js";
+import { decode } from "./runtime/wait-pr-multiformats/block.js";
 import { parse } from "multiformats/link";
+import { Block } from "multiformats/block";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 import { put, get, entries, root } from "@web3-storage/pail/crdt";
-import { EventBlockView, EventLink, Operation, PutOperation, Result } from "@web3-storage/pail/crdt/api";
+import {
+  EventBlockView,
+  EventLink,
+  Operation,
+  PutOperation,
+  Result,
+  BlockFetcher as PailBlockFetcher,
+} from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import {
@@ -34,6 +42,8 @@ import {
 import { Logger } from "@adviser/cement";
 import { CarTransactionImpl } from "./blockstore/transaction.js";
 import { NotFoundError } from "./utils.js";
+import { Link, Version } from "multiformats";
+import { anyBlock2FPBlock, doc2FPBlock, fileBlock2FPBlock } from "./blockstore/loader-helpers.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
@@ -53,6 +63,22 @@ function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
     default:
       throw logger.Error().Msg("Invalid key type").AsError();
   }
+}
+
+export function toPailFetcher(tblocks: BlockFetcher): PailBlockFetcher {
+  return {
+    get: async <T = unknown, C extends number = number, A extends number = number, V extends Version = 1>(
+      link: Link<T, C, A, V>,
+    ) => {
+      const block = await tblocks.get(link);
+      return block
+        ? ({
+            cid: block.cid,
+            bytes: block.bytes,
+          } as Block<T, C, A, V>)
+        : undefined;
+    },
+  };
 }
 
 export function sanitizeDocumentFields<T>(obj: T): T {
@@ -103,7 +129,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
 ): Promise<CRDTMeta> {
   let result: Result | null = null;
   if (updates.length > 1) {
-    const batch = await Batch.create(tblocks, head);
+    const batch = await Batch.create(toPailFetcher(tblocks), head);
     for (const update of updates) {
       const link = await writeDocContent(store, tblocks, update, logger);
       await batch.put(toString(update.id, logger), link);
@@ -111,17 +137,17 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
     result = await batch.commit();
   } else if (updates.length === 1) {
     const link = await writeDocContent(store, tblocks, updates[0], logger);
-    result = await put(tblocks, head, toString(updates[0].id, logger), link);
+    result = await put(toPailFetcher(tblocks), head, toString(updates[0].id, logger), link);
   }
   if (!result) throw logger.Error().Uint64("updates.len", updates.length).Msg("Missing result").AsError();
 
   if (result.event) {
-    for (const { cid, bytes } of [
+    for (const block of [
       ...result.additions,
       // ...result.removals,
       result.event,
     ]) {
-      tblocks.putSync(cid, bytes);
+      tblocks.putSync(await anyBlock2FPBlock(block));
     }
   }
   return { head: result.head } satisfies CRDTMeta;
@@ -142,8 +168,12 @@ async function writeDocContent<T extends DocTypes>(
     await processFiles(store, blocks, update.value, logger);
     value = { doc: update.value as DocWithId<T> };
   }
-  const block = await encode({ value, hasher, codec });
-  blocks.putSync(block.cid, block.bytes);
+  // const ref = await encode({ value, hasher, codec });
+  const block = await doc2FPBlock(value);
+  // if (ref.cid.toString() !== block.cid.toString()) {
+  //   debugger
+  // }
+  blocks.putSync(block);
   return block.cid;
 }
 
@@ -175,7 +205,8 @@ async function processFileset(
       const { cid, blocks: fileBlocks } = await store.encodeFile(file);
       didPut.push(filename);
       for (const block of fileBlocks) {
-        t.putSync(block.cid, block.bytes);
+        // console.log("processFileset", block.cid.toString())
+        t.putSync(await fileBlock2FPBlock(block));
       }
       files[filename] = { cid, type: file.type, size: file.size, lastModified: file.lastModified } as DocFileMeta;
     } else {
@@ -209,7 +240,7 @@ export async function getValueFromCrdt<T extends DocTypes>(
 ): Promise<DocValue<T>> {
   if (!head.length) throw logger.Debug().Msg("Getting from an empty ledger").AsError();
   // console.log("getValueFromCrdt-1", head, key)
-  const link = await get(blocks, head, key);
+  const link = await get(toPailFetcher(blocks), head, key);
   // console.log("getValueFromCrdt-2", key)
   if (!link) {
     // Use NotFoundError instead of logging an error
@@ -275,7 +306,7 @@ async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: 
 class DirtyEventFetcher<T> extends EventFetcher<T> {
   readonly logger: Logger;
   constructor(logger: Logger, blocks: BlockFetcher) {
-    super(blocks);
+    super(toPailFetcher(blocks));
     this.logger = logger;
   }
   async get(link: EventLink<T>): Promise<EventBlockView<T>> {
@@ -296,7 +327,7 @@ export async function clockChangesSince<T extends DocTypes>(
   logger: Logger,
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
   const eventsFetcher = (
-    opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(blocks)
+    opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(toPailFetcher(blocks))
   ) as EventFetcher<Operation>;
   const keys = new Set<string>();
   const updates = await gatherUpdates<T>(
@@ -366,7 +397,7 @@ async function gatherUpdates<T extends DocTypes>(
 
 export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
   // return entries(blocks, head)
-  for await (const [key, link] of entries(blocks, head)) {
+  for await (const [key, link] of entries(toPailFetcher(blocks), head)) {
     // console.log("getAllEntries", key, link);
     if (key !== PARAM.GENESIS_CID) {
       const docValue = await getValueFromLink(blocks, link, logger);
@@ -376,7 +407,7 @@ export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, h
 }
 
 export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {
-  for await (const line of vis(blocks, head)) {
+  for await (const line of vis(toPailFetcher(blocks), head)) {
     yield line;
   }
 }
@@ -425,18 +456,18 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
 
   time("compact clock vis");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _line of vis(blockLog, head)) {
+  for await (const _line of vis(toPailFetcher(blockLog), head)) {
     void 1;
   }
   timeEnd("compact clock vis");
 
   time("compact root");
-  const result = await root(blockLog, head);
+  const result = await root(toPailFetcher(blockLog), head);
   timeEnd("compact root");
 
   time("compact root blocks");
-  for (const { cid, bytes } of [...result.additions, ...result.removals]) {
-    blockLog.loggedBlocks.putSync(cid, bytes);
+  for (const block of [...result.additions, ...result.removals]) {
+    blockLog.loggedBlocks.putSync(await anyBlock2FPBlock(block));
   }
   timeEnd("compact root blocks");
 

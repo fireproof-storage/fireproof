@@ -12,6 +12,7 @@ import {
   Index,
   index,
 } from "@fireproof/core";
+import { isBlockItemReady } from "../../src/blockstore/index.js";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;
@@ -433,6 +434,7 @@ describe("Loader with a committed transaction", function () {
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(isBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0 + 1 /* genesis */);
@@ -487,6 +489,7 @@ describe("Loader with two committed transactions", function () {
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(isBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(1 + 1 /* genesis */);
@@ -538,6 +541,7 @@ describe("Loader with many committed transactions", function () {
     // expect(dones[5].cars).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
+    assert(isBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(7 + 1 /* genesis */);

@@ -14,6 +14,7 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
+import { CarBlockItem, FPBlock } from "../src/blockstore/index.js";
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
@@ -139,15 +140,15 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.AnyBlock | Falsy> {
+  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock | Falsy> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.CarCacheItem> {
+  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock<CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.CarCacheItem> {
+  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock<CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -155,7 +156,7 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  entries(cache?: boolean): AsyncIterableIterator<bs.AnyBlock> {
+  entries(cache?: boolean): AsyncIterableIterator<FPBlock> {
     throw new Error("Method not implemented.");
   }
 }
