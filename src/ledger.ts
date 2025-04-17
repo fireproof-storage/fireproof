@@ -1,4 +1,4 @@
-import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 
 import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
 import type {
@@ -94,7 +94,7 @@ export class LedgerShell implements Ledger {
     return this.ref.opts;
   }
 
-  get context(): FPContext {
+  get context(): AppContext {
     return this.ref.context;
   }
 
@@ -146,7 +146,7 @@ class LedgerImpl implements Ledger {
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  readonly context = new FPContext();
+  readonly context = new AppContext();
 
   get name(): string {
     return this.opts.name;

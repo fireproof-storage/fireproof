@@ -40,7 +40,7 @@ class AttachedImpl implements Attached {
       detach: async () => {
         /* noop */
       },
-      ctx: new FPContext(),
+      ctx: new AppContext(),
       ...actx,
     };
   }
@@ -53,7 +53,7 @@ class AttachedImpl implements Attached {
     await Promise.all(toClose);
     this.attachCtx.detach();
   }
-  ctx(): FPContext {
+  ctx(): AppContext {
     return this.attachCtx.ctx;
   }
   status(): ReturnType<Attached["status"]> {

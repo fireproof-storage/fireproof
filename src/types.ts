@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 import type { Block, UnknownLink, Version } from "multiformats";
-import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI } from "@adviser/cement";
+import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext } from "@adviser/cement";
 
 import type {
   CarTransactionOpts,
@@ -29,7 +29,6 @@ import type {
 import type { KeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 import type { WriteQueueParams } from "./write-queue.js";
 import type { Index } from "./indexer.js";
-import type { FPContext } from "./fp-context.js";
 
 export type { DbMeta };
 
@@ -134,7 +133,7 @@ export interface SuperThisOpts {
   readonly crypto: CryptoRuntime;
   readonly env: Partial<EnvFactoryOpts>;
   readonly txt: TextEndeCoder;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
 }
 
 export interface SuperThis {
@@ -142,7 +141,7 @@ export interface SuperThis {
   readonly loggerCollector?: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
@@ -482,7 +481,7 @@ export interface CoerceURIandInterceptor {
 
 export interface AttachContext {
   detach(): Promise<void>;
-  readonly ctx: FPContext;
+  readonly ctx: AppContext;
 }
 
 /**
@@ -546,7 +545,7 @@ export interface Attached {
   detach(): Promise<void>;
   status(): "attached" | "loading" | "loaded" | "error" | "detached" | "syncing" | "idle";
 
-  ctx(): FPContext;
+  ctx(): AppContext;
 }
 
 export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
@@ -613,7 +612,7 @@ export interface Ledger extends HasCRDT {
 
   readonly name: string;
 
-  readonly context: FPContext;
+  readonly context: AppContext;
 
   onClosed(fn: () => void): () => void;
 
