@@ -1,6 +1,6 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
-import type { Block, UnknownLink, Version } from "multiformats";
+import type { Block } from "multiformats";
 import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext } from "@adviser/cement";
 
 import type {
@@ -11,7 +11,6 @@ import type {
   StoreEnDeFile,
   SerdeGatewayInterceptor,
   Loadable,
-  AnyBlock,
   TransactionMeta,
   TransactionWrapper,
   BlockstoreRuntime,
@@ -23,6 +22,7 @@ import type {
   BaseStore,
   FileStore,
   CarStore,
+  FPBlock,
 } from "./blockstore/index.js";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
@@ -33,8 +33,6 @@ import type { Index } from "./indexer.js";
 export type { DbMeta };
 
 export type Falsy = false | null | undefined;
-
-export type Unreg = () => void;
 
 export function isFalsy(value: unknown): value is Falsy {
   return value === false || value === null || value === undefined;
@@ -372,17 +370,17 @@ export interface CRDTClock {
 
 export interface CarTransaction {
   readonly parent: BaseBlockstore;
-  get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined>;
+  get(cid: AnyLink): Promise<FPBlock | Falsy>;
 
-  superGet(cid: AnyLink): Promise<AnyBlock | undefined>;
+  superGet(cid: AnyLink): Promise<FPBlock | Falsy>;
 
   // needed for genesis block
-  unshift(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
-  putSync(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
+  unshift(fb: FPBlock): void;
+  putSync(fb: FPBlock): void;
 
-  put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;
+  put(fb: FPBlock): Promise<void>;
 
-  entries(): AsyncIterableIterator<AnyBlock>;
+  entries(): AsyncIterableIterator<FPBlock>;
 }
 
 export interface BaseBlockstore {
@@ -397,8 +395,8 @@ export interface BaseBlockstore {
   compact(): Promise<void>;
   readonly logger: Logger;
 
-  get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined>;
-  put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;
+  get(cid: AnyLink): Promise<FPBlock | Falsy>;
+  put(fp: FPBlock): Promise<void>;
 
   transaction<M extends TransactionMeta>(
     fn: (t: CarTransaction) => Promise<M>,
@@ -418,7 +416,7 @@ export interface BaseBlockstore {
     done: M,
     opts: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>>;
-  entries(): AsyncIterableIterator<AnyBlock>;
+  entries(): AsyncIterableIterator<FPBlock>;
 }
 
 export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRDT {

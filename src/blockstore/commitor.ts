@@ -10,9 +10,9 @@ import {
   CommitOpts,
   DbMeta,
   FileStore,
+  FPBlock,
   FroozenCarLog,
   MetaStore,
-  toCIDBlock,
   TransactionMeta,
   WALStore,
 } from "./types.js";
@@ -20,10 +20,9 @@ import * as CBW from "@ipld/car/buffer-writer";
 import { ByteView, CID } from "multiformats";
 import { encode } from "../runtime/wait-pr-multiformats/block.js";
 import { AsyncBlockEncoder } from "../runtime/wait-pr-multiformats/codec-interface.js";
-// import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as dagCodec from "@ipld/dag-cbor";
 import { CarTransactionImpl } from "./transaction.js";
 import { sha256 } from "multiformats/hashes/sha2";
+import { carHeader2FPBlock } from "./loader-helpers.js";
 
 async function encodeCarFile(
   roots: AnyLink[],
@@ -125,11 +124,13 @@ function makeCarHeader<T>(meta: T, cars: CarLog, compact = false): CarHeader<T> 
 }
 
 async function encodeCarHeader<T>(fp: CarHeader<T>) {
-  return (await encode({
-    value: { fp },
-    hasher: sha256,
-    codec: dagCodec,
-  })) as AnyBlock;
+  return carHeader2FPBlock(fp);
+
+  // return (await encode({
+  //   value: { fp },
+  //   hasher: sha256,
+  //   codec: dagCodec,
+  // })) as AnyBlock;
 }
 
 export interface CommitParams {
@@ -175,7 +176,7 @@ export async function commit<T>(
 async function prepareCarFiles(
   encoder: AsyncBlockEncoder<24, Uint8Array>,
   threshold: number | undefined,
-  rootBlock: AnyBlock,
+  rootBlock: FPBlock,
   t: CarTransaction,
 ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
   // const theKey = isPublic ? undefined : await this._getKey();
@@ -183,21 +184,22 @@ async function prepareCarFiles(
   threshold = threshold || 16 * 65536;
   let clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });
   // console.log("prepareCarFiles-root", rootBlock.cid.toString());
-  clonedt.putSync(rootBlock.cid, rootBlock.bytes);
-  let newsize = CBW.blockLength(toCIDBlock(rootBlock));
+  clonedt.putSync(rootBlock);
+  let newsize = CBW.blockLength(rootBlock);
   let cidRootBlock = rootBlock;
-  for await (const { cid, bytes } of t.entries()) {
+  for await (const fpblock of t.entries()) {
     // console.log("prepareCarFiles", cid.toString(), bytes.length);
-    newsize += CBW.blockLength(toCIDBlock({ cid: cid, bytes }));
+    newsize += CBW.blockLength(fpblock);
+    // ktoCIDBlock({ cid: cid, bytes }));
     // console.log("prepareCarFiles", cid.toString(), bytes.length)
     if (newsize >= threshold) {
       carFiles.push(await createCarFile(encoder, cidRootBlock.cid, clonedt));
       clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });
-      clonedt.putSync(cid, bytes);
-      cidRootBlock = { cid, bytes };
-      newsize = CBW.blockLength(toCIDBlock({ cid, bytes })); //+ CBW.blockLength(rootBlock)
+      clonedt.putSync(fpblock);
+      cidRootBlock = fpblock;
+      newsize = CBW.blockLength(fpblock);
     } else {
-      clonedt.putSync(cid, bytes);
+      clonedt.putSync(fpblock);
     }
   }
   // HEREMENO

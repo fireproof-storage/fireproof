@@ -17,15 +17,22 @@ import {
   ActiveStore,
   BaseStore,
   CIDActiveStore,
-  CarCacheItem,
   CarLog,
   FroozenCarLog,
   CarStore,
+  FPBlock,
+  CarBlockItem,
+  BlockFetcher,
+  StaleCarBlockItem,
+  isBlockItemReady,
+  isBlockItemStale,
+  ReadyCarBlockItem,
+  isBlockReady,
 } from "./types.js";
 
-import { parseCarFile } from "./loader-helpers.js";
+import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
 
-import { BlockFetcher, defaultedBlockstoreRuntime } from "./transaction.js";
+import { defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import {
   isFalsy,
@@ -81,7 +88,7 @@ export class Loader implements Loadable {
   readonly logger: Logger;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   isCompacting = false;
-  private readonly cidCache: KeyedResolvOnce<CarCacheItem>;
+  readonly cidCache: KeyedResolvOnce<FPBlock>;
   private readonly maxConcurrentCarReader: ReturnType<typeof pLimit>;
   private readonly maxConcurrentWrite = pLimit(1);
   readonly seenCompacted: LRUSet<string>;
@@ -110,14 +117,12 @@ export class Loader implements Loadable {
                 return;
               }
               const value = rvalue.Ok();
-              if (value.status !== "stale") {
-                return;
-              }
-              if (value.type === "car") {
+              if (isBlockReady(value)) {
                 this.cidCache.unget(value.cid.toString());
                 await this.loadCar(value.cid, stores);
               } else {
-                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.type }).Msg("should not type");
+                const value = rvalue.Ok(); // typescript thanks
+                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
               }
             }),
           );
@@ -306,10 +311,16 @@ export class Loader implements Loadable {
   async loadCarHeaderFromMeta<T>(dbm: DbMeta, astore: ActiveStore): Promise<CarHeader<T>> {
     //Call loadCar for every cid
     const reader = await this.loadCar(dbm.cars[0], astore);
-    if (reader.status !== "ready") {
+    if (isBlockItemStale(reader)) {
       this.logger.Warn().Str("cid", dbm.cars[0].toString()).Msg("stale loadCarHeaderFromMeta");
+    } else if (isBlockItemReady(reader)) {
+      return await parseCarFile(reader, this.logger);
     }
-    return await parseCarFile(reader, this.logger);
+    return {
+      cars: [],
+      compact: [],
+      meta: {} as T,
+    };
   }
 
   // async _getKey(): Promise<string | undefined> {
@@ -332,7 +343,7 @@ export class Loader implements Loadable {
     return this.commitQueue.enqueue(() => commitFiles(fstore, wstore, t, done));
   }
 
-  async loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<CarCacheItem> {
+  async loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<FPBlock<CarBlockItem>> {
     return await this.storesLoadCar(cid, store.fileStore()); // store.local.file, store.remotes.map((r) => r.file));
   }
 
@@ -392,14 +403,14 @@ export class Loader implements Loadable {
     for await (const block of t.entries()) {
       const sBlock = block.cid.toString();
       this.cidCache.get(sBlock).once(
-        () =>
-          ({
-            type: "block",
-            status: "ready",
-            cid: block.cid,
-            blocks: [block],
-            roots: [],
-          }) satisfies CarCacheItem,
+        () => block,
+        // ({
+        //   type: "block",
+        //   status: "ready",
+        //   cid: block.cid,
+        //   blocks: [block],
+        //   roots: [],
+        // }) satisfies CarBlockItem,
       );
     }
   }
@@ -443,7 +454,7 @@ export class Loader implements Loadable {
   //   }
   // }
 
-  async *entries(/*cache = true*/): AsyncIterableIterator<AnyBlock> {
+  async *entries(/*cache = true*/): AsyncIterableIterator<FPBlock> {
     await this.ready();
     // for (const { value } of this.cidCache.values()) {
     //   if (value.isOk() && value.Ok().type === "block") {
@@ -460,12 +471,12 @@ export class Loader implements Loadable {
     for (const carCids of this.carLog.asArray()) {
       for (const carCid of carCids) {
         const reader = await this.loadCar(carCid, this.attachedStores.local());
-        if (reader.status !== "ready") {
-          this.logger.Warn().Str("cid", carCid.toString()).Err(reader.statusCause).Msg("stale car");
+        if (isBlockItemStale(reader)) {
+          this.logger.Warn().Str("cid", carCid.toString()).Err(reader.item.statusCause).Msg("stale car");
           continue;
         }
-        if (!reader || reader.type !== "car") {
-          throw this.logger.Error().Any("reader", reader.type).Str("cid", carCid.toString()).Msg("missing car reader").AsError();
+        if (!isBlockItemReady(reader)) {
+          throw this.logger.Error().Any({ cid: carCid.toString(), item: reader.item }).Msg("missing car reader").AsError();
         }
         // console.log(
         //   "entries",
@@ -473,7 +484,7 @@ export class Loader implements Loadable {
         //   reader.blocks.map((b) => b.cid.toString()),
         // );
         // const readBlocks = await this.readCar(reader);
-        for (const block of reader.blocks) {
+        for (const block of reader.item.value.car.blocks) {
           const cidStr = block.cid.toString();
           if (seen.has(cidStr)) continue;
           seen.add(cidStr);
@@ -483,106 +494,60 @@ export class Loader implements Loadable {
     }
   }
 
-  async getBlock(cid: AnyLink, store: ActiveStore): Promise<AnyBlock | Falsy> {
+  async getBlock(cid: AnyLink): Promise<FPBlock | Falsy> {
     await this.ready();
-    const cidStr = cid.toString();
-    const ci = await this.cidCache.get(cidStr).once(async () => {
-      // console.log("getBlock", cidStr);
-      // const getCarCid = async (carCid: AnyLink) => {
-      //   const sCid = carCid.toString();
-      //   if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
-      //   const reader = await this.loadCar(carCid, store);
-      //   if (!reader) {
-      //     throw this.logger.Error().Str("cid", sCid).Msg("missing car reader").AsError();
-      //   }
-      //   await this.cacheCarReader(sCid, reader).catch((e) => {
-      //     this.logger.Error().Err(e).Str("cid", sCid).Msg("error caching car reader");
-      //     return;
-      //   });
-      //   if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
-      //   console.log("getBlock-error", sCid);
-      //   throw this.logger.Error().Str("cid", sCid).Msg("block not in reader").AsError();
-      // };
-
-      const getCompactCarCids = async (carCid: AnyLink) => {
-        const sCid = carCid.toString();
-        const reader = await this.loadCar(carCid, store);
-        if (reader.status !== "ready") {
-          this.logger.Warn().Str("cid", sCid).Err(reader.statusCause).Msg("stale getCompactCarCids");
-          return;
-        }
-        // if (!reader) {
-        //   throw this.logger.Error().Str("cid", carCid.toString()).Msg("missing car reader").AsError();
-        // }
-        const header = await parseCarFile(reader, this.logger);
-        const compacts = header.compact;
-        // let got: AnyBlock | undefined;
-
-        // const batchSize = 5;
-        // for (let i = 0; i < compacts.length; i += batchSize) {
-        //   const promises: Promise<AnyBlock | undefined>[] = [];
-        //   for (let j = i; j < Math.min(i + batchSize, compacts.length); j++) {
-        //     for (const cid of compacts[j]) {
-        //       promises.push(getCarCid(cid));
-        //     }
-        //   }
-        const got = await Promise.allSettled(compacts.map((compact) => compact.map((cid) => this.loadCar(cid, store)).flat()));
-        got
-          .filter((result) => result.status === "rejected")
-          .forEach((result) => {
-            this.logger.Error().Err(result.reason).Str("cid", sCid).Msg("error getting compacted block");
-          });
-
-        // if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
-        // throw this.logger.Error().Str("cid", sCid).Msg("block not in compact reader").AsError();
-      };
-
-      let got: AnyBlock | undefined;
-      for (const carCids of this.carLog.asArray()) {
-        for (const carCid of carCids) {
-          const ci = await this.loadCar(carCid, store);
-          if (!ci) {
-            this.logger.Error().Str("cid", carCid.toString()).Msg("missing CarCID");
-            continue;
-          }
-          if (ci.status !== "ready") {
-            this.logger.Warn().Str("cid", carCid.toString()).Err(ci.statusCause).Msg("stale getBlock");
-            continue;
-          }
-          got = ci.blocks.find((block) => block.cid.equals(cid));
-          if (got) {
-            break;
-          }
-        }
-      }
-      if (!got) {
-        await getCompactCarCids(this.carLog.last()[0]);
-      }
-      return {
-        type: "block",
-        cid: cid,
-        blocks: got ? [got] : [],
-        roots: [],
-      };
-    });
-    if (!(ci.type === "block" && ci.blocks.length === 1)) {
-      this.logger.Error().Str("cid", cidStr).Any("block", ci).Msg("missing block");
-      return undefined;
-    }
-    return ci.blocks[0];
+    const got = this.cidCache.get(cid.toString());
+    return got.value;
   }
 
-  async loadCar(cid: AnyLink, store: ActiveStore): Promise<CarCacheItem> {
+  async getCompactCarCids(carCid: AnyLink, store: ActiveStore): Promise<void> {
+    const sCid = carCid.toString();
+    const reader = await this.loadCar(carCid, store);
+    if (isBlockItemStale(reader)) {
+      this.logger.Warn().Str("cid", sCid).Err(reader.item.statusCause).Msg("stale getCompactCarCids");
+      return;
+    }
+    if (!isBlockItemReady(reader)) {
+      this.logger.Warn().Str("cid", sCid).Msg("is not ready");
+      return;
+    }
+    // if (!reader) {
+    //   throw this.logger.Error().Str("cid", carCid.toString()).Msg("missing car reader").AsError();
+    // }
+    const header = await parseCarFile(reader, this.logger);
+    const compacts = header.compact;
+    // let got: AnyBlock | undefined;
+
+    // const batchSize = 5;
+    // for (let i = 0; i < compacts.length; i += batchSize) {
+    //   const promises: Promise<AnyBlock | undefined>[] = [];
+    //   for (let j = i; j < Math.min(i + batchSize, compacts.length); j++) {
+    //     for (const cid of compacts[j]) {
+    //       promises.push(getCarCid(cid));
+    //     }
+    //   }
+    const got = await Promise.allSettled(compacts.map((compact) => compact.map((cid) => this.loadCar(cid, store)).flat()));
+    got
+      .filter((result) => result.status === "rejected")
+      .forEach((result) => {
+        this.logger.Error().Err(result.reason).Str("cid", sCid).Msg("error getting compacted block");
+      });
+
+    // if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
+    // throw this.logger.Error().Str("cid", sCid).Msg("block not in compact reader").AsError();
+  }
+
+  async loadCar(cid: AnyLink, store: ActiveStore): Promise<FPBlock<CarBlockItem>> {
     const loaded = await this.storesLoadCar(cid, store.carStore());
-    if (loaded.status === "stale") {
-      this.logger.Warn().Str("cid", cid.toString()).Err(loaded.statusCause).Msg("stale car");
+    if (isBlockItemStale(loaded)) {
+      this.logger.Warn().Str("cid", cid.toString()).Err(loaded.item.statusCause).Msg("stale car");
     }
     return loaded;
   }
 
-  private async makeDecoderAndCarReader(carCid: AnyLink, store: CIDActiveStore): Promise<CarCacheItem> {
+  private async makeDecoderAndCarReader(carCid: AnyLink, store: CIDActiveStore): Promise<FPBlock<CarBlockItem>> {
     const carCidStr = carCid.toString();
-    let loadedCar: AnyBlock | undefined = undefined;
+    let loadedCar: AnyBlock | undefined;
     let activeStore: BaseStore = store.local();
     try {
       //loadedCar now is an array of AnyBlocks
@@ -615,12 +580,13 @@ export class Loader implements Loadable {
     }
     if (!loadedCar) {
       return {
-        type: "car",
-        status: "stale",
-        statusCause: new Error("missing car file"),
         cid: carCid,
-        blocks: [],
-        roots: [],
+        bytes: new Uint8Array(0),
+        item: {
+          status: "stale",
+          statusCause: new Error("missing car file"),
+          type: "car",
+        } as StaleCarBlockItem,
       };
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
@@ -631,25 +597,34 @@ export class Loader implements Loadable {
     // const kc = await activeStore.keyedCrypto()
     // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
 
-    const blocks: AnyBlock[] = [];
-    for await (const block of rawReader.blocks()) {
-      const sBlock = block.cid.toString();
+    const blocks: FPBlock[] = [];
+    for await (const rawBlock of rawReader.blocks()) {
+      const sBlock = rawBlock.cid.toString();
+      const block = await anyBlock2FPBlock(rawBlock);
       blocks.push(block);
       // console.log("loadBlock", block.cid);
-      this.cidCache.get(sBlock).once<CarCacheItem>(() => ({
-        type: "block",
-        status: "ready",
-        cid: block.cid,
-        blocks: [block],
-        roots: [],
-      }));
+      this.cidCache.get(sBlock).once(() => block);
+      //   ({
+      //   type: "block",
+      //   status: "ready",
+      //   cid: block.cid,
+      //   blocks: [block],
+      //   roots: [],
+      // }));
     }
     return {
-      type: "car",
-      status: "ready",
       cid: carCid,
-      blocks,
-      roots: await rawReader.getRoots(),
+      bytes: bytes.value.data,
+      item: {
+        type: "car",
+        status: "ready",
+        value: {
+          car: {
+            blocks,
+            roots: await rawReader.getRoots(),
+          },
+        },
+      } satisfies ReadyCarBlockItem,
     };
     // const cachedReaderP = readerP.then(async (reader) => {
     //   await this.cacheCarReader(carCidStr, reader).catch((e) => {
@@ -663,14 +638,14 @@ export class Loader implements Loadable {
   }
 
   //What if instead it returns an Array of CarHeader
-  protected async storesLoadCar(carCid: AnyLink, store: CIDActiveStore): Promise<CarCacheItem> {
+  protected async storesLoadCar(carCid: AnyLink, store: CIDActiveStore): Promise<FPBlock<CarBlockItem>> {
     const carCidStr = carCid.toString();
     return this.cidCache.get(carCidStr).once(async () => {
       return this.maxConcurrentCarReader(() => this.makeDecoderAndCarReader(carCid, store));
     });
   }
 
-  protected async getMoreReaders(cids: AnyLink[], store: ActiveStore): Promise<Result<CarCacheItem>[]> {
+  protected async getMoreReaders(cids: AnyLink[], store: ActiveStore): Promise<Result<FPBlock<CarBlockItem>>[]> {
     return Promise.all(
       cids.map(async (cid) =>
         this.loadCar(cid, store)

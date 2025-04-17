@@ -1,6 +1,9 @@
 import { CID } from "multiformats";
-import { BaseBlockstore, bs, CarTransaction, ensureSuperThis, SuperThis } from "@fireproof/core";
+import { BaseBlockstore, bs, CarTransaction, ensureSuperThis } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
+import { anyBlock2FPBlock } from "../../src/blockstore/loader-helpers.js";
+import { AnyLink } from "../../src/blockstore/index.js";
+import { to_uint8 } from "@adviser/cement";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: BaseBlockstore;
@@ -17,7 +20,7 @@ describe("Fresh TransactionBlockstore", function () {
   // });
   it("should not put", async () => {
     const value = sthis.txt.encode("value");
-    const e = await blocks.put("key" as unknown as bs.AnyLink, value).catch((e) => e);
+    const e = await blocks.put(await anyBlock2FPBlock({ cid: "key" as unknown as AnyLink, bytes: value })).catch((e) => e);
     expect(e.message).toMatch(/transaction/g);
   });
   it("should yield a transaction", async () => {
@@ -49,7 +52,7 @@ describe("TransactionBlockstore with name", function () {
     const bytes = sthis.txt.encode("bytes");
     expect(blocks.loader).toBeTruthy();
     blocks.loader.getBlock = async (cid) => {
-      return { cid, bytes };
+      return anyBlock2FPBlock({ cid, bytes });
     };
     const value = await blocks.get("key" as unknown as bs.AnyAnyLink);
     expect(value).toEqual({ cid: "key" as unknown as bs.AnyAnyLink, bytes });
@@ -68,18 +71,18 @@ describe("A transaction", function () {
   it("should put and get", async () => {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     const bytes = sthis.txt.encode("bytes");
-    await tblocks.put(cid, bytes);
+    await tblocks.put(await anyBlock2FPBlock({ cid, bytes }));
     expect(blocks.transactions.has(tblocks)).toBeTruthy();
     const got = await tblocks.get(cid);
-    expect(got).toBeTruthy();
-    expect(got?.cid).toEqual(cid);
-    expect(got?.bytes).toEqual(bytes);
+    assert(got, "missing block");
+    expect(got.cid).toEqual(cid);
+    expect(got.bytes).toEqual(bytes);
   });
 });
 
-function asUInt8Array(str: string, sthis: SuperThis) {
-  return sthis.txt.encode(str);
-}
+// function asUInt8Array(str: string, sthis: SuperThis) {
+//   return sthis.txt.encode(str);
+// }
 
 describe("TransactionBlockstore with a completed transaction", function () {
   let blocks: BaseBlockstore;
@@ -93,13 +96,13 @@ describe("TransactionBlockstore with a completed transaction", function () {
 
     blocks = new bs.BaseBlockstoreImpl(simpleBlockOpts(sthis));
     await blocks.transaction(async (tblocks) => {
-      await tblocks.put(cid, asUInt8Array("value", sthis));
-      await tblocks.put(cid, asUInt8Array("value", sthis));
+      await tblocks.put(await anyBlock2FPBlock({ cid, bytes: to_uint8("value") }));
+      await tblocks.put(await anyBlock2FPBlock({ cid, bytes: to_uint8("value") }));
       return { head: [] };
     });
     await blocks.transaction(async (tblocks) => {
-      await tblocks.put(cid, asUInt8Array("value", sthis));
-      await tblocks.put(cid2, asUInt8Array("value2", sthis));
+      await tblocks.put(await anyBlock2FPBlock({ cid, bytes: to_uint8("value") }));
+      await tblocks.put(await anyBlock2FPBlock({ cid: cid2, bytes: to_uint8("value2") }));
       return { head: [] };
     });
   });
@@ -110,10 +113,10 @@ describe("TransactionBlockstore with a completed transaction", function () {
   it("should get", async () => {
     const value = (await blocks.get(cid)) as bs.AnyBlock;
     expect(value.cid).toEqual(cid);
-    expect(value.bytes.toString()).toEqual(asUInt8Array("value", sthis).toString());
+    expect(value.bytes.toString()).toEqual(to_uint8("value").toString());
 
     const value2 = (await blocks.get(cid2)) as bs.AnyBlock;
-    expect(value2.bytes.toString()).toEqual(asUInt8Array("value2", sthis).toString());
+    expect(value2.bytes.toString()).toEqual(to_uint8("value2").toString());
   });
   it("should yield entries", async () => {
     const blz = [];
