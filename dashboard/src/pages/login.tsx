@@ -123,14 +123,14 @@ export function Login() {
               },
             }}
           />
-          <div className="my-10 text-center">
+          {/* <div className="my-10 text-center">
             <p className="text-14 sm:text-16 text-fp-s">
               Don't have an account?{" "}
               <Link to="/signup" className="text-fp-a-02 hover:text-fp-a-01">
                 Sign up
               </Link>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
