@@ -27,25 +27,25 @@ describe("HOOK: useFireproof with refactored implementation", () => {
       // Check basic database functionality
       expect(result.current).toBeDefined();
       expect(result.current.name).toBe(dbName);
-      
+
       // Test that we can put and get data
       let docId = "";
-      
+
       // Use act to wrap state updates
       await act(async () => {
         const response = await result.current.put({ text: "more data" });
         docId = response.id;
       });
-      
+
       expect(docId).toBeDefined();
-      
+
       // Get the document back
       await act(async () => {
         const doc = await result.current.get(docId);
         expect(doc).toBeDefined();
         expect(doc.text).toBe("more data");
       });
-      
+
       // Get all documents
       await act(async () => {
         const allDocs = await result.current.allDocs();

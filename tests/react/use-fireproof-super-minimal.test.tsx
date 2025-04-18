@@ -22,7 +22,7 @@ describe("HOOK: useFireproof super minimal test", () => {
       const { result } = renderHook(() => {
         const fp = useFireproof(dbName);
         return {
-          database: fp.database
+          database: fp.database,
         };
       });
 

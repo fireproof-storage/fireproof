@@ -79,11 +79,11 @@ The primary files that need modification are:
 // ❌ CURRENT PATTERN (problematic)
 function useFireproof(name) {
   // Implementation...
-  
+
   function useLiveQuery(mapFn, query, initialRows) {
     // Implementation using closure variables from useFireproof
   }
-  
+
   return { database, useLiveQuery };
 }
 
@@ -111,7 +111,7 @@ const FireproofContext = createContext(null);
 // Provider component
 function FireproofProvider({ name, children }) {
   const db = useMemo(() => fireproof(name), [name]);
-  
+
   return (
     <FireproofContext.Provider value={db}>
       {children}
@@ -174,14 +174,12 @@ If maintaining the current API shape is important, consider a compatibility laye
 // Compatibility wrapper (deprecated)
 function useFireproofLegacy(name) {
   const db = useFireproofDatabase(name);
-  
+
   // This is just a function returning hooks, not actual hook definitions
   return {
     database: db,
-    useLiveQuery: (mapFn, query, initialRows) => 
-      useLiveQuery(mapFn, query, initialRows, db),
-    useDocument: (initialDoc) => 
-      useDocument(initialDoc, db)
+    useLiveQuery: (mapFn, query, initialRows) => useLiveQuery(mapFn, query, initialRows, db),
+    useDocument: (initialDoc) => useDocument(initialDoc, db),
   };
 }
 ```

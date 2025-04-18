@@ -36,7 +36,7 @@ describe("HOOK: useFireproof minimal test", () => {
       const { result } = renderHook(() => {
         const fp = useFireproof(dbName);
         return {
-          query: fp.useLiveQuery("text")
+          query: fp.useLiveQuery("text"),
         };
       });
 
@@ -57,7 +57,7 @@ describe("HOOK: useFireproof minimal test", () => {
         const fp = useFireproof(dbName);
         return {
           db: fp.database,
-          query: fp.useLiveQuery("text")
+          query: fp.useLiveQuery("text"),
         };
       });
 
@@ -73,7 +73,7 @@ describe("HOOK: useFireproof minimal test", () => {
       // Verify the hook updates with the new document
       await waitFor(() => {
         expect(result.current.query.rows.length).toBe(2);
-        const texts = result.current.query.rows.map(row => row.doc?.text);
+        const texts = result.current.query.rows.map((row) => row.doc?.text);
         expect(texts).toContain("sample data");
         expect(texts).toContain("new data");
       });

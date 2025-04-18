@@ -1,12 +1,8 @@
 import type { Database } from "@fireproof/core";
-import { fireproof } from "@fireproof/core";
 import type { UseFireproof, UseFPConfig } from "./types.js";
-import { createUseDocument } from "./use-document.js";
-import { createUseLiveQuery } from "./use-live-query.js";
-import { createUseAllDocs } from "./use-all-docs.js";
-import { createUseChanges } from "./use-changes.js";
-import { createAttach } from "./create-attach.js";
 import { useMemo } from "react";
+import { createFireproofHooks, useFireproofDatabase } from "./fixed-hooks.js";
+import { createAttach } from "./create-attach.js";
 
 /**
  * @deprecated Use the `useFireproof` hook instead
@@ -28,19 +24,17 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
-  // Use useMemo to ensure stable references across renders
-  return useMemo(() => {
-    const database = typeof name === "string" ? fireproof(name, config) : name;
-
-    const attach = createAttach(database, config);
-
-    const useDocument = createUseDocument(database);
-    const useLiveQuery = createUseLiveQuery(database);
-    const useAllDocs = createUseAllDocs(database);
-    const useChanges = createUseChanges(database);
-
-    return { database, useLiveQuery, useDocument, useAllDocs, useChanges, attach };
-  }, [name, JSON.stringify(config)]); // Only recreate if name or stringified config changes
+  // Get or create the database instance
+  const database = useFireproofDatabase(name, config);
+  
+  // Create hook functions bound to this database using the factory function
+  const hooks = useMemo(() => createFireproofHooks(database), [database]);
+  
+  // Create the attachment function
+  const attach = createAttach(database, config);
+  
+  // Return the same API shape as the original implementation
+  return { database, ...hooks, attach };
 }
 
 // Export types

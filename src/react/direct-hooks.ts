@@ -1,25 +1,25 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+// This file implements React hooks that directly interact with Fireproof
+// without violating React's Rules of Hooks
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { fireproof } from "@fireproof/core";
 import type {
-  DocSet,
+  Database,
   DocTypes,
   DocWithId,
   IndexKeyType,
   IndexRow,
   MapFn,
-  Database,
   DocFragment,
   ChangesOptions,
   ClockHead,
 } from "@fireproof/core";
-import { fireproof } from "@fireproof/core";
 import { deepClone } from "./utils.js";
 import type {
-  DeleteDocFn,
-  StoreDocFn,
-  UseDocumentInitialDocOrFn,
   UseDocumentResult,
+  UseDocumentInitialDocOrFn,
   LiveQueryResult,
-  UseFireproof,
+  StoreDocFn,
+  DeleteDocFn,
   UseFPConfig,
   ChangesResult,
 } from "./types.js";
@@ -27,48 +27,56 @@ import type {
 /**
  * Base hook that returns a Fireproof database instance
  */
-export function useFireproofDatabase(name: string | Database = "useFireproof", config: UseFPConfig = {}): Database {
+export function useFireproofDB(name: string | Database, config: UseFPConfig = {}): Database {
+  // Compute stable dependencies
+  const dbName = typeof name === "string" ? name : name.name;
+  const configString = JSON.stringify(config || {});
+
   return useMemo(() => {
     return typeof name === "string" ? fireproof(name, config) : name;
-  }, [name, JSON.stringify(config)]); // Stringify config to compare by value
+  }, [dbName, configString]);
 }
 
 /**
- * Document hook implementation - independent of useFireproof
+ * Document hook that manages a document state
  */
-export function useFireproofDocument<T extends DocTypes>(
+export function useDocumentState<T extends DocTypes>(
   database: Database,
   initialDocOrFn?: UseDocumentInitialDocOrFn<T>,
 ): UseDocumentResult<T> {
-  const updateHappenedRef = useRef(false);
-
-  // Handle initial document
-  const resolvedInitialDoc = useMemo(() => {
-    let initialDoc: DocSet<T>;
+  // Process initial document value - this only happens once on mount
+  // Using empty array for deps that should never change (mount-only)
+  const initialDoc = useMemo(() => {
     if (typeof initialDocOrFn === "function") {
-      initialDoc = initialDocOrFn();
-    } else {
-      initialDoc = initialDocOrFn ?? ({} as T);
+      return initialDocOrFn();
     }
-    return initialDoc;
+    return initialDocOrFn ?? ({} as T);
   }, []);
 
-  const originalInitialDoc = useMemo(() => deepClone({ ...resolvedInitialDoc }), [resolvedInitialDoc]);
-  const [doc, setDoc] = useState(resolvedInitialDoc);
+  // Keep a stable reference to the original initial doc (mount-only)
+  const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
+  // Track when we're performing updates manually vs. from subscription
+  const updateHappenedRef = useRef(false);
+
+  // Document state
+  const [doc, setDoc] = useState<T & { _id?: string }>(initialDoc);
+
+  // Refresh document from database
   const refresh = useCallback(async () => {
     if (doc._id) {
       try {
         const gotDoc = await database.get<T>(doc._id);
         setDoc(gotDoc);
       } catch {
-        setDoc(resolvedInitialDoc);
+        setDoc(initialDoc);
       }
     } else {
-      setDoc(resolvedInitialDoc);
+      setDoc(initialDoc);
     }
-  }, [doc._id, database, resolvedInitialDoc]);
+  }, [doc._id, database, initialDoc]);
 
+  // Save document with proper dependency array (no emptyDeps)
   const save: StoreDocFn<T> = useCallback(
     async (existingDoc) => {
       updateHappenedRef.current = false;
@@ -81,9 +89,10 @@ export function useFireproofDocument<T extends DocTypes>(
 
       return res;
     },
-    [doc, database],
+    [doc, database], // Removed emptyDeps
   );
 
+  // Delete document
   const remove: DeleteDocFn<T> = useCallback(
     async (existingDoc) => {
       const id = existingDoc?._id ?? doc._id;
@@ -91,55 +100,70 @@ export function useFireproofDocument<T extends DocTypes>(
       const gotDoc = await database.get<T>(id).catch(() => undefined);
       if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
       const res = await database.del(id);
-      setDoc(resolvedInitialDoc);
+      setDoc(initialDoc);
       return res;
     },
-    [doc, resolvedInitialDoc, database],
+    [doc, initialDoc, database],
   );
 
-  // Granular update methods
+  // Update methods with stable dependency array (no emptyDeps)
   const merge = useCallback((newDoc: Partial<T>) => {
     updateHappenedRef.current = true;
     setDoc((prev) => ({ ...prev, ...newDoc }));
-  }, []);
+  }, []); // No deps needed since it only uses setDoc which is stable
 
   const replace = useCallback((newDoc: T) => {
     updateHappenedRef.current = true;
     setDoc(newDoc);
-  }, []);
+  }, []); // No deps needed since it only uses setDoc which is stable
 
   const reset = useCallback(() => {
     updateHappenedRef.current = true;
     setDoc({ ...originalInitialDoc });
-  }, [originalInitialDoc]);
+  }, [originalInitialDoc]); // Removed emptyDeps
 
-  // Legacy-compatible updateDoc
+  // Legacy updateDoc function
   const updateDoc = useCallback(
-    (newDoc?: DocSet<T>, opts = { replace: false, reset: false }) => {
+    (newDoc?: T, opts = { replace: false, reset: false }) => {
       if (!newDoc) {
         return opts.reset ? reset() : refresh();
       }
-      return opts.replace ? replace(newDoc as T) : merge(newDoc);
+      return opts.replace ? replace(newDoc) : merge(newDoc);
     },
     [refresh, reset, replace, merge],
   );
 
+  // Subscribe to database changes - ensure hook isn't conditionally called
   useEffect(() => {
-    if (!doc._id) return;
-    return database.subscribe((changes) => {
-      if (updateHappenedRef.current) {
-        return;
-      }
-      if (changes.find((c) => c._id === doc._id)) {
-        void refresh();
-      }
-    }, true);
+    // Use a no-op function that won't trigger lint errors
+    const noop = (): void => {
+      /* no-op */
+    };
+    let unsubscribe = noop;
+
+    if (doc._id) {
+      unsubscribe =
+        database.subscribe((changes) => {
+          if (updateHappenedRef.current) {
+            return;
+          }
+          if (changes.find((c) => c._id === doc._id)) {
+            void refresh();
+          }
+        }, true) || noop;
+    }
+
+    return () => {
+      unsubscribe();
+    };
   }, [doc._id, refresh, database]);
 
+  // Initial document load
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
+  // Form submit handler
   const submit = useCallback(
     async (e?: Event) => {
       if (e?.preventDefault) e.preventDefault();
@@ -149,7 +173,7 @@ export function useFireproofDocument<T extends DocTypes>(
     [save, reset],
   );
 
-  // Primary Object API with both new and legacy methods
+  // Create the API object with the exact same structure as original
   const apiObject = {
     doc: { ...doc } as DocWithId<T>,
     merge,
@@ -161,7 +185,7 @@ export function useFireproofDocument<T extends DocTypes>(
     submit,
   };
 
-  // Make the object properly iterable
+  // Make the object properly iterable as in original implementation
   const tuple = [{ ...doc }, updateDoc, save, remove, reset, refresh];
   Object.assign(apiObject, tuple);
   Object.defineProperty(apiObject, Symbol.iterator, {
@@ -175,9 +199,9 @@ export function useFireproofDocument<T extends DocTypes>(
 }
 
 /**
- * Live query hook implementation - independent of useFireproof
+ * Live query hook that provides real-time query results
  */
-export function useFireproofQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
+export function useLiveQueryState<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   database: Database,
   mapFn: MapFn<T> | string,
   query = {},
@@ -188,44 +212,41 @@ export function useFireproofQuery<T extends DocTypes, K extends IndexKeyType = s
     rows: initialRows,
   });
 
+  // Stringify query to detect changes
   const queryString = useMemo(() => JSON.stringify(query), [query]);
-  const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
+  // Function to refresh query results
   const refreshRows = useCallback(async () => {
     const res = await database.query<K, T, R>(mapFn, query);
     setResult({
       docs: res.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
       rows: res.rows,
     });
-  }, [database, mapFnString, queryString]);
+  }, [database, mapFn, queryString]);
 
+  // Subscribe to changes
   useEffect(() => {
     refreshRows();
     const unsubscribe = database.subscribe(refreshRows);
     return () => {
       unsubscribe();
     };
-  }, [database, refreshRows]);
+  }, [refreshRows]);
 
   return result;
 }
 
 /**
- * AllDocs hook implementation - independent of useFireproof
+ * Hook for all documents
  */
-export function useFireproofAllDocs<T extends DocTypes>(
-  database: Database,
-  query = {},
-  initialRows: IndexRow<string, T, T>[] = [],
-) {
-  return useFireproofQuery<T, string, T>(database, "_id", query, initialRows);
+export function useAllDocsState<T extends DocTypes>(database: Database, query = {}, initialRows: IndexRow<string, T, T>[] = []) {
+  return useLiveQueryState<T, string, T>(database, "_id", query, initialRows);
 }
 
 /**
- * Changes hook implementation - independent of useFireproof
- * Follows the same pattern as the original implementation
+ * Hook for database changes
  */
-export function useFireproofChanges<T extends DocTypes>(
+export function useChangesState<T extends DocTypes>(
   database: Database,
   since: ClockHead = [],
   opts: ChangesOptions = {},
@@ -234,9 +255,11 @@ export function useFireproofChanges<T extends DocTypes>(
     docs: [],
   });
 
-  const queryString = useMemo(() => JSON.stringify(opts), [opts]);
+  // Memoize parameters
+  const optsString = useMemo(() => JSON.stringify(opts), [opts]);
   const sinceString = useMemo(() => JSON.stringify(since), [since]);
 
+  // Refresh changes from database
   const refreshRows = useCallback(async () => {
     try {
       const res = await database.changes<T>(since, opts);
@@ -247,40 +270,13 @@ export function useFireproofChanges<T extends DocTypes>(
     } catch {
       // Silently handle errors to match original behavior
     }
-  }, [database, sinceString, queryString]);
+  }, [database, sinceString, optsString]);
 
+  // Subscribe to changes
   useEffect(() => {
-    refreshRows(); // Initial data fetch
+    refreshRows();
     return database.subscribe(refreshRows);
   }, [refreshRows]);
 
   return result;
-}
-
-// Non-hook factory function that creates hooks bound to a specific database
-// This is NOT a hook - hooks rules don't apply
-export function createFireproofHooks(database: Database): Omit<UseFireproof, "database" | "attach"> {
-  return {
-    // These are just functions that call the real hooks
-    useDocument: <T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>) => {
-      return useFireproofDocument<T>(database, initialDocOrFn);
-    },
-
-    useLiveQuery: <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
-      mapFn: MapFn<T> | string,
-      query = {},
-      initialRows: IndexRow<K, T, R>[] = [],
-    ) => {
-      return useFireproofQuery<T, K, R>(database, mapFn, query, initialRows);
-    },
-
-    useAllDocs: <T extends DocTypes>(query = {}, initialRows: IndexRow<string, T, T>[] = []) => {
-      return useFireproofAllDocs<T>(database, query, initialRows);
-    },
-
-    // Match the original signature exactly
-    useChanges: <T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}) => {
-      return useFireproofChanges<T>(database, since, opts);
-    },
-  };
 }

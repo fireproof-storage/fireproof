@@ -23,30 +23,36 @@ describe("HOOK: useToyHook with nested hooks", () => {
         return {
           query: toyHook.useToyQuery("text"),
           db: toyHook.database,
-          name: toyHook.name
+          name: toyHook.name,
         };
       });
 
       // Wait for initial data to load
-      await waitFor(() => {
-        expect(result.current.query.rows.length).toBeGreaterThan(0);
-      }, { timeout: 2000 });
-      
+      await waitFor(
+        () => {
+          expect(result.current.query.rows.length).toBeGreaterThan(0);
+        },
+        { timeout: 2000 },
+      );
+
       expect(result.current.query.rows[0].doc.text).toBe("sample data");
 
       // Test hook reordering by changing database name
       // This should trigger the conditional useState in useToyHook
       rerender("new-toy-db-name");
-      
+
       // Add more data and verify it updates
       await act(async () => {
         await result.current.db.put({ text: "more data" });
       });
 
-      await waitFor(() => {
-        expect(result.current.query.rows.length).toBeGreaterThan(0);
-      }, { timeout: 2000 });
-      
+      await waitFor(
+        () => {
+          expect(result.current.query.rows.length).toBeGreaterThan(0);
+        },
+        { timeout: 2000 },
+      );
+
       const texts = result.current.query.rows.map((row: any) => row.doc.text);
       expect(texts).toContain("more data");
     },
@@ -83,13 +89,13 @@ describe("HOOK: useToyHook with nested hooks", () => {
 
       expect(docId).toBeDefined();
       expect(result.current[0]._id).toBe(docId);
-      
+
       // Test hook reordering by changing database name
       rerender("another-toy-db-name");
     },
     TEST_TIMEOUT,
   );
-  
+
   it(
     "should trigger hook violations with dynamic name changes",
     async () => {
@@ -97,11 +103,11 @@ describe("HOOK: useToyHook with nested hooks", () => {
       const { result, rerender } = renderHook((dbNameInput = dbName) => {
         // Create a hook with initial name
         const hook1 = useToyHook(dbNameInput);
-        
+
         // Create another hook with a different name in the same render
         // This should cause hooks to be called in a different order on re-renders
         const hook2 = useToyHook(dbNameInput + "-secondary");
-        
+
         return {
           // Use both hooks' nested hooks
           query1: hook1.useToyQuery("text"),
@@ -109,23 +115,23 @@ describe("HOOK: useToyHook with nested hooks", () => {
           query2: hook2.useToyQuery("text"),
           doc2: hook2.useToyDocument(() => ({ text: "from hook2" })),
           db1: hook1.database,
-          db2: hook2.database
+          db2: hook2.database,
         };
       });
-      
+
       // Initial check
       expect(result.current.db1.name).toBe(dbName);
       expect(result.current.db2.name).toBe(dbName + "-secondary");
-      
+
       // Changing the name should cause hook rule violations due to conditional execution
       rerender("changing-hook-order");
-      
+
       // Add data to both databases
       await act(async () => {
         await result.current.db1.put({ text: "test data 1" });
         await result.current.db2.put({ text: "test data 2" });
       });
-      
+
       // This test might cause console errors but should still function
       expect(result.current.db1.name).toBe("changing-hook-order");
       expect(result.current.db2.name).toBe("changing-hook-order-secondary");

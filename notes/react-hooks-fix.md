@@ -8,11 +8,11 @@ This document outlines a practical approach to fix the React Hooks rule violatio
 function MyComponent() {
   // Get hooks for a specific database
   const { useDocument, useLiveQuery, database } = useFireproof("my-ledger");
-  
+
   // Use the hooks
   const { doc, merge, submit } = useDocument({ text: "" });
   const { docs } = useLiveQuery("_id", { limit: 10, descending: true });
-  
+
   // Rest of component...
 }
 ```
@@ -28,10 +28,10 @@ This pattern separates the hook definition (which must be at module level) from 
 ```typescript
 // src/react/hooks.ts
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { fireproof } from '../fireproof';
-import type { Database, DocTypes, Doc, LiveQueryResult, IndexRow, MapFn } from '../types';
-import type { ConfigOpts } from '../ledger';
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { fireproof } from "../fireproof";
+import type { Database, DocTypes, Doc, LiveQueryResult, IndexRow, MapFn } from "../types";
+import type { ConfigOpts } from "../ledger";
 
 // Module-level hook functions
 function useFireproofDatabase(name: string, config: ConfigOpts = {}) {
@@ -41,52 +41,52 @@ function useFireproofDatabase(name: string, config: ConfigOpts = {}) {
 }
 
 // Document hook implementation
-function useFireproofDocument<T extends DocTypes>(
-  database: Database,
-  initialDoc: Partial<T>
-) {
+function useFireproofDocument<T extends DocTypes>(database: Database, initialDoc: Partial<T>) {
   const [doc, setDoc] = useState<T & { _id?: string }>({ ...initialDoc } as T);
-  
+
   // Update function
   const merge = useCallback((newData: Partial<T>) => {
-    setDoc(currentDoc => ({ ...currentDoc, ...newData }));
+    setDoc((currentDoc) => ({ ...currentDoc, ...newData }));
   }, []);
-  
+
   // Save function
-  const submit = useCallback(async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const result = await database.put(doc);
-    setDoc(currentDoc => ({ ...currentDoc, _id: result.id }));
-    return result;
-  }, [doc, database]);
-  
+  const submit = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      const result = await database.put(doc);
+      setDoc((currentDoc) => ({ ...currentDoc, _id: result.id }));
+      return result;
+    },
+    [doc, database],
+  );
+
   return { doc, merge, submit };
 }
 
-// Live query hook implementation 
+// Live query hook implementation
 function useFireproofQuery<T extends DocTypes>(
   database: Database,
   mapFn: MapFn | string,
   query = {},
-  initialRows: IndexRow<T>[] = []
+  initialRows: IndexRow<T>[] = [],
 ): LiveQueryResult<T> {
   const [result, setResult] = useState({
     rows: initialRows,
     docs: initialRows.map((r) => r.doc as Doc<T>),
   });
-  
+
   // Implementation of live query with useEffect
   useEffect(() => {
     // Query subscription logic
     const unsubscribe = database.liveQuery(mapFn, query, (newResult) => {
       setResult(newResult);
     });
-    
+
     return () => {
       unsubscribe();
     };
   }, [database, mapFn, JSON.stringify(query)]);
-  
+
   return result;
 }
 
@@ -99,15 +99,11 @@ function createFireproofHooks(database: Database, name: string) {
     useDocument: <T extends DocTypes>(initialDoc: Partial<T>) => {
       return useFireproofDocument<T>(database, initialDoc);
     },
-    
-    useLiveQuery: <T extends DocTypes>(
-      mapFn: MapFn | string,
-      query = {},
-      initialRows: IndexRow<T>[] = []
-    ) => {
+
+    useLiveQuery: <T extends DocTypes>(mapFn: MapFn | string, query = {}, initialRows: IndexRow<T>[] = []) => {
       return useFireproofQuery<T>(database, mapFn, query, initialRows);
     },
-    
+
     // Add any other hooks here...
   };
 }
@@ -116,7 +112,7 @@ function createFireproofHooks(database: Database, name: string) {
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}) {
   // Get the database instance
   const database = useFireproofDatabase(name, config);
-  
+
   // Create and memoize the hooks object to maintain stable identity across renders
   const hooksObject = useMemo(() => {
     return {
@@ -124,17 +120,13 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       ...createFireproofHooks(database, typeof name === "string" ? name : name.name),
     };
   }, [database, name]);
-  
+
   // Return the same structure as the current API
   return hooksObject;
 }
 
 // Also export the underlying hooks for advanced use cases
-export {
-  useFireproofDatabase,
-  useFireproofDocument,
-  useFireproofQuery
-};
+export { useFireproofDatabase, useFireproofDocument, useFireproofQuery };
 ```
 
 ## Implementation Notes
@@ -147,7 +139,7 @@ export {
 ## Migration Steps
 
 1. Start by extracting the current hook implementations into separate module-level functions
-2. Implement the factory function pattern as shown above 
+2. Implement the factory function pattern as shown above
 3. Update the main `useFireproof` hook to use the new pattern
 4. Run tests to verify the implementation works and resolves the hook violations
 5. Update documentation to explain the under-the-hood changes
@@ -161,19 +153,19 @@ When testing, use both patterns:
 
 ```js
 // Unit test for a specific hook
-test('useFireproofQuery should return live results', () => {
-  const db = fireproof('test-db');
-  const { result } = renderHook(() => useFireproofQuery(db, '_id', { limit: 5 }));
+test("useFireproofQuery should return live results", () => {
+  const db = fireproof("test-db");
+  const { result } = renderHook(() => useFireproofQuery(db, "_id", { limit: 5 }));
   // Test assertions...
 });
 
 // Integration test for the public API
-test('useFireproof should provide working hooks', () => {
+test("useFireproof should provide working hooks", () => {
   const { result } = renderHook(() => {
-    const { useDocument, useLiveQuery } = useFireproof('test-db');
+    const { useDocument, useLiveQuery } = useFireproof("test-db");
     return {
-      document: useDocument({ text: 'test' }),
-      query: useLiveQuery('_id')
+      document: useDocument({ text: "test" }),
+      query: useLiveQuery("_id"),
     };
   });
   // Test assertions...

@@ -25,17 +25,17 @@ describe("HOOK: useToyHook basic test", () => {
       // Check basic functionality
       expect(result.current).toBeDefined();
       expect(result.current.name).toBe(dbName);
-      
+
       // Test put and get
       let docId: string;
-      
+
       await act(async () => {
         const response = await result.current.put({ text: "more data" });
         docId = response.id;
       });
-      
+
       expect(docId).toBeDefined();
-      
+
       await act(async () => {
         const doc = await result.current.get(docId);
         expect(doc).toBeDefined();

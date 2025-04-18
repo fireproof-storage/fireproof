@@ -19,7 +19,7 @@ describe("HOOK: useDocument minimal test", () => {
     async () => {
       // Keep everything local to the test
       let docId: string | undefined;
-      
+
       const { result } = renderHook(() => {
         const { useDocument } = useFireproof(dbName);
         const [doc, updateDoc, saveDoc] = useDocument({ text: "initial" });
@@ -32,21 +32,21 @@ describe("HOOK: useDocument minimal test", () => {
 
       // Save the document
       await result.current.saveDoc();
-      
+
       // Get the ID for later cleanup
       docId = result.current.doc._id;
-      
+
       // Verify document was saved with an ID
       expect(docId).toBeDefined();
-      
+
       // Update the document
       result.current.updateDoc({ text: "updated" });
-      
+
       // Verify update worked
       await waitFor(() => {
         expect(result.current.doc.text).toBe("updated");
       });
-      
+
       // Clean up the specific document we created
       if (docId) {
         await db.delete(docId);
