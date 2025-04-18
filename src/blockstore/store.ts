@@ -21,7 +21,7 @@ import type {
 } from "./types.js";
 import { Falsy, PARAM, StoreType, SuperThis } from "../types.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { ensureLogger, inplaceFilter, isNotFoundError } from "../utils.js";
+import { ensureLogger, hashString, inplaceFilter, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
@@ -94,6 +94,11 @@ export abstract class BaseStoreImpl {
 
   url(): URI {
     return this._url;
+  }
+
+  readonly _id = new ResolveOnce();
+  id(): Promise<string> {
+    return this._id.once(() => hashString(this.url().toString()));
   }
 
   readonly _onStarted: ((dam: DataAndMetaStore) => void)[] = [];

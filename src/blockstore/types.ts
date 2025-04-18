@@ -391,6 +391,7 @@ export interface BaseStore {
   readonly logger: Logger;
   // readonly url: URI
   url(): URI;
+  id(): Promise<string>;
   // readonly name: string;
   // onStarted(fn: () => void): void;
   // onClosed(fn: () => void): void;
@@ -824,6 +825,7 @@ export interface StaleCarBlockItem extends BlockItemBase<undefined> {
   readonly type: "car";
   readonly status: "stale";
   readonly statusCause: Error;
+  readonly origin: string;
 }
 interface ReadyCarBlockItemValue {
   readonly car: {
@@ -834,6 +836,7 @@ interface ReadyCarBlockItemValue {
 export interface ReadyCarBlockItem extends BlockItemBase<ReadyCarBlockItemValue> {
   readonly type: "car";
   readonly status: "ready";
+  readonly origin: string;
   readonly value: ReadyCarBlockItemValue;
 }
 
