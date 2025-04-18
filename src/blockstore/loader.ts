@@ -1,7 +1,6 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car/reader";
 import { KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result } from "@adviser/cement";
-// import { uuidv4 } from "uuidv7";
 
 import {
   type AnyBlock,
@@ -15,7 +14,6 @@ import {
   BlockstoreOpts,
   AttachedStores,
   ActiveStore,
-  BaseStore,
   CIDActiveStore,
   CarLog,
   FroozenCarLog,
@@ -23,11 +21,9 @@ import {
   FPBlock,
   CarBlockItem,
   BlockFetcher,
-  StaleCarBlockItem,
   isBlockItemReady,
   isBlockItemStale,
   ReadyCarBlockItem,
-  isBlockNotReady,
 } from "./types.js";
 
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
@@ -105,30 +101,42 @@ export class Loader implements Loadable {
 
   readonly attachedStores: AttachedStores;
 
+  async tryToLoadStaleCars(store: ActiveStore) {
+    const staleLoadcars: Promise<FPBlock<CarBlockItem>>[] = [];
+    for (const { value: rvalue } of this.cidCache.values()) {
+      if (rvalue.isErr()) {
+        this.logger.Error().Err(rvalue).Msg("error loading car");
+        return this;
+      }
+      const value = rvalue.Ok();
+      if (isBlockItemStale(value)) {
+        this.cidCache.unget(value.cid.toString());
+        staleLoadcars.push(
+          this.maxConcurrentCarReader(() =>
+            this.loadCar(value.cid, store).then((fpcar) => {
+              if (isBlockItemStale(fpcar)) {
+                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
+              }
+              return Promise.resolve(fpcar);
+            }),
+          ),
+        );
+      }
+    }
+    await Promise.all(staleLoadcars);
+  }
+
   async attach(attachable: Attachable): Promise<Attached> {
     return await this.attachedStores.attach(attachable, async (at) => {
       if (!at.stores.wal) {
         try {
-          const stores = this.attachedStores.activate(at.stores);
-          await Promise.all(
-            this.cidCache.values().map(async ({ value: rvalue }) => {
-              if (rvalue.isErr()) {
-                this.logger.Error().Err(rvalue).Msg("error loading car");
-                return;
-              }
-              const value = rvalue.Ok();
-              if (isBlockNotReady(value)) {
-                this.cidCache.unget(value.cid.toString());
-                await this.loadCar(value.cid, stores);
-                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
-              }
-            }),
-          );
+          const store = this.attachedStores.activate(at.stores);
+          await this.tryToLoadStaleCars(store);
           // remote Store need to kick off the sync by requesting the latest meta
           const dbMeta = await at.stores.meta.load();
           if (Array.isArray(dbMeta)) {
             if (dbMeta.length !== 0) {
-              await this.handleDbMetasFromStore(dbMeta, stores);
+              await this.handleDbMetasFromStore(dbMeta, store);
             }
           } else if (!isFalsy(dbMeta)) {
             throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
@@ -546,35 +554,35 @@ export class Loader implements Loadable {
   private async makeDecoderAndCarReader(carCid: AnyLink, store: CIDActiveStore): Promise<FPBlock<CarBlockItem>> {
     const carCidStr = carCid.toString();
     let loadedCar: AnyBlock | undefined;
-    let activeStore: BaseStore = store.local();
+    const activeStore = store.active as CarStore;
     try {
       //loadedCar now is an array of AnyBlocks
       this.logger.Debug().Any("cid", carCidStr).Msg("loading car");
-      loadedCar = await store.local().load(carCid);
+      loadedCar = await activeStore.load(carCid);
       // console.log("loadedCar", carCid);
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
       }
-      for (const remote of store.remotes() as CarStore[]) {
-        // console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
-        try {
-          const remoteCar = await remote.load(carCid);
-          if (remoteCar) {
-            // todo test for this
-            this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
-            await store.local().save(remoteCar);
-            loadedCar = remoteCar;
-            activeStore = remote;
-            break;
-          } else {
-            this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
-          }
-        } catch (e) {
-          this.logger.Warn().Str("cid", carCidStr).Url(remote.url()).Err(e).Msg("loading car");
-        }
-      }
+      // for (const remote of store.remotes() as CarStore[]) {
+      //   // console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
+      //   try {
+      //     const remoteCar = await remote.load(carCid);
+      //     if (remoteCar) {
+      //       // todo test for this
+      //       this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
+      //       await store.local().save(remoteCar);
+      //       loadedCar = remoteCar;
+      //       activeStore = remote;
+      //       break;
+      //     } else {
+      //       this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
+      //     }
+      //   } catch (e) {
+      //     this.logger.Warn().Str("cid", carCidStr).Url(remote.url()).Err(e).Msg("loading car");
+      //   }
+      // }
     }
     if (!loadedCar) {
       return {
@@ -584,7 +592,9 @@ export class Loader implements Loadable {
           status: "stale",
           statusCause: new Error("missing car file"),
           type: "car",
-        } as StaleCarBlockItem,
+          origin: await activeStore.id(),
+          value: undefined,
+        },
       };
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
@@ -616,6 +626,7 @@ export class Loader implements Loadable {
       item: {
         type: "car",
         status: "ready",
+        origin: await activeStore.id(),
         value: {
           car: {
             blocks,

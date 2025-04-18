@@ -511,6 +511,12 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
   return env;
 }
 
+export async function hashString(str: string): Promise<string> {
+  const bytes = json.encode(str);
+  const hash = await sha256.digest(bytes);
+  return CID.create(1, json.code, hash).toString();
+}
+
 export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
   return (await hashObjectCID(o)).cid.toString();
 }

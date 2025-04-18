@@ -1,23 +1,11 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
-import { ensureSuperThis, PARAM, CRDTImpl, CRDT, LedgerOpts, fireproof, bs } from "@fireproof/core";
+import { ensureSuperThis, PARAM, CRDTImpl, CRDT, LedgerOpts, fireproof, bs, sleep } from "@fireproof/core";
 import { Link } from "multiformats";
-// import { dde as cborDecode } from "@ipld/dag-cbor";
 import { stripper } from "@adviser/cement/utils";
+import pLimit from "p-limit";
 
 describe("standalone", () => {
   const sthis = ensureSuperThis();
-
-  // it.skip("CIDPeer", async () => {
-  //   const cid = await hashObjectCID({ cid: "test", peer: "peer" });
-  //   const peer = sthis.txt.encode("peer");
-  //   const cp = new CIDPeer(cid.cid, peer);
-  //   expect(cp.cid.toString()).toEqual(cid.cid.toString());
-  //   expect(cp.peer).toEqual(peer);
-  //   expect(cp.toString()).toEqual("bagiy4ancmnrwszcyeuayabaseabbkwg7pmwdxrj766jov33byzsd5ju4rsnplrasx6zfy7pm3quwyzdqmvsxerdqmvsxe");
-  //   const cp2 = CIDPeer.parse(cp.toString());
-  //   expect(cp2.cid.toString()).toEqual(cid.cid.toString());
-  //   expect(cp2.peer).toEqual(peer);
-  // });
 
   describe("howto-loader", () => {
     beforeAll(async () => {
@@ -72,7 +60,28 @@ describe("standalone", () => {
     });
   });
 
-  describe.skip("crdt-stack", () => {
+  describe("test-plimit", () => {
+    it("should work with plimit", async () => {
+      const limiter = pLimit(2);
+      let concurrent = 0;
+      const ret = await Promise.all(
+        Array(10)
+          .fill(0)
+          .map((_, i) => {
+            return limiter(async () => {
+              concurrent++;
+              expect(concurrent).toBeLessThanOrEqual(2);
+              await sleep(100);
+              concurrent--;
+              return i;
+            });
+          }),
+      );
+      expect(ret).toEqual(Array.from(Array(10).keys()));
+    });
+  });
+
+  describe("crdt-stack", () => {
     let crdt: CRDT;
     beforeEach(async () => {
       let uri: URI;
