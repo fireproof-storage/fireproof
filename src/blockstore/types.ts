@@ -844,6 +844,11 @@ export function isBlockReady(ifp: unknown): ifp is FPBlock {
   return fp.item && fp.item.status === "ready";
 }
 
+export function isBlockNotReady(ifp: unknown): ifp is FPBlock {
+  const fp = ifp as FPBlock;
+  return fp.item && fp.item.status !== "ready";
+}
+
 export function isBlockItemReady(ifp: unknown): ifp is FPBlock<ReadyCarBlockItem> {
   const fp = ifp as FPBlock<ReadyCarBlockItem>;
   return fp.item && fp.item.type === "car" && fp.item.status === "ready";
