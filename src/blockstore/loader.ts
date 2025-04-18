@@ -27,7 +27,7 @@ import {
   isBlockItemReady,
   isBlockItemStale,
   ReadyCarBlockItem,
-  isBlockReady,
+  isBlockNotReady,
 } from "./types.js";
 
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
@@ -117,11 +117,9 @@ export class Loader implements Loadable {
                 return;
               }
               const value = rvalue.Ok();
-              if (isBlockReady(value)) {
+              if (isBlockNotReady(value)) {
                 this.cidCache.unget(value.cid.toString());
                 await this.loadCar(value.cid, stores);
-              } else {
-                const value = rvalue.Ok(); // typescript thanks
                 this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
               }
             }),

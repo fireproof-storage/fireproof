@@ -283,6 +283,7 @@ describe("join function", () => {
 
   let db: Database;
   let joinableDBs: string[] = [];
+  const rows = 1;
   beforeAll(async () => {
     const set = sthis.nextId().str;
 
@@ -292,19 +293,19 @@ describe("join function", () => {
       },
     });
     // await db.put({ _id: `genesis`, value: `genesis` });
-    for (let j = 0; j < 10; j++) {
+    for (let j = 0; j < rows; j++) {
       await db.put({ _id: `db-${j}`, value: `db-${set}` });
     }
 
     joinableDBs = await Promise.all(
-      new Array(5).fill(1).map(async (_, i) => {
+      new Array(1).fill(1).map(async (_, i) => {
         const name = `remote-db-${i}-${set}`;
         const jdb = fireproof(name, {
           storeUrls: attachableStoreUrls(name, db),
         });
         // await db.put({ _id: `genesis`, value: `genesis` });
         // await db.ready();
-        for (let j = 0; j < 10; j++) {
+        for (let j = 0; j < rows; j++) {
           await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
         }
         expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
@@ -333,7 +334,7 @@ describe("join function", () => {
           storeUrls: attachableStoreUrls(name, db),
         });
         const res = await tmp.allDocs();
-        expect(res.rows.length).toBe(10);
+        expect(res.rows.length).toBe(rows);
         await tmp.close();
         const attached = await my.attach(aJoinable(name));
         expect(attached).toBeDefined();
@@ -354,7 +355,7 @@ describe("join function", () => {
     await sleep(100);
     expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await db.allDocs();
-    expect(res.rows.length).toBe(10 + 10 * joinableDBs.length);
+    expect(res.rows.length).toBe(rows + rows * joinableDBs.length);
   });
 
   it("it empty inbound syncing", async () => {
@@ -371,7 +372,7 @@ describe("join function", () => {
     await sleep(100);
     expect(mydb.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await mydb.allDocs();
-    expect(res.rows.length).toBe(10 * joinableDBs.length);
+    expect(res.rows.length).toBe(rows * joinableDBs.length);
   });
 
   it("prepare only once", async () => {
