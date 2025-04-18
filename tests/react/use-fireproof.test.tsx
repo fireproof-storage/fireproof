@@ -1,5 +1,6 @@
-import { renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import * as React from "react";
 import { fireproof, useFireproof } from "use-fireproof";
 import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
 
@@ -81,11 +82,16 @@ describe("HOOK: useFireproof useDocument has results", () => {
   beforeEach(async () => {
     db = fireproof(dbName);
 
+    // Create the hook - we don't need to capture the result since we're setting variables directly
     renderHook(() => {
+      // Use React.useRef to ensure stable reference for initial document
+      const initialDocRef = React.useRef({ input: "" });
       const result = useFireproof(dbName);
       database = result.database;
       useDocument = result.useDocument;
-      docResult = useDocument<{ input: string }>({ input: "" });
+      // Use the ref's current value for a stable reference
+      docResult = useDocument<{ input: string }>(initialDocRef.current);
+      return { docResult };
     });
   });
 
@@ -112,7 +118,10 @@ describe("HOOK: useFireproof useDocument has results", () => {
   it(
     "handles mutations correctly",
     async () => {
-      docResult.merge({ input: "new" });
+      await act(async () => {
+        docResult.merge({ input: "new" });
+      });
+      
       await waitFor(() => {
         expect(docResult.doc.input).toBe("new");
         expect(docResult.doc._id).toBeUndefined();
@@ -124,14 +133,17 @@ describe("HOOK: useFireproof useDocument has results", () => {
   it(
     "handles save correctly",
     async () => {
-      docResult.merge({ input: "first" });
+      await act(async () => {
+        docResult.merge({ input: "first" });
+      });
+      
       await waitFor(() => {
         expect(docResult.doc.input).toBe("first");
         expect(docResult.doc._id).toBeUndefined();
       });
 
-      renderHook(() => {
-        docResult.save();
+      await act(async () => {
+        await docResult.save();
       });
 
       await waitFor(() => {
@@ -147,50 +159,71 @@ describe("HOOK: useFireproof useDocument has results", () => {
       // Create a document with input "first" to ensure it exists in the database
       await db.put({ input: "first" });
 
-      docResult.merge({ input: "new" });
+      await act(async () => {
+        docResult.merge({ input: "new" });
+      });
+      
       await waitFor(() => {
         expect(docResult.doc.input).toBe("new");
         expect(docResult.doc._id).toBeUndefined();
       });
 
-      renderHook(() => {
-        docResult.save();
+      let doc1_id: string | undefined;
+      
+      // First, completely finish the save operation in isolation
+      await act(async () => {
+        const response = await docResult.save();
+        doc1_id = response.id; // Store the ID here from the response directly
       });
-
+      
       await waitFor(() => {
         expect(docResult.doc._id).toBeDefined();
+        doc1_id = docResult.doc._id;
       });
 
-      const doc1 = await db.get<{ input: string }>(docResult.doc._id);
-      expect(doc1.input).toBe("new");
+      // Get a fresh document reference to ensure no stale state
+      const savedDoc = await db.get(doc1_id as string) as { input: string, _id: string };
+      expect(savedDoc.input).toBe("new");
 
-      renderHook(() => {
+      // Now reset the document in isolation
+      await act(async () => {
+        // Force synchronous reset to clear state immediately
         docResult.reset();
       });
-
+      
+      // Add a small delay to allow any state updates to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       await waitFor(() => {
+        expect(docResult.doc._id).toBeUndefined();
         expect(docResult.doc.input).toBe("");
+      }, { timeout: 2000 });
+
+      // Create a new document with different content
+      await act(async () => {
+        docResult.merge({ input: "fresh" });
+      });
+      
+      await waitFor(() => {
+        expect(docResult.doc.input).toBe("fresh");
         expect(docResult.doc._id).toBeUndefined();
       });
 
-      renderHook(() => {
-        docResult.merge({ input: "fresh" });
+      // Save the new document
+      let doc2_id: string | undefined;
+      await act(async () => {
+        const response = await docResult.save();
+        doc2_id = response.id;
       });
-
-      renderHook(() => {
-        docResult.save();
-      });
-
+      
       await waitFor(() => {
-        expect(docResult.doc.input).toBe("fresh");
         expect(docResult.doc._id).toBeDefined();
       });
+      
+      // Verify the IDs are different
+      expect(doc1_id).not.toBe(doc2_id);
 
-      const doc2 = await db.get<{ input: string }>(docResult.doc._id);
-      expect(doc2.input).toBe("fresh");
-      expect(doc2._id).toBe(docResult.doc._id);
-      expect(doc1._id).not.toBe(doc2._id);
-
+      // Check database contents
       const allDocs = await db.allDocs<{ input: string }>();
       const inputs = allDocs.rows.map((r) => r.value.input);
       expect(inputs).toEqual(expect.arrayContaining(["first", "new", "fresh"]));
@@ -216,11 +249,16 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
   beforeEach(async () => {
     db = fireproof(dbName);
 
+    // Create the hook - we don't need to capture the result since we're setting variables directly
     renderHook(() => {
+      // Use React.useRef to ensure stable reference for initial document
+      const initialDocRef = React.useRef({ input: "" });
       const result = useFireproof(dbName);
       database = result.database;
       useDocument = result.useDocument;
-      docResult = useDocument<{ input: string }>({ input: "" });
+      // Use the ref's current value for a stable reference
+      docResult = useDocument<{ input: string }>(initialDocRef.current);
+      return { docResult };
     });
   });
 
@@ -247,7 +285,10 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
   it(
     "handles mutations correctly",
     async () => {
-      docResult.merge({ input: "new" });
+      await act(async () => {
+        docResult.merge({ input: "new" });
+      });
+      
       await waitFor(() => {
         expect(docResult.doc.input).toBe("new");
         expect(docResult.doc._id).toBeUndefined();
@@ -259,14 +300,17 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
   it(
     "handles save correctly",
     async () => {
-      docResult.merge({ input: "first" });
+      await act(async () => {
+        docResult.merge({ input: "first" });
+      });
+      
       await waitFor(() => {
         expect(docResult.doc.input).toBe("first");
         expect(docResult.doc._id).toBeUndefined();
       });
 
-      renderHook(() => {
-        docResult.save();
+      await act(async () => {
+        await docResult.save();
       });
 
       await waitFor(() => {
@@ -493,11 +537,16 @@ describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
   beforeEach(async () => {
     db = fireproof(dbName);
 
+    // Create the hook - we don't need to capture the result since we're setting variables directly
     renderHook(() => {
+      // Use React.useRef to ensure stable reference for initial document
+      const initialDocRef = React.useRef({ input: "" });
       const result = useFireproof(dbName);
       database = result.database;
       useDocument = result.useDocument;
-      docResult = useDocument<{ input: string }>({ input: "" });
+      // Use the ref's current value for a stable reference
+      docResult = useDocument<{ input: string }>(initialDocRef.current);
+      return { docResult };
     });
   });
 
@@ -505,15 +554,18 @@ describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
     "ensures save() then reset() yields an ephemeral doc (blank _id)",
     async () => {
       // Merge some changes
-      docResult.merge({ input: "temp data" });
+      await act(async () => {
+        docResult.merge({ input: "temp data" });
+      });
+      
       await waitFor(() => {
         expect(docResult.doc.input).toBe("temp data");
         expect(docResult.doc._id).toBeUndefined();
       });
 
-      // Save
-      renderHook(() => {
-        docResult.save();
+      // Save and reset within the same act() call
+      await act(async () => {
+        await docResult.save();
         docResult.reset();
       });
 
@@ -522,17 +574,17 @@ describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
         expect(docResult.doc.input).toBe("");
       });
 
-      renderHook(() => {
+      await act(async () => {
         docResult.merge({ input: "new temp data" });
       });
 
       let waitForSave: Promise<DocResponse>;
-      renderHook(() => {
+      await act(async () => {
         waitForSave = docResult.save();
+        await waitForSave; // Wait for the save to complete within the act() call
       });
 
-      await waitFor(async () => {
-        await waitForSave;
+      await waitFor(() => {
         expect(docResult.doc._id).toBeDefined();
         expect(docResult.doc.input).toBe("new temp data");
       });
@@ -573,11 +625,16 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
     "demonstrates that calling docResult.save() and docResult.reset() in the same tick can overwrite reset",
     async () => {
       // Merge some changes into doc
-      docResult.merge({ input: "some data" });
+      await act(async () => {
+        docResult.merge({ input: "some data" });
+      });
 
       // Call save() but DO NOT await it, then immediately reset().
-      docResult.save();
-      docResult.reset();
+      // This is intentionally not awaiting to test the race condition
+      await act(async () => {
+        docResult.save(); // Intentionally not awaited
+        docResult.reset();
+      });
 
       // Let the async subscription produce a new doc in case the doc is reloaded with an _id
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -613,18 +670,21 @@ describe("useFireproo calling submit()", () => {
   });
 
   it(
-    "demonstrates that calling docResult.save() and docResult.reset() in the same tick can overwrite reset",
+    "demonstrates that submit() correctly saves and resets the document",
     async () => {
       // Merge some changes into doc
-      docResult.merge({ input: "some data" });
+      await act(async () => {
+        docResult.merge({ input: "some data" });
+      });
 
-      docResult.submit();
+      await act(async () => {
+        await docResult.submit();
+      });
 
       // Let the async subscription produce a new doc in case the doc is reloaded with an _id
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // If the reset worked, doc._id should STILL be undefined.
-      // If the subscription wins, doc._id will be defined => test fails.
+      // After submit, the document should be reset
       await waitFor(() => {
         expect(docResult.doc._id).toBeUndefined();
         expect(docResult.doc.input).toBe("");

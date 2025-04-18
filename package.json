@@ -29,7 +29,7 @@
     "dev:dashboard": "npx vite -c vite.config.ts cloud/dashboard --port 3002",
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
-    "test:indexeddb": "vitest --config vitest.indexeddb.config.ts --run",
+    "test:indexeddb": "vitest --config tests/vitest.indexeddb.config.ts --run",
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
     "lint": "eslint",
