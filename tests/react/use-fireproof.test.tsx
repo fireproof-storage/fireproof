@@ -1,7 +1,7 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { RenderHookResult, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "use-fireproof";
-import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
+import type { Database, DocResponse, UseDocumentResult } from "use-fireproof";
 
 const TEST_TIMEOUT = 45000;
 
@@ -30,10 +30,7 @@ describe("HOOK: useFireproof", () => {
 
 describe("HOOK: useFireproof useLiveQuery has results", () => {
   const dbName = "useLiveQueryHasResults";
-  let db: Database,
-    query: LiveQueryResult<{ foo: string }, string>,
-    database: ReturnType<typeof useFireproof>["database"],
-    useLiveQuery: ReturnType<typeof useFireproof>["useLiveQuery"];
+  let db: Database;
 
   beforeEach(async () => {
     const expectedValues = ["aha", "bar", "caz"];
@@ -49,15 +46,16 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
   it(
     "queries correctly",
     async () => {
-      renderHook(() => {
-        const result = useFireproof(dbName);
-        database = result.database;
-        useLiveQuery = result.useLiveQuery;
-        query = useLiveQuery<{ foo: string }>("foo");
+      // Properly use the hook without capturing variables outside the render function
+      const { result } = renderHook(() => {
+        const { database, useLiveQuery } = useFireproof(dbName);
+        const query = useLiveQuery<{ foo: string }>("foo");
+        return { database, query };
       });
 
+      // Use the result value to make assertions
       await waitFor(() => {
-        expect(query.rows.map((row) => row.doc?.foo)).toEqual(["aha", "bar", "caz"]);
+        expect(result.current.query.rows.map((row) => row.doc?.foo)).toEqual(["aha", "bar", "caz"]);
       });
     },
     TEST_TIMEOUT,
@@ -66,27 +64,36 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-    await database?.close();
-    await database?.destroy();
   });
 });
 
+interface DocHookResult {
+  database: Database;
+  docResult: UseDocumentResult<{ input: string }>;
+}
+
 describe("HOOK: useFireproof useDocument has results", () => {
   const dbName = "useDocumentHasResults";
-  let db: Database,
-    docResult: UseDocumentResult<{ input: string }>,
-    database: ReturnType<typeof useFireproof>["database"],
-    useDocument: ReturnType<typeof useFireproof>["useDocument"];
+  let db: Database;
+  let hookResult: RenderHookResult<DocHookResult, unknown>;
 
   beforeEach(async () => {
     db = fireproof(dbName);
 
-    renderHook(() => {
-      const result = useFireproof(dbName);
-      database = result.database;
-      useDocument = result.useDocument;
-      docResult = useDocument<{ input: string }>({ input: "" });
+    // Use proper renderHook pattern to access hook results
+    hookResult = renderHook(() => {
+      const { database, useDocument } = useFireproof(dbName);
+      const docResult = useDocument<{ input: string }>({ input: "" });
+      return { database, docResult };
     });
+  });
+  
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+    const { database } = hookResult.result.current;
+    await database?.close();
+    await database?.destroy();
   });
 
   it(
@@ -102,6 +109,8 @@ describe("HOOK: useFireproof useDocument has results", () => {
     "queries correctly",
     async () => {
       await waitFor(() => {
+        // Access the current result value inside waitFor
+        const { docResult } = hookResult.result.current;
         expect(docResult.doc.input).toBe("");
         expect(docResult.doc._id).toBeUndefined();
       });
@@ -112,8 +121,13 @@ describe("HOOK: useFireproof useDocument has results", () => {
   it(
     "handles mutations correctly",
     async () => {
+      // Access the hook result through the current property
+      const { docResult } = hookResult.result.current;
       docResult.merge({ input: "new" });
+      
       await waitFor(() => {
+        // Re-access current result for the latest state
+        const { docResult } = hookResult.result.current;
         expect(docResult.doc.input).toBe("new");
         expect(docResult.doc._id).toBeUndefined();
       });
