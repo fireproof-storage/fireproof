@@ -105,11 +105,14 @@ function createLazyDatabase(name: string, config: ConfigOpts = {}): Database {
         // Handle subscribe method to collect subscribers even before DB is initialized
         if (prop === "subscribe") {
           return function subscribe(callback: (changes: unknown[]) => void) {
+            // Store locally so aggregator can dispatch before DB exists
             _subscribers.add(callback);
 
-            // Always initialize database for subscriptions
-            const db = getDatabase();
-            return db.subscribe(callback as (changes: Record<string, unknown>[]) => void);
+            // Ensure DB is initialised (sets up the aggregator once)
+            getDatabase();
+
+            // Return an unsubscribe that removes the callback from the local set
+            return () => _subscribers.delete(callback);
           };
         }
 
