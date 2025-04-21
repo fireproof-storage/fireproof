@@ -1,12 +1,12 @@
 import type { Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import type { UseFireproof, UseFPConfig } from "./types.js";
-import { createUseDocument } from "./use-document.js";
-import { createUseLiveQuery } from "./use-live-query.js";
+import { useMemo } from "react";
+import { useAttach } from "./create-attach.js";
+import type { UseFPConfig, UseFireproof } from "./types.js";
 import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
-import { createAttach } from "./create-attach.js";
-import { useMemo } from "react";
+import { createUseDocument } from "./use-document.js";
+import { createUseLiveQuery } from "./use-live-query.js";
 
 /**
  * @deprecated Use the `useFireproof` hook instead
@@ -28,30 +28,26 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
-  // Use useMemo to ensure stable references across renders
-  return useMemo(() => {
-    const database = typeof name === "string" ? fireproof(name, config) : name;
+  const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, JSON.stringify(config)]);
+  const attach = useAttach(database, config);
 
-    const attach = createAttach(database, config);
+  const useDocument = useMemo(() => createUseDocument(database), [database.name, JSON.stringify(config)]);
+  const useLiveQuery = useMemo(() => createUseLiveQuery(database), [database.name, JSON.stringify(config)]);
+  const useAllDocs = useMemo(() => createUseAllDocs(database), [database.name, JSON.stringify(config)]);
+  const useChanges = useMemo(() => createUseChanges(database), [database.name, JSON.stringify(config)]);
 
-    const useDocument = createUseDocument(database);
-    const useLiveQuery = createUseLiveQuery(database);
-    const useAllDocs = createUseAllDocs(database);
-    const useChanges = createUseChanges(database);
-
-    return { database, useLiveQuery, useDocument, useAllDocs, useChanges, attach };
-  }, [name, JSON.stringify(config)]); // Only recreate if name or stringified config changes
+  return { database, useLiveQuery, useDocument, useAllDocs, useChanges, attach };
 }
 
 // Export types
 export type {
-  LiveQueryResult,
-  UseDocumentResult,
   AllDocsResult,
   ChangesResult,
-  UseDocument,
-  UseLiveQuery,
+  LiveQueryResult,
   UseAllDocs,
   UseChanges,
+  UseDocument,
+  UseDocumentResult,
   UseFireproof,
+  UseLiveQuery,
 } from "./types.js";
