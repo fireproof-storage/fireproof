@@ -2,7 +2,7 @@ import { Result, URI } from "@adviser/cement";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { PARAM, SuperThis } from "../../../types.js";
 import { MEMORY_VERSION } from "./version.js";
-import { NotFoundError } from "../../../utils.js";
+import {ensureLogger, NotFoundError} from "../../../utils.js";
 import { VoidResult } from "../../../blockstore/serde-gateway.js";
 
 function cleanURI(uri: URI): URI {
@@ -10,7 +10,10 @@ function cleanURI(uri: URI): URI {
     .build()
     .cleanParams(
       PARAM.VERSION,
+      PARAM.NAME,
       // PARAM.STORE,
+      PARAM.STORE_KEY,
+      PARAM.SELF_REFLECT,
       PARAM.LOCAL_NAME,
     )
     .URI();
@@ -49,15 +52,19 @@ export class MemoryGateway implements Gateway {
     return Promise.resolve(Result.Ok(undefined));
   }
 
-  async put(url: URI, bytes: Uint8Array): Promise<VoidResult> {
-    // ensureLogger(sthis, "MemoryGateway").Debug().Str("url", url.toString()).Msg("put");
-    // this.sthis.logger.Warn().Url(url).Msg("put");
+  async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<VoidResult> {
+    // const logger = ensureLogger(sthis, "MemoryGateway")
+    // logger.Debug().Url(url).Msg("put");
+    // if (url.getParam(PARAM.STORE) === 'meta') {
+      // console.log("MemoryGateway put meta", url.toString());
+    // }
     this.memorys.set(cleanURI(url).toString(), bytes);
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
-  get(url: URI): Promise<GetResult> {
-    // ensureLogger(sthis, "MemoryGateway").Debug().Str("url", url.toString()).Msg("put");
+  get(url: URI, sthis: SuperThis): Promise<GetResult> {
+    // const logger = ensureLogger(sthis, "MemoryGateway")
+    // logger.Debug().Url(url).Msg("get");
     const x = this.memorys.get(cleanURI(url).toString());
     if (!x) {
       // const possible = Array.from(this.memorys.keys()).filter(i => i.startsWith(url.build().cleanParams().toString()))

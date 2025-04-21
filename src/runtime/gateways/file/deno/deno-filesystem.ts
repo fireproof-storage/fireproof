@@ -46,7 +46,7 @@ export class DenoFileSystem implements SysFileSystem {
       isDirectory: () => x.isDirectory,
       isBlockDevice: () => !!x.isBlockDevice,
       isCharacterDevice: () => !!x.isCharDevice,
-      isSymbolicLink: () => !!x.isSymlink,
+      isSymbolicLink: () => x.isSymlink,
       isFIFO: () => !!x.isFifo,
       isSocket: () => !!x.isSocket,
       uid: x.uid,

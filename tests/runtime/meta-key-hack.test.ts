@@ -51,7 +51,7 @@ describe("MetaKeyHack", () => {
     expect(rDataStoreKeyItem.isOk()).toBeTruthy();
     const rUrl = await memGw.buildUrl(metaStore.url(), "main");
     // console.log(">>>>", rUrl.Ok().toString())
-    const rGet = await memGw.get(rUrl.Ok());
+    const rGet = await memGw.get(rUrl.Ok(), sthis);
     const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as rt.V2SerializedMetaKey;
     const keyMaterials = metas.keys;
     const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asKeysItem();

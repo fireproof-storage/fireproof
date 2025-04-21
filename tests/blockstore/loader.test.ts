@@ -3,7 +3,7 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
-import { FPBlock, isBlockItemReady, isBlockItemStale } from "../../src/blockstore/index.js";
+import { FPBlock, isCarBlockItemReady, isCarBlockItemStale } from "../../src/blockstore/index.js";
 import { anyBlock2FPBlock } from "../../src/blockstore/loader-helpers.js";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
@@ -86,7 +86,7 @@ describe("basic Loader simple", function () {
     const carGroup = await loader.commit(t, { head: [block.cid] });
     expect(loader.carLog.length).toBe(1);
     const reader = await loader.loadCar(carGroup[0], loader.attachedStores.local());
-    assert(isBlockItemReady(reader));
+    assert(isCarBlockItemReady(reader));
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -172,7 +172,7 @@ describe("basic Loader with two commits", function () {
   it("should commit", async () => {
     const reader = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
-    assert(isBlockItemReady(reader));
+    assert(isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(0);
@@ -187,7 +187,7 @@ describe("basic Loader with two commits", function () {
 
     const reader = await loader.loadCar(compactCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
-    assert(isBlockItemReady(reader));
+    assert(isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(2);
@@ -212,7 +212,7 @@ describe("basic Loader with two commits", function () {
 
     const e = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(e).toBeTruthy();
-    assert(isBlockItemStale(e));
+    assert(isCarBlockItemStale(e));
     expect(e.item.status).toBe("stale");
     expect(e.item.statusCause.message).toMatch(/(missing car file)|(not found)/);
   }, 10000);
@@ -282,7 +282,7 @@ describe("basic Loader with index commits", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = await ib.loader.loadCar(carCid![0], ib.loader.attachedStores.local());
     expect(reader).toBeTruthy();
-    assert(isBlockItemReady(reader));
+    assert(isCarBlockItemReady(reader));
     const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);

@@ -24,7 +24,7 @@ export class CarLog {
     Object.freeze(x);
     return x;
   }
-  xunshift(logs: CarGroup) {
+  unshift(logs: CarGroup) {
     // console.log(
     //   "CarLog-unshift",
     //   logs.map((l) => l.toString()),
@@ -852,12 +852,12 @@ export function isBlockNotReady(ifp: unknown): ifp is FPBlock {
   return fp.item && fp.item.status !== "ready";
 }
 
-export function isBlockItemReady(ifp: unknown): ifp is FPBlock<ReadyCarBlockItem> {
+export function isCarBlockItemReady(ifp: unknown): ifp is FPBlock<ReadyCarBlockItem> {
   const fp = ifp as FPBlock<ReadyCarBlockItem>;
   return fp.item && fp.item.type === "car" && fp.item.status === "ready";
 }
 
-export function isBlockItemStale(ifp: unknown): ifp is FPBlock<StaleCarBlockItem> {
+export function isCarBlockItemStale(ifp: unknown): ifp is FPBlock<StaleCarBlockItem> {
   const fp = ifp as FPBlock<StaleCarBlockItem>;
   return fp.item && fp.item.type === "car" && fp.item.status === "stale";
 }

@@ -443,7 +443,7 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
   for await (const _entry of getAllEntries(blockLog, head, logger)) {
     // result.push(entry)
     // void 1;
-    continue;
+    // continue;
   }
   timeEnd("compact all entries");
 

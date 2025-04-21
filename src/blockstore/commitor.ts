@@ -93,7 +93,7 @@ export async function commitFiles(
 function makeFileCarHeader(result: FileTransactionMeta): TransactionMeta {
   const files: AnyLink[] = [];
   for (const [, meta] of Object.entries(result.files || {})) {
-    if (meta && typeof meta === "object" && "cid" in meta && meta !== null) {
+    if (typeof meta === "object" && "cid" in meta && meta !== null) {
       files.push(meta.cid as AnyLink);
     }
   }

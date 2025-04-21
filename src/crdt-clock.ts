@@ -182,7 +182,7 @@ async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTra
     } catch (e) {
       logger.Error().Err(e).Msg("failed to advance head");
       // console.log('failed to advance head:', cid.toString(), e)
-      continue;
+      // continue;
     }
   }
   return head;

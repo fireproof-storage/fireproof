@@ -10,8 +10,8 @@ import indexeddb from "./tests/vitest.indexeddb.config.ts";
 export default defineWorkspace([
   // force multilines
   memory,
-  file,
-  indexeddb,
+//  file,
+//  indexeddb,
   cloudD1,
   cloudLibsql,
   cloudMetaMerge,

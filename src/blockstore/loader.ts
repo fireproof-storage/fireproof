@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car/reader";
-import { KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result } from "@adviser/cement";
+import {exception2Result, KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result } from "@adviser/cement";
 
 import {
   type AnyBlock,
@@ -21,8 +21,8 @@ import {
   FPBlock,
   CarBlockItem,
   BlockFetcher,
-  isBlockItemReady,
-  isBlockItemStale,
+  isCarBlockItemReady,
+  isCarBlockItemStale,
   ReadyCarBlockItem,
 } from "./types.js";
 
@@ -47,6 +47,7 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { TaskManager } from "./task-manager.js";
 import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
 import { ensureLogger, isNotFoundError } from "../utils.js";
+import {Car2FPMsg} from "./fp-envelope.js";
 
 export function carLogIncludesGroup(list: FroozenCarLog, cids: CarGroup) {
   const cidSet = cids
@@ -109,12 +110,12 @@ export class Loader implements Loadable {
         return this;
       }
       const value = rvalue.Ok();
-      if (isBlockItemStale(value)) {
+      if (isCarBlockItemStale(value)) {
         this.cidCache.unget(value.cid.toString());
         staleLoadcars.push(
           this.maxConcurrentCarReader(() =>
             this.loadCar(value.cid, store).then((fpcar) => {
-              if (isBlockItemStale(fpcar)) {
+              if (isCarBlockItemStale(fpcar)) {
                 this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
               }
               return Promise.resolve(fpcar);
@@ -131,9 +132,14 @@ export class Loader implements Loadable {
       if (!at.stores.wal) {
         try {
           const store = this.attachedStores.activate(at.stores);
+          console.log("attach-1", store.active.car.url().toString())
           await this.tryToLoadStaleCars(store);
+          console.log("attach-2", store.active.car.url().toString(), "local", store.local().carStore().active.url().toString())
+          const localDbMeta = await store.local().active.meta.load();
+          console.log("attach-3", localDbMeta, store.active.car.url().toString())
           // remote Store need to kick off the sync by requesting the latest meta
-          const dbMeta = await at.stores.meta.load();
+          const dbMeta = await store.active.meta.load();
+          console.log("attach-4", store.active.car.url().toString())
           if (Array.isArray(dbMeta)) {
             if (dbMeta.length !== 0) {
               await this.handleDbMetasFromStore(dbMeta, store);
@@ -141,14 +147,43 @@ export class Loader implements Loadable {
           } else if (!isFalsy(dbMeta)) {
             throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
           }
+          if (localDbMeta) {
+            console.log("attach-6", store.active.car.url())
+            await this.ensureAttachedStore(store, localDbMeta);
+          }
+          console.log("attach-5", store.active.car.url())
         } catch (e) {
-          this.logger.Error().Err(e).Msg("error attaching store");
-          at.detach();
+          await at.detach();
+          throw this.logger.Error().Err(e).Msg("error attaching store").AsError()
         }
       }
       return at;
     });
   }
+
+    private async ensureAttachedStore(store: ActiveStore, localDbMeta: DbMeta[]) {
+      const localCarStore = store.local().carStore()
+      // console.log("local", localCarStore.active.url(), "remote", store.active.car.url());
+
+      const codec = (await localCarStore.active.keyedCrypto()).codec()
+      for (const cargroup of localDbMeta) {
+        for (const carId of cargroup.cars) {
+          const car = await this.storesLoadCar(carId, localCarStore);
+          const rStore = await exception2Result(async () => await store.active.car.save({
+            cid: carId,
+            bytes: await codec.encode(car.bytes),
+          }))
+          if (rStore.isErr()) {
+            this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
+          }
+        }
+        const res = await store.active.meta.save(cargroup)
+        if (res.isErr()) {
+          this.logger.Warn().Err(res.Err()).Msg("error saving meta");
+        }
+      }
+      // TODO remeber
+    }
 
   // private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta: LRUSet<string>;
@@ -317,9 +352,9 @@ export class Loader implements Loadable {
   async loadCarHeaderFromMeta<T>(dbm: DbMeta, astore: ActiveStore): Promise<CarHeader<T>> {
     //Call loadCar for every cid
     const reader = await this.loadCar(dbm.cars[0], astore);
-    if (isBlockItemStale(reader)) {
+    if (isCarBlockItemStale(reader)) {
       this.logger.Warn().Str("cid", dbm.cars[0].toString()).Msg("stale loadCarHeaderFromMeta");
-    } else if (isBlockItemReady(reader)) {
+    } else if (isCarBlockItemReady(reader)) {
       return await parseCarFile(reader, this.logger);
     }
     return {
@@ -401,7 +436,7 @@ export class Loader implements Loadable {
       //     .map((c) => c.map((cc) => cc.toString()))
       //     .flat(),
       // );
-      this.carLog.xunshift(cids);
+      this.carLog.unshift(cids);
     }
   }
 
@@ -477,11 +512,14 @@ export class Loader implements Loadable {
     for (const carCids of this.carLog.asArray()) {
       for (const carCid of carCids) {
         const reader = await this.loadCar(carCid, this.attachedStores.local());
-        if (isBlockItemStale(reader)) {
-          this.logger.Warn().Str("cid", carCid.toString()).Err(reader.item.statusCause).Msg("stale car");
+        if (isCarBlockItemStale(reader)) {
+          this.logger.Warn().Any({
+            cid: carCid.toString(),
+            url: this.attachedStores.local().carStore().active.url()
+          }).Err(reader.item.statusCause).Msg("entries-stale car");
           continue;
         }
-        if (!isBlockItemReady(reader)) {
+        if (!isCarBlockItemReady(reader)) {
           throw this.logger.Error().Any({ cid: carCid.toString(), item: reader.item }).Msg("missing car reader").AsError();
         }
         // console.log(
@@ -509,11 +547,11 @@ export class Loader implements Loadable {
   async getCompactCarCids(carCid: AnyLink, store: ActiveStore): Promise<void> {
     const sCid = carCid.toString();
     const reader = await this.loadCar(carCid, store);
-    if (isBlockItemStale(reader)) {
+    if (isCarBlockItemStale(reader)) {
       this.logger.Warn().Str("cid", sCid).Err(reader.item.statusCause).Msg("stale getCompactCarCids");
       return;
     }
-    if (!isBlockItemReady(reader)) {
+    if (!isCarBlockItemReady(reader)) {
       this.logger.Warn().Str("cid", sCid).Msg("is not ready");
       return;
     }
@@ -545,8 +583,11 @@ export class Loader implements Loadable {
 
   async loadCar(cid: AnyLink, store: ActiveStore): Promise<FPBlock<CarBlockItem>> {
     const loaded = await this.storesLoadCar(cid, store.carStore());
-    if (isBlockItemStale(loaded)) {
-      this.logger.Warn().Str("cid", cid.toString()).Err(loaded.item.statusCause).Msg("stale car");
+    if (isCarBlockItemStale(loaded)) {
+      this.logger.Warn().Any({
+        cid: loaded.cid.toString(),
+        url: this.attachedStores.local().carStore().active.url()
+      }).Err(loaded.item.statusCause).Msg("load-car-stale car");
     }
     return loaded;
   }

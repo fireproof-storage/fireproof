@@ -8,7 +8,7 @@ import {
   Loadable,
   FPBlock,
   BlockFetcher,
-  isBlockItemReady,
+  isCarBlockItemReady,
 } from "./types.js";
 import { Loader } from "./loader.js";
 import { BaseBlockstore, CarTransaction, CRDT, Falsy, falsyToUndef, SuperThis } from "../types.js";
@@ -272,7 +272,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
     const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
-    if (!isBlockItemReady(reader)) {
+    if (!isCarBlockItemReady(reader)) {
       throw this.logger.Error().Str("cid", car.toString()).Msg("car not ready").AsError();
     }
     const block = await reader.item.value.car.blocks.find((i) => i.cid.equals(cid));

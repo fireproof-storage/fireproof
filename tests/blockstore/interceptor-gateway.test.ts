@@ -87,14 +87,14 @@ export class URITrackGateway implements bs.Gateway {
     return this.memgw.destroy(baseUrl);
   }
 
-  put(url: URI, bytes: Uint8Array): Promise<bs.VoidResult> {
+  put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<bs.VoidResult> {
     this.uriAdd(url);
-    return this.memgw.put(url, bytes);
+    return this.memgw.put(url, bytes, sthis);
   }
 
-  get(url: URI): Promise<bs.GetResult> {
+  get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
     this.uriAdd(url);
-    return this.memgw.get(url);
+    return this.memgw.get(url, sthis);
   }
   delete(url: URI): Promise<bs.VoidResult> {
     this.uriAdd(url);

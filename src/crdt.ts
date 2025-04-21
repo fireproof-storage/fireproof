@@ -162,7 +162,7 @@ export class CRDTImpl implements CRDT {
         // console.log("bs-ready-pre")
         // await this.blockstore.ready();
         // console.log("bs-ready-post-1")
-        // await this.indexBlockstore.ready();
+        // await this.indexBlockstore?.ready();
         // console.log("bs-ready-post-2")
         // await this.clock.ready();
         // console.log("bs-ready-post-3")
