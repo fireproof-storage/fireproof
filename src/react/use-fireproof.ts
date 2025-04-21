@@ -31,7 +31,7 @@ export const FireproofCtx = {} as UseFireproof;
  */
 function createLazyDatabase(name: string, config: ConfigOpts = {}): Database {
   let _database: Database | null = null;
-  const _subscribers = new Set<(changes: Record<string, unknown>[]) => void>();
+  const _subscribers = new Set<(changes: unknown[]) => void>();
 
   // Initialize the database only when needed
   const getDatabase = (): Database => {
@@ -104,12 +104,12 @@ function createLazyDatabase(name: string, config: ConfigOpts = {}): Database {
 
         // Handle subscribe method to collect subscribers even before DB is initialized
         if (prop === "subscribe") {
-          return function subscribe(callback: (changes: Record<string, unknown>[]) => void) {
+          return function subscribe(callback: (changes: unknown[]) => void) {
             _subscribers.add(callback);
 
             // Always initialize database for subscriptions
             const db = getDatabase();
-            return db.subscribe(callback);
+            return db.subscribe(callback as (changes: Record<string, unknown>[]) => void);
           };
         }
 
