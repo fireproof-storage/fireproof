@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, waitFor, fireEvent, act } from "@testing-library/react";
-import { useState, useEffect, createElement } from "react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { createElement, useEffect, useState } from "react";
+import { describe, expect, it, vi } from "vitest";
 import { useFireproof } from "../../src/react/use-fireproof.js";
 
 // Extend HTMLElement for TypeScript compatibility
@@ -16,9 +16,8 @@ declare global {
 // Test component that triggers state updates and verifies database stability
 function TestComponent() {
   const { database } = useFireproof("test-stability-db");
-  const initialDatabaseRef = database;
-
   const [counter, setCounter] = useState(0);
+  const initialDatabaseRef = database;
 
   // Verify that the database reference remains stable across renders
   if (counter > 0 && initialDatabaseRef !== database) {
@@ -33,6 +32,7 @@ function TestComponent() {
       {
         "data-testid": "increment",
         key: "increment",
+        type: "button",
         onClick: () => setCounter((c) => c + 1),
       },
       "Increment",
