@@ -32,7 +32,7 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       cborg:
-        specifier: ^4.2.9
+        specifier: ^4.2.10
         version: 4.2.11
       charwise:
         specifier: ^3.0.1
@@ -4549,8 +4549,8 @@ packages:
   carstream@2.3.0:
     resolution: {integrity: sha512-2YwFg5Kxs2tqVCJv7sthWbYoUpALCYBBfTdpQcpicV7ipi6bBb1h9M4MNb1vm+724f39lUNp5VWhW43IFxfPlA==}
 
-  cborg@1.10.2:
-    resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
+  cborg@4.2.10:
+    resolution: {integrity: sha512-ZVA0xrVn8uBfDJYgfKKZzB/93z/Uiz7YtRdBPsZi/gyHNyqFdHMLHURVEk9dejOHepaX0zhcMyNva2/vF972SA==}
     hasBin: true
 
   cborg@4.2.11:
@@ -10457,8 +10457,8 @@ snapshots:
 
   '@ipld/dag-cbor@8.0.1':
     dependencies:
-      cborg: 1.10.2
-      multiformats: 11.0.2
+      cborg: 4.2.10
+      multiformats: 13.3.2
 
   '@ipld/dag-cbor@9.2.4':
     dependencies:
@@ -12636,7 +12636,7 @@ snapshots:
       multiformats: 13.3.6
       uint8arraylist: 2.4.8
 
-  cborg@1.10.2: {}
+  cborg@4.2.10: {}
 
   cborg@4.2.11: {}
 
