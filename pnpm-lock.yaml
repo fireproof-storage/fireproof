@@ -162,7 +162,7 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
       typescript-eslint:
-        specifier: ^8.29.1
+        specifier: ^8.30.1
         version: 8.33.1(eslint@9.28.0(jiti@1.21.7))(typescript@5.8.3)
       uuidv7:
         specifier: ^1.0.2
