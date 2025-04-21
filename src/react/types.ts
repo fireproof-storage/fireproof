@@ -1,4 +1,11 @@
 import type {
+  AllDocsQueryOpts,
+  Attachable,
+  Attached,
+  ChangesOptions,
+  ClockHead,
+  ConfigOpts,
+  Database,
   DocFragment,
   DocResponse,
   DocSet,
@@ -8,13 +15,6 @@ import type {
   IndexRow,
   MapFn,
   QueryOpts,
-  Database,
-  AllDocsQueryOpts,
-  ChangesOptions,
-  ClockHead,
-  ConfigOpts,
-  Attachable,
-  Attached,
 } from "@fireproof/core";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
@@ -95,8 +95,9 @@ export interface UseFireproof {
   readonly useLiveQuery: UseLiveQuery;
   readonly useAllDocs: UseAllDocs;
   readonly useChanges: UseChanges;
-  readonly attach: AttachState;
+  readonly attach: AttachState; // changed from AttachState to function returning AttachState
 }
+
 export interface WebToCloudCtx {
   readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
   readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"

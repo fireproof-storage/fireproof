@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 
-import { falsyToUndef, Database } from "@fireproof/core";
-import { AttachState, UseFPConfig, WebToCloudCtx } from "./types.js";
+import { Database, falsyToUndef } from "@fireproof/core";
 import { useEffect, useState } from "react";
+import { AttachState, UseFPConfig, WebToCloudCtx } from "./types.js";
 
 export const WebCtx = "webCtx";
 
@@ -59,8 +59,9 @@ export function defaultWebToCloudOpts(opts: Partial<WebToCloudCtx>): WebToCloudC
   return new WebCtxImpl(opts);
 }
 
-export function createAttach(database: Database, config: UseFPConfig): AttachState {
+export function useAttach(database: Database, config: UseFPConfig): AttachState {
   const [attachState, setAttachState] = useState<AttachState>({ state: "initial" });
+
   useEffect(() => {
     if (config.attach && attachState.state === "initial") {
       setAttachState({ state: "attaching" });
@@ -71,7 +72,6 @@ export function createAttach(database: Database, config: UseFPConfig): AttachSta
             .ctx()
             .get<WebToCloudCtx>(WebCtx)
             ?.onTokenChange((token) => {
-              // console.log("Token changed", token);
               if (!token) {
                 setAttachState({ state: "initial" });
                 return;
@@ -85,5 +85,6 @@ export function createAttach(database: Database, config: UseFPConfig): AttachSta
         });
     }
   }, [database, config.attach, attachState]);
+
   return attachState;
 }
