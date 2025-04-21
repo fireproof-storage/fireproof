@@ -2,7 +2,7 @@ import { CRDTEntry } from "@fireproof/core";
 import { sqlTenantLedger } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
 import { foreignKey, primaryKey, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
-import { eq, and, inArray } from "drizzle-orm/expressions";
+import { eq, and, inArray } from "drizzle-orm";
 import { sqlMetaSend } from "./meta-send.js";
 import { DrizzleDatebase } from "../hono-server.js";
 
