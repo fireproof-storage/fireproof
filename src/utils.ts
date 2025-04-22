@@ -21,6 +21,7 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
+import { toSortedArray } from "@adviser/cement/utils";
 
 //export type { Logger };
 //export { Result };
@@ -396,13 +397,6 @@ export function inplaceFilter<T>(i: T[], pred: (i: T, idx: number) => boolean): 
   return i;
 }
 
-export function toSortedArray<T extends NonNullable<unknown>>(set?: T): Record<string, unknown>[] {
-  if (!set) return [];
-  return Object.entries(set)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => ({ [k]: v }));
-}
-
 export function coerceIntoUint8(raw: ToUInt8): Result<Uint8Array> {
   if (raw instanceof Uint8Array) {
     return Result.Ok(raw);
@@ -519,7 +513,7 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
 
 export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
   // toSortedArray should be shallow
-  const bytes = json.encode(toSortedArray(o as unknown as Record<string, unknown>));
+  const bytes = json.encode(toSortedArray(o));
   const hash = await sha256.digest(bytes);
   const cid = CID.create(1, json.code, hash);
   return cid.toString();
