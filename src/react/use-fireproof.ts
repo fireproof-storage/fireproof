@@ -1,5 +1,4 @@
-import type { Database } from "@fireproof/core";
-import { fireproof } from "@fireproof/core";
+import { Database, toSortedArray, fireproof } from "@fireproof/core";
 import { useMemo } from "react";
 import { useAttach } from "./use-attach.js";
 import type { UseFPConfig, UseFireproof } from "./types.js";
@@ -28,13 +27,14 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
-  const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, JSON.stringify(config)]);
+  const strConfig = JSON.stringify(toSortedArray(config));
+  const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, strConfig]);
   const attach = useAttach(database, config);
 
-  const useDocument = useMemo(() => createUseDocument(database), [database.name, JSON.stringify(config)]);
-  const useLiveQuery = useMemo(() => createUseLiveQuery(database), [database.name, JSON.stringify(config)]);
-  const useAllDocs = useMemo(() => createUseAllDocs(database), [database.name, JSON.stringify(config)]);
-  const useChanges = useMemo(() => createUseChanges(database), [database.name, JSON.stringify(config)]);
+  const useDocument = useMemo(() => createUseDocument(database), [database.name, strConfig]);
+  const useLiveQuery = useMemo(() => createUseLiveQuery(database), [database.name, strConfig]);
+  const useAllDocs = useMemo(() => createUseAllDocs(database), [database.name, strConfig]);
+  const useChanges = useMemo(() => createUseChanges(database), [database.name, strConfig]);
 
   return { database, useLiveQuery, useDocument, useAllDocs, useChanges, attach };
 }
