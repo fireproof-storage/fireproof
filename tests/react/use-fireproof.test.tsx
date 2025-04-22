@@ -598,7 +598,7 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
   });
 });
 
-describe("useFireproo calling submit()", () => {
+describe("useFireproof calling submit()", () => {
   const dbName = "submitDb";
   let db: Database, docResult: UseDocumentResult<{ input: string }>;
 

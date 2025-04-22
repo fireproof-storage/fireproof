@@ -1,6 +1,6 @@
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { createElement, useEffect, useState } from "react";
-import { describe, expect, it, vi } from "vitest";
 import { useFireproof } from "../../src/react/use-fireproof.js";
 
 // Extend HTMLElement for TypeScript compatibility
