@@ -19,9 +19,7 @@ export function createUseChanges(database: Database) {
     }, [since, queryString]);
 
     useEffect(() => {
-      refreshRows().then(() => {
-        // No-op
-      }); // Initial data fetch
+      refreshRows(); // Initial data fetch
       return database.subscribe(refreshRows);
     }, [refreshRows]);
 

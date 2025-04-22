@@ -22,9 +22,7 @@ export function createUseAllDocs(database: Database) {
     }, [database, queryString]);
 
     useEffect(() => {
-      refreshRows().then(() => {
-        // No-op
-      });
+      refreshRows();
       const unsubscribe = database.subscribe(refreshRows);
       return () => {
         unsubscribe();
