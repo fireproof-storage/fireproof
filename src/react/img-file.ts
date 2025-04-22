@@ -1,18 +1,16 @@
 import { DocFileMeta } from "@fireproof/core";
 import React, { useState, useEffect, ImgHTMLAttributes } from "react";
 
-const { URL } = globalThis;
-
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
 
 interface ImgFileProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
-  file?: FileType;
+  readonly file?: FileType;
   /**
    * @deprecated Use 'file' instead. This is for internal use only to support legacy code.
    * @internal
    */
-  meta?: FileType;
+  readonly meta?: FileType;
 }
 
 // Helper function to determine if the object is a File-like object
@@ -50,8 +48,10 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
       }
 
       if (fileObj && /image/.test(fileType)) {
+        // eslint-disable-next-line no-restricted-globals
         const src = URL.createObjectURL(fileObj);
         setImgDataUrl(src);
+        // eslint-disable-next-line no-restricted-globals
         return () => URL.revokeObjectURL(src);
       }
     };

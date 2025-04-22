@@ -528,3 +528,10 @@ export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<str
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Deep clone a value
+ */
+export function deepClone<T>(value: T): T {
+  return (structuredClone ?? ((v: T) => JSON.parse(JSON.stringify(v))))(value);
+}
