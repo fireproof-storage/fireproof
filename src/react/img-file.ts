@@ -5,12 +5,12 @@ import React, { useState, useEffect, ImgHTMLAttributes } from "react";
 type FileType = File | DocFileMeta;
 
 interface ImgFileProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> {
-  readonly file?: FileType;
+  file?: FileType;
   /**
    * @deprecated Use 'file' instead. This is for internal use only to support legacy code.
    * @internal
    */
-  readonly meta?: FileType;
+  meta?: FileType;
 }
 
 // Helper function to determine if the object is a File-like object

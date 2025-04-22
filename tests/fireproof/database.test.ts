@@ -742,29 +742,30 @@ describe("StoreURIRuntime", () => {
 
   it("keyConfigOpts", () => {
     expect(JSON.parse(keyConfigOpts(sthis, "test"))).toEqual([
-      {
-        name: "test",
-      },
-      {
-        stores: [
-          {
-            data: {
+      ["name", "test"],
+      [
+        "stores",
+        [
+          [
+            "data",
+            {
               car: "my://bla/storage?name=test&store=car&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
               file: "my://bla/storage?name=test&store=file&storekey=%40test-data%40&urlGen=fromEnv",
               meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
               wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
             },
-          },
-          {
-            idx: {
+          ],
+          [
+            "idx",
+            {
               car: "my://bla/storage?index=idx&name=test&store=car&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
               file: "my://bla/storage?index=idx&name=test&store=file&storekey=%40test-data-idx%40&urlGen=fromEnv",
               meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
               wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",
             },
-          },
+          ],
         ],
-      },
+      ],
     ]);
   });
 

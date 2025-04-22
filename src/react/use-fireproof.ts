@@ -1,4 +1,5 @@
-import { Database, toSortedArray, fireproof } from "@fireproof/core";
+import { toSortedArray } from "@adviser/cement/utils";
+import { Database, fireproof } from "@fireproof/core";
 import { useMemo } from "react";
 import { useAttach } from "./use-attach.js";
 import type { UseFPConfig, UseFireproof } from "./types.js";

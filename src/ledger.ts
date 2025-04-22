@@ -18,7 +18,7 @@ import type {
 } from "./types.js";
 import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
-import { ensureLogger, ensureSuperThis, ensureURIDefaults, toSortedArray } from "./utils.js";
+import { ensureLogger, ensureSuperThis, ensureURIDefaults } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts } from "./runtime/key-bag.js";
@@ -26,6 +26,7 @@ import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
 import { FPContext } from "./fp-context.js";
+import { toSortedArray } from "@adviser/cement/utils";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
