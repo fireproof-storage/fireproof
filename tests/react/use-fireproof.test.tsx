@@ -577,18 +577,18 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
 
       // Call save and don't await it
       const savePromise = docResult.save();
-      
+
       // Add a small delay to avoid React state queue issues in test environment
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Call reset after save
       docResult.reset();
 
       // Wait for save to complete
       await savePromise;
-      
+
       // Let any async subscriptions complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify the reset took precedence
       expect(docResult.doc._id).toBeUndefined();
