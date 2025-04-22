@@ -14,7 +14,7 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-import { CarBlockItem, FPBlock } from "../src/blockstore/index.js";
+import {CarBlockItem, CarGroup, FPBlock} from "../src/blockstore/index.js";
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
@@ -128,9 +128,9 @@ class MockLoader implements bs.Loadable {
     return rt.kb.getKeyBag(this.sthis, {});
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<void> {
+  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<CarGroup> {
     // throw new Error("Method not implemented.");
-    return Promise.resolve();
+    return Promise.resolve([]);
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   commit<T = unknown>(t: CarTransaction, done: T, opts: bs.CommitOpts): Promise<bs.CarGroup> {

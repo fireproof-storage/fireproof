@@ -55,9 +55,12 @@ export class MemoryGateway implements Gateway {
   async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<VoidResult> {
     // const logger = ensureLogger(sthis, "MemoryGateway")
     // logger.Debug().Url(url).Msg("put");
-    // if (url.getParam(PARAM.STORE) === 'meta') {
-      // console.log("MemoryGateway put meta", url.toString());
-    // }
+    if (url.getParam(PARAM.STORE) === 'car') {
+      console.log("put-car", url.pathname, url.getParam(PARAM.KEY))
+    }
+    if (url.getParam(PARAM.STORE) === 'meta') {
+      console.log("put-meta", url.pathname, (new TextDecoder()).decode(bytes))
+    }
     this.memorys.set(cleanURI(url).toString(), bytes);
     return Result.Ok(undefined);
   }
@@ -70,6 +73,12 @@ export class MemoryGateway implements Gateway {
       // const possible = Array.from(this.memorys.keys()).filter(i => i.startsWith(url.build().cleanParams().toString()))
       // this.sthis.logger.Warn().Any("possible", possible).Url(url).Msg("not found");
       return Promise.resolve(Result.Err(new NotFoundError(`not found: ${url.toString()}`)));
+    }
+    if (url.getParam(PARAM.STORE) === 'meta') {
+        console.log("get-meta", url.pathname, (new TextDecoder()).decode(x))
+    }
+    if (url.getParam(PARAM.STORE) === 'car') {
+      console.log("get-car", url.pathname, url.getParam(PARAM.KEY))
     }
     return Promise.resolve(Result.Ok(x));
   }

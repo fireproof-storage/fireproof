@@ -167,7 +167,7 @@ export async function commit<T>(
   }
 
   // await this.cacheTransaction(t);
-  const newDbMeta = { cars: cids } as DbMeta;
+  const newDbMeta = { cars: cids };
   await params.WALStore.enqueue(newDbMeta, opts);
   await params.metaStore.save(newDbMeta);
   return { cgrp: cids, header: fp };

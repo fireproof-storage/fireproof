@@ -223,7 +223,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   //   return (rDbMeta.Ok() as FPEnvelopeMeta).payload;
   // }
 
-  async load(branch = "main"): Promise<DbMeta[] | Falsy> {
+  async load(branch = "main", skipHandle = false): Promise<DbMeta[] | Falsy> {
     const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
     if (url.isErr()) {
       throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
@@ -238,8 +238,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
     // const dbMetas = await this.handleByteHeads(fpMeta);
     const dbMetas = fpMeta.map((m) => m.dbMeta);
-    await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.activate(url.Ok()));
-    this.updateParentsFromDbMetas(fpMeta);
+    if (!skipHandle) {
+      await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.activate(url.Ok()));
+      this.updateParentsFromDbMetas(fpMeta);
+    }
     return dbMetas;
   }
 

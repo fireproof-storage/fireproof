@@ -150,7 +150,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
       tblocks.putSync(await anyBlock2FPBlock(block));
     }
   }
-  return { head: result.head } satisfies CRDTMeta;
+  return { head: result.head }; // satisfies CRDTMeta;
 }
 
 // this whole thing can get pulled outside of the write queue

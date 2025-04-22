@@ -426,7 +426,9 @@ export function DbMetaEventsEqual(a: DbMetaEvent[], b: DbMetaEvent[]): boolean {
 
 export interface MetaStore extends BaseStore {
   readonly storeType: "meta";
-  load(branch?: string): Promise<DbMeta[] | Falsy>;
+  // branch defaults to "main"
+  // skipHandle defaults to false
+  load(branch?: string, skipHandle?: boolean): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
   // onLoad(branch: string, loadHandler: LoadHandler): () => void;
@@ -665,7 +667,7 @@ export interface Loadable {
 
   keyBag(): Promise<KeyBag>;
 
-  handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<void>;
+  handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<CarGroup>;
 
   commit<T = TransactionMeta>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup>;
   destroy(): Promise<void>;

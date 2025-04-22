@@ -14,7 +14,8 @@ import {
 } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
-import {mockLoader, storageURL} from "../helpers.js";
+import { mockLoader, storageURL } from "../helpers.js";
+import { expect } from "vitest";
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();
@@ -251,9 +252,21 @@ describe("join function", () => {
     }
     prepare(): Promise<GatewayUrlsParam> {
       return Promise.resolve({
-        car: { url: BuildURI.from(`memory://car/${this.name}` ).setParam(PARAM.STORE_KEY, "@fireproof:attach@").setParam(PARAM.SELF_REFLECT, "x")},
-        meta: { url: BuildURI.from(`memory://meta/${this.name}` ).setParam(PARAM.STORE_KEY, "@fireproof:attach@").setParam(PARAM.SELF_REFLECT, "x")},
-        file: { url: BuildURI.from(`memory://file/${this.name}`).setParam(PARAM.STORE_KEY, "@fireproof:attach@").setParam(PARAM.SELF_REFLECT, "x") },
+        car: {
+          url: BuildURI.from(`memory://car/${this.name}`)
+            .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
+            .setParam(PARAM.SELF_REFLECT, "x"),
+        },
+        meta: {
+          url: BuildURI.from(`memory://meta/${this.name}`)
+            .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
+            .setParam(PARAM.SELF_REFLECT, "x"),
+        },
+        file: {
+          url: BuildURI.from(`memory://file/${this.name}`)
+            .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
+            .setParam(PARAM.SELF_REFLECT, "x"),
+        },
       });
     }
   }
@@ -394,90 +407,103 @@ describe("join function", () => {
   it("offline sync", async () => {
     const id = sthis.nextId().str;
 
-    console.log("outbound-db")
-    const outbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    await outbound.db.attach(aJoinable(`sync-${id}`))
-    await outbound.db.close()
+    console.log("outbound-db");
+    const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
+    await poutbound.db.attach(aJoinable(`sync-${id}`));
+    // await sleep(500);
+    await poutbound.db.close();
+    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
     // await writeRow(outbound, "outbound");
 
-    console.log("inbound-db")
-    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`)
-    await inbound.db.attach(aJoinable(`sync-${id}`))
-    await inbound.db.close()
+    console.log("inbound-db");
+    const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await pinbound.db.close();
+    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
 
-    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound")
-    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound")
+    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await inbound.db.attach(aJoinable(`sync-${id}`));
+    await inbound.db.close();
 
-    console.log(outRows);
-    console.log(inRows);
-    expect(inRows). toEqual(outRows);
+    console.log("result");
+    const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+    // console.log(re);
+    // console.log(inRows);
+    expect(resultRows.length).toBe(4);
+    expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
+
+    const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
+    await joined.db.attach(aJoinable(`sync-${id}`));
+    await joined.db.close();
+    const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
+    expect(resultRows).toEqual(joinedRows);
   }, 100_000);
 
   it("sync outbound", async () => {
     const id = sthis.nextId().str;
 
     const outbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    await outbound.db.attach(aJoinable(`sync-${id}`))
+    await outbound.db.attach(aJoinable(`sync-${id}`));
     await writeRow(outbound, "outbound");
 
-    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`)
-    await inbound.db.attach(aJoinable(`sync-${id}`))
+    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await inbound.db.attach(aJoinable(`sync-${id}`));
     await writeRow(inbound, "both-inbound");
     await writeRow(outbound, "both-outbound");
-    await inbound.db.close()
-    await outbound.db.close()
+    await inbound.db.close();
+    await outbound.db.close();
 
-    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound")
-    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound")
-
+    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
     console.log(outRows);
     console.log(inRows);
-    expect(inRows). toEqual(outRows);
+    expect(inRows).toEqual(outRows);
   });
 });
 
+async function syncDb(name: string, base: string) {
+  const db = fireproof(name, {
+    storeUrls: {
+      base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@").setParam(PARAM.SELF_REFLECT, "yes"),
+    },
+  });
+  await db.ready();
+  return db;
+}
+
 async function prepareDb(name: string, base: string) {
   {
-    const db = fireproof(name, {
-      storeUrls: {
-        base: BuildURI.from(base)
-          .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
-          .setParam(PARAM.SELF_REFLECT, 'yes')
-      }
-    });
-    await db.ready()
-    const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id()
-    const ret = {db, dbId}
-    await writeRow(ret, `initial`)
+    const db = await syncDb(name, base);
+    await db.ready();
+    const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+    const ret = { db, dbId };
+    await writeRow(ret, `initial`);
     await db.close();
   }
 
-  const db = fireproof(name, {storeUrls: {base: BuildURI.from(base)
-        .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
-        .setParam(PARAM.SELF_REFLECT, 'yes') }});
+  const db = await syncDb(name, base);
   await db.ready();
-  const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id()
-  const ret = {db, dbId}
-  await writeRow(ret, `prepare`)
+  const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+  const ret = { db, dbId };
+  await writeRow(ret, `prepare`);
 
-  return {db, dbId}
+  return { db, dbId };
 }
 
 async function readDb(name: string, base: string) {
-  const db = fireproof(name, { storeUrls: {
-    base: BuildURI.from(base)
-      .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
-      .setParam(PARAM.SELF_REFLECT, 'yes')
-  } })
-  const rows = await db.allDocs()
-  await db.close()
-  return rows.rows.sort((a,b) => a.key.localeCompare(b.key))
+  const db = await syncDb(name, base);
+  const rows = await db.allDocs();
+  await db.close();
+  return rows.rows.sort((a, b) => a.key.localeCompare(b.key));
 }
 
 async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
-  await Promise.all(Array(1).fill(0).map(async (_, i) => {
-    const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
-    console.log(key);
-    await pdb.db.put({_id: key, value: key});
-  }))
+  await Promise.all(
+    Array(1)
+      .fill(0)
+      .map(async (_, i) => {
+        const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
+        console.log(key);
+        await pdb.db.put({ _id: key, value: key });
+      }),
+  );
 }
