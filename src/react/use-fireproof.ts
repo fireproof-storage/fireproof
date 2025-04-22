@@ -1,7 +1,7 @@
 import type { Database } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useMemo } from "react";
-import { useAttach } from "./create-attach.js";
+import { useAttach } from "./use-attach.js";
 import type { UseFPConfig, UseFireproof } from "./types.js";
 import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
