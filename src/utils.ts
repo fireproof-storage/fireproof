@@ -396,7 +396,7 @@ export function inplaceFilter<T>(i: T[], pred: (i: T, idx: number) => boolean): 
   return i;
 }
 
-export function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
+export function toSortedArray<T extends NonNullable<unknown>>(set?: T): Record<string, unknown>[] {
   if (!set) return [];
   return Object.entries(set)
     .sort(([a], [b]) => a.localeCompare(b))
