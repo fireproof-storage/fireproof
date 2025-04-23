@@ -14,7 +14,7 @@ import {
 } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
-import { mockLoader, storageURL } from "../helpers.js";
+import { mockLoader } from "../helpers.js";
 import { expect } from "vitest";
 
 describe("meta check", () => {
@@ -407,7 +407,7 @@ describe("join function", () => {
   it("offline sync", async () => {
     const id = sthis.nextId().str;
 
-    console.log("outbound-db");
+    // console.log("outbound-db");
     const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
     await poutbound.db.attach(aJoinable(`sync-${id}`));
     // await sleep(500);
@@ -415,7 +415,7 @@ describe("join function", () => {
     const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
     // await writeRow(outbound, "outbound");
 
-    console.log("inbound-db");
+    // console.log("inbound-db");
     const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
     await pinbound.db.close();
     const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
@@ -424,11 +424,11 @@ describe("join function", () => {
     await inbound.db.attach(aJoinable(`sync-${id}`));
     await inbound.db.close();
 
-    console.log("result");
+    // console.log("result");
     const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
     // console.log(re);
     // console.log(inRows);
-    expect(resultRows.length).toBe(4);
+    expect(resultRows.length).toBe(20);
     expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
 
     const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
@@ -454,8 +454,8 @@ describe("join function", () => {
 
     const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
     const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
-    console.log(outRows);
-    console.log(inRows);
+    // console.log(outRows);
+    // console.log(inRows);
     expect(inRows).toEqual(outRows);
   });
 });
@@ -498,11 +498,11 @@ async function readDb(name: string, base: string) {
 
 async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
   await Promise.all(
-    Array(1)
+    Array(5)
       .fill(0)
       .map(async (_, i) => {
         const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
-        console.log(key);
+        // console.log(key);
         await pdb.db.put({ _id: key, value: key });
       }),
   );

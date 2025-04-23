@@ -2,8 +2,8 @@ import { Result, URI } from "@adviser/cement";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { PARAM, SuperThis } from "../../../types.js";
 import { MEMORY_VERSION } from "./version.js";
-import {ensureLogger, NotFoundError} from "../../../utils.js";
-import { VoidResult } from "../../../blockstore/serde-gateway.js";
+import { ensureLogger, NotFoundError } from "../../../utils.js";
+import { VoidResult } from "../../../blockstore/index.js";
 
 function cleanURI(uri: URI): URI {
   return uri
@@ -53,20 +53,19 @@ export class MemoryGateway implements Gateway {
   }
 
   async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<VoidResult> {
-    // const logger = ensureLogger(sthis, "MemoryGateway")
+    const logger = ensureLogger(sthis, "MemoryGateway");
     // logger.Debug().Url(url).Msg("put");
-    if (url.getParam(PARAM.STORE) === 'car') {
-      console.log("put-car", url.pathname, url.getParam(PARAM.KEY))
+    if (url.getParam(PARAM.STORE) === "car") {
+      logger.Debug().Url(url).Msg("put-car");
     }
-    if (url.getParam(PARAM.STORE) === 'meta') {
-      console.log("put-meta", url.pathname, (new TextDecoder()).decode(bytes))
+    if (url.getParam(PARAM.STORE) === "meta") {
+      logger.Debug().Url(url).Msg("put-meta");
     }
     this.memorys.set(cleanURI(url).toString(), bytes);
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
   get(url: URI, sthis: SuperThis): Promise<GetResult> {
-    // const logger = ensureLogger(sthis, "MemoryGateway")
     // logger.Debug().Url(url).Msg("get");
     const x = this.memorys.get(cleanURI(url).toString());
     if (!x) {
@@ -74,11 +73,12 @@ export class MemoryGateway implements Gateway {
       // this.sthis.logger.Warn().Any("possible", possible).Url(url).Msg("not found");
       return Promise.resolve(Result.Err(new NotFoundError(`not found: ${url.toString()}`)));
     }
-    if (url.getParam(PARAM.STORE) === 'meta') {
-        console.log("get-meta", url.pathname, (new TextDecoder()).decode(x))
+    const logger = ensureLogger(sthis, "MemoryGateway");
+    if (url.getParam(PARAM.STORE) === "meta") {
+      logger.Debug().Url(url).Msg("get-meta");
     }
-    if (url.getParam(PARAM.STORE) === 'car') {
-      console.log("get-car", url.pathname, url.getParam(PARAM.KEY))
+    if (url.getParam(PARAM.STORE) === "car") {
+      logger.Debug().Url(url).Msg("get-car");
     }
     return Promise.resolve(Result.Ok(x));
   }

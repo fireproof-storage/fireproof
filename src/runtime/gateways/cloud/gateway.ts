@@ -273,7 +273,9 @@ class CurrentMeta {
     // console.log("cloud-get-2")
     item
       .once(async () => {
-        const res = ctx.conn.conn.Ok().bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, authType, reqSignedUrl, gwCtx), {
+        const res = ctx.conn.conn
+          .Ok()
+          .bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, authType, reqSignedUrl, gwCtx), {
             waitFor: MsgIsEventGetMeta,
           });
         for await (const msg of res) {

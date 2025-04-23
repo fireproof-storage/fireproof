@@ -6,13 +6,10 @@ import {
   CarHeader,
   CarLog,
   CarMakeable,
-  CarStore,
   CommitOpts,
-  DbMeta,
   FileStore,
   FPBlock,
   FroozenCarLog,
-  MetaStore,
   TransactionMeta,
   WALStore,
 } from "./types.js";
@@ -136,9 +133,15 @@ async function encodeCarHeader<T>(fp: CarHeader<T>) {
 export interface CommitParams {
   readonly encoder: AsyncBlockEncoder<24, Uint8Array>;
   readonly carLog: CarLog;
-  readonly carStore: CarStore;
-  readonly WALStore: WALStore;
-  readonly metaStore: MetaStore;
+
+  writeCar(block: AnyBlock): Promise<void>;
+  writeWAL(cids: AnyLink[]): Promise<void>;
+  writeMeta(cids: AnyLink[]): Promise<void>;
+
+  // readonly carStore: CarStore;
+  // readonly WALStore: WALStore;
+  // readonly metaStore: MetaStore;
+
   readonly threshold?: number;
 }
 
@@ -150,26 +153,19 @@ export async function commit<T>(
 ): Promise<{ cgrp: CarGroup; header: CarHeader<T> }> {
   const fp = makeCarHeader<T>(done, params.carLog, !!opts.compact);
   const rootBlock = await encodeCarHeader(fp);
-
   const cars = await prepareCarFiles(params.encoder, params.threshold, rootBlock, t);
-  // console.log(
-  //   "commit-root",
-  //   rootBlock.cid.toString(),
-  //   fp,
-  //   cars.map((c) => c.cid.toString()),
-  // );
-  const cids: AnyLink[] = [];
-  // console.log("committing", cars.map((c) => c.cid.toString()));
-  for (const car of cars) {
-    const { cid, bytes } = car;
-    await params.carStore.save({ cid, bytes });
-    cids.push(cid);
-  }
+  const cids = await Promise.all(
+    cars.map(async (car) => {
+      await params.writeCar(car);
+      return car.cid;
+    }),
+  );
 
-  // await this.cacheTransaction(t);
-  const newDbMeta = { cars: cids };
-  await params.WALStore.enqueue(newDbMeta, opts);
-  await params.metaStore.save(newDbMeta);
+  // await params.carStore.save({ cid, bytes });
+  // const newDbMeta = { cars: cids };
+  // await params.WALStore.enqueue(newDbMeta, opts);
+  // await params.metaStore.save(newDbMeta);
+  await Promise.all([params.writeWAL(cids), params.writeMeta(cids)]);
   return { cgrp: cids, header: fp };
 }
 

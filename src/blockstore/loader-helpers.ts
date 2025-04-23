@@ -94,7 +94,7 @@ class FPBlockImpl implements FPBlock {
           status: "ready",
           value: content.value as unknown,
         });
-        // throw new Error(`block2item: unknown block type; ${Object.keys(content.value).join(",")}:${JSON.stringify(content.value)}`);
+      // throw new Error(`block2item: unknown block type; ${Object.keys(content.value).join(",")}:${JSON.stringify(content.value)}`);
     }
   }
 

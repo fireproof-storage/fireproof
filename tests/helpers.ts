@@ -14,7 +14,7 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-import {CarBlockItem, CarGroup, FPBlock} from "../src/blockstore/index.js";
+import { CarBlockItem, CarGroup, FPBlock } from "../src/blockstore/index.js";
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {

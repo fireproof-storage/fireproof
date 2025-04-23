@@ -30,7 +30,7 @@ import {
 
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
 
-import { CarTransactionImpl, defaultedBlockstoreRuntime, EncryptedBlockstore } from "./transaction.js";
+import { CarTransactionImpl, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import {
   isFalsy,
@@ -41,7 +41,6 @@ import {
   type DbMeta,
   type Falsy,
   type SuperThis,
-  CRDT,
   type BaseBlockstore,
 } from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
@@ -51,8 +50,7 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { TaskManager } from "./task-manager.js";
 import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
 import { ensureLogger, isNotFoundError } from "../utils.js";
-import { Car2FPMsg } from "./fp-envelope.js";
-import { CRDTImpl } from "../crdt.js";
+import { AsyncBlockEncoder } from "../runtime/wait-pr-multiformats/codec-interface.js";
 
 export function carLogIncludesGroup(list: FroozenCarLog, cids: CarGroup) {
   const cidSet = cids
@@ -83,15 +81,78 @@ function uniqueCids(list: FroozenCarLog, remove = new LRUSet<string>()): Froozen
 //   readonly decoder: BlockDecoder<number, Uint8Array>;
 // }
 
-function dbMetaArrayToDbMeta(dbms: DbMeta[]): DbMeta {
-  const ancestorDbMetas = new Map<string, AnyLink>();
-  for (const dbm of dbms) {
-    for (const cid of dbm.cars) {
-      ancestorDbMetas.set(cid.toString(), cid);
-    }
+// function dbMetaArrayToDbMeta(dbms: DbMeta[]): DbMeta {
+//   const ancestorDbMetas = new Map<string, AnyLink>();
+//   for (const dbm of dbms) {
+//     for (const cid of dbm.cars) {
+//       ancestorDbMetas.set(cid.toString(), cid);
+//     }
+//   }
+//   return { cars: Array.from(ancestorDbMetas.values()) };
+// }
+
+class CommitAction implements CommitParams {
+  readonly carLog: CarLog;
+  readonly encoder: AsyncBlockEncoder<24, Uint8Array>;
+  readonly threshold: number;
+  readonly attached: AttachedStores;
+  readonly opts: CommitOpts;
+  readonly commitQueue: CommitQueue<CarGroup>;
+  readonly logger: Logger;
+
+  constructor(
+    logger: Logger,
+    carLog: CarLog,
+    commitQueue: CommitQueue<CarGroup>,
+    encoder: AsyncBlockEncoder<24, Uint8Array>,
+    attached: AttachedStores,
+    threshold: number,
+    opts: CommitOpts,
+  ) {
+    this.logger = logger;
+    this.carLog = carLog;
+    this.commitQueue = commitQueue;
+    this.attached = attached;
+    // this.carLog = carLog;
+    this.encoder = encoder;
+    this.threshold = threshold;
+    this.opts = opts;
   }
-  return { cars: Array.from(ancestorDbMetas.values()) };
+
+  async writeCar(block: AnyBlock): Promise<void> {
+    await this.attached.local().active.car.save(block);
+    this.attached.remotes().forEach((r) => {
+      this.commitQueue.enqueue(async () => {
+        this.logger.Debug().Url(r.active.car.url()).Msg("remote-writeCar");
+        await r.active.car.save(block);
+        return [];
+      });
+    });
+    // console.log("writeCar", block.cid.toString(), this.attached.remotes().map((r) => r.carStore().active.url().toString()));
+  }
+
+  async writeMeta(cids: AnyLink[]): Promise<void> {
+    const meta = { cars: cids };
+    await this.attached.local().active.meta.save(meta);
+    this.attached.remotes().forEach((r) => {
+      this.commitQueue.enqueue(async () => {
+        this.logger.Debug().Url(r.active.meta.url()).Msg("remote-writeMeta");
+        await r.active.meta.save(meta);
+        return [];
+      });
+    });
+  }
+
+  async writeWAL(cids: AnyLink[]): Promise<void> {
+    await this.attached.local().active.wal.enqueue({ cars: cids }, this.opts);
+    // return Promise.resolve(undefined);
+  }
 }
+
+// await params.carStore.save({ cid, bytes });
+// const newDbMeta = { cars: cids };
+// await params.WALStore.enqueue(newDbMeta, opts);
+// await params.metaStore.save(newDbMeta);
 
 export class Loader implements Loadable {
   // readonly name: string;
@@ -151,46 +212,49 @@ export class Loader implements Loadable {
           await this.tryToLoadStaleCars(store);
           // console.log("attach-2", store.active.car.url().pathname, "local", store.local().carStore().active.url().pathname)
           const localDbMeta = await store.local().active.meta.load();
-          console.log("attach-local", localDbMeta, store.local().active.meta.url().pathname);
+          // console.log("attach-local", localDbMeta, store.local().active.meta.url().pathname);
           // remote Store need to kick off the sync by requesting the latest meta
-          const dbMeta = await store.active.meta.load("main", true);
-          console.log("attach-remote", dbMeta, store.active.car.url().pathname);
-          const cgs: CarGroup = [];
+          const remoteDbMeta = await store.active.meta.load("main", true);
+          // console.log("attach-remote", remoteDbMeta, store.active.car.url().pathname);
+          // const cgs: CarGroup = [];
           // if (localDbMeta) {
           // cgs.push(...localDbMeta.map((i) => i.cars).flat(2));
           // }
-          if (Array.isArray(dbMeta)) {
-            if (dbMeta.length !== 0) {
-              await this.handleDbMetasFromStore(dbMeta, store);
+          if (Array.isArray(remoteDbMeta)) {
+            if (remoteDbMeta.length !== 0) {
+              await this.handleDbMetasFromStore(remoteDbMeta, store);
 
               // this.ebOpts.applyMeta(dbMeta);
               // console.log("xxxxx", );
-              await (this.blockstoreParent as BaseBlockstore).commitTransaction(
-                new CarTransactionImpl(this.blockstoreParent as BaseBlockstore),
-                {
-                  head: this.blockstoreParent?.crdtParent?.clock.head,
-                },
-                {
-                  add: false,
-                  noLoader: false,
-                },
-              );
+
               // { add: false, noLoader });
               // await store.local().active.meta.save({ cars:  ?? [] });
             }
-          } else if (!isFalsy(dbMeta)) {
-            throw this.logger.Error().Any({ dbMeta }).Msg("missing dbMeta").AsError();
+          } else if (!isFalsy(remoteDbMeta)) {
+            throw this.logger.Error().Any({ dbMeta: remoteDbMeta }).Msg("missing dbMeta").AsError();
           }
           if (localDbMeta) {
-            console.log("attach-ensure", store.active.car.url().pathname);
+            // console.log("attach-ensure", store.active.car.url().pathname);
             await this.ensureAttachedStore(store, localDbMeta);
 
-            const res = await store.active.meta.save(dbMetaArrayToDbMeta(localDbMeta));
-            if (res.isErr()) {
-              this.logger.Warn().Err(res.Err()).Msg("error saving meta");
-            }
+            // const res = await store.active.meta.save(dbMetaArrayToDbMeta(localDbMeta));
+            // if (res.isErr()) {
+            //   this.logger.Warn().Err(res.Err()).Msg("error saving meta");
+            // }
           }
-          console.log("attach-done", store.active.car.url().pathname);
+
+          await (this.blockstoreParent as BaseBlockstore).commitTransaction(
+            new CarTransactionImpl(this.blockstoreParent as BaseBlockstore),
+            {
+              head: this.blockstoreParent?.crdtParent?.clock.head,
+            },
+            {
+              add: false,
+              noLoader: false,
+            },
+          );
+
+          // console.log("attach-done", store.active.car.url().pathname);
         } catch (e) {
           await at.detach();
           throw this.logger.Error().Err(e).Msg("error attaching store").AsError();
@@ -378,7 +442,7 @@ export class Loader implements Loadable {
       if (carLogIncludesGroup(this.carLog.asArray(), meta.cars)) {
         return [];
       }
-      console.log("mergeDbMetaIntoClock", activeStore.active.car.url().pathname);
+      // console.log("mergeDbMetaIntoClock", activeStore.active.car.url().pathname);
       const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta, activeStore);
       // fetch other cars down the compact log?
       // todo we should use a CID set for the compacted cids (how to expire?)
@@ -459,17 +523,27 @@ export class Loader implements Loadable {
   ): Promise<CarGroup> {
     await this.ready();
     const carStore = this.attachedStores.local().active.car;
-    const params: CommitParams = {
-      encoder: (await carStore.keyedCrypto()).codec(),
-      carLog: this.carLog,
-      carStore: carStore,
-      WALStore: this.attachedStores.local().active.wal,
-      metaStore: this.attachedStores.local().active.meta,
-      threshold: this.ebOpts.threshold,
-    };
+    // const params: CommitParams = {
+    //   encoder: (await carStore.keyedCrypto()).codec(),
+    //   carLog: this.carLog,
+    //   carStore: carStore,
+    //   WALStore: this.attachedStores.local().active.wal,
+    //   metaStore: this.attachedStores.local().active.meta,
+    //   threshold: this.ebOpts.threshold,
+    // };
+
+    const caction = new CommitAction(
+      this.logger,
+      this.carLog,
+      this.commitQueue,
+      await carStore.keyedCrypto().then((c) => c.codec()),
+      this.attachedStores,
+      this.ebOpts.threshold,
+      opts,
+    );
     return this.commitQueue.enqueue(async () => {
       await this.cacheTransaction(t);
-      const ret = await commit(params, t, done, opts);
+      const ret = await commit(caction, t, done, opts);
       await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
       return ret.cgrp;
     });
@@ -728,7 +802,7 @@ export class Loader implements Loadable {
     const rawReader = await CarReader.fromBytes(bytes.value.data);
     // const readerP = Promise.resolve(rawReader);
     // const kc = await activeStore.keyedCrypto()
-    // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
+    // const readerP = !(kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader));
 
     const blocks: FPBlock[] = [];
     for await (const rawBlock of rawReader.blocks()) {

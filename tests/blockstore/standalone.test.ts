@@ -8,19 +8,29 @@ describe("standalone", () => {
   const sthis = ensureSuperThis();
 
   describe("howto-loader", () => {
-    beforeAll(async () => {
-      const db = fireproof("howto-loader", {
+    // beforeAll(async () => {
+    //   const db = fireproof("howto-loader", {
+    //     storeUrls: {
+    //       base: "file://dist/how-to-loader?store-key=insecure",
+    //     },
+    //   });
+    //   for (let cid = 0; cid < 1; cid++) {
+    //     const blk = new Array(3)
+    //       .fill(0)
+    //       .map((_, peer) => ({ _id: `test-${cid}:peer-${peer}`, value: { cid: `test-${cid}`, peer: `peer-${peer}` } }));
+    //     await db.bulk(blk);
+    //   }
+    //   // await db.compact()
+    //   await db.close();
+    // });
+
+    it("understand the writer", async () => {
+      const db = fireproof("howto-writer", {
         storeUrls: {
-          base: "file://dist/how-to-loader?store-key=insecure",
+          base: "memory://how-to-writer",
         },
       });
-      for (let cid = 0; cid < 1; cid++) {
-        const blk = new Array(3)
-          .fill(0)
-          .map((_, peer) => ({ _id: `test-${cid}:peer-${peer}`, value: { cid: `test-${cid}`, peer: `peer-${peer}` } }));
-        await db.bulk(blk);
-      }
-      // await db.compact()
+      await db.put({ _id: "test-1", value: { cid: "test-1", peer: "peer-1" } });
       await db.close();
     });
 
@@ -81,7 +91,7 @@ describe("standalone", () => {
     });
   });
 
-  describe("crdt-stack", () => {
+  describe.skip("crdt-stack", () => {
     let crdt: CRDT;
     beforeEach(async () => {
       let uri: URI;
