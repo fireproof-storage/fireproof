@@ -1,7 +1,7 @@
 import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 
 import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
-import type {
+import {
   DocUpdate,
   ConfigOpts,
   DocWithId,
@@ -15,8 +15,9 @@ import type {
   LedgerOpts,
   Attachable,
   Attached,
+  LedgerOptsOptionalTracer,
+  PARAM,
 } from "./types.js";
-import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, ensureURIDefaults } from "./utils.js";
 
@@ -64,6 +65,11 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
           decodeFile,
           ...opts?.storeEnDe,
         },
+        tracer:
+          opts?.tracer ??
+          (() => {
+            /* noop */
+          }),
       });
       db.onClosed(() => {
         ledgers.unget(key);
@@ -201,8 +207,13 @@ class LedgerImpl implements Ledger {
   readonly sthis: SuperThis;
   readonly id: string;
 
-  constructor(sthis: SuperThis, opts: LedgerOpts) {
-    this.opts = opts; // || this.opts;
+  constructor(sthis: SuperThis, opts: LedgerOptsOptionalTracer) {
+    this.opts = {
+      tracer: () => {
+        /* noop */
+      },
+      ...opts,
+    }; // || this.opts;
     // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;

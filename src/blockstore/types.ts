@@ -1,5 +1,16 @@
 import type { CID, Link, Version } from "multiformats";
-import { Attachable, Attached, CarTransaction, CRDT, DocFileMeta, Falsy, GatewayUrls, StoreType, SuperThis } from "../types.js";
+import {
+  Attachable,
+  Attached,
+  CarTransaction,
+  CRDT,
+  DocFileMeta,
+  Falsy,
+  GatewayUrls,
+  StoreType,
+  SuperThis,
+  TraceFn,
+} from "../types.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
@@ -469,7 +480,7 @@ export interface WALStore extends BaseStore {
   readonly storeType: "wal";
   ready(): Promise<void>;
   readonly processing?: Promise<void> | undefined;
-  readonly processQueue: CommitQueue<void>;
+  readonly processQueue: CommitQueue<unknown>;
 
   process(): Promise<void>;
   enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;
@@ -510,6 +521,7 @@ export type BlockstoreOpts = Partial<BlockstoreParams> & {
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
   readonly storeRuntime: StoreRuntime;
+  readonly tracer: TraceFn;
 };
 
 export interface BlockstoreRuntime {
@@ -657,6 +669,7 @@ export interface Loadable {
   readonly carLog: CarLog;
 
   readonly attachedStores: AttachedStores;
+  readonly commitQueue: CommitQueue<unknown>;
 
   attach(attached: Attachable): Promise<Attached>;
 

@@ -88,13 +88,18 @@ export class URITrackGateway implements bs.Gateway {
   }
 
   put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<bs.VoidResult> {
+    // console.log("put", url.getParam(PARAM.KEY), url.toString());
     this.uriAdd(url);
-    return this.memgw.put(url, bytes, sthis);
+    return this.memgw.put(url.build().cleanParams("itis").URI(), bytes, sthis);
   }
 
-  get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
+  async get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
     this.uriAdd(url);
-    return this.memgw.get(url, sthis);
+    const ret = await this.memgw.get(url.build().cleanParams("itis").URI(), sthis);
+    // if (ret.isErr()) {
+    //   console.log("get-err", url.getParam(PARAM.KEY), url.toString());
+    // }
+    return ret;
   }
   delete(url: URI): Promise<bs.VoidResult> {
     this.uriAdd(url);

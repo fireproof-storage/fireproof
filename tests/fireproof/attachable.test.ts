@@ -17,6 +17,8 @@ import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
 import { expect } from "vitest";
 
+const ROWS = 5;
+
 describe("meta check", () => {
   const sthis = ensureSuperThis();
   it("empty Database", async () => {
@@ -410,8 +412,54 @@ describe("join function", () => {
     // console.log("outbound-db");
     const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
     await poutbound.db.attach(aJoinable(`sync-${id}`));
-    // await sleep(500);
     await poutbound.db.close();
+    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
+
+    expect(outRows.length).toBe(ROWS);
+
+    const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await pinbound.db.close();
+    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+
+    expect(inRows.length).toBe(ROWS);
+
+    const inbound = await syncDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    await inbound.attach(aJoinable(`sync-${id}`));
+    await inbound.close();
+
+    // console.log("result");
+    const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+    // console.log(re);
+    // console.log(inRows);
+    expect(resultRows.length).toBe(ROWS * 2);
+    expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
+
+    const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
+    await joined.db.attach(aJoinable(`sync-${id}`));
+    await joined.db.close();
+    const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
+    expect(resultRows).toEqual(joinedRows);
+  }, 100_000);
+
+  it("online sync", async () => {
+    const id = sthis.nextId().str;
+    const dbs = await Promise.all(
+      Array(2)
+        .fill(0)
+        .map(async (_, i) => {
+          const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://sync-local-osync-${id}`);
+          await db.attach(aJoinable(`sync-${id}`));
+          return db;
+        }),
+    );
+    await db.ready();
+
+    dbs.forEach((db) => {});
+
+    // console.log("outbound-db");
+    const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
+    await poutbound.db.attach(aJoinable(`sync-${id}`));
+    // await sleep(500);
     const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
     // await writeRow(outbound, "outbound");
 
@@ -484,8 +532,6 @@ async function prepareDb(name: string, base: string) {
   await db.ready();
   const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
   const ret = { db, dbId };
-  await writeRow(ret, `prepare`);
-
   return { db, dbId };
 }
 

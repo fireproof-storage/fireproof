@@ -381,13 +381,14 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly _ready = new ResolveOnce<void>();
 
   readonly walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
-  readonly processing: Promise<void> | undefined = undefined;
-  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
+  readonly processing?: Promise<void>;
+  readonly processQueue: CommitQueue<unknown>;
 
   constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(sthis, url, { ...opts }, ensureLogger(sthis, "WALStoreImpl"));
+    this.processQueue = opts.loader.commitQueue;
     // this.loader = loader;
   }
 
@@ -395,7 +396,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     return this._ready.once(async () => {
       const walState = await this.load().catch((e) => {
         this.logger.Error().Err(e).Msg("error loading wal");
-        return undefined;
+        return;
       });
       this.walState.operations.splice(0, this.walState.operations.length);
       this.walState.fileOperations.splice(0, this.walState.fileOperations.length);
@@ -475,9 +476,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         noLoaderOps,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) {
-              return;
-            }
+            // if (!this.loader) {
+            //   return;
+            // }
             for (const cid of dbMeta.cars) {
               const car = await this.loader.attachedStores.local().active.car.load(cid);
               // .carStore().then((i) => i.load(cid));
@@ -485,8 +486,8 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
                 if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
                 }
-              } else {
-                await this.loader.attachedStores.forRemotes((x) => x.active.car.save(car));
+                // } else {
+                //   await this.loader.attachedStores.forRemotes((x) => x.active.car.save(car));
                 // throwFalsy(this.loader.xremoteCarStore).save(car);
               }
             }
@@ -502,20 +503,20 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         operations,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) {
-              return;
-            }
+            // if (!this.loader) {
+            //   return;
+            // }
             for (const cid of dbMeta.cars) {
               const car = await this.loader.attachedStores.local().active.car.load(cid);
               if (!car) {
                 if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
                 }
-              } else {
-                // await throwFalsy(this.loader.xremoteCarStore).save(car);
-                await this.loader.attachedStores.forRemotes(async (x) => {
-                  await x.active.car.save(car);
-                });
+                // } else {
+                //   // await throwFalsy(this.loader.xremoteCarStore).save(car);
+                //   await this.loader.attachedStores.forRemotes(async (x) => {
+                //     await x.active.car.save(car);
+                //   });
               }
             }
             // Remove from walState after successful upload
@@ -528,16 +529,16 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       // Process fileOperations
       await pMap(
         fileOperations,
-        async ({ cid: fileCid, public: publicFile }) => {
+        async ({ cid: fileCid }) => {
           await retryableUpload(async () => {
-            if (!this.loader) {
-              return;
-            }
+            // if (!this.loader) {
+            //   return;
+            // }
             const fileBlock = await this.loader.attachedStores.local().active.file.load(fileCid);
             if (!fileBlock) {
               throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
             }
-            await this.loader.attachedStores.forRemotes((x) => x.active.file.save(fileBlock, { public: publicFile }));
+            // await this.loader.attachedStores.forRemotes((x) => x.active.file.save(fileBlock, { public: publicFile }));
             // await this.loader.xremoteFileStore?.save(fileBlock, { public: publicFile });
             // Remove from walState after successful upload
             inplaceFilter(this.walState.fileOperations, (op) => op.cid !== fileCid);
@@ -554,7 +555,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             return;
           }
           // await this.loader.xremoteMetaStore?.save(lastOp);
-          await this.loader.attachedStores.forRemotes((x) => x.active.meta.save(lastOp));
+          // await this.loader.attachedStores.forRemotes((x) => x.active.meta.save(lastOp));
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
       }
     } catch (error) {

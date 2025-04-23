@@ -31,6 +31,7 @@ import {
   type DocTypes,
   PARAM,
   Ledger,
+  TraceEvent,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
@@ -69,6 +70,19 @@ export class CRDTImpl implements CRDT {
     this.blockstore = new EncryptedBlockstore(
       sthis,
       {
+        tracer: (event: TraceEvent) => {
+          switch (event.event) {
+            case "idleFromCommitQueue":
+              opts.tracer({
+                event: "idleFromBlockstore",
+                blockstore: "data",
+                ledger: parent,
+              });
+              break;
+            default:
+              return opts.tracer(event);
+          }
+        },
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as CRDTMeta;
           if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
@@ -93,6 +107,7 @@ export class CRDTImpl implements CRDT {
       this.indexBlockstore = new EncryptedBlockstore(
         sthis,
         {
+          tracer: opts.tracer,
           // name: opts.name,
           applyMeta: async (meta: TransactionMeta) => {
             const idxCarMeta = meta as IndexTransactionMeta;

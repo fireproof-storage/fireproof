@@ -15,6 +15,10 @@ import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
 import { CarBlockItem, CarGroup, FPBlock } from "../src/blockstore/index.js";
+import { CommitQueue } from "../src/blockstore/commit-queue.js";
+
+/* eslint-disable @typescript-eslint/no-empty-function */
+export function tracer() {}
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
@@ -77,6 +81,7 @@ export function simpleBlockOpts(sthis: SuperThis, name?: string) {
       meta: url,
       car: url,
     },
+    tracer,
   };
 }
 
@@ -92,6 +97,7 @@ class MockLoader implements bs.Loadable {
   readonly carLog: bs.CarLog;
   readonly attachedStores: bs.AttachedStores;
   readonly taskManager: bs.TaskManager;
+  readonly commitQueue: CommitQueue<unknown>;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -112,6 +118,9 @@ class MockLoader implements bs.Loadable {
       retryTimeout: 50,
     });
     this.attachedStores = new bs.AttachedRemotesImpl(this);
+    this.commitQueue = new CommitQueue({
+      tracer,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

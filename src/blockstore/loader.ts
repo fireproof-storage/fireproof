@@ -159,7 +159,7 @@ export class Loader implements Loadable {
   readonly blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly logger: Logger;
-  readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
+  readonly commitQueue: CommitQueue<CarGroup>;
   isCompacting = false;
   readonly cidCache: KeyedResolvOnce<FPBlock>;
   private readonly maxConcurrentCarReader: ReturnType<typeof pLimit>;
@@ -353,6 +353,8 @@ export class Loader implements Loadable {
   constructor(sthis: SuperThis, ebOpts: BlockstoreOpts, blockstore?: BlockFetcher) {
     // this.name = name;
     this.sthis = sthis;
+
+    this.commitQueue = new CommitQueue<CarGroup>(ebOpts);
     this.blockstoreParent = blockstore;
     this.ebOpts = defaultedBlockstoreRuntime(
       sthis,

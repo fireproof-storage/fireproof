@@ -13,6 +13,7 @@ import {
   CRDTImpl,
   fireproof,
 } from "@fireproof/core";
+import { tracer } from "../helpers.js";
 
 interface TestType {
   readonly title: string;
@@ -329,6 +330,7 @@ describe("basic Index upon cold start", function () {
       keyBag: rt.kb.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-indexer-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
     await crdt.bulk([

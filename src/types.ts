@@ -147,6 +147,16 @@ export interface SuperThis {
   clone(override: Partial<SuperThisOpts>): SuperThis;
 }
 
+export interface IdleEventFromCommitQueue {
+  readonly event: "idleFromCommitQueue";
+}
+export interface IdleEventFromBlockstore {
+  readonly event: "idleFromBlockstore";
+  readonly blockstore: "data" | "index";
+  readonly ledger?: Ledger;
+}
+export type TraceEvent = IdleEventFromCommitQueue | IdleEventFromBlockstore;
+
 export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly public?: boolean;
   readonly meta?: DbMeta;
@@ -158,6 +168,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
   readonly keyBag?: Partial<KeyBagOpts>;
+  readonly tracer?: TraceFn;
 }
 
 // export interface ToCloudOpts {
@@ -587,7 +598,13 @@ export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocType
   close(): Promise<void>;
 }
 
-export interface LedgerOpts {
+export type TraceFn = (traceEvent: TraceEvent) => void;
+
+export interface Tracer {
+  readonly tracer: TraceFn;
+}
+
+export interface LedgerOpts extends Tracer {
   readonly name: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
@@ -598,6 +615,8 @@ export interface LedgerOpts {
   readonly storeEnDe: StoreEnDeFile;
   readonly keyBag: KeyBagRuntime;
 }
+
+export type LedgerOptsOptionalTracer = Omit<LedgerOpts, "tracer"> & Partial<Tracer>;
 
 export interface Ledger extends HasCRDT {
   readonly opts: LedgerOpts;
