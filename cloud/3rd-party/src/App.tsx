@@ -33,14 +33,6 @@ function App() {
           webCtx?.resetToken();
         }}
       >
-      <div>{attached ? "Attached" : "waiting to attach"}</div>
-      <div
-        className="card"
-        onClick={() => {
-          console.log("reset", webCtx?.token());
-          webCtx?.resetToken();
-        }}
-      >
         Reset Token
       </div>
       <div

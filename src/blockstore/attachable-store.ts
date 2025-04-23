@@ -1,4 +1,4 @@
-import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI } from "@adviser/cement";
+import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI, AppContext } from "@adviser/cement";
 import { toSortedArray } from "@adviser/cement/utils";
 import { Attached, Attachable, GatewayUrls, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore, AttachContext } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
@@ -25,7 +25,6 @@ import {
   FileStore,
 } from "./types.js";
 import { ensureURIDefaults, hashObject } from "../utils.js";
-import { FPContext } from "../fp-context.js";
 
 class AttachedImpl implements Attached {
   readonly keyed: string;

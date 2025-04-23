@@ -25,7 +25,6 @@ import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
-import { FPContext } from "./fp-context.js";
 import { toSortedArray } from "@adviser/cement/utils";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
