@@ -86,7 +86,9 @@ export class CRDTImpl implements CRDT {
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as CRDTMeta;
           if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
+          console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
           await this.clock.applyHead(crdtMeta.head, []);
+          console.log("applyMeta-post", crdtMeta.head, this.clock.head);
         },
         compact: async (blocks: CompactFetcher) => {
           await doCompact(blocks, this.clock.head, this.logger);

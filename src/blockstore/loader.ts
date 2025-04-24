@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car/reader";
-import { exception2Result, KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result } from "@adviser/cement";
+import { exception2Result, KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result, URI } from "@adviser/cement";
 
 import {
   type AnyBlock,
@@ -136,6 +136,12 @@ class CommitAction implements CommitParams {
     this.attached.remotes().forEach((r) => {
       this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.meta.url()).Msg("remote-writeMeta");
+        console.log(
+          "writeMeta",
+          this.attached.local().active.meta.url().pathname,
+          r.active.meta.url().pathname,
+          meta.cars.map((i) => i.toString()),
+        );
         await r.active.meta.save(meta);
         return [];
       });
@@ -206,6 +212,7 @@ export class Loader implements Loadable {
     return await this.attachedStores.attach(attachable, async (at) => {
       if (!at.stores.wal) {
         try {
+          console.log("attach", at.stores.car.url().pathname);
           const store = this.attachedStores.activate(at.stores);
           // console.log("attach-1", store.active.car.url().pathname)
           await this.tryToLoadStaleCars(store);
@@ -214,8 +221,8 @@ export class Loader implements Loadable {
           // console.log("attach-local", localDbMeta, store.local().active.meta.url().pathname);
           // remote Store need to kick off the sync by requesting the latest meta
           const remoteDbMeta = store.active.meta.stream();
-          console.log("attach-remote", store.active.meta.url().pathname, store.local().active.car.url().pathname);
-          await this.waitFirstMeta(remoteDbMeta.getReader(), store);
+          // console.log("attach-remote", store.active.meta.url().pathname, store.local().active.car.url().pathname);
+          await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
 
           // // console.log("attach-remote", remoteDbMeta, store.active.car.url().pathname);
           // // const cgs: CarGroup = [];
@@ -327,19 +334,19 @@ export class Loader implements Loadable {
         this.blockstoreParent?.crdtParent?.ledgerParent?.name,
       );
       const local = this.attachedStores.local();
-      console.log("ready", this.id);
+      // console.log("ready", this.id);
       this.metaStreamReader = local.active.meta.stream().getReader();
-      console.log("attach-local", local.active.car.url().pathname);
-      await this.waitFirstMeta(this.metaStreamReader, local, { meta: this.ebOpts.meta });
+      // console.log("attach-local", local.active.car.url().pathname);
+      await this.waitFirstMeta(this.metaStreamReader, local, { meta: this.ebOpts.meta, origin: local.active.car.url() });
     });
   }
 
   currentMeta: CarGroup = [];
 
-  waitFirstMeta(reader: ReadableStreamDefaultReader<DbMeta[]>, local: ActiveStore, opts?: { meta?: DbMeta }) {
+  waitFirstMeta(reader: ReadableStreamDefaultReader<DbMeta[]>, local: ActiveStore, opts?: { meta?: DbMeta; origin?: URI }) {
     return new Promise<CarGroup>((resolve) => {
       this.handleMetaStream(reader, local, {
-        meta: opts?.meta,
+        ...opts,
         first: () => {
           resolve(this.currentMeta);
         },
@@ -350,13 +357,14 @@ export class Loader implements Loadable {
   handleMetaStream(
     reader: ReadableStreamDefaultReader<DbMeta[]>,
     local: ActiveStore,
-    opts?: { meta?: DbMeta; first: (v: CarGroup) => void },
+    opts?: { meta?: DbMeta; origin?: URI; first: (v: CarGroup) => void },
   ): void {
     reader.read().then(({ done, value }) => {
       if (done) {
         this.logger.Warn().Any({ value, done }).Msg("unexpected meta stream end");
         return;
       }
+      // console.log("handleMetaStream", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname, value);
       let pHandle: Promise<CarGroup> | undefined;
       if (opts?.meta) {
         pHandle = this.handleDbMetasFromStore([opts?.meta, ...(value || [])], local);
@@ -371,6 +379,18 @@ export class Loader implements Loadable {
             //   "Handled",
             //   dbMeta.map((i) => i.toString()),
             // );
+            if (!dbMeta.length) {
+              // console.log("no dbMeta", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname);
+              return;
+            }
+            console.log(
+              "new-meta",
+              this.id,
+              local.local().active.meta.url().pathname,
+              opts?.origin?.pathname,
+              value.map((i) => i.cars.map((i) => i.toString())).flat(2),
+              dbMeta.map((i) => i.toString()),
+            );
             this.currentMeta = dbMeta;
           })
           .catch((e) => {
@@ -378,6 +398,7 @@ export class Loader implements Loadable {
           })
           .finally(() => {
             opts?.first(this.currentMeta ?? []);
+            this.handleMetaStream(reader, local);
             // console.log("done-reader" + local.active.car.url().pathname);
             // reader.cancel("done-read");
           });
@@ -389,7 +410,7 @@ export class Loader implements Loadable {
   }
 
   async close() {
-    console.log("close", this.id);
+    // console.log("close", this.id);
     await this.commitQueue.waitIdle();
     // console.log("close-2");
     await this.attachedStores.detach();

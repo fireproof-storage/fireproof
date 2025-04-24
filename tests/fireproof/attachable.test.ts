@@ -20,6 +20,64 @@ import { afterEach, beforeEach, expect } from "vitest";
 
 const ROWS = 1;
 
+class AJoinable implements Attachable {
+  readonly name: string;
+  readonly db: Database;
+
+  constructor(name: string, db: Database) {
+    this.name = name;
+    this.db = db;
+  }
+
+  async configHash() {
+    return `joinable-${this.name}`;
+  }
+
+  prepare(): Promise<GatewayUrlsParam> {
+    return Promise.resolve({
+      car: {
+        url: BuildURI.from(`memory://car/${this.name}`)
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
+          .setParam(PARAM.SELF_REFLECT, "x"),
+      },
+      meta: {
+        url: BuildURI.from(`memory://meta/${this.name}`)
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
+          .setParam(PARAM.SELF_REFLECT, "x"),
+      },
+      file: {
+        url: BuildURI.from(`memory://file/${this.name}`)
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
+          .setParam(PARAM.SELF_REFLECT, "x"),
+      },
+    });
+  }
+}
+
+function aJoinable(name: string, db: Database): Attachable {
+  return new AJoinable(name, db);
+}
+
+function attachableStoreUrls(name: string, db: Database) {
+  return {
+    // base: `memory://${name}`,
+    data: {
+      car: BuildURI.from(`memory://car/${name}?`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+      meta: BuildURI.from(`memory://meta/${name}`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+      file: BuildURI.from(`memory://file/${name}`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+      wal: BuildURI.from(`memory://wal/${name}`)
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, ""))
+        .URI(),
+    },
+  };
+}
+
 describe("meta check", () => {
   const sthis = ensureSuperThis();
   it("empty Database", async () => {
@@ -245,63 +303,6 @@ describe("join function", () => {
   //       return connection;
   //     });
   //   };
-  class AJoinable implements Attachable {
-    readonly name: string;
-    readonly db: Database;
-
-    constructor(name: string, db: Database) {
-      this.name = name;
-      this.db = db;
-    }
-
-    async configHash() {
-      return `joinable-${this.name}`;
-    }
-
-    prepare(): Promise<GatewayUrlsParam> {
-      return Promise.resolve({
-        car: {
-          url: BuildURI.from(`memory://car/${this.name}`)
-            .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
-            .setParam(PARAM.SELF_REFLECT, "x"),
-        },
-        meta: {
-          url: BuildURI.from(`memory://meta/${this.name}`)
-            .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
-            .setParam(PARAM.SELF_REFLECT, "x"),
-        },
-        file: {
-          url: BuildURI.from(`memory://file/${this.name}`)
-            .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
-            .setParam(PARAM.SELF_REFLECT, "x"),
-        },
-      });
-    }
-  }
-
-  function aJoinable(name: string, db: Database): Attachable {
-    return new AJoinable(name, db);
-  }
-
-  function attachableStoreUrls(name: string, db: Database) {
-    return {
-      // base: `memory://${name}`,
-      data: {
-        car: BuildURI.from(`memory://car/${name}?`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-        meta: BuildURI.from(`memory://meta/${name}`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-        file: BuildURI.from(`memory://file/${name}`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-        wal: BuildURI.from(`memory://wal/${name}`)
-          .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, ""))
-          .URI(),
-      },
-    };
-  }
 
   let db: Database;
   let joinableDBs: string[] = [];
@@ -453,52 +454,62 @@ describe("join function", () => {
     const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
     expect(resultRows).toEqual(joinedRows);
   }, 100_000);
+});
 
+describe("sync", () => {
+  const sthis = ensureSuperThis();
   it("online sync", async () => {
     const id = sthis.nextId().str;
-    const tracer = vi.fn((ev) => console.log(ev));
+    // const tracer = vi.fn((ev) => console.log(ev));
     const dbs = await Promise.all(
       Array(2)
         .fill(0)
         .map(async (_, i) => {
-          const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://sync-local-osync-${id}`, tracer);
+          const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
           await db.attach(aJoinable(`sync-${id}`, db));
           return db;
         }),
     );
 
-    dbs.forEach(() => {
-      /* */
-    });
+    await sleep(200);
+    await Promise.all(
+      dbs.map(async (db) => {
+        const rows = await db.allDocs();
+        console.log(db.name, rows.rows.length);
+        expect(rows.rows.length).toBe(ROWS * dbs.length);
+      }),
+    );
 
-    // console.log("outbound-db");
-    const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
-    // await sleep(500);
-    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
-    // await writeRow(outbound, "outbound");
+    await Promise.all(dbs.map(async (db) => db.close()));
 
-    // console.log("inbound-db");
-    const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    await pinbound.db.close();
-    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-
-    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
-    await inbound.db.close();
-
-    // console.log("result");
-    const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-    // console.log(re);
-    // console.log(inRows);
-    expect(resultRows.length).toBe(ROWS * 5);
-    expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
-
-    const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
-    await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
-    await joined.db.close();
-    const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
-    expect(resultRows).toEqual(joinedRows);
+    // // console.log("outbound-db");
+    // const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
+    // await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
+    // // await sleep(500);
+    // const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
+    // // await writeRow(outbound, "outbound");
+    //
+    // // console.log("inbound-db");
+    // const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    // await pinbound.db.close();
+    // const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+    //
+    // const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+    // await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
+    // await inbound.db.close();
+    //
+    // // console.log("result");
+    // const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+    // // console.log(re);
+    // // console.log(inRows);
+    // expect(resultRows.length).toBe(ROWS * 5);
+    // expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
+    //
+    // const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
+    // await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
+    // await joined.db.close();
+    // const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
+    // expect(resultRows).toEqual(joinedRows);
   }, 100_000);
 
   it("sync outbound", async () => {

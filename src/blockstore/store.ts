@@ -20,7 +20,7 @@ import type {
   FileStore,
 } from "./types.js";
 import { Falsy, PARAM, StoreType, SuperThis } from "../types.js";
-import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
+import { SerdeGateway, SerdeGatewayInterceptor, UnsubscribeResult } from "./serde-gateway.js";
 import { ensureLogger, hashString, inplaceFilter, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
@@ -231,18 +231,36 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   stream(branch = "main"): ReadableStream<DbMeta[]> {
     const id = this.sthis.nextId();
     // let nested = 0;
+    let unsubscribe: UnsubscribeResult = Result.Ok(() => {
+      /* */
+    });
     return new ReadableStream<DbMeta[]>({
       start: async (controller) => {
-        console.log("starting stream", this.myId, id.str, this.url().pathname);
+        // console.log("starting stream", this.myId, id.str, this.url().pathname);
         // nested++;
         this.cnt++;
+
+        unsubscribe = await this.gateway.subscribe({ loader: this.loader }, this.url(), async (fpMeta: FPEnvelopeMeta) => {
+          const dbMetas = fpMeta.payload.map((m) => m.dbMeta);
+          console.log(
+            "subscribe",
+            this.myId,
+            id.str,
+            this.url().pathname,
+            dbMetas.map((i) => i.cars.map((i) => i.toString())).flat(2),
+          );
+          controller.enqueue(dbMetas);
+          this.updateParentsFromDbMetas(fpMeta.payload);
+        });
+
         const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
         // console.log("p-0", id.str, this.loader.attachedStores.local().active.car.url());
         // console.log("p-0", this.myId, id.str, this.url().pathname);
         if (url.isErr()) {
+          this.logger.Error().Err(url).Msg("buildUrlError");
           // nested--;
           // console.log("buildUrl error", id.str, url.Err());
-          controller.enqueue([]);
+          // controller.enqueue([]);
           return;
           // throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
         }
@@ -284,7 +302,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
         // console.log("pulled", id.str, this.loader.attachedStores.local().active.car.url());
       },
       cancel: () => {
-        console.log("closing stream", this.myId, id.str, this.url().pathname);
+        if (unsubscribe.isOk()) {
+          unsubscribe.Ok()();
+        }
+        // console.log("closing stream", this.myId, id.str, this.url().pathname);
       },
       // pull: async (controller) => {},
     });
