@@ -55,15 +55,16 @@ export class CRDTClockImpl {
 
   setHead(head: ClockHead) {
     // this.head = head;
-    const oldHeadStr = this.head.map(c => c.toString()).join(',');
-    const newHeadStr = head.map(c => c.toString()).join(',');
-    this.logger.Debug()
-      .Str('old_head', oldHeadStr)
-      .Str('new_head', newHeadStr)
-      .Int('old_head_length', this.head.length)
-      .Int('new_head_length', head.length)
-      .Bool('head_changed', oldHeadStr !== newHeadStr)
-      .Msg('CLOCK-HEAD-UPDATED');
+    const oldHeadStr = this.head.map((c) => c.toString()).join(",");
+    const newHeadStr = head.map((c) => c.toString()).join(",");
+    this.logger
+      .Debug()
+      .Str("old_head", oldHeadStr)
+      .Str("new_head", newHeadStr)
+      .Int("old_head_length", this.head.length)
+      .Int("new_head_length", head.length)
+      .Bool("head_changed", oldHeadStr !== newHeadStr)
+      .Msg("CLOCK-HEAD-UPDATED");
     this.head.splice(0, this.head.length, ...head);
   }
 
@@ -161,12 +162,13 @@ export class CRDTClockImpl {
       await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
       this.transaction = undefined;
     }
-    const callerStack = new Error().stack?.split('\n').slice(2, 6).join('\n') || 'unknown';
-    this.logger.Debug()
-      .Str('caller_stack', callerStack)
-      .Str('advanced_head', advancedHead.map(c => c.toString()).join(','))
-      .Int('advanced_head_length', advancedHead.length)
-      .Msg('INT-APPLY-HEAD-COMPLETE');
+    const callerStack = new Error().stack?.split("\n").slice(2, 6).join("\n") || "unknown";
+    this.logger
+      .Debug()
+      .Str("caller_stack", callerStack)
+      .Str("advanced_head", advancedHead.map((c) => c.toString()).join(","))
+      .Int("advanced_head_length", advancedHead.length)
+      .Msg("INT-APPLY-HEAD-COMPLETE");
     this.setHead(advancedHead);
   }
 }
@@ -192,50 +194,54 @@ function compareClockHeads(head1: ClockHead, head2: ClockHead) {
 
 async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTransaction, head: ClockHead) {
   // Add detailed logging for debugging sync issues
-  const initialHeadStr = head.map(cid => cid.toString()).join(',');
-  const newHeadStr = newHead.map(cid => cid.toString()).join(',');
-  
-  logger.Debug()
-    .Str('initial_head', initialHeadStr)
-    .Int('initial_head_length', head.length)
-    .Str('new_head', newHeadStr)
-    .Int('new_head_length', newHead.length)
-    .Msg('ADVANCE-BLOCKS-START');
+  const initialHeadStr = head.map((cid) => cid.toString()).join(",");
+  const newHeadStr = newHead.map((cid) => cid.toString()).join(",");
+
+  logger
+    .Debug()
+    .Str("initial_head", initialHeadStr)
+    .Int("initial_head_length", head.length)
+    .Str("new_head", newHeadStr)
+    .Int("new_head_length", newHead.length)
+    .Msg("ADVANCE-BLOCKS-START");
 
   for (const cid of newHead) {
     try {
       const cidStr = cid.toString();
-      const preAdvanceHeadStr = head.map(c => c.toString()).join(',');
-      logger.Debug()
-        .Str('processing_cid', cidStr)
-        .Str('pre_advance_head', preAdvanceHeadStr)
-        .Int('pre_advance_head_length', head.length)
-        .Msg('ADVANCE-BLOCKS-PROCESSING');
+      const preAdvanceHeadStr = head.map((c) => c.toString()).join(",");
+      logger
+        .Debug()
+        .Str("processing_cid", cidStr)
+        .Str("pre_advance_head", preAdvanceHeadStr)
+        .Int("pre_advance_head_length", head.length)
+        .Msg("ADVANCE-BLOCKS-PROCESSING");
 
       head = await advance(toPailFetcher(tblocks), head, cid);
-      
-      const postAdvanceHeadStr = head.map(c => c.toString()).join(',');
-      logger.Debug()
-        .Str('processed_cid', cidStr)
-        .Str('post_advance_head', postAdvanceHeadStr)
-        .Int('post_advance_head_length', head.length)
-        .Bool('head_changed', preAdvanceHeadStr !== postAdvanceHeadStr)
-        .Msg('ADVANCE-BLOCKS-PROCESSED');
+
+      const postAdvanceHeadStr = head.map((c) => c.toString()).join(",");
+      logger
+        .Debug()
+        .Str("processed_cid", cidStr)
+        .Str("post_advance_head", postAdvanceHeadStr)
+        .Int("post_advance_head_length", head.length)
+        .Bool("head_changed", preAdvanceHeadStr !== postAdvanceHeadStr)
+        .Msg("ADVANCE-BLOCKS-PROCESSED");
     } catch (e) {
-      logger.Error().Err(e).Str('failed_cid', cid.toString()).Msg("failed to advance head");
+      logger.Error().Err(e).Str("failed_cid", cid.toString()).Msg("failed to advance head");
       // console.log('failed to advance head:', cid.toString(), e)
       // continue;
     }
   }
-  
-  const finalHeadStr = head.map(cid => cid.toString()).join(',');
+
+  const finalHeadStr = head.map((cid) => cid.toString()).join(",");
   const headChanged = initialHeadStr !== finalHeadStr;
-  
-  logger.Debug()
-    .Str('final_head', finalHeadStr)
-    .Int('final_head_length', head.length)
-    .Bool('head_changed', headChanged)
-    .Msg('ADVANCE-BLOCKS-COMPLETE');
-    
+
+  logger
+    .Debug()
+    .Str("final_head", finalHeadStr)
+    .Int("final_head_length", head.length)
+    .Bool("head_changed", headChanged)
+    .Msg("ADVANCE-BLOCKS-COMPLETE");
+
   return head;
 }

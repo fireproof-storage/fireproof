@@ -86,28 +86,39 @@ export class CRDTImpl implements CRDT {
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as CRDTMeta;
           if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
-          
-          const newHeadStr = crdtMeta.head.map(c => c.toString()).join(',');
-          const currentHeadStr = this.clock.head.map(c => c.toString()).join(',');
-          
-          this.logger.Debug()
-            .Str('new_head', newHeadStr)
-            .Int('new_head_length', crdtMeta.head.length)
-            .Str('current_head', currentHeadStr)
-            .Int('current_head_length', this.clock.head.length)
-            .Msg('CRDT-APPLY-META-PRE');
-            
-          console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
+
+          const newHeadStr = crdtMeta.head.map((c) => c.toString()).join(",");
+          const currentHeadStr = this.clock.head.map((c) => c.toString()).join(",");
+
+          this.logger
+            .Debug()
+            .Str("new_head", newHeadStr)
+            .Int("new_head_length", crdtMeta.head.length)
+            .Str("current_head", currentHeadStr)
+            .Int("current_head_length", this.clock.head.length)
+            .Msg("CRDT-APPLY-META-PRE");
+
+          // Apply head from metadata to current clock head
           await this.clock.applyHead(crdtMeta.head, []);
-          
-          const afterHeadStr = this.clock.head.map(c => c.toString()).join(',');
-          this.logger.Debug()
-            .Str('after_head', afterHeadStr)
-            .Int('after_head_length', this.clock.head.length)
-            .Bool('head_changed', currentHeadStr !== afterHeadStr)
-            .Msg('CRDT-APPLY-META-POST');
-            
-          console.log("applyMeta-post", crdtMeta.head, this.clock.head);
+
+          const afterHeadStr = this.clock.head.map((c) => c.toString()).join(",");
+          const headChanged = currentHeadStr !== afterHeadStr;
+          this.logger
+            .Debug()
+            .Str("after_head", afterHeadStr)
+            .Int("after_head_length", this.clock.head.length)
+            .Bool("head_changed", headChanged)
+            .Msg("CRDT-APPLY-META-POST");
+
+          // Force the ledger to notify subscribers about metadata changes
+          // This allows components like useAllDocs and changes() to refresh
+          // even when there are no document updates
+          if (headChanged && this.ledgerParent) {
+            this.logger.Debug().Msg("CRDT-FORCING-UPDATE-NOTIFY-FOR-META-CHANGE");
+            // Directly trigger the no_update_notify method on the ledger
+            // which will notify all subscribers that are listening for metadata changes
+            this.ledgerParent._no_update_notify();
+          }
         },
         compact: async (blocks: CompactFetcher) => {
           await doCompact(blocks, this.clock.head, this.logger);
@@ -232,22 +243,17 @@ export class CRDTImpl implements CRDT {
 
   async allDocs<T extends DocTypes>(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
     await this.ready();
-    
-    const headStr = this.clock.head.map(c => c.toString()).join(',');
-    this.logger.Debug()
-      .Str('current_head', headStr)
-      .Int('head_length', this.clock.head.length)
-      .Msg('CRDT-ALLDOCS-USING-HEAD');
-      
+
+    const headStr = this.clock.head.map((c) => c.toString()).join(",");
+    this.logger.Debug().Str("current_head", headStr).Int("head_length", this.clock.head.length).Msg("CRDT-ALLDOCS-USING-HEAD");
+
     const result: DocUpdate<T>[] = [];
     for await (const entry of getAllEntries<DocTypes>(this.blockstore, this.clock.head, this.logger)) {
       result.push(entry as DocUpdate<T>);
     }
-    
-    this.logger.Debug()
-      .Int('result_count', result.length)
-      .Msg('CRDT-ALLDOCS-COMPLETED');
-      
+
+    this.logger.Debug().Int("result_count", result.length).Msg("CRDT-ALLDOCS-COMPLETED");
+
     return { result, head: this.clock.head };
   }
 
@@ -280,22 +286,21 @@ export class CRDTImpl implements CRDT {
     head: ClockHead;
   }> {
     await this.ready();
-    
-    const headStr = this.clock.head.map(c => c.toString()).join(',');
-    const sinceStr = since.map(c => c.toString()).join(',');
-    this.logger.Debug()
-      .Str('current_head', headStr)
-      .Int('head_length', this.clock.head.length)
-      .Str('since_head', sinceStr)
-      .Int('since_length', since.length)
-      .Msg('CRDT-CHANGES-USING-HEAD');
-      
+
+    const headStr = this.clock.head.map((c) => c.toString()).join(",");
+    const sinceStr = since.map((c) => c.toString()).join(",");
+    this.logger
+      .Debug()
+      .Str("current_head", headStr)
+      .Int("head_length", this.clock.head.length)
+      .Str("since_head", sinceStr)
+      .Int("since_length", since.length)
+      .Msg("CRDT-CHANGES-USING-HEAD");
+
     const result = await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
-    
-    this.logger.Debug()
-      .Int('result_count', result.result.length)
-      .Msg('CRDT-CHANGES-COMPLETED');
-      
+
+    this.logger.Debug().Int("result_count", result.result.length).Msg("CRDT-CHANGES-COMPLETED");
+
     return result;
   }
 

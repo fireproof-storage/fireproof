@@ -639,6 +639,10 @@ export interface Ledger extends HasCRDT {
   destroy(): Promise<void>;
   ready(): Promise<void>;
 
+  // Internal method to notify subscribers without updating the state
+  // Used for metadata-only updates to trigger UI refreshes
+  _no_update_notify(syncMeta?: TransactionMeta): void;
+
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
 
   // asDB(): Database;

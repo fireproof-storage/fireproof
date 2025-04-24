@@ -7,14 +7,16 @@ This document analyzes the logs from both online sync (failing) and offline sync
 ### Online Sync Test (Failing)
 
 1. **Clock Head Isolation**:
+
    - Each database maintains a single-CID clock head that never merges with the other
    - DB1 final clock head: `bafyreib3tiyy6kpfmxncgbmtp45hsxznf4quq455jqgsgiofopcyzfciea` (single CID)
    - DB0 final clock head: `bafyreib3tiyy6kpfmxncgbmtp45hsxznf4quq455jqgsgiofopcyzfciea,bafyreifrxtyqn2uo6xybjubauja5kbh3vvckdmgkkxii6cxg43r6xkl7ym` (two CIDs)
 
 2. **Asymmetric Head State**:
+
    - The first database (DB0) successfully sees both clock heads merged (2 CIDs)
    - The second database (DB1) only sees its own clock head (1 CID) and fails to merge
-   - Log evidence: 
+   - Log evidence:
      ```
      online-db-z2p7qfv51k-1 actual: 1, expected: 2
      CLOCK-FINAL online-db-z2p7qfv51k-1 clock length: 1
@@ -26,6 +28,7 @@ This document analyzes the logs from both online sync (failing) and offline sync
      ```
 
 3. **Metadata Stream Termination**:
+
    - Multiple occurrences of "unexpected meta stream end" warnings
    - This happens before the second database can fully process the updated head
 
@@ -37,6 +40,7 @@ This document analyzes the logs from both online sync (failing) and offline sync
 ### Offline Sync Test (Passing)
 
 1. **Full Clock Head Merging**:
+
    - Upon reopening the database, it initializes with a complete multi-CID clock head
    - Log evidence:
      ```
@@ -47,6 +51,7 @@ This document analyzes the logs from both online sync (failing) and offline sync
      ```
 
 2. **Clean CID Collection**:
+
    - The logs show both databases' CIDs being collected together
    - New meta logs show consistent collection of all CIDs from both databases
 
@@ -59,10 +64,10 @@ This document analyzes the logs from both online sync (failing) and offline sync
 The issue is definitively traced to the persistence of clock head state in live database instances:
 
 1. **Metadata Exchange Works**: Both tests successfully exchange metadata via the gateways
-   
 2. **CID Exchange Works**: Both databases receive CIDs from each other
 
 3. **Asymmetric Meta Processing**:
+
    - In the online case, DB0 successfully merges all CIDs into its clock head
    - DB1 fails to incorporate DB0's CID into its clock head
    - When the test asserts document counts, DB1 has only 1 doc instead of 2
@@ -87,6 +92,7 @@ The root cause can be definitively identified as:
 ## Why Database Closure & Reopening Fixes It
 
 Database closure forces:
+
 1. A complete shutdown of the live clock head state
 2. Upon reopening, a complete reconstruction of the clock head from all available metadata
 3. This ensures a clean, unified view of all CIDs from all connected databases

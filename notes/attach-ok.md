@@ -7,6 +7,7 @@ This document analyzes the logs from the successful "offline sync" test that use
 ### 1. Database Lifecycle Pattern
 
 The test that works follows this pattern:
+
 - Create and prepare outbound database
 - Attach to sync source
 - Close the database
@@ -69,14 +70,17 @@ applyMeta-post [
 ## Key Differences Between Failing and Successful Tests
 
 1. **Database Lifecycle**:
+
    - Successful test: Creates, attaches, closes, and reopens databases sequentially
    - Failing test: Creates multiple databases that remain open during synchronization
 
 2. **Meta Processing Time**:
+
    - Successful test: Database is closed and reopened, which appears to trigger complete processing of the metadata
    - Failing test: The "unexpected meta stream end" message may indicate premature termination of meta processing
 
 3. **CID Loading Pattern**:
+
    - Successful test: Loads all CIDs together after reopening the database
    - Failing test: Loads CIDs in parallel while databases are still running
 
@@ -89,6 +93,7 @@ applyMeta-post [
 The critical difference appears to be in how the clock head state is handled when reopening a database versus keeping it running:
 
 1. When reopening a database:
+
    - The initialization process loads all metadata
    - All CIDs are processed from scratch
    - The CRDT clock is reconstructed with a complete view of all operations
@@ -104,9 +109,10 @@ The successful synchronization depends on a full reinitialization of the databas
 
 1. The `advanceBlocks` function properly merges clock heads, but the merged state isn't properly applied to live database operations
 2. The issue is likely in how the updated clock head is (or isn't) propagated to active database query operations
-3. Database initialization upon reopening correctly uses the complete merged head state 
+3. Database initialization upon reopening correctly uses the complete merged head state
 
 To fix the issue, the code needs to ensure that:
+
 1. Meta updates trigger a complete refresh of the internal database state
 2. Document retrieval operations always use the latest merged clock head
 3. The cache invalidation mechanism properly responds to CRDT updates

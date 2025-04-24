@@ -13,12 +13,12 @@ import {
   WriteQueue,
   CRDT,
   LedgerOpts,
-  Attachable,
-  Attached,
-  LedgerOptsOptionalTracer,
+  type Attachable,
+  type Attached,
+  type LedgerOptsOptionalTracer,
   PARAM,
 } from "./types.js";
-import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
+import { StoreURIRuntime, StoreUrlsOpts, type TransactionMeta } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, ensureURIDefaults } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
@@ -135,6 +135,11 @@ export class LedgerShell implements Ledger {
 
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
     return this.ref.subscribe(listener, updates);
+  }
+
+  _no_update_notify(): void {
+    // Shell implementation - do nothing
+    // This is just to satisfy the interface
   }
 }
 
@@ -271,15 +276,24 @@ class LedgerImpl implements Ledger {
     }
   }
 
-  private async _no_update_notify() {
-    await this.ready();
-    if (this._noupdate_listeners.size) {
-      for (const listener of this._noupdate_listeners) {
-        await (async () => await listener([]))().catch((e: Error) => {
-          this.logger.Error().Err(e).Msg("subscriber error");
-        });
-      }
+  _no_update_notify(syncMeta?: TransactionMeta): void {
+    // Use a void promise to handle the async work without blocking
+    if (syncMeta) {
+      this.logger.Debug().Msg("LEDGER-NO-UPDATE-NOTIFY-WITH-META");
+    } else {
+      this.logger.Debug().Msg("LEDGER-NO-UPDATE-NOTIFY");
     }
+
+    void (async () => {
+      await this.ready();
+      if (this._noupdate_listeners.size) {
+        for (const listener of this._noupdate_listeners) {
+          await (async () => await listener([]))().catch((e: Error) => {
+            this.logger.Error().Err(e).Msg("subscriber error");
+          });
+        }
+      }
+    })();
   }
 }
 

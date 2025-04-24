@@ -475,26 +475,26 @@ describe("sync", () => {
     await Promise.all(
       dbs.map(async (db) => {
         const changes = await db.changes();
-        console.log(`CLOCK-HEAD-INIT ${db.name} clock length:`, changes.clock.length, 'clock:', JSON.stringify(changes.clock));
-      })
+        console.log(`CLOCK-HEAD-INIT ${db.name} clock length:`, changes.clock.length, "clock:", JSON.stringify(changes.clock));
+      }),
     );
 
     // Wait longer for sync to happen
-    console.log('Waiting for sync to happen...');
+    console.log("Waiting for sync to happen...");
     await sleep(500); // Increased from 200ms to 500ms
-    
+
     // Log state after first wait
     await Promise.all(
       dbs.map(async (db) => {
         const changes = await db.changes();
-        console.log(`CLOCK-MID ${db.name} clock length:`, changes.clock.length, 'clock:', JSON.stringify(changes.clock));
-      })
+        console.log(`CLOCK-MID ${db.name} clock length:`, changes.clock.length, "clock:", JSON.stringify(changes.clock));
+      }),
     );
-    
+
     // Try closing and reopening the databases to see if that helps
-    console.log('Closing and reopening databases to check persistence...');
-    await Promise.all(dbs.map(db => db.close()));
-    
+    console.log("Closing and reopening databases to check persistence...");
+    await Promise.all(dbs.map((db) => db.close()));
+
     // Reopen the databases
     const reopenedDbs = await Promise.all(
       Array(2)
@@ -505,82 +505,82 @@ describe("sync", () => {
           return db;
         }),
     );
-    
+
     // Wait again
-    console.log('Waiting after reopen...');
+    console.log("Waiting after reopen...");
     await sleep(500);
-    
+
     // Check results
     await Promise.all(
       reopenedDbs.map(async (db) => {
         const rows = await db.allDocs();
-        const docIds = rows.rows.map(r => r.key).join(',');
-        console.log(`${db.name} rows:`, rows.rows.length, 'docs:', docIds);
-        
+        const docIds = rows.rows.map((r) => r.key).join(",");
+        console.log(`${db.name} rows:`, rows.rows.length, "docs:", docIds);
+
         const changes = await db.changes();
-        console.log(`CLOCK-FINAL ${db.name} clock length:`, changes.clock.length, 'clock:', JSON.stringify(changes.clock));
-        
+        console.log(`CLOCK-FINAL ${db.name} clock length:`, changes.clock.length, "clock:", JSON.stringify(changes.clock));
+
         // Comment out the expectation temporarily to let test complete
         // expect(rows.rows.length).toBe(ROWS * dbs.length);
         console.log(`${db.name} actual: ${rows.rows.length}, expected: ${ROWS * reopenedDbs.length}`);
       }),
     );
-    
+
     // Clean up
-    await Promise.all(reopenedDbs.map(db => db.close()));
+    await Promise.all(reopenedDbs.map((db) => db.close()));
   }, 30000);
 
-    // // console.log("outbound-db");
-    // const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    // await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
-    // // await sleep(500);
-    // const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
-    // // await writeRow(outbound, "outbound");
-    //
-    // // console.log("inbound-db");
-    // const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    // await pinbound.db.close();
-    // const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-    //
-    // const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    // await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
-    // await inbound.db.close();
-    //
-    // // console.log("result");
-    // const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-    // // console.log(re);
-    // // console.log(inRows);
-    // expect(resultRows.length).toBe(ROWS * 5);
-    // expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
-    //
-    // const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
-    // await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
-    // await joined.db.close();
-    // const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
-    // expect(resultRows).toEqual(joinedRows);
-  }, 100_000);
+  // // console.log("outbound-db");
+  // const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
+  // await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
+  // // await sleep(500);
+  // const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
+  // // await writeRow(outbound, "outbound");
+  //
+  // // console.log("inbound-db");
+  // const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+  // await pinbound.db.close();
+  // const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+  //
+  // const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
+  // await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
+  // await inbound.db.close();
+  //
+  // // console.log("result");
+  // const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+  // // console.log(re);
+  // // console.log(inRows);
+  // expect(resultRows.length).toBe(ROWS * 5);
+  // expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
+  //
+  // const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
+  // await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
+  // await joined.db.close();
+  // const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
+  // expect(resultRows).toEqual(joinedRows);
+}, 100_000);
 
-  it("sync outbound", async () => {
-    const sthis = ensureSuperThis();
-    const id = sthis.nextId().str;
+it("sync outbound", async () => {
+  const sthis = ensureSuperThis();
+  const id = sthis.nextId().str;
 
-    const outbound = await prepareDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
-    await outbound.db.attach(aJoinable(`sync-${id}`, outbound.db));
-    await writeRow(outbound, "outbound");
+  const outbound = await prepareDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
+  await outbound.db.attach(aJoinable(`sync-${id}`, outbound.db));
+  await writeRow(outbound, "outbound");
 
-    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
-    await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
-    await writeRow(inbound, "both-inbound");
-    await writeRow(outbound, "both-outbound");
-    await inbound.db.close();
-    await outbound.db.close();
+  const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
+  await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
+  await writeRow(inbound, "both-inbound");
+  await writeRow(outbound, "both-outbound");
+  await inbound.db.close();
+  await outbound.db.close();
 
-    const inRows = await readDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
-    const outRows = await readDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
-    // console.log(outRows);
-    // console.log(inRows);
-    expect(inRows).toEqual(outRows);
-  }, 100_000);
+  const inRows = await readDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
+  const outRows = await readDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
+  // console.log(outRows);
+  // console.log(inRows);
+  expect(inRows).toEqual(outRows);
+}, 100_000);
 
 async function syncDb(name: string, base: string, tracer?: TraceFn) {
   const db = fireproof(name, {
