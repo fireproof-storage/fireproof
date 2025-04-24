@@ -86,8 +86,27 @@ export class CRDTImpl implements CRDT {
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as CRDTMeta;
           if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
+          
+          const newHeadStr = crdtMeta.head.map(c => c.toString()).join(',');
+          const currentHeadStr = this.clock.head.map(c => c.toString()).join(',');
+          
+          this.logger.Debug()
+            .Str('new_head', newHeadStr)
+            .Int('new_head_length', crdtMeta.head.length)
+            .Str('current_head', currentHeadStr)
+            .Int('current_head_length', this.clock.head.length)
+            .Msg('CRDT-APPLY-META-PRE');
+            
           console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
           await this.clock.applyHead(crdtMeta.head, []);
+          
+          const afterHeadStr = this.clock.head.map(c => c.toString()).join(',');
+          this.logger.Debug()
+            .Str('after_head', afterHeadStr)
+            .Int('after_head_length', this.clock.head.length)
+            .Bool('head_changed', currentHeadStr !== afterHeadStr)
+            .Msg('CRDT-APPLY-META-POST');
+            
           console.log("applyMeta-post", crdtMeta.head, this.clock.head);
         },
         compact: async (blocks: CompactFetcher) => {
@@ -213,10 +232,22 @@ export class CRDTImpl implements CRDT {
 
   async allDocs<T extends DocTypes>(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
     await this.ready();
+    
+    const headStr = this.clock.head.map(c => c.toString()).join(',');
+    this.logger.Debug()
+      .Str('current_head', headStr)
+      .Int('head_length', this.clock.head.length)
+      .Msg('CRDT-ALLDOCS-USING-HEAD');
+      
     const result: DocUpdate<T>[] = [];
     for await (const entry of getAllEntries<DocTypes>(this.blockstore, this.clock.head, this.logger)) {
       result.push(entry as DocUpdate<T>);
     }
+    
+    this.logger.Debug()
+      .Int('result_count', result.length)
+      .Msg('CRDT-ALLDOCS-COMPLETED');
+      
     return { result, head: this.clock.head };
   }
 
@@ -249,7 +280,23 @@ export class CRDTImpl implements CRDT {
     head: ClockHead;
   }> {
     await this.ready();
-    return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
+    
+    const headStr = this.clock.head.map(c => c.toString()).join(',');
+    const sinceStr = since.map(c => c.toString()).join(',');
+    this.logger.Debug()
+      .Str('current_head', headStr)
+      .Int('head_length', this.clock.head.length)
+      .Str('since_head', sinceStr)
+      .Int('since_length', since.length)
+      .Msg('CRDT-CHANGES-USING-HEAD');
+      
+    const result = await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
+    
+    this.logger.Debug()
+      .Int('result_count', result.result.length)
+      .Msg('CRDT-CHANGES-COMPLETED');
+      
+    return result;
   }
 
   async compact(): Promise<void> {

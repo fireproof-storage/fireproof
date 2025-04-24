@@ -126,13 +126,33 @@ export class DatabaseImpl implements Database {
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     await this.ready();
-    this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
+    
+    const sinceStr = since.map(c => c.toString()).join(',');
+    this.logger.Debug()
+      .Any("opts", opts)
+      .Str("since_head", sinceStr)
+      .Int("since_length", since.length)
+      .Msg("DATABASE-CHANGES-STARTING");
+      
     const { result, head } = await this.ledger.crdt.changes(since, opts);
+    
+    const headStr = head.map(c => c.toString()).join(',');
+    this.logger.Debug()
+      .Str('head_from_crdt', headStr)
+      .Int('head_length', head.length)
+      .Int('result_length', result.length)
+      .Msg('DATABASE-CHANGES-RECEIVED');
+      
     const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
       clock,
     }));
+    
+    this.logger.Debug()
+      .Int('rows_count', rows.length)
+      .Msg('DATABASE-CHANGES-RETURNING');
+      
     return { rows, clock: head, name: this.name };
   }
 
@@ -140,11 +160,25 @@ export class DatabaseImpl implements Database {
     await this.ready();
     void opts;
     this.logger.Debug().Msg("allDocs");
+    
     const { result, head } = await this.ledger.crdt.allDocs();
+    
+    const headStr = head.map(c => c.toString()).join(',');
+    this.logger.Debug()
+      .Str('head_from_crdt', headStr)
+      .Int('head_length', head.length)
+      .Int('result_length', result.length)
+      .Msg('DATABASE-ALLDOCS-RECEIVED');
+      
     const rows = result.map(({ id: key, value, del }) => ({
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
+    
+    this.logger.Debug()
+      .Int('rows_count', rows.length)
+      .Msg('DATABASE-ALLDOCS-RETURNING');
+      
     return { rows, clock: head, name: this.name };
   }
 
