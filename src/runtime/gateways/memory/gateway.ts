@@ -19,14 +19,14 @@ function cleanURI(uri: URI): URI {
     .URI();
 }
 
+// type Callbacks = Map<string, (meta: Uint8Array) => void>;
+
 export class MemoryGateway implements Gateway {
-  readonly memorys: Map<string, Uint8Array>;
+  readonly memories: Map<string, Uint8Array>;
   readonly sthis: SuperThis;
   // readonly logger: Logger;
-  constructor(sthis: SuperThis, memorys: Map<string, Uint8Array>) {
-    // console.log("MemoryGateway", memorys);
-    this.memorys = memorys;
-    // this.logger = ensureLogger(sthis, "MemoryGateway");
+  constructor(sthis: SuperThis, memories: Map<string, Uint8Array>) {
+    this.memories = memories;
     this.sthis = sthis;
   }
 
@@ -43,31 +43,57 @@ export class MemoryGateway implements Gateway {
   destroy(baseUrl: URI): Promise<VoidResult> {
     const keyUrl = cleanURI(baseUrl);
     const match = keyUrl.match(keyUrl);
-    for (const key of this.memorys.keys()) {
+    for (const key of this.memories.keys()) {
       if (keyUrl.match(key).score >= match.score) {
-        this.memorys.delete(key);
+        this.memories.delete(key);
       }
     }
     // this.memorys.clear();
     return Promise.resolve(Result.Ok(undefined));
   }
 
+  // subscribe(url: URI, callback: (meta: Uint8Array) => void, sthis: SuperThis): Promise<UnsubscribeResult> {
+  //   console.log("subscribe", url.toString());
+  //   const callbackKey = `callbacks:${cleanURI(url).toString()}`;
+  //   const callbacks = (this.memories.get(callbackKey) as Callbacks) ?? new Map<string, Callbacks>();
+  //   const key = sthis.nextId().str;
+  //   callbacks.set(key, callback);
+  //   return Promise.resolve(
+  //     Result.Ok(() => {
+  //       callbacks.delete(key);
+  //       if (callbacks.size === 0) {
+  //         this.memories.delete(callbackKey);
+  //       }
+  //     }),
+  //   );
+  // }
+
   async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<VoidResult> {
-    const logger = ensureLogger(sthis, "MemoryGateway");
     // logger.Debug().Url(url).Msg("put");
     if (url.getParam(PARAM.STORE) === "car") {
+      const logger = ensureLogger(sthis, "MemoryGatewayCar");
       logger.Debug().Url(url).Msg("put-car");
     }
     if (url.getParam(PARAM.STORE) === "meta") {
+      const logger = ensureLogger(sthis, "MemoryGatewayMeta");
       logger.Debug().Url(url).Msg("put-meta");
+      // if (url.hasParam(PARAM.SELF_REFLECT)) {
+      //   const callbackKey = `callbacks:${cleanURI(url).toString()}`;
+      //   const callbacks = this.memories.get(callbackKey) as Callbacks;
+      //   if (callbacks) {
+      //     for (const callback of callbacks.values()) {
+      //       callback(bytes);
+      //     }
+      //   }
+      // }
     }
-    this.memorys.set(cleanURI(url).toString(), bytes);
+    this.memories.set(cleanURI(url).toString(), bytes);
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
   get(url: URI, sthis: SuperThis): Promise<GetResult> {
     // logger.Debug().Url(url).Msg("get");
-    const x = this.memorys.get(cleanURI(url).toString());
+    const x = this.memories.get(cleanURI(url).toString());
     if (!x) {
       // const possible = Array.from(this.memorys.keys()).filter(i => i.startsWith(url.build().cleanParams().toString()))
       // this.sthis.logger.Warn().Any("possible", possible).Url(url).Msg("not found");
@@ -83,12 +109,12 @@ export class MemoryGateway implements Gateway {
     return Promise.resolve(Result.Ok(x));
   }
   delete(url: URI): Promise<VoidResult> {
-    this.memorys.delete(cleanURI(url).toString());
+    this.memories.delete(cleanURI(url).toString());
     return Promise.resolve(Result.Ok(undefined));
   }
 
   async getPlain(url: URI, key: string): Promise<Result<Uint8Array>> {
-    const x = this.memorys.get(cleanURI(url).build().setParam(PARAM.KEY, key).toString());
+    const x = this.memories.get(cleanURI(url).build().setParam(PARAM.KEY, key).toString());
     if (!x) {
       return Result.Err(new NotFoundError("not found"));
     }

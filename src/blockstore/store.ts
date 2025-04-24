@@ -70,9 +70,11 @@ export abstract class BaseStoreImpl {
   // readonly keybag: KeyBag;
   readonly opts: StoreOpts;
   readonly loader: Loadable;
+  readonly myId: string;
   // readonly loader: Loadable;
   constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts, logger: Logger) {
     // this.name = name;
+    this.myId = sthis.nextId().str;
     this._url = url;
     this.opts = opts;
     // this.keybag = opts.keybag;
@@ -185,25 +187,27 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     // my.searchParams.set("storekey", 'insecure');
     super(sthis, url, { ...opts }, ensureLogger(sthis, "MetaStoreImpl"));
     // this.remote = !!remote;
-    if (/*this.remote && */ opts.gateway.subscribe) {
-      this.onStarted(async (dam) => {
-        this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
-        await opts.gateway.subscribe({ loader: this.loader }, this.url(), async ({ payload: dbMetas }: FPEnvelopeMeta) => {
-          this.logger.Debug().Msg("Received message from gateway");
-          await Promise.all(
-            dbMetas.map((dbMetaEv) =>
-              this.loader.taskManager?.handleEvent(
-                dbMetaEv.eventCid,
-                dbMetaEv.parents,
-                dbMetaEv.dbMeta,
-                this.loader.attachedStores.activate(dam),
-              ),
-            ),
-          );
-          this.updateParentsFromDbMetas(dbMetas);
-        });
-      });
-    }
+    // if (/*this.remote && */ opts.gateway.subscribe) {
+    //   this.onStarted(async (dam) => {
+    //     this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
+    //     await opts.gateway.subscribe({ loader: this.loader }, this.url(), async ({ payload: dbMetas }: FPEnvelopeMeta) => {
+    //       this.logger.Debug().Url(url).Msg("Received message from gateway");
+    //       this.loader.handleDbMetasFromStore(dbMetas);
+    //
+    //       // await Promise.all(
+    //       //   dbMetas.map((dbMetaEv) =>
+    //       //     this.loader.taskManager?.handleEvent(
+    //       //       dbMetaEv.eventCid,
+    //       //       dbMetaEv.parents,
+    //       //       dbMetaEv.dbMeta,
+    //       //       this.loader.attachedStores.activate(dam),
+    //       //     ),
+    //       //   ),
+    //       // );
+    //       this.updateParentsFromDbMetas(dbMetas);
+    //     });
+    //   });
+    // }
   }
 
   private updateParentsFromDbMetas(dbMetas: DbMetaEvent[]) {
@@ -223,27 +227,90 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   //   return (rDbMeta.Ok() as FPEnvelopeMeta).payload;
   // }
 
-  async load(branch = "main", skipHandle = false): Promise<DbMeta[] | Falsy> {
-    const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
-    if (url.isErr()) {
-      throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
-    }
-    const rfpEnv = await this.gateway.get({ loader: this.loader }, url.Ok());
-    if (rfpEnv.isErr()) {
-      if (isNotFoundError(rfpEnv)) {
-        return undefined;
-      }
-      throw this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError();
-    }
-    const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
-    // const dbMetas = await this.handleByteHeads(fpMeta);
-    const dbMetas = fpMeta.map((m) => m.dbMeta);
-    if (!skipHandle) {
-      await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.activate(url.Ok()));
-      this.updateParentsFromDbMetas(fpMeta);
-    }
-    return dbMetas;
+  cnt = 0;
+  stream(branch = "main"): ReadableStream<DbMeta[]> {
+    const id = this.sthis.nextId();
+    // let nested = 0;
+    return new ReadableStream<DbMeta[]>({
+      start: async (controller) => {
+        console.log("starting stream", this.myId, id.str, this.url().pathname);
+        // nested++;
+        this.cnt++;
+        const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
+        // console.log("p-0", id.str, this.loader.attachedStores.local().active.car.url());
+        // console.log("p-0", this.myId, id.str, this.url().pathname);
+        if (url.isErr()) {
+          // nested--;
+          // console.log("buildUrl error", id.str, url.Err());
+          controller.enqueue([]);
+          return;
+          // throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
+        }
+        // console.log("p-1", id.str, this.gateway);
+        const rfpEnv = await this.gateway.get({ loader: this.loader }, url.Ok());
+        // console.log("p-1", this.myId, id.str, this.url().pathname, rfpEnv.isErr());
+        // console.log("p-1a", id.str);
+        if (rfpEnv.isErr()) {
+          // nested--;
+          // console.log("p-1b", this.myId, id.str, this.url().pathname, rfpEnv.Err());
+          if (isNotFoundError(rfpEnv)) {
+            // console.log("not found error", id.str, url.Ok());
+            controller.enqueue([]);
+            return;
+          }
+          console.log("gateway get error", id.str, url.Ok());
+          controller.close();
+          throw this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError();
+        }
+        // console.log("p-2", this.myId, id.str, this.url().pathname);
+        const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
+        // const dbMetas = await this.handleByteHeads(fpMeta);
+        const dbMetas = fpMeta.map((m) => m.dbMeta);
+        // console.log("p-3", id.str);
+        // console.log(
+        //   "pulling",
+        //   this.cnt,
+        //   nested,
+        //   this.myId,
+        //   id.str,
+        //   this.url().pathname,
+        //   dbMetas.map((m) => m.cars.map((c) => c.toString())).flat(2),
+        // );
+        // console.log("p-4", this.myId, id.str, this.url().pathname);
+        controller.enqueue(dbMetas);
+        this.updateParentsFromDbMetas(fpMeta);
+        // console.log("p-5", this.myId, id.str, this.url().pathname);
+        // nested--;
+        // console.log("pulled", id.str, this.loader.attachedStores.local().active.car.url());
+      },
+      cancel: () => {
+        console.log("closing stream", this.myId, id.str, this.url().pathname);
+      },
+      // pull: async (controller) => {},
+    });
   }
+
+  // async xload(branch = "main", skipHandle = false): Promise<DbMeta[] | Falsy> {
+  //   const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
+  //   if (url.isErr()) {
+  //     throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
+  //   }
+  //   const rfpEnv = await this.gateway.get({ loader: this.loader }, url.Ok());
+  //   if (rfpEnv.isErr()) {
+  //     if (isNotFoundError(rfpEnv)) {
+  //       return undefined;
+  //     }
+  //     throw this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError();
+  //   }
+  //   const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
+  //   // const dbMetas = await this.handleByteHeads(fpMeta);
+  //   const dbMetas = fpMeta.map((m) => m.dbMeta);
+  //   if (!skipHandle) {
+  //     await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.activate(url.Ok()));
+  //     this.updateParentsFromDbMetas(fpMeta);
+  //   }
+  //   return dbMetas;
+  // }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";

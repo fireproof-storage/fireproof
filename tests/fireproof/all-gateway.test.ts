@@ -2,7 +2,7 @@ import { Database, Ledger, LedgerFactory, PARAM, bs, ensureSuperThis, fireproof 
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
-import { Future } from "@adviser/cement";
+import { BuildURI, Future } from "@adviser/cement";
 
 // import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
 // import { Gateway } from "../../src/blockstore/gateway.js";
@@ -380,7 +380,11 @@ describe("noop Gateway subscribe", function () {
     await db.destroy();
   });
   beforeEach(async () => {
-    db = fireproof("test-gateway-" + sthis.nextId().str);
+    db = fireproof("test-gateway-" + sthis.nextId().str, {
+      storeUrls: {
+        base: BuildURI.from(sthis.env.get("FP_STORAGE_URL")).setParam(PARAM.SELF_REFLECT, "x"),
+      },
+    });
 
     await db.ready();
 

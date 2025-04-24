@@ -1,4 +1,4 @@
-import { URI } from "@adviser/cement";
+import { BuildURI, URI } from "@adviser/cement";
 import { rt, bs, fireproof, PARAM, ensureSuperThis, Database } from "@fireproof/core";
 
 describe("MetaKeyHack", () => {
@@ -19,7 +19,7 @@ describe("MetaKeyHack", () => {
   beforeAll(async () => {
     db = fireproof("test", {
       storeUrls: {
-        base: "hack://localhost",
+        base: BuildURI.from("hack://localhost").setParam(PARAM.SELF_REFLECT, "x"),
       },
       keyBag: {
         url: "memory://./dist/kb-dir-partykit?extractKey=_deprecated_internal_api",
@@ -35,7 +35,8 @@ describe("MetaKeyHack", () => {
     const subscribeFn = vitest.fn();
     const unreg = await metaStore.realGateway.subscribe(
       ctx,
-      metaStore.url().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
+      metaStore.url(),
+      // metaStore.url().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
       subscribeFn,
     );
     expect(unreg.isOk()).toBeTruthy();

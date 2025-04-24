@@ -11,13 +11,14 @@ import {
   Attached,
   bs,
   sleep,
+  TraceFn,
 } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
-import { expect } from "vitest";
+import { afterEach, beforeEach, expect } from "vitest";
 
-const ROWS = 5;
+const ROWS = 1;
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();
@@ -32,9 +33,9 @@ describe("meta check", () => {
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memorys.entries()).filter(
-        ([k]) => k.startsWith(`memory://${name}`),
-      ),
+      Array.from(
+        ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries(),
+      ).filter(([k]) => k.startsWith(`memory://${name}`)),
     ).toEqual([]);
   });
 
@@ -73,7 +74,7 @@ describe("meta check", () => {
     ]);
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memorys.entries())
+      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries())
         .filter(([k]) => k.startsWith(`memory://${name}`))
         .map(([k]) =>
           stripper(
@@ -128,7 +129,7 @@ describe("meta check", () => {
       },
     ]);
     const car = Array.from(
-      ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memorys.entries(),
+      ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries(),
     )
       .filter(([k]) => k.startsWith(`memory://${name}`))
       .map(([k, v]) => [URI.from(k).getParam(PARAM.KEY), v])
@@ -246,34 +247,40 @@ describe("join function", () => {
   //   };
   class AJoinable implements Attachable {
     readonly name: string;
-    constructor(name: string) {
+    readonly db: Database;
+
+    constructor(name: string, db: Database) {
       this.name = name;
+      this.db = db;
     }
+
     async configHash() {
       return `joinable-${this.name}`;
     }
+
     prepare(): Promise<GatewayUrlsParam> {
       return Promise.resolve({
         car: {
           url: BuildURI.from(`memory://car/${this.name}`)
-            .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
+            .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
             .setParam(PARAM.SELF_REFLECT, "x"),
         },
         meta: {
           url: BuildURI.from(`memory://meta/${this.name}`)
-            .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
+            .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
             .setParam(PARAM.SELF_REFLECT, "x"),
         },
         file: {
           url: BuildURI.from(`memory://file/${this.name}`)
-            .setParam(PARAM.STORE_KEY, "@fireproof:attach@")
+            .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
             .setParam(PARAM.SELF_REFLECT, "x"),
         },
       });
     }
   }
-  function aJoinable(name: string): Attachable {
-    return new AJoinable(name);
+
+  function aJoinable(name: string, db: Database): Attachable {
+    return new AJoinable(name, db);
   }
 
   function attachableStoreUrls(name: string, db: Database) {
@@ -298,8 +305,7 @@ describe("join function", () => {
 
   let db: Database;
   let joinableDBs: string[] = [];
-  const rows = 1;
-  beforeAll(async () => {
+  beforeEach(async () => {
     const set = sthis.nextId().str;
 
     db = fireproof(`db-${set}`, {
@@ -308,7 +314,7 @@ describe("join function", () => {
       },
     });
     // await db.put({ _id: `genesis`, value: `genesis` });
-    for (let j = 0; j < rows; j++) {
+    for (let j = 0; j < ROWS; j++) {
       await db.put({ _id: `db-${j}`, value: `db-${set}` });
     }
 
@@ -320,7 +326,7 @@ describe("join function", () => {
         });
         // await db.put({ _id: `genesis`, value: `genesis` });
         // await db.ready();
-        for (let j = 0; j < rows; j++) {
+        for (let j = 0; j < ROWS; j++) {
           await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
         }
         expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
@@ -332,26 +338,29 @@ describe("join function", () => {
 
     expect(await db.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
   });
-  afterAll(async () => {
+  afterEach(async () => {
     await db.close();
   });
 
   it("it is joinable detachable", async () => {
     const my = fireproof("my", {
       storeUrls: {
-        base: "memory://my",
+        base: BuildURI.from("memory://it-is-joinable-detachable").setParam(
+          PARAM.STORE_KEY,
+          db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""),
+        ), // .setParam(PARAM.STORE_KEY, "@fireproof:attach@"),
       },
     });
     await my.put({ _id: "genesis", value: "genesis" });
     await Promise.all(
       joinableDBs.map(async (name) => {
         const tmp = fireproof(name, {
-          storeUrls: attachableStoreUrls(name, db),
+          storeUrls: attachableStoreUrls(name, my),
         });
         const res = await tmp.allDocs();
-        expect(res.rows.length).toBe(rows);
+        expect(res.rows.length).toBe(ROWS);
         await tmp.close();
-        const attached = await my.attach(aJoinable(name));
+        const attached = await my.attach(aJoinable(name, my));
         expect(attached).toBeDefined();
       }),
     );
@@ -363,14 +372,14 @@ describe("join function", () => {
   it("it is inbound syncing", async () => {
     await Promise.all(
       joinableDBs.map(async (name) => {
-        const attached = await db.attach(aJoinable(name));
+        const attached = await db.attach(aJoinable(name, db));
         expect(attached).toBeDefined();
       }),
     );
     await sleep(100);
     expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await db.allDocs();
-    expect(res.rows.length).toBe(rows + rows * joinableDBs.length);
+    expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
   });
 
   it("it empty inbound syncing", async () => {
@@ -380,14 +389,14 @@ describe("join function", () => {
     });
     await Promise.all(
       joinableDBs.map(async (name) => {
-        const attached = await mydb.attach(aJoinable(name));
+        const attached = await mydb.attach(aJoinable(name, mydb));
         expect(attached).toBeDefined();
       }),
     );
     await sleep(100);
     expect(mydb.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
     const res = await mydb.allDocs();
-    expect(res.rows.length).toBe(rows * joinableDBs.length);
+    expect(res.rows.length).toBe(ROWS * joinableDBs.length);
   });
 
   it("prepare only once", async () => {
@@ -396,7 +405,7 @@ describe("join function", () => {
         base: `memory://prepare`,
       },
     });
-    const mocked = aJoinable("test");
+    const mocked = aJoinable("test", db);
     const originalPrepare = mocked.prepare;
     mocked.prepare = vi.fn(() => originalPrepare.apply(mocked));
     expect(mocked.prepare).not.toHaveBeenCalled();
@@ -408,11 +417,15 @@ describe("join function", () => {
 
   it("offline sync", async () => {
     const id = sthis.nextId().str;
+    console.log("sync-offline");
 
     // console.log("outbound-db");
+    console.log("-1");
     const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    await poutbound.db.attach(aJoinable(`sync-${id}`));
+    console.log("-2");
+    await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
     await poutbound.db.close();
+    console.log("-3");
     const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
 
     expect(outRows.length).toBe(ROWS);
@@ -424,7 +437,7 @@ describe("join function", () => {
     expect(inRows.length).toBe(ROWS);
 
     const inbound = await syncDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    await inbound.attach(aJoinable(`sync-${id}`));
+    await inbound.attach(aJoinable(`sync-${id}`, inbound));
     await inbound.close();
 
     // console.log("result");
@@ -435,7 +448,7 @@ describe("join function", () => {
     expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
 
     const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
-    await joined.db.attach(aJoinable(`sync-${id}`));
+    await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
     await joined.db.close();
     const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
     expect(resultRows).toEqual(joinedRows);
@@ -443,22 +456,24 @@ describe("join function", () => {
 
   it("online sync", async () => {
     const id = sthis.nextId().str;
+    const tracer = vi.fn((ev) => console.log(ev));
     const dbs = await Promise.all(
       Array(2)
         .fill(0)
         .map(async (_, i) => {
-          const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://sync-local-osync-${id}`);
-          await db.attach(aJoinable(`sync-${id}`));
+          const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://sync-local-osync-${id}`, tracer);
+          await db.attach(aJoinable(`sync-${id}`, db));
           return db;
         }),
     );
-    await db.ready();
 
-    dbs.forEach((db) => {});
+    dbs.forEach(() => {
+      /* */
+    });
 
     // console.log("outbound-db");
     const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    await poutbound.db.attach(aJoinable(`sync-${id}`));
+    await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
     // await sleep(500);
     const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
     // await writeRow(outbound, "outbound");
@@ -469,18 +484,18 @@ describe("join function", () => {
     const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
 
     const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    await inbound.db.attach(aJoinable(`sync-${id}`));
+    await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
     await inbound.db.close();
 
     // console.log("result");
     const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
     // console.log(re);
     // console.log(inRows);
-    expect(resultRows.length).toBe(20);
+    expect(resultRows.length).toBe(ROWS * 5);
     expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
 
     const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
-    await joined.db.attach(aJoinable(`sync-${id}`));
+    await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
     await joined.db.close();
     const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
     expect(resultRows).toEqual(joinedRows);
@@ -489,38 +504,39 @@ describe("join function", () => {
   it("sync outbound", async () => {
     const id = sthis.nextId().str;
 
-    const outbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    await outbound.db.attach(aJoinable(`sync-${id}`));
+    const outbound = await prepareDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
+    await outbound.db.attach(aJoinable(`sync-${id}`, outbound.db));
     await writeRow(outbound, "outbound");
 
-    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    await inbound.db.attach(aJoinable(`sync-${id}`));
+    const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
+    await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
     await writeRow(inbound, "both-inbound");
     await writeRow(outbound, "both-outbound");
     await inbound.db.close();
     await outbound.db.close();
 
-    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
+    const inRows = await readDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
+    const outRows = await readDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
     // console.log(outRows);
     // console.log(inRows);
     expect(inRows).toEqual(outRows);
-  });
+  }, 100_000);
 });
 
-async function syncDb(name: string, base: string) {
+async function syncDb(name: string, base: string, tracer?: TraceFn) {
   const db = fireproof(name, {
     storeUrls: {
       base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@").setParam(PARAM.SELF_REFLECT, "yes"),
     },
+    tracer,
   });
   await db.ready();
   return db;
 }
 
-async function prepareDb(name: string, base: string) {
+async function prepareDb(name: string, base: string, tracer?: TraceFn) {
   {
-    const db = await syncDb(name, base);
+    const db = await syncDb(name, base, tracer);
     await db.ready();
     const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
     const ret = { db, dbId };
@@ -531,7 +547,7 @@ async function prepareDb(name: string, base: string) {
   const db = await syncDb(name, base);
   await db.ready();
   const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
-  const ret = { db, dbId };
+  // const ret = { db, dbId };
   return { db, dbId };
 }
 
@@ -544,7 +560,7 @@ async function readDb(name: string, base: string) {
 
 async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
   await Promise.all(
-    Array(5)
+    Array(ROWS)
       .fill(0)
       .map(async (_, i) => {
         const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;

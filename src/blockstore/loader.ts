@@ -33,7 +33,6 @@ import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
 import { CarTransactionImpl, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import {
-  isFalsy,
   PARAM,
   type Attachable,
   type Attached,
@@ -211,28 +210,31 @@ export class Loader implements Loadable {
           // console.log("attach-1", store.active.car.url().pathname)
           await this.tryToLoadStaleCars(store);
           // console.log("attach-2", store.active.car.url().pathname, "local", store.local().carStore().active.url().pathname)
-          const localDbMeta = await store.local().active.meta.load();
+          const localDbMeta = this.currentMeta; // await store.local().active.meta.load();
           // console.log("attach-local", localDbMeta, store.local().active.meta.url().pathname);
           // remote Store need to kick off the sync by requesting the latest meta
-          const remoteDbMeta = await store.active.meta.load("main", true);
-          // console.log("attach-remote", remoteDbMeta, store.active.car.url().pathname);
-          // const cgs: CarGroup = [];
-          // if (localDbMeta) {
-          // cgs.push(...localDbMeta.map((i) => i.cars).flat(2));
+          const remoteDbMeta = store.active.meta.stream();
+          console.log("attach-remote", store.active.meta.url().pathname, store.local().active.car.url().pathname);
+          await this.waitFirstMeta(remoteDbMeta.getReader(), store);
+
+          // // console.log("attach-remote", remoteDbMeta, store.active.car.url().pathname);
+          // // const cgs: CarGroup = [];
+          // // if (localDbMeta) {
+          // // cgs.push(...localDbMeta.map((i) => i.cars).flat(2));
+          // // }
+          // if (Array.isArray(remoteDbMeta)) {
+          //   if (remoteDbMeta.length) {
+          //     await this.handleDbMetasFromStore(remoteDbMeta, store);
+          //
+          //     // this.ebOpts.applyMeta(dbMeta);
+          //     // console.log("xxxxx", );
+          //
+          //     // { add: false, noLoader });
+          //     // await store.local().active.meta.save({ cars:  ?? [] });
+          //   }
+          // } else if (!isFalsy(remoteDbMeta)) {
+          //   throw this.logger.Error().Any({ dbMeta: remoteDbMeta }).Msg("missing dbMeta").AsError();
           // }
-          if (Array.isArray(remoteDbMeta)) {
-            if (remoteDbMeta.length !== 0) {
-              await this.handleDbMetasFromStore(remoteDbMeta, store);
-
-              // this.ebOpts.applyMeta(dbMeta);
-              // console.log("xxxxx", );
-
-              // { add: false, noLoader });
-              // await store.local().active.meta.save({ cars:  ?? [] });
-            }
-          } else if (!isFalsy(remoteDbMeta)) {
-            throw this.logger.Error().Any({ dbMeta: remoteDbMeta }).Msg("missing dbMeta").AsError();
-          }
           if (localDbMeta) {
             // console.log("attach-ensure", store.active.car.url().pathname);
             await this.ensureAttachedStore(store, localDbMeta);
@@ -264,40 +266,40 @@ export class Loader implements Loadable {
     });
   }
 
-  private async ensureAttachedStore(store: ActiveStore, localDbMeta: DbMeta[]) {
+  private async ensureAttachedStore(store: ActiveStore, localDbMeta: CarGroup) {
     const localCarStore = store.local().carStore();
     // console.log("local", localCarStore.active.url(), "remote", store.active.car.url());
     const codec = (await localCarStore.active.keyedCrypto()).codec();
     const ancestorDbMetas = new Map<string, AnyLink>();
-    for (const cargroup of localDbMeta) {
-      for (const carId of cargroup.cars) {
-        const car = await this.storesLoadCar(carId, localCarStore);
-        const rStore = await exception2Result(
-          async () =>
-            await store.active.car.save({
-              cid: carId,
-              bytes: await codec.encode(car.bytes),
-            }),
-        );
-        if (rStore.isErr()) {
-          this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
-        }
-        if (car.item.value) {
-          for (const ancestorFp of car.item.value.car.blocks.filter((i) => isFPBlockItem(i))) {
-            if (!isFPBlockItem<BlockItem>(ancestorFp)) {
-              continue;
-            }
-            ancestorFp.item.value.fp.cars.forEach((aCids) => {
-              aCids.forEach((aCid) => ancestorDbMetas.set(aCid.toString(), aCid));
-            });
-            // for (const aCid of ) {
-            // }
+    // for (const cargroup of localDbMeta) {
+    for (const carId of localDbMeta) {
+      const car = await this.storesLoadCar(carId, localCarStore);
+      const rStore = await exception2Result(
+        async () =>
+          await store.active.car.save({
+            cid: carId,
+            bytes: await codec.encode(car.bytes),
+          }),
+      );
+      if (rStore.isErr()) {
+        this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
+      }
+      if (car.item.value) {
+        for (const ancestorFp of car.item.value.car.blocks.filter((i) => isFPBlockItem(i))) {
+          if (!isFPBlockItem<BlockItem>(ancestorFp)) {
+            continue;
           }
+          ancestorFp.item.value.fp.cars.forEach((aCids) => {
+            aCids.forEach((aCid) => ancestorDbMetas.set(aCid.toString(), aCid));
+          });
+          // for (const aCid of ) {
+          // }
         }
       }
+      // }
     }
     if (ancestorDbMetas.size > 0) {
-      await this.ensureAttachedStore(store, [{ cars: Array.from(ancestorDbMetas.values()) }]);
+      await this.ensureAttachedStore(store, Array.from(ancestorDbMetas.values()));
     }
     // TODO remeber
   }
@@ -311,6 +313,7 @@ export class Loader implements Loadable {
 
   private readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
 
+  metaStreamReader!: ReadableStreamDefaultReader<DbMeta[]>;
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       await createAttachedStores(
@@ -324,18 +327,75 @@ export class Loader implements Loadable {
         this.blockstoreParent?.crdtParent?.ledgerParent?.name,
       );
       const local = this.attachedStores.local();
-      const metas = await local.active.meta.load();
-      if (this.ebOpts.meta) {
-        await this.handleDbMetasFromStore([this.ebOpts.meta, ...(metas || [])], local);
-      } else if (metas) {
-        await this.handleDbMetasFromStore(metas, local);
+      console.log("ready", this.id);
+      this.metaStreamReader = local.active.meta.stream().getReader();
+      console.log("attach-local", local.active.car.url().pathname);
+      await this.waitFirstMeta(this.metaStreamReader, local, { meta: this.ebOpts.meta });
+    });
+  }
+
+  currentMeta: CarGroup = [];
+
+  waitFirstMeta(reader: ReadableStreamDefaultReader<DbMeta[]>, local: ActiveStore, opts?: { meta?: DbMeta }) {
+    return new Promise<CarGroup>((resolve) => {
+      this.handleMetaStream(reader, local, {
+        meta: opts?.meta,
+        first: () => {
+          resolve(this.currentMeta);
+        },
+      });
+    });
+  }
+
+  handleMetaStream(
+    reader: ReadableStreamDefaultReader<DbMeta[]>,
+    local: ActiveStore,
+    opts?: { meta?: DbMeta; first: (v: CarGroup) => void },
+  ): void {
+    reader.read().then(({ done, value }) => {
+      if (done) {
+        this.logger.Warn().Any({ value, done }).Msg("unexpected meta stream end");
+        return;
+      }
+      let pHandle: Promise<CarGroup> | undefined;
+      if (opts?.meta) {
+        pHandle = this.handleDbMetasFromStore([opts?.meta, ...(value || [])], local);
+      } else if (value) {
+        // console.log("handleMetaStream", this.id, value);
+        pHandle = this.handleDbMetasFromStore(value, local);
+      }
+      if (pHandle) {
+        pHandle
+          .then((dbMeta) => {
+            // console.log(
+            //   "Handled",
+            //   dbMeta.map((i) => i.toString()),
+            // );
+            this.currentMeta = dbMeta;
+          })
+          .catch((e) => {
+            this.logger.Error().Err(e).Msg("error handling meta stream");
+          })
+          .finally(() => {
+            opts?.first(this.currentMeta ?? []);
+            // console.log("done-reader" + local.active.car.url().pathname);
+            // reader.cancel("done-read");
+          });
+      } else {
+        // reader.cancel("done");
+        this.handleMetaStream(reader, local);
       }
     });
   }
 
   async close() {
+    console.log("close", this.id);
     await this.commitQueue.waitIdle();
+    // console.log("close-2");
     await this.attachedStores.detach();
+    // console.log("close-3");
+    await this.metaStreamReader?.cancel();
+    // console.log("close-4");
     // const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     // await Promise.all(toClose.map((store) => store.close()));
   }
@@ -350,9 +410,11 @@ export class Loader implements Loadable {
     );
   }
 
+  readonly id: string;
   constructor(sthis: SuperThis, ebOpts: BlockstoreOpts, blockstore?: BlockFetcher) {
     // this.name = name;
     this.sthis = sthis;
+    this.id = sthis.nextId().str;
 
     this.commitQueue = new CommitQueue<CarGroup>(ebOpts);
     this.blockstoreParent = blockstore;

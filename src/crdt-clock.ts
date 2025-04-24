@@ -36,12 +36,12 @@ export class CRDTClockImpl {
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this._ready.once(async () => {
-      await this.blockstore.ready();
+      // await this.blockstore.ready();
     });
   }
 
   async close() {
-    await this.blockstore.close();
+    // await this.blockstore.close();
   }
 
   readonly logger: Logger;

@@ -439,7 +439,8 @@ export interface MetaStore extends BaseStore {
   readonly storeType: "meta";
   // branch defaults to "main"
   // skipHandle defaults to false
-  load(branch?: string, skipHandle?: boolean): Promise<DbMeta[] | Falsy>;
+  // load(branch?: string, skipHandle?: boolean): Promise<DbMeta[] | Falsy>;
+  stream(branch?: string): ReadableStream<DbMeta[]>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
   // onLoad(branch: string, loadHandler: LoadHandler): () => void;

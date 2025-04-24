@@ -33,10 +33,11 @@ export class DefSerdeGateway implements SerdeGateway {
     if (rUint8.isErr()) return rUint8;
     const ret = this.gw.put(url, rUint8.Ok(), sthis);
 
-    if (env.type === FPEnvelopeTypes.META) {
+    if (env.type === FPEnvelopeTypes.META && url.hasParam(PARAM.SELF_REFLECT)) {
       const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
       const subFn = this.subscribeFn.get(urlWithoutKey);
       if (subFn) {
+        // console.log("callback", subFn, rUint8.Ok());
         await subFn(rUint8.Ok());
       }
     }
