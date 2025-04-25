@@ -88,8 +88,8 @@ describe("MetaKeyHack", () => {
     expect(subscribeFn).toHaveBeenCalledTimes(2);
     const addKeyToDbMetaGateway = metaStore.realGateway as rt.AddKeyToDbMetaGateway;
     expect(
-      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: bs.DbMetaEvent) => i.eventCid.toString()))).flat(),
-    ).toEqual(addKeyToDbMetaGateway.lastDecodedMetas.map((i) => i.metas.map((i) => i.cid)));
+      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: bs.DbMetaEvent) => i.eventCid.toString()))).flat(2),
+    ).toEqual(Array.from(new Set(addKeyToDbMetaGateway.lastDecodedMetas.map((i) => i.metas.map((i) => i.cid)).flat(2))));
     unreg.Ok()();
   });
 });

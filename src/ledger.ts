@@ -53,6 +53,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   return new LedgerShell(
     item.once((key) => {
       // console.log("once-LedgerFactory", key);
+
       const db = new LedgerImpl(sthis, {
         name,
         meta: opts?.meta,
@@ -60,6 +61,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
         storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
         gatewayInterceptor: opts?.gatewayInterceptor,
         writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
+        ctx: opts?.ctx ?? new AppContext(),
         storeEnDe: {
           encodeFile,
           decodeFile,
@@ -99,8 +101,8 @@ export class LedgerShell implements Ledger {
     return this.ref.opts;
   }
 
-  get context(): AppContext {
-    return this.ref.context;
+  get ctx(): AppContext {
+    return this.ref.ctx;
   }
 
   get id(): string {
@@ -151,7 +153,7 @@ class LedgerImpl implements Ledger {
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
 
-  readonly context = new AppContext();
+  readonly ctx: AppContext;
 
   get name(): string {
     return this.opts.name;
@@ -216,6 +218,7 @@ class LedgerImpl implements Ledger {
     }; // || this.opts;
     // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
     this.sthis = sthis;
+    this.ctx = opts.ctx;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
     this.crdt = new CRDTImpl(this.sthis, this.opts, this);

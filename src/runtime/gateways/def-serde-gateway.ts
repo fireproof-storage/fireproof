@@ -3,7 +3,6 @@ import type { Gateway } from "../../blockstore/gateway.js";
 import { FPEnvelopeTypes, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
 import { FPDecoder, fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
 import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult } from "../../blockstore/serde-gateway.js";
-import type { DbMetaEvent } from "../../blockstore/types.js";
 import { PARAM, SuperThis } from "../../types.js";
 
 const subscribeFn = new Map<string, Map<string, (raw: Uint8Array) => Promise<void>>>();
@@ -86,7 +85,9 @@ export class DefSerdeGateway implements SerdeGateway {
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
   ): Promise<Result<() => void>> {
     const rawCallback = wrapRawCallback(sthis, url, callback, decoder);
-    let realUnreg: UnsubscribeResult = Result.Ok(() => {});
+    let realUnreg: UnsubscribeResult = Result.Ok(() => {
+      /* no-op */
+    });
     if (this.gw.subscribe) {
       realUnreg = await this.gw.subscribe(url, rawCallback, sthis);
     }

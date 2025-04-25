@@ -355,14 +355,14 @@ export class Loader implements Loadable {
             if (!dbMeta.length) {
               return;
             }
-            // console.log(
-            //   "new-meta",
-            //   this.id,
-            //   local.local().active.meta.url().pathname,
-            //   opts?.origin?.pathname,
-            //   value.map((i) => i.cars.map((i) => i.toString())).flat(2),
-            //   dbMeta.map((i) => i.toString()),
-            // );
+            console.log(
+              "new-meta",
+              this.id,
+              local.local().active.meta.url().pathname,
+              opts?.origin?.pathname,
+              value.map((i) => i.cars.map((i) => i.toString())).flat(2),
+              dbMeta.map((i) => i.toString()),
+            );
             this.currentMeta = dbMeta;
           })
           .catch((e) => {

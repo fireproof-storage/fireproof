@@ -13,6 +13,7 @@ import {
   index,
 } from "@fireproof/core";
 import { tracer } from "../helpers.js";
+import { AppContext } from "@adviser/cement";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;
@@ -29,6 +30,7 @@ describe("Fresh crdt", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -75,6 +77,7 @@ describe("CRDT with one record", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -133,6 +136,7 @@ describe("CRDT with a multi-write", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -205,6 +209,7 @@ describe("CRDT with two multi-writes", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -266,6 +271,7 @@ describe("Compact a named CRDT with writes", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction-${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -364,6 +370,7 @@ describe("CRDT with an index", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -415,6 +422,7 @@ describe("Loader with a committed transaction", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, dbname),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -469,6 +477,7 @@ describe("Loader with two committed transactions", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
@@ -525,6 +534,7 @@ describe("Loader with many committed transactions", function () {
       keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader-many"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
+      ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);

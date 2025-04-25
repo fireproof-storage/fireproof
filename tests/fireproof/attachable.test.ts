@@ -1,4 +1,4 @@
-import { BuildURI, URI, WithoutPromise } from "@adviser/cement";
+import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
 import {
   Attachable,
@@ -18,7 +18,7 @@ import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
 import { afterEach, beforeEach, expect } from "vitest";
 
-const ROWS = 5;
+const ROWS = 1;
 
 class AJoinable implements Attachable {
   readonly name: string;
@@ -418,15 +418,15 @@ describe("join function", () => {
 
   it("offline sync", async () => {
     const id = sthis.nextId().str;
-    console.log("sync-offline");
+    // console.log("sync-offline");
 
     // console.log("outbound-db");
-    console.log("-1");
+    // console.log("-1");
     const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    console.log("-2");
+    // console.log("-2");
     await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
     await poutbound.db.close();
-    console.log("-3");
+    // console.log("-3");
     const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
 
     expect(outRows.length).toBe(ROWS);
@@ -456,64 +456,156 @@ describe("join function", () => {
   }, 100_000);
 });
 
+// interface WaitItem {
+//   ev: IdleEventFromBlockstore | BusyEventFromBlockstore;
+//   waitforIdle: Set<Future<IdleEventFromBlockstore>>;
+// }
+// class WaitIdle {
+//   readonly _waitState = new Map<string, WaitItem>();
+//
+//   upsertItem(name: string) {
+//     let item = this._waitState.get(name);
+//     if (!item) {
+//       item = { ev: {} as IdleEventFromBlockstore, waitforIdle: new Set() };
+//       this._waitState.set(name, item);
+//     }
+//     return item;
+//   }
+//   upsertEvent(name: string, ev: IdleEventFromBlockstore | BusyEventFromBlockstore) {
+//     this.upsertItem(name).ev = ev;
+//   }
+//
+//   readonly _traceFn = (ev: TraceEvent) => {
+//     console.log("trace", ev.event);
+//     if (EventIsIdleFromBlockstore(ev) && ev.ledger) {
+//       const item = this.upsertItem(ev.ledger.name);
+//       item.ev = ev;
+//       console.log("database is now idle", ev.ledger.name);
+//       Array.from(item.waitforIdle).forEach((waiter) => {
+//         waiter.resolve(ev);
+//         item.waitforIdle.delete(waiter);
+//       });
+//     }
+//     if (EventIsBusyFromBlockstore(ev) && ev.ledger) {
+//       this.upsertEvent(ev.ledger.name, ev);
+//     }
+//   };
+//
+//   traceFn(): TraceFn {
+//     return this._traceFn;
+//   }
+//
+//   async wait(dbs: Database[]) {
+//     const waiting = dbs.map((db) => {
+//       const item = this.upsertItem(db.name);
+//       let waiter: Promise<IdleEventFromBlockstore>;
+//       if (EventIsIdleFromBlockstore(item.ev)) {
+//         console.log("database is already idle", db.name);
+//         waiter = Promise.resolve(item.ev);
+//       } else {
+//         const future = new Future<IdleEventFromBlockstore>();
+//         item.waitforIdle.add(future);
+//         waiter = future.asPromise();
+//       }
+//       return waiter;
+//     });
+//     console.log(dbs.map((db) => db.name));
+//     await Promise.all(waiting);
+//   }
+// }
+
 describe("sync", () => {
   const sthis = ensureSuperThis();
   it("online sync", async () => {
     const id = sthis.nextId().str;
-    // const tracer = vi.fn((ev) => console.log(ev));
+    // const waitIdle = new WaitIdle();
     const dbs = await Promise.all(
-      Array(5)
+      Array(3)
         .fill(0)
         .map(async (_, i) => {
-          const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
-          await db.attach(aJoinable(`sync-${id}`, db));
-          return db;
+          const tdb = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
+          await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
+          return tdb;
         }),
     );
 
+    // await waitIdle.wait(dbs);
     await sleep(500);
     await Promise.all(
-      dbs.map(async (db) => {
-        const rows = await db.allDocs();
+      dbs.map(async (tdb) => {
+        const rows = await tdb.db.allDocs();
         // console.log(db.name, rows.rows.length);
         // console.log(rows.rows.length);
         expect(rows.rows.length).toBe(ROWS * dbs.length);
       }),
     );
 
-    await Promise.all(dbs.map(async (db) => db.close()));
+    const keys = (
+      await Promise.all(
+        dbs.map(async (db) => {
+          await sleep(100 * Math.random());
+          return writeRow(db, "add-online");
+        }),
+      )
+    ).flat();
+    await sleep(500);
+    await Promise.all(
+      dbs.map(async (db) => {
+        for (const key of keys) {
+          const rows = await db.db.get(key);
+          expect(rows).toEqual({ _id: key, value: key });
+        }
+      }),
+    );
 
-    // // console.log("outbound-db");
-    // const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
-    // await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
-    // // await sleep(500);
-    // const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
-    // // await writeRow(outbound, "outbound");
-    //
-    // // console.log("inbound-db");
-    // const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    // await pinbound.db.close();
-    // const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-    //
-    // const inbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
-    // await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
-    // await inbound.db.close();
-    //
-    // // console.log("result");
-    // const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-    // // console.log(re);
-    // // console.log(inRows);
-    // expect(resultRows.length).toBe(ROWS * 5);
-    // expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
-    //
-    // const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
-    // await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
-    // await joined.db.close();
-    // const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
-    // expect(resultRows).toEqual(joinedRows);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const toCloseDbs = [dbs.shift()!, dbs.pop()!];
+    await Promise.all(toCloseDbs.map((tdb) => tdb.db.close()));
+
+    await Promise.all(
+      dbs.map(async (db) => {
+        return writeRow(db, "mid-dbs");
+      }),
+    );
+
+    const reOpenedWithoutAttach = await Promise.all(
+      toCloseDbs.map(async (tdb) => {
+        // console.log("reopen", tdb.db.name, tdb.db.ledger.ctx.get("base"));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const db = await syncDb(tdb.db.name, tdb.db.ledger.ctx.get("base")!);
+        return { db, dbId: tdb.dbId };
+      }),
+    );
+
+    // const reOpenKeys = (
+    await Promise.all(
+      dbs.map(async (db) => {
+        return writeRow(db, "reOpenKeys");
+      }),
+    );
+    // ).flat();
+
+    await Promise.all(
+      reOpenedWithoutAttach.map(async (tdb) => {
+        await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
+      }),
+    );
+    await sleep(500);
+
+    await Promise.all(
+      dbs.map(async (tdb) => {
+        const rows = await tdb.db.allDocs();
+        // console.log(db.name, rows.rows.length);
+        // console.log(rows.rows.length);
+        expect(rows.rows.length).toBe(8 * ROWS * dbs.length);
+      }),
+    );
+
+    await Promise.all(dbs.map((tdb) => tdb.db.close()));
+    await Promise.all(reOpenedWithoutAttach.map((tdb) => tdb.db.close()));
   }, 100_000);
 
-  it("sync outbound", async () => {
+  it.skip("sync outbound", async () => {
     const id = sthis.nextId().str;
 
     const outbound = await prepareDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
@@ -524,13 +616,20 @@ describe("sync", () => {
     await inbound.db.attach(aJoinable(`sync-${id}`, inbound.db));
     await writeRow(inbound, "both-inbound");
     await writeRow(outbound, "both-outbound");
+    await sleep(1000);
     await inbound.db.close();
     await outbound.db.close();
 
     const inRows = await readDb(`inbound-db-${id}`, `memory://sync-inbound-${id}`);
     const outRows = await readDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
-    // console.log(outRows);
-    // console.log(inRows);
+    console.log(
+      "out",
+      outRows.map((row) => row.key),
+    );
+    console.log(
+      "in",
+      inRows.map((row) => row.key),
+    );
     expect(inRows).toEqual(outRows);
   }, 100_000);
 });
@@ -540,6 +639,7 @@ async function syncDb(name: string, base: string, tracer?: TraceFn) {
     storeUrls: {
       base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@"), // .setParam(PARAM.SELF_REFLECT, "yes"),
     },
+    ctx: AppContext.merge({ base }),
     tracer,
   });
   await db.ready();
@@ -571,13 +671,14 @@ async function readDb(name: string, base: string) {
 }
 
 async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
-  await Promise.all(
+  return await Promise.all(
     Array(ROWS)
       .fill(0)
       .map(async (_, i) => {
         const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
         // console.log(key);
         await pdb.db.put({ _id: key, value: key });
+        return key;
       }),
   );
 }

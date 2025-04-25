@@ -35,6 +35,10 @@ export class CommitQueue<T = void> {
           this.processNext();
         }
       };
+      this.traceFn({
+        event: "busyFromCommitQueue",
+        queueLen: this.queue.length + 1,
+      });
       this.queue.push(queueFn);
       if (!this.processing) {
         this.processNext();

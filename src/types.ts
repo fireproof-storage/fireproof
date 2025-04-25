@@ -155,7 +155,26 @@ export interface IdleEventFromBlockstore {
   readonly blockstore: "data" | "index";
   readonly ledger?: Ledger;
 }
-export type TraceEvent = IdleEventFromCommitQueue | IdleEventFromBlockstore;
+
+export interface BusyEventFromCommitQueue {
+  readonly event: "busyFromCommitQueue";
+  readonly queueLen: number;
+}
+
+export interface BusyEventFromBlockstore extends Omit<IdleEventFromBlockstore, "event"> {
+  readonly event: "busyFromBlockstore";
+  readonly queueLen: number;
+}
+
+export function EventIsIdleFromBlockstore(event: TraceEvent): event is IdleEventFromBlockstore {
+  return event.event === "idleFromBlockstore";
+}
+
+export function EventIsBusyFromBlockstore(event: TraceEvent): event is BusyEventFromBlockstore {
+  return event.event === "busyFromBlockstore";
+}
+
+export type TraceEvent = IdleEventFromCommitQueue | IdleEventFromBlockstore | BusyEventFromBlockstore | BusyEventFromCommitQueue;
 
 export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly public?: boolean;
@@ -610,6 +629,7 @@ export interface LedgerOpts extends Tracer {
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
 
+  readonly ctx: AppContext;
   readonly writeQueue: WriteQueueParams;
   readonly storeUrls: StoreURIRuntime;
   readonly storeEnDe: StoreEnDeFile;
@@ -629,7 +649,7 @@ export interface Ledger extends HasCRDT {
 
   readonly name: string;
 
-  readonly context: AppContext;
+  readonly ctx: AppContext;
 
   onClosed(fn: () => void): () => void;
 

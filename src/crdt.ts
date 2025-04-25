@@ -79,6 +79,14 @@ export class CRDTImpl implements CRDT {
                 ledger: parent,
               });
               break;
+            case "busyFromCommitQueue":
+              opts.tracer({
+                event: "busyFromBlockstore",
+                blockstore: "data",
+                ledger: parent,
+                queueLen: event.queueLen,
+              });
+              break;
             default:
               return opts.tracer(event);
           }
