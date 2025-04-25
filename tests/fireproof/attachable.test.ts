@@ -537,7 +537,7 @@ describe("sync", () => {
 async function syncDb(name: string, base: string, tracer?: TraceFn) {
   const db = fireproof(name, {
     storeUrls: {
-      base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@").setParam(PARAM.SELF_REFLECT, "yes"),
+      base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@"), // .setParam(PARAM.SELF_REFLECT, "yes"),
     },
     tracer,
   });
