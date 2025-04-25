@@ -18,7 +18,7 @@ import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
 import { afterEach, beforeEach, expect } from "vitest";
 
-const ROWS = 1;
+const ROWS = 5;
 
 class AJoinable implements Attachable {
   readonly name: string;
@@ -462,7 +462,7 @@ describe("sync", () => {
     const id = sthis.nextId().str;
     // const tracer = vi.fn((ev) => console.log(ev));
     const dbs = await Promise.all(
-      Array(2)
+      Array(5)
         .fill(0)
         .map(async (_, i) => {
           const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
@@ -471,25 +471,13 @@ describe("sync", () => {
         }),
     );
 
-    // const dbs: Database[] = [];
-    // for (let i = 0; i < 2; i++) {
-    //   const { db } = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
-    //   await db.attach(aJoinable(`sync-${id}`, db));
-    //   dbs.push(db);
-    // }
-    // for (const db of dbs) {
-    //   const rows = await db.allDocs();
-    //   console.log(db.name, rows.rows.length);
-    //   // expect(rows.rows.length).toBe(ROWS * dbs.length);
-    // }
-
-    await sleep(200);
+    await sleep(500);
     await Promise.all(
       dbs.map(async (db) => {
         const rows = await db.allDocs();
-        console.log(db.name, rows.rows.length);
+        // console.log(db.name, rows.rows.length);
         // console.log(rows.rows.length);
-        // expect(rows.rows.length).toBe(ROWS * dbs.length);
+        expect(rows.rows.length).toBe(ROWS * dbs.length);
       }),
     );
 

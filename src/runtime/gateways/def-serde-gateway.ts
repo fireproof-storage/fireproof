@@ -67,7 +67,7 @@ export class DefSerdeGateway implements SerdeGateway {
       const urlWithoutKey = subscribeKeyURL(url);
       const subFn = subscribeFn.get(urlWithoutKey);
       if (subFn) {
-        console.log("PUT-SELF_REFLECT", url.toString(), subFn.size);
+        // console.log("PUT-SELF_REFLECT", url.toString(), subFn.size);
         await Promise.all(Array.from(subFn.values()).map((subFn) => subFn(rUint8.Ok())));
       }
     }

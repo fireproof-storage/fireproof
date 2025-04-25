@@ -136,12 +136,12 @@ class CommitAction implements CommitParams {
     this.attached.remotes().forEach((r) => {
       this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.meta.url()).Msg("remote-writeMeta");
-        console.log(
-          "writeMeta",
-          this.attached.local().active.meta.url().pathname,
-          r.active.meta.url().pathname,
-          meta.cars.map((i) => i.toString()),
-        );
+        // console.log(
+        //   "writeMeta",
+        //   this.attached.local().active.meta.url().pathname,
+        //   r.active.meta.url().pathname,
+        //   meta.cars.map((i) => i.toString()),
+        // );
         await r.active.meta.save(meta);
         return [];
       });
@@ -213,7 +213,7 @@ export class Loader implements Loadable {
       if (!at.stores.wal) {
         try {
           const store = this.attachedStores.activate(at.stores);
-          console.log("enter-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
+          // console.log("enter-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           // console.log("attach-1", store.active.car.url().pathname)
           await this.tryToLoadStaleCars(store);
           // console.log("attach-2", store.active.car.url().pathname, "local", store.local().carStore().active.url().pathname)
@@ -223,37 +223,13 @@ export class Loader implements Loadable {
           const remoteDbMeta = store.active.meta.stream();
           // console.log("attach-remote", store.active.meta.url().pathname, store.local().active.car.url().pathname);
           await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
-
-          console.log("remote-sycned-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
-          // // console.log("attach-remote", remoteDbMeta, store.active.car.url().pathname);
-          // // const cgs: CarGroup = [];
-          // // if (localDbMeta) {
-          // // cgs.push(...localDbMeta.map((i) => i.cars).flat(2));
-          // // }
-          // if (Array.isArray(remoteDbMeta)) {
-          //   if (remoteDbMeta.length) {
-          //     await this.handleDbMetasFromStore(remoteDbMeta, store);
-          //
-          //     // this.ebOpts.applyMeta(dbMeta);
-          //     // console.log("xxxxx", );
-          //
-          //     // { add: false, noLoader });
-          //     // await store.local().active.meta.save({ cars:  ?? [] });
-          //   }
-          // } else if (!isFalsy(remoteDbMeta)) {
-          //   throw this.logger.Error().Any({ dbMeta: remoteDbMeta }).Msg("missing dbMeta").AsError();
-          // }
+          // console.log("remote-sycned-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           if (localDbMeta) {
             // console.log("attach-ensure", store.active.car.url().pathname);
             await this.ensureAttachedStore(store, localDbMeta);
-
-            console.log("outbound-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
-            // const res = await store.active.meta.save(dbMetaArrayToDbMeta(localDbMeta));
-            // if (res.isErr()) {
-            //   this.logger.Warn().Err(res.Err()).Msg("error saving meta");
-            // }
+            // console.log("outbound-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           }
-
+          /* ultra hacky */
           await (this.blockstoreParent as BaseBlockstore).commitTransaction(
             new CarTransactionImpl(this.blockstoreParent as BaseBlockstore),
             {
@@ -264,9 +240,7 @@ export class Loader implements Loadable {
               noLoader: false,
             },
           );
-          console.log("leave-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
-
-          // console.log("attach-done", store.active.car.url().pathname);
+          // console.log("leave-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
         } catch (e) {
           await at.detach();
           throw this.logger.Error().Err(e).Msg("error attaching store").AsError();
@@ -378,22 +352,17 @@ export class Loader implements Loadable {
       if (pHandle) {
         pHandle
           .then((dbMeta) => {
-            // console.log(
-            //   "Handled",
-            //   dbMeta.map((i) => i.toString()),
-            // );
             if (!dbMeta.length) {
-              // console.log("no dbMeta", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname);
               return;
             }
-            console.log(
-              "new-meta",
-              this.id,
-              local.local().active.meta.url().pathname,
-              opts?.origin?.pathname,
-              value.map((i) => i.cars.map((i) => i.toString())).flat(2),
-              dbMeta.map((i) => i.toString()),
-            );
+            // console.log(
+            //   "new-meta",
+            //   this.id,
+            //   local.local().active.meta.url().pathname,
+            //   opts?.origin?.pathname,
+            //   value.map((i) => i.cars.map((i) => i.toString())).flat(2),
+            //   dbMeta.map((i) => i.toString()),
+            // );
             this.currentMeta = dbMeta;
           })
           .catch((e) => {

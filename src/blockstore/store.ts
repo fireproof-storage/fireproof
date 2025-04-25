@@ -242,13 +242,13 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
         unsubscribe = await this.gateway.subscribe({ loader: this.loader }, this.url(), async (fpMeta: FPEnvelopeMeta) => {
           const dbMetas = fpMeta.payload.map((m) => m.dbMeta);
-          console.log(
-            "subscribe",
-            this.myId,
-            id.str,
-            this.url().pathname,
-            dbMetas.map((i) => i.cars.map((i) => i.toString())).flat(2),
-          );
+          // console.log(
+          //   "subscribe",
+          //   this.myId,
+          //   id.str,
+          //   this.url().pathname,
+          //   dbMetas.map((i) => i.cars.map((i) => i.toString())).flat(2),
+          // );
           controller.enqueue(dbMetas);
           this.updateParentsFromDbMetas(fpMeta.payload);
         });
