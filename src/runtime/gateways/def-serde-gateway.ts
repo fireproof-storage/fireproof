@@ -1,10 +1,42 @@
 import { Result, URI } from "@adviser/cement";
 import type { Gateway } from "../../blockstore/gateway.js";
 import { FPEnvelopeTypes, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
-import { fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
-import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult } from "../../blockstore/serde-gateway.js";
+import { FPDecoder, fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
+import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult } from "../../blockstore/serde-gateway.js";
 import type { DbMetaEvent } from "../../blockstore/types.js";
-import { PARAM } from "../../types.js";
+import { PARAM, SuperThis } from "../../types.js";
+
+const subscribeFn = new Map<string, Map<string, (raw: Uint8Array) => Promise<void>>>();
+
+function wrapRawCallback(
+  sthis: SuperThis,
+  url: URI,
+  callback: (meta: FPEnvelopeMeta) => Promise<void>,
+  decoder?: Partial<FPDecoder>,
+) {
+  return async (raw: Uint8Array) => {
+    const res = await fpDeserialize(sthis, url, Result.Ok(raw), decoder);
+    if (res.isErr()) {
+      sthis.logger.Error().Err(res).Msg("Failed to deserialize");
+      return;
+    }
+    await callback(res.Ok() as FPEnvelopeMeta);
+  };
+}
+
+// function rawCallback(raw: Uint8Array) {
+//   return fpDeserialize<DbMetaEvent[]>(sthis, url, Result.Ok(raw), decoder).then((res) => {
+//     if (res.isErr()) {
+//       sthis.logger.Error().Err(res).Msg("Failed to deserialize");
+//       return;
+//     }
+//     callback(res.Ok() as FPEnvelopeMeta);
+//   });
+// }
+
+function subscribeKeyURL(url: URI) {
+  return url.build().cleanParams(PARAM.SELF_REFLECT, PARAM.KEY, PARAM.LOCAL_NAME, PARAM.NAME).toString();
+}
 
 export class DefSerdeGateway implements SerdeGateway {
   // abstract readonly storeType: StoreType;
@@ -26,19 +58,17 @@ export class DefSerdeGateway implements SerdeGateway {
     return this.gw.close(uri, sthis);
   }
 
-  private subscribeFn = new Map<string, (raw: Uint8Array) => Promise<void>>();
-
   async put<T>({ loader: { sthis }, encoder }: SerdeGatewayCtx, url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
     const rUint8 = await fpSerialize(sthis, env, encoder);
     if (rUint8.isErr()) return rUint8;
     const ret = this.gw.put(url, rUint8.Ok(), sthis);
 
     if (env.type === FPEnvelopeTypes.META && url.hasParam(PARAM.SELF_REFLECT)) {
-      const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
-      const subFn = this.subscribeFn.get(urlWithoutKey);
+      const urlWithoutKey = subscribeKeyURL(url);
+      const subFn = subscribeFn.get(urlWithoutKey);
       if (subFn) {
-        // console.log("callback", subFn, rUint8.Ok());
-        await subFn(rUint8.Ok());
+        console.log("PUT-SELF_REFLECT", url.toString(), subFn.size);
+        await Promise.all(Array.from(subFn.values()).map((subFn) => subFn(rUint8.Ok())));
       }
     }
     return ret;
@@ -55,30 +85,31 @@ export class DefSerdeGateway implements SerdeGateway {
     url: URI,
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
   ): Promise<Result<() => void>> {
-    function rawCallback(raw: Uint8Array) {
-      return fpDeserialize<DbMetaEvent[]>(sthis, url, Result.Ok(raw), decoder).then((res) => {
-        if (res.isErr()) {
-          sthis.logger.Error().Err(res).Msg("Failed to deserialize");
+    const rawCallback = wrapRawCallback(sthis, url, callback, decoder);
+    let realUnreg: UnsubscribeResult = Result.Ok(() => {});
+    if (this.gw.subscribe) {
+      realUnreg = await this.gw.subscribe(url, rawCallback, sthis);
+    }
+    if (url.hasParam(PARAM.SELF_REFLECT)) {
+      // memory leak possible
+      const urlWithoutKey = subscribeKeyURL(url);
+      const fns = subscribeFn.get(urlWithoutKey) ?? new Map<string, (raw: Uint8Array) => Promise<void>>();
+      subscribeFn.set(urlWithoutKey, fns);
+      const key = sthis.nextId().str;
+      fns.set(key, rawCallback);
+      return Result.Ok(() => {
+        const f = subscribeFn.get(urlWithoutKey);
+        if (!f) {
           return;
         }
-        callback(res.Ok() as FPEnvelopeMeta);
+        f.delete(key);
+        if (f.size === 0) {
+          subscribeFn.delete(urlWithoutKey);
+        }
+        realUnreg.Ok()();
       });
     }
-    if (!this.gw.subscribe) {
-      if (!url.hasParam(PARAM.SELF_REFLECT)) {
-        return Result.Ok(() => {
-          /* noop */
-        });
-      }
-      // memory leak possible
-      const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
-      this.subscribeFn.set(urlWithoutKey, rawCallback);
-      return Result.Ok(() => {
-        this.subscribeFn.delete(urlWithoutKey);
-      });
-    }
-    const unreg = await this.gw.subscribe(url, rawCallback, sthis);
-    return unreg;
+    return realUnreg;
   }
 
   async delete({ loader: { sthis } }: SerdeGatewayCtx, url: URI): Promise<Result<void>> {

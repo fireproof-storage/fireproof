@@ -301,7 +301,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
         // nested--;
         // console.log("pulled", id.str, this.loader.attachedStores.local().active.car.url());
       },
-      cancel: () => {
+      cancel: (reason) => {
+        if (reason !== "close") {
+          this.logger.Warn().Any({ reason }).Msg("unexpected meta stream end");
+        }
         if (unsubscribe.isOk()) {
           unsubscribe.Ok()();
         }

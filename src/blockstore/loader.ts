@@ -212,8 +212,8 @@ export class Loader implements Loadable {
     return await this.attachedStores.attach(attachable, async (at) => {
       if (!at.stores.wal) {
         try {
-          console.log("attach", at.stores.car.url().pathname);
           const store = this.attachedStores.activate(at.stores);
+          console.log("enter-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           // console.log("attach-1", store.active.car.url().pathname)
           await this.tryToLoadStaleCars(store);
           // console.log("attach-2", store.active.car.url().pathname, "local", store.local().carStore().active.url().pathname)
@@ -224,6 +224,7 @@ export class Loader implements Loadable {
           // console.log("attach-remote", store.active.meta.url().pathname, store.local().active.car.url().pathname);
           await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
 
+          console.log("remote-sycned-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           // // console.log("attach-remote", remoteDbMeta, store.active.car.url().pathname);
           // // const cgs: CarGroup = [];
           // // if (localDbMeta) {
@@ -246,6 +247,7 @@ export class Loader implements Loadable {
             // console.log("attach-ensure", store.active.car.url().pathname);
             await this.ensureAttachedStore(store, localDbMeta);
 
+            console.log("outbound-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
             // const res = await store.active.meta.save(dbMetaArrayToDbMeta(localDbMeta));
             // if (res.isErr()) {
             //   this.logger.Warn().Err(res.Err()).Msg("error saving meta");
@@ -262,6 +264,7 @@ export class Loader implements Loadable {
               noLoader: false,
             },
           );
+          console.log("leave-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
 
           // console.log("attach-done", store.active.car.url().pathname);
         } catch (e) {
@@ -359,9 +362,9 @@ export class Loader implements Loadable {
     local: ActiveStore,
     opts?: { meta?: DbMeta; origin?: URI; first: (v: CarGroup) => void },
   ): void {
-    reader.read().then(({ done, value }) => {
+    reader.read().then((o) => {
+      const { done, value } = o;
       if (done) {
-        this.logger.Warn().Any({ value, done }).Msg("unexpected meta stream end");
         return;
       }
       // console.log("handleMetaStream", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname, value);
@@ -415,7 +418,7 @@ export class Loader implements Loadable {
     // console.log("close-2");
     await this.attachedStores.detach();
     // console.log("close-3");
-    await this.metaStreamReader?.cancel();
+    await this.metaStreamReader?.cancel("close");
     // console.log("close-4");
     // const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     // await Promise.all(toClose.map((store) => store.close()));
