@@ -119,7 +119,13 @@ jobs:
           MINIO_ROOT_PASSWORD: minioadmin
         ports:
           - 9000:9000
-        # Minio in GitHub Actions runs with 'server' command by default
+        # Use explicit command to run Minio server
+        options: >-
+          --health-cmd="curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+          --entrypoint server
     steps:
       - uses: actions/checkout@v4
 
@@ -141,6 +147,15 @@ jobs:
 
       - name: install
         run: pnpm install
+
+      - name: Create test bucket for cloud tests
+        run: |
+          # Install Minio Client
+          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          ./mc alias set myminio http://localhost:9000 minioadmin minioadmin
+          ./mc mb myminio/testbucket --ignore-existing
+          ./mc policy set public myminio/testbucket
 
       - name: playwright
         run: pnpm exec playwright install chromium
