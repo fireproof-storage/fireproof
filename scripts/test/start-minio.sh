@@ -18,33 +18,56 @@ if [ ! -z "${FP_CI}" ] || [ ! -z "${GITHUB_ACTIONS}" ]; then
     exit 0
   fi
   # If running in GitHub Actions, Minio is already started as a service container
+  if [ ! -z "${GITHUB_ACTIONS}" ]; then
+    echo "Using GitHub Actions service container for Minio"
+    # Skip Docker operations and proceed to bucket creation
+    # Install Minio Client if needed for bucket operations
+    if ! command -v mc &> /dev/null; then
+      echo "Installing Minio Client..."
+      if [[ $(uname -m) == "aarch64" || $(uname -m) == "arm64" ]]; then
+        curl -O https://dl.min.io/client/mc/release/linux-arm64/mc
+      else
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+      fi
+      chmod +x mc
+      export PATH=$PATH:.
+    fi
+    # Skip to bucket creation section
+    goto_bucket_creation=true
+  fi
 fi
 
-# Check if container is already running
-if docker ps -q -f name=$CONTAINER_NAME | grep -q .; then
-  echo "Minio container is already running"
-else
-  echo "Starting Minio container..."
-  docker run -d --rm --name $CONTAINER_NAME \
-    -p $MINIO_PORT:9000 -p $MINIO_CONSOLE_PORT:9001 \
-    -e "MINIO_ROOT_USER=$MINIO_USER" \
-    -e "MINIO_ROOT_PASSWORD=$MINIO_PASSWORD" \
-    quay.io/minio/minio server /data --console-address ":9001"
+# Initialize goto_bucket_creation if not set
+goto_bucket_creation=${goto_bucket_creation:-false}
 
-  # Wait for Minio to start up
-  echo "Waiting for Minio to start..."
-  for i in {1..10}; do
-    if curl -s http://localhost:$MINIO_PORT/minio/health/live > /dev/null; then
-      echo "Minio is up and running"
-      break
-    fi
-    if [ $i -eq 10 ]; then
-      echo "Minio failed to start in time"
-      exit 1
-    fi
-    echo "Waiting... ($i/10)"
-    sleep 1
-  done
+# Only do Docker operations if we're not skipping to bucket creation
+if [ "$goto_bucket_creation" != "true" ]; then
+  # Check if container is already running
+  if docker ps -q -f name=$CONTAINER_NAME | grep -q .; then
+    echo "Minio container is already running"
+  else
+    echo "Starting Minio container..."
+    docker run -d --rm --name $CONTAINER_NAME \
+      -p $MINIO_PORT:9000 -p $MINIO_CONSOLE_PORT:9001 \
+      -e "MINIO_ROOT_USER=$MINIO_USER" \
+      -e "MINIO_ROOT_PASSWORD=$MINIO_PASSWORD" \
+      quay.io/minio/minio server /data --console-address ":9001"
+
+    # Wait for Minio to start up
+    echo "Waiting for Minio to start..."
+    for i in {1..10}; do
+      if curl -s http://localhost:$MINIO_PORT/minio/health/live > /dev/null; then
+        echo "Minio is up and running"
+        break
+      fi
+      if [ $i -eq 10 ]; then
+        echo "Minio failed to start in time"
+        exit 1
+      fi
+      echo "Waiting... ($i/10)"
+      sleep 1
+    done
+  fi
 fi
 
 # Create the test bucket
