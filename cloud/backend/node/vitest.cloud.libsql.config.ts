@@ -21,7 +21,7 @@ export default defineConfig({
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },
     globals: true,
-    globalSetup: "./cloud/backend/node/globalSetup.cloud.libsql.ts",
+    globalSetup: ["./cloud/backend/minio-test-setup.ts", "./cloud/backend/node/globalSetup.cloud.libsql.ts"],
     setupFiles: "./cloud/backend/node/setup.cloud.libsql.js",
   },
 });

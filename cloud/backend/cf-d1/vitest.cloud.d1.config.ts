@@ -22,7 +22,7 @@ export default defineConfig({
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },
     globals: true,
-    globalSetup: "./cloud/backend/cf-d1/globalSetup.cloud.d1.ts",
+    globalSetup: ["./cloud/backend/minio-test-setup.ts", "./cloud/backend/cf-d1/globalSetup.cloud.d1.ts"],
     setupFiles: "./cloud/backend/cf-d1/setup.cloud.d1.js",
   },
 });
