@@ -9,10 +9,15 @@ MINIO_PASSWORD=minioadmin
 CONTAINER_NAME=fireproof-test-minio
 BUCKET_NAME=testbucket
 
-# Exit if we're already running in CI with Minio
-if [ "$FP_CI" = "fp_ci" ] && [ -n "$CI_MINIO_ENDPOINT" ]; then
-  echo "Using existing CI Minio at $CI_MINIO_ENDPOINT"
-  exit 0
+# Check for CI environment
+if [ ! -z "${FP_CI}" ] || [ ! -z "${GITHUB_ACTIONS}" ]; then
+  echo "Running in CI environment"
+  # In CI, we assume Minio is already running on the standard port
+  if [ ! -z "${CI_MINIO_ENDPOINT}" ]; then
+    echo "Using Minio endpoint: ${CI_MINIO_ENDPOINT}"
+    exit 0
+  fi
+  # If running in GitHub Actions, Minio is already started as a service container
 fi
 
 # Check if container is already running

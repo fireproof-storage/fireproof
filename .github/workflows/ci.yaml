@@ -109,6 +109,17 @@ jobs:
     name: test-node
     needs: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    services:
+      # Use Minio container for S3 storage in cloud tests
+      minio:
+        # Official Minio image
+        image: quay.io/minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        # Minio in GitHub Actions runs with 'server' command by default
     steps:
       - uses: actions/checkout@v4
 
