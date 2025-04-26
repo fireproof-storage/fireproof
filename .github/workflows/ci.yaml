@@ -112,8 +112,8 @@ jobs:
     services:
       # Use Minio container for S3 storage in cloud tests
       minio:
-        # Official Minio image
-        image: quay.io/minio/minio:latest
+        # Official Minio image with command
+        image: quay.io/minio/minio:latest server /data
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
@@ -125,8 +125,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-        # Command to run Minio server (must be after the image name)
-        args: ["server", "/data"]
     steps:
       - uses: actions/checkout@v4
 
