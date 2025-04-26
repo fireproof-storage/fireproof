@@ -112,19 +112,18 @@ jobs:
     services:
       # Use Minio container for S3 storage in cloud tests
       minio:
-        # Official Minio image with command
-        image: quay.io/minio/minio:latest server /data
+        image: quay.io/minio/minio:latest
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin
         ports:
           - 9000:9000
-        # Use health check for Minio server
         options: >-
           --health-cmd="curl -f http://localhost:9000/minio/health/live || exit 1"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+        command: ["server", "/data"]
     steps:
       - uses: actions/checkout@v4
 
