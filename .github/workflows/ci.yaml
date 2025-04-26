@@ -147,8 +147,8 @@ jobs:
 
       - name: Create test bucket for cloud tests
         run: |
-          # Install Minio Client
-          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+          # Install Minio Client for ARM architecture
+          curl -O https://dl.min.io/client/mc/release/linux-arm64/mc
           chmod +x mc
           ./mc alias set myminio http://localhost:9000 minioadmin minioadmin
           ./mc mb myminio/testbucket --ignore-existing
