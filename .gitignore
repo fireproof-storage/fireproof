@@ -34,3 +34,4 @@ smoke/react/pnpm-lock.yaml
 
 .dev.vars*
 .wrangler
+.windsurfrules
