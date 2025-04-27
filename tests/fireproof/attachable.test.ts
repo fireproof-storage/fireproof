@@ -605,7 +605,7 @@ describe("sync", () => {
     await Promise.all(reOpenedWithoutAttach.map((tdb) => tdb.db.close()));
   }, 100_000);
 
-  it.skip("sync outbound", async () => {
+  it.skip"sync outbound", async () => {
     const id = sthis.nextId().str;
 
     const outbound = await prepareDb(`outbound-db-${id}`, `memory://sync-outbound-${id}`);
