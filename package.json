@@ -63,7 +63,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.14.1",
     "@types/randombytes": "^2.0.3",
-    "@types/react": "^18.3.12",
+    "@types/react": "^19.1.2",
     "@types/react-dom": "18.3.1",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/typescript-estree": "^8.30.1",
@@ -83,8 +83,8 @@
     "playwright": "^1.52.0",
     "playwright-chromium": "^1.52.0",
     "prettier": "^3.5.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "semver": "^7.7.1",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
@@ -126,7 +126,7 @@
     "pnpm-lock.yaml": "^1.0.0",
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
-    "react": "^18.3.1",
+    "react": "^19.1.0",
     "ws": "^8.18.1"
   },
   "bundle-phobia": {
