@@ -1,6 +1,8 @@
 import { SuperThis, ps } from "@fireproof/core";
-import { MsgDispatcher } from "./msg-dispatch.js";
+import { MsgDispatcher, MsgDispatcherCtx } from "./msg-dispatch.js";
 import { metaMerger } from "./meta-merger/meta-merger.js";
+import { Promisable } from "@adviser/cement";
+// import { isAuthTypeFPCloud, MsgBase, MsgIsTenantLedger } from "../../src/protocols/cloud/msg-types.js";
 // import { WSRoom } from "./ws-room.js";
 
 const {
@@ -44,6 +46,47 @@ type MsgWithConnAuth<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConnAuth<T>;
 type BindGetMeta = ps.cloud.BindGetMeta;
 type ReqDelMeta = ps.cloud.ReqDelMeta;
 type ReqPutMeta = ps.cloud.ReqPutMeta;
+
+// export type MsgWithConnAuthTendantLedger<T extends ps.cloud.MsgBase> = MsgWithConnAuth<T> & {
+//   readonly tenantLedger: {
+//     readonly tenant: string;
+//     readonly ledger: string;
+//   };
+// }
+
+export function ensureTendantLedger<T extends ps.cloud.MsgBase>(
+  fn: (
+    ctx: MsgDispatcherCtx,
+    msg: ps.cloud.MsgWithTenantLedger<MsgWithConnAuth<T>>,
+  ) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>>,
+  // right: "read" | "write" = "write"
+): (ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<T>) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>> {
+  return async (ctx, msg) => {
+    if (!ps.cloud.MsgIsTenantLedger(msg)) {
+      return buildErrorMsg(ctx, msg, new Error("missing tenant ledger"));
+    }
+    if (!ps.cloud.isAuthTypeFPCloud(msg.auth)) {
+      return buildErrorMsg(ctx, msg, new Error("ensureTendantLedger: needs auth with claim"));
+    }
+    if (!msg.auth.params.claim.tenants.map((i) => i.id).includes(msg.tenant.tenant)) {
+      return buildErrorMsg(
+        ctx,
+        msg,
+        new Error(`ensureTendantLedger: missing tenant: ${msg.tenant.tenant}:${msg.auth.params.claim.tenants.map((i) => i.id)}`),
+      );
+    }
+    if (!msg.auth.params.claim.ledgers.map((i) => i.id).includes(msg.tenant.ledger)) {
+      return buildErrorMsg(
+        ctx,
+        msg,
+        new Error(`ensureTendantLedger: missing ledger: ${msg.tenant.ledger}:${msg.auth.params.claim.ledgers.map((i) => i.id)}`),
+      );
+    }
+    /* need some read and write check here */
+    const ret = await fn(ctx, msg);
+    return ret;
+  };
+}
 
 export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende: EnDeCoder, wsRoom: WSRoom*/): MsgDispatcher {
   const dp = MsgDispatcher.new(_sthis /*, gestalt, ende, wsRoom*/);
@@ -103,49 +146,49 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
     },
     {
       match: MsgIsReqGetData,
-      fn: (ctx, msg: MsgWithConnAuth<ReqGetData>) => {
+      fn: ensureTendantLedger<ReqGetData>((ctx, msg) => {
         return buildResGetData(ctx, msg, ctx.impl);
-      },
+      }),
     },
     {
       match: MsgIsReqPutData,
-      fn: (ctx, msg: MsgWithConnAuth<ReqPutData>) => {
+      fn: ensureTendantLedger<ReqPutData>((ctx, msg) => {
         return buildResPutData(ctx, msg, ctx.impl);
-      },
+      }),
     },
     {
       match: MsgIsReqDelData,
-      fn: (ctx, msg: MsgWithConnAuth<ReqDelData>) => {
+      fn: ensureTendantLedger<ReqDelData>((ctx, msg) => {
         return buildResDelData(ctx, msg, ctx.impl);
-      },
+      }),
     },
     {
       match: MsgIsReqGetWAL,
-      fn: (ctx, msg: MsgWithConnAuth<ReqGetWAL>) => {
+      fn: ensureTendantLedger<ReqGetWAL>((ctx, msg) => {
         return buildResGetWAL(ctx, msg, ctx.impl);
-      },
+      }),
     },
     {
       match: MsgIsReqPutWAL,
-      fn: (ctx, msg: MsgWithConnAuth<ReqPutWAL>) => {
+      fn: ensureTendantLedger<ReqPutWAL>((ctx, msg) => {
         return buildResPutWAL(ctx, msg, ctx.impl);
-      },
+      }),
     },
     {
       match: MsgIsReqDelWAL,
-      fn: (ctx, msg: MsgWithConnAuth<ReqDelWAL>) => {
+      fn: ensureTendantLedger<ReqDelWAL>((ctx, msg) => {
         return buildResDelWAL(ctx, msg, ctx.impl);
-      },
+      }),
     },
     {
       match: MsgIsBindGetMeta,
-      fn: (ctx, msg: MsgWithConnAuth<BindGetMeta>) => {
+      fn: ensureTendantLedger<BindGetMeta>((ctx, msg) => {
         return ctx.impl.handleBindGetMeta(ctx, msg);
-      },
+      }),
     },
     {
       match: MsgIsReqPutMeta,
-      fn: async (ctx, req: MsgWithConnAuth<ReqPutMeta>) => {
+      fn: ensureTendantLedger<ReqPutMeta>(async (ctx, req) => {
         const ret = await ctx.impl.handleReqPutMeta(ctx, req);
         if (!ps.cloud.MsgIsResPutMeta(ret)) {
           return ret;
@@ -182,13 +225,13 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
           );
         }
         return ret;
-      },
+      }),
     },
     {
       match: MsgIsReqDelMeta,
-      fn: (ctx, msg: MsgWithConnAuth<ReqDelMeta>) => {
+      fn: ensureTendantLedger<ReqDelMeta>((ctx, msg) => {
         return ctx.impl.handleReqDelMeta(ctx, msg);
-      },
+      }),
     },
   );
   return dp;
