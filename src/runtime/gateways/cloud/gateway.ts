@@ -86,6 +86,7 @@ abstract class BaseGateway {
       store: param.REQUIRED,
       path: param.OPTIONAL,
       tenant: param.REQUIRED,
+      ledger: param.REQUIRED,
       name: param.REQUIRED,
       index: param.OPTIONAL,
     });
@@ -107,7 +108,7 @@ abstract class BaseGateway {
       conn: conn.conn.Ok().conn,
       tenant: {
         tenant: params.tenant,
-        ledger: params.name,
+        ledger: params.ledger,
       },
       // tenant: conn.tenant,
       methodParam: {

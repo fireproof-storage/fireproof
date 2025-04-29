@@ -16,7 +16,7 @@ export interface BaseTokenParam {
 export interface FPCloudClaim extends JWTPayload {
   readonly userId: string;
   readonly tenants: { readonly id: string; readonly role: string }[];
-  readonly ledgers: { readonly id: string; readonly role: string; readonly right: string }[];
+  readonly ledgers: { readonly id: string; readonly role: "admin" | "owner" | "member"; readonly right: "read" | "write" }[];
 }
 
 export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;

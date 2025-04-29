@@ -19,11 +19,10 @@ describe("fp-cloud", () => {
 
     fpGwUrl = BuildURI.from(sthis.env.get("FP_ENDPOINT"))
       .protocol("fpcloud")
-      .setParam("tenant", sthis.nextId().str)
-      .setParam("ledger", "test-l")
+      .setParam("tenant", auth.claims.tenants[0].id)
+      .setParam("ledger", auth.claims.ledgers[0].id)
       .setParam("protocol", "ws")
       .URI();
-    // console.log("KEYS", sthis.env.get("FP_KEYBAG_URL"));
   });
 
   // describe.each([
@@ -57,14 +56,15 @@ describe("fp-cloud", () => {
       },
     });
 
-    const tenant = `tenant-${sthis.nextId().str}`;
+    // console.log(">>>>>", auth.authType.params.jwk);
+    // const tenant = `tenant-${sthis.nextId().str}`;
     const attachs = await Promise.all(
       Array(10)
         .fill(0)
         .map(() => {
           const x = db.attach(
             toCloud({
-              urls: { base: fpGwUrl.build().setParam("tenant", tenant) },
+              urls: { base: fpGwUrl },
               strategy: new SimpleTokenStrategy(auth.authType.params.jwk),
             }),
           );
