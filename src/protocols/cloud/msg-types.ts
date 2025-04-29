@@ -13,10 +13,52 @@ export interface BaseTokenParam {
   readonly validFor: number;
 }
 
+export type ReadWrite = "read" | "write";
+
+export function toReadWrite(i: string): ReadWrite {
+  switch (i.toLowerCase()) {
+    case "write":
+      return "write";
+    default:
+      return "read";
+  }
+}
+
+export type Role = "admin" | "owner" | "member";
+
+export function toRole(i: string): Role {
+  switch (i.toLowerCase()) {
+    case "admin":
+      return "admin";
+    case "owner":
+      return "owner";
+    default:
+      return "member";
+  }
+}
+
+interface TenantClaim {
+  readonly id: string;
+  readonly role: Role;
+}
+
+interface LedgerClaim {
+  readonly id: string;
+  readonly role: Role;
+  readonly right: ReadWrite;
+}
+
+// export type RoleClaim = TenantClaim | LedgerClaim;
+
 export interface FPCloudClaim extends JWTPayload {
   readonly userId: string;
-  readonly tenants: { readonly id: string; readonly role: string }[];
-  readonly ledgers: { readonly id: string; readonly role: "admin" | "owner" | "member"; readonly right: "read" | "write" }[];
+  readonly email: string;
+  readonly nickname?: string;
+  readonly provider?: "github" | "google";
+  readonly created: Date;
+  readonly tenants: TenantClaim[];
+  readonly ledgers: LedgerClaim[];
+  readonly selected: TenantLedger;
 }
 
 export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
@@ -139,6 +181,7 @@ export type MsgWithConnAuth<T extends MsgBase = MsgBase> = MsgWithConn<T> & { re
 
 // export type MsgWithOptionalConnAuth<T extends MsgBase = MsgBase> = MsgWithOptionalConn<T> & { readonly auth: AuthType };
 
+export type MsgWithOptionalTenantLedger<T extends MsgWithConnAuth> = T & { readonly tenant?: Partial<TenantLedger> };
 export type MsgWithTenantLedger<T extends MsgWithConnAuth> = T & { readonly tenant: TenantLedger };
 
 export interface ErrorMsg extends MsgBase {
