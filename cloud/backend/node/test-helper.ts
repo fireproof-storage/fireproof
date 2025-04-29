@@ -206,6 +206,7 @@ export interface MockJWK {
   keys: rt.sts.KeysResult;
   authType: ps.cloud.FPJWKCloudAuthType;
   applyAuthToURI: (uri: CoerceURI) => URI;
+  claims: ps.cloud.TokenForParam;
 }
 
 export async function mockJWK(sthis: SuperThis, claim: Partial<ps.cloud.TokenForParam> = {}): Promise<MockJWK> {
@@ -239,15 +240,19 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<ps.cloud.TokenFor
   const sts = await rt.sts.SessionTokenService.create({
     token: keys.strings.privateKey,
   });
-  const jwk = await sts.tokenFor({
-    userId: "hello",
-    tenants: [],
-    ledgers: [],
+
+  const id = claim.id ?? sthis.nextId().str;
+  const claims = {
+    userId: `hello-${id}`,
+    tenants: claim.tenants ?? [{ id: `test-tenant-${id}`, role: "admin" }],
+    ledgers: claim.ledgers ?? [{ id: `test-ledger-${id}`, role: "admin", right: "write" }],
     ...claim,
-  });
+  };
+  const jwk = await sts.tokenFor(claims);
 
   return {
     keys,
+    claims,
     authType: {
       type: "fp-cloud-jwk",
       params: {
@@ -279,62 +284,5 @@ export async function setupBackendNode(
   const app = new Hono();
   const hs = new HonoServer(nhf);
   await hs.start().then((srv) => srv.once(app, port));
-  //   $.verbose = !!process.env.FP_DEBUG;
-  //   const auth = await mockJWK({}, sthis);
-  //   await writeEnvFile(sthis, tomlFile, envName, auth.keys.strings.publicKey);
-  //   // .dev.vars.<environment-name>
-  //   const runningWrangler = $`
-  //               wrangler dev -c ${tomlFile} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &
-  //               waitPid=$!
-  //               echo "PID:$waitPid"
-  //               wait $waitPid`;
-  //   const waitReady = new Future();
-  //   let pid: number | undefined;
-  //   runningWrangler.stdout.on("data", (chunk) => {
-  //     // console.log(">>", chunk.toString())
-  //     const mightPid = chunk.toString().match(/PID:(\d+)/)?.[1];
-  //     if (mightPid) {
-  //       pid = +mightPid;
-  //     }
-  //     if (chunk.includes("Starting local serv")) {
-  //       waitReady.resolve(true);
-  //     }
-  //   });
-  //   runningWrangler.stderr.on("data", (chunk) => {
-  //     // eslint-disable-next-line no-console
-  //     console.error("!!", chunk.toString());
-  //   });
-  //   await waitReady.asPromise();
   return { port, pid: 0, envName, hs };
 }
-
-// export interface BackendParams {
-//   readonly port: number;
-//   readonly pid: number;
-//   readonly envName: string;
-// }
-
-// export function cloudBackendParams(sthis: SuperThis, envName: string): BackendParams {
-//   const cf_backend = JSON.parse(sthis.env.get("FP_TEST_CLOUD_BACKEND") ?? "{}");
-//   const ret = cf_backend[envName];
-//   if (!ret) {
-//     throw new Error(`No backend for ${envName}`);
-//   }
-//   return ret;
-// }
-
-// export function setGlobalBackendParams(params: BackendParams) {
-//   const prevStr = process.env[`FP_TEST_CLOUD_BACKEND`];
-//   const prev: Record<string, BackendParams> = {};
-//   if (prevStr) {
-//     Object.assign(prev, JSON.parse(prevStr));
-//   }
-//   process.env[`FP_TEST_CLOUD_BACKEND`] = JSON.stringify({
-//     ...prev,
-//     [params.envName]: {
-//       port: params.port,
-//       pid: params.pid,
-//       envName: params.envName,
-//     },
-//   });
-// }

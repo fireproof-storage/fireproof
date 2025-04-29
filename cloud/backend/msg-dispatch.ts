@@ -130,7 +130,6 @@ export class MsgDispatcher {
       return this.send(ctx, buildErrorMsg(ctx, { ...msg }, new Error("dispatch missing connection")));
       // return send(buildErrorMsg(this.sthis, this.logger, msg, new Error("non open connection")));
     }
-    // console.log("validateConn-1");
     const r = await this.validateAuth(ctx, msg, (msg) => fn(msg));
     return Promise.resolve(this.send(ctx, r));
   }
@@ -172,19 +171,16 @@ export class MsgDispatcher {
   async dispatch(ctx: MsgDispatcherCtx, msg: MsgBase): Promise<Response> {
     // const id = this.sthis.nextId(12).str;
     try {
-      // console.log("dispatch-1", id);
       const found = Array.from(this.items.values()).find((item) => item.match(msg));
       if (!found) {
-        // console.log("dispatch-2", msg);
         return this.send(ctx, buildErrorMsg(ctx, msg, new Error(`unexpected message`)));
       }
       if (!found.isNotConn) {
-        // console.log("dispatch-3");
-        return this.validateConn(ctx, msg, (msg) => found.fn(ctx, msg));
+        const ret = await this.validateConn(ctx, msg, (msg) => found.fn(ctx, msg));
+        return ret;
       }
       return this.send(ctx, await this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg)));
     } catch (e) {
-      // console.log("dispatch-4", id);
       return this.send(ctx, buildErrorMsg(ctx, msg, e as Error));
       // } finally {
       //   console.log("dispatch-5", id);

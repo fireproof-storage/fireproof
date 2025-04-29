@@ -229,8 +229,8 @@ describe("Connection", () => {
         gwCtx = {
           conn: conn.conn,
           tenant: {
-            tenant: `Tenant-${sthis.nextId(12).str}`,
-            ledger: "Ledger",
+            tenant: auth.claims.tenants[0].id,
+            ledger: auth.claims.ledgers[0].id,
           },
         };
       });
