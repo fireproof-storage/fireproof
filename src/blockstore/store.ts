@@ -183,31 +183,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   // remote: boolean;
 
   constructor(sthis: SuperThis, url: URI, opts: BaseStoreOpts) {
-    // const my = new URL(url.toString());
-    // my.searchParams.set("storekey", 'insecure');
     super(sthis, url, { ...opts }, ensureLogger(sthis, "MetaStoreImpl"));
-    // this.remote = !!remote;
-    // if (/*this.remote && */ opts.gateway.subscribe) {
-    //   this.onStarted(async (dam) => {
-    //     this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
-    //     await opts.gateway.subscribe({ loader: this.loader }, this.url(), async ({ payload: dbMetas }: FPEnvelopeMeta) => {
-    //       this.logger.Debug().Url(url).Msg("Received message from gateway");
-    //       this.loader.handleDbMetasFromStore(dbMetas);
-    //
-    //       // await Promise.all(
-    //       //   dbMetas.map((dbMetaEv) =>
-    //       //     this.loader.taskManager?.handleEvent(
-    //       //       dbMetaEv.eventCid,
-    //       //       dbMetaEv.parents,
-    //       //       dbMetaEv.dbMeta,
-    //       //       this.loader.attachedStores.activate(dam),
-    //       //     ),
-    //       //   ),
-    //       // );
-    //       this.updateParentsFromDbMetas(dbMetas);
-    //     });
-    //   });
-    // }
   }
 
   private updateParentsFromDbMetas(dbMetas: DbMetaEvent[]) {
@@ -217,15 +193,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const dbMetaParentsSet = new Set(dbMetaParents.map((p) => p.toString()));
     this.parents = Array.from(uniqueParentsMap.values()).filter((p) => !dbMetaParentsSet.has(p.toString()));
   }
-
-  // async handleByteHeads(byteHeads: Uint8Array) {
-  //   // return await decodeGatewayMetaBytesToDbMeta(this.sthis, byteHeads);
-  //   const rDbMeta = await fpDeserialize(this.sthis, byteHeads, this.url());
-  //   if (rDbMeta.isErr()) {
-  //     throw this.logger.Error().Err(rDbMeta).Msg("error deserializing").AsError();
-  //   }
-  //   return (rDbMeta.Ok() as FPEnvelopeMeta).payload;
-  // }
 
   cnt = 0;
   stream(branch = "main"): ReadableStream<DbMeta[]> {
@@ -313,28 +280,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       // pull: async (controller) => {},
     });
   }
-
-  // async xload(branch = "main", skipHandle = false): Promise<DbMeta[] | Falsy> {
-  //   const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), branch);
-  //   if (url.isErr()) {
-  //     throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
-  //   }
-  //   const rfpEnv = await this.gateway.get({ loader: this.loader }, url.Ok());
-  //   if (rfpEnv.isErr()) {
-  //     if (isNotFoundError(rfpEnv)) {
-  //       return undefined;
-  //     }
-  //     throw this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError();
-  //   }
-  //   const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
-  //   // const dbMetas = await this.handleByteHeads(fpMeta);
-  //   const dbMetas = fpMeta.map((m) => m.dbMeta);
-  //   if (!skipHandle) {
-  //     await this.loader.handleDbMetasFromStore(dbMetas, this.loader.attachedStores.activate(url.Ok()));
-  //     this.updateParentsFromDbMetas(fpMeta);
-  //   }
-  //   return dbMetas;
-  // }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";

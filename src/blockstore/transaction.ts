@@ -15,8 +15,6 @@ import { BaseBlockstore, CarTransaction, CRDT, Falsy, falsyToUndef, SuperThis } 
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "../utils.js";
-import { anyBlock2FPBlock } from "./loader-helpers.js";
-import { CID } from "multiformats/cid";
 
 export interface CarTransactionOpts {
   readonly add: boolean;
@@ -37,9 +35,6 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
   }
 
   async get(cid: AnyLink): Promise<FPBlock | Falsy> {
-    if (cid.toString() === "bafyreib5b6mxpp5dzrm4no2t5rzjwzq27dqjvft4zuappxzswxzmbidol4") {
-      cid = CID.parse(cid.toString());
-    }
     const sg = await this.superGet(cid);
     if (sg) return sg;
     return await this.parent.get(cid);
@@ -338,7 +333,7 @@ export class CompactionFetcher implements BlockFetcher {
 
   async get(cid: AnyLink): Promise<FPBlock | Falsy> {
     const block = await this.blockstore.get(cid);
-    if (block) this.loggedBlocks.putSync(await anyBlock2FPBlock({ cid, bytes: block.bytes }));
+    if (block) this.loggedBlocks.putSync(block); //await anyBlock2FPBlock({ cid, bytes: block.bytes }));
     return falsyToUndef(block);
   }
 }
