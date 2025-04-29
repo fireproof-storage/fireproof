@@ -311,7 +311,7 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
   }
   async get(link: EventLink<T>): Promise<EventBlockView<T>> {
     try {
-      return super.get(link);
+      return await super.get(link);
     } catch (e) {
       this.logger.Error().Ref("link", link.toString()).Err(e).Msg("Missing event");
       return { value: undefined } as unknown as EventBlockView<T>;
