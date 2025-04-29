@@ -120,6 +120,7 @@ class CommitAction implements CommitParams {
 
   async writeCar(block: AnyBlock): Promise<void> {
     await this.attached.local().active.car.save(block);
+    // detached remote stores
     this.attached.remotes().forEach((r) => {
       this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.car.url()).Msg("remote-writeCar");
@@ -133,6 +134,7 @@ class CommitAction implements CommitParams {
   async writeMeta(cids: AnyLink[]): Promise<void> {
     const meta = { cars: cids };
     await this.attached.local().active.meta.save(meta);
+    // detached remote stores
     this.attached.remotes().forEach((r) => {
       this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.meta.url()).Msg("remote-writeMeta");

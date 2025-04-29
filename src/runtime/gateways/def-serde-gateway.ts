@@ -90,6 +90,9 @@ export class DefSerdeGateway implements SerdeGateway {
     });
     if (this.gw.subscribe) {
       realUnreg = await this.gw.subscribe(url, rawCallback, sthis);
+      if (realUnreg.isErr()) {
+        return realUnreg;
+      }
     }
     if (url.hasParam(PARAM.SELF_REFLECT)) {
       // memory leak possible

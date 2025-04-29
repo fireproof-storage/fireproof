@@ -1,6 +1,6 @@
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
-import { Logger, ResolveOnce } from "@adviser/cement";
+import { Logger } from "@adviser/cement";
 
 import { clockChangesSince, toPailFetcher } from "./crdt-helpers.js";
 import {
@@ -28,20 +28,17 @@ export class CRDTClockImpl {
   readonly watchers = new Map<string, (updates: DocUpdate<DocTypes>[]) => void>();
   readonly emptyWatchers = new Map<string, VoidFn>();
 
-  readonly blockstore: BaseBlockstore;
+  readonly blockstore: BaseBlockstore; // ready blockstore
 
   readonly applyHeadQueue: ApplyHeadQueue<DocTypes>;
   transaction?: CarTransaction;
 
-  readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
-    return this._ready.once(async () => {
-      // await this.blockstore.ready();
-    });
+    /* no-op */
   }
 
   async close() {
-    // await this.blockstore.close();
+    /* no-op */
   }
 
   readonly logger: Logger;
@@ -142,12 +139,18 @@ export class CRDTClockImpl {
 
     const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
     const result = await root(toPailFetcher(tblocks), advancedHead);
-    for (const block of [
-      ...result.additions,
-      // ...result.removals
-    ]) {
-      tblocks.putSync(await anyBlock2FPBlock(block));
+
+    const fpBlocks = await Promise.all(result.additions.map(anyBlock2FPBlock));
+    for (const fp of fpBlocks) {
+      tblocks.putSync(fp);
     }
+
+    //    for (const block of [
+    //      ...result.additions,
+    //      // ...result.removals
+    //    ]) {
+    //      tblocks.putSync(await anyBlock2FPBlock(block));
+    //    }
     if (!noLoader) {
       await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
       this.transaction = undefined;
