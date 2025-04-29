@@ -116,6 +116,12 @@ export class SessionTokenService {
       userId: p.userId,
       tenants: p.tenants,
       ledgers: p.ledgers,
+      email: "test@test",
+      created: new Date(),
+      selected: {
+        tenant: p.tenants[0].id,
+        ledger: p.ledgers[0].id,
+      },
     } satisfies FPCloudClaim)
       .setProtectedHeader({ alg: this.alg }) // algorithm
       .setIssuedAt()

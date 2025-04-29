@@ -242,10 +242,16 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<ps.cloud.TokenFor
   });
 
   const id = claim.id ?? sthis.nextId().str;
-  const claims = {
+  const claims: ps.cloud.TokenForParam = {
     userId: `hello-${id}`,
+    email: `hello-${id}@test.de`,
+    created: claim.created ?? new Date(),
     tenants: claim.tenants ?? [{ id: `test-tenant-${id}`, role: "admin" }],
     ledgers: claim.ledgers ?? [{ id: `test-ledger-${id}`, role: "admin", right: "write" }],
+    selected: claim.selected ?? {
+      tenant: claim.tenants?.[0].id ?? `test-tenant-${id}`,
+      ledger: claim.ledgers?.[0].id ?? `test-ledger-${id}`,
+    },
     ...claim,
   };
   const jwk = await sts.tokenFor(claims);

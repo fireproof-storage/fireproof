@@ -2,6 +2,7 @@ import { SuperThis, ps } from "@fireproof/core";
 import { MsgDispatcher, MsgDispatcherCtx } from "./msg-dispatch.js";
 import { metaMerger } from "./meta-merger/meta-merger.js";
 import { Promisable } from "@adviser/cement";
+import { TenantLedger } from "../../src/protocols/cloud/msg-types.js";
 // import { isAuthTypeFPCloud, MsgBase, MsgIsTenantLedger } from "../../src/protocols/cloud/msg-types.js";
 // import { WSRoom } from "./ws-room.js";
 
@@ -57,29 +58,33 @@ type ReqPutMeta = ps.cloud.ReqPutMeta;
 export function ensureTendantLedger<T extends ps.cloud.MsgBase>(
   fn: (
     ctx: MsgDispatcherCtx,
-    msg: ps.cloud.MsgWithTenantLedger<MsgWithConnAuth<T>>,
+    msg: ps.cloud.MsgWithOptionalTenantLedger<MsgWithConnAuth<T>>,
   ) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>>,
   // right: "read" | "write" = "write"
 ): (ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<T>) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>> {
   return async (ctx, msg) => {
-    if (!ps.cloud.MsgIsTenantLedger(msg)) {
-      return buildErrorMsg(ctx, msg, new Error("missing tenant ledger"));
-    }
     if (!ps.cloud.isAuthTypeFPCloud(msg.auth)) {
       return buildErrorMsg(ctx, msg, new Error("ensureTendantLedger: needs auth with claim"));
     }
-    if (!msg.auth.params.claim.tenants.map((i) => i.id).includes(msg.tenant.tenant)) {
+    const optionalTenantLedger = msg as ps.cloud.MsgWithOptionalTenantLedger<MsgWithConnAuth<T>>;
+    const tl = {
+      tenant: optionalTenantLedger.tenant?.tenant ?? msg.auth.params.claim.selected.tenant,
+      ledger: optionalTenantLedger.tenant?.ledger ?? msg.auth.params.claim.selected.ledger,
+    } satisfies TenantLedger;
+    const tlMsg = { ...msg, auth: msg.auth, tenant: tl };
+
+    if (!tlMsg.auth.params.claim.tenants.map((i) => i.id).includes(tl.tenant)) {
       return buildErrorMsg(
         ctx,
         msg,
-        new Error(`ensureTendantLedger: missing tenant: ${msg.tenant.tenant}:${msg.auth.params.claim.tenants.map((i) => i.id)}`),
+        new Error(`ensureTendantLedger: missing tenant: ${tlMsg.tenant.tenant}:${msg.auth.params.claim.tenants.map((i) => i.id)}`),
       );
     }
-    if (!msg.auth.params.claim.ledgers.map((i) => i.id).includes(msg.tenant.ledger)) {
+    if (!msg.auth.params.claim.ledgers.map((i) => i.id).includes(tlMsg.tenant.ledger)) {
       return buildErrorMsg(
         ctx,
         msg,
-        new Error(`ensureTendantLedger: missing ledger: ${msg.tenant.ledger}:${msg.auth.params.claim.ledgers.map((i) => i.id)}`),
+        new Error(`ensureTendantLedger: missing ledger: ${tlMsg.tenant.ledger}:${msg.auth.params.claim.ledgers.map((i) => i.id)}`),
       );
     }
     /* need some read and write check here */
