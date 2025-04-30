@@ -8,6 +8,7 @@ import { DefSerdeGateway } from "../runtime/gateways/def-serde-gateway.js";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
 import { INDEXEDDB_VERSION } from "../runtime/gateways/indexeddb-version.js";
 import { sysFileSystemFactory } from "../runtime/gateways/file/sys-file-system-factory.js";
+import { FireproofCloudGateway } from "../runtime/gateways/cloud/gateway.js";
 
 export interface SerdeGatewayFactoryItem {
   readonly protocol: string;
@@ -155,5 +156,19 @@ registerStoreProtocol({
   },
   gateway: async (sthis) => {
     return new MemoryGateway(sthis, memory);
+  },
+});
+
+//const onceRegisterFireproofCloudStoreProtocol = new KeyedResolvOnce<() => void>();
+// export function registerFireproofCloudStoreProtocol(protocol = "fpcloud:") {
+// return onceRegisterFireproofCloudStoreProtocol.get(protocol).once(() => {
+URI.protocolHasHostpart("fpcloud");
+registerStoreProtocol({
+  protocol: "fpcloud",
+  defaultURI() {
+    return URI.from("fpcloud://fireproof.cloud/");
+  },
+  serdegateway: async (sthis: SuperThis) => {
+    return new FireproofCloudGateway(sthis);
   },
 });
