@@ -38,7 +38,6 @@ import {
 } from "../../../protocols/cloud/msg-types-data.js";
 import { ensureLogger, hashObject, NotFoundError } from "../../../utils.js";
 import { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
-import { registerStoreProtocol } from "../../../blockstore/register-store-protocol.js";
 import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeWAL } from "../../../blockstore/fp-envelope.js";
 import { dbMetaEvent2Serialized, decode2DbMetaEvents, fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
 import {
@@ -498,9 +497,6 @@ interface Subscription {
   readonly callback: (msg: Uint8Array) => void;
   readonly unsub: () => void;
 }
-// function connectionURI(uri: URI): URI {
-//   return uri.build().delParam("authJWK").delParam("key").delParam("store").delParam("suffix").delParam("storekey").URI();
-// }
 
 const subscriptions = new Map<string, Subscription[]>();
 // const doServerSubscribe = new KeyedResolvOnce();
@@ -593,13 +589,6 @@ export class FireproofCloudGateway implements SerdeGateway {
     return Result.Ok(undefined);
   }
 
-  // fireproof://localhost:1999/?name=test-public-api&protocol=ws&store=meta
-  // async getCloudConnection(uri: URI): Promise<Result<MsgConnectedAuth>> {
-  //   return this.getCloudConnectionItem(uri).then((r) => {
-  //     return r.conn;
-  //   });
-  // }
-
   matchURI(uri: URI): () => string {
     // console.log("getCloudConnectionItem", uri);
     let protocol = uri.getParam("protocol", "https");
@@ -656,85 +645,10 @@ export class FireproofCloudGateway implements SerdeGateway {
     return { conn: Result.Ok(conn.Ok().attachAuth(() => authTypeFromUri(this.logger, uri))), citem: bestMatch };
   }
 
-  // private notifySubscribers(data: Uint8Array, callbacks: ((msg: Uint8Array) => void)[] = []): void {
-  //   for (const cb of callbacks) {
-  //     try {
-  //       cb(data);
-  //     } catch (error) {
-  //       this.logger.Error().Err(error).Msg("Error in subscriber callback execution");
-  //     }
-  //   }
-  // }
   async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     const metaGw = getStoreTypeGateway(ctx.loader.sthis, uri) as MetaGateway;
 
     return metaGw.subscribe(ctx, uri, callback);
-
-    // const conn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
-    // if (conn.conn.isErr()) {
-    //   return Result.Err(conn.conn);
-    // }
-
-    // ctx.loader.logger.Error().Url(url).Msg("subscribe");
-    // return Result.Err(new Error("Not implemented"));
-    // const rParams = uri.getParamsResult({
-    //   store: 0,
-    //   storekey: 0,
-    // });
-    // if (rParams.isErr()) {
-    //   return this.logger.Error().Err(rParams).Msg("Error in subscribe").ResultError();
-    // }
-    // const { store } = rParams.Ok();
-    // if (store !== "meta") {
-    //   return Result.Err(new Error("store must be meta"));
-    // }
-    // const rConn = await this.getCloudConnection(uri);
-    // if (rConn.isErr()) {
-    //   return this.logger.Error().Err(rConn).Msg("Error in subscribe:getCloudConnection").ResultError();
-    // }
-    // const conn = rConn.Ok();
-    // const rResSubscribeMeta = await doServerSubscribe.get(pkKey(conn.key)).once(async () => {
-    //   const subId = this.sthis.nextId().str;
-    //   const fn = (subId: string) => (msg: MsgBase) => {
-    //     if (MsgIsUpdateMetaEvent(msg) && subId === msg.subscriberId) {
-    //       // console.log("onMessage", subId, conn.key, msg.metas);
-    //       const s = subscriptions.get(subId);
-    //       if (!s) {
-    //         return;
-    //       }
-    //       console.log("msg", JSON.stringify(msg));
-    //       this.notifySubscribers(
-    //         this.sthis.txt.encode(JSON.stringify(msg.metas)),
-    //         s.map((s) => s.callback)
-    //       );
-    //     }
-    //   };
-    //   conn.onMessage(fn(subId));
-    //   return conn.request<ResSubscribeMeta>(buildReqSubscriptMeta(this.sthis, conn.key, subId), {
-    //     waitType: "resSubscribeMeta",
-    //   });
-    // });
-    // if (rResSubscribeMeta.isErr()) {
-    //   return this.logger.Error().Err(rResSubscribeMeta).Msg("Error in subscribe:request").ResultError();
-    // }
-    // const subId = rResSubscribeMeta.Ok().subscriberId;
-    // let callbacks = subscriptions.get(subId);
-    // if (!callbacks) {
-    //   callbacks = [];
-    //   subscriptions.set(subId, callbacks);
-    // }
-    // const sid = this.sthis.nextId().str;
-    // const unsub = () => {
-    //   const idx = callbacks.findIndex((c) => c.sid === sid);
-    //   if (idx !== -1) {
-    //     callbacks.splice(idx, 1);
-    //   }
-    //   if (callbacks.length === 0) {
-    //     subscriptions.delete(subId);
-    //   }
-    // };
-    // callbacks.push({ uri: uri.toString(), callback, sid, unsub });
-    // return Result.Ok(unsub);
   }
 
   async destroy(ctx: SerdeGatewayCtx, uri: URI): Promise<VoidResult> {
@@ -748,54 +662,5 @@ export class FireproofCloudGateway implements SerdeGateway {
 
   async getPlain(): Promise<Result<Uint8Array>> {
     return Result.Err(new Error("Not implemented"));
-    // const url = uri.build().setParam("key", key).URI();
-    // const dbFile = this.sthis.pathOps.join(rt.getPath(url, this.sthis), rt.getFileName(url, this.sthis));
-    // this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
-    // const buffer = await this.gateway.get(url);
-    // this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
-    // return buffer.Ok();
   }
 }
-
-const onceRegisterFireproofCloudStoreProtocol = new KeyedResolvOnce<() => void>();
-export function registerFireproofCloudStoreProtocol(protocol = "fpcloud:") {
-  return onceRegisterFireproofCloudStoreProtocol.get(protocol).once(() => {
-    URI.protocolHasHostpart(protocol);
-    return registerStoreProtocol({
-      protocol,
-      defaultURI() {
-        return URI.from("fpcloud://fireproof.cloud/");
-      },
-      serdegateway: async (sthis: SuperThis) => {
-        return new FireproofCloudGateway(sthis);
-      },
-    });
-  });
-}
-
-registerFireproofCloudStoreProtocol();
-
-// export function toCloud(url: CoerceURI): Attachable {
-//   const urlObj = URI.from(url);
-//   if (urlObj.protocol !== "fpcloud:") {
-//     throw new Error("url must have fireproof protocol");
-//   }
-//   // const existingName = urlObj.getParam("name");
-//   // urlObj.defParam("name", remoteDbName || existingName || dbName);
-//   // urlObj.defParam("localName", dbName);
-//   // urlObj.defParam("storekey", `@${dbName}:data@`);
-//   const cfgId =
-//   return {
-//     name: urlObj.protocol,
-//     configHash: () => {
-
-//     },
-//     prepare(): Promise<GatewayUrlsParam> {
-//       return Promise.resolve({
-//         car: { url: urlObj },
-//         file: { url: urlObj },
-//         meta: { url: urlObj },
-//       });
-//     },
-//   };
-// }
