@@ -6,6 +6,7 @@ import "./App.css";
 function App() {
   const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
+      dashboardURI: "http://localhost:3000/fp/cloud/api/token",
       urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
       tenant: "3rd-party",
       ledger: "have-four-drinks",

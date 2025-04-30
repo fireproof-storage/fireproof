@@ -13,6 +13,7 @@ env:
 
 jobs:
   pre-build:
+    timeout-minutes: 10
     name: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
@@ -106,6 +107,7 @@ jobs:
         run: pnpm run build
 
   test-node:
+    timeout-minutes: 3
     name: test-node
     needs: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
@@ -158,6 +160,7 @@ jobs:
         run: pnpm run test:deno
 
   smoke:
+    timeout-minutes: 4
     name: smoke
     needs: ["test-node", "build"]
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
@@ -211,6 +214,7 @@ jobs:
         run: pnpm run smoke-retry
 
   publish:
+    timeout-minutes: 3
     name: publish
     needs: ["test-node", "smoke", "build"]
     environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}

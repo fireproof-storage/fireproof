@@ -70,7 +70,7 @@ async function main() {
   const destPackageJson = JSON.parse(await fs.readFile(templateFile, "utf-8"));
   // copy version from package.json
   const withCoreVersion = {
-    "@fireproof/core": `^${getVersion()}`,
+    "@fireproof/core": `${getVersion()}`,
     ...mainPackageJson.dependencies,
   };
   transferVersionsFromPackageJson(withCoreVersion, destPackageJson.dependencies);
