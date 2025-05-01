@@ -87,6 +87,10 @@ interface TokenType {
   readonly type: "clerk" | "better";
   readonly token: string;
 }
+export interface ListTenantsLedgersByUser {
+  readonly tenant: ResListTenantsByUser["tenants"][number];
+  readonly ledgers: ResListLedgersByUser["ledgers"];
+}
 
 export class CloudContext {
   readonly api: CloudApi;
@@ -212,9 +216,33 @@ export class CloudContext {
     return listLedgers;
   }
 
+  getListTenantsLedgersByUser(): ReturnType<typeof useQuery<ListTenantsLedgersByUser[]>> {
+    return useQuery({
+      queryKey: ["listTenantsLedgersByUser", this._ensureUser.data?.user.userId],
+      queryFn: async () => {
+        console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
+        const listTenantsByUser = await this.api.listTenantsByUser({});
+        const listLedgersByUser = await this.api.listLedgersByUser({
+          tenantIds: listTenantsByUser.Ok().tenants.map((t) => t.tenantId),
+        });
+        return listTenantsByUser
+          .Ok()
+          .tenants.map((tenant) => ({
+            tenant,
+            ledgers: listLedgersByUser
+              .Ok()
+              .ledgers.filter((ledger) => ledger.tenantId === tenant.tenantId)
+              .sort((a, b) => a.name.localeCompare(b.name)),
+          }))
+          .sort((a, b) => a.tenant.tenant.name?.localeCompare(b.tenant.tenant.name || "") || 0);
+      },
+      enabled: this.activeApi(),
+    });
+  }
+
   getListTenantsByUser(): ReturnType<typeof useQuery<ResListTenantsByUser>> {
     return useQuery({
-      queryKey: ["listTenandsByUser", this._ensureUser.data?.user.userId],
+      queryKey: ["listTenantsByUser", this._ensureUser.data?.user.userId],
       queryFn: () => {
         console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
         return wrapResultToPromise(() => this.api.listTenantsByUser({}))();
