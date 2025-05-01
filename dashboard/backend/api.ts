@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { rt } from "@fireproof/core";
+import { rt, ps } from "@fireproof/core";
 import { SuperThis } from "@fireproof/core";
 import { and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
@@ -31,7 +31,7 @@ interface RoleBase {
   readonly tenantId?: string;
   readonly ledgerId?: string;
   readonly userId: string;
-  readonly role: Role;
+  readonly role: ps.cloud.Role;
   readonly adminUserIds: string[];
   readonly memberUserIds: string[];
 }
@@ -42,7 +42,7 @@ interface TenantRole extends RoleBase {
 
 interface LedgerRole extends RoleBase {
   readonly ledgerId: string;
-  readonly right: "read" | "write";
+  readonly right: ps.cloud.ReadWrite;
 }
 
 type RoleType = TenantRole | LedgerRole;
@@ -190,7 +190,7 @@ export interface ReqAttachUserToLedger {
   readonly tenantId: string;
   readonly ledgerId: string;
   readonly userId: string;
-  readonly role: "read" | "write";
+  readonly role: ps.cloud.ReadWrite;
 }
 
 export interface ResAttachUserToLedger {
@@ -198,7 +198,7 @@ export interface ResAttachUserToLedger {
   readonly tenantId: string;
   readonly ledgerId: string;
   readonly userId: string;
-  readonly role: "read" | "write";
+  readonly role: ps.cloud.ReadWrite;
 }
 
 export interface ReqListTenantsByUser {
@@ -216,7 +216,7 @@ export interface UserTenantCommon {
 
 export interface UserTenant {
   readonly tenantId: string;
-  readonly role: Role;
+  readonly role: ps.cloud.Role;
   readonly default: boolean;
   readonly user: UserTenantCommon;
   readonly tenant: UserTenantCommon;
@@ -320,7 +320,7 @@ export interface ReqUpdateUserTenant {
   readonly auth: AuthType;
   readonly tenantId: string;
   readonly userId?: string;
-  readonly role?: Role; // only if admin
+  readonly role: ps.cloud.Role; // only if admin
   readonly default?: boolean;
   readonly name?: string;
 }
@@ -329,7 +329,7 @@ export interface ResUpdateUserTenant {
   readonly type: "resUpdateUserTenant";
   readonly tenantId: string;
   readonly userId: string;
-  readonly role: Role;
+  readonly role: ps.cloud.Role;
   readonly default: boolean;
   readonly name?: string;
 }
@@ -353,8 +353,8 @@ export interface ResCreateLedger {
 export interface UpdateLedger {
   readonly ledgerId: string;
   readonly tenantId: string;
-  readonly right?: "read" | "write";
-  readonly role?: "admin" | "member";
+  readonly right?: ps.cloud.ReadWrite;
+  readonly role?: ps.cloud.Role;
   readonly name?: string;
   readonly default?: boolean;
 }
@@ -386,6 +386,7 @@ export interface ResDeleteLedger {
 export interface ReqCloudSessionToken {
   readonly type: "reqCloudSessionToken";
   readonly auth: AuthType;
+  readonly selected?: Partial<ps.cloud.TenantLedger>;
 }
 
 export interface ResCloudSessionToken {
@@ -528,15 +529,13 @@ interface ReqInsertTenant {
 //   readonly updatedAt?: Date;
 // }
 
-type Role = "admin" | "member"; // | "owner";
-
 interface AddUserToTenant {
   readonly userName?: string;
   readonly tenantName?: string;
   readonly tenantId: string;
   readonly userId: string;
   readonly default?: boolean;
-  readonly role: Role;
+  readonly role: ps.cloud.Role;
   readonly status?: UserStatus;
   readonly statusReason?: string;
 }
@@ -550,8 +549,8 @@ interface AddUserToLedger {
   readonly default?: boolean;
   readonly status?: UserStatus;
   readonly statusReason?: string;
-  readonly role: Role;
-  readonly right: "read" | "write";
+  readonly role: ps.cloud.Role;
+  readonly right: ps.cloud.ReadWrite;
 }
 
 // interface ResAddUserToTenant {
@@ -744,7 +743,7 @@ export class FPApiSQL implements FPApiInterface {
         tenantId: req.tenantId,
         userId: req.userId,
         default: !!tenantUser.default,
-        role: tenantUser.role as Role,
+        role: ps.cloud.toRole(tenantUser.role),
         status: tenantUser.status as UserStatus,
         statusReason: tenantUser.statusReason,
       });
@@ -786,7 +785,7 @@ export class FPApiSQL implements FPApiInterface {
       default: ret.default ? true : false,
       status: ret.status as UserStatus,
       statusReason: ret.statusReason,
-      role: ret.role as Role,
+      role: ps.cloud.toRole(ret.role),
     });
   }
 
@@ -861,8 +860,8 @@ export class FPApiSQL implements FPApiInterface {
         default: !!ledgerUser.LedgerUsers.default,
         status: ledgerUser.LedgerUsers.status as UserStatus,
         statusReason: ledgerUser.LedgerUsers.statusReason,
-        role: ledgerUser.LedgerUsers.role as Role,
-        right: ledgerUser.LedgerUsers.right as "read" | "write",
+        role: ps.cloud.toRole(ledgerUser.LedgerUsers.role),
+        right: ps.cloud.toReadWrite(ledgerUser.LedgerUsers.right),
       });
     }
     const rCheck = await this.checkMaxRoles(ledger.Tenants, req.role);
@@ -904,8 +903,8 @@ export class FPApiSQL implements FPApiInterface {
       statusReason: ret.statusReason,
       userId: req.userId,
       default: req.default ?? false,
-      role: ret.role as Role,
-      right: ret.right as "read" | "write",
+      role: ps.cloud.toRole(ret.role),
+      right: ps.cloud.toReadWrite(ret.right),
     });
   }
 
@@ -1117,15 +1116,15 @@ export class FPApiSQL implements FPApiInterface {
       ...Array.from(tenantUserFilter.values()).map((item) => ({
         userId: userId,
         tenantId: item.users[0].tenantId,
-        role: item.my!.role as Role,
+        role: ps.cloud.toRole(item.my!.role),
         adminUserIds: item.users.filter((u) => u.role === "admin").map((u) => u.userId),
         memberUserIds: item.users.filter((u) => u.role !== "admin").map((u) => u.userId),
       })),
       ...Array.from(ledgerUsersFilter.values()).map((item) => ({
         userId: userId,
         ledgerId: item.ledger.ledgerId,
-        role: item.my!.role as Role,
-        right: item.my!.right as "read" | "write",
+        role: ps.cloud.toRole(item.my!.role),
+        right: ps.cloud.toReadWrite(item.my!.right),
         adminUserIds: item.users.filter((u) => u.role === "admin").map((u) => u.userId),
         memberUserIds: item.users.filter((u) => u.role !== "admin").map((u) => u.userId),
       })),
@@ -1577,11 +1576,17 @@ export class FPApiSQL implements FPApiInterface {
         or(
           inArray(
             sqlInviteTickets.invitedTenantId,
-            roles.filter((i) => i.role === "admin" && i.tenantId).map((i) => i.tenantId!),
+            roles
+              .filter((i) => i.role === "admin" && i.tenantId)
+              .map((i) => i.tenantId!)
+              .flat(2),
           ),
           inArray(
             sqlInviteTickets.invitedLedgerId,
-            roles.filter((i) => i.role === "admin" && i.ledgerId).map((i) => i.ledgerId!),
+            roles
+              .filter((i) => i.role === "admin" && i.ledgerId)
+              .map((i) => i.ledgerId!)
+              .flat(2),
           ),
         ),
       );
@@ -1751,7 +1756,7 @@ export class FPApiSQL implements FPApiInterface {
       type: "resUpdateUserTenant",
       tenantId: ret.TenantUsers.tenantId,
       userId: ret.TenantUsers.userId,
-      role: ret.TenantUsers.role as Role,
+      role: ps.cloud.toRole(ret.TenantUsers.role),
       default: !!ret.TenantUsers.default,
       name: toUndef(ret.TenantUsers.name),
     });
@@ -2001,8 +2006,8 @@ export class FPApiSQL implements FPApiInterface {
       readonly updatedAt: string;
       default?: number;
       name?: string;
-      role?: Role;
-      right?: "read" | "write";
+      role?: ps.cloud.Role;
+      right?: ps.cloud.ReadWrite;
     };
     if (typeof req.ledger.default === "boolean") {
       role.default = req.ledger.default ? 1 : 0;
@@ -2142,6 +2147,29 @@ export class FPApiSQL implements FPApiInterface {
     if (!(0 <= validFor && validFor <= 3600000)) {
       validFor = 3600000;
     }
+    // verify if tenant and ledger are valid
+    const selected = {
+      tenant: resListTenants.Ok().tenants[0]?.tenantId,
+      ledger: resListLedgers.Ok().ledgers[0]?.ledgerId,
+    };
+    if (
+      req.selected?.tenant &&
+      resListTenants
+        .Ok()
+        .tenants.map((i) => i.tenantId)
+        .includes(req.selected?.tenant)
+    ) {
+      selected.tenant = req.selected?.tenant;
+    }
+    if (
+      req.selected?.ledger &&
+      resListLedgers
+        .Ok()
+        .ledgers.map((i) => i.ledgerId)
+        .includes(req.selected?.ledger)
+    ) {
+      selected.ledger = req.selected?.ledger;
+    }
     const token = await new SignJWT({
       userId: auth.user.userId,
       tenants: resListTenants.Ok().tenants.map((i) => ({
@@ -2161,8 +2189,16 @@ export class FPApiSQL implements FPApiInterface {
             right: rights.right,
           };
         })
-        .filter((i) => i),
-    })
+        .filter((i) => i) as ps.cloud.FPCloudClaim["ledgers"],
+      email: auth.verifiedAuth.params.email,
+      nickname: auth.verifiedAuth.params.nick,
+      provider: toProvider(auth.verifiedAuth),
+      created: auth.user.createdAt,
+      selected: {
+        tenant: req.selected?.tenant ?? resListTenants.Ok().tenants[0]?.tenantId,
+        ledger: req.selected?.ledger ?? resListLedgers.Ok().ledgers[0]?.ledgerId,
+      },
+    } satisfies ps.cloud.FPCloudClaim)
       .setProtectedHeader({ alg: "ES256" }) // algorithm
       .setIssuedAt()
       .setIssuer(ctx.issuer) // issuer
@@ -2176,6 +2212,13 @@ export class FPApiSQL implements FPApiInterface {
       token,
     });
   }
+}
+
+function toProvider(i: ClerkVerifyAuth): ps.cloud.FPCloudClaim["provider"] {
+  if (i.params.nick) {
+    return "github";
+  }
+  return "google";
 }
 
 // // eslint-disable-next-line @typescript-eslint/no-unused-vars

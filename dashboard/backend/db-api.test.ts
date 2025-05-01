@@ -15,6 +15,7 @@ import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
 import { jwtVerify } from "jose/jwt/verify";
 import { rt } from "@fireproof/core";
 import { Result } from "@adviser/cement";
+import { create } from "multiformats/block";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
 // // import Database from 'better-sqlite3';
@@ -864,6 +865,11 @@ describe("db-api", () => {
     expect(v.payload.exp).toBeLessThanOrEqual(new Date().getTime() + 3700000);
     expect(v.payload).toEqual({
       aud: "TEST_A",
+      created: v.payload.created,
+      email: v.payload.email,
+      nickname: v.payload.nickname,
+      provider: "github",
+      selected: v.payload.selected,
       exp: v.payload.exp,
       iat: v.payload.iat,
       iss: "TEST_I",
