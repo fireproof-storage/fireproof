@@ -135,7 +135,7 @@ importers:
         specifier: ^0.25.3
         version: 0.25.3
       eslint:
-        specifier: ^9.25.1
+        specifier: ^9.26.0
         version: 9.28.0(jiti@1.21.7)
       eslint-import-resolver-typescript:
         specifier: ^4.3.4
