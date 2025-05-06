@@ -127,7 +127,7 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^19.1.0",
-    "ws": "^8.18.1"
+    "ws": "^8.18.2"
   },
   "bundle-phobia": {
     "max-size": "390kB",

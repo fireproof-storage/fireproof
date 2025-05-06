@@ -74,7 +74,7 @@ importers:
         specifier: ^19.1.0
         version: 19.1.0
       ws:
-        specifier: ^8.18.1
+        specifier: ^8.18.2
         version: 8.18.2
     devDependencies:
       '@cloudflare/workers-types':
@@ -3496,6 +3496,9 @@ packages:
 
   '@types/mocha@10.0.10':
     resolution: {integrity: sha512-xPyYSz1cMPnJQhl0CLMH68j3gprKZaTjG3s5Vi+fDgx+uhG9NOXwbVt52eFS8ECyXhyKcjDLCBEqBExKuiZb7Q==}
+
+  '@types/node@20.17.43':
+    resolution: {integrity: sha512-DnDEcDUnVAUYSa7U03QvrXbj1MZj00xoyi/a3lRGkR/c7BFUnqv+OY9EUphMqXUKdZJEOmuzu2mm+LmCisnPow==}
 
   '@types/node@20.19.0':
     resolution: {integrity: sha512-hfrc+1tud1xcdVTABC2JiomZJEklMcXYNTVtZLAeqTVWD+qL5jkHKT+1lOtqDdGxt+mB53DTtiz673vfjU8D1Q==}
@@ -10943,7 +10946,6 @@ snapshots:
   '@promptbook/utils@0.69.5':
     dependencies:
       spacetrim: 0.11.59
-    optional: true
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -10992,7 +10994,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
-    optional: true
 
   '@remix-run/router@1.23.0': {}
 
@@ -11288,6 +11289,10 @@ snapshots:
 
   '@types/mocha@10.0.10': {}
 
+  '@types/node@20.17.43':
+    dependencies:
+      undici-types: 6.19.8
+
   '@types/node@20.19.0':
     dependencies:
       undici-types: 6.21.0
@@ -11345,8 +11350,7 @@ snapshots:
 
   '@types/web-bluetooth@0.0.16': {}
 
-  '@types/which@2.0.2':
-    optional: true
+  '@types/which@2.0.2': {}
 
   '@types/ws@8.18.1':
     dependencies:
@@ -12038,7 +12042,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
-    optional: true
 
   '@wdio/logger@9.15.0':
     dependencies:
@@ -12046,10 +12049,8 @@ snapshots:
       loglevel: 1.9.2
       loglevel-plugin-prefix: 0.8.4
       strip-ansi: 7.1.0
-    optional: true
 
-  '@wdio/protocols@9.15.0':
-    optional: true
+  '@wdio/protocols@9.15.0': {}
 
   '@wdio/repl@9.4.4':
     dependencies:
@@ -12059,7 +12060,6 @@ snapshots:
   '@wdio/types@9.15.0':
     dependencies:
       '@types/node': 20.19.0
-    optional: true
 
   '@wdio/utils@9.15.0':
     dependencies:
@@ -12079,7 +12079,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
-    optional: true
 
   '@web3-storage/access@18.4.0':
     dependencies:
@@ -12365,8 +12364,7 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@zip.js/zip.js@2.7.62':
-    optional: true
+  '@zip.js/zip.js@2.7.62': {}
 
   abort-controller@3.0.0:
     dependencies:
@@ -13128,8 +13126,7 @@ snapshots:
 
   commander@4.1.1: {}
 
-  commander@9.5.0:
-    optional: true
+  commander@9.5.0: {}
 
   comment-parser@1.3.1: {}
 
@@ -13371,8 +13368,7 @@ snapshots:
 
   decamelize@4.0.0: {}
 
-  decamelize@6.0.0:
-    optional: true
+  decamelize@6.0.0: {}
 
   decimal.js@10.5.0: {}
 
@@ -13413,8 +13409,7 @@ snapshots:
 
   deepmerge-ts@5.1.0: {}
 
-  deepmerge-ts@7.1.5:
-    optional: true
+  deepmerge-ts@7.1.5: {}
 
   deepmerge@4.3.1: {}
 
@@ -13555,7 +13550,6 @@ snapshots:
     dependencies:
       '@types/which': 2.0.2
       which: 2.0.2
-    optional: true
 
   edgedriver@6.1.1:
     dependencies:
@@ -13570,7 +13564,6 @@ snapshots:
       which: 5.0.0
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   electron-fetch@1.9.1:
     dependencies:
@@ -14650,7 +14643,6 @@ snapshots:
   fast-xml-parser@4.5.3:
     dependencies:
       strnum: 1.1.2
-    optional: true
 
   fastest-levenshtein@1.0.16: {}
 
@@ -14785,7 +14777,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
-    optional: true
 
   gel@2.1.0:
     dependencies:
@@ -14827,8 +14818,7 @@ snapshots:
 
   get-iterator@1.0.2: {}
 
-  get-port@7.1.0:
-    optional: true
+  get-port@7.1.0: {}
 
   get-proto@1.0.1:
     dependencies:
@@ -15124,8 +15114,7 @@ snapshots:
 
   import-meta-resolve@3.1.1: {}
 
-  import-meta-resolve@4.1.0:
-    optional: true
+  import-meta-resolve@4.1.0: {}
 
   imurmurhash@0.1.4: {}
 
@@ -15429,8 +15418,7 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isexe@3.1.1:
-    optional: true
+  isexe@3.1.1: {}
 
   iso-url@1.2.1: {}
 
@@ -15711,7 +15699,6 @@ snapshots:
       '@promptbook/utils': 0.69.5
       type-fest: 4.26.0
       userhome: 1.0.1
-    optional: true
 
   locate-path@3.0.0:
     dependencies:
@@ -15752,11 +15739,9 @@ snapshots:
       chalk: 5.4.1
       is-unicode-supported: 1.3.0
 
-  loglevel-plugin-prefix@0.8.4:
-    optional: true
+  loglevel-plugin-prefix@0.8.4: {}
 
-  loglevel@1.9.2:
-    optional: true
+  loglevel@1.9.2: {}
 
   long@5.3.2: {}
 
@@ -16744,7 +16729,6 @@ snapshots:
       socks-proxy-agent: 8.0.5
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   proxy-from-env@1.1.0: {}
 
@@ -17095,8 +17079,7 @@ snapshots:
     dependencies:
       mri: 1.2.0
 
-  safaridriver@1.0.0:
-    optional: true
+  safaridriver@1.0.0: {}
 
   safe-array-concat@1.1.3:
     dependencies:
@@ -17365,8 +17348,7 @@ snapshots:
 
   sourcemap-codec@1.4.8: {}
 
-  spacetrim@0.11.59:
-    optional: true
+  spacetrim@0.11.59: {}
 
   sparse-array@1.3.2: {}
 
@@ -17379,8 +17361,7 @@ snapshots:
 
   spdx-license-ids@3.0.21: {}
 
-  split2@4.2.0:
-    optional: true
+  split2@4.2.0: {}
 
   sprintf-js@1.1.3: {}
 
@@ -17533,8 +17514,7 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
-  strnum@1.1.2:
-    optional: true
+  strnum@1.1.2: {}
 
   stubborn-fs@1.2.5: {}
 
@@ -17952,8 +17932,7 @@ snapshots:
 
   type-fest@3.13.1: {}
 
-  type-fest@4.26.0:
-    optional: true
+  type-fest@4.26.0: {}
 
   type-fest@4.41.0: {}
 
@@ -18056,8 +18035,7 @@ snapshots:
     dependencies:
       '@fastify/busboy': 2.1.1
 
-  undici@6.21.3:
-    optional: true
+  undici@6.21.3: {}
 
   unenv@2.0.0-rc.17:
     dependencies:
@@ -18128,8 +18106,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  userhome@1.0.1:
-    optional: true
+  userhome@1.0.1: {}
 
   util-deprecate@1.0.2: {}
 
@@ -18386,7 +18363,6 @@ snapshots:
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   watchpack@2.4.4:
     dependencies:
@@ -18403,9 +18379,24 @@ snapshots:
     dependencies:
       '@peculiar/asn1-schema': 2.3.15
       '@peculiar/json-schema': 1.1.12
+      '@types/node': 20.17.43
+      '@types/ws': 8.18.1
+      '@wdio/config': 9.15.0
+      '@wdio/logger': 9.15.0
+      '@wdio/protocols': 9.15.0
+      '@wdio/types': 9.15.0
+      '@wdio/utils': 9.15.0
       asn1js: 3.0.6
+      deepmerge-ts: 7.1.5
       pvtsutils: 1.3.6
       tslib: 2.8.1
+      undici: 6.21.3
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bare-buffer
+      - bufferutil
+      - supports-color
+      - utf-8-validate
 
   webdriver@9.15.0:
     dependencies:
@@ -18700,7 +18691,6 @@ snapshots:
   which@5.0.0:
     dependencies:
       isexe: 3.1.1
-    optional: true
 
   why-is-node-running@2.3.0:
     dependencies:
