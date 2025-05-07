@@ -1,5 +1,5 @@
 import { JSX, useCallback, useEffect, useState } from "react";
-import Editor from "react-simple-code-editor";
+// import Editor from "react-simple-code-editor";
 
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
