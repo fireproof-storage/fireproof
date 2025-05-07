@@ -167,7 +167,8 @@ export function ApiToken() {
     }
     // typescript o my typescript
     const l = ledgerSelected as LedgerUser;
-    if (searchParams.get("ledger") !== l.ledgerId) {
+    const ledgerFromUrl = searchParams.get("ledger");
+    if (!ledgerFromUrl && ledgerFromUrl !== l.ledgerId) {
       return;
     }
 
