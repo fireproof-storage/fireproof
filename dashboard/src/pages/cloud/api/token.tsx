@@ -41,15 +41,22 @@ export function ApiToken() {
 
   const [initialParameters, setInitialParameters] = useState(false);
 
-  const [createApiToken, setCreateApiToken] = useState<Partial<TenantLedgerWithName>>({
-    ledger: falsyToUndef(searchParams.get("ledger")),
-    tenant: falsyToUndef(searchParams.get("tenant")),
-    name: falsyToUndef(searchParams.get("local_ledger_name")),
-  });
+  const [createApiToken, setCreateApiToken] = useState<Partial<TenantLedgerWithName>>({});
 
   // console.log("createApiToken", searchParams.toString(), createApiToken);
 
   const couldSelected = !!createApiToken.ledger && !!createApiToken.tenant;
+
+  function selectLedger(param: TenantLedgerWithName) {
+    setSearchParams((prev) => {
+      // console.log("setSearchParams", prev.toString());
+      prev.set("local_ledger_name", param.name);
+      prev.set("tenant", param.tenant);
+      prev.set("ledger", param.ledger);
+      return prev;
+    });
+    setCreateApiToken(param);
+  }
 
   const {
     data: cloudToken,
@@ -145,9 +152,6 @@ export function ApiToken() {
       return;
     }
     setInitialParameters(true);
-    if (searchParams.get("ledger")) {
-      return;
-    }
     let justOneLedgerSelected = 0;
     let ledgerSelected: (LedgerUser & { selected: boolean }) | undefined = undefined;
     tenantsData.forEach((tenant) => {
@@ -161,14 +165,13 @@ export function ApiToken() {
     if (!ledgerSelected || justOneLedgerSelected !== 1) {
       return;
     }
-    setSearchParams((prev) => {
-      prev.set("tenant", ledgerSelected?.tenantId ?? "");
-      prev.set("ledger", ledgerSelected?.ledgerId ?? "");
-      return prev;
-    });
     // typescript o my typescript
     const l = ledgerSelected as LedgerUser;
-    setCreateApiToken({
+    if (searchParams.get("ledger") !== l.ledgerId) {
+      return;
+    }
+
+    selectLedger({
       ledger: l.ledgerId,
       tenant: l.tenantId,
       name: l.name,
@@ -273,14 +276,7 @@ export function ApiToken() {
                               <SelectLedger
                                 ledger={ledger}
                                 onSelect={() => {
-                                  setSearchParams((prev) => {
-                                    console.log("setSearchParams", prev.toString());
-                                    // prev.set("local_ledger_name", ledger.name);
-                                    prev.set("tenant", row.tenant.tenantId);
-                                    prev.set("ledger", ledger.ledgerId);
-                                    return prev;
-                                  });
-                                  setCreateApiToken({
+                                  selectLedger({
                                     ledger: ledger.ledgerId,
                                     tenant: row.tenant.tenantId,
                                     name: ledger.name,
@@ -298,13 +294,7 @@ export function ApiToken() {
                           ledgers={row.ledgers}
                           onAdd={(a) => {
                             queryClient.invalidateQueries({ queryKey: ["listTenantsLedgersByUser"] });
-                            setSearchParams((prev) => {
-                              prev.set("tenant", a.tenant);
-                              prev.set("ledger", a.ledger);
-                              prev.set("local_ledger_name", a.name);
-                              return prev;
-                            });
-                            setCreateApiToken(a);
+                            selectLedger(a);
                           }}
                         />
                       )}
