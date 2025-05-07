@@ -44,7 +44,7 @@ function SidebarCloud() {
   const { setIsSidebarOpen } = sideBar;
   const { tenantId } = useParams();
   const location = useLocation();
-  console.log("tenantId", tenantId);
+  // console.log("tenantId", tenantId);
   const ledgerList = cloud.getListLedgersByUser(tenantId);
 
   if (ledgerList.isPending) {

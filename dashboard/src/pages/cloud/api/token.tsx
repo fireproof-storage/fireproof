@@ -1,51 +1,30 @@
 import { BuildURI, URI } from "@adviser/cement";
 import { AppContext } from "../../../app-context.tsx";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
-import { set } from "react-hook-form";
-import { build } from "vite";
-import { Ledger, ps } from "@fireproof/core";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useContext, useEffect, useRef, useState } from "react";
+import { falsyToUndef, ps } from "@fireproof/core";
 import { LedgerUser } from "../../../../backend/ledgers.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserTenant } from "../../../../backend/api.ts";
-import { is } from "drizzle-orm";
+
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+
+import "highlight.js/styles/github.css";
+
+// Then register the languages you need
+hljs.registerLanguage("javascript", javascript);
 
 export function redirectBackUrl() {
   const uri = URI.from(window.location.href);
   if (uri.hasParam("token")) {
     const backUrl = URI.from(uri.getParam("back_url", ""));
     if (backUrl.protocol.startsWith("http")) {
-      console.log("api-RedirectBackUrl", backUrl, window.location.href);
+      // console.log("api-RedirectBackUrl", backUrl, window.location.href);
       window.location.href = backUrl.toString();
     }
   }
 }
-
-// function CreateApiToken({ buri }: { buri: URI }) {
-//   const { cloud } = useContext(AppContext);
-//   const cloudToken = cloud.getCloudToken();
-//   const navigate = useNavigate();
-//   useEffect(() => {
-//     if (cloud._clerkSession?.isSignedIn === true && !buri.hasParam("token")) {
-//       if (cloudToken.data) {
-//         const back_url = BuildURI.from(buri.getParam("back_url")).setParam("fpToken", cloudToken.data.token).URI();
-//         const redirectTo = buri
-//           .build()
-//           .setParam("token", "ready")
-//           .setParam("back_url", back_url.toString())
-//           .URI().withoutHostAndSchema;
-//         console.log("set-redirectTo", back_url, redirectTo);
-//         // window.location.assign(back_url);
-//         // window.location.replace(redirectTo);
-//         // setRedirectTo(back_url.toString());
-//         navigate(redirectTo.toString(), { replace: true });
-//       } else {
-//         // Show the possible ledgers
-//         // setShowPossibleLedgers(true);
-//       }
-//     }
-//   }, [cloudToken.data, cloud._clerkSession?.isSignedIn]);
-// }
 
 interface TenantLedgerWithName extends ps.cloud.TenantLedger {
   readonly name: string;
@@ -56,13 +35,21 @@ export function ApiToken() {
 
   const buri = URI.from(window.location.href);
 
-  const [localLedgerName, setLocalLedgerName] = useState(buri.getParam("local_ledger_name", ""));
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const navigate = useNavigate();
 
-  const [createApiToken, setCreateApiToken] = useState<Partial<ps.cloud.TenantLedger>>({});
+  const [initialParameters, setInitialParameters] = useState(false);
 
-  const isSelected = !!createApiToken.ledger && !!createApiToken.tenant;
+  const [createApiToken, setCreateApiToken] = useState<Partial<TenantLedgerWithName>>({
+    ledger: falsyToUndef(searchParams.get("ledger")),
+    tenant: falsyToUndef(searchParams.get("tenant")),
+    name: falsyToUndef(searchParams.get("local_ledger_name")),
+  });
+
+  // console.log("createApiToken", searchParams.toString(), createApiToken);
+
+  const couldSelected = !!createApiToken.ledger && !!createApiToken.tenant;
 
   const {
     data: cloudToken,
@@ -77,14 +64,16 @@ export function ApiToken() {
       if (rToken.isErr()) {
         throw rToken.Err();
       }
+
       return rToken.Ok().token;
     },
-    enabled: isSelected,
+    enabled: couldSelected,
   });
 
   const [redirectCountdown, setRedirectCountdown] = useState({
     state: "waiting", // | "started" | "running",
-    countdownSecs: parseInt(buri.getParam("countdownSecs", "3")),
+    countdownSecs: parseInt(searchParams.get("countdownSecs") ?? "3"),
+    interval: undefined as unknown | undefined,
   });
 
   const back_url = BuildURI.from(buri.getParam("back_url"))
@@ -95,6 +84,9 @@ export function ApiToken() {
   const [doNavigate, setDoNavigate] = useState(false);
 
   useEffect(() => {
+    if (redirectCountdown.state === "stopped" && redirectCountdown.interval) {
+      clearInterval(redirectCountdown.interval as unknown as number);
+    }
     if (redirectCountdown.state === "started" && cloudToken) {
       const interval = setInterval(() => {
         setRedirectCountdown((prev) => {
@@ -106,6 +98,7 @@ export function ApiToken() {
           return { ...prev, countdownSecs: prev.countdownSecs - 1 };
         });
       }, 1000);
+      setRedirectCountdown((prev) => ({ ...prev, interval }));
       return () => clearInterval(interval);
     }
   }, [redirectCountdown.state, cloudToken]);
@@ -125,7 +118,76 @@ export function ApiToken() {
   // const [ledgers, setLedgers] = useState<[]>([]);
   const queryClient = useQueryClient();
 
-  const { data: tenantsData, isLoading: isLoadingLedgers, error: errorLedgers } = cloud.getListTenantsLedgersByUser();
+  const { data: fromApiRows, isLoading: isLoadingLedgers, error: errorLedgers } = cloud.getListTenantsLedgersByUser();
+
+  const tenantsData = fromApiRows?.map((row) => {
+    return {
+      tenant: {
+        ...row.tenant,
+        selected: !!row.ledgers.find(
+          (l) => l.ledgerId === searchParams.get("ledger") || l.name === searchParams.get("local_ledger_name"),
+        ),
+      },
+      ledgers: row.ledgers.map((l) => {
+        return {
+          ...l,
+          selected: l.ledgerId === searchParams.get("ledger") || l.name === searchParams.get("local_ledger_name"),
+        };
+      }),
+    };
+  });
+
+  useEffect(() => {
+    if (initialParameters) {
+      return;
+    }
+    if (!tenantsData) {
+      return;
+    }
+    setInitialParameters(true);
+    if (searchParams.get("ledger")) {
+      return;
+    }
+    let justOneLedgerSelected = 0;
+    let ledgerSelected: (LedgerUser & { selected: boolean }) | undefined = undefined;
+    tenantsData.forEach((tenant) => {
+      tenant.ledgers.forEach((ledger) => {
+        if (ledger.selected) {
+          justOneLedgerSelected++;
+          ledgerSelected = ledger;
+        }
+      });
+    });
+    if (!ledgerSelected || justOneLedgerSelected !== 1) {
+      return;
+    }
+    setSearchParams((prev) => {
+      prev.set("tenant", ledgerSelected?.tenantId ?? "");
+      prev.set("ledger", ledgerSelected?.ledgerId ?? "");
+      return prev;
+    });
+    // typescript o my typescript
+    const l = ledgerSelected as LedgerUser;
+    setCreateApiToken({
+      ledger: l.ledgerId,
+      tenant: l.tenantId,
+      name: l.name,
+    });
+  }, [tenantsData, initialParameters]);
+  const codeRef = useRef(null);
+
+  const jsCode = `const { database } = useFireproof("${searchParams.get("local_ledger_name")}", {
+    attach: toCloud({
+      tenant: "${createApiToken.tenant}",
+      ledger: "${createApiToken.ledger}",
+    }),
+  });`;
+
+  useEffect(() => {
+    if (codeRef.current) {
+      hljs.highlightElement(codeRef.current);
+    }
+  }, [jsCode]);
 
   if (doNavigate) {
     navigate(redirectTo.withoutHostAndSchema);
@@ -150,27 +212,38 @@ export function ApiToken() {
   if (errorLedgers) {
     return <div>Error loading ledgers: {errorLedgers.message}</div>;
   }
-  console.log("ledgersData", buri.asObj());
-
-  // if (localLedgerNameFromUrl.length > 0 && localLedgerName !== localLedgerNameFromUrl) {
-  //   const newBuri = buri.build().setParam("local_ledger_name", localLedgerName).URI().toString();
-  //   console.log("localLedgerNameFromUrl", newBuri);
-  //   return <Navigate to={buri.build().setParam("local_ledger_name", localLedgerName).URI().toString()} replace={true} />;
-  // }
-
-  // // window.location.assign(back_url);
-  // // window.location.replace(redirectTo);
-  // // setRedirectTo(back_url.toString());
-  // navigate(redirectTo.toString(), { replace: true });
 
   return (
     <>
       <div>
-        {buri.hasParam("local_ledger_name") && (
-          <div>
-            Your local database name is: <b>{localLedgerName}</b>
-          </div>
-        )}
+        <div>
+          {searchParams.get("local_ledger_name") && (
+            <div>
+              <label>Your local database name is: </label>
+              <b>{searchParams.get("local_ledger_name")}</b>
+            </div>
+          )}
+          {searchParams.get("back_url") && (
+            <div>
+              <label>You are coming from: </label>
+              <small>
+                <a href={searchParams.get("back_url") ?? ""}>{searchParams.get("back_url")}</a>
+              </small>
+            </div>
+          )}
+          {searchParams.get("tenant") && (
+            <div>
+              <label>Your local tenant preset is: </label>
+              <b>{searchParams.get("tenant")}</b>
+            </div>
+          )}
+          {searchParams.get("ledger") && (
+            <div>
+              <label>Your local ledger preset is: </label>
+              <b>{searchParams.get("ledger")}</b>
+            </div>
+          )}
+        </div>
         <h2>Choose Tenants</h2>
         <table>
           <thead>
@@ -183,7 +256,8 @@ export function ApiToken() {
             {tenantsData?.map((row) => (
               <tr key={row.tenant.tenantId}>
                 <td>
-                  {row.tenant.tenant.name}[{row.tenant.tenantId}]
+                  <IfThenBold condition={row.tenant.selected} text={row.tenant.tenant.name ?? ""} />
+                  <small>[${row.tenant.tenantId}]</small>
                 </td>
                 <td>
                   <table>
@@ -191,23 +265,45 @@ export function ApiToken() {
                       {row.ledgers.map((ledger) => (
                         <tr key={ledger.ledgerId}>
                           <td>
-                            <IfThenBold condition={ledger.name === localLedgerName} text={ledger.name} />[{ledger.ledgerId}]
+                            <IfThenBold condition={ledger.selected} text={ledger.name} />
+                            <small>[{ledger.ledgerId}]</small>
                           </td>
                           <td>
-                            {!isSelected && (
-                              <SelectLedger ledger={ledger} localLedgerName={localLedgerName} onSelect={setCreateApiToken} />
+                            {!couldSelected && (
+                              <SelectLedger
+                                ledger={ledger}
+                                onSelect={() => {
+                                  setSearchParams((prev) => {
+                                    console.log("setSearchParams", prev.toString());
+                                    // prev.set("local_ledger_name", ledger.name);
+                                    prev.set("tenant", row.tenant.tenantId);
+                                    prev.set("ledger", ledger.ledgerId);
+                                    return prev;
+                                  });
+                                  setCreateApiToken({
+                                    ledger: ledger.ledgerId,
+                                    tenant: row.tenant.tenantId,
+                                    name: ledger.name,
+                                  });
+                                }}
+                              />
                             )}
                           </td>
                         </tr>
                       ))}
-                      {!isSelected && (
+                      {!couldSelected && (
                         <AddIfNotSelectedLedger
                           tenant={row.tenant}
+                          urlLedgerName={searchParams.get("local_ledger_name") ?? ""}
                           ledgers={row.ledgers}
-                          localLedgerName={localLedgerName}
                           onAdd={(a) => {
                             queryClient.invalidateQueries({ queryKey: ["listTenantsLedgersByUser"] });
-                            setLocalLedgerName(a.name);
+                            setSearchParams((prev) => {
+                              prev.set("tenant", a.tenant);
+                              prev.set("ledger", a.ledger);
+                              prev.set("local_ledger_name", a.name);
+                              return prev;
+                            });
                             setCreateApiToken(a);
                           }}
                         />
@@ -227,18 +323,11 @@ export function ApiToken() {
         {cloudToken && (
           <div>
             <h2>Code Preset</h2>
-            <b>
-              <pre>
-                {`
-            const { database } = useFireproof("${localLedgerName}", {
-              attach: toCloud({
-                tenant: "${createApiToken.tenant}",
-                ledger: "${createApiToken.ledger}",
-              }),
-            });
-            `}
-              </pre>
-            </b>
+            <pre>
+              <code ref={codeRef} className="language-js">
+                {jsCode}
+              </code>
+            </pre>
             <h2>Token</h2>
             <b>
               <pre>{cloudToken}</pre>
@@ -250,126 +339,144 @@ export function ApiToken() {
                 {back_url.build().cleanParams("fpToken").toString()}
               </Link>
             </b>
+            <div>
+              <button
+                onClick={() => {
+                  setRedirectCountdown({ ...redirectCountdown, state: "stopped" });
+                  // setCreateApiToken({} as Partial<TenantLedgerWithName>);
+                  // setSearchParams((prev) => {
+                  //   prev.delete("tenant");
+                  //   prev.delete("ledger");
+                  //   return prev;
+                  // });
+                }}
+              >
+                Stop
+              </button>
+            </div>
             <div>Redirecting in {redirectCountdown.countdownSecs} seconds...</div>
           </div>
         )}
       </div>
     </>
   );
-
-  function AddIfNotSelectedLedger({
-    tenant,
-    ledgers,
-    localLedgerName: lDef,
-    onAdd,
-  }: {
-    tenant: UserTenant;
-    ledgers: LedgerUser[];
-    localLedgerName: string;
-    onAdd: (ledger: TenantLedgerWithName) => void;
-  }) {
-    const mutation = useMutation({
-      mutationFn: async ({ tenant, ledgerName }: { tenant: UserTenant; ledgerName: string }) => {
-        const res = await cloud.api.createLedger({
-          ledger: {
-            tenantId: tenant.tenantId,
-            name: ledgerName,
-          },
-        });
-        if (res.isErr()) {
-          throw res.Err();
-        }
-        return res.Ok();
-      },
-    });
-
-    const [localLedgerName, setLocalLedgerName] = useState(lDef);
-    const ledger = ledgers.find((l) => l.name === localLedgerName);
-
-    if (mutation.isSuccess) {
-      onAdd({
-        name: mutation.data.ledger.name,
-        ledger: mutation.data.ledger.ledgerId,
-        tenant: mutation.data.ledger.tenantId,
-      });
-      return <></>;
-    }
-    console.log("mutation", mutation.isPending, ledger, localLedgerName);
-
-    if (ledger || localLedgerName?.length === 0) {
-      return <></>;
-    }
-    if (mutation.isError) {
-      console.log("mutation.error", mutation.error);
-      return <div>Error: {mutation.error.message}</div>;
-    }
-    if (mutation.isPending) {
-      console.log("mutation.isPending", mutation.isPending);
-      return <div>Adding ledger...</div>;
-    }
-    return (
-      <tr>
-        <td>
-          <label>DB-Name</label>
-          <input
-            type="text"
-            value={localLedgerName}
-            onChange={(e) => {
-              setLocalLedgerName(e.target.value);
-            }}
-          />
-        </td>
-        <td>
-          <button
-            onClick={() => {
-              mutation.mutate({ tenant, ledgerName: localLedgerName });
-            }}
-          >
-            <IfThenBold condition={true} text="Add" />
-          </button>
-        </td>
-      </tr>
-    );
-  }
-
-  function SelectLedger({
-    ledger,
-    localLedgerName,
-    onSelect,
-  }: {
-    ledger: LedgerUser;
-    localLedgerName: string;
-    onSelect: (ledger: ps.cloud.TenantLedger) => void;
-  }) {
-    return (
-      <button
-        onClick={() => {
-          onSelect({
-            ledger: ledger.ledgerId,
-            tenant: ledger.tenantId,
-          });
-        }}
-      >
-        <IfThenBold condition={ledger.name === localLedgerName} text="Select" />
-      </button>
-    );
-  }
-
-  // console.log("is to nav", buri.hasParam("token"));
-  // if (buri.hasParam("token")) {
-  //   const url = BuildURI.from(window.location.href).pathname("/fp/cloud/api/token").cleanParams("token").URI().withoutHostAndSchema;
-  //   console.log("nav-redirectUrl", url);
-  //   return <Navigate to={url} />;
-  // }
-
-  // return (
-  //   <>
-  //     <div>
-  //       Waiting for Fireproof Backend token for: {buri.getParam("back_url")} - {window.location.href}
-  //     </div>
-  //   </>
-  // );
 }
+
+function AddIfNotSelectedLedger({
+  tenant,
+  urlLedgerName,
+  ledgers,
+  onAdd,
+}: {
+  tenant: UserTenant;
+  urlLedgerName: string;
+  ledgers: (LedgerUser & { selected: boolean })[];
+  onAdd: (ledger: TenantLedgerWithName) => void;
+}) {
+  const { cloud } = useContext(AppContext);
+  const mutation = useMutation({
+    mutationFn: async ({ tenant, ledgerName }: { tenant: UserTenant; ledgerName: string }) => {
+      const res = await cloud.api.createLedger({
+        ledger: {
+          tenantId: tenant.tenantId,
+          name: ledgerName,
+        },
+      });
+      if (res.isErr()) {
+        throw res.Err();
+      }
+      return res.Ok();
+    },
+  });
+
+  const ledger = ledgers.find((l) => l.selected);
+  if (ledger && urlLedgerName.length > 0) {
+    // reset if ledger is selected
+    urlLedgerName = "";
+  }
+  const [localLedgerName, setLocalLedgerName] = useState(urlLedgerName);
+
+  if (mutation.isSuccess) {
+    onAdd({
+      name: mutation.data.ledger.name,
+      ledger: mutation.data.ledger.ledgerId,
+      tenant: mutation.data.ledger.tenantId,
+    });
+    return <></>;
+  }
+  console.log("mutation", mutation.isPending, ledger);
+
+  // if (ledger && !urlLedgerName?.length) {
+  //   return <></>;
+  // }
+  if (mutation.isError) {
+    console.log("mutation.error", mutation.error);
+    return <div>Error: {mutation.error.message}</div>;
+  }
+  if (mutation.isPending) {
+    console.log("mutation.isPending", mutation.isPending);
+    return <div>Adding ledger...</div>;
+  }
+  return (
+    <tr>
+      <td>
+        <label>DB-Name</label>
+        <input
+          type="text"
+          value={localLedgerName}
+          onChange={(e) => {
+            setLocalLedgerName(e.target.value);
+          }}
+        />
+      </td>
+      <td>
+        <button
+          onClick={() => {
+            mutation.mutate({ tenant, ledgerName: localLedgerName });
+          }}
+        >
+          <IfThenBold condition={!!localLedgerName.length} text="Add" />
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function SelectLedger({
+  ledger,
+  onSelect,
+}: {
+  ledger: LedgerUser & { selected: boolean };
+  onSelect: (ledger: ps.cloud.TenantLedger) => void;
+}) {
+  return (
+    <button
+      onClick={() => {
+        onSelect({
+          ledger: ledger.ledgerId,
+          tenant: ledger.tenantId,
+        });
+      }}
+    >
+      <IfThenBold condition={ledger.selected} text="Select" />
+    </button>
+  );
+}
+
+// console.log("is to nav", buri.hasParam("token"));
+// if (buri.hasParam("token")) {
+//   const url = BuildURI.from(window.location.href).pathname("/fp/cloud/api/token").cleanParams("token").URI().withoutHostAndSchema;
+//   console.log("nav-redirectUrl", url);
+//   return <Navigate to={url} />;
+// }
+
+// return (
+//   <>
+//     <div>
+//       Waiting for Fireproof Backend token for: {buri.getParam("back_url")} - {window.location.href}
+//     </div>
+//   </>
+// );
 
 function IfThenBold({ condition, text }: { condition: boolean; text: string }) {
   if (condition) {

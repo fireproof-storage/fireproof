@@ -27,6 +27,7 @@
     "@clerk/clerk-js": "^5.58.1",
     "@clerk/clerk-react": "^5.25.5",
     "@fireproof/core": "^0.20.5-dev-preview-7",
+    "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/react-query": "^5.66.0",
     "highlight.js": "^11.10.0",
