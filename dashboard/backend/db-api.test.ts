@@ -823,6 +823,7 @@ describe("db-api", () => {
     const auth: AuthType = data[0].reqs.auth;
     // fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "
 
+    const resultId = sthis.nextId(12).str;
     const rledger = await fpApi.createLedger({
       type: "reqCreateLedger",
       auth: data[0].reqs.auth,
@@ -843,10 +844,25 @@ describe("db-api", () => {
       },
     });
 
+    const res1 = await fpApi.getTokenByResultId({
+      type: "reqTokenByResultId",
+      resultId,
+    });
+    expect(res1.Ok()).toEqual({
+      type: "resTokenByResultId",
+      resultId,
+      status: "not-found",
+    });
+
     const resSt = await fpApi.getCloudSessionToken(
       {
         type: "reqCloudSessionToken",
         auth,
+        resultId,
+        selected: {
+          ledger: rledger.Ok().ledger.ledgerId,
+          tenant: data[0].ress.tenants[0].tenantId,
+        },
       },
       {
         secretToken:
@@ -863,6 +879,28 @@ describe("db-api", () => {
     );
     const v = await jwtVerify(resSt.Ok().token, pub);
     expect(v.payload.exp).toBeLessThanOrEqual(new Date().getTime() + 3700000);
+
+    const res2 = await fpApi.getTokenByResultId({
+      type: "reqTokenByResultId",
+      resultId,
+    });
+    expect(res2.Ok()).toEqual({
+      type: "resTokenByResultId",
+      resultId,
+      status: "found",
+      token: resSt.Ok().token,
+    });
+
+    const res3 = await fpApi.getTokenByResultId({
+      type: "reqTokenByResultId",
+      resultId,
+    });
+    expect(res3.Ok()).toEqual({
+      type: "resTokenByResultId",
+      resultId,
+      status: "not-found",
+    });
+
     expect(v.payload).toEqual({
       aud: "TEST_A",
       created: v.payload.created,
@@ -888,6 +926,7 @@ describe("db-api", () => {
       ],
       userId: data[0].ress.user.userId,
     });
+
     await fpApi.deleteLedger({
       type: "reqDeleteLedger",
       auth: data[0].reqs.auth,

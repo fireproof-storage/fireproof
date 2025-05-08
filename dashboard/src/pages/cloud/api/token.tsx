@@ -1,8 +1,8 @@
-import { BuildURI, URI } from "@adviser/cement";
+import { URI } from "@adviser/cement";
 import { AppContext } from "../../../app-context.tsx";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useContext, useEffect, useRef, useState } from "react";
-import { falsyToUndef, ps } from "@fireproof/core";
+import { ps } from "@fireproof/core";
 import { LedgerUser } from "../../../../backend/ledgers.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserTenant } from "../../../../backend/api.ts";
@@ -37,7 +37,7 @@ export function ApiToken() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [initialParameters, setInitialParameters] = useState(false);
 
@@ -65,7 +65,12 @@ export function ApiToken() {
   } = useQuery({
     queryKey: [createApiToken.ledger, createApiToken.tenant],
     queryFn: async () => {
+      const resultId = searchParams.get("result_id");
+      if (!resultId) {
+        throw new Error("No result_id");
+      }
       const rToken = await cloud.api.getCloudSessionToken({
+        resultId,
         selected: createApiToken,
       });
       if (rToken.isErr()) {
@@ -83,12 +88,12 @@ export function ApiToken() {
     interval: undefined as unknown | undefined,
   });
 
-  const back_url = BuildURI.from(buri.getParam("back_url"))
-    .setParam("fpToken", cloudToken ?? "not-ready")
-    .URI();
-  const redirectTo = buri.build().setParam("token", "ready").setParam("back_url", back_url.toString()).URI();
+  // const back_url = BuildURI.from(buri.getParam("back_url"))
+  //   .setParam("fpToken", cloudToken ?? "not-ready")
+  //   .URI();
+  // const redirectTo = buri.build().setParam("token", "ready").setParam("back_url", back_url.toString()).URI();
 
-  const [doNavigate, setDoNavigate] = useState(false);
+  // const [doNavigate, setDoNavigate] = useState(false);
 
   useEffect(() => {
     if (redirectCountdown.state === "stopped" && redirectCountdown.interval) {
@@ -99,7 +104,8 @@ export function ApiToken() {
         setRedirectCountdown((prev) => {
           if (prev.countdownSecs <= 0) {
             clearInterval(interval);
-            setDoNavigate(true);
+
+            // setDoNavigate(true);
             return { ...prev, state: "finished" };
           }
           return { ...prev, countdownSecs: prev.countdownSecs - 1 };
@@ -193,10 +199,15 @@ export function ApiToken() {
     }
   }, [jsCode]);
 
-  if (doNavigate) {
-    navigate(redirectTo.withoutHostAndSchema);
-    // setDoNavigate(false);
-    return <>redirecting {redirectTo.withoutHostAndSchema}</>;
+  // if (doNavigate) {
+  //   navigate(redirectTo.withoutHostAndSchema);
+  //   // setDoNavigate(false);
+  //   return <>redirecting {redirectTo.withoutHostAndSchema}</>;
+  // }
+
+  const result_id = searchParams.get("result_id");
+  if (!result_id || result_id.length < 5) {
+    return <div>Invalid result_id</div>;
   }
 
   if (cloud._clerkSession?.isSignedIn === false) {
@@ -210,6 +221,7 @@ export function ApiToken() {
     return <Navigate to={tos} />;
     // return <div>Not logged in:{tos}</div>;
   }
+
   if (isLoadingLedgers) {
     return <div>Loading ledgers...</div>;
   }
@@ -323,13 +335,13 @@ export function ApiToken() {
             <b>
               <pre>{cloudToken}</pre>
             </b>
-            <h2>Back to Your App</h2>
+            {/* <h2>Back to Your App</h2>
             <b>
               <Link to={redirectTo.toString()} className="text-fp-p">
                 {" "}
                 {back_url.build().cleanParams("fpToken").toString()}
               </Link>
-            </b>
+            </b> */}
             <div>
               <button
                 onClick={() => {

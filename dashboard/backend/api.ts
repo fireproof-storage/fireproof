@@ -21,6 +21,8 @@ import {
   upsetUserByProvider,
 } from "./users.ts";
 import { SignJWT } from "jose";
+import { sqlTokenByResultId } from "./token-by-result-id.ts";
+import { gte, sql } from "drizzle-orm";
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
@@ -387,11 +389,31 @@ export interface ReqCloudSessionToken {
   readonly type: "reqCloudSessionToken";
   readonly auth: AuthType;
   readonly selected?: Partial<ps.cloud.TenantLedger>;
+  readonly resultId?: string;
 }
 
 export interface ResCloudSessionToken {
   readonly type: "resCloudSessionToken";
   readonly token: string; // JWT
+}
+
+export interface ReqTokenByResultId {
+  readonly type: "reqTokenByResultId";
+  readonly resultId: string;
+}
+
+export interface ResTokenByResultId {
+  readonly type: "resTokenByResultId";
+  readonly status: "found" | "not-found";
+  readonly resultId: string;
+  readonly token?: string; // JWT
+}
+
+export interface TokenByResultIdParam {
+  readonly status: "found" | "not-found";
+  readonly resultId: string;
+  readonly token?: string; // JWT
+  readonly now: Date;
 }
 
 export interface FPApiInterface {
@@ -421,6 +443,7 @@ export interface FPApiInterface {
 
   // attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger>
   getCloudSessionToken(req: ReqCloudSessionToken): Promise<Result<ResCloudSessionToken>>;
+  getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>>;
 }
 
 interface FPApiMsgInterface {
@@ -2206,10 +2229,71 @@ export class FPApiSQL implements FPApiInterface {
       .setExpirationTime(Date.now() + validFor) // expiration time
       .sign(privKey);
 
+    if (req.resultId) {
+      await this.addTokenByResultId({
+        status: "found",
+        resultId: req.resultId,
+        token,
+        now: new Date(),
+      });
+    }
+
     // console.log(">>>>-post:", ctx, privKey)
     return Result.Ok({
       type: "resCloudSessionToken",
       token,
+    });
+  }
+
+  async addTokenByResultId(req: TokenByResultIdParam): Promise<Result<ResTokenByResultId>> {
+    const now = (req.now ?? new Date()).toISOString();
+    await this.db
+      .insert(sqlTokenByResultId)
+      .values({
+        resultId: req.resultId,
+        status: req.status,
+        token: req.token,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [sqlTokenByResultId.resultId],
+        set: {
+          updatedAt: now,
+          resultId: req.resultId,
+          token: req.token,
+          status: req.status,
+        },
+      })
+      .run();
+    const past = new Date(new Date(now).getTime() - 15 * 60 * 1000).toISOString();
+    await this.db.delete(sqlTokenByResultId).where(lt(sqlTokenByResultId.updatedAt, past)).run();
+    return Result.Ok({
+      type: "resTokenByResultId",
+      ...req,
+    });
+  }
+
+  async getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>> {
+    const past = new Date(new Date().getTime() - 15 * 60 * 1000).toISOString();
+    const out = await this.db
+      .select()
+      .from(sqlTokenByResultId)
+      .where(and(eq(sqlTokenByResultId.resultId, req.resultId), gte(sqlTokenByResultId.updatedAt, past)))
+      .get();
+    if (!out || out.status !== "found" || !out.token) {
+      return Result.Ok({
+        type: "resTokenByResultId",
+        resultId: req.resultId,
+        status: "not-found",
+      });
+    }
+    await this.db.delete(sqlTokenByResultId).where(eq(sqlTokenByResultId.resultId, req.resultId)).run();
+    return Result.Ok({
+      type: "resTokenByResultId",
+      resultId: out.resultId,
+      token: out.token,
+      status: "found",
     });
   }
 }
