@@ -2234,13 +2234,15 @@ export class FPApiSQL implements FPApiInterface {
       .setExpirationTime(Date.now() + validFor) // expiration time
       .sign(privKey);
 
-    if (req.resultId) {
+    if (req.resultId && req.resultId.length > "laenger".length) {
       await this.addTokenByResultId({
         status: "found",
         resultId: req.resultId,
         token,
         now: new Date(),
       });
+    } else if (req.resultId) {
+      this.sthis.logger.Warn().Any({ resultId: req.resultId }).Msg("resultId too short");
     }
 
     // console.log(">>>>-post:", ctx, privKey)
