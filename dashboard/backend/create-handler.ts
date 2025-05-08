@@ -174,6 +174,10 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
         res = fpApi.getCloudSessionToken(jso);
         break;
 
+      case FPAPIMsg.isTokenByResultId(jso):
+        res = fpApi.getTokenByResultId(jso);
+        break;
+
       default:
         return new Response("Invalid request", { status: 400, headers: CORS });
     }
