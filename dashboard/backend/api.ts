@@ -458,6 +458,8 @@ interface FPApiMsgInterface {
   isEnsureUser(jso: unknown): jso is ReqEnsureUser;
   isListTenantsByUser(jso: unknown): jso is ReqListTenantsByUser;
   isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant;
+  isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken;
+  isTokenByResultId(jso: unknown): jso is ReqTokenByResultId;
 }
 
 class FAPIMsgImpl implements FPApiMsgInterface {
@@ -511,6 +513,9 @@ class FAPIMsgImpl implements FPApiMsgInterface {
 
   isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken {
     return (jso as ReqCloudSessionToken).type === "reqCloudSessionToken";
+  }
+  isTokenByResultId(jso: unknown): jso is ReqTokenByResultId {
+    return (jso as ReqTokenByResultId).type === "reqTokenByResultId";
   }
 }
 
@@ -2274,6 +2279,7 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
+  // this is why to expensive --- why not kv or other simple storage
   async getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>> {
     const past = new Date(new Date().getTime() - 15 * 60 * 1000).toISOString();
     const out = await this.db
