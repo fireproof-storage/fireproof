@@ -1,12 +1,7 @@
 import { useContext } from "react";
 import { Outlet, useParams } from "react-router-dom";
-import type { UserTenant } from "../../../../backend/api.ts";
 import { AppContext } from "../../../app-context.tsx";
 import { TabNavigation } from "../../../components/TabNavigation.tsx";
-
-function isAdmin(ut: UserTenant) {
-  return ut.role === "admin";
-}
 
 export async function clientLoader() {
   return {

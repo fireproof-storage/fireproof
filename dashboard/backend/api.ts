@@ -3,106 +3,61 @@ import { rt, ps } from "@fireproof/core";
 import { SuperThis } from "@fireproof/core";
 import { and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { InviteTicket, InvitedParams, prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
-import { LedgerUser, sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
-import { QueryUser, queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.ts";
-import { Tenant, sqlTenantUsers, sqlTenants } from "./tenants.ts";
+import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
+import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
+import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.ts";
+import { sqlTenantUsers, sqlTenants } from "./tenants.ts";
+import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.ts";
+import { SignJWT } from "jose";
+import { sqlTokenByResultId } from "./token-by-result-id.ts";
+import { gte, sql } from "drizzle-orm";
 import {
   AuthType,
   ClerkClaim,
   ClerkVerifyAuth,
+  InCreateTenantParams,
+  InviteTicket,
+  InvitedParams,
+  OutTenantParams,
+  QueryUser,
+  ReqCloudSessionToken,
+  ReqCreateLedger,
+  ReqCreateTenant,
+  ReqDeleteInvite,
+  ReqDeleteLedger,
+  ReqDeleteTenant,
+  ReqEnsureUser,
+  ReqFindUser,
+  ReqInviteUser,
+  ReqListInvites,
+  ReqListLedgersByUser,
+  ReqListTenantsByUser,
+  ReqRedeemInvite,
+  ReqTokenByResultId,
+  ReqUpdateLedger,
+  ReqUpdateTenant,
+  ReqUpdateUserTenant,
+  ResCloudSessionToken,
+  ResCreateLedger,
+  ResCreateTenant,
+  ResDeleteInvite,
+  ResDeleteLedger,
+  ResDeleteTenant,
+  ResEnsureUser,
+  ResFindUser,
+  ResInviteUser,
+  ResListInvites,
+  ResListLedgersByUser,
+  ResListTenantsByUser,
+  ResRedeemInvite,
+  ResTokenByResultId,
+  ResUpdateLedger,
+  ResUpdateTenant,
+  ResUpdateUserTenant,
+  RoleType,
   User,
-  UserNotFoundError,
   UserStatus,
-  VerifiedAuth,
-  getUser,
-  isUserNotFound,
-  queryUser,
-  upsetUserByProvider,
-} from "./users.ts";
-import { SignJWT } from "jose";
-import { sqlTokenByResultId } from "./token-by-result-id.ts";
-import { gte, sql } from "drizzle-orm";
-
-export interface ReqEnsureUser {
-  readonly type: "reqEnsureUser";
-  readonly auth: AuthType;
-}
-
-interface RoleBase {
-  readonly tenantId?: string;
-  readonly ledgerId?: string;
-  readonly userId: string;
-  readonly role: ps.cloud.Role;
-  readonly adminUserIds: string[];
-  readonly memberUserIds: string[];
-}
-
-interface TenantRole extends RoleBase {
-  readonly tenantId: string;
-}
-
-interface LedgerRole extends RoleBase {
-  readonly ledgerId: string;
-  readonly right: ps.cloud.ReadWrite;
-}
-
-type RoleType = TenantRole | LedgerRole;
-
-// export interface TenantUser {
-//     readonly userId: string;
-//     readonly tenantId: string;
-//     readonly name: string;
-//     readonly active: boolean; // active for this user
-// }
-
-export interface ResEnsureUser {
-  readonly type: "resEnsureUser";
-  readonly user: User;
-  readonly tenants: UserTenant[];
-}
-
-// export interface Tenant {
-//   readonly tenantId: string;
-//   readonly name: string;
-//   readonly ownerUserId: string;
-//   // null means don't change
-//   readonly adminUserIds?: string[];
-//   readonly memberUserIds?: string[];
-//   readonly maxAdminUsers?: number;
-//   readonly maxMemberUsers?: number;
-// }
-
-// export interface ReqEnsureTenant {
-//   readonly type: "reqEnsureTenant";
-//   readonly auth: AuthType;
-//   readonly tenant: Omit<InsertTenantParam, "tenantId"> & { readonly tenantId?: string };
-// }
-
-export interface ResDeleteTenant {
-  readonly type: "resDeleteTenant";
-  readonly tenantId: string;
-}
-
-export interface ReqDeleteTenant {
-  readonly type: "reqDeleteTenant";
-  readonly auth: AuthType;
-  readonly tenantId: string;
-}
-
-export interface OutTenantParams {
-  readonly tenantId: string;
-  readonly name: string;
-  readonly ownerUserId: string;
-  readonly maxAdminUsers: number;
-  readonly maxMemberUsers: number;
-  readonly maxInvites: number;
-  readonly maxLedgers: number;
-  readonly status: UserStatus;
-  readonly statusReason: string;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
+} from "./fp-dash-types.ts";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -118,295 +73,6 @@ function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantPar
     createdAt: new Date(sql.createdAt),
     updatedAt: new Date(sql.updatedAt),
   };
-}
-
-export interface ResCreateTenant {
-  readonly type: "resCreateTenant";
-  readonly tenant: OutTenantParams;
-}
-
-export interface InCreateTenantParams {
-  readonly name?: string;
-  readonly ownerUserId: string;
-  readonly maxAdminUsers?: number;
-  readonly maxMemberUsers?: number;
-  readonly maxInvites?: number;
-}
-
-export interface ReqCreateTenant {
-  readonly type: "reqCreateTenant";
-  readonly auth: AuthType;
-  readonly tenant: Omit<InCreateTenantParams, "ownerUserId">;
-}
-
-export interface InUpdateTenantParams {
-  readonly tenantId: string;
-  readonly name?: string;
-  readonly maxAdminUsers?: number;
-  readonly maxMemberUsers?: number;
-  readonly maxInvites?: number;
-}
-
-export interface ResUpdateTenant {
-  readonly type: "resUpdateTenant";
-  readonly tenant: OutTenantParams;
-}
-
-export interface ReqUpdateTenant {
-  readonly type: "reqUpdateTenant";
-  readonly auth: AuthType;
-  readonly tenant: InUpdateTenantParams;
-}
-
-export interface ResEnsureTenant {
-  readonly type: "resEnsureTenant";
-  readonly tenant: Tenant;
-}
-
-export interface ReqRedeemInvite {
-  readonly type: "reqRedeemInvite";
-  readonly auth: AuthType;
-  // readonly query: QueryUser;
-}
-
-export interface ResRedeemInvite {
-  readonly type: "resRedeemInvite";
-  readonly invites?: InviteTicket[];
-}
-
-export interface ReqListLedgersByUser {
-  readonly type: "reqListLedgersByUser";
-  readonly auth: AuthType;
-  readonly tenantIds?: string[];
-}
-
-export interface ResListLedgersByUser {
-  readonly type: "resListLedgersByUser";
-  readonly userId: string;
-  readonly ledgers: LedgerUser[];
-}
-
-export interface ReqAttachUserToLedger {
-  readonly type: "reqAttachUserToLedger";
-  readonly auth: AuthType;
-  readonly tenantId: string;
-  readonly ledgerId: string;
-  readonly userId: string;
-  readonly role: ps.cloud.ReadWrite;
-}
-
-export interface ResAttachUserToLedger {
-  readonly type: "resAttachUserToLedger";
-  readonly tenantId: string;
-  readonly ledgerId: string;
-  readonly userId: string;
-  readonly role: ps.cloud.ReadWrite;
-}
-
-export interface ReqListTenantsByUser {
-  readonly type: "reqListTenantsByUser";
-  readonly auth: AuthType;
-}
-
-export interface UserTenantCommon {
-  readonly name?: string;
-  readonly status: UserStatus;
-  readonly statusReason: string;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
-
-export interface UserTenant {
-  readonly tenantId: string;
-  readonly role: ps.cloud.Role;
-  readonly default: boolean;
-  readonly user: UserTenantCommon;
-  readonly tenant: UserTenantCommon;
-}
-
-export function isAdmin(ut: UserTenant) {
-  return ut.role === "admin";
-}
-
-export interface AdminTenant extends UserTenant {
-  readonly role: "admin"; // | "owner";
-  readonly adminUserIds: string[];
-  readonly memberUserIds: string[];
-  readonly maxAdminUsers: number;
-  readonly maxMemberUsers: number;
-}
-
-export interface ResListTenantsByUser {
-  readonly type: "resListTenantsByUser";
-  readonly userId: string;
-  readonly authUserId: string;
-  readonly tenants: UserTenant[];
-}
-
-// export type AuthProvider = "github" | "google" | "fp";
-
-export interface ReqFindUser {
-  readonly type: "reqFindUser";
-  readonly auth: AuthType;
-  readonly query: QueryUser;
-}
-
-// export interface QueryResultUser {
-//   readonly userId: string;
-//   readonly authProvider: AuthProvider;
-//   readonly email?: string;
-//   readonly nick?: string;
-//   readonly status: UserStatus;
-//   readonly createdAt: Date;
-//   readonly updatedAt: Date;
-// }
-
-export interface ResFindUser {
-  readonly type: "resFindUser";
-  // readonly userId: string;
-  // readonly authUserId: string;
-  readonly query: QueryUser;
-  readonly results: User[];
-}
-
-export interface QueryInviteTicket {
-  readonly incSendEmailCount?: boolean;
-
-  // indicate update or insert
-  readonly inviteId?: string;
-  readonly query: QueryUser;
-
-  // readonly invitedTenantId?: string;
-  // readonly invitedLedgerId?: string;
-  readonly invitedParams: InvitedParams;
-}
-
-export interface ReqInviteUser {
-  readonly type: "reqInviteUser";
-  readonly auth: AuthType;
-  readonly ticket: QueryInviteTicket; // InviteTicket & { readonly incSendEmailCount?: boolean }
-}
-
-export interface ResInviteUser {
-  readonly type: "resInviteUser";
-  readonly invite: InviteTicket;
-}
-
-export interface ReqDeleteInvite {
-  readonly type: "reqDeleteInvite";
-  readonly auth: AuthType;
-  readonly inviteId: string;
-}
-
-export interface ResDeleteInvite {
-  readonly type: "resDeleteInvite";
-  readonly inviteId: string;
-}
-
-export interface ReqListInvites {
-  readonly type: "reqListInvites";
-  readonly auth: AuthType;
-  // if set all invites for the given tenants are listed
-  // if not set all invites for the user are listed
-  readonly tenantIds?: string[];
-  readonly ledgerIds?: string[];
-}
-
-export interface ResListInvites {
-  readonly type: "resListInvites";
-  readonly tickets: InviteTicket[];
-}
-
-export interface ReqUpdateUserTenant {
-  readonly type: "reqUpdateUserTenant";
-  readonly auth: AuthType;
-  readonly tenantId: string;
-  readonly userId?: string;
-  readonly role: ps.cloud.Role; // only if admin
-  readonly default?: boolean;
-  readonly name?: string;
-}
-
-export interface ResUpdateUserTenant {
-  readonly type: "resUpdateUserTenant";
-  readonly tenantId: string;
-  readonly userId: string;
-  readonly role: ps.cloud.Role;
-  readonly default: boolean;
-  readonly name?: string;
-}
-
-export interface CreateLedger {
-  readonly tenantId: string;
-  readonly name: string;
-}
-
-export interface ReqCreateLedger {
-  readonly type: "reqCreateLedger";
-  readonly auth: AuthType;
-  readonly ledger: CreateLedger;
-}
-
-export interface ResCreateLedger {
-  readonly type: "resCreateLedger";
-  readonly ledger: LedgerUser;
-}
-
-export interface UpdateLedger {
-  readonly ledgerId: string;
-  readonly tenantId: string;
-  readonly right?: ps.cloud.ReadWrite;
-  readonly role?: ps.cloud.Role;
-  readonly name?: string;
-  readonly default?: boolean;
-}
-
-export interface ReqUpdateLedger {
-  readonly type: "reqUpdateLedger";
-  readonly auth: AuthType;
-  readonly ledger: UpdateLedger;
-}
-export interface ResUpdateLedger {
-  readonly type: "resUpdateLedger";
-  readonly ledger: LedgerUser;
-}
-
-export interface DeleteLedger {
-  readonly ledgerId: string;
-  readonly tenantId: string;
-}
-
-export interface ReqDeleteLedger {
-  readonly type: "reqDeleteLedger";
-  readonly auth: AuthType;
-  readonly ledger: DeleteLedger;
-}
-export interface ResDeleteLedger {
-  readonly type: "resDeleteLedger";
-}
-
-export interface ReqCloudSessionToken {
-  readonly type: "reqCloudSessionToken";
-  readonly auth: AuthType;
-  readonly selected?: Partial<ps.cloud.TenantLedger>;
-  readonly resultId?: string;
-}
-
-export interface ResCloudSessionToken {
-  readonly type: "resCloudSessionToken";
-  readonly token: string; // JWT
-}
-
-export interface ReqTokenByResultId {
-  readonly type: "reqTokenByResultId";
-  readonly resultId: string;
-}
-
-export interface ResTokenByResultId {
-  readonly type: "resTokenByResultId";
-  readonly status: "found" | "not-found";
-  readonly resultId: string;
-  readonly token?: string; // JWT
 }
 
 export interface TokenByResultIdParam {
@@ -446,83 +112,10 @@ export interface FPApiInterface {
   getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>>;
 }
 
-interface FPApiMsgInterface {
-  isDeleteTenant(jso: unknown): jso is ReqDeleteTenant;
-  isUpdateTenant(jso: unknown): jso is ReqUpdateTenant;
-  isCreateTenant(jso: unknown): jso is ReqCreateTenant;
-  isDeleteInvite(jso: unknown): jso is ReqDeleteInvite;
-  isListInvites(jso: unknown): jso is ReqListInvites;
-  isInviteUser(jso: unknown): jso is ReqInviteUser;
-  isFindUser(jso: unknown): jso is ReqFindUser;
-  isRedeemInvite(jso: unknown): jso is ReqRedeemInvite;
-  isEnsureUser(jso: unknown): jso is ReqEnsureUser;
-  isListTenantsByUser(jso: unknown): jso is ReqListTenantsByUser;
-  isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant;
-  isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken;
-  isTokenByResultId(jso: unknown): jso is ReqTokenByResultId;
-}
-
-class FAPIMsgImpl implements FPApiMsgInterface {
-  isDeleteTenant(jso: unknown): jso is ReqDeleteTenant {
-    return (jso as ReqDeleteTenant).type === "reqDeleteTenant";
-  }
-  isUpdateTenant(jso: unknown): jso is ReqUpdateTenant {
-    return (jso as ReqUpdateTenant).type === "reqUpdateTenant";
-  }
-  isCreateTenant(jso: unknown): jso is ReqCreateTenant {
-    return (jso as ReqCreateTenant).type === "reqCreateTenant";
-  }
-  isDeleteInvite(jso: unknown): jso is ReqDeleteInvite {
-    return (jso as ReqDeleteInvite).type === "reqDeleteInvite";
-  }
-  isListInvites(jso: unknown): jso is ReqListInvites {
-    return (jso as ReqListInvites).type === "reqListInvites";
-  }
-  isInviteUser(jso: unknown): jso is ReqInviteUser {
-    return (jso as ReqInviteUser).type === "reqInviteUser";
-  }
-  isFindUser(jso: unknown): jso is ReqFindUser {
-    return (jso as ReqFindUser).type === "reqFindUser";
-  }
-  isRedeemInvite(jso: unknown): jso is ReqRedeemInvite {
-    return (jso as ReqRedeemInvite).type === "reqRedeemInvite";
-  }
-  isEnsureUser(jso: unknown): jso is ReqEnsureUser {
-    return (jso as ReqEnsureUser).type === "reqEnsureUser";
-  }
-
-  isListTenantsByUser(jso: unknown): jso is ReqListTenantsByUser {
-    return (jso as ReqListTenantsByUser).type === "reqListTenantsByUser";
-  }
-  isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant {
-    return (jso as ReqUpdateUserTenant).type === "reqUpdateUserTenant";
-  }
-  isListLedgersByUser(jso: unknown): jso is ReqListLedgersByUser {
-    return (jso as ReqListLedgersByUser).type === "reqListLedgersByUser";
-  }
-
-  isCreateLedger(jso: unknown): jso is ReqCreateLedger {
-    return (jso as ReqCreateLedger).type === "reqCreateLedger";
-  }
-  isUpdateLedger(jso: unknown): jso is ReqUpdateLedger {
-    return (jso as ReqUpdateLedger).type === "reqUpdateLedger";
-  }
-  isDeleteLedger(jso: unknown): jso is ReqDeleteLedger {
-    return (jso as ReqDeleteLedger).type === "reqDeleteLedger";
-  }
-
-  isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken {
-    return (jso as ReqCloudSessionToken).type === "reqCloudSessionToken";
-  }
-  isTokenByResultId(jso: unknown): jso is ReqTokenByResultId {
-    return (jso as ReqTokenByResultId).type === "reqTokenByResultId";
-  }
-}
-
-export const FPAPIMsg = new FAPIMsgImpl();
+export const FPAPIMsg = new ps.dashboard.FAPIMsgImpl();
 
 export interface FPApiToken {
-  verify(token: string): Promise<Result<VerifiedAuth>>;
+  verify(token: string): Promise<Result<ps.dashboard.VerifiedAuth>>;
 }
 
 interface ReqInsertTenant {

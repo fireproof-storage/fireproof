@@ -8,14 +8,14 @@
 
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiSQL, FPApiToken, AdminTenant, ReqEnsureUser, ResEnsureUser } from "./api.js";
+import { FPApiSQL, FPApiToken } from "./api.js";
 import { ensureSuperThis, SuperThis } from "@fireproof/core";
-import { AuthType, VerifiedAuth } from "./users.ts";
-import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
+import { queryEmail, queryNick } from "./sql-helper.ts";
 import { jwtVerify } from "jose/jwt/verify";
 import { rt } from "@fireproof/core";
 import { Result } from "@adviser/cement";
-import { create } from "multiformats/block";
+import { AdminTenant, AuthType, QueryUser, ReqEnsureUser, ResEnsureUser, VerifiedAuth } from "./fp-dash-types.ts";
+
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
 // // import Database from 'better-sqlite3';

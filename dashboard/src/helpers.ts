@@ -1,12 +1,12 @@
 import { BuildURI, URI } from "@adviser/cement";
-import { UserTenant } from "../backend/api.ts";
+import { ps } from "@fireproof/core";
 
 export function truncateDbName(name: string, maxLength: number) {
   if (name.length <= maxLength) return name;
   return `${name.substring(0, maxLength - 3)}...`;
 }
 
-export function tenantName(tenant: UserTenant) {
+export function tenantName(tenant: ps.dashboard.UserTenant) {
   // if (tenant.default) {
   //   return "Default";
   // }

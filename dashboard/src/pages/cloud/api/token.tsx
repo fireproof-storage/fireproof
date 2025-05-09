@@ -3,9 +3,7 @@ import { AppContext } from "../../../app-context.tsx";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useContext, useEffect, useRef, useState } from "react";
 import { ps } from "@fireproof/core";
-import { LedgerUser } from "../../../../backend/ledgers.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { UserTenant } from "../../../../backend/api.ts";
 
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
@@ -159,7 +157,7 @@ export function ApiToken() {
     }
     setInitialParameters(true);
     let justOneLedgerSelected = 0;
-    let ledgerSelected: (LedgerUser & { selected: boolean }) | undefined = undefined;
+    let ledgerSelected: (ps.dashboard.LedgerUser & { selected: boolean }) | undefined = undefined;
     tenantsData.forEach((tenant) => {
       tenant.ledgers.forEach((ledger) => {
         if (ledger.selected) {
@@ -172,7 +170,7 @@ export function ApiToken() {
       return;
     }
     // typescript o my typescript
-    const l = ledgerSelected as LedgerUser;
+    const l = ledgerSelected as ps.dashboard.LedgerUser;
     const ledgerFromUrl = searchParams.get("ledger");
     if (!ledgerFromUrl && ledgerFromUrl !== l.ledgerId) {
       return;
@@ -371,14 +369,14 @@ function AddIfNotSelectedLedger({
   ledgers,
   onAdd,
 }: {
-  tenant: UserTenant;
+  tenant: ps.dashboard.UserTenant;
   urlLedgerName: string;
-  ledgers: (LedgerUser & { selected: boolean })[];
+  ledgers: (ps.dashboard.LedgerUser & { selected: boolean })[];
   onAdd: (ledger: TenantLedgerWithName) => void;
 }) {
   const { cloud } = useContext(AppContext);
   const mutation = useMutation({
-    mutationFn: async ({ tenant, ledgerName }: { tenant: UserTenant; ledgerName: string }) => {
+    mutationFn: async ({ tenant, ledgerName }: { tenant: ps.dashboard.UserTenant; ledgerName: string }) => {
       const res = await cloud.api.createLedger({
         ledger: {
           tenantId: tenant.tenantId,
@@ -449,7 +447,7 @@ function SelectLedger({
   ledger,
   onSelect,
 }: {
-  ledger: LedgerUser & { selected: boolean };
+  ledger: ps.dashboard.LedgerUser & { selected: boolean };
   onSelect: (ledger: ps.cloud.TenantLedger) => void;
 }) {
   return (

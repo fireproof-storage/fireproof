@@ -36,16 +36,3 @@ export const sqlTenantUsers = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.tenantId] })],
 );
-
-export interface Tenant {
-  readonly tenantId: string;
-  readonly name: string;
-  readonly ownerUserId: string;
-  readonly adminUserIds: string[];
-  readonly memberUserIds: string[];
-  readonly maxAdminUsers: number;
-  readonly maxMemberUsers: number;
-  readonly maxLedgers: number;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}

@@ -1,5 +1,6 @@
 import { and, eq, or } from "drizzle-orm/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
+import { Queryable, QueryUser } from "./fp-dash-types.ts";
 
 export function toUndef(v: string | null | undefined): string | undefined {
   return v ? v : undefined;
@@ -7,23 +8,6 @@ export function toUndef(v: string | null | undefined): string | undefined {
 
 export function toBoolean(v: number): boolean {
   return !!v;
-}
-
-export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
-
-export interface Queryable {
-  readonly userId?: string;
-  readonly queryProvider?: AuthProvider;
-  readonly queryEmail?: string;
-  readonly queryNick?: string;
-}
-
-export interface QueryUser {
-  readonly byString?: string; // could be email or nick or exact userId
-  readonly existingUserId?: string;
-  readonly byEmail?: string; // exact email
-  readonly byNick?: string; // exact nick
-  readonly andProvider?: AuthProvider;
 }
 
 export function queryable2QueryUser(queryable: Queryable): QueryUser {
