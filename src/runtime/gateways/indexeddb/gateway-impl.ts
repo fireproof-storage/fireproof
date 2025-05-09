@@ -26,6 +26,7 @@ function sanitzeKey(key: string | string[]): string | string[] {
 async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
   const dbName = getIndexedDBName(url, sthis);
   const once = await onceIndexedDB.get(dbName.fullDb).once(async () => {
+    // console.log("IndexedDBDataStore:connectIdb-1", dbName.fullDb);
     const db = await openDB(dbName.fullDb, 1, {
       upgrade(db) {
         ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
@@ -35,6 +36,7 @@ async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
         });
       },
     });
+    // console.log("IndexedDBDataStore:connectIdb-2", dbName.fullDb);
     const found = await db.get("version", "version");
     const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
     if (!found) {
