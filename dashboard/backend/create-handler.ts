@@ -12,9 +12,8 @@ import type { Env } from "./cf-serve.ts";
 export const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
+  "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
   "Access-Control-Max-Age": "86400",
-  // "X-Frame-Options": "ALLOW-FROM *",
-  //  "Content-Security-Policy": "frame-ancestors 'self' http://localhost:3001 https://dev.connect.fireproof.direct https://github.com https://accounts.google.com",
 };
 
 interface ClerkTemplate {
@@ -108,6 +107,15 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
   });
   return async (req: Request): Promise<Response> => {
     const startTime = performance.now();
+    if (req.method === "OPTIONS") {
+      return new Response("ok", {
+        status: 200,
+        headers: {
+          ...CORS,
+          "Content-Type": "application/json",
+        },
+      });
+    }
     if (!["POST", "PUT"].includes(req.method)) {
       return new Response("Invalid request", { status: 404, headers: CORS });
     }
