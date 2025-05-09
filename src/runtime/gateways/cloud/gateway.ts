@@ -22,12 +22,13 @@ import {
   ReqSignedUrl,
   MsgWithError,
   ResSignedUrl,
-  GwCtx,
   QSId,
   coerceFPStoreTypes,
   AuthType,
+  buildReqClose,
+  ReqGwCtx,
 } from "../../../protocols/cloud/msg-types.js";
-import { MsgConnected, MsgConnectedAuth, Msger, authTypeFromUri } from "../../../protocols/cloud/msger.js";
+import { Msger, VirtualConnected, authTypeFromUri } from "../../../protocols/cloud/msger.js";
 import {
   MsgIsResDelData,
   MsgIsResGetData,
@@ -57,7 +58,12 @@ import { encodeAsV2SerializedMetaKey, V2SerializedMetaKeyExtractKey } from "../.
 
 const VERSION = "v0.1-fp-cloud";
 
-type ConnectedSerdeGatewayCtx = SerdeGatewayCtx & { conn: AuthedConnection };
+export interface VConnItems {
+  readonly conn: Result<VirtualConnected>;
+  readonly citem: ConnectionItem;
+}
+
+type ConnectedSerdeGatewayCtx = SerdeGatewayCtx & { conn: VConnItems };
 
 export interface StoreTypeGateway {
   get: <S>(ctx: ConnectedSerdeGatewayCtx, url: URI) => Promise<SerdeGetResult<S>>;
@@ -78,7 +84,7 @@ abstract class BaseGateway {
     method: HttpMethods,
     store: FPStoreTypes,
     uri: URI,
-    conn: AuthedConnection,
+    conn: VConnItems,
   ): Promise<MsgWithError<ReqSignedUrl>> {
     const rParams = uri.getParamsResult({
       key: param.REQUIRED,
@@ -104,7 +110,7 @@ abstract class BaseGateway {
       tid: this.sthis.nextId().str,
       auth: rAuth.Ok(),
       type,
-      conn: conn.conn.Ok().conn,
+      conn: { ...conn.conn.Ok().opts.conn },
       tenant: {
         tenant: params.tenant,
         ledger: params.ledger,
@@ -128,7 +134,7 @@ abstract class BaseGateway {
     store: FPStoreTypes,
     waitForFn: (msg: MsgBase) => boolean,
     uri: URI,
-    conn: AuthedConnection,
+    conn: VConnItems,
   ): Promise<MsgWithError<S>> {
     const rsu = await this.buildReqSignedUrl(type, method, store, uri, conn);
     if (MsgIsError(rsu)) {
@@ -137,7 +143,7 @@ abstract class BaseGateway {
     return conn.conn.Ok().request<S, ReqSignedUrl>(rsu, { waitFor: waitForFn });
   }
 
-  async putObject(uri: URI, uploadUrl: string, body: Uint8Array, conn: AuthedConnection): Promise<Result<void>> {
+  async putObject(uri: URI, uploadUrl: string, body: Uint8Array, conn: VConnItems): Promise<Result<void>> {
     this.logger.Debug().Any("url", { uploadUrl, uri }).Msg("put-fetch-url");
     const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body }));
     if (rUpload.isErr()) {
@@ -153,7 +159,7 @@ abstract class BaseGateway {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getObject(uri: URI, downloadUrl: string, _conn: AuthedConnection): Promise<Result<Uint8Array>> {
+  async getObject(uri: URI, downloadUrl: string, _conn: VConnItems): Promise<Result<Uint8Array>> {
     this.logger.Debug().Any("url", { downloadUrl, uri }).Msg("get-fetch-url");
     const rDownload = await exception2Result(async () => fetch(downloadUrl.toString(), { method: "GET" }));
     if (rDownload.isErr()) {
@@ -170,7 +176,7 @@ abstract class BaseGateway {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async delObject(uri: URI, deleteUrl: string, _conn: AuthedConnection): Promise<Result<void>> {
+  async delObject(uri: URI, deleteUrl: string, _conn: VConnItems): Promise<Result<void>> {
     this.logger.Debug().Any("url", { deleteUrl, uri }).Msg("get-fetch-url");
     const rDelete = await exception2Result(async () => fetch(deleteUrl.toString(), { method: "DELETE" }));
     if (rDelete.isErr()) {
@@ -227,7 +233,7 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
   }
 }
 
-function getGwCtx(conn: QSId, uri: URI): Result<GwCtx> {
+function getGwCtx(conn: Partial<QSId>, uri: URI): Result<ReqGwCtx> {
   const rParams = uri.getParamsResult({
     tid: param.OPTIONAL,
     tenant: param.REQUIRED,
@@ -264,10 +270,10 @@ class CurrentMeta {
     ctx: ConnectedSerdeGatewayCtx,
     authType: AuthType,
     reqSignedUrl: ReqSignedUrl,
-    gwCtx: GwCtx,
+    gwCtx: ReqGwCtx,
   ): Promise<Result<FPEnvelopeMeta>> {
     // console.log("cloud-get-1")
-    const key = await hashObject(ctx.conn.conn.Ok().conn);
+    const key = await hashObject(ctx.conn.conn.Ok());
     // register bind updates
     const item = this.boundGetMeta.get(key);
     // console.log("cloud-get-2")
@@ -351,7 +357,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (rGwCtx.isErr()) {
       return Result.Err(rGwCtx);
     }
-    const rAuthType = await ctx.conn.conn.Ok().authType();
+    const rAuthType = await authTypeFromUri(this.logger, uri); // ctx.conn.conn.Ok().authType();
     if (rAuthType.isErr()) {
       return Result.Err(rAuthType);
     }
@@ -367,11 +373,11 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (MsgIsError(reqSignedUrl)) {
       return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
     }
-    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().opts.conn, uri);
     if (rGwCtx.isErr()) {
       return Result.Err(rGwCtx);
     }
-    const rAuthType = await ctx.conn.conn.Ok().authType();
+    const rAuthType = await authTypeFromUri(this.logger, uri); // ctx.conn.conn.Ok().authType();
     if (rAuthType.isErr()) {
       return Result.Err(rAuthType);
     }
@@ -401,7 +407,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (rGwCtx.isErr()) {
       return Result.Err(rGwCtx);
     }
-    const rAuthType = await ctx.conn.conn.Ok().authType();
+    const rAuthType = await authTypeFromUri(this.logger, uri); //ctx.conn.conn.Ok().authType();
     if (rAuthType.isErr()) {
       return Result.Err(rAuthType);
     }
@@ -481,13 +487,8 @@ function getStoreTypeGateway(sthis: SuperThis, uri: URI): StoreTypeGateway {
 interface ConnectionItem {
   // readonly uri: URI;
   // readonly matchRes: MatchResult;
-  readonly connection: ResolveOnce<Result<MsgConnected>>;
+  readonly connection: ResolveOnce<Result<VirtualConnected>>;
   readonly trackPuts: Set<string>;
-}
-
-export interface AuthedConnection {
-  readonly conn: Result<MsgConnectedAuth>;
-  readonly citem: ConnectionItem;
 }
 
 // const keyedConnections = new KeyedResolvOnce<Connection>();
@@ -527,7 +528,7 @@ export class FireproofCloudGateway implements SerdeGateway {
     ret.defParam("protocol", "wss");
     const retURI = ret.URI();
     this.registerConnectionURI(retURI, () => ({
-      connection: new ResolveOnce<Result<MsgConnected>>(),
+      connection: new ResolveOnce<Result<VirtualConnected>>(),
       trackPuts: new Set<string>(),
     }));
     return Result.Ok(retURI);
@@ -583,8 +584,12 @@ export class FireproofCloudGateway implements SerdeGateway {
       return this.logger.Error().Err(rConn).Msg("Error in getCloudConnection").ResultError();
     }
     const conn = rConn.conn.Ok();
-    const rAuth = await conn.msgConnAuth();
-    await conn.close(rAuth.Ok());
+    const rAuth = await authTypeFromUri(this.logger, uri);
+    if (rAuth.isErr()) {
+      this.logger.Error().Err(rAuth).Msg("Error in authTypeFromUri").ResultError();
+    } else {
+      await conn.close(buildReqClose(this.sthis, rAuth.Ok(), conn.conn));
+    }
     this.#connectionURIs.unget(this.matchURI(uri)());
     return Result.Ok(undefined);
   }
@@ -616,33 +621,31 @@ export class FireproofCloudGateway implements SerdeGateway {
     this.#connectionURIs.get(this.matchURI(uri)).once(itemFactory);
   }
 
-  async getCloudConnectionItem(logger: Logger, uri: URI): Promise<AuthedConnection> {
+  async getCloudConnectionItem(logger: Logger, uri: URI): Promise<VConnItems> {
     const item = this.#connectionURIs.get(this.matchURI(uri));
     const bestMatch = item.value;
     if (!item.ready || !bestMatch) {
       return { conn: logger.Error().Url(uri).Msg("Connection not ready").ResultError(), citem: {} as ConnectionItem };
     }
-    const conn = await bestMatch.connection.once(async () => {
+    const rConn = await bestMatch.connection.once(async () => {
       const rParams = uri.getParamsResult({
         protocol: "https",
       });
       if (rParams.isErr()) {
-        return this.logger.Error().Url(uri).Err(rParams).Msg("getCloudConnection:err").ResultError<MsgConnected>();
+        return this.logger.Error().Url(uri).Err(rParams).Msg("getCloudConnection:err").ResultError<VirtualConnected>();
       }
       const params = rParams.Ok();
       const rAuth = await authTypeFromUri(this.logger, uri);
       if (rAuth.isErr()) {
-        return Result.Err<MsgConnected>(rAuth);
+        return Result.Err<VirtualConnected>(rAuth);
       }
       const qOpen = buildReqOpen(this.sthis, rAuth.Ok(), {});
 
       const cUrl = uri.build().protocol(params.protocol).cleanParams().URI();
-      return Msger.connect(this.sthis, rAuth.Ok(), cUrl, qOpen);
+      return Msger.connect(this.sthis, cUrl, qOpen);
     });
-    if (conn.isErr()) {
-      return { conn: Result.Err(conn), citem: bestMatch };
-    }
-    return { conn: Result.Ok(conn.Ok().attachAuth(() => authTypeFromUri(this.logger, uri))), citem: bestMatch };
+    return { conn: rConn, citem: bestMatch };
+    // return { conn: Result.Ok(rConn.Ok().attachAuth(() => authTypeFromUri(this.logger, uri))), citem: bestMatch };
   }
 
   async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {

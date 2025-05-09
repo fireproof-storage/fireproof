@@ -31,6 +31,13 @@ export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
     });
   }
 
+  async del(id: string): Promise<void> {
+    const db = await this._prepare();
+    const tx = db.transaction(["bag"], "readwrite");
+    await tx.objectStore("bag").delete(id);
+    await tx.done;
+  }
+
   async get(id: string): Promise<rt.kb.KeysItem | rt.kb.V1StorageKeyItem | undefined> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readonly");

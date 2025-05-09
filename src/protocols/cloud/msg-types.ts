@@ -61,19 +61,30 @@ export interface FPCloudClaim extends JWTPayload {
   readonly selected: TenantLedger;
 }
 
+// export interface FPWaitTokenResult {
+//   readonly type: "FPWaitTokenResult";
+//   readonly token: string;
+// }
+
+// export function isFPWaitTokenResult(r: unknown): r is FPWaitTokenResult {
+//   return typeof r === "object" && !!r && (r as FPWaitTokenResult).type === "FPWaitTokenResult";
+// }
+
 export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
 
 export type MsgWithError<T extends MsgBase> = T | ErrorMsg;
 
-export interface PreSignedMsg extends MsgWithTenantLedger<MsgWithConnAuth> {
+export interface PreSignedMsg extends MsgWithTenantLedger<MsgWithConn> {
   readonly methodParam: MethodSignedUrlParam;
   readonly urlParam: SignedUrlParam;
 }
 
 export interface RequestOpts {
   readonly waitFor: (msg: MsgBase) => boolean;
+  readonly noConn?: boolean; // if true, no connection is required
   readonly pollInterval?: number; // 1000ms
   readonly timeout?: number; // ms
+  readonly noRetry?: boolean;
 }
 
 export interface EnDeCoder {
@@ -173,23 +184,40 @@ export function MsgIsTid(msg: MsgBase, tid: string): boolean {
   return !msg.tid || msg.tid === tid;
 }
 
-type MsgWithConn<T extends MsgBase = MsgBase> = T & { readonly conn: QSId };
+export interface MsgConnAuth {
+  readonly conn: QSId;
+  readonly auth: AuthType;
+}
 
-export type MsgWithConnAuth<T extends MsgBase = MsgBase> = MsgWithConn<T> & { readonly auth: AuthType };
+export type MsgWithConn<T extends MsgBase = MsgBase> = T & { readonly conn: QSId };
+
+export type MsgWithOptionalConn<T extends MsgBase = MsgBase> = T & { readonly conn?: Partial<QSId> };
 
 // type MsgWithOptionalConn<T extends MsgBase = MsgBase> = T & { readonly conn?: QSId };
 
 // export type MsgWithOptionalConnAuth<T extends MsgBase = MsgBase> = MsgWithOptionalConn<T> & { readonly auth: AuthType };
 
-export type MsgWithOptionalTenantLedger<T extends MsgWithConnAuth> = T & { readonly tenant?: Partial<TenantLedger> };
-export type MsgWithTenantLedger<T extends MsgWithConnAuth> = T & { readonly tenant: TenantLedger };
+export type MsgWithOptionalTenantLedger<T extends MsgWithConn> = T & { readonly tenant?: Partial<TenantLedger> };
+export type MsgWithTenantLedger<T extends MsgWithOptionalConn> = T & { readonly tenant: TenantLedger };
 
-export interface ErrorMsg extends MsgBase {
+export type ErrorMsg = ErrorMsgBase | NotReadyErrorMsg;
+
+export interface ErrorMsgBase extends MsgWithOptionalConn {
   readonly type: "error";
   readonly src: unknown;
   readonly message: string;
   readonly body?: string;
   readonly stack?: string[];
+}
+
+export interface NotReadyErrorMsg extends ErrorMsgBase {
+  readonly reason: "not-ready";
+  readonly src: "not-ready";
+  readonly message: "Not Ready";
+}
+
+export function MsgIsNotReadyError(msg: MsgBase): msg is NotReadyErrorMsg {
+  return MsgIsError(msg) && (msg as NotReadyErrorMsg).reason === "not-ready";
 }
 
 export function MsgIsError(rq: MsgBase): rq is ErrorMsg {
@@ -380,13 +408,13 @@ export interface ResChat extends MsgWithConn {
   readonly targets: QSId[];
 }
 
-export function buildReqChat(sthis: NextId, auth: AuthType, conn: QSId, message: string, targets?: QSId[]): ReqChat {
+export function buildReqChat(sthis: NextId, auth: AuthType, conn: Partial<QSId>, message: string, targets?: QSId[]): ReqChat {
   return {
     tid: sthis.nextId().str,
     type: "reqChat",
     version: VERSION,
     auth,
-    conn,
+    conn: conn as QSId, // to build on ReqOpenConn is fine
     message,
     targets: targets ?? [],
   };
@@ -463,23 +491,23 @@ export function MsgIsResGestalt(msg: MsgBase): msg is ResGestalt {
   return msg.type === "resGestalt";
 }
 
-export interface ReqOpenConnection {
-  // readonly key: TenantLedger;
-  readonly reqId?: string;
-  readonly resId?: string; // for double open
-}
+// export interface ReqOpenConnection {
+//   // readonly key: TenantLedger;
+//   readonly reqId?: string;
+//   readonly resId?: string; // for double open
+// }
 
 export interface ReqOpenConn {
   readonly reqId: string;
   readonly resId?: string;
 }
 
-export interface ReqOpen extends MsgBase {
+export interface ReqOpen extends Omit<MsgWithConn, "conn"> {
   readonly type: "reqOpen";
   readonly conn: ReqOpenConn;
 }
 
-export function buildReqOpen(sthis: NextId, auth: AuthType, conn: ReqOpenConnection): ReqOpen {
+export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>): ReqOpen {
   return {
     tid: sthis.nextId().str,
     auth,
@@ -497,7 +525,7 @@ export function buildReqOpen(sthis: NextId, auth: AuthType, conn: ReqOpenConnect
 //   return msg.type === "reqOpen" && !!msg.conn && !!msg.conn.reqId;
 // }
 
-export function MsgIsReqOpen(imsg: MsgBase): imsg is MsgWithConn<ReqOpen> {
+export function MsgIsReqOpen(imsg: MsgBase): imsg is ReqOpen {
   const msg = imsg as MsgWithConn<ReqOpen>;
   return msg.type === "reqOpen" && !!msg.conn && !!msg.conn.reqId;
 }
@@ -512,7 +540,7 @@ export function MsgIsWithConn<T extends MsgBase>(msg: T): msg is MsgWithConn<T> 
   return mwc && !!(mwc as QSId).reqId && !!(mwc as QSId).resId;
 }
 
-export function MsgIsWithConnAuth<T extends MsgBase>(msg: T): msg is MsgWithConnAuth<T> {
+export function MsgIsWithConnAuth<T extends MsgBase>(msg: T): msg is MsgWithConn<T> {
   return MsgIsWithConn(msg) && !!msg.auth && typeof msg.auth.type === "string";
 }
 
@@ -624,9 +652,9 @@ export function buildErrorMsg(
   return msg;
 }
 
-export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTenantLedger<MsgWithConnAuth<T>> {
+export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTenantLedger<MsgWithConn<T>> {
   if (MsgIsWithConnAuth(msg)) {
-    const t = (msg as MsgWithTenantLedger<MsgWithConnAuth<T>>).tenant;
+    const t = (msg as MsgWithTenantLedger<MsgWithConn<T>>).tenant;
     return !!t && !!t.tenant && !!t.ledger;
   }
   return false;
@@ -642,12 +670,18 @@ export interface SignedUrlParams {
 
 export type MethodSignedUrlParams = MethodParams & SignedUrlParams;
 
-export type ReqSignedUrlWithoutMethodParams = SignedUrlParams & MsgWithTenantLedger<MsgWithConnAuth>;
-export type ReqSignedUrl = MethodSignedUrlParams & MsgWithTenantLedger<MsgWithConnAuth>;
+export type ReqSignedUrlWithoutMethodParams = SignedUrlParams & MsgWithTenantLedger<MsgWithConn>;
+export type ReqSignedUrl = MethodSignedUrlParams & MsgWithTenantLedger<MsgWithOptionalConn>;
 
 export interface GwCtx {
   readonly tid?: string;
   readonly conn: QSId;
+  readonly tenant: TenantLedger;
+}
+
+export interface ReqGwCtx {
+  readonly tid?: string;
+  readonly conn: Partial<QSId>;
   readonly tenant: TenantLedger;
 }
 

@@ -190,24 +190,32 @@ export class Loader implements Loadable {
     for (const { value: rvalue } of this.cidCache.values()) {
       if (rvalue.isErr()) {
         this.logger.Error().Err(rvalue).Msg("error loading car");
-        return this;
+        return;
       }
       const value = rvalue.Ok();
       if (isCarBlockItemStale(value)) {
         this.cidCache.unget(value.cid.toString());
-        staleLoadcars.push(
-          this.maxConcurrentCarReader(() =>
-            this.loadCar(value.cid, store).then((fpcar) => {
-              if (isCarBlockItemStale(fpcar)) {
-                this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
-              }
-              return Promise.resolve(fpcar);
-            }),
-          ),
-        );
+        const x = this.loadCar(value.cid, store)
+          .then((fpcar) => {
+            if (isCarBlockItemStale(fpcar)) {
+              this.logger.Warn().Any({ cid: value.cid.toString(), type: value.item.type }).Msg("is stale");
+            }
+            return Promise.resolve(fpcar);
+          })
+          .catch((e) => {
+            this.logger
+              .Warn()
+              .Err(e)
+              .Any({
+                cid: value.cid.toString(),
+              })
+              .Msg("error loading car");
+            return Promise.reject(e);
+          });
+        staleLoadcars.push(x);
       }
     }
-    await Promise.all(staleLoadcars);
+    await Promise.allSettled(staleLoadcars);
   }
 
   async attach(attachable: Attachable): Promise<Attached> {
@@ -258,32 +266,45 @@ export class Loader implements Loadable {
     const codec = (await localCarStore.active.keyedCrypto()).codec();
     const ancestorDbMetas = new Map<string, AnyLink>();
     // for (const cargroup of localDbMeta) {
-    for (const carId of localDbMeta) {
-      const car = await this.storesLoadCar(carId, localCarStore);
-      const rStore = await exception2Result(
-        async () =>
-          await store.active.car.save({
-            cid: carId,
-            bytes: await codec.encode(car.bytes),
-          }),
-      );
-      if (rStore.isErr()) {
-        this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
-      }
-      if (car.item.value) {
-        for (const ancestorFp of car.item.value.car.blocks.filter((i) => isFPBlockItem(i))) {
-          if (!isFPBlockItem<BlockItem>(ancestorFp)) {
-            continue;
-          }
-          ancestorFp.item.value.fp.cars.forEach((aCids) => {
-            aCids.forEach((aCid) => ancestorDbMetas.set(aCid.toString(), aCid));
-          });
-          // for (const aCid of ) {
-          // }
+    const myCids = new Set<string>(localDbMeta.map((i) => i.toString()));
+    await Promise.allSettled(
+      localDbMeta.map(async (carId) => {
+        // console.log("ensureAttachedStore", carId.toString(), localDbMeta.length);
+        const car = await this.storesLoadCar(carId, localCarStore);
+        const rStore = await exception2Result(
+          async () =>
+            await store.active.car.save({
+              cid: carId,
+              bytes: await codec.encode(car.bytes),
+            }),
+        );
+        if (rStore.isErr()) {
+          this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
         }
-      }
-      // }
-    }
+        if (car.item.value) {
+          const ancestorBlocks = car.item.value.car.blocks.filter((i) => isFPBlockItem(i));
+          // console.log("ensureAttachedStore:ancestorBlocks:", carId.toString(), localDbMeta.length, ancestorBlocks.length);
+          for (const ancestorFp of ancestorBlocks) {
+            if (!isFPBlockItem<BlockItem>(ancestorFp)) {
+              continue;
+            }
+            const ancestorCars = ancestorFp.item.value.fp.cars;
+            ancestorCars.forEach((aCids) => {
+              aCids.forEach((aCid) => {
+                const aCidStr = aCid.toString();
+                if (myCids.has(aCidStr)) {
+                  return;
+                }
+                ancestorDbMetas.set(aCidStr, aCid);
+              });
+            });
+          }
+        }
+        // }
+      }),
+    );
+
+    // console.log("ensureAttachedStore:ancestorDbMetas:", localDbMeta.length, ancestorDbMetas.size);
     if (ancestorDbMetas.size > 0) {
       await this.ensureAttachedStore(store, Array.from(ancestorDbMetas.values()));
     }
@@ -329,6 +350,10 @@ export class Loader implements Loadable {
         first: () => {
           resolve(this.currentMeta);
         },
+        error: (e) => {
+          this.logger.Error().Err(e).Msg("error waiting for first meta");
+          resolve(this.currentMeta);
+        },
       });
     });
   }
@@ -336,51 +361,57 @@ export class Loader implements Loadable {
   handleMetaStream(
     reader: ReadableStreamDefaultReader<DbMeta[]>,
     local: ActiveStore,
-    opts?: { meta?: DbMeta; origin?: URI; first: (v: CarGroup) => void },
+    opts?: { meta?: DbMeta; origin?: URI; first: (v: CarGroup) => void; error: (e: Error) => void },
   ): void {
-    reader.read().then((o) => {
-      const { done, value } = o;
-      if (done) {
-        return;
-      }
-      // console.log("handleMetaStream", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname, value);
-      let pHandle: Promise<CarGroup> | undefined;
-      if (opts?.meta) {
-        pHandle = this.handleDbMetasFromStore([opts?.meta, ...(value || [])], local);
-      } else if (value) {
-        // console.log("handleMetaStream", this.id, value);
-        pHandle = this.handleDbMetasFromStore(value, local);
-      }
-      if (pHandle) {
-        pHandle
-          .then((dbMeta) => {
-            if (!dbMeta.length) {
-              return;
-            }
-            // console.log(
-            //   "new-meta",
-            //   this.id,
-            //   local.local().active.meta.url().pathname,
-            //   opts?.origin?.pathname,
-            //   value.map((i) => i.cars.map((i) => i.toString())).flat(2),
-            //   dbMeta.map((i) => i.toString()),
-            // );
-            this.currentMeta = dbMeta;
-          })
-          .catch((e) => {
-            this.logger.Error().Err(e).Msg("error handling meta stream");
-          })
-          .finally(() => {
-            opts?.first(this.currentMeta ?? []);
-            this.handleMetaStream(reader, local);
-            // console.log("done-reader" + local.active.car.url().pathname);
-            // reader.cancel("done-read");
-          });
-      } else {
-        // reader.cancel("done");
-        this.handleMetaStream(reader, local);
-      }
-    });
+    reader
+      .read()
+      .then((o) => {
+        const { done, value } = o;
+        if (done) {
+          return;
+        }
+        // console.log("handleMetaStream", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname, value);
+        let pHandle: Promise<CarGroup> | undefined;
+        if (opts?.meta) {
+          pHandle = this.handleDbMetasFromStore([opts?.meta, ...(value || [])], local);
+        } else if (value) {
+          // console.log("handleMetaStream", this.id, value);
+          pHandle = this.handleDbMetasFromStore(value, local);
+        }
+        if (pHandle) {
+          pHandle
+            .then((dbMeta) => {
+              if (!dbMeta.length) {
+                return;
+              }
+              // console.log(
+              //   "new-meta",
+              //   this.id,
+              //   local.local().active.meta.url().pathname,
+              //   opts?.origin?.pathname,
+              //   value.map((i) => i.cars.map((i) => i.toString())).flat(2),
+              //   dbMeta.map((i) => i.toString()),
+              // );
+              this.currentMeta = dbMeta;
+            })
+            .catch((e) => {
+              this.logger.Error().Err(e).Msg("error handling meta stream");
+            })
+            .finally(() => {
+              opts?.first(this.currentMeta ?? []);
+              this.handleMetaStream(reader, local);
+              // console.log("done-reader" + local.active.car.url().pathname);
+              // reader.cancel("done-read");
+            });
+        } else {
+          // reader.cancel("done");
+          this.handleMetaStream(reader, local);
+        }
+      })
+      .catch((e) => {
+        // console.error("handleMetaStream", e);
+        opts?.error(e);
+      });
   }
 
   async close() {

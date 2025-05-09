@@ -6,18 +6,20 @@ import {
   NextId,
   ResOptionalSignedUrl,
   MsgTypesCtx,
-  MsgWithConnAuth,
   SignedUrlParam,
   MethodSignedUrlParam,
   ResSignedUrl,
   VERSION,
   ReqSignedUrl,
   MethodSignedUrlParams,
+  MsgWithConn,
+  MsgWithOptionalConn,
+  ReqGwCtx,
 } from "./msg-types.js";
 import { V2SerializedMetaKey } from "../../runtime/meta-key-hack.js";
 
 /* Put Meta */
-export interface ReqPutMeta extends MsgWithTenantLedger<MsgWithConnAuth> {
+export interface ReqPutMeta extends MsgWithTenantLedger<MsgWithOptionalConn> {
   readonly type: "reqPutMeta";
   readonly methodParam: MethodSignedUrlParam;
   readonly urlParam: SignedUrlParam;
@@ -29,14 +31,14 @@ export interface ResPutMetaVal {
   readonly meta: V2SerializedMetaKey;
 }
 
-export type ResPutMeta = ResPutMetaVal & ResSignedUrl & MsgWithTenantLedger<MsgWithConnAuth>;
+export type ResPutMeta = ResPutMetaVal & ResSignedUrl & MsgWithTenantLedger<MsgWithConn>;
 
 export function buildReqPutMeta(
   sthis: NextId,
   auth: AuthType,
   signedUrlParam: SignedUrlParam,
   meta: V2SerializedMetaKey,
-  gwCtx: GwCtx,
+  gwCtx: ReqGwCtx,
 ): ReqPutMeta {
   return {
     auth,
@@ -59,7 +61,7 @@ export function MsgIsReqPutMeta(msg: MsgBase): msg is ReqPutMeta {
 
 export function buildResPutMeta(
   _msgCtx: MsgTypesCtx,
-  req: MsgWithTenantLedger<MsgWithConnAuth<ReqPutMeta>>,
+  req: MsgWithTenantLedger<MsgWithConn<ReqPutMeta>>,
   meta: V2SerializedMetaKey,
   signedUrl: string,
 ): ResPutMeta {
@@ -82,7 +84,7 @@ export function MsgIsResPutMeta(qs: MsgBase): qs is ResPutMeta {
 }
 
 /* Bind Meta */
-export interface BindGetMeta extends MsgWithTenantLedger<MsgWithConnAuth & ReqSignedUrl> {
+export interface BindGetMeta extends MsgWithTenantLedger<MsgWithOptionalConn & ReqSignedUrl> {
   readonly type: "bindGetMeta";
   // readonly methodParams: MethodSignedUrlParam;
   // readonly params: SignedUrlParam;
@@ -92,12 +94,12 @@ export function MsgIsBindGetMeta(msg: MsgBase): msg is BindGetMeta {
   return msg.type === "bindGetMeta";
 }
 
-export interface EventGetMeta extends MsgWithTenantLedger<MsgWithConnAuth>, ResSignedUrl {
+export interface EventGetMeta extends MsgWithTenantLedger<MsgWithConn>, Omit<ResSignedUrl, "conn"> {
   readonly type: "eventGetMeta";
   readonly meta: V2SerializedMetaKey;
 }
 
-export function buildBindGetMeta(sthis: NextId, auth: AuthType, msp: MethodSignedUrlParams, gwCtx: GwCtx): BindGetMeta {
+export function buildBindGetMeta(sthis: NextId, auth: AuthType, msp: MethodSignedUrlParams, gwCtx: ReqGwCtx): BindGetMeta {
   return {
     auth,
     ...gwCtx,
@@ -110,7 +112,7 @@ export function buildBindGetMeta(sthis: NextId, auth: AuthType, msp: MethodSigne
 
 export function buildEventGetMeta(
   _msgCtx: MsgTypesCtx,
-  req: MsgWithTenantLedger<MsgWithConnAuth<ReqSignedUrl>>,
+  req: MsgWithTenantLedger<MsgWithConn<ReqSignedUrl>>,
   meta: V2SerializedMetaKey,
   gwCtx: GwCtx,
   signedUrl: string,
@@ -134,7 +136,7 @@ export function MsgIsEventGetMeta(qs: MsgBase): qs is EventGetMeta {
 }
 
 /* Del Meta */
-export interface ReqDelMeta extends MsgWithTenantLedger<MsgWithConnAuth> {
+export interface ReqDelMeta extends MsgWithTenantLedger<MsgWithOptionalConn> {
   readonly type: "reqDelMeta";
   readonly urlParam: SignedUrlParam;
   readonly meta?: V2SerializedMetaKey;
@@ -144,7 +146,7 @@ export function buildReqDelMeta(
   sthis: NextId,
   auth: AuthType,
   param: SignedUrlParam,
-  gwCtx: GwCtx,
+  gwCtx: ReqGwCtx,
   meta?: V2SerializedMetaKey,
 ): ReqDelMeta {
   return {
@@ -164,13 +166,13 @@ export function MsgIsReqDelMeta(msg: MsgBase): msg is ReqDelMeta {
   return msg.type === "reqDelMeta";
 }
 
-export interface ResDelMeta extends MsgWithTenantLedger<MsgWithConnAuth>, ResOptionalSignedUrl {
+export interface ResDelMeta extends MsgWithTenantLedger<MsgWithConn>, ResOptionalSignedUrl {
   readonly type: "resDelMeta";
 }
 
 export function buildResDelMeta(
   // msgCtx: MsgTypesCtx,
-  req: MsgWithTenantLedger<MsgWithConnAuth<ReqDelMeta>>,
+  req: MsgWithTenantLedger<MsgWithConn<ReqDelMeta>>,
   param: SignedUrlParam,
   signedUrl?: string,
 ): ResDelMeta {

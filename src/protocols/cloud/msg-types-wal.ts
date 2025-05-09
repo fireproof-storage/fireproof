@@ -11,7 +11,7 @@ import {
   MsgIsTenantLedger,
   MsgWithTenantLedger,
   MsgTypesCtx,
-  MsgWithConnAuth,
+  MsgWithConn,
 } from "./msg-types.js";
 import { CalculatePreSignedUrl } from "./msg-types-data.js";
 
@@ -38,10 +38,10 @@ export function MsgIsResGetWAL(msg: MsgBase): msg is ResGetWAL {
 
 export function buildResGetWAL(
   msgCtx: MsgTypesCtx,
-  req: MsgWithTenantLedger<MsgWithConnAuth<ReqGetWAL>>,
+  req: MsgWithTenantLedger<MsgWithConn<ReqGetWAL>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResGetWAL>> {
-  return buildRes<MsgWithTenantLedger<MsgWithConnAuth<ReqGetWAL>>, ResGetWAL>(
+  return buildRes<MsgWithTenantLedger<MsgWithConn<ReqGetWAL>>, ResGetWAL>(
     { method: "GET", store: "wal" },
     "resGetWAL",
     msgCtx,
@@ -73,10 +73,10 @@ export function MsgIsResPutWAL(msg: MsgBase): msg is ResPutWAL {
 
 export function buildResPutWAL(
   msgCtx: MsgTypesCtx,
-  req: MsgWithTenantLedger<MsgWithConnAuth<ReqPutWAL>>,
+  req: MsgWithTenantLedger<MsgWithConn<ReqPutWAL>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResPutWAL>> {
-  return buildRes<MsgWithTenantLedger<MsgWithConnAuth<ReqPutWAL>>, ResPutWAL>(
+  return buildRes<MsgWithTenantLedger<MsgWithConn<ReqPutWAL>>, ResPutWAL>(
     { method: "PUT", store: "wal" },
     "resPutWAL",
     msgCtx,
@@ -107,10 +107,10 @@ export function MsgIsResDelWAL(msg: MsgBase): msg is ResDelWAL {
 
 export function buildResDelWAL(
   msgCtx: MsgTypesCtx,
-  req: MsgWithTenantLedger<MsgWithConnAuth<ReqDelWAL>>,
+  req: MsgWithTenantLedger<MsgWithConn<ReqDelWAL>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResDelWAL>> {
-  return buildRes<MsgWithTenantLedger<MsgWithConnAuth<ReqDelWAL>>, ResDelWAL>(
+  return buildRes<MsgWithTenantLedger<MsgWithConn<ReqDelWAL>>, ResDelWAL>(
     { method: "DELETE", store: "wal" },
     "resDelWAL",
     msgCtx,
