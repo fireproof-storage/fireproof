@@ -21,6 +21,7 @@ import { Env } from "./env.js";
 import { WSRoom } from "../ws-room.js";
 import { FPRoomDurableObject } from "./server.js";
 import { ConnItem } from "../msg-dispatch.js";
+import { Writable } from "../../../src/utils.js";
 import { envKeyDefaults } from "../../../src/runtime/sts-service/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -88,14 +89,14 @@ class CFWSRoom implements WSRoom {
       const conns = getWebSockets();
       const res = conns
         .map((i) => {
-          const o = i.deserializeAttachment();
-          if (!o.conn) {
-            return;
-          }
-
+          const o = i.deserializeAttachment() as ConnItem;
+          // if (!o.conns) {
+          //   return;
+          // }
           // console.log("getConns", o);
           return {
-            conn: o.conn,
+            id: o.id,
+            conns: o.conns ?? [],
             touched: new Date(),
             ws: new WSContextWithId(o.id, webSocket2WSContextInit(i)),
           } satisfies ConnItem;
@@ -109,42 +110,58 @@ class CFWSRoom implements WSRoom {
     }
     // throw new Error("Method not implemented.");
   }
-  removeConn(conn: ps.cloud.QSId): void {
-    if (!this.isWebsocket) {
-      const idx = this.notWebSockets.findIndex((i) => ps.cloud.qsidEqual(i.conn, conn));
-      if (idx >= 0) {
-        this.notWebSockets.splice(idx, 1);
+  removeConn(...conns: ps.cloud.QSId[]): void {
+    for (const conn of conns) {
+      if (!this.isWebsocket) {
+        const idx = this.notWebSockets.findIndex((i) => i.conns.find((c) => ps.cloud.qsidEqual(c, conn)));
+        if (idx >= 0) {
+          this.notWebSockets.splice(idx, 1);
+        }
+        return;
       }
-      return;
+      const found = this.getConns().find((i) => i.conns.find((c) => ps.cloud.qsidEqual(c, conn)));
+      if (!found) {
+        return;
+      }
+      // console.log("removeConn", this.id, conn);
+      const s = found.ws.raw?.deserializeAttachment() as Writable<ConnItem<WebSocket>>;
+      if (s && s.conns) {
+        s.conns = s.conns.filter((c) => !ps.cloud.qsidEqual(c, conn));
+      }
+      found.ws.raw?.serializeAttachment(s);
     }
-    const found = this.getConns().find((i) => ps.cloud.qsidEqual(i.conn, conn));
-    if (!found) {
-      return;
-    }
-    // console.log("removeConn", this.id, conn);
-    const s = found.ws.raw?.deserializeAttachment();
-    delete s.conn;
-    found.ws.raw?.serializeAttachment(s);
 
     // throw new Error("Method not implemented.");
   }
   addConn(ws: WSContextWithId<WebSocket>, conn: ps.cloud.QSId): ps.cloud.QSId {
+    const id = this.sthis.nextId(12).str;
     if (!this.isWebsocket) {
-      this.notWebSockets.push({ conn, touched: new Date(), ws });
+      this.notWebSockets.push({ id, conns: [conn], touched: new Date(), ws } satisfies ConnItem<WebSocket>);
       return conn;
     }
-    const x = ws.raw?.deserializeAttachment();
-    ws.raw?.serializeAttachment({ ...x, conn });
+    if (!ws.raw) {
+      throw new Error("CFWSRoom.addConn: missing raw WebSocket");
+    }
+    const preSockAttach = {
+      conns: [],
+      ...ws.raw.deserializeAttachment(),
+    } as ConnItem<WebSocket>;
+    const sockAttachment = {
+      ...preSockAttach,
+      conns: [...preSockAttach.conns, conn],
+    };
+    ws.raw?.serializeAttachment(sockAttachment);
     return conn;
   }
-  isConnected<T extends ps.cloud.MsgBase>(msg: T): msg is ps.cloud.MsgWithConnAuth<T> {
+  isConnected<T extends ps.cloud.MsgBase>(msg: T): msg is ps.cloud.MsgWithConn<T> {
     if (!ps.cloud.MsgIsWithConn(msg)) {
       return false;
     }
     if (!this.isWebsocket) {
       return true;
     }
-    return !!this.getConns().find((i) => ps.cloud.qsidEqual(i.conn, msg.conn));
+    const findConn = !!this.getConns().find((i) => i.conns.find((c) => ps.cloud.qsidEqual(c, msg.conn)));
+    return findConn;
   }
 
   readonly events = {

@@ -530,7 +530,7 @@ describe("sync", () => {
     );
 
     // await waitIdle.wait(dbs);
-    await sleep(500);
+    await sleep(1000);
     await Promise.all(
       dbs.map(async (tdb) => {
         const rows = await tdb.db.allDocs();

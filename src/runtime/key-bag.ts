@@ -426,7 +426,17 @@ export interface KeyBagOpts {
 export interface KeyBagProvider {
   get(id: string): Promise<V1StorageKeyItem | KeysItem | undefined>;
   set(item: KeysItem): Promise<void>;
+  del(id: string): Promise<void>;
 }
+
+export function isV1StorageKeyItem(item: V1StorageKeyItem | KeysItem): item is V1StorageKeyItem {
+  return !!(item as V1StorageKeyItem).key;
+}
+
+export function isKeysItem(item: V1StorageKeyItem | KeysItem): item is KeysItem {
+  return !!(item as KeysItem).keys;
+}
+
 export interface KeyBagRuntime {
   readonly url: URI;
   readonly crypto: CryptoRuntime;

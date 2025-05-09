@@ -43,7 +43,7 @@ type ReqPutWAL = ps.cloud.ReqPutWAL;
 type ReqGestalt = ps.cloud.ReqGestalt;
 type ReqChat = ps.cloud.ReqChat;
 type ReqClose = ps.cloud.ReqClose;
-type MsgWithConnAuth<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConn<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConn<T>;
 type BindGetMeta = ps.cloud.BindGetMeta;
 type ReqDelMeta = ps.cloud.ReqDelMeta;
 type ReqPutMeta = ps.cloud.ReqPutMeta;
@@ -58,15 +58,15 @@ type ReqPutMeta = ps.cloud.ReqPutMeta;
 export function ensureTendantLedger<T extends ps.cloud.MsgBase>(
   fn: (
     ctx: MsgDispatcherCtx,
-    msg: ps.cloud.MsgWithOptionalTenantLedger<MsgWithConnAuth<T>>,
+    msg: ps.cloud.MsgWithOptionalTenantLedger<MsgWithConn<T>>,
   ) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>>,
   // right: "read" | "write" = "write"
-): (ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<T>) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>> {
+): (ctx: MsgDispatcherCtx, msg: MsgWithConn<T>) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>> {
   return async (ctx, msg) => {
     if (!ps.cloud.isAuthTypeFPCloud(msg.auth)) {
       return buildErrorMsg(ctx, msg, new Error("ensureTendantLedger: needs auth with claim"));
     }
-    const optionalTenantLedger = msg as ps.cloud.MsgWithOptionalTenantLedger<MsgWithConnAuth<T>>;
+    const optionalTenantLedger = msg as ps.cloud.MsgWithOptionalTenantLedger<MsgWithConn<T>>;
     const tl = {
       tenant: optionalTenantLedger.tenant?.tenant ?? msg.auth.params.claim.selected.tenant,
       ledger: optionalTenantLedger.tenant?.ledger ?? msg.auth.params.claim.selected.ledger,
@@ -124,27 +124,44 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
     },
     {
       match: MsgIsReqClose,
-      fn: (ctx, msg: MsgWithConnAuth<ReqClose>) => {
+      fn: (ctx, msg: MsgWithConn<ReqClose>) => {
         ctx.wsRoom.removeConn(msg.conn);
         return buildResClose(msg, msg.conn);
       },
     },
     {
       match: MsgIsReqChat,
-      fn: (ctx, msg: MsgWithConnAuth<ReqChat>) => {
-        const conns = ctx.wsRoom.getConns(msg.conn);
-        const ci = conns.map((c) => c.conn);
-        for (const conn of conns) {
-          if (qsidEqual(conn.conn, msg.conn)) {
-            continue;
+      fn: (ctx, msg: MsgWithConn<ReqChat>) => {
+        const connItems = ctx.wsRoom.getConns(msg.conn);
+        const ci = connItems.map((i) => i.conns).flat();
+        // console.log("ReqChat", msg.conn, connItems.length);
+        // if (!ci) {
+        //   return buildErrorMsg(ctx, msg, new Error("missing connection in chat"));
+        // }
+        for (const item of connItems) {
+          for (const conn of item.conns) {
+            if (qsidEqual(conn, msg.conn)) {
+              continue;
+            }
+            if (msg.message.startsWith("/ping")) {
+              continue;
+            }
+            // console.log("me", msg.message);
+            if (msg.message.startsWith("/close-connection")) {
+              setTimeout(() => {
+                item.ws.close();
+                ctx.wsRoom.removeConn(...item.conns);
+              }, 50);
+            }
+            //}
+            dp.send(
+              {
+                ...ctx,
+                ws: item.ws,
+              },
+              buildResChat(msg, conn, `[${msg.conn.reqId}]: ${msg.message}`, ci),
+            );
           }
-          dp.send(
-            {
-              ...ctx,
-              ws: conn.ws,
-            },
-            buildResChat(msg, conn.conn, `[${msg.conn.reqId}]: ${msg.message}`, ci),
-          );
         }
         return buildResChat(msg, msg.conn, `ack: ${msg.message}`, ci);
       },
@@ -200,13 +217,14 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
         }
         const conns = ctx.wsRoom.getConns(req.conn);
         for (const conn of conns) {
-          if (qsidEqual(conn.conn, req.conn)) {
+          const myConn = conn.conns.find((i) => qsidEqual(i, req.conn));
+          if (!myConn) {
             continue;
           }
           // pretty bad but ok for now we should be able to
           // filter by tenant and ledger on a connection level
           const res = await metaMerger(ctx).metaToSend({
-            conn: conn.conn,
+            conn: myConn,
             tenant: req.tenant,
           });
           if (res.metas.length === 0) {
@@ -222,7 +240,7 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
               req,
               res,
               {
-                conn: conn.conn,
+                conn: myConn,
                 tenant: req.tenant,
               },
               ret.signedUrl,

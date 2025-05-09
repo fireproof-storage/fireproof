@@ -11,8 +11,8 @@ import {
   GwCtx,
   MsgIsTenantLedger,
   MsgTypesCtx,
-  MsgWithConnAuth,
   PreSignedMsg,
+  MsgWithConn,
 } from "./msg-types.js";
 
 export interface ReqGetData extends ReqSignedUrl {
@@ -42,10 +42,10 @@ export interface CalculatePreSignedUrl {
 
 export function buildResGetData(
   msgCtx: MsgTypesCtx,
-  req: MsgWithConnAuth<ReqGetData>,
+  req: MsgWithConn<ReqGetData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResGetData>> {
-  return buildRes<MsgWithConnAuth<ReqGetData>, ResGetData>(
+  return buildRes<MsgWithConn<ReqGetData>, ResGetData>(
     { method: "GET", store: req.methodParam.store },
     "resGetData",
     msgCtx,
@@ -77,10 +77,10 @@ export function MsgIsResPutData(msg: MsgBase): msg is ResPutData {
 
 export function buildResPutData(
   msgCtx: MsgTypesCtx,
-  req: MsgWithConnAuth<ReqPutData>,
+  req: MsgWithConn<ReqPutData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResPutData>> {
-  return buildRes<MsgWithConnAuth<ReqPutData>, ResPutData>(
+  return buildRes<MsgWithConn<ReqPutData>, ResPutData>(
     { method: "PUT", store: req.methodParam.store },
     "resPutData",
     msgCtx,
@@ -111,10 +111,10 @@ export function MsgIsResDelData(msg: MsgBase): msg is ResDelData {
 
 export function buildResDelData(
   msgCtx: MsgTypesCtx,
-  req: MsgWithConnAuth<ReqDelData>,
+  req: MsgWithConn<ReqDelData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResDelData>> {
-  return buildRes<MsgWithConnAuth<ReqDelData>, ResDelData>(
+  return buildRes<MsgWithConn<ReqDelData>, ResDelData>(
     { method: "DELETE", store: req.methodParam.store },
     "resDelData",
     msgCtx,

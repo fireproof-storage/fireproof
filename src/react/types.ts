@@ -1,6 +1,6 @@
+// import { AppContext } from "@adviser/cement";
 import type {
   AllDocsQueryOpts,
-  Attachable,
   Attached,
   ChangesOptions,
   ClockHead,
@@ -15,7 +15,10 @@ import type {
   IndexRow,
   MapFn,
   QueryOpts,
+  rt,
+  SuperThis,
 } from "@fireproof/core";
+import { TokenAndClaims } from "../runtime/gateways/cloud/to-cloud.js";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
@@ -64,22 +67,28 @@ export interface UseDocumentResultObject<T extends DocTypes> {
   submit(e?: Event): Promise<void>;
 }
 
+export type AttachStatus = "initial" | "attaching" | "attached" | "error";
+
 export interface InitialAttachState {
   readonly state: "initial";
+  readonly ctx: WebCtxHook;
 }
 
 export interface AttachingAttachState {
   readonly state: "attaching";
+  readonly ctx: WebCtxHook;
 }
 
 export interface AttachedAttachState {
   readonly state: "attached";
   readonly attached: Attached;
+  readonly ctx: WebCtxHook;
 }
 
 export interface ErrorAttachState {
   readonly state: "error";
   readonly error: Error;
+  readonly ctx: WebCtxHook;
 }
 
 export type AttachState = InitialAttachState | AttachingAttachState | AttachedAttachState | ErrorAttachState;
@@ -98,14 +107,35 @@ export interface UseFireproof {
   readonly attach: AttachState; // changed from AttachState to function returning AttachState
 }
 
-export interface WebToCloudCtx {
-  readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
-  readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
-  readonly tokenKey: string;
-  onTokenChange(on: (token?: string) => void): void;
-  resetToken(): void;
-  setToken(token: string): void;
-  token(): string | undefined;
+export interface InitialTokenAndClaimsState {
+  readonly state: "initial";
+}
+export interface ReadyTokenAndClaimsState {
+  readonly state: "ready";
+  readonly tokenAndClaims: TokenAndClaims;
+  readonly reset: () => void;
 }
 
-export type UseFPConfig = ConfigOpts & { readonly attach?: Attachable };
+export interface WebCtxHook {
+  readonly tokenAndClaims: InitialTokenAndClaimsState | ReadyTokenAndClaimsState;
+}
+
+export interface WebToCloudCtx {
+  readonly sthis: SuperThis;
+  readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
+  readonly tokenApiURI: string; // https://dev.connect.fireproof.direct/api
+  // stores connection and token
+  keyBag?: rt.kb.KeyBagProvider;
+  // readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
+  // url param name for token
+  readonly tokenParam: string;
+
+  ready(db: Database): Promise<void>;
+
+  onTokenChange(on: (token?: TokenAndClaims) => void): void;
+  resetToken(): Promise<void>;
+  setToken(token: TokenAndClaims | string): Promise<void>;
+  token(): Promise<TokenAndClaims | undefined>;
+}
+
+export type UseFPConfig = ConfigOpts & { readonly attach?: rt.gw.cloud.ToCloudAttachable };

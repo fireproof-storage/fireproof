@@ -23,7 +23,7 @@ const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe
 type Gestalt = ps.cloud.Gestalt;
 type MsgBase = ps.cloud.MsgBase;
 type MsgerParams = ps.cloud.MsgerParams;
-type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConn<T>;
 type QSId = ps.cloud.QSId;
 
 interface ServerType {
@@ -52,19 +52,22 @@ class NodeWSRoom implements WSRoom {
   getConns(): ConnItem[] {
     return Array.from(this._conns.values());
   }
-  removeConn(conn: QSId): void {
+  removeConn(...conns: QSId[]): void {
     // console.log("removeConn", this.id, qsidKey(conn));
-    this._conns.delete(qsidKey(conn));
+    for (const conn of conns) {
+      this._conns.delete(qsidKey(conn));
+    }
   }
   addConn(ws: WSContextWithId<unknown>, conn: QSId): QSId {
     // console.log("addConn", this.id, qsidKey(conn));
     const key = qsidKey(conn);
     let ci = this._conns.get(key);
     if (!ci) {
-      ci = { ws, conn, touched: new Date() };
+      ci = { ws, conns: [], touched: new Date(), id: this.sthis.nextId(12).str };
       this._conns.set(key, ci);
     }
-    return ci.conn;
+    ci?.conns.push(conn);
+    return conn;
   }
 
   isConnected(msg: MsgBase): msg is MsgWithConnAuth<MsgBase> {

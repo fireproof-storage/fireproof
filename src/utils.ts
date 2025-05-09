@@ -26,6 +26,10 @@ import { toSortedArray } from "@adviser/cement/utils";
 //export type { Logger };
 //export { Result };
 
+export type Writable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
 const _globalLogger = new ResolveOnce();
 function globalLogger(): Logger {
   return _globalLogger.once(() => new LoggerImpl());

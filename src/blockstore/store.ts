@@ -244,8 +244,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
             return;
           }
           // console.log("gateway get error", id.str, url.Ok());
+          controller.error(this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError());
           controller.close();
-          throw this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError();
         }
         // console.log("p-2", this.myId, id.str, this.url().pathname);
         const fpMeta = (rfpEnv.Ok() as FPEnvelopeMeta).payload;

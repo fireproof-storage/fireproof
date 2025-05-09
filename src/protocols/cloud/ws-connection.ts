@@ -1,5 +1,5 @@
 import { exception2Result, Future, Logger, Result, top_uint8 } from "@adviser/cement";
-import { MsgBase, MsgIsError, buildErrorMsg, ReqOpen, WaitForTid, MsgWithError, RequestOpts, MsgIsTid } from "./msg-types.js";
+import { MsgBase, MsgIsError, buildErrorMsg, ReqOpen, WaitForTid, MsgWithError, RequestOpts } from "./msg-types.js";
 import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, MsgRawConnection, OnMsgFn, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
 import { SuperThis } from "../../types.js";
@@ -10,6 +10,65 @@ export interface WSReqOpen {
   readonly ws: WebSocket; // this WS is opened with a specific URL-Param
 }
 
+interface WaitForTidItem {
+  readonly opts: WaitForTid;
+  readonly timeout?: ReturnType<typeof setTimeout>;
+}
+
+class WaitForTids {
+  readonly waitForTids = new Map<string, WaitForTidItem>();
+
+  start(sthis: SuperThis, logger: Logger, waitFor: WaitForTid) {
+    let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
+    if (typeof waitFor.timeout === "number" && waitFor.timeout > 0) {
+      timeout = setTimeout(() => {
+        this.waitForTids.delete(waitFor.tid);
+        waitFor.future.resolve(
+          buildErrorMsg(
+            { logger, sthis },
+            {
+              tid: waitFor.tid,
+            } as MsgBase,
+            logger.Error().Any({ tid: waitFor }).Msg("Timeout").AsError(),
+          ),
+        );
+      }, waitFor.timeout);
+    }
+    // console.log("waitForTids", waitFor.tid, waitFor.timeout);
+    this.waitForTids.set(waitFor.tid, {
+      opts: waitFor,
+      timeout,
+    });
+  }
+
+  stop(tid: string) {
+    const item = this.waitForTids.get(tid);
+    if (!item) {
+      return;
+    }
+    if (item.timeout) {
+      clearTimeout(item.timeout);
+    }
+    this.waitForTids.delete(tid);
+  }
+
+  resolve(msg: MsgBase): WaitForTidItem | undefined {
+    const item = this.waitForTids.get(msg.tid);
+    if (!item) {
+      return undefined;
+    }
+    if (item.opts.waitFor(msg)) {
+      if (item.timeout) {
+        clearTimeout(item.timeout);
+      }
+      item.opts.future.resolve(msg);
+    }
+    return item;
+  }
+}
+
+const DefaultRoundTripTime = 1000;
+
 export class WSConnection extends MsgRawConnectionBase implements MsgRawConnection {
   readonly logger: Logger;
   readonly msgP: MsgerParamsWithEnDe;
@@ -19,11 +78,11 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   readonly #onMsg = new Map<string, OnMsgFn>();
   readonly #onClose = new Map<string, UnReg>();
 
-  readonly waitForTid = new Map<string, WaitForTid>();
-
-  opened = false;
+  readonly waitForTid = new WaitForTids();
 
   readonly id: string;
+
+  isReady = false;
 
   constructor(sthis: SuperThis, ws: WebSocket, msgP: MsgerParamsWithEnDe, exGestalt: ExchangedGestalt) {
     super(sthis, exGestalt);
@@ -41,24 +100,26 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       this.toMsg(buildErrorMsg(this, {} as MsgBase, err));
       onOpenFuture.resolve(Result.Err(err));
     }, this.msgP.timeout);
+
     this.ws.onopen = () => {
       onOpenFuture.resolve(Result.Ok(undefined));
-      this.opened = true;
+      this.isReady = true;
     };
     this.ws.onerror = (ierr) => {
+      // console.log("onerror", this.id, ierr);
       const err = this.logger.Error().Err(ierr).Msg("WS Error").AsError();
       onOpenFuture.resolve(Result.Err(err));
       const res = this.buildErrorMsg(this, {}, err);
       this.toMsg(res);
     };
     this.ws.onmessage = (evt) => {
-      if (!this.opened) {
+      if (!this.isReady) {
         this.toMsg(buildErrorMsg(this, {} as MsgBase, this.logger.Error().Msg("Received message before onOpen").AsError()));
       }
       this.#wsOnMessage(evt);
     };
     this.ws.onclose = () => {
-      this.opened = false;
+      this.isReady = false;
       // console.log("onclose", this.id);
       this.close().catch((ierr) => {
         const err = this.logger.Error().Err(ierr).Msg("close error").AsError();
@@ -91,26 +152,12 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       return;
     }
     const msg = rMsg.Ok();
+    this.waitForTid.resolve(msg);
     // console.log("wsOnMessage", msg, this.#onMsg.size);
-    const waitFor = this.waitForTid.get(msg.tid);
     Array.from(this.#onMsg.values()).forEach((cb) => {
       // console.log("cb-onmessage", this.id, msg, cb.toString());
       cb(msg);
     });
-    if (waitFor) {
-      if (MsgIsError(msg)) {
-        this.waitForTid.delete(msg.tid);
-        waitFor.future.resolve(msg);
-      } else if (waitFor.waitFor(msg)) {
-        // what for a specific type
-        this.waitForTid.delete(msg.tid);
-        waitFor.future.resolve(msg);
-      } else {
-        // wild-card
-        this.waitForTid.delete(msg.tid);
-        waitFor.future.resolve(msg);
-      }
-    }
   };
 
   async close(): Promise<Result<void>> {
@@ -144,17 +191,17 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
     return () => this.#onClose.delete(key);
   }
 
-  readonly activeBinds = new Map<string, ActiveStream<MsgBase, MsgBase>>();
+  readonly activeBinds = new Map<string, ActiveStream>();
   bind<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
-    const state: ActiveStream<S, Q> = {
+    const state: ActiveStream = {
       id: this.sthis.nextId().str,
       bind: {
         msg: req,
         opts,
       },
       // timeout: undefined,
-      // controller: undefined,
-    } satisfies ActiveStream<S, Q>;
+      controller: undefined,
+    } satisfies ActiveStream;
     this.activeBinds.set(state.id, state);
     return new ReadableStream<MsgWithError<S>>({
       cancel: () => {
@@ -162,21 +209,25 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
         this.activeBinds.delete(state.id);
       },
       start: (controller) => {
+        state.controller = controller; // set controller in ActiveStream
         this.onMsg<S>((msg) => {
-          if (MsgIsError(msg)) {
-            controller.enqueue(msg);
-            return;
-          }
-          if (!MsgIsTid(msg, req.tid)) {
-            return;
-          }
-          if (opts.waitFor && opts.waitFor(msg)) {
-            controller.enqueue(msg);
+          try {
+            if (MsgIsError(msg)) {
+              controller.enqueue(msg);
+              return;
+            }
+            if (!opts.waitFor) {
+              controller.enqueue(msg);
+            } else if (opts.waitFor(msg)) {
+              controller.enqueue(msg);
+            }
+          } catch (err) {
+            this.logger.Error().Err(err).Any({ msg }).Msg("Error in onMsg callback[ignored]");
           }
         });
         this.send(req);
         const future = new Future<S>();
-        this.waitForTid.set(req.tid, { tid: req.tid, future, waitFor: opts.waitFor, timeout: opts.timeout });
+        this.waitForTid.start(this.sthis, this.logger, { tid: req.tid, future, waitFor: opts.waitFor });
         future.asPromise().then((msg) => {
           if (MsgIsError(msg)) {
             // double err emitting
@@ -189,11 +240,13 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   }
 
   async request<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
-    if (!this.opened) {
-      return buildErrorMsg(this, req, this.logger.Error().Msg("Connection not open").AsError());
-    }
     const future = new Future<S>();
-    this.waitForTid.set(req.tid, { tid: req.tid, future, waitFor: opts.waitFor, timeout: opts.timeout });
+    this.waitForTid.start(this.sthis, this.logger, {
+      tid: req.tid,
+      future,
+      waitFor: opts.waitFor,
+      timeout: opts.timeout ?? DefaultRoundTripTime,
+    });
     await this.send(req);
     return future.asPromise();
   }
