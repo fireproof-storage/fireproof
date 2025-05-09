@@ -165,7 +165,9 @@ class TokenObserver {
     if (activeTokenAndClaim && activeTokenAndClaim.token !== this.currentTokenAndClaim?.token) {
       this.currentTokenAndClaim = activeTokenAndClaim;
       await this.opts.events?.changed(activeTokenAndClaim);
-      return activeTokenAndClaim;
+    }
+    if (this.currentTokenAndClaim) {
+      return this.currentTokenAndClaim;
     }
     throw logger.Error().Msg("Token not found").AsError();
   }
@@ -270,7 +272,7 @@ export function toCloud(iopts: Partial<ToCloudBase> & ToCloudRequiredOpts): ToCl
       },
     },
     context: iopts.context ?? new AppContext(),
-    strategy: iopts.strategy ?? new SimpleTokenStrategy(""),
+    strategy: iopts.strategy,
   });
 }
 
