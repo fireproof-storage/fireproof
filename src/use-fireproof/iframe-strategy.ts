@@ -1,6 +1,7 @@
-import { BuildURI, URI, Logger } from "@adviser/cement";
-import { rt } from "@fireproof/core";
+import { BuildURI, Logger } from "@adviser/cement";
+import { rt, SuperThis } from "@fireproof/core";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core/react";
+import { TokenAndClaims } from "../runtime/gateways/cloud/to-cloud.js";
 
 export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
   fpIframeOverlay() {
@@ -68,24 +69,24 @@ export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
     return ret;
   }
 
-  open(_logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
+  open(sthis: SuperThis, _logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     document.body.appendChild(this.overlayDiv(deviceId, redirectCtx.dashboardURI));
   }
-  async gatherToken(logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<string | undefined> {
+  async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<TokenAndClaims | undefined> {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    const uri = URI.from(window.location.href);
-    const uriFpToken = uri.getParam(redirectCtx.tokenKey);
-    if (uriFpToken) {
-      redirectCtx.setToken(uriFpToken);
-      logger.Debug().Any({ uriFpToken }).Msg("Token set");
-      window.location.href = uri.build().delParam(redirectCtx.tokenKey).toString();
-    }
+    // const uri = URI.from(window.location.href);
+    // const uriFpToken = uri.getParam(redirectCtx.tokenParam);
+    // if (uriFpToken) {
+    //   await redirectCtx.setToken(uriFpToken);
+    //   logger.Debug().Any({ uriFpToken }).Msg("Token set");
+    //   window.location.href = uri.build().delParam(redirectCtx.tokenParam).toString();
+    // }
     return redirectCtx.token();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async waitForToken(logger: Logger, deviceId: string): Promise<string | undefined> {
+  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<TokenAndClaims | undefined> {
     // throw new Error("waitForToken not implemented");
     return new Promise(() => {
       /* */
