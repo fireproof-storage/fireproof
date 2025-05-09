@@ -1,10 +1,10 @@
-import { ps, SuperThis } from "@fireproof/core";
-import { Result, URI } from "@adviser/cement";
-// import { HonoServer } from "./hono-server.js";
-// import { Hono } from "hono";
+import { ps, sleep, SuperThis } from "@fireproof/core";
+import { URI } from "@adviser/cement";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, wsStyle } from "./node/test-helper.js";
 import { testSuperThis } from "../test-super-this.js";
+import { VirtualConnected } from "../../src/protocols/cloud/msger.js";
+import { buildReqChat, buildReqClose, QSId } from "../../src/protocols/cloud/msg-types.js";
 
 const {
   buildReqGestalt,
@@ -34,7 +34,6 @@ const {
   MsgIsResDelMeta,
   MsgIsEventGetMeta,
   MsgIsResPutMeta,
-  MsgConnected,
 } = ps.cloud;
 type MsgBase = ps.cloud.MsgBase;
 type MsgWithError<T extends MsgBase> = ps.cloud.MsgWithError<T>;
@@ -47,7 +46,6 @@ type ResDelMeta = ps.cloud.ResDelMeta;
 type ReqDelMeta = ps.cloud.ReqDelMeta;
 type BindGetMeta = ps.cloud.BindGetMeta;
 type EventGetMeta = ps.cloud.EventGetMeta;
-type MsgConnectedAuth = ps.cloud.MsgConnectedAuth;
 
 async function refURL(sthis: SuperThis, sp: ResOptionalSignedUrl) {
   return (
@@ -101,6 +99,51 @@ describe("Connection", () => {
     ];
   // : [];
 
+  describe("ws-reconnect", () => {
+    let style: ReturnType<typeof wsStyle>;
+
+    beforeAll(async () => {
+      style = wsStyle(sthis, auth.applyAuthToURI, endpoint, msgP, my);
+
+      // sthis.env.sets((await resolveToml()).env as unknown as Record<string, string>);
+    });
+    it("reconnect", async () => {
+      const rC = await Msger.connect(sthis, style.ok.url(), msgP, {
+        reqId: "req-reconnect-test",
+      });
+      expect(rC.isOk()).toBeTruthy();
+      const c = rC.Ok(); // .attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+      // expect(c.virtualConn).toEqual({
+      //   reqId: "req-reconnect-test",
+      //   // resId: c.conn.resId,
+      // });
+
+      for (let i = 0; i < 5; i++) {
+        // console.log("reconnect-chat", i);
+        const act = await c.request(ps.cloud.buildReqChat(sthis, auth.authType, {}, "/close-connection"), {
+          waitFor: ps.cloud.MsgIsResChat,
+        });
+        expect(c.realConn).toBeInstanceOf(style.cInstance);
+        expect(c.exchangedGestalt).toEqual({
+          my,
+          remote: { ...style.remoteGestalt, id: c.exchangedGestalt?.remote.id },
+        });
+        expect(c.virtualConn).toEqual({
+          reqId: "req-reconnect-test",
+          resId: c.conn.resId,
+        });
+
+        if (!ps.cloud.MsgIsResChat(act)) {
+          assert.fail("Expected a response", JSON.stringify(act));
+        }
+        await sleep(100);
+      }
+      await c.close(buildReqClose(sthis, auth.authType, c.conn));
+    });
+
+    // const app = new Hono();
+  });
+
   describe.each(styles)(`${honoServer.name} - $name`, (styleFn) => {
     let style: ReturnType<typeof wsStyle> | ReturnType<typeof httpStyle>;
     // let server: HonoServer;
@@ -131,22 +174,30 @@ describe("Connection", () => {
     });
 
     describe(`connection`, () => {
-      let c: MsgConnectedAuth;
+      let c: VirtualConnected;
       beforeEach(async () => {
-        const rC = await style.ok.open().then((r) => MsgConnected.connect(auth.authType, r, { reqId: "req-open-testx" }));
+        // const rC = await style.ok.open().then((r) => Msger.connect(sthis, style.ok.url(), {}, {}, {
+        //   openHttp: async () => r,
+        //   openWS: async () => r,
+        // }));
+
+        const rC = await Msger.connect(sthis, style.ok.url(), msgP, qOpen.conn);
+
+        // auth.authType, r, { reqId: "req-open-testx" }));
         expect(rC.isOk()).toBeTruthy();
-        c = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
-        expect(c.conn).toEqual({
-          reqId: "req-open-testx",
-          resId: c.conn.resId,
-        });
+        c = rC.Ok(); // .attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+        // expect(c.conn).toEqual({
+        //   reqId: "req-open-testx",
+        //   resId: c.conn.resId,
+        // });
       });
       afterEach(async () => {
-        await c.close((await c.msgConnAuth()).Ok());
+        // we might not have a connected
+        await c.close(buildReqClose(sthis, auth.authType, c.virtualConn as QSId));
       });
 
       it("kaputt url http", async () => {
-        const r = await c.raw.request(
+        const r = await c.request(
           {
             tid: "test",
             auth: auth.authType,
@@ -159,6 +210,7 @@ describe("Connection", () => {
           assert.fail("expected MsgError");
           return;
         }
+        // console.log("kaputt", style.ok.url().toString(), r);
         expect(r).toEqual({
           message: "unexpected message",
           auth: auth.authType,
@@ -166,7 +218,9 @@ describe("Connection", () => {
           type: "error",
           version: "FP-MSG-1.0",
           src: {
-            tid: "test",
+            ...(r.src as ps.cloud.MsgBase),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            conn: { resId: (r as any).src.conn.resId, ...qOpen.conn },
             auth: auth.authType,
             type: "kaputt",
             version: "FP-MSG-1.0",
@@ -176,9 +230,9 @@ describe("Connection", () => {
       it("gestalt url http", async () => {
         const msgP = defaultMsgParams(sthis, {});
         const req = buildReqGestalt(sthis, auth.authType, defaultGestalt(msgP, { id: "test" }));
-        const r = await c.raw.request(req, { waitFor: MsgIsResGestalt });
+        const r = await c.request(req, { waitFor: MsgIsResGestalt, noConn: true });
         if (!MsgIsResGestalt(r)) {
-          assert.fail("expected MsgError", JSON.stringify(r));
+          assert.fail(`expected MsgResGestalt:${JSON.stringify(r)}`);
         }
         expect(r.gestalt).toEqual({
           ...c.exchangedGestalt?.remote,
@@ -187,13 +241,13 @@ describe("Connection", () => {
       });
 
       it("openConnection", async () => {
-        const req = buildReqOpen(sthis, auth.authType, { ...c.conn });
-        const r = await c.raw.request(req, { waitFor: MsgIsResOpen });
+        const req = buildReqOpen(sthis, auth.authType, { reqId: "req-openConnection" });
+        const r = await c.request(req, { waitFor: MsgIsResOpen });
         if (!MsgIsResOpen(r)) {
           assert.fail(JSON.stringify(r));
         }
         expect(r).toEqual({
-          conn: { ...c.conn, resId: r.conn?.resId },
+          conn: { reqId: "req-openConnection", resId: r.conn?.resId },
           auth: auth.authType,
           tid: req.tid,
           type: "resOpen",
@@ -203,29 +257,39 @@ describe("Connection", () => {
     });
 
     it("open", async () => {
-      const rC = await Msger.connect(sthis, auth.authType, style.ok.url(), msgP, {
+      const rC = await Msger.connect(sthis, style.ok.url(), msgP, {
         reqId: "req-open-testy",
       });
       expect(rC.isOk()).toBeTruthy();
-      const c = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
-      expect(c.conn).toEqual({
-        reqId: "req-open-testy",
-        resId: c.conn.resId,
+      const c = rC.Ok(); //.attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+      await c.request(buildReqChat(sthis, auth.authType, c.opts.conn, "test-open"), {
+        waitFor: ps.cloud.MsgIsResChat,
       });
-      expect(c.raw).toBeInstanceOf(style.cInstance);
+      // expect(c.conn).toEqual({
+      //   reqId: "req-open-testy",
+      //   resId: c.conn.resId,
+      // });
+      expect(c.realConn).toBeInstanceOf(style.cInstance);
       expect(c.exchangedGestalt).toEqual({
         my,
-        remote: { ...style.remoteGestalt, id: c.exchangedGestalt.remote.id },
+        remote: { ...style.remoteGestalt, id: c.exchangedGestalt?.remote.id },
       });
-      await c.close((await c.msgConnAuth()).Ok());
+      await c.close(buildReqClose(sthis, auth.authType, c.conn));
     });
     describe(`${honoServer.name} - Msgs`, () => {
       let gwCtx: GwCtx;
-      let conn: MsgConnectedAuth;
+      let conn: VirtualConnected;
       beforeAll(async () => {
-        const rC = await Msger.connect(sthis, auth.authType, style.ok.url(), msgP, qOpen.conn);
+        const rC = await Msger.connect(sthis, style.ok.url(), msgP, qOpen.conn);
         expect(rC.isOk()).toBeTruthy();
-        conn = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+        conn = rC.Ok(); // .attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+
+        const ret = await conn.request(buildReqChat(sthis, auth.authType, qOpen.conn, "test-open"), {
+          waitFor: ps.cloud.MsgIsResChat,
+        });
+        if (MsgIsError(ret)) {
+          assert.fail(`expected MsgResChat:${JSON.stringify(ret)}`);
+        }
         gwCtx = {
           conn: conn.conn,
           tenant: {
@@ -235,10 +299,10 @@ describe("Connection", () => {
         };
       });
       afterAll(async () => {
-        await conn.close((await conn.msgConnAuth()).Ok());
+        await conn.close(buildReqClose(sthis, auth.authType, conn.virtualConn as QSId));
       });
       it("Open", async () => {
-        const res = await conn.raw.request(buildReqOpen(sthis, auth.authType, conn.conn), {
+        const res = await conn.request(buildReqOpen(sthis, auth.authType, conn.conn), {
           waitFor: MsgIsResOpen,
         });
         if (!MsgIsResOpen(res)) {
@@ -294,7 +358,7 @@ describe("Connection", () => {
       describe("Meta", async () => {
         it("bind stop", async () => {
           const sp = sup({ method: "GET", store: "meta" });
-          expect(conn.raw.activeBinds.size).toBe(0);
+          expect(conn.activeBinds.size).toBe(0);
           const streams: ReadableStream<MsgWithError<EventGetMeta>>[] = Array(5)
             .fill(0)
             .map(() => {
@@ -318,7 +382,7 @@ describe("Connection", () => {
               await reader.cancel();
             }
           }
-          expect(conn.raw.activeBinds.size).toBe(0);
+          expect(conn.activeBinds.size).toBe(0);
           // await Promise.all(streams.map((s) => s.cancel()));
         });
 

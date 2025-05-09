@@ -4,8 +4,8 @@ import { ps } from "@fireproof/core";
 
 type SignedUrlParam = ps.cloud.SignedUrlParam;
 type MethodSignedUrlParam = ps.cloud.MethodSignedUrlParam;
-type MsgWithTenantLedger<T extends ps.cloud.MsgWithConnAuth> = ps.cloud.MsgWithTenantLedger<T>;
-type MsgWithConnAuth = ps.cloud.MsgWithConnAuth;
+type MsgWithTenantLedger<T extends ps.cloud.MsgWithConn> = ps.cloud.MsgWithTenantLedger<T>;
+type MsgWithConnAuth = ps.cloud.MsgWithConn;
 
 export interface PreSignedMsg extends MsgWithTenantLedger<MsgWithConnAuth> {
   readonly methodParam: MethodSignedUrlParam;

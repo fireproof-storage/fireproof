@@ -50,12 +50,12 @@ export class DatabaseImpl implements Database {
   readonly ledger: Ledger;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly id: string;
+  // readonly id: string;
 
   constructor(ledger: Ledger) {
     this.sthis = ledger.sthis;
     this.ledger = ledger;
-    this.id = ledger.id;
+    // this.id = ledger.id;
     this.logger = ensureLogger(this.sthis, "Database");
   }
 

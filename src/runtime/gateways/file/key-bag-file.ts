@@ -32,6 +32,18 @@ export class KeyBagProviderFile implements KeyBagProvider {
     this.logger = sthis.logger;
   }
 
+  async del(id: string): Promise<void> {
+    const ctx = await this._prepare(id);
+    try {
+      await ctx.sysFS.unlink(ctx.fName);
+    } catch (e) {
+      if (isNotFoundError(e)) {
+        return;
+      }
+      throw this.logger.Error().Err(e).Any("file", ctx).Msg("delete bag failed").AsError();
+    }
+  }
+
   async get(id: string): Promise<V1StorageKeyItem | KeysItem | undefined> {
     const ctx = await this._prepare(id);
     try {

@@ -28,7 +28,7 @@ type PreSignedMsg = ps.cloud.PreSignedMsg;
 type MsgWithError<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithError<T>;
 type AuthType = ps.cloud.AuthType;
 type FPCloudAuthType = ps.cloud.FPCloudAuthType;
-type MsgWithConnAuth<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConn<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConn<T>;
 type GwCtx = ps.cloud.GwCtx;
 type MsgBase = ps.cloud.MsgBase;
 
@@ -159,7 +159,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
   //   return this._gs;
   // }
 
-  async handleReqPutMeta(ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<ReqPutMeta>): Promise<MsgWithError<ResPutMeta>> {
+  async handleReqPutMeta(ctx: MsgDispatcherCtx, msg: MsgWithConn<ReqPutMeta>): Promise<MsgWithError<ResPutMeta>> {
     const rUrl = await buildRes({ method: "PUT", store: "meta" }, "resPutMeta", ctx, msg, this);
     if (MsgIsError(rUrl)) {
       return rUrl;
@@ -172,7 +172,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
     return buildResPutMeta(ctx, msg, res, rUrl.signedUrl);
   }
 
-  async handleReqDelMeta(ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<ReqDelMeta>): Promise<MsgWithError<ResDelMeta>> {
+  async handleReqDelMeta(ctx: MsgDispatcherCtx, msg: MsgWithConn<ReqDelMeta>): Promise<MsgWithError<ResDelMeta>> {
     const rUrl = await buildRes({ method: "DELETE", store: "meta" }, "resDelMeta", ctx, msg, this);
     if (MsgIsError(rUrl)) {
       return rUrl;
@@ -186,7 +186,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
 
   async handleBindGetMeta(
     ctx: MsgDispatcherCtx,
-    msg: MsgWithConnAuth<BindGetMeta>,
+    msg: MsgWithConn<BindGetMeta>,
     gwCtx: GwCtx = msg,
   ): Promise<MsgWithError<EventGetMeta>> {
     const rMsg = await buildRes({ method: "GET", store: "meta" }, "eventGetMeta", ctx, msg, this);
