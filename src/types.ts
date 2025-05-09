@@ -581,7 +581,7 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   readonly ledger: Ledger;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly id: string;
+  // readonly id: string;
   readonly name: string;
 
   onClosed(fn: () => void): void;
@@ -645,11 +645,14 @@ export interface Ledger extends HasCRDT {
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly id: string;
+  // readonly id: string;
 
   readonly name: string;
 
   readonly ctx: AppContext;
+
+  // a config and name hash to the same instance
+  refId(): Promise<string>;
 
   onClosed(fn: () => void): () => void;
 

@@ -11,6 +11,7 @@ export class KeyBagProviderMemory implements KeyBagProvider {
     this.url = url;
     this.sthis = sthis;
   }
+
   key(id: string): string {
     return `${this.url.pathname}/${id}`;
   }
@@ -26,6 +27,14 @@ export class KeyBagProviderMemory implements KeyBagProvider {
   //     fName: this.sthis.pathOps.join(dirName, `${id.replace(/[^a-zA-Z0-9]/g, "_")}.json`),
   //   };
   // }
+
+  del(id: string): Promise<void> {
+    const key = this.key(id);
+    if (memoryKeyBag.has(key)) {
+      memoryKeyBag.delete(key);
+    }
+    return Promise.resolve();
+  }
 
   async get(id: string): Promise<KeysItem | V1StorageKeyItem | undefined> {
     const binKeyItem = memoryKeyBag.get(this.key(id));

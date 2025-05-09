@@ -1,11 +1,14 @@
 import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
-import { Attachable, bs, ensureLogger, Ledger, hashObject } from "@fireproof/core";
 import { decodeJwt } from "jose/jwt/decode";
+import { FPCloudClaim } from "../../../protocols/cloud/msg-types.js";
+import { Attachable, Ledger, SuperThis } from "../../../types.js";
+import { ensureLogger, hashObject } from "../../../utils.js";
+import { URIInterceptor } from "../../../blockstore/uri-interceptor.js";
 
 export interface TokenStrategie {
-  open(logger: Logger, deviceId: string, opts: ToCloudOpts): void;
-  gatherToken(logger: Logger, opts: ToCloudOpts): Promise<string | undefined>;
-  waitForToken(logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<string | undefined>;
+  open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): void;
+  tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
+  waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
 }
 
 export const ToCloudName = "toCloud";
@@ -17,11 +20,16 @@ export interface FPCloudRef {
   readonly meta: CoerceURI;
 }
 
+export interface TokenAndClaimsEvents {
+  changed(token?: TokenAndClaims): Promise<void>;
+}
+
 interface ToCloudBase {
   readonly name: string; // default "toCloud"
   readonly interval: number; // default 1000 or 1 second
   readonly refreshTokenPreset: number; // default 2 minutes this is the time before the token expires
   readonly context: AppContext;
+  readonly events: TokenAndClaimsEvents;
   readonly tenant?: string; // default undefined
   readonly ledger?: string; // default undefined
 }
@@ -29,11 +37,14 @@ interface ToCloudBase {
 export interface ToCloudRequiredOpts {
   readonly urls: Partial<FPCloudRef>;
   readonly strategy: TokenStrategie;
+  // readonly events: TokenAndClaimsEvents;
+  // readonly context: AppContext;
+  // readonly context: AppContext;
 }
 
 export type ToCloudOpts = ToCloudRequiredOpts & ToCloudBase;
 
-export type ToCloudOptionalOpts = ToCloudRequiredOpts & Partial<ToCloudBase>;
+export type ToCloudOptionalOpts = Partial<ToCloudBase> & ToCloudRequiredOpts;
 
 export interface FPCloudUri {
   readonly car: URI;
@@ -64,6 +75,11 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
     interval: 1000,
     refreshTokenPreset: 2 * 60 * 1000, // 2 minutes
     ...opts,
+    events: opts.events ?? {
+      changed: async () => {
+        /* no-op */
+      },
+    },
     context: opts.context ?? new AppContext(),
     urls: param,
   } satisfies ToCloudOpts;
@@ -72,32 +88,40 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
 
 export interface ToCloudAttachable extends Attachable {
   token?: string;
+  readonly opts: ToCloudOpts;
 }
 
-interface TokenAndClaims {
+export interface TokenAndClaims {
   readonly token: string;
-  readonly claims: {
-    readonly exp: number;
-    readonly tenant?: string;
-    readonly ledger?: string;
-  };
+  readonly claims: FPCloudClaim;
+  //   readonly exp: number;
+  //   readonly tenant?: string;
+  //   readonly ledger?: string;
+  // };
 }
 
-function toTokenAndClaims(token: string): TokenAndClaims {
-  const claims = decodeJwt(token);
-  return {
-    token,
-    claims: {
-      ...claims,
-      exp: claims.exp || 0,
-    },
-  };
+// function toTokenAndClaims(token: string): TokenAndClaims {
+//   const claims = decodeJwt(token);
+//   return {
+//     token,
+//     claims: {
+//       ...claims,
+//       exp: claims.exp || 0,
+//     } as FPCloudClaim,
+//   };
+// }
+
+function definedExp(exp?: number): number {
+  if (typeof exp === "number") {
+    return exp;
+  }
+  return new Date().getTime();
 }
 
 class TokenObserver {
   private readonly opts: ToCloudOpts;
 
-  currentToken?: TokenAndClaims;
+  currentTokenAndClaim?: TokenAndClaims;
 
   constructor(opts: ToCloudOpts) {
     this.opts = opts;
@@ -112,52 +136,43 @@ class TokenObserver {
     return;
   }
 
-  readonly _token = new ResolveOnce<TokenAndClaims>();
-  async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
-    // console.log("getToken", this._token.ready);
-    const tc = await this._token.once(async () => {
-      const token = await this.opts.strategy.gatherToken(logger, this.opts);
+  async refreshToken(logger: Logger, ledger: Ledger) {
+    let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
+    if (!token) {
+      logger.Debug().Msg("waiting for token");
+      this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
+      token = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
       if (!token) {
-        logger.Debug().Msg("waiting for token");
-        this.opts.strategy.open(logger, ledger.name, this.opts);
-        const token = await this.opts.strategy.waitForToken(logger, ledger.name, this.opts);
-        if (!token) {
-          throw new Error("Token not found");
-        }
-        return toTokenAndClaims(token);
+        throw new Error("Token not found");
       }
-      const tc = toTokenAndClaims(token);
-      if (!this.currentToken) {
-        logger
-          .Debug()
-          .Any({ tc, diff: new Date().getTime() - tc.claims.exp })
-          .Msg("set current token");
-        this.currentToken = tc;
-        // return tc;
-      }
-      // if (tc.token === this.currentToken.token) {
-      const now = new Date().getTime();
-      if (this.currentToken?.claims.exp - this.opts.refreshTokenPreset < now) {
-        logger.Debug().Any(tc.claims).Msg("token expired");
-        this.opts.strategy.open(logger, ledger.name, this.opts);
-        const token = await this.opts.strategy.waitForToken(logger, ledger.name, this.opts);
-        if (!token) {
-          throw new Error("Token not found");
-        }
-        return toTokenAndClaims(token);
-      }
-      return tc;
-      // }
-      // logger.Debug().Msg("Token changed");
-      // this.currentToken = tc;
-      // return tc;
-    });
-    return tc;
+    }
+    return token;
   }
 
-  reset() {
-    this._token.reset();
-    this.currentToken = undefined;
+  readonly _token = new ResolveOnce<TokenAndClaims>();
+  async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
+    const now = new Date().getTime();
+    let activeTokenAndClaim = this.currentTokenAndClaim;
+    if (!this.currentTokenAndClaim || definedExp(this.currentTokenAndClaim.claims.exp) - this.opts.refreshTokenPreset < now) {
+      await this.opts.events?.changed(undefined);
+      logger
+        .Debug()
+        .Any({ claims: this.currentTokenAndClaim?.claims, now, exp: definedExp(this.currentTokenAndClaim?.claims.exp) })
+        .Msg("refresh token");
+      activeTokenAndClaim = await this.refreshToken(logger, ledger);
+    }
+
+    if (activeTokenAndClaim && activeTokenAndClaim.token !== this.currentTokenAndClaim?.token) {
+      this.currentTokenAndClaim = activeTokenAndClaim;
+      await this.opts.events?.changed(activeTokenAndClaim);
+      return activeTokenAndClaim;
+    }
+    throw logger.Error().Msg("Token not found").AsError();
+  }
+
+  async reset() {
+    this.currentTokenAndClaim = undefined;
+    await this.opts.events?.changed(undefined);
     return;
   }
 }
@@ -208,24 +223,24 @@ class ToCloud implements ToCloudAttachable {
     await this._tokenObserver.start();
 
     // console.log("prepare");
-    const gatewayInterceptor = bs.URIInterceptor.withMapper(async (uri) => {
+    const gatewayInterceptor = URIInterceptor.withMapper(async (uri) => {
       // wait for the token
       const token = await this._tokenObserver.getToken(logger, ledger);
       // console.log("getToken", token)
       const buri = BuildURI.from(uri).setParam("authJWK", token.token);
-      if (this.opts.tenant) {
+
+      if (token.claims.selected.tenant) {
+        buri.setParam("tenant", token.claims.selected.tenant);
+      } else if (this.opts.tenant) {
         buri.setParam("tenant", this.opts.tenant);
       }
-      if (this.opts.ledger) {
+      if (token.claims.selected.ledger) {
+        buri.setParam("ledger", token.claims.selected.ledger);
+      } else if (this.opts.ledger) {
         buri.setParam("ledger", this.opts.ledger);
       }
-      if (token.claims.tenant && !buri.hasParam("tenant")) {
-        buri.setParam("tenant", token.claims.tenant);
-      }
-      if (token.claims.ledger && !buri.hasParam("ledger")) {
-        buri.setParam("ledger", token.claims.ledger);
-      }
-      return uri.build().setParam("authJWK", token.token).URI();
+
+      return buri.URI();
     });
     return {
       car: { url: this.opts.urls.car, gatewayInterceptor },
@@ -244,26 +259,39 @@ class ToCloud implements ToCloudAttachable {
 //   resetToken(): void;
 // }
 
-export function toCloud(iopts: ToCloudOptionalOpts): ToCloudAttachable {
+export function toCloud(iopts: Partial<ToCloudBase> & ToCloudRequiredOpts): ToCloudAttachable {
   // console.log("toCloud", iopts);
-  return new ToCloud(iopts);
+  return new ToCloud({
+    ...iopts,
+    urls: iopts.urls ?? {},
+    events: iopts.events ?? {
+      changed: async () => {
+        /* no-op */
+      },
+    },
+    context: iopts.context ?? new AppContext(),
+    strategy: iopts.strategy ?? new SimpleTokenStrategy(""),
+  });
 }
 
 export class SimpleTokenStrategy implements TokenStrategie {
-  private jwk: string;
+  private tc: TokenAndClaims;
   constructor(jwk: string) {
-    this.jwk = jwk;
+    this.tc = {
+      token: jwk,
+      claims: decodeJwt(jwk) as FPCloudClaim,
+    };
   }
   open(): void {
     // console.log("SimpleTokenStrategy open");
     return;
   }
-  async gatherToken(): Promise<string | undefined> {
+  async tryToken(): Promise<TokenAndClaims | undefined> {
     // console.log("SimpleTokenStrategy gatherToken");
-    return this.jwk;
+    return this.tc;
   }
-  async waitForToken(): Promise<string | undefined> {
+  async waitForToken(): Promise<TokenAndClaims | undefined> {
     // console.log("SimpleTokenStrategy waitForToken");
-    return this.jwk;
+    return this.tc;
   }
 }

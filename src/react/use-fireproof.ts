@@ -1,7 +1,7 @@
 import { toSortedArray } from "@adviser/cement/utils";
 import { Database, fireproof } from "@fireproof/core";
 import { useMemo } from "react";
-import { useAttach } from "./use-attach.js";
+import { createAttach } from "./use-attach.js";
 import type { UseFPConfig, UseFireproof } from "./types.js";
 import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
@@ -30,7 +30,7 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
   const strConfig = JSON.stringify(toSortedArray(config));
   const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, strConfig]);
-  const attach = useAttach(database, config);
+  const attach = createAttach(database, config);
 
   const useDocument = useMemo(() => createUseDocument(database), [database.name, strConfig]);
   const useLiveQuery = useMemo(() => createUseLiveQuery(database), [database.name, strConfig]);
