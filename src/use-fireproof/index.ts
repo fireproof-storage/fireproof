@@ -9,13 +9,36 @@ import { AppContext } from "@adviser/cement";
 
 import { RedirectStrategy } from "./redirect-strategy.js";
 
-export function toCloud(
-  opts: Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy"> &
-    Partial<WebToCloudCtx> & { readonly strategy?: rt.gw.cloud.TokenStrategie },
-): rt.gw.cloud.ToCloudAttachable {
-  return rt.gw.cloud.toCloud({
+export type UseFpToCloudParam = Omit<Omit<Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy">, "context">, "events"> &
+  Partial<WebToCloudCtx> & {
+    readonly strategy?: rt.gw.cloud.TokenStrategie;
+    readonly context?: AppContext;
+    readonly events?: rt.gw.cloud.TokenAndClaimsEvents;
+  };
+
+export function toCloud(opts: UseFpToCloudParam): rt.gw.cloud.ToCloudAttachable {
+  const myOpts = {
     ...opts,
-    context: opts.context ?? new AppContext().set(WebCtx, defaultWebToCloudOpts(opts)),
+    events: opts.events ?? {
+      changed: async () => {
+        throw new Error("not ready");
+      },
+    },
+    context: opts.context ?? new AppContext(),
     strategy: opts.strategy ?? new RedirectStrategy(),
-  });
+  };
+  const webCtx = defaultWebToCloudOpts(myOpts);
+  if (!opts.events) {
+    // hacky but who has a better idea?
+    myOpts.events.changed = async (token?: rt.gw.cloud.TokenAndClaims) => {
+      if (token) {
+        await webCtx.setToken(token);
+      } else {
+        webCtx.resetToken();
+      }
+    };
+  }
+
+  myOpts.context.set(WebCtx, webCtx);
+  return rt.gw.cloud.toCloud(myOpts);
 }

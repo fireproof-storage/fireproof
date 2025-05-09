@@ -1,4 +1,4 @@
-import { DocWithId, useFireproof, toCloud, WebToCloudCtx, WebCtx } from "use-fireproof";
+import { DocWithId, useFireproof, toCloud } from "use-fireproof";
 import { useState, useEffect } from "react";
 import "./App.css";
 // import { URI } from "@adviser/cement";
@@ -6,10 +6,10 @@ import "./App.css";
 function App() {
   const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
-      dashboardURI: "http://localhost:3000/fp/cloud/api/token",
+      // dashboardURI: "http://localhost:3000/fp/cloud/api/token",
       urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
-      tenant: "3rd-party",
-      ledger: "have-four-drinks",
+      // tenant: "3rd-party",
+      // ledger: "have-four-drinks",
     }),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
@@ -21,17 +21,19 @@ function App() {
     });
   });
 
-  const webCtx = attach.state === "attached" ? attach.attached.ctx().get<WebToCloudCtx>(WebCtx) : undefined;
+  // attach.state === "attached" ? attach.attached.ctx().get<WebToCloudCtx>(WebCtx)?.hook()
 
   return (
     <>
       <h1>FireProof Party of the 3rd</h1>
-      <div>{attach.state}</div>
+      <div>
+        {attach.state}:[{attach.ctx.tokenAndClaims?.token}]
+      </div>
       <div
         className="card"
         onClick={() => {
-          console.log("reset", webCtx?.token());
-          webCtx?.resetToken();
+          console.log("reset", attach.ctx);
+          attach.ctx.reset();
         }}
       >
         Reset Token
@@ -48,7 +50,7 @@ function App() {
           });
         }}
       >
-        Add - {webCtx?.token()}
+        Add - {attach.ctx.tokenAndClaims?.token}
       </div>
       <div className="read-the-docs">
         {rows.map((row) => {
