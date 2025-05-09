@@ -1,6 +1,6 @@
 import { Result, exception2Result } from "@adviser/cement";
 import { useSession } from "@clerk/clerk-react";
-import { QueryClient, QueryObserverResult, RefetchOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   ReqCloudSessionToken,
   ReqCreateLedger,
@@ -34,11 +34,11 @@ import type {
   ResUpdateLedger,
   ResUpdateTenant,
   ResUpdateUserTenant,
+  AuthType,
+  InviteTicket,
   UserTenant,
-} from "../backend/api.ts";
-import { AuthType } from "../backend/users.ts";
+} from "../backend/fp-dash-types.ts";
 import { API_URL } from "./helpers.ts";
-import { InviteTicket } from "../backend/invites.ts";
 
 interface TypeString {
   type: string;
@@ -270,7 +270,7 @@ export class CloudContext {
   //   });
   // }
 
-  createTenantMutation() {
+  createTenantMutation(): ReturnType<typeof useMutation<ResCreateTenant, Error, { name: string }>> {
     const listTenantsByUser = this.getListTenantsByUser();
     return useMutation({
       mutationFn: ({ name }: { name: string }) => {
@@ -283,7 +283,7 @@ export class CloudContext {
     });
   }
 
-  createLedgerMutation() {
+  createLedgerMutation(): ReturnType<typeof useMutation<ResCreateLedger, Error, { name: string; tenantId: string }>> {
     const listLedgers = this.getListLedgersByUser();
     return useMutation({
       mutationFn: ({ name, tenantId }: { name: string; tenantId: string }) => {
@@ -307,7 +307,7 @@ export class CloudContext {
     });
   }
 
-  updateTenantMutation() {
+  updateTenantMutation(): ReturnType<typeof useMutation<ResUpdateTenant, Error, { tenantId: string; name: string }>> {
     const listTenants = this.getListTenantsByUser();
     return useMutation({
       mutationFn: ({ tenantId, name }: { tenantId: string; name: string }) => {

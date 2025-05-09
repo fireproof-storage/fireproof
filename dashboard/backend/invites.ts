@@ -3,10 +3,9 @@ import { int, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 import { sqlUsers } from "./users.ts";
 import { sqlTenants } from "./tenants.ts";
 import { sqlLedgers } from "./ledgers.ts";
-import { AuthProvider, queryEmail, queryNick, QueryUser, toUndef } from "./sql-helper.ts";
-import { SuperThis } from "@fireproof/core";
-
-export type InviteTicketStatus = "pending" | "accepted" | "rejected" | "expired";
+import { queryEmail, queryNick, toUndef } from "./sql-helper.ts";
+import { SuperThis, ps } from "@fireproof/core";
+import { InviteTicket, SqlInvitedParams, AuthProvider, InviteTicketStatus, QueryUser, InvitedParams } from "./fp-dash-types.ts";
 
 export const sqlInviteTickets = sqliteTable(
   "InviteTickets",
@@ -53,42 +52,6 @@ export const sqlInviteTickets = sqliteTable(
     index("invitesExpiresAfter").on(table.expiresAfter),
   ],
 );
-
-export interface SqlInvitedParams {
-  readonly tenant?: {
-    readonly role: "admin" | "member";
-  };
-  readonly ledger?: {
-    readonly role: "admin" | "member";
-    readonly right: "read" | "write";
-  };
-}
-
-export interface InvitedParams {
-  readonly tenant?: SqlInvitedParams["tenant"] & { readonly id: string };
-  readonly ledger?: SqlInvitedParams["ledger"] & { readonly id: string };
-}
-
-export interface InviteTicket {
-  readonly inviteId: string;
-  readonly sendEmailCount: number;
-  readonly inviterUserId: string;
-
-  readonly query: QueryUser;
-  // readonly userID?: string;
-  // readonly queryProvider?: AuthProvider;
-  // readonly queryEmail?: string;
-  // readonly queryNick?: string;
-
-  readonly status: InviteTicketStatus;
-  readonly statusReason: string;
-  readonly invitedUserId?: string;
-  readonly invitedParams: InvitedParams;
-
-  readonly expiresAfter: Date;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
 
 export function sqlToInviteTickets(sqls: (typeof sqlInviteTickets.$inferSelect)[]): InviteTicket[] {
   return sqls.map((sql) => {

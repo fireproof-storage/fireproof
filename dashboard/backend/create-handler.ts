@@ -2,9 +2,8 @@
 import { exception2Result, LoggerImpl, Result, URI, utils } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis } from "@fireproof/core";
+import { SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis, ps } from "@fireproof/core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
-import { VerifiedAuth } from "./users.ts";
 import type { Env } from "./cf-serve.ts";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
@@ -39,7 +38,7 @@ class ClerkApiToken implements FPApiToken {
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
   }
-  async verify(token: string): Promise<Result<VerifiedAuth>> {
+  async verify(token: string): Promise<Result<ps.dashboard.VerifiedAuth>> {
     const jwtKey = this.sthis.env.get("CLERK_PUB_JWT_KEY");
     if (!jwtKey) {
       return Result.Err("Invalid CLERK_PUB_JWT_KEY");
@@ -182,7 +181,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
         res = fpApi.getCloudSessionToken(jso);
         break;
 
-      case FPAPIMsg.isTokenByResultId(jso):
+      case FPAPIMsg.isReqTokenByResultId(jso):
         res = fpApi.getTokenByResultId(jso);
         break;
 

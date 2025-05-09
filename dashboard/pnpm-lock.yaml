@@ -26,8 +26,8 @@ importers:
         specifier: ^5.25.5
         version: 5.25.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fireproof/core':
-        specifier: ^0.20.5-dev-preview-7
-        version: 0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1)
+        specifier: ^0.20.5-dev-preview-8
+        version: 0.20.5-dev-preview-8(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1)
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -75,7 +75,7 @@ importers:
         version: 2.3.3(react@18.3.1)
       use-fireproof:
         specifier: ^0.20.5-dev-preview-6
-        version: 0.20.5-dev-preview-6(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1)
+        version: 0.20.5-dev-preview-6(@fireproof/core@0.20.5-dev-preview-8(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^0.1.19
@@ -1056,8 +1056,8 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.20.5-dev-preview-7':
-    resolution: {integrity: sha512-wpcePoH5D6FUtkr0YB2a/ksFr+6w8ac0oq9C0p13cmhsTGzfbXgEvBPOPOBoTlV5kNwjLTOZ8u3akZQW/erphw==}
+  '@fireproof/core@0.20.5-dev-preview-8':
+    resolution: {integrity: sha512-C/wHmGLnE7ZmAf7iiLmWpnDoqarxmf+Cwxc/ojV6iYHYT2/QT2QSHSqeuFcSSM07ham/6ndwVy03QkHGXun3lw==}
     hasBin: true
     peerDependencies:
       '@adviser/cement': ~0.4.2
@@ -3777,6 +3777,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.18.2:
+    resolution: {integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
@@ -4509,7 +4521,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1)':
+  '@fireproof/core@0.20.5-dev-preview-8(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.4.14(typescript@5.8.3)
       '@fireproof/vendor': 2.0.1
@@ -4527,7 +4539,7 @@ snapshots:
       p-retry: 6.2.1
       prolly-trees: 1.0.4
       react: 18.3.1
-      ws: 8.18.1
+      ws: 8.18.2
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -7280,9 +7292,9 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  use-fireproof@0.20.5-dev-preview-6(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1):
+  use-fireproof@0.20.5-dev-preview-6(@fireproof/core@0.20.5-dev-preview-8(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@fireproof/core': 0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1)
+      '@fireproof/core': 0.20.5-dev-preview-8(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@18.3.1)
       react: 18.3.1
 
   use-sync-external-store@1.4.0(react@18.3.1):
@@ -7470,6 +7482,8 @@ snapshots:
   ws@8.18.0: {}
 
   ws@8.18.1: {}
+
+  ws@8.18.2: {}
 
   y18n@5.0.8: {}
 

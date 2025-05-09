@@ -1,8 +1,15 @@
 import { Result } from "@adviser/cement";
+import { ps } from "@fireproof/core";
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { AuthProvider, Queryable, queryCondition, QueryUser, toUndef } from "./sql-helper.ts";
+import { queryCondition, toUndef } from "./sql-helper.ts";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, inArray } from "drizzle-orm/expressions";
+
+type QueryUser = ps.dashboard.QueryUser;
+type User = ps.dashboard.User;
+type UserStatus = ps.dashboard.UserStatus;
+type AuthProvider = ps.dashboard.AuthProvider;
+type UserByProvider = ps.dashboard.UserByProvider;
 
 export const sqlUsers = sqliteTable("Users", {
   userId: text().primaryKey(),
@@ -51,57 +58,6 @@ export const sqlUserByProviders = sqliteTable(
     index("queryNickIdx").on(table.queryNick),
   ],
 );
-
-export type UserStatus = "active" | "inactive" | "banned" | "invited";
-
-export interface AuthType {
-  readonly type: "ucan" | "clerk" | "better";
-  readonly token: string;
-}
-
-export interface VerifiedAuth {
-  readonly type: "clerk" | "better";
-  readonly token: string;
-  readonly userId: string;
-  readonly provider: string;
-}
-
-export interface ClerkClaim {
-  readonly email: string;
-  readonly first: string;
-  readonly last: string;
-  // github handle
-  readonly nick?: string;
-  readonly name?: string;
-  readonly image_url?: string;
-}
-
-export interface ClerkVerifyAuth extends VerifiedAuth {
-  readonly params: ClerkClaim;
-}
-
-export interface User {
-  readonly userId: string;
-  readonly maxTenants: number;
-  readonly status: UserStatus;
-  readonly statusReason?: string;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-  readonly byProviders: UserByProvider[];
-}
-
-export interface UserByProvider extends Queryable {
-  readonly providerUserId: string;
-  readonly cleanEmail?: string;
-  readonly cleanNick?: string;
-  readonly queryProvider: AuthProvider;
-  readonly queryEmail?: string;
-  readonly queryNick?: string;
-  readonly params: ClerkClaim;
-  readonly used: Date;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
 
 export async function queryUser(db: LibSQLDatabase, req: QueryUser): Promise<Result<User[]>> {
   const condition = queryCondition(req, sqlUserByProviders);

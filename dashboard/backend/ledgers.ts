@@ -2,6 +2,7 @@ import { int, sqliteTable, text, primaryKey, index, unique } from "drizzle-orm/s
 import { sqlTenants } from "./tenants.ts";
 import { sqlUsers } from "./users.ts";
 import { toUndef } from "./sql-helper.ts";
+import { LedgerUser } from "./fp-dash-types.ts";
 
 export const sqlLedgers = sqliteTable(
   "Ledgers",
@@ -22,27 +23,6 @@ export const sqlLedgers = sqliteTable(
   },
   (table) => [unique("ledgerNamespace").on(table.tenantId, table.name)],
 );
-
-interface LedgerUserRight {
-  readonly userId: string;
-  readonly role: "admin" | "member";
-  readonly right: "read" | "write";
-  readonly name?: string;
-  readonly default: boolean;
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
-
-export interface LedgerUser {
-  readonly ledgerId: string;
-  readonly tenantId: string;
-  readonly name: string;
-  readonly ownerId: string;
-  readonly maxShares: number;
-  readonly users: LedgerUserRight[];
-  readonly createdAt: Date;
-  readonly updatedAt: Date;
-}
 
 export function sqlToLedgers(
   rows: {
