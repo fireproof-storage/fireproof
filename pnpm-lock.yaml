@@ -23,7 +23,7 @@ importers:
         specifier: ^9.2.2
         version: 9.2.4
       '@ipld/dag-json':
-        specifier: ^10.2.3
+        specifier: ^10.2.4
         version: 10.2.5
       '@libsql/client':
         specifier: ^0.15.4
