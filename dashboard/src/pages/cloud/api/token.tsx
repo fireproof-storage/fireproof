@@ -51,6 +51,12 @@ export function ApiToken() {
     setCreateApiToken(param);
   }
 
+  const [redirectCountdown, setRedirectCountdown] = useState({
+    state: "waiting", // | "started" | "running",
+    countdownSecs: parseInt(searchParams.get("countdownSecs") ?? "3"),
+    interval: undefined as unknown | undefined,
+  });
+
   const {
     data: cloudToken,
     isLoading: isLoadingCloudToken,
@@ -62,6 +68,7 @@ export function ApiToken() {
       if (!resultId) {
         throw new Error("No result_id");
       }
+      console.log("call getCloudSession", redirectCountdown.state, resultId);
       const rToken = await cloud.api.getCloudSessionToken({
         resultId,
         selected: createApiToken,
@@ -73,12 +80,6 @@ export function ApiToken() {
       return rToken.Ok().token;
     },
     enabled: couldSelected,
-  });
-
-  const [redirectCountdown, setRedirectCountdown] = useState({
-    state: "waiting", // | "started" | "running",
-    countdownSecs: parseInt(searchParams.get("countdownSecs") ?? "3"),
-    interval: undefined as unknown | undefined,
   });
 
   // const back_url = BuildURI.from(buri.getParam("back_url"))
@@ -197,7 +198,8 @@ export function ApiToken() {
     return <div>Error loading ledgers: {errorLedgers.message}</div>;
   }
 
-  const showChooser = isLoadingCloudToken || errorCloudToken || !!cloudToken;
+  const showChooser = !(isLoadingCloudToken || errorCloudToken || cloudToken);
+  // console.log("showChooser", showChooser, isLoadingCloudToken, errorCloudToken, cloudToken);
 
   return (
     <>
@@ -232,7 +234,7 @@ export function ApiToken() {
         </div>
       </div>
 
-      {showChooser ?? (
+      {showChooser && (
         <ChooseLedger
           searchParams={searchParams}
           couldSelected={false}

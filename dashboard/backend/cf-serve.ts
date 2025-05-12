@@ -14,7 +14,7 @@ export default {
     let ares: Promise<CFResponse>;
     switch (true) {
       case uri.pathname.startsWith("/api"):
-        console.log("cf-serve", request.url, env);
+        // console.log("cf-serve", request.url, env);
         ares = createHandler(drizzle(env.DB), env)(request) as unknown as Promise<CFResponse>;
         break;
 
