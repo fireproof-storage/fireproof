@@ -20,7 +20,7 @@ export function newCloudAction(ctx: AppContextType) {
     }
     // const { refresh } = ctx.cloud.useListTenantsByUser();
     // refresh();
-    return redirect(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}/overview`);
+    return redirect(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}`);
   };
 }
 
@@ -38,7 +38,7 @@ export function CloudNew() {
   async function onSubmit(data: FieldValues): Promise<void> {
     try {
       const rTenant = await createTenant.mutateAsync({ name: data.tenantName });
-      navigate(`/fp/cloud/tenants/${rTenant.tenant.tenantId}/overview`);
+      navigate(`/fp/cloud/tenants/${rTenant.tenant.tenantId}`);
     } catch (error) {
       console.error("Failed to create tenant:", error);
     }

@@ -1,6 +1,7 @@
 import { SignUp } from "@clerk/clerk-react";
 import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
+import { base64url } from "jose";
 
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
@@ -9,8 +10,14 @@ const slides = [
 
 export async function signupLoader({ request }: { request: Request }) {
   const url = new URL(request.url);
-  const nextUrl = url.searchParams.get("redirect_url") || "/";
-  return nextUrl;
+  const redirectUrl = url.searchParams.get("redirect_url");
+  if (redirectUrl) {
+    const decodedUrl = base64url.decode(redirectUrl);
+    const decodedUrlString = new TextDecoder().decode(decodedUrl);
+    const nextUrl = new URL(decodedUrlString);
+    return nextUrl;
+  }
+  return "/";
 }
 
 export function SignUpPage() {

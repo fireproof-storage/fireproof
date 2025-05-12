@@ -4,14 +4,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { useContext, useEffect, useRef, useState } from "react";
 import { ps } from "@fireproof/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import hljs from "highlight.js/lib/core";
-import javascript from "highlight.js/lib/languages/javascript";
-
-import "highlight.js/styles/github.css";
-
-// Then register the languages you need
-hljs.registerLanguage("javascript", javascript);
+import { SelectedTenantLedger } from "./selected-tenant-ledger.tsx";
 
 export function redirectBackUrl() {
   const uri = URI.from(window.location.href);
@@ -182,26 +175,6 @@ export function ApiToken() {
       name: l.name,
     });
   }, [tenantsData, initialParameters]);
-  const codeRef = useRef(null);
-
-  const jsCode = `const { database } = useFireproof("${searchParams.get("local_ledger_name")}", {
-    attach: toCloud({
-      tenant: "${createApiToken.tenant}",
-      ledger: "${createApiToken.ledger}",
-    }),
-  });`;
-
-  useEffect(() => {
-    if (codeRef.current) {
-      hljs.highlightElement(codeRef.current);
-    }
-  }, [jsCode]);
-
-  // if (doNavigate) {
-  //   navigate(redirectTo.withoutHostAndSchema);
-  //   // setDoNavigate(false);
-  //   return <>redirecting {redirectTo.withoutHostAndSchema}</>;
-  // }
 
   const result_id = searchParams.get("result_id");
   if (!result_id || result_id.length < 5) {
@@ -209,14 +182,9 @@ export function ApiToken() {
   }
 
   if (cloud._clerkSession?.isSignedIn === false) {
-    const tos = buri
-      .build()
-      .pathname("/login")
-      .cleanParams()
-      .setParam("redirect_url", buri.withoutHostAndSchema)
-      .URI().withoutHostAndSchema;
+    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", buri.toString()).URI();
     console.log("tos", tos);
-    return <Navigate to={tos} />;
+    return <Navigate to={tos.withoutHostAndSchema} />;
     // return <div>Not logged in:{tos}</div>;
   }
 
@@ -323,16 +291,11 @@ export function ApiToken() {
         {errorCloudToken && <div>Loading token failed with {errorCloudToken.message}</div>}
         {cloudToken && (
           <div>
-            <h2>Code Preset</h2>
-            <pre>
-              <code ref={codeRef} className="language-js">
-                {jsCode}
-              </code>
-            </pre>
-            <h2>Token</h2>
-            <b>
-              <pre>{cloudToken}</pre>
-            </b>
+            <SelectedTenantLedger
+              dbName={searchParams.get("local_ledger_name") ?? ""}
+              tenantAndLedger={createApiToken as TenantLedgerWithName}
+              cloudToken={cloudToken}
+            />
             {/* <h2>Back to Your App</h2>
             <b>
               <Link to={redirectTo.toString()} className="text-fp-p">
@@ -463,21 +426,6 @@ function SelectLedger({
     </button>
   );
 }
-
-// console.log("is to nav", buri.hasParam("token"));
-// if (buri.hasParam("token")) {
-//   const url = BuildURI.from(window.location.href).pathname("/fp/cloud/api/token").cleanParams("token").URI().withoutHostAndSchema;
-//   console.log("nav-redirectUrl", url);
-//   return <Navigate to={url} />;
-// }
-
-// return (
-//   <>
-//     <div>
-//       Waiting for Fireproof Backend token for: {buri.getParam("back_url")} - {window.location.href}
-//     </div>
-//   </>
-// );
 
 function IfThenBold({ condition, text }: { condition: boolean; text: string }) {
   if (condition) {

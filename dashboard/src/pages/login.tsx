@@ -3,6 +3,7 @@ import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
 import { Link, Navigate } from "react-router-dom";
 import { BuildURI, param, URI } from "@adviser/cement";
+import { base64url } from "jose";
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
   { text: "Fastest I’ve ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },
@@ -43,12 +44,14 @@ export function Login() {
     if (!tos) {
       return <Navigate to="/fp/cloud" />;
     } else {
-      return <Navigate to={URI.from(tos).withoutHostAndSchema} />;
+      const to = URI.from(new TextDecoder().decode(base64url.decode(tos))).withoutHostAndSchema;
+      console.log("login-tos", to);
+      return <Navigate to={to} />;
     }
   }
 
   // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")
-  const redirect_url = URI.from(window.location.href).withoutHostAndSchema;
+  const redirect_url = URI.from(window.location.href).toString();
   console.log("login-redirect_url", window.location.href);
 
   return (

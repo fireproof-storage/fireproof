@@ -27,7 +27,7 @@ export function CloudTenantShow() {
   }
 
   const tabs = [
-    { id: "overview", label: "Overview" },
+    // { id: "overview", label: "Overview" },
     { id: "members", label: "Members" },
     { id: "admin", label: "Settings" },
   ];
