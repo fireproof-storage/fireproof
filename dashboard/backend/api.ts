@@ -1827,6 +1827,9 @@ export class FPApiSQL implements FPApiInterface {
       .setExpirationTime(Date.now() + validFor) // expiration time
       .sign(privKey);
 
+    console.log("getCloudSessionToken", {
+      result: req.resultId,
+    });
     if (req.resultId && req.resultId.length > "laenger".length) {
       await this.addTokenByResultId({
         status: "found",
@@ -1834,8 +1837,14 @@ export class FPApiSQL implements FPApiInterface {
         token,
         now: new Date(),
       });
+      console.log("getCloudSessionToken-ok", {
+        result: req.resultId,
+      });
     } else if (req.resultId) {
       this.sthis.logger.Warn().Any({ resultId: req.resultId }).Msg("resultId too short");
+      console.log("getCloudSessionToken-failed", {
+        result: req.resultId,
+      });
     }
 
     // console.log(">>>>-post:", ctx, privKey)

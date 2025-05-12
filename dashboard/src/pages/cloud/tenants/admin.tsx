@@ -31,6 +31,7 @@ export function CloudTenantAdmin() {
   }
 
   function onSubmitTenant(data: TenantFormData) {
+    console.log("updateTenant", data);
     updateTenantMutation.mutate({
       tenantId: data.tenantId,
       name: data.tenantName,
@@ -80,9 +81,9 @@ export function CloudTenantAdmin() {
                   Once you delete a tenant, there is no going back. Please be certain.
                 </p>
               </div>
-              <Button variation="destructive" tag={Link} to={`/fp/cloud/tenants/${tenant.tenantId}/delete`}>
-                Delete Tenant
-              </Button>
+              <Link to={`/fp/cloud/tenants/${tenant.tenantId}/delete`}>
+                <Button variation="destructive">Delete Tenant</Button>
+              </Link>
             </div>
           </div>
         </div>

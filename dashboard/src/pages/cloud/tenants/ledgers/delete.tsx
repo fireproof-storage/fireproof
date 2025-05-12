@@ -18,8 +18,8 @@ export function LedgerDelete() {
 
   async function deleteLedgerAction(ctx: CloudContext, tenantId?: string, ledgerId?: string) {
     if (tenantId && ledgerId) {
-      await ctx.api.deleteLedger({ ledger: { tenantId, ledgerId } });
-      console.log("deleted", tenantId, ledgerId);
+      const res = await ctx.api.deleteLedger({ ledger: { tenantId, ledgerId } });
+      console.log("deleted", tenantId, ledgerId, res);
       refetch();
       navigate(`/fp/cloud`);
     }

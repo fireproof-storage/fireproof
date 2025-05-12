@@ -85,13 +85,10 @@ export function LedgerAdmin() {
                   Once you delete a ledger/database, there is no going back. Please be certain.
                 </p>
               </div>
-              <Button
-                variation="destructive"
-                tag={Link}
+              <Link to={`/fp/cloud/tenants/${ledger.tenantId}/ledgers/${ledger.ledgerId}/delete`}>
                 to={`/fp/cloud/tenants/${ledger.tenantId}/ledgers/${ledger.ledgerId}/delete`}
-              >
-                Delete Database
-              </Button>
+                <Button variation="destructive">Delete Database</Button>
+              </Link>
             </div>
           </div>
         </div>
