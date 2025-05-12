@@ -17,8 +17,8 @@ importers:
         specifier: ~0.4.15
         version: 0.4.15(typescript@5.8.3)
       '@ipld/car':
-        specifier: ^5.4.0
-        version: 5.4.0
+        specifier: ^5.4.1
+        version: 5.4.1
       '@ipld/dag-cbor':
         specifier: ^9.2.3
         version: 9.2.3
@@ -1172,8 +1172,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@ipld/car@5.4.0':
-    resolution: {integrity: sha512-FiGxOhTUh3fn/kkA+YvNYQjA/T8T5DcKG0NZwAi3aXrizN1qm99HzdYTccEwcX/rUCtI8wTUCKDNPBLUb7pBIQ==}
+  '@ipld/car@5.4.1':
+    resolution: {integrity: sha512-dThVbtNlN3jwf2owmImuPPo4QIrhTZYHtVbBf55oJTD7WZMLYq+hdh15qp1eMykh9tfdYb2URHoHOWUKAS0UhA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-cbor@9.2.3':
@@ -5818,7 +5818,7 @@ snapshots:
       '@types/node': 22.15.17
     optional: true
 
-  '@ipld/car@5.4.0':
+  '@ipld/car@5.4.1':
     dependencies:
       '@ipld/dag-cbor': 9.2.3
       cborg: 4.2.10
@@ -6673,7 +6673,7 @@ snapshots:
 
   '@web3-storage/pail@0.6.2':
     dependencies:
-      '@ipld/car': 5.4.0
+      '@ipld/car': 5.4.1
       '@ipld/dag-cbor': 9.2.3
       archy: 1.0.0
       carstream: 2.3.0
