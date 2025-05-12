@@ -267,42 +267,43 @@ export class Loader implements Loadable {
     const ancestorDbMetas = new Map<string, AnyLink>();
     // for (const cargroup of localDbMeta) {
     const myCids = new Set<string>(localDbMeta.map((i) => i.toString()));
-    for (const carId of localDbMeta) {
-      // console.log("ensureAttachedStore", carId.toString(), localDbMeta.length);
-      const car = await this.storesLoadCar(carId, localCarStore);
-      const rStore = await exception2Result(
-        async () =>
-          await store.active.car.save({
-            cid: carId,
-            bytes: await codec.encode(car.bytes),
-          }),
-      );
-      if (rStore.isErr()) {
-        this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
-      }
-      if (car.item.value) {
-        const ancestorBlocks = car.item.value.car.blocks.filter((i) => isFPBlockItem(i));
-        // console.log("ensureAttachedStore:ancestorBlocks:", carId.toString(), localDbMeta.length, ancestorBlocks.length);
-        for (const ancestorFp of ancestorBlocks) {
-          if (!isFPBlockItem<BlockItem>(ancestorFp)) {
-            continue;
-          }
-          const ancestorCars = ancestorFp.item.value.fp.cars;
-          ancestorCars.forEach((aCids) => {
-            aCids.forEach((aCid) => {
-              const aCidStr = aCid.toString();
-              if (myCids.has(aCidStr)) {
-                return;
-              }
-              ancestorDbMetas.set(aCidStr, aCid);
-            });
-          });
-          // for (const aCid of ) {
-          // }
+    await Promise.allSettled(
+      localDbMeta.map(async (carId) => {
+        // console.log("ensureAttachedStore", carId.toString(), localDbMeta.length);
+        const car = await this.storesLoadCar(carId, localCarStore);
+        const rStore = await exception2Result(
+          async () =>
+            await store.active.car.save({
+              cid: carId,
+              bytes: await codec.encode(car.bytes),
+            }),
+        );
+        if (rStore.isErr()) {
+          this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
         }
-      }
-      // }
-    }
+        if (car.item.value) {
+          const ancestorBlocks = car.item.value.car.blocks.filter((i) => isFPBlockItem(i));
+          // console.log("ensureAttachedStore:ancestorBlocks:", carId.toString(), localDbMeta.length, ancestorBlocks.length);
+          for (const ancestorFp of ancestorBlocks) {
+            if (!isFPBlockItem<BlockItem>(ancestorFp)) {
+              continue;
+            }
+            const ancestorCars = ancestorFp.item.value.fp.cars;
+            ancestorCars.forEach((aCids) => {
+              aCids.forEach((aCid) => {
+                const aCidStr = aCid.toString();
+                if (myCids.has(aCidStr)) {
+                  return;
+                }
+                ancestorDbMetas.set(aCidStr, aCid);
+              });
+            });
+          }
+        }
+        // }
+      }),
+    );
+
     // console.log("ensureAttachedStore:ancestorDbMetas:", localDbMeta.length, ancestorDbMetas.size);
     if (ancestorDbMetas.size > 0) {
       await this.ensureAttachedStore(store, Array.from(ancestorDbMetas.values()));

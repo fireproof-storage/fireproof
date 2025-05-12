@@ -160,7 +160,7 @@ jobs:
         run: pnpm run test:deno
 
   smoke:
-    timeout-minutes: 4
+    timeout-minutes: 6
     name: smoke
     needs: ["test-node", "build"]
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm

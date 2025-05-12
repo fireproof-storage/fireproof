@@ -9,6 +9,7 @@ export interface TokenStrategie {
   open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): void;
   tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
   waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
+  stop(): void;
 }
 
 export const ToCloudName = "toCloud";

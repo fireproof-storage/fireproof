@@ -67,6 +67,8 @@ export interface UseDocumentResultObject<T extends DocTypes> {
   submit(e?: Event): Promise<void>;
 }
 
+export type AttachStatus = "initial" | "attaching" | "attached" | "error";
+
 export interface InitialAttachState {
   readonly state: "initial";
   readonly ctx: WebCtxHook;
@@ -105,9 +107,17 @@ export interface UseFireproof {
   readonly attach: AttachState; // changed from AttachState to function returning AttachState
 }
 
+export interface InitialTokenAndClaimsState {
+  readonly state: "initial";
+}
+export interface ReadyTokenAndClaimsState {
+  readonly state: "ready";
+  readonly tokenAndClaims: TokenAndClaims;
+  readonly reset: () => void;
+}
+
 export interface WebCtxHook {
-  readonly tokenAndClaims?: TokenAndClaims;
-  reset(): void;
+  readonly tokenAndClaims: InitialTokenAndClaimsState | ReadyTokenAndClaimsState;
 }
 
 export interface WebToCloudCtx {
