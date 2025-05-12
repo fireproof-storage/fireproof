@@ -23,8 +23,8 @@ importers:
         specifier: ^9.2.2
         version: 9.2.2
       '@ipld/dag-json':
-        specifier: ^10.2.3
-        version: 10.2.3
+        specifier: ^10.2.4
+        version: 10.2.4
       '@libsql/client':
         specifier: ^0.15.4
         version: 0.15.4
@@ -1180,8 +1180,8 @@ packages:
     resolution: {integrity: sha512-uIEOuruCqKTP50OBWwgz4Js2+LhiBQaxc57cnP71f45b1mHEAo1OCR1Zn/TbvSW/mV1x+JqhacIktkKyaYqhCw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-json@10.2.3':
-    resolution: {integrity: sha512-itacv1j1hvYgLox2B42Msn70QLzcr0MEo5yGIENuw2SM/lQzq9bmBiMky+kDsIrsqqblKTXcHBZnnmK7D4a6ZQ==}
+  '@ipld/dag-json@10.2.4':
+    resolution: {integrity: sha512-u1Pp4Tqz4r9GHGeLIJUJat5slasSxpBiBlL/i5pmGVEkCnQ1plrp5rQ5e+x3wZaPabxvsirQpfR76TPoGAiXiw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@isaacs/cliui@8.0.2':
@@ -5823,7 +5823,7 @@ snapshots:
       cborg: 4.2.10
       multiformats: 13.3.2
 
-  '@ipld/dag-json@10.2.3':
+  '@ipld/dag-json@10.2.4':
     dependencies:
       cborg: 4.2.10
       multiformats: 13.3.2
