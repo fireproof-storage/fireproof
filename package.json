@@ -119,7 +119,7 @@
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.2",
     "jose": "^6.0.11",
-    "multiformats": "^13.3.2",
+    "multiformats": "^13.3.3",
     "p-limit": "^6.2.0",
     "p-map": "^7.0.3",
     "p-retry": "^6.2.1",
