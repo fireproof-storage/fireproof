@@ -7,9 +7,12 @@ function overlayHtml(redirectLink: string) {
   return `
     <div class="fpOverlayContent">
       <div class="fpCloseButton">&times;</div>
+      Fireproof Dashboard
+      Sign in to Fireproof Dashboard
       <a href="${redirectLink}" target="_blank">Redirect to Fireproof</a>
     </div>
 `;
+  // <iframe src="${redirectLink}" style="width: 100%; height: 100%; border: none;"></iframe>
 }
 
 const overlayCss = `
@@ -30,11 +33,15 @@ const overlayCss = `
 
 .fpOverlayContent {
   position: absolute;
+  // width: calc(100vw - 50px);
+  // height: calc(100vh - 50px);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%); /* Center the content */
+  // transform: translate(0%, 0%); /* Center the content */
   background-color: white;
   color: black;
+  // margin: 10px;
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
@@ -51,8 +58,9 @@ const overlayCss = `
 
 export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
   resultId?: string;
+  overlayNode?: HTMLElement;
+  waitState: "started" | "stopped" = "stopped";
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   open(sthis: SuperThis, logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     logger.Debug().Url(redirectCtx.dashboardURI).Msg("open redirect");
@@ -81,29 +89,66 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
       document.body.appendChild(overlayNode);
       overlayNode.querySelector(".fpCloseButton")?.addEventListener("click", () => {
         if (overlayNode) {
-          overlayNode.style.display = overlayNode.style.display === "block" ? "none" : "block";
+          if (overlayNode.style.display === "block") {
+            overlayNode.style.display = "none";
+            this.stop();
+          } else {
+            overlayNode.style.display = "block";
+          }
         }
       });
     }
     overlayNode.style.display = "block";
+    this.overlayNode = overlayNode;
+
     // window.location.href = url.toString();
   }
 
   currentToken?: rt.gw.cloud.TokenAndClaims;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
-    return this.currentToken;
+  waiting?: NodeJS.Timeout;
 
-    // const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    // const uri = URI.from(window.location.href);
-    // const uriFpToken = uri.getParam(redirectCtx.tokenParam);
-    // if (uriFpToken) {
-    //   await redirectCtx.setToken(uriFpToken);
-    //   logger.Debug().Any({ uriFpToken }).Msg("Token set");
-    //   window.location.href = uri.build().delParam(redirectCtx.tokenParam).toString();
-    // }
-    // return redirectCtx.token();
+  stop() {
+    if (this.waiting) {
+      clearTimeout(this.waiting);
+      this.waiting = undefined;
+    }
+  }
+
+  async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
+    if (!this.currentToken) {
+      const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
+      this.currentToken = await webCtx.token();
+    }
+    return this.currentToken;
+  }
+
+  async getTokenAndClaimsByResultId(
+    logger: Logger,
+    dashApi: ps.dashboard.Api,
+    resultId: undefined | string,
+    opts: rt.gw.cloud.ToCloudOpts,
+    resolve: (value: rt.gw.cloud.TokenAndClaims) => void,
+  ) {
+    if (!resultId) {
+      return logger.Error().Msg("No resultId");
+    }
+    if (this.waitState !== "started") {
+      return;
+    }
+    const rWaitForToken = await dashApi.waitForToken({ resultId }, logger);
+    if (rWaitForToken.isErr()) {
+      return logger.Error().Err(rWaitForToken).Msg("Error fetching token").ResultError();
+    }
+    const waitedTokenByResultId = rWaitForToken.unwrap();
+    if (waitedTokenByResultId.status === "found" && waitedTokenByResultId.token) {
+      const token = waitedTokenByResultId.token;
+      const claims = decodeJwt(token) as ps.cloud.FPCloudClaim;
+      this.overlayNode?.style.setProperty("display", "none");
+      resolve({ token, claims });
+      return;
+    }
+    this.waiting = setTimeout(() => this.getTokenAndClaimsByResultId(logger, dashApi, resultId, opts, resolve), opts.interval);
   }
 
   async waitForToken(
@@ -116,24 +161,10 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
       throw new Error("waitForToken not working on redirect strategy");
     }
     const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    const resultId = this.resultId;
     const dashApi = new ps.dashboard.Api(webCtx.tokenApiURI);
-    async function getTokenAndClaimsByResultId(resolve: (value: rt.gw.cloud.TokenAndClaims) => void) {
-      const rWaitForToken = await dashApi.waitForToken({ resultId }, logger);
-      if (rWaitForToken.isErr()) {
-        return logger.Error().Err(rWaitForToken).Msg("Error fetching token").ResultError();
-      }
-      const waitedTokenByResultId = rWaitForToken.unwrap();
-      if (waitedTokenByResultId.status === "found" && waitedTokenByResultId.token) {
-        const token = waitedTokenByResultId.token;
-        const claims = decodeJwt(token) as ps.cloud.FPCloudClaim;
-        resolve({ token, claims });
-        return;
-      }
-      setTimeout(getTokenAndClaimsByResultId, opts.interval);
-    }
+    this.waitState = "started";
     return new Promise<rt.gw.cloud.TokenAndClaims | undefined>((resolve) => {
-      getTokenAndClaimsByResultId((tokenAndClaims) => {
+      this.getTokenAndClaimsByResultId(logger, dashApi, this.resultId, opts, (tokenAndClaims) => {
         this.currentToken = tokenAndClaims;
         resolve(tokenAndClaims);
       });

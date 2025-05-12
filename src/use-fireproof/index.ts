@@ -34,7 +34,7 @@ export function toCloud(opts: UseFpToCloudParam): rt.gw.cloud.ToCloudAttachable 
       if (token) {
         await webCtx.setToken(token);
       } else {
-        webCtx.resetToken();
+        // webCtx.resetToken();
       }
     };
   }

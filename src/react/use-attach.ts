@@ -2,8 +2,8 @@
 
 import { Database, ensureSuperThis, hashString, rt, SuperThis } from "@fireproof/core";
 import { useEffect, useState } from "react";
-import { AttachState as AttachHook, UseFPConfig, WebToCloudCtx } from "./types.js";
-import { AppContext, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
+import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
+import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 import { ToCloudAttachable, TokenAndClaims } from "../runtime/gateways/cloud/to-cloud.js";
 import { decodeJwt } from "jose/jwt/decode";
 import { FPCloudClaim } from "../protocols/cloud/msg-types.js";
@@ -26,16 +26,19 @@ class WebCtxImpl implements WebToCloudCtx {
   dbId!: string;
 
   private opts: ToCloudParam;
-  readonly myTokenChange = new ResolveOnce();
+  // readonly myTokenChange = new ResolveOnce();
 
   constructor(opts: ToCloudParam) {
     this.dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/fp/cloud/api/token";
-    this.tokenApiURI = opts.tokenApiURI ?? "https://dev.connect.fireproof.direct/api";
+    if (!opts.tokenApiURI) {
+      this.tokenApiURI = BuildURI.from(this.dashboardURI).pathname("/api").toString();
+    } else {
+      this.tokenApiURI = opts.tokenApiURI;
+    }
     // this.uiURI = opts.uiURI ?? "https://dev.connect.fireproof.direct/api";
     this.tokenParam = opts.tokenParam ?? "fpToken";
 
     this.sthis = opts.sthis ?? ensureSuperThis();
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     this.keyBag = opts.keyBag; // ?? rt.kb.getKeyBag(ensureSuperThis());
     // if (opts.keyBag) {
     //   this.keyBag = opts.keyBag;
@@ -62,6 +65,10 @@ class WebCtxImpl implements WebToCloudCtx {
       return this.opts.onTokenChange(on);
     }
     this.onActions.add(on);
+    const tc = this._tokenAndClaims.value;
+    if (tc) {
+      on(tc);
+    }
     return () => {
       this.onActions.delete(on);
     };
@@ -73,7 +80,7 @@ class WebCtxImpl implements WebToCloudCtx {
     if (this.opts.token) {
       return this.opts.token();
     }
-    return this._tokenAndClaims.once(async () => {
+    const tc = await this._tokenAndClaims.once(async () => {
       const ret = await this.keyBag?.get(`${this.dbId}/urlToken`);
       if (!ret) {
         return;
@@ -92,6 +99,10 @@ class WebCtxImpl implements WebToCloudCtx {
         claims,
       };
     });
+    if (tc) {
+      this.onAction(tc);
+    }
+    return tc;
   }
 
   async resetToken() {
@@ -132,45 +143,21 @@ export function defaultWebToCloudOpts(opts: ToCloudParam): WebToCloudCtx {
   return new WebCtxImpl(opts);
 }
 
-const nonAttachedCtx = {
-  token: undefined,
-  reset: () => {
-    /* no-op */
-  },
-};
-
-let pCnt = 0;
-let caCnt = 0;
+const initialCtx = {
+  tokenAndClaims: { state: "initial" },
+} satisfies WebCtxHook;
 
 const prepareWebctxs = new KeyedResolvOnce();
 
 export function createAttach(database: Database, config: UseFPConfig): AttachHook {
-  caCnt++;
-  if (caCnt > 1) console.log("enter-createAttach", caCnt);
-  const [attachState, setAttachState] = useState<AttachHook>({ state: "initial", ctx: nonAttachedCtx });
-
-  // const [token, setToken] = useState<string | undefined>(undefined);
-  // const [doResetToken, setDoResetToken] = useState(false);
-  // useEffect(() => {
-  //   if (doResetToken && attachState.state === "attached") {
-  //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  //     const webCtx = attachState.attached.ctx().get<WebToCloudCtx>(WebCtx)!;
-  //     webCtx.resetToken().then(() => {
-  //       setDoResetToken(false);
-  //       // setToken(undefined);
-  //     });
-  //     // return webCtx.onTokenChange((token) => {
-  //     //   setToken(token);
-  //     // });
-  //   }
-  // });
+  const [attachState, setAttachState] = useState<AttachHook>({ state: "initial", ctx: initialCtx });
 
   useEffect(() => {
     database.ledger.refId().then((dbId) => {
       prepareWebctxs.get(dbId).once(() => {
         if (config.attach && attachState.state === "initial") {
           const id = database.sthis.nextId().str;
-          setAttachState({ state: "attaching", ctx: nonAttachedCtx });
+          setAttachState((prev) => ({ ...prev, state: "attaching" }));
 
           async function prepareWebctx(attachable: ToCloudAttachable) {
             console.log("1-prepareWebctx", id);
@@ -183,21 +170,30 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
             webCtx.onTokenChange((token) => {
               console.log("2.a-webctx-onTokenChange", id, token);
               if (!token) {
-                setAttachState({ state: "initial", ctx: nonAttachedCtx });
+                setAttachState((prev) => ({ ...prev, state: "initial", ctx: initialCtx }));
                 return;
               }
-              setAttachState((prev) => {
-                return {
-                  ...prev,
-                  ctx: {
+              setAttachState((prev) => ({
+                ...prev,
+                ctx: {
+                  ...prev.ctx,
+                  tokenAndClaims: {
+                    state: "ready",
                     tokenAndClaims: token,
                     reset: () => {
                       console.log("2.b-webctx-onTokenChange-reset", id);
+                      webCtx.resetToken().then(() =>
+                        setAttachState((prev) => ({
+                          ...prev,
+                          state: "initial",
+                          ctx: initialCtx,
+                        })),
+                      );
                       // setDoResetToken(true);
                     },
                   },
-                };
-              });
+                },
+              }));
             });
             const rAttached = await exception2Result(async () => {
               console.log("2.a-prepareWebctx", id);
@@ -208,32 +204,21 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
             console.log("3-prepareWebctx", id);
             if (rAttached.isErr()) {
               database.logger.Error().Err(rAttached).Msg("attach error");
-              setAttachState({ state: "error", error: rAttached.Err(), ctx: nonAttachedCtx });
+              setAttachState((prev) => ({ ...prev, state: "error", error: rAttached.Err() }));
             }
             const attached = rAttached.Ok();
 
-            setAttachState({
+            setAttachState((prev) => ({
+              ...prev,
               state: "attached",
               attached,
-              ctx: nonAttachedCtx,
-            });
+            }));
           }
-          prepareWebctx(config.attach)
-            .catch((e) => {
-              console.error("attach error", e, id);
-            })
-            .then(() => {
-              console.log("prepareWebctx-done", id);
-            })
-            .finally(() => {
-              console.log("leave-prepareWebctx", --pCnt, id);
-            });
+          prepareWebctx(config.attach);
         }
       });
     });
   }, [database, config.attach, attachState.state]);
-
-  if (--caCnt) console.log("leave-createAttach", caCnt);
 
   return attachState;
 }

@@ -6,7 +6,8 @@ import "./App.css";
 function App() {
   const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
-      // dashboardURI: "http://localhost:3000/fp/cloud/api/token",
+      dashboardURI: "http://localhost:3000/fp/cloud/api/token",
+      tokenApiURI: "https://dev.connect.fireproof.direct/api",
       urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
       // tenant: "3rd-party",
       // ledger: "have-four-drinks",
@@ -27,13 +28,15 @@ function App() {
     <>
       <h1>FireProof Party of the 3rd</h1>
       <div>
-        {attach.state}:[{attach.ctx.tokenAndClaims?.token}]
+        {attach.state}:[{attach.ctx.tokenAndClaims.state === "ready" ? attach.ctx.tokenAndClaims.tokenAndClaims.token : ""}]
+        {attach.state === "error" ? attach.error.message : ""}
       </div>
       <div
         className="card"
         onClick={() => {
-          console.log("reset", attach.ctx);
-          attach.ctx.reset();
+          if (attach.ctx.tokenAndClaims.state === "ready") {
+            attach.ctx.tokenAndClaims.reset();
+          }
         }}
       >
         Reset Token
@@ -50,7 +53,7 @@ function App() {
           });
         }}
       >
-        Add - {attach.ctx.tokenAndClaims?.token}
+        Add
       </div>
       <div className="read-the-docs">
         {rows.map((row) => {
