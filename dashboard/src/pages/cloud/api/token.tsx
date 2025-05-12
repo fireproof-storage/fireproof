@@ -2,9 +2,11 @@ import { URI } from "@adviser/cement";
 import { AppContext } from "../../../app-context.tsx";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useContext, useEffect, useRef, useState } from "react";
-import { ps } from "@fireproof/core";
+import { Ledger, ps } from "@fireproof/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SelectedTenantLedger } from "./selected-tenant-ledger.tsx";
+import { a } from "vitest/dist/chunks/suite.d.FvehnV49.js";
+import { aI } from "vitest/dist/chunks/reporters.d.CfRkRKN2.js";
 
 export function redirectBackUrl() {
   const uri = URI.from(window.location.href);
@@ -96,6 +98,7 @@ export function ApiToken() {
           if (prev.countdownSecs <= 0) {
             clearInterval(interval);
 
+            window.open("", "_self")?.close();
             // setDoNavigate(true);
             return { ...prev, state: "finished" };
           }
@@ -165,10 +168,9 @@ export function ApiToken() {
     // typescript o my typescript
     const l = ledgerSelected as ps.dashboard.LedgerUser;
     const ledgerFromUrl = searchParams.get("ledger");
-    if (!ledgerFromUrl && ledgerFromUrl !== l.ledgerId) {
+    if (ledgerFromUrl && ledgerFromUrl !== l.ledgerId) {
       return;
     }
-
     selectLedger({
       ledger: l.ledgerId,
       tenant: l.tenantId,
@@ -194,6 +196,8 @@ export function ApiToken() {
   if (errorLedgers) {
     return <div>Error loading ledgers: {errorLedgers.message}</div>;
   }
+
+  const showChooser = isLoadingCloudToken || errorCloudToken || !!cloudToken;
 
   return (
     <>
@@ -226,65 +230,20 @@ export function ApiToken() {
             </div>
           )}
         </div>
-        <h2>Choose Tenants</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Tenant</th>
-              <th>Ledger</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tenantsData?.map((row) => (
-              <tr key={row.tenant.tenantId}>
-                <td>
-                  <IfThenBold condition={row.tenant.selected} text={row.tenant.tenant.name ?? ""} />
-                  <small>[${row.tenant.tenantId}]</small>
-                </td>
-                <td>
-                  <table>
-                    <tbody>
-                      {row.ledgers.map((ledger) => (
-                        <tr key={ledger.ledgerId}>
-                          <td>
-                            <IfThenBold condition={ledger.selected} text={ledger.name} />
-                            <small>[{ledger.ledgerId}]</small>
-                          </td>
-                          <td>
-                            {!couldSelected && (
-                              <SelectLedger
-                                ledger={ledger}
-                                onSelect={() => {
-                                  selectLedger({
-                                    ledger: ledger.ledgerId,
-                                    tenant: row.tenant.tenantId,
-                                    name: ledger.name,
-                                  });
-                                }}
-                              />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                      {!couldSelected && (
-                        <AddIfNotSelectedLedger
-                          tenant={row.tenant}
-                          urlLedgerName={searchParams.get("local_ledger_name") ?? ""}
-                          ledgers={row.ledgers}
-                          onAdd={(a) => {
-                            queryClient.invalidateQueries({ queryKey: ["listTenantsLedgersByUser"] });
-                            selectLedger(a);
-                          }}
-                        />
-                      )}
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
+
+      {showChooser ?? (
+        <ChooseLedger
+          searchParams={searchParams}
+          couldSelected={false}
+          tenantsData={tenantsData}
+          onSelect={selectLedger}
+          onAdd={(a) => {
+            queryClient.invalidateQueries({ queryKey: ["listTenantsLedgersByUser"] });
+            selectLedger(a);
+          }}
+        />
+      )}
 
       <div>
         {isLoadingCloudToken && <div>Loading token...</div>}
@@ -432,4 +391,81 @@ function IfThenBold({ condition, text }: { condition: boolean; text: string }) {
     return <b>{text}</b>;
   }
   return text;
+}
+
+function ChooseLedger({
+  couldSelected,
+  tenantsData,
+  onSelect,
+  onAdd,
+  searchParams,
+}: {
+  searchParams: URLSearchParams;
+  couldSelected: boolean;
+  tenantsData?: {
+    tenant: ps.dashboard.UserTenant & { selected: boolean };
+    ledgers: (ps.dashboard.LedgerUser & { selected: boolean })[];
+  }[];
+  onSelect: (ledger: TenantLedgerWithName) => void;
+  onAdd: (ledger: TenantLedgerWithName) => void;
+}) {
+  return (
+    <>
+      <h2>Choose Tenants</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tenant</th>
+            <th>Ledger</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tenantsData?.map((row) => (
+            <tr key={row.tenant.tenantId}>
+              <td>
+                <IfThenBold condition={row.tenant.selected} text={row.tenant.tenant.name ?? ""} />
+                <small>[${row.tenant.tenantId}]</small>
+              </td>
+              <td>
+                <table>
+                  <tbody>
+                    {row.ledgers.map((ledger) => (
+                      <tr key={ledger.ledgerId}>
+                        <td>
+                          <IfThenBold condition={ledger.selected} text={ledger.name} />
+                          <small>[{ledger.ledgerId}]</small>
+                        </td>
+                        <td>
+                          {!couldSelected && (
+                            <SelectLedger
+                              ledger={ledger}
+                              onSelect={() => {
+                                onSelect({
+                                  ledger: ledger.ledgerId,
+                                  tenant: row.tenant.tenantId,
+                                  name: ledger.name,
+                                });
+                              }}
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {!couldSelected && (
+                      <AddIfNotSelectedLedger
+                        tenant={row.tenant}
+                        urlLedgerName={searchParams.get("local_ledger_name") ?? ""}
+                        ledgers={row.ledgers}
+                        onAdd={onAdd}
+                      />
+                    )}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
 }

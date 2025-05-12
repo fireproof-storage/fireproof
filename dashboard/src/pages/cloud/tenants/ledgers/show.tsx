@@ -11,6 +11,7 @@ export function CloudTenantLedgersShow() {
     { id: "overview", label: "Overview" },
     { id: "documents", label: "Documents" },
     { id: "sharing", label: "Sharing" },
+    { id: "admin", label: "Settings" },
   ];
 
   return (
