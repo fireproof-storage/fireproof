@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.14
-        version: 0.4.14(typescript@5.8.3)
+        specifier: ~0.4.15
+        version: 0.4.15(typescript@5.8.3)
       '@ipld/car':
         specifier: ^5.4.0
         version: 5.4.0
@@ -197,8 +197,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.4.14':
-    resolution: {integrity: sha512-6iPOJrDDglRsixXCMQe6vMlrpZ4L2z5881LQ0awXTK1DIzY3ZTVR8+pFeTqcMz2oYZTDcKm31XSHl2q9JiRT1w==}
+  '@adviser/cement@0.4.15':
+    resolution: {integrity: sha512-ig+DNLQvL7C9Gnp/XKTGDw3LnDW7Bg0ryGmpujFjSnkd8fZRW+sb8QXLgUPcoB912Ri2wpP7o480rCnxWtJiSw==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -5119,7 +5119,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.4.14(typescript@5.8.3)':
+  '@adviser/cement@0.4.15(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.3)
       yaml: 2.7.1
