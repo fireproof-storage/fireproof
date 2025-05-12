@@ -74,7 +74,7 @@
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.13.0",
     "drizzle-kit": "0.30.6",
-    "esbuild": "^0.25.3",
+    "esbuild": "^0.25.4",
     "esbuild-plugin-replace": "^1.4.0",
     "eslint": "^9.26.0",
     "eslint-import-resolver-typescript": "^4.3.4",
