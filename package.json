@@ -73,7 +73,7 @@
     "@vitest/ui": "^3.1.1",
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.13.0",
-    "drizzle-kit": "0.30.6",
+    "drizzle-kit": "0.31.1",
     "esbuild": "^0.25.4",
     "esbuild-plugin-replace": "^1.4.0",
     "eslint": "^9.26.0",
