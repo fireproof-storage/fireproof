@@ -322,6 +322,24 @@ export class CloudContext {
       },
     });
   }
+
+  updateLedgerMutation(): ReturnType<
+    typeof useMutation<ResUpdateLedger, Error, { ledgerId: string; tenantId: string; name: string }>
+  > {
+    const listLedgers = this.getListLedgersByUser();
+    return useMutation({
+      mutationFn: ({ tenantId, ledgerId, name }: { tenantId: string; ledgerId: string; name: string }) => {
+        return wrapResultToPromise(() =>
+          this.api.updateLedger({
+            ledger: { ledgerId, tenantId, name },
+          }),
+        )();
+      },
+      onSuccess: () => {
+        listLedgers.refetch();
+      },
+    });
+  }
 }
 
 class CloudApi {

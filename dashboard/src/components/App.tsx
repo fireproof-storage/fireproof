@@ -37,6 +37,8 @@ import { Login, loginLoader } from "../pages/login.tsx";
 import { SignUpPage, signupLoader } from "../pages/signup.tsx";
 import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.tsx";
 import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.tsx";
+import { LedgerAdmin } from "../pages/cloud/tenants/ledgers/admin.tsx";
+import { LedgerDelete } from "../pages/cloud/tenants/ledgers/delete.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -76,7 +78,9 @@ export function App() {
                   <Route path="new" element={<NewLedgerDocument />} />
                   <Route path=":documentId" element={<ShowLedgerDocument />} />
                 </Route>
+                <Route path="delete" element={<LedgerDelete />} />
                 <Route path="sharing" element={<LedgerSharing />} />
+                <Route path="admin" element={<LedgerAdmin />} />
               </Route>
             </Route>
           </Route>

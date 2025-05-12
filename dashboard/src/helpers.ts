@@ -13,6 +13,13 @@ export function tenantName(tenant: ps.dashboard.UserTenant) {
   return tenant.user.name || tenant.tenant.name || tenant.tenantId;
 }
 
+export function ledgerName(ledger: ps.dashboard.LedgerUser) {
+  // if (tenant.default) {
+  //   return "Default";
+  // }
+  return ledger.name;
+}
+
 export const DEFAULT_ENDPOINT = BuildURI.from("fireproof://cloud.fireproof.direct")
   .setParam("getBaseUrl", "https://storage.fireproof.direct/")
   .URI();
