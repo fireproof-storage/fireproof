@@ -50,7 +50,7 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11
       multiformats:
-        specifier: ^13.3.2
+        specifier: ^13.3.3
         version: 13.3.6
       p-limit:
         specifier: ^6.2.0
@@ -4452,10 +4452,6 @@ packages:
   carstream@2.3.0:
     resolution: {integrity: sha512-2YwFg5Kxs2tqVCJv7sthWbYoUpALCYBBfTdpQcpicV7ipi6bBb1h9M4MNb1vm+724f39lUNp5VWhW43IFxfPlA==}
 
-  cborg@1.10.2:
-    resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
-    hasBin: true
-
   cborg@4.2.11:
     resolution: {integrity: sha512-7gs3iaqtsD9OHowgqzc6ixQGwSBONqosVR2co0Bg0pARgrLap+LCcEIXJuuIz2jHy0WWQeDMFPEsU2r17I2XPQ==}
     hasBin: true
@@ -6859,6 +6855,9 @@ packages:
   multiformats@12.1.3:
     resolution: {integrity: sha512-eajQ/ZH7qXZQR2AgtfpmSMizQzmyYVmCql7pdhldPuYQi4atACekbJaQplk6dWyIi10jCaFnd6pqvcEFXjbaJw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+
+  multiformats@13.3.3:
+    resolution: {integrity: sha512-TlaFCzs3NHNzMpwiGwRYehnnhHlZcWfptygFekshlb9xCyO09GfN+9881+VBENCdRnKOeqmMxDCbupNecV8xRQ==}
 
   multiformats@13.3.6:
     resolution: {integrity: sha512-yakbt9cPYj8d3vi/8o/XWm61MrOILo7fsTL0qxNx6zS0Nso6K5JqqS2WV7vK/KSuDBvrW3KfCwAdAgarAgOmww==}
@@ -10394,8 +10393,8 @@ snapshots:
 
   '@ipld/dag-cbor@8.0.1':
     dependencies:
-      cborg: 1.10.2
-      multiformats: 11.0.2
+      cborg: 4.2.10
+      multiformats: 13.3.3
 
   '@ipld/dag-cbor@9.2.4':
     dependencies:
@@ -12633,8 +12632,6 @@ snapshots:
       '@ipld/dag-cbor': 9.2.4
       multiformats: 13.3.6
       uint8arraylist: 2.4.8
-
-  cborg@1.10.2: {}
 
   cborg@4.2.11: {}
 
@@ -15675,6 +15672,8 @@ snapshots:
   multiformats@11.0.2: {}
 
   multiformats@12.1.3: {}
+
+  multiformats@13.3.3: {}
 
   multiformats@13.3.6: {}
 
