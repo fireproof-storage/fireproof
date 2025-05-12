@@ -1,11 +1,8 @@
 import { useContext } from "react";
 import {
-  BrowserRouter,
   Navigate,
-  Outlet,
   Route,
   RouterProvider,
-  Routes,
   createBrowserRouter,
   createMemoryRouter,
   createRoutesFromElements,
@@ -25,7 +22,7 @@ import { LedgerSharing } from "../pages/cloud/tenants/ledgers/sharing.tsx";
 import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
 import { CloudTenantMembers } from "../pages/cloud/tenants/members.tsx";
 import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.tsx";
-import { CloudTenantOverview } from "../pages/cloud/tenants/overview.tsx";
+// import { CloudTenantOverview } from "../pages/cloud/tenants/overview.tsx";
 import { CloudTenantShow } from "../pages/cloud/tenants/show.tsx";
 import { Databases, databaseLoader } from "../pages/databases.tsx";
 import { DatabasesConnect, connectDatabasesLoader } from "../pages/databases/connect.tsx";
@@ -39,6 +36,7 @@ import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
 import { SignUpPage, signupLoader } from "../pages/signup.tsx";
 import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.tsx";
+import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -60,8 +58,8 @@ export function App() {
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
           <Route path=":tenantId">
             <Route element={<CloudTenantShow />}>
-              <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<CloudTenantOverview />} />
+              <Route index element={<Navigate to="members" replace />} />
+              {/* <Route path="overview" element={<CloudTenantOverview />} /> */}
               <Route path="members" element={<CloudTenantMembers />} />
               <Route path="admin" element={<CloudTenantAdmin />} />
             </Route>
@@ -70,9 +68,11 @@ export function App() {
               <Route index element={<CloudTenantLedgersIndex />} />
               <Route path="new" element={<CloudTenantLedgersNew />} />
               <Route path=":ledgerId" element={<CloudTenantLedgersShow />}>
-                <Route index element={<Navigate to="documents" replace />} />
+                <Route index element={<Navigate to="overview" replace />} />
+                <Route path="overview" element={<LedgerOverview />} />
                 <Route path="documents">
                   <Route index element={<LedgerDocuments />} />
+                  <Route path="documents" element={<LedgerDocuments />} />
                   <Route path="new" element={<NewLedgerDocument />} />
                   <Route path=":documentId" element={<ShowLedgerDocument />} />
                 </Route>

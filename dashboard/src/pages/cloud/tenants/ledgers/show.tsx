@@ -8,6 +8,7 @@ export function CloudTenantLedgersShow() {
   const { ledgerId } = useParams();
 
   const tabs = [
+    { id: "overview", label: "Overview" },
     { id: "documents", label: "Documents" },
     { id: "sharing", label: "Sharing" },
   ];

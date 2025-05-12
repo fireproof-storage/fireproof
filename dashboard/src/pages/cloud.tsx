@@ -7,6 +7,7 @@ import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 // import { useSession } from "@clerk/clerk-react";
 import { URI } from "@adviser/cement";
+import { base64url } from "jose";
 
 // TODO: This is a temporary loader to ensure the user is logged in with Clerk.
 // TODO: We should move this to a provider agnostic loader
@@ -30,10 +31,10 @@ export function Cloud() {
   // console.log(">>>>>>>>", cloud.sessionReady(true), cloud._clerkSession?.isLoaded, cloud._clerkSession?.isSignedIn);
   if (cloud._clerkSession?.isSignedIn === false) {
     const buri = URI.from(window.location.href);
-    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", buri.toString()).URI().withoutHostAndSchema;
+    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", base64url.encode(buri.toString())).URI();
     console.log("cloud-tos", tos);
     // return <><div>{tos}</div></>
-    return <Navigate to={tos} />;
+    return <Navigate to={tos.withoutHostAndSchema} />;
     // return <div>Not logged in:{tos}</div>;
   }
   return <WithSidebar sideBarComponent={<SidebarCloud />} />;
@@ -56,7 +57,7 @@ function SidebarCloud() {
   }
 
   function isHomeActive(path: string) {
-    const regex = new RegExp(`/fp/cloud/tenants/${tenantId}/(overview|members|admin)?$`);
+    const regex = new RegExp(`/fp/cloud/tenants/${tenantId}/(members|admin)?$`);
     return regex.test(location.pathname) || path === location.pathname;
   }
 
