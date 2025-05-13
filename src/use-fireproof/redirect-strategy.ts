@@ -113,6 +113,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
       clearTimeout(this.waiting);
       this.waiting = undefined;
     }
+    this.waitState = "stopped";
   }
 
   async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
