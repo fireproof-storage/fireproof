@@ -34,6 +34,10 @@ interface FPApiMsgInterface {
   isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken;
   isReqTokenByResultId(jso: unknown): jso is ReqTokenByResultId;
   isResTokenByResultId(jso: unknown): jso is ResTokenByResultId;
+  isListLedgersByUser(jso: unknown): jso is ReqListLedgersByUser;
+  isCreateLedger(jso: unknown): jso is ReqCreateLedger;
+  isUpdateLedger(jso: unknown): jso is ReqUpdateLedger;
+  isDeleteLedger(jso: unknown): jso is ReqDeleteLedger;
 }
 
 export class FAPIMsgImpl implements FPApiMsgInterface {
