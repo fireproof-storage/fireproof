@@ -1,5 +1,5 @@
 #!/bin/sh -e
-set -e
+set -ex
 
 # progName=$0
 projectRoot=$(pwd)
