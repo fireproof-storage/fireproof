@@ -28,6 +28,7 @@ export interface TokenAndClaimsEvents {
 interface ToCloudBase {
   readonly name: string; // default "toCloud"
   readonly interval: number; // default 1000 or 1 second
+  readonly tokenWaitTime: number; // default 90 seconds
   readonly refreshTokenPreset: number; // default 2 minutes this is the time before the token expires
   readonly context: AppContext;
   readonly events: TokenAndClaimsEvents;
@@ -74,6 +75,7 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
   const defOpts = {
     name: ToCloudName,
     interval: 1000,
+    tokenWaitTime: 90 * 1000, // 90 seconds
     refreshTokenPreset: 2 * 60 * 1000, // 2 minutes
     ...opts,
     events: opts.events ?? {
