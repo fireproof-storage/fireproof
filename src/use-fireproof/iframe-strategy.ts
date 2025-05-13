@@ -69,6 +69,10 @@ export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
     return ret;
   }
 
+  stop() {
+    return;
+  }
+
   open(sthis: SuperThis, _logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     document.body.appendChild(this.overlayDiv(deviceId, redirectCtx.dashboardURI));
