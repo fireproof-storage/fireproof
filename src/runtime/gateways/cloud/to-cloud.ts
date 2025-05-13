@@ -285,6 +285,12 @@ export class SimpleTokenStrategy implements TokenStrategie {
       claims: decodeJwt(jwk) as FPCloudClaim,
     };
   }
+
+  stop(): void {
+    // console.log("SimpleTokenStrategy stop");
+    return;
+  }
+
   open(): void {
     // console.log("SimpleTokenStrategy open");
     return;
