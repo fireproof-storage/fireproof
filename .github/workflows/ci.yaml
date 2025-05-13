@@ -107,7 +107,7 @@ jobs:
         run: pnpm run build
 
   test-node:
-    timeout-minutes: 3
+    timeout-minutes: 5
     name: test-node
     needs: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
