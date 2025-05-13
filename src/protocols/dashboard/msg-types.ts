@@ -181,8 +181,8 @@ export interface ReqListLedgersByUser {
 
 interface LedgerUserRight {
   readonly userId: string;
-  readonly role: "admin" | "member";
-  readonly right: "read" | "write";
+  readonly role: Role;
+  readonly right: ReadWrite;
   readonly name?: string;
   readonly default: boolean;
   readonly createdAt: Date;
@@ -206,22 +206,22 @@ export interface ResListLedgersByUser {
   readonly ledgers: LedgerUser[];
 }
 
-export interface ReqAttachUserToLedger {
-  readonly type: "reqAttachUserToLedger";
-  readonly auth: AuthType;
-  readonly tenantId: string;
-  readonly ledgerId: string;
-  readonly userId: string;
-  readonly role: ReadWrite;
-}
+// export interface ReqAttachUserToLedger {
+//   readonly type: "reqAttachUserToLedger";
+//   readonly auth: AuthType;
+//   readonly tenantId: string;
+//   readonly ledgerId: string;
+//   readonly userId: string;
+//   readonly role: ReadWrite;
+// }
 
-export interface ResAttachUserToLedger {
-  readonly type: "resAttachUserToLedger";
-  readonly tenantId: string;
-  readonly ledgerId: string;
-  readonly userId: string;
-  readonly role: ReadWrite;
-}
+// export interface ResAttachUserToLedger {
+//   readonly type: "resAttachUserToLedger";
+//   readonly tenantId: string;
+//   readonly ledgerId: string;
+//   readonly userId: string;
+//   readonly role: ReadWrite;
+// }
 
 export interface ReqListTenantsByUser {
   readonly type: "reqListTenantsByUser";

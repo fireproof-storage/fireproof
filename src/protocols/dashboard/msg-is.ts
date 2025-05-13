@@ -40,62 +40,62 @@ interface FPApiMsgInterface {
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger;
 }
 
+function hasType(jso: unknown, t: string): jso is { type: string } {
+  return typeof jso === "object" && jso !== null && (jso as { type?: unknown }).type === t;
+}
 export class FAPIMsgImpl implements FPApiMsgInterface {
   isDeleteTenant(jso: unknown): jso is ReqDeleteTenant {
-    return (jso as ReqDeleteTenant).type === "reqDeleteTenant";
+    return hasType(jso, "reqDeleteTenant");
   }
   isUpdateTenant(jso: unknown): jso is ReqUpdateTenant {
-    return (jso as ReqUpdateTenant).type === "reqUpdateTenant";
+    return hasType(jso, "reqUpdateTenant");
   }
   isCreateTenant(jso: unknown): jso is ReqCreateTenant {
-    return (jso as ReqCreateTenant).type === "reqCreateTenant";
+    return hasType(jso, "reqCreateTenant");
   }
   isDeleteInvite(jso: unknown): jso is ReqDeleteInvite {
-    return (jso as ReqDeleteInvite).type === "reqDeleteInvite";
+    return hasType(jso, "reqDeleteInvite");
   }
   isListInvites(jso: unknown): jso is ReqListInvites {
-    return (jso as ReqListInvites).type === "reqListInvites";
+    return hasType(jso, "reqListInvites");
   }
   isInviteUser(jso: unknown): jso is ReqInviteUser {
-    return (jso as ReqInviteUser).type === "reqInviteUser";
+    return hasType(jso, "reqInviteUser");
   }
   isFindUser(jso: unknown): jso is ReqFindUser {
-    return (jso as ReqFindUser).type === "reqFindUser";
+    return hasType(jso, "reqFindUser");
   }
   isRedeemInvite(jso: unknown): jso is ReqRedeemInvite {
-    return (jso as ReqRedeemInvite).type === "reqRedeemInvite";
+    return hasType(jso, "reqRedeemInvite");
   }
   isEnsureUser(jso: unknown): jso is ReqEnsureUser {
-    return (jso as ReqEnsureUser).type === "reqEnsureUser";
+    return hasType(jso, "reqEnsureUser");
   }
-
   isListTenantsByUser(jso: unknown): jso is ReqListTenantsByUser {
-    return (jso as ReqListTenantsByUser).type === "reqListTenantsByUser";
+    return hasType(jso, "reqListTenantsByUser");
   }
   isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant {
-    return (jso as ReqUpdateUserTenant).type === "reqUpdateUserTenant";
+    return hasType(jso, "reqUpdateUserTenant");
   }
   isListLedgersByUser(jso: unknown): jso is ReqListLedgersByUser {
-    return (jso as ReqListLedgersByUser).type === "reqListLedgersByUser";
+    return hasType(jso, "reqListLedgersByUser");
   }
-
   isCreateLedger(jso: unknown): jso is ReqCreateLedger {
-    return (jso as ReqCreateLedger).type === "reqCreateLedger";
+    return hasType(jso, "reqCreateLedger");
   }
   isUpdateLedger(jso: unknown): jso is ReqUpdateLedger {
-    return (jso as ReqUpdateLedger).type === "reqUpdateLedger";
+    return hasType(jso, "reqUpdateLedger");
   }
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger {
-    return (jso as ReqDeleteLedger).type === "reqDeleteLedger";
+    return hasType(jso, "reqDeleteLedger");
   }
-
   isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken {
-    return (jso as ReqCloudSessionToken).type === "reqCloudSessionToken";
+    return hasType(jso, "reqCloudSessionToken");
   }
   isReqTokenByResultId(jso: unknown): jso is ReqTokenByResultId {
-    return (jso as ReqTokenByResultId).type === "reqTokenByResultId";
+    return hasType(jso, "reqTokenByResultId");
   }
   isResTokenByResultId(jso: unknown): jso is ResTokenByResultId {
-    return (jso as ResTokenByResultId).type === "resTokenByResultId";
+    return hasType(jso, "resTokenByResultId");
   }
 }

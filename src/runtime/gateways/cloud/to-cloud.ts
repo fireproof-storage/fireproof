@@ -232,13 +232,14 @@ class ToCloud implements ToCloudAttachable {
       // console.log("getToken", token)
       const buri = BuildURI.from(uri).setParam("authJWK", token.token);
 
-      if (token.claims.selected.tenant) {
-        buri.setParam("tenant", token.claims.selected.tenant);
+      const selected = token.claims.selected ?? {};
+      if (selected.tenant) {
+        buri.setParam("tenant", selected.tenant);
       } else if (this.opts.tenant) {
         buri.setParam("tenant", this.opts.tenant);
       }
-      if (token.claims.selected.ledger) {
-        buri.setParam("ledger", token.claims.selected.ledger);
+      if (selected.ledger) {
+        buri.setParam("ledger", selected.ledger);
       } else if (this.opts.ledger) {
         buri.setParam("ledger", this.opts.ledger);
       }
