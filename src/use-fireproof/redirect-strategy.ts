@@ -106,7 +106,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
 
   currentToken?: rt.gw.cloud.TokenAndClaims;
 
-  waiting?: NodeJS.Timeout;
+  waiting?: ReturnType<typeof setTimeout>;
 
   stop() {
     if (this.waiting) {
