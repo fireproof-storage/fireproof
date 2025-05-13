@@ -16,14 +16,15 @@ export type UseFpToCloudParam = Omit<Omit<Omit<rt.gw.cloud.ToCloudOptionalOpts, 
     readonly events?: rt.gw.cloud.TokenAndClaimsEvents;
   };
 
+async function defaultChanged() {
+   throw new Error("not ready");
+}
+
 export function toCloud(opts: UseFpToCloudParam): rt.gw.cloud.ToCloudAttachable {
+  const mergedEvents = { ...opts.events, changed: opts.events?.changed ?? defaultChanged };
   const myOpts = {
     ...opts,
-    events: opts.events ?? {
-      changed: async () => {
-        throw new Error("not ready");
-      },
-    },
+    events: mergedEvents,
     context: opts.context ?? new AppContext(),
     strategy: opts.strategy ?? new RedirectStrategy(),
   };
@@ -35,6 +36,9 @@ export function toCloud(opts: UseFpToCloudParam): rt.gw.cloud.ToCloudAttachable 
         await webCtx.setToken(token);
       } else {
         // webCtx.resetToken();
+      }
+      if (opts.events?.changed && opts.events?.changed !== defaultChanged) {
+        opts.events?.changed(token);
       }
     };
   }
