@@ -130,11 +130,17 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     resultId: undefined | string,
     opts: rt.gw.cloud.ToCloudOpts,
     resolve: (value: rt.gw.cloud.TokenAndClaims) => void,
+    attempts = 0,
   ) {
     if (!resultId) {
       return logger.Error().Msg("No resultId");
     }
     if (this.waitState !== "started") {
+      return;
+    }
+    if (attempts * opts.interval > opts.tokenWaitTime) {
+      logger.Error().Uint64("attempts", attempts).Msg("Token polling timed out");
+      this.stop();
       return;
     }
     const rWaitForToken = await dashApi.waitForToken({ resultId }, logger);

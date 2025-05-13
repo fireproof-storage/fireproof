@@ -17,7 +17,7 @@ export type UseFpToCloudParam = Omit<Omit<Omit<rt.gw.cloud.ToCloudOptionalOpts, 
   };
 
 async function defaultChanged() {
-   throw new Error("not ready");
+  throw new Error("not ready");
 }
 
 export function toCloud(opts: UseFpToCloudParam): rt.gw.cloud.ToCloudAttachable {
