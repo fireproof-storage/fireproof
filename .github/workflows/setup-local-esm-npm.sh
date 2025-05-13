@@ -26,7 +26,7 @@ fi
 
 export PROJECT_BASE=$projectRoot
 # $dockerCompose down || exit 0
-$dockerCompose -f .github/docker-compose.yaml up -d --wait
+$dockerCompose -f .github/docker-compose.yaml up -d --wait --force-recreate
 
 mkdir -p $projectRoot/dist
 
