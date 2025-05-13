@@ -8,11 +8,14 @@ projectRoot=$(pwd)
 if [ "$(which podman)" ] && [ "$FP_CI" != "fp_ci" ]
 then
   dockerCompose="podman compose"
-elif which docker-compose
-then
-  dockerCompose="docker-compose"
 else
-  dockerCompose="docker compose"
+  docker compose version
+  if [ $? -eq 0 ]
+  then
+    dockerCompose="docker compose"
+  else
+    dockerCompose="docker-compose"
+  fi
 fi
 
 mkdir -p $HOME/.cache/vd $HOME/.cache/esm
