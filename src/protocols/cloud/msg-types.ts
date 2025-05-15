@@ -61,6 +61,15 @@ export interface FPCloudClaim extends JWTPayload {
   readonly selected: TenantLedger;
 }
 
+// export interface FPWaitTokenResult {
+//   readonly type: "FPWaitTokenResult";
+//   readonly token: string;
+// }
+
+// export function isFPWaitTokenResult(r: unknown): r is FPWaitTokenResult {
+//   return typeof r === "object" && !!r && (r as FPWaitTokenResult).type === "FPWaitTokenResult";
+// }
+
 export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
 
 export type MsgWithError<T extends MsgBase> = T | ErrorMsg;

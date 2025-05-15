@@ -135,7 +135,14 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
         const conns = ctx.wsRoom.getConns(msg.conn);
         const ci = conns.map((c) => c.conn);
         for (const conn of conns) {
-          if (qsidEqual(conn.conn, msg.conn)) {
+          if (qsidEqual(conn.conn, msg.conn) && !msg.message.startsWith("/ping")) {
+            console.log("me", msg.message);
+            if (msg.message.startsWith("/close-connection")) {
+              setTimeout(() => {
+                conn.ws.close();
+                ctx.wsRoom.removeConn(conn.conn);
+              }, 10);
+            }
             continue;
           }
           dp.send(
