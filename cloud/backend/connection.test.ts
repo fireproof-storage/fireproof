@@ -5,6 +5,7 @@ import { Result, URI } from "@adviser/cement";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, wsStyle } from "./node/test-helper.js";
 import { testSuperThis } from "../test-super-this.js";
+import { sleep } from "zx";
 
 const {
   buildReqGestalt,
@@ -100,6 +101,47 @@ describe("Connection", () => {
       { name: "ws", action: () => wsStyle(sthis, auth.applyAuthToURI, endpoint, msgP, my) },
     ];
   // : [];
+
+  describe("ws-reconnect", () => {
+    let style: ReturnType<typeof wsStyle>;
+
+    beforeAll(async () => {
+      style = wsStyle(sthis, auth.applyAuthToURI, endpoint, msgP, my);
+
+      // sthis.env.sets((await resolveToml()).env as unknown as Record<string, string>);
+    });
+    it("reconnect", async () => {
+      const rC = await Msger.connect(sthis, auth.authType, style.ok.url(), msgP, {
+        reqId: "req-reconnect-test",
+      });
+      expect(rC.isOk()).toBeTruthy();
+      const c = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+      expect(c.conn).toEqual({
+        reqId: "req-reconnect-test",
+        resId: c.conn.resId,
+      });
+      expect(c.raw).toBeInstanceOf(style.cInstance);
+      expect(c.exchangedGestalt).toEqual({
+        my,
+        remote: { ...style.remoteGestalt, id: c.exchangedGestalt.remote.id },
+      });
+
+      for (let i = 0; i < 5; i++) {
+        console.log("reconnect-chat", i);
+        const act = await c.request(ps.cloud.buildReqChat(sthis, auth.authType, c.conn, "/close-connection"), {
+          waitFor: ps.cloud.MsgIsResChat,
+        });
+        if (!ps.cloud.MsgIsResChat(act)) {
+          assert.fail("Expected a response", JSON.stringify(act));
+        }
+        await sleep(30);
+      }
+
+      await c.close((await c.msgConnAuth()).Ok());
+    });
+
+    // const app = new Hono();
+  });
 
   describe.each(styles)(`${honoServer.name} - $name`, (styleFn) => {
     let style: ReturnType<typeof wsStyle> | ReturnType<typeof httpStyle>;
