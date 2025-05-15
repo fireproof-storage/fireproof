@@ -177,6 +177,16 @@ export class MsgConnected {
   attachAuth(auth: AuthFactory): MsgConnectedAuth {
     return new MsgConnectedAuth(this, auth);
   }
+
+  async close(): Promise<Result<void>> {
+    // return this.raw.close({
+    //   type: "reqClose",
+    //   tid: this.id,
+    //   version: VERSION,
+    //   auth: this.raw.
+    // });
+    return Result.Ok(undefined);
+  }
 }
 
 export class MsgConnectedAuth implements MsgRawConnection<MsgWithConnAuth> {
@@ -283,19 +293,19 @@ export class Msger {
     msgP: MsgerParamsWithEnDe,
     exGestalt: ExchangedGestalt,
   ): Promise<Result<MsgRawConnection>> {
-    let ws: WebSocket;
     // const { encode } = jsonEnDe(sthis);
     url = url.build().setParam("random", sthis.nextId().str).URI();
     // console.log("openWS", url.toString());
     // .setParam("reqOpen", sthis.txt.decode(encode(qOpen)))
     const wsUrl = ensurePath(url, "ws");
+    let wsFactory: () => WebSocket;
     if (runtimeFn().isNodeIsh) {
       const { WebSocket } = await import("ws");
-      ws = new WebSocket(wsUrl) as unknown as WebSocket;
+      wsFactory = () => new WebSocket(wsUrl) as unknown as WebSocket;
     } else {
-      ws = new WebSocket(wsUrl);
+      wsFactory = () => new WebSocket(wsUrl);
     }
-    return Result.Ok(new WSConnection(sthis, ws, msgP, exGestalt));
+    return Result.Ok(new WSConnection(sthis, wsFactory(), msgP, exGestalt));
   }
   static async open(
     sthis: SuperThis,
