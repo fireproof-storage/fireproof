@@ -1,12 +1,10 @@
 import { URI } from "@adviser/cement";
-import { AppContext } from "../../../app-context.tsx";
-import { Navigate, useSearchParams } from "react-router-dom";
-import { useContext, useEffect, useRef, useState } from "react";
-import { Ledger, ps } from "@fireproof/core";
+import { ps } from "@fireproof/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useContext, useEffect, useState } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { AppContext } from "../../../app-context.tsx";
 import { SelectedTenantLedger } from "./selected-tenant-ledger.tsx";
-import { a } from "vitest/dist/chunks/suite.d.FvehnV49.js";
-import { aI } from "vitest/dist/chunks/reporters.d.CfRkRKN2.js";
 
 export function redirectBackUrl() {
   const uri = URI.from(window.location.href);
@@ -38,7 +36,8 @@ export function ApiToken() {
 
   // console.log("createApiToken", searchParams.toString(), createApiToken);
 
-  const couldSelected = !!createApiToken.ledger && !!createApiToken.tenant;
+  const skipChooser = searchParams.has("skipChooser");
+  const couldSelected = skipChooser || (!!createApiToken.ledger && !!createApiToken.tenant);
 
   function selectLedger(param: TenantLedgerWithName) {
     setSearchParams((prev) => {
@@ -191,7 +190,7 @@ export function ApiToken() {
     // return <div>Not logged in:{tos}</div>;
   }
 
-  if (isLoadingLedgers) {
+  if (isLoadingLedgers && !skipChooser) {
     return <div>Loading ledgers...</div>;
   }
   if (errorLedgers) {
@@ -200,6 +199,10 @@ export function ApiToken() {
 
   const showChooser = !(isLoadingCloudToken || errorCloudToken || cloudToken);
   // console.log("showChooser", showChooser, isLoadingCloudToken, errorCloudToken, cloudToken);
+
+  if (skipChooser) {
+    return <div>Skip Chooser - Customize that UI</div>;
+  }
 
   return (
     <>
