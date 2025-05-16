@@ -1,5 +1,5 @@
 import { DocFileMeta } from "@fireproof/core";
-import React, { useState, useEffect, ImgHTMLAttributes } from "react";
+import React, { useState, useEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
 
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
@@ -25,9 +25,30 @@ function isFileMeta(obj: FileType): obj is DocFileMeta {
 
 export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const [imgDataUrl, setImgDataUrl] = useState("");
+  const fileDataRef = useRef<FileType | null>(null);
 
   // Use meta as fallback if file is not provided (for backward compatibility)
-  const fileData = file || meta;
+  // Memoize fileData to prevent unnecessary re-renders
+  const fileData = useMemo(() => {
+    const data = file || meta;
+    // If no data is provided, return null
+    if (!data) {
+      fileDataRef.current = null;
+      return null;
+    }
+
+    // Only update the reference if the file actually changed
+    if (
+      !fileDataRef.current ||
+      (isFile(data) &&
+        isFile(fileDataRef.current) &&
+        (data.size !== fileDataRef.current.size || data.lastModified !== fileDataRef.current.lastModified)) ||
+      (isFileMeta(data) && isFileMeta(fileDataRef.current) && data !== fileDataRef.current)
+    ) {
+      fileDataRef.current = data;
+    }
+    return fileDataRef.current;
+  }, [file, meta]);
 
   useEffect(() => {
     if (!fileData) return;
@@ -71,7 +92,7 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
       isMounted = false;
       if (cleanup) cleanup();
     };
-  }, [fileData]);
+  }, [fileDataRef.current]);
 
   return imgDataUrl
     ? React.createElement("img", {
