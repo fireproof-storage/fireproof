@@ -1,6 +1,9 @@
 import { DocFileMeta } from "@fireproof/core";
 import React, { useState, useEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
 
+// Cache for object URLs to avoid recreating them unnecessarily
+const objectUrlCache = new Map<string, string>();
+
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
 
@@ -25,30 +28,31 @@ function isFileMeta(obj: FileType): obj is DocFileMeta {
 
 export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const [imgDataUrl, setImgDataUrl] = useState("");
-  const fileDataRef = useRef<FileType | null>(null);
+  const fileObjRef = useRef<File | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   // Use meta as fallback if file is not provided (for backward compatibility)
   // Memoize fileData to prevent unnecessary re-renders
   const fileData = useMemo(() => {
-    const data = file || meta;
-    // If no data is provided, return null
-    if (!data) {
-      fileDataRef.current = null;
-      return null;
+    return file || meta;
+  }, [file, meta]);
+
+  // Generate a cache key for file objects
+  const getCacheKey = (fileObj: File): string => {
+    return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
+  };
+
+  // Get or create an object URL with caching
+  const getObjectUrl = (fileObj: File): string => {
+    const cacheKey = getCacheKey(fileObj);
+
+    if (!objectUrlCache.has(cacheKey)) {
+      // eslint-disable-next-line no-restricted-globals
+      objectUrlCache.set(cacheKey, URL.createObjectURL(fileObj));
     }
 
-    // Only update the reference if the file actually changed
-    if (
-      !fileDataRef.current ||
-      (isFile(data) &&
-        isFile(fileDataRef.current) &&
-        (data.size !== fileDataRef.current.size || data.lastModified !== fileDataRef.current.lastModified)) ||
-      (isFileMeta(data) && isFileMeta(fileDataRef.current) && data !== fileDataRef.current)
-    ) {
-      fileDataRef.current = data;
-    }
-    return fileDataRef.current;
-  }, [file, meta]);
+    return objectUrlCache.get(cacheKey) as string;
+  };
 
   useEffect(() => {
     if (!fileData) return;
@@ -68,17 +72,40 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
           break;
       }
 
-      if (fileObj && /image/.test(fileType)) {
-        // eslint-disable-next-line no-restricted-globals
-        const src = URL.createObjectURL(fileObj);
-        setImgDataUrl(src);
-        // eslint-disable-next-line no-restricted-globals
-        return () => URL.revokeObjectURL(src);
+      // Clean up previous object URL if it exists and we're loading a new file
+      if (fileObjRef.current !== fileObj && cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
       }
+
+      if (fileObj && /image/.test(fileType)) {
+        // Skip if it's the same exact file object
+        if (fileObjRef.current !== fileObj) {
+          const src = getObjectUrl(fileObj);
+          setImgDataUrl(src);
+          fileObjRef.current = fileObj;
+
+          // Store cleanup function
+          cleanupRef.current = () => {
+            const cacheKey = getCacheKey(fileObj);
+            if (objectUrlCache.has(cacheKey)) {
+              // eslint-disable-next-line no-restricted-globals
+              URL.revokeObjectURL(objectUrlCache.get(cacheKey) as string);
+              objectUrlCache.delete(cacheKey);
+            }
+          };
+
+          return cleanupRef.current;
+        }
+
+        // Return existing cleanup if same file
+        return cleanupRef.current;
+      }
+      return null;
     };
 
     let isMounted = true;
-    let cleanup: (() => void) | undefined;
+    let cleanup: (() => void) | null = null;
 
     loadFile().then((result) => {
       if (isMounted) {
@@ -92,7 +119,7 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
       isMounted = false;
       if (cleanup) cleanup();
     };
-  }, [fileDataRef.current]);
+  }, [fileData]);
 
   return imgDataUrl
     ? React.createElement("img", {
