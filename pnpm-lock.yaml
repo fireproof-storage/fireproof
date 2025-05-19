@@ -50,8 +50,8 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11
       multiformats:
-        specifier: ^13.3.3
-        version: 13.3.3
+        specifier: ^13.3.4
+        version: 13.3.4
       p-limit:
         specifier: ^6.2.0
         version: 6.2.0
@@ -3756,8 +3756,8 @@ packages:
       typescript:
         optional: true
 
-  multiformats@13.3.3:
-    resolution: {integrity: sha512-TlaFCzs3NHNzMpwiGwRYehnnhHlZcWfptygFekshlb9xCyO09GfN+9881+VBENCdRnKOeqmMxDCbupNecV8xRQ==}
+  multiformats@13.3.4:
+    resolution: {integrity: sha512-JXpM5p9TpJ/BHsUtmLaWuRN0ft0gJPGa6BhkX2KXjFHvkFQOQkDManoar3gx0JsTLNrOojBE2Mj4hFxohGnXZA==}
 
   mustache@4.2.0:
     resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
@@ -5845,18 +5845,18 @@ snapshots:
     dependencies:
       '@ipld/dag-cbor': 9.2.3
       cborg: 4.2.10
-      multiformats: 13.3.3
+      multiformats: 13.3.4
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.3':
     dependencies:
       cborg: 4.2.10
-      multiformats: 13.3.3
+      multiformats: 13.3.4
 
   '@ipld/dag-json@10.2.4':
     dependencies:
       cborg: 4.2.10
-      multiformats: 13.3.3
+      multiformats: 13.3.4
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -6706,7 +6706,7 @@ snapshots:
       archy: 1.0.0
       carstream: 2.3.0
       cli-color: 2.0.4
-      multiformats: 13.3.3
+      multiformats: 13.3.4
       sade: 1.8.1
 
   '@webassemblyjs/ast@1.14.1':
@@ -7115,7 +7115,7 @@ snapshots:
   carstream@2.3.0:
     dependencies:
       '@ipld/dag-cbor': 9.2.3
-      multiformats: 13.3.3
+      multiformats: 13.3.4
       uint8arraylist: 2.4.8
 
   cborg@4.2.10: {}
@@ -8801,7 +8801,7 @@ snapshots:
       - '@types/node'
     optional: true
 
-  multiformats@13.3.3: {}
+  multiformats@13.3.4: {}
 
   mustache@4.2.0: {}
 
@@ -9991,7 +9991,7 @@ snapshots:
 
   uint8arrays@5.1.0:
     dependencies:
-      multiformats: 13.3.3
+      multiformats: 13.3.4
 
   unbox-primitive@1.1.0:
     dependencies:
