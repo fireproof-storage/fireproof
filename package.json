@@ -61,7 +61,7 @@
     "@hono/node-server": "^1.14.1",
     "@hono/node-ws": "^1.1.4",
     "@testing-library/react": "^16.3.0",
-    "@types/node": "^22.15.17",
+    "@types/node": "^22.15.19",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^19.1.4",
     "@types/react-dom": "19.1.3",
