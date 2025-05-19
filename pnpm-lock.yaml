@@ -159,7 +159,7 @@ importers:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
       semver:
-        specifier: ^7.7.1
+        specifier: ^7.7.2
         version: 7.7.2
       tsup:
         specifier: ^8.4.0
