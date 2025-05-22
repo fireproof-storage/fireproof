@@ -163,7 +163,7 @@ jobs:
     timeout-minutes: 4
     name: smoke
     needs: ["test-node", "build"]
-    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4
 
