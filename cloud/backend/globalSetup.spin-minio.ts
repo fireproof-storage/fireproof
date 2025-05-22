@@ -8,7 +8,7 @@ export default async function setup() {
   await gt.fpMinioSetupOnce.once(async () => {
     // eslint-disable-next-line no-console
     console.log("minio spinning up", id);
-    await $`docker-compose -f cloud/docker-compose.yaml up -d`;
+    await $`docker compose -f cloud/docker-compose.yaml up -d`;
   });
   // eslint-disable-next-line no-console
   console.log("minio ready", id, gt.fpMinioSetupOnce.ready);

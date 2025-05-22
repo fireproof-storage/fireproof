@@ -1,5 +1,5 @@
 #!/bin/sh -e
-set -e
+set -ex
 
 # progName=$0
 projectRoot=$(pwd)
@@ -8,11 +8,14 @@ projectRoot=$(pwd)
 if [ "$(which podman)" ] && [ "$FP_CI" != "fp_ci" ]
 then
   dockerCompose="podman compose"
-elif which docker-compose
-then
-  dockerCompose="docker-compose"
 else
-  dockerCompose="docker compose"
+  docker compose version
+  if [ $? -eq 0 ]
+  then
+    dockerCompose="docker compose"
+  else
+    dockerCompose="docker-compose"
+  fi
 fi
 
 mkdir -p $HOME/.cache/vd $HOME/.cache/esm
@@ -26,7 +29,7 @@ fi
 
 export PROJECT_BASE=$projectRoot
 # $dockerCompose down || exit 0
-$dockerCompose -f .github/docker-compose.yaml up -d --wait
+$dockerCompose -f .github/docker-compose.yaml up -d --wait --force-recreate
 
 mkdir -p $projectRoot/dist
 
