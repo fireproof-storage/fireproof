@@ -16,7 +16,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
-      AWS_EC2_METADATA_DISABLED: true
+      AWS_EC2_METADATA_DISABLED: "true"
     entrypoint: ""
     command: bash -xc 'aws --endpoint-url http://minio:9000/ s3 ls s3://testbucket || aws --endpoint-url http://minio:9000/ s3 mb s3://testbucket'
     depends_on:
