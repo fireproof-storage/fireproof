@@ -15,7 +15,7 @@ jobs:
   pre-build:
     timeout-minutes: 10
     name: pre-build
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -79,7 +79,7 @@ jobs:
   build:
     name: build
     needs: pre-build
-    runs-on: blacksmith-2vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -110,7 +110,7 @@ jobs:
     timeout-minutes: 3
     name: test-node
     needs: pre-build
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -163,7 +163,7 @@ jobs:
     timeout-minutes: 4
     name: smoke
     needs: ["test-node", "build"]
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -218,7 +218,7 @@ jobs:
     name: publish
     needs: ["test-node", "smoke", "build"]
     environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
-    runs-on: blacksmith-2vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
@@ -261,7 +261,7 @@ jobs:
     name: cf-deploy
     needs: test-node
     environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
-    runs-on: blacksmith-2vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -323,7 +323,7 @@ jobs:
 
   clean-sticky-cache:
     name: clean-sticky-cache
-    runs-on: blacksmith-2vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-2vcpu-ubuntu-2404-arm
     needs: [build, test-node, smoke, publish, cf-deploy]
     if: always()
     steps:
