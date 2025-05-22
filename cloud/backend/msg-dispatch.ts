@@ -6,7 +6,7 @@ import { WSRoom } from "./ws-room.js";
 type MsgBase = ps.cloud.MsgBase;
 type MsgWithError<T extends MsgBase> = ps.cloud.MsgWithError<T>;
 type QSId = ps.cloud.QSId;
-type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConn<T extends MsgBase> = ps.cloud.MsgWithConn<T>;
 type FPJWKCloudAuthType = ps.cloud.FPJWKCloudAuthType;
 type AuthType = ps.cloud.AuthType;
 type PreSignedMsg = ps.cloud.PreSignedMsg;
@@ -124,7 +124,7 @@ export class MsgDispatcher {
   async validateConn<T extends MsgBase>(
     ctx: MsgDispatcherCtx,
     msg: T,
-    fn: (msg: MsgWithConnAuth<T>) => Promisable<MsgWithError<MsgBase>>,
+    fn: (msg: MsgWithConn<T>) => Promisable<MsgWithError<MsgBase>>,
   ): Promise<Response> {
     if (!ctx.wsRoom.isConnected(msg)) {
       return this.send(ctx, buildErrorMsg(ctx, { ...msg }, new Error("dispatch missing connection")));

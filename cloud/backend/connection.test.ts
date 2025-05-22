@@ -5,6 +5,7 @@ import { Result, URI } from "@adviser/cement";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, wsStyle } from "./node/test-helper.js";
 import { testSuperThis } from "../test-super-this.js";
+import { VirtualConnected } from "../../src/protocols/cloud/msger.js";
 
 const {
   buildReqGestalt,
@@ -34,7 +35,6 @@ const {
   MsgIsResDelMeta,
   MsgIsEventGetMeta,
   MsgIsResPutMeta,
-  MsgConnected,
 } = ps.cloud;
 type MsgBase = ps.cloud.MsgBase;
 type MsgWithError<T extends MsgBase> = ps.cloud.MsgWithError<T>;
@@ -47,7 +47,6 @@ type ResDelMeta = ps.cloud.ResDelMeta;
 type ReqDelMeta = ps.cloud.ReqDelMeta;
 type BindGetMeta = ps.cloud.BindGetMeta;
 type EventGetMeta = ps.cloud.EventGetMeta;
-type MsgConnectedAuth = ps.cloud.MsgConnectedAuth;
 
 async function refURL(sthis: SuperThis, sp: ResOptionalSignedUrl) {
   return (
@@ -101,6 +100,47 @@ describe("Connection", () => {
     ];
   // : [];
 
+  describe("ws-reconnect", () => {
+    let style: ReturnType<typeof wsStyle>;
+
+    beforeAll(async () => {
+      style = wsStyle(sthis, auth.applyAuthToURI, endpoint, msgP, my);
+
+      // sthis.env.sets((await resolveToml()).env as unknown as Record<string, string>);
+    });
+    it("reconnect", async () => {
+      const rC = await Msger.connect(sthis, style.ok.url(), msgP, {
+        reqId: "req-reconnect-test",
+      });
+      expect(rC.isOk()).toBeTruthy();
+      const c = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
+      expect(c.connnected.conn).toEqual({
+        reqId: "req-reconnect-test",
+        resId: c.connnected.conn.resId,
+      });
+      expect(c.connnected.transport()).toBeInstanceOf(style.cInstance);
+      expect(c.exchangedGestalt).toEqual({
+        my,
+        remote: { ...style.remoteGestalt, id: c.exchangedGestalt.remote.id },
+      });
+
+      for (let i = 0; i < 5; i++) {
+        console.log("reconnect-chat", i);
+        const act = await c.request(ps.cloud.buildReqChat(sthis, auth.authType, c.connnected.conn, "/close-connection"), {
+          waitFor: ps.cloud.MsgIsResChat,
+        });
+        if (!ps.cloud.MsgIsResChat(act)) {
+          assert.fail("Expected a response", JSON.stringify(act));
+        }
+        await sleep(30);
+      }
+
+      await c.close((await c.msgConnAuth()).Ok());
+    });
+
+    // const app = new Hono();
+  });
+
   describe.each(styles)(`${honoServer.name} - $name`, (styleFn) => {
     let style: ReturnType<typeof wsStyle> | ReturnType<typeof httpStyle>;
     // let server: HonoServer;
@@ -131,14 +171,14 @@ describe("Connection", () => {
     });
 
     describe(`connection`, () => {
-      let c: MsgConnectedAuth;
+      let c: VirtualConnected;
       beforeEach(async () => {
         const rC = await style.ok.open().then((r) => MsgConnected.connect(auth.authType, r, { reqId: "req-open-testx" }));
         expect(rC.isOk()).toBeTruthy();
         c = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
-        expect(c.conn).toEqual({
+        expect(c.connnected.conn).toEqual({
           reqId: "req-open-testx",
-          resId: c.conn.resId,
+          resId: c.connnected.conn.resId,
         });
       });
       afterEach(async () => {
@@ -146,7 +186,7 @@ describe("Connection", () => {
       });
 
       it("kaputt url http", async () => {
-        const r = await c.raw.request(
+        const r = await c.request(
           {
             tid: "test",
             auth: auth.authType,
@@ -176,7 +216,7 @@ describe("Connection", () => {
       it("gestalt url http", async () => {
         const msgP = defaultMsgParams(sthis, {});
         const req = buildReqGestalt(sthis, auth.authType, defaultGestalt(msgP, { id: "test" }));
-        const r = await c.raw.request(req, { waitFor: MsgIsResGestalt });
+        const r = await c.request(req, { waitFor: MsgIsResGestalt });
         if (!MsgIsResGestalt(r)) {
           assert.fail("expected MsgError", JSON.stringify(r));
         }
@@ -187,13 +227,13 @@ describe("Connection", () => {
       });
 
       it("openConnection", async () => {
-        const req = buildReqOpen(sthis, auth.authType, { ...c.conn });
-        const r = await c.raw.request(req, { waitFor: MsgIsResOpen });
+        const req = buildReqOpen(sthis, auth.authType, { ...c.connnected.conn });
+        const r = await c.request(req, { waitFor: MsgIsResOpen });
         if (!MsgIsResOpen(r)) {
           assert.fail(JSON.stringify(r));
         }
         expect(r).toEqual({
-          conn: { ...c.conn, resId: r.conn?.resId },
+          conn: { ...c.connnected, resId: r.conn?.resId },
           auth: auth.authType,
           tid: req.tid,
           type: "resOpen",
@@ -203,16 +243,16 @@ describe("Connection", () => {
     });
 
     it("open", async () => {
-      const rC = await Msger.connect(sthis, auth.authType, style.ok.url(), msgP, {
+      const rC = await Msger.connect(sthis, style.ok.url(), msgP, {
         reqId: "req-open-testy",
       });
       expect(rC.isOk()).toBeTruthy();
       const c = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
-      expect(c.conn).toEqual({
+      expect(c.connnected).toEqual({
         reqId: "req-open-testy",
-        resId: c.conn.resId,
+        resId: c.connnected.conn.resId,
       });
-      expect(c.raw).toBeInstanceOf(style.cInstance);
+      expect(c.connnected.transport()).toBeInstanceOf(style.cInstance);
       expect(c.exchangedGestalt).toEqual({
         my,
         remote: { ...style.remoteGestalt, id: c.exchangedGestalt.remote.id },
@@ -223,11 +263,11 @@ describe("Connection", () => {
       let gwCtx: GwCtx;
       let conn: MsgConnectedAuth;
       beforeAll(async () => {
-        const rC = await Msger.connect(sthis, auth.authType, style.ok.url(), msgP, qOpen.conn);
+        const rC = await Msger.connect(sthis, style.ok.url(), msgP, qOpen.conn);
         expect(rC.isOk()).toBeTruthy();
         conn = rC.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
         gwCtx = {
-          conn: conn.conn,
+          conn: conn.connnected.conn,
           tenant: {
             tenant: auth.claims.tenants[0].id,
             ledger: auth.claims.ledgers[0].id,
@@ -238,7 +278,7 @@ describe("Connection", () => {
         await conn.close((await conn.msgConnAuth()).Ok());
       });
       it("Open", async () => {
-        const res = await conn.raw.request(buildReqOpen(sthis, auth.authType, conn.conn), {
+        const res = await conn.request(buildReqOpen(sthis, auth.authType, conn.connnected.conn), {
           waitFor: MsgIsResOpen,
         });
         if (!MsgIsResOpen(res)) {
@@ -294,7 +334,7 @@ describe("Connection", () => {
       describe("Meta", async () => {
         it("bind stop", async () => {
           const sp = sup({ method: "GET", store: "meta" });
-          expect(conn.raw.activeBinds.size).toBe(0);
+          expect(conn.activeBinds.size).toBe(0);
           const streams: ReadableStream<MsgWithError<EventGetMeta>>[] = Array(5)
             .fill(0)
             .map(() => {
@@ -318,7 +358,7 @@ describe("Connection", () => {
               await reader.cancel();
             }
           }
-          expect(conn.raw.activeBinds.size).toBe(0);
+          expect(conn.activeBinds.size).toBe(0);
           // await Promise.all(streams.map((s) => s.cancel()));
         });
 

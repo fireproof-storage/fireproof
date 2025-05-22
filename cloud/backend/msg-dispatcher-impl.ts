@@ -43,7 +43,7 @@ type ReqPutWAL = ps.cloud.ReqPutWAL;
 type ReqGestalt = ps.cloud.ReqGestalt;
 type ReqChat = ps.cloud.ReqChat;
 type ReqClose = ps.cloud.ReqClose;
-type MsgWithConnAuth<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConn<T extends ps.cloud.MsgBase> = ps.cloud.MsgWithConn<T>;
 type BindGetMeta = ps.cloud.BindGetMeta;
 type ReqDelMeta = ps.cloud.ReqDelMeta;
 type ReqPutMeta = ps.cloud.ReqPutMeta;
@@ -58,15 +58,15 @@ type ReqPutMeta = ps.cloud.ReqPutMeta;
 export function ensureTendantLedger<T extends ps.cloud.MsgBase>(
   fn: (
     ctx: MsgDispatcherCtx,
-    msg: ps.cloud.MsgWithOptionalTenantLedger<MsgWithConnAuth<T>>,
+    msg: ps.cloud.MsgWithOptionalTenantLedger<MsgWithConn<T>>,
   ) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>>,
   // right: "read" | "write" = "write"
-): (ctx: MsgDispatcherCtx, msg: MsgWithConnAuth<T>) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>> {
+): (ctx: MsgDispatcherCtx, msg: MsgWithConn<T>) => Promisable<ps.cloud.MsgWithError<ps.cloud.MsgBase>> {
   return async (ctx, msg) => {
     if (!ps.cloud.isAuthTypeFPCloud(msg.auth)) {
       return buildErrorMsg(ctx, msg, new Error("ensureTendantLedger: needs auth with claim"));
     }
-    const optionalTenantLedger = msg as ps.cloud.MsgWithOptionalTenantLedger<MsgWithConnAuth<T>>;
+    const optionalTenantLedger = msg as ps.cloud.MsgWithOptionalTenantLedger<MsgWithConn<T>>;
     const tl = {
       tenant: optionalTenantLedger.tenant?.tenant ?? msg.auth.params.claim.selected.tenant,
       ledger: optionalTenantLedger.tenant?.ledger ?? msg.auth.params.claim.selected.ledger,
@@ -124,18 +124,25 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
     },
     {
       match: MsgIsReqClose,
-      fn: (ctx, msg: MsgWithConnAuth<ReqClose>) => {
+      fn: (ctx, msg: MsgWithConn<ReqClose>) => {
         ctx.wsRoom.removeConn(msg.conn);
         return buildResClose(msg, msg.conn);
       },
     },
     {
       match: MsgIsReqChat,
-      fn: (ctx, msg: MsgWithConnAuth<ReqChat>) => {
+      fn: (ctx, msg: MsgWithConn<ReqChat>) => {
         const conns = ctx.wsRoom.getConns(msg.conn);
         const ci = conns.map((c) => c.conn);
         for (const conn of conns) {
-          if (qsidEqual(conn.conn, msg.conn)) {
+          if (qsidEqual(conn.conn, msg.conn) && !msg.message.startsWith("/ping")) {
+            console.log("me", msg.message);
+            if (msg.message.startsWith("/close-connection")) {
+              setTimeout(() => {
+                conn.ws.close();
+                ctx.wsRoom.removeConn(conn.conn);
+              }, 10);
+            }
             continue;
           }
           dp.send(

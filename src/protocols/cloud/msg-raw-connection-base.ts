@@ -1,11 +1,12 @@
 import { SuperThis } from "../../types.js";
 import { MsgBase, ErrorMsg, buildErrorMsg } from "./msg-types.js";
-import { ExchangedGestalt, OnErrorFn, UnReg } from "./msger.js";
+import { ExchangedGestalt, OnErrorFn, UnReg, } from "./msger.js";
 import { Logger } from "@adviser/cement";
 
 export class MsgRawConnectionBase {
   readonly sthis: SuperThis;
   readonly exchangedGestalt: ExchangedGestalt;
+
 
   constructor(sthis: SuperThis, exGestalt: ExchangedGestalt) {
     this.sthis = sthis;
