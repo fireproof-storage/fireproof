@@ -334,4 +334,4 @@ jobs:
           path: ./dist
       - name: wipe-sticky-cache
         run: |
-          (cd dist && rm -rf $(ls -A))
+          (cd dist && rm -rf $(ls -A) || true)
