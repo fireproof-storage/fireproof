@@ -23,7 +23,7 @@ const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe
 type Gestalt = ps.cloud.Gestalt;
 type MsgBase = ps.cloud.MsgBase;
 type MsgerParams = ps.cloud.MsgerParams;
-type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConn<T>;
 type QSId = ps.cloud.QSId;
 
 interface ServerType {

@@ -80,9 +80,9 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
 
   readonly waitForTid = new WaitForTids();
 
-  opened = false;
-
   readonly id: string;
+
+  isReady = false;
 
   constructor(sthis: SuperThis, ws: WebSocket, msgP: MsgerParamsWithEnDe, exGestalt: ExchangedGestalt) {
     super(sthis, exGestalt);
@@ -102,7 +102,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
     }, this.msgP.timeout);
     this.ws.onopen = () => {
       onOpenFuture.resolve(Result.Ok(undefined));
-      this.opened = true;
+      this.isReady = true;
     };
     this.ws.onerror = (ierr) => {
       console.log("onerror", this.id, ierr);
@@ -112,13 +112,13 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       this.toMsg(res);
     };
     this.ws.onmessage = (evt) => {
-      if (!this.opened) {
+      if (!this.isReady) {
         this.toMsg(buildErrorMsg(this, {} as MsgBase, this.logger.Error().Msg("Received message before onOpen").AsError()));
       }
       this.#wsOnMessage(evt);
     };
     this.ws.onclose = () => {
-      this.opened = false;
+      this.isReady = false;
       console.log("onclose", this.id);
       this.close().catch((ierr) => {
         const err = this.logger.Error().Err(ierr).Msg("close error").AsError();
@@ -235,9 +235,6 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   }
 
   async request<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
-    if (!this.opened) {
-      return buildErrorMsg(this, req, this.logger.Error().Msg("Connection not open").AsError());
-    }
     const future = new Future<S>();
     this.waitForTid.start(this.sthis, this.logger, {
       tid: req.tid,

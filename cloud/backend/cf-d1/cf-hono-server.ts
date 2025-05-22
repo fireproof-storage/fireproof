@@ -137,7 +137,7 @@ class CFWSRoom implements WSRoom {
     ws.raw?.serializeAttachment({ ...x, conn });
     return conn;
   }
-  isConnected<T extends ps.cloud.MsgBase>(msg: T): msg is ps.cloud.MsgWithConnAuth<T> {
+  isConnected<T extends ps.cloud.MsgBase>(msg: T): msg is ps.cloud.MsgWithConn<T> {
     if (!ps.cloud.MsgIsWithConn(msg)) {
       return false;
     }

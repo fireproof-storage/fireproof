@@ -12,7 +12,7 @@ import {
   UnReg,
 } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
-import { SuperThis } from "../../types.js";
+import { SuperThis } from '../../types.js';
 
 function toHttpProtocol(uri: URI): URI {
   const protocol = (uri.getParam("protocol") ?? uri.protocol).replace(/:$/, "");
@@ -47,6 +47,9 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
   readonly baseURIs: { in: URI; cleaned: URI }[];
 
   readonly #onMsg = new Map<string, OnMsgFn>();
+
+  readonly isReady = true;
+
 
   constructor(sthis: SuperThis, uris: URI[], msgP: MsgerParamsWithEnDe, exGestalt: ExchangedGestalt) {
     super(sthis, exGestalt);

@@ -45,7 +45,7 @@ describe("test multiple connections", () => {
             .pathname("fp")
             .setParam("protocol", fpUrl.protocol.startsWith("https") ? "wss" : "ws")
             .setParam("random", sthis.nextId(12).str);
-          return Msger.connect(sthis, auth.authType, url);
+          return Msger.connect(sthis, url);
         }),
     ).then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
 
@@ -71,7 +71,7 @@ describe("test multiple connections", () => {
     const rest = [...conns];
     for (const c of conns) {
       // console.log("Sending a chat request", rest.length, conns.length);
-      const act = await c.request(buildReqChat(sthis, auth.authType, c.conn, "Hello"), {
+      const act = await c.request(buildReqChat(sthis, auth.authType, c.connnected.conn, "Hello"), {
         waitFor: MsgIsResChat,
       });
       if (MsgIsResChat(act)) {

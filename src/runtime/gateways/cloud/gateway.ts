@@ -27,7 +27,7 @@ import {
   coerceFPStoreTypes,
   AuthType,
 } from "../../../protocols/cloud/msg-types.js";
-import { MsgConnected, MsgConnectedAuth, Msger, authTypeFromUri } from "../../../protocols/cloud/msger.js";
+import { Msger, VirtualConnected, authTypeFromUri } from "../../../protocols/cloud/msger.js";
 import {
   MsgIsResDelData,
   MsgIsResGetData,
@@ -267,7 +267,7 @@ class CurrentMeta {
     gwCtx: GwCtx,
   ): Promise<Result<FPEnvelopeMeta>> {
     // console.log("cloud-get-1")
-    const key = await hashObject(ctx.conn.conn.Ok().conn);
+    const key = await hashObject(ctx.conn.conn.Ok());
     // register bind updates
     const item = this.boundGetMeta.get(key);
     // console.log("cloud-get-2")
@@ -367,7 +367,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (MsgIsError(reqSignedUrl)) {
       return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
     }
-    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().connnected.conn, uri);
     if (rGwCtx.isErr()) {
       return Result.Err(rGwCtx);
     }
@@ -481,12 +481,12 @@ function getStoreTypeGateway(sthis: SuperThis, uri: URI): StoreTypeGateway {
 interface ConnectionItem {
   // readonly uri: URI;
   // readonly matchRes: MatchResult;
-  readonly connection: ResolveOnce<Result<MsgConnected>>;
+  readonly connection: ResolveOnce<Result<VirtualConnected>>;
   readonly trackPuts: Set<string>;
 }
 
 export interface AuthedConnection {
-  readonly conn: Result<MsgConnectedAuth>;
+  readonly conn: Result<VirtualConnected>;
   readonly citem: ConnectionItem;
 }
 
@@ -527,7 +527,7 @@ export class FireproofCloudGateway implements SerdeGateway {
     ret.defParam("protocol", "wss");
     const retURI = ret.URI();
     this.registerConnectionURI(retURI, () => ({
-      connection: new ResolveOnce<Result<MsgConnected>>(),
+      connection: new ResolveOnce<Result<VirtualConnected>>(),
       trackPuts: new Set<string>(),
     }));
     return Result.Ok(retURI);
@@ -622,27 +622,27 @@ export class FireproofCloudGateway implements SerdeGateway {
     if (!item.ready || !bestMatch) {
       return { conn: logger.Error().Url(uri).Msg("Connection not ready").ResultError(), citem: {} as ConnectionItem };
     }
-    const conn = await bestMatch.connection.once(async () => {
+    const rConn = await bestMatch.connection.once(async () => {
       const rParams = uri.getParamsResult({
         protocol: "https",
       });
       if (rParams.isErr()) {
-        return this.logger.Error().Url(uri).Err(rParams).Msg("getCloudConnection:err").ResultError<MsgConnected>();
+        return this.logger.Error().Url(uri).Err(rParams).Msg("getCloudConnection:err").ResultError<VirtualConnected>();
       }
       const params = rParams.Ok();
       const rAuth = await authTypeFromUri(this.logger, uri);
       if (rAuth.isErr()) {
-        return Result.Err<MsgConnected>(rAuth);
+        return Result.Err<VirtualConnected>(rAuth);
       }
       const qOpen = buildReqOpen(this.sthis, rAuth.Ok(), {});
 
       const cUrl = uri.build().protocol(params.protocol).cleanParams().URI();
-      return Msger.connect(this.sthis, rAuth.Ok(), cUrl, qOpen);
+      return Msger.connect(this.sthis, cUrl, qOpen);
     });
-    if (conn.isErr()) {
-      return { conn: Result.Err(conn), citem: bestMatch };
+    if (rConn.isErr()) {
+      return { conn: Result.Err(rConn), citem: bestMatch };
     }
-    return { conn: Result.Ok(conn.Ok().attachAuth(() => authTypeFromUri(this.logger, uri))), citem: bestMatch };
+    return { conn: Result.Ok(rConn.Ok().attachAuth(() => authTypeFromUri(this.logger, uri))), citem: bestMatch };
   }
 
   async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
