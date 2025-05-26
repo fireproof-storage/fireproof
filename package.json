@@ -58,7 +58,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250519.0",
     "@eslint/js": "^9.27.0",
-    "@hono/node-server": "^1.14.1",
+    "@hono/node-server": "^1.14.2",
     "@hono/node-ws": "^1.1.4",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.15.19",
