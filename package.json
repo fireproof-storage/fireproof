@@ -110,7 +110,7 @@
   "dependencies": {
     "@adviser/cement": "~0.4.15",
     "@ipld/car": "^5.4.1",
-    "@ipld/dag-cbor": "^9.2.3",
+    "@ipld/dag-cbor": "^9.2.4",
     "@ipld/dag-json": "^10.2.4",
     "@libsql/client": "^0.15.6",
     "@web3-storage/pail": "^0.6.2",

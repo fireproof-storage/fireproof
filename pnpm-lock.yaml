@@ -20,7 +20,7 @@ importers:
         specifier: ^5.4.1
         version: 5.4.2
       '@ipld/dag-cbor':
-        specifier: ^9.2.3
+        specifier: ^9.2.4
         version: 9.2.4
       '@ipld/dag-json':
         specifier: ^10.2.4
