@@ -20,11 +20,8 @@ export function createUseLiveQuery(database: Database) {
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
     const refreshRows = useCallback(async () => {
-      const res = await database.query<K, T, R>(mapFn, query);
-      setResult({
-        docs: res.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
-        rows: res.rows,
-      });
+      const res = await database.query<T, K, R>(mapFn, query);
+      setResult(res);
     }, [database, mapFnString, queryString]);
 
     useEffect(() => {
