@@ -172,11 +172,11 @@ export class DatabaseImpl implements Database {
     // const _crdt = this.ledger.crdt as unknown as CRDT<T>;
     const idx = typeof field === "string" ? index<K, T, R>(this, field) : index<K, T, R>(this, makeName(field.toString()), field);
     const result = await idx.query(opts);
-    
+
     // Add docs property to match useLiveQuery behavior
     return {
       rows: result.rows,
-      docs: result.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r)
+      docs: result.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
     };
   }
 

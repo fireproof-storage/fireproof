@@ -1,6 +1,7 @@
 # Implementation Plan: Standardizing Query Return Values
 
 ## Issue Summary
+
 - **Issue #802**: useLiveQuery and query return different structures
 - **Problem**: Two inconsistencies exist:
   1. Database's `query` method returns only `rows` while React's `useLiveQuery` hook returns both `rows` and `docs`
@@ -8,7 +9,9 @@
 - **Impact**: These inconsistencies confuse AI models and cause runtime errors when code tries to access a non-existent property
 
 ## Implementation Plan: Option 1
+
 Modify the Database `query` method to match `useLiveQuery` by:
+
 1. Returning both `rows` and `docs` properties
 2. Standardizing the type parameter order to match `useLiveQuery` (`<T, K, R>` instead of `<K, T, R>`)
 
@@ -17,13 +20,14 @@ Modify the Database `query` method to match `useLiveQuery` by:
 ### 1. Update Type Definitions
 
 #### File: `src/types.ts`
+
 - Modify the `IndexRows` interface to include the `docs` property and standardize type parameter order:
 
 ```typescript
 // Change from <K, T, R> to <T, K, R> to match useLiveQuery
 export interface IndexRows<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T> {
   rows: IndexRow<K, T, R>[];
-  docs: DocWithId<T>[];  // Add this line
+  docs: DocWithId<T>[]; // Add this line
 }
 ```
 
@@ -32,6 +36,7 @@ export interface IndexRows<T extends DocTypes, K extends IndexKeyType = string, 
 ### 2. Modify the Query Implementation
 
 #### File: `src/database.ts`
+
 - Update the `query` method in `DatabaseImpl` class to add the `docs` property and reorder type parameters:
 
 ```typescript
@@ -42,12 +47,12 @@ async query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFr
 ): Promise<IndexRows<T, K, R>> {  // Note the reordered type parameters here
   await this.ready();
   this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
-  const idx = typeof field === "string" 
+  const idx = typeof field === "string"
     ? index<T, K, R>(this, field)  // Reordered type parameters
     : index<T, K, R>(this, makeName(field.toString()), field);  // Reordered type parameters
-  
+
   const result = await idx.query(opts);
-  
+
   // Add docs property to match useLiveQuery behavior
   return {
     rows: result.rows,
@@ -57,20 +62,21 @@ async query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFr
 ```
 
 #### File: `src/indexer.ts`
+
 - Update the `Index.query` method to return both `rows` and `docs` and adjust for reordered type parameters:
 
 ```typescript
 // The Index class will need its type parameters reordered: <T, K, R> instead of <K, T, R>
 async query(opts: QueryOpts<K> = {}): Promise<IndexRows<T, K, R>> { // Note reordered type params
   // Existing implementation...
-  
+
   // When returning results, add the docs property
   const queryResult = await applyQuery<T, K, R>( // Reordered type parameters
     this.crdt,
     // ... existing logic for getting results
     opts
   );
-  
+
   return {
     rows: queryResult.rows,
     docs: queryResult.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r)
@@ -81,6 +87,7 @@ async query(opts: QueryOpts<K> = {}): Promise<IndexRows<T, K, R>> { // Note reor
 ### 3. Simplify useLiveQuery Implementation
 
 #### File: `src/react/use-live-query.ts`
+
 - Simplify the hook now that the `query` method returns the expected structure with matching type parameter order:
 
 ```typescript
@@ -94,7 +101,7 @@ export function createUseLiveQuery(database: Database) {
       docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
       rows: initialRows,
     };
-    
+
     const [result, setResult] = useState<LiveQueryResult<T, K, R>>(initialResult);
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
@@ -122,21 +129,23 @@ export function createUseLiveQuery(database: Database) {
 ### 4. Update Tests
 
 #### Update existing tests to reflect the new return type:
+
 - Modify test assertions to expect both `rows` and `docs` properties
 - Add tests specifically for the `docs` property to ensure it contains the correct data
 
 #### Example test:
+
 ```typescript
-test('query returns both rows and docs', async () => {
-  const db = await fireproof('test-db');
-  await db.put({ _id: 'doc1', type: 'test', value: 123 });
-  
-  const result = await db.query('type');
-  
-  expect(result).toHaveProperty('rows');
-  expect(result).toHaveProperty('docs');
-  expect(result.docs[0]._id).toBe('doc1');
-  expect(result.rows[0].doc._id).toBe('doc1');
+test("query returns both rows and docs", async () => {
+  const db = await fireproof("test-db");
+  await db.put({ _id: "doc1", type: "test", value: 123 });
+
+  const result = await db.query("type");
+
+  expect(result).toHaveProperty("rows");
+  expect(result).toHaveProperty("docs");
+  expect(result.docs[0]._id).toBe("doc1");
+  expect(result.rows[0].doc._id).toBe("doc1");
 });
 ```
 
@@ -151,10 +160,12 @@ test('query returns both rows and docs', async () => {
 This change should not break existing code for several reasons:
 
 1. **Return Values**:
+
    - Adding the `docs` property is additive and doesn't remove any existing functionality
    - Code that expects only `rows` will still work since that property remains unchanged
 
 2. **Type Parameter Reordering**:
+
    - TypeScript's type inference will handle most cases automatically
    - Explicit type usage like `db.query<string, MyDocType>()` would need updates, but this is rare
    - We'll search the codebase for explicit type usages and update them
