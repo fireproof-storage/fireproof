@@ -38,12 +38,12 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   }, [file, meta]);
 
   // Generate a cache key for file objects
-  const getCacheKey = (fileObj: File): string => {
+  function getCacheKey(fileObj: File): string {
     return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
-  };
+  }
 
   // Get or create an object URL with caching
-  const getObjectUrl = (fileObj: File): string => {
+  function getObjectUrl(fileObj: File): string {
     const cacheKey = getCacheKey(fileObj);
 
     if (!objectUrlCache.has(cacheKey)) {
@@ -52,24 +52,27 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
     }
 
     return objectUrlCache.get(cacheKey) as string;
-  };
+  }
 
   useEffect(() => {
     if (!fileData) return;
 
-    const loadFile = async () => {
+    async function loadFile() {
       let fileObj: File | null = null;
       let fileType = "";
 
-      switch (true) {
-        case isFile(fileData):
-          fileObj = fileData;
-          fileType = fileData.type;
-          break;
-        case isFileMeta(fileData):
-          fileType = fileData.type;
-          fileObj = (await fileData.file?.()) || null;
-          break;
+      // Make sure fileData is defined before checking its type
+      if (fileData) {
+        switch (true) {
+          case isFile(fileData):
+            fileObj = fileData;
+            fileType = fileData.type;
+            break;
+          case isFileMeta(fileData):
+            fileType = fileData.type;
+            fileObj = typeof fileData.file === "function" ? await fileData.file() : null;
+            break;
+        }
       }
 
       // Clean up previous object URL if it exists and we're loading a new file
@@ -86,7 +89,7 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
           fileObjRef.current = fileObj;
 
           // Store cleanup function
-          cleanupRef.current = () => {
+          cleanupRef.current = function cleanup() {
             const cacheKey = getCacheKey(fileObj);
             if (objectUrlCache.has(cacheKey)) {
               // eslint-disable-next-line no-restricted-globals
@@ -102,22 +105,26 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
         return cleanupRef.current;
       }
       return null;
-    };
+    }
 
     let isMounted = true;
-    let cleanup: (() => void) | null = null;
 
-    loadFile().then((result) => {
+    loadFile().then(function handleResult(result) {
       if (isMounted) {
-        cleanup = result;
+        // Store the result in cleanupRef.current if component is still mounted
+        cleanupRef.current = result;
       } else if (result) {
+        // If component unmounted before promise resolved, call cleanup immediately
         result();
       }
     });
 
-    return () => {
+    return function cleanupEffect() {
       isMounted = false;
-      if (cleanup) cleanup();
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
     };
   }, [fileData]);
 
