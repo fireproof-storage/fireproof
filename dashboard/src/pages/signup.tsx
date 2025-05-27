@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/clerk-react";
+import { URI } from "@adviser/cement";
 import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
 import { base64url } from "jose";
@@ -31,6 +32,26 @@ export function SignUpPage() {
 
   function decSlide() {
     setActiveSlide((cur) => (cur === 0 ? slides.length - 1 : --cur));
+  }
+
+  const fromApp = URI.from(window.location.href).getParam("fromApp");
+  if (fromApp) {
+    // treat any value as generic until we make a special one
+    let bg = isDarkMode ? '#212A4A' : '#CCE5F3';
+    return (<div style={{ backgroundColor: bg }} className='h-screen flex items-center justify-center'>
+      <SignUp
+        appearance={{
+          elements: {
+            headerSubtitle: { display: "none" },
+            footer: { display: "none" },
+          },
+        }}
+        unsafeMetadata={{
+          gclid: new URLSearchParams(window.location.search).get("gclid"),
+          emailOptIn: emailOptIn,
+        }}
+      />
+    </div>)
   }
 
   return (
