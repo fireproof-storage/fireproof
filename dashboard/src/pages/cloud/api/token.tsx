@@ -201,7 +201,7 @@ export function ApiToken() {
   // console.log("showChooser", showChooser, isLoadingCloudToken, errorCloudToken, cloudToken);
 
   if (skipChooser) {
-    return <div>Skip Chooser - Customize that UI</div>;
+    return <div></div>; // intentionally left blank
   }
 
   return (

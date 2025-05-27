@@ -52,6 +52,8 @@ export function App() {
       </Route>
       {/* <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}> */}
 
+      <Route path="/token" element={<ApiToken />} loader={redirectBackUrl} />
+
       <Route path="/fp/cloud" element={<Cloud />}>
         <Route index element={<CloudIndex />} />
         <Route path="api/token" element={<ApiToken />} loader={redirectBackUrl} />
