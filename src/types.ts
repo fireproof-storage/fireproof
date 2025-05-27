@@ -289,7 +289,7 @@ export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends
   readonly doc?: DocWithId<T>;
 }
 
-export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
+export interface IndexRows<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];
   readonly docs: DocWithId<T>[];
 }
@@ -605,10 +605,10 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   }>;
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
 
-  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+  query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
     field: string | MapFn<T>,
     opts?: QueryOpts<K>,
-  ): Promise<IndexRows<K, T, R>>;
+  ): Promise<IndexRows<T, K, R>>;
   compact(): Promise<void>;
 }
 

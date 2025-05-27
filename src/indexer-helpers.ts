@@ -21,6 +21,7 @@ import {
   IndexUpdate,
   QueryOpts,
   IndexRow,
+  IndexRows,
   DocWithId,
   IndexKeyType,
   IndexKey,
@@ -162,13 +163,11 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }
 
-export async function applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
+export async function applyQuery<T extends DocObject, K extends IndexKeyType, R extends DocFragment>(
   crdt: CRDT,
   resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K>,
-): Promise<{
-  rows: IndexRow<K, T, R>[];
-}> {
+): Promise<IndexRows<T, K, R>> {
   if (query.descending) {
     resp.result = resp.result.reverse();
   }
@@ -184,13 +183,18 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
       }),
     );
   }
+  const rows = resp.result.map(({ key, ...row }) => {
+    return {
+      key: charwise.decode(key),
+      ...row,
+    } as IndexRow<T, K, R>;
+  });
+
+  // We need to be explicit about the document types here
+  const typedRows = rows as unknown as IndexRow<T, K, R>[];
   return {
-    rows: resp.result.map(({ key, ...row }) => {
-      return {
-        key: charwise.decode(key),
-        ...row,
-      };
-    }),
+    rows: typedRows,
+    docs: typedRows.map((r) => r.doc).filter((d): d is DocWithId<T> => !!d),
   };
 }
 
@@ -206,6 +210,7 @@ export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
   readonly id: string;
   readonly key: IndexKey<K>;
   readonly value: T;
+  readonly doc?: DocWithId<DocObject>;
 }
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
