@@ -187,14 +187,18 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
     return {
       key: charwise.decode(key),
       ...row,
-    } as IndexRow<T, K, R>;
+    } as IndexRow<K, T, R>;
   });
 
   // We need to be explicit about the document types here
-  const typedRows = rows as unknown as IndexRow<T, K, R>[];
+  const typedRows = rows as IndexRow<K, T, R>[];
+
+  // Simply filter out null/undefined docs and cast the result
+  const docs = typedRows.map((r) => r.doc).filter(Boolean) as unknown as DocWithId<T>[];
+
   return {
     rows: typedRows,
-    docs: typedRows.map((r) => r.doc).filter((d): d is DocWithId<T> => !!d),
+    docs,
   };
 }
 
