@@ -291,6 +291,7 @@ export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends
 
 export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];
+  readonly docs: DocWithId<T>[];
 }
 export interface CRDTMeta {
   readonly head: ClockHead;
