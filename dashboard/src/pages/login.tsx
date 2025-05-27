@@ -2,7 +2,7 @@ import { SignIn } from "@clerk/clerk-react";
 import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
 import { Link, Navigate } from "react-router-dom";
-import { BuildURI, param, URI } from "@adviser/cement";
+import { URI } from "@adviser/cement";
 import { base64url } from "jose";
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
@@ -53,6 +53,23 @@ export function Login() {
   // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")
   const redirect_url = URI.from(window.location.href).toString();
   console.log("login-redirect_url", window.location.href);
+
+  const fromApp = URI.from(window.location.href).getParam("fromApp");
+  if (fromApp) {
+    // treat any value as generic until we make a special one
+    let bg = isDarkMode ? '#212A4A' : '#CCE5F3';
+    return (<div style={{ backgroundColor: bg }} className='h-screen flex items-center justify-center'>
+      <SignIn
+        forceRedirectUrl={redirect_url}
+        appearance={{
+          elements: {
+            headerSubtitle: { display: "none" },
+            footer: { display: "none" },
+          },
+        }}
+      />
+    </div>)
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] min-h-screen overflow-hidden">
