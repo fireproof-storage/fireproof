@@ -163,14 +163,14 @@ export class DatabaseImpl implements Database {
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+  async query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
     field: string | MapFn<T>,
     opts: QueryOpts<K> = {},
-  ): Promise<IndexRows<K, T, R>> {
+  ): Promise<IndexRows<T, K, R>> {
     await this.ready();
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     // const _crdt = this.ledger.crdt as unknown as CRDT<T>;
-    const idx = typeof field === "string" ? index<K, T, R>(this, field) : index<K, T, R>(this, makeName(field.toString()), field);
+    const idx = typeof field === "string" ? index<T, K, R>(this, field) : index<T, K, R>(this, makeName(field.toString()), field);
     const result = await idx.query(opts);
 
     // Add docs property to match useLiveQuery behavior

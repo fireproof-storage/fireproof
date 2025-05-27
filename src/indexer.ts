@@ -20,6 +20,7 @@ import {
   type HasLogger,
   type HasSuperThis,
   type RefLedger,
+  type DocWithId,
 } from "./types.js";
 // import { BaseBlockstore } from "./blockstore/index.js";
 
@@ -43,24 +44,24 @@ function refLedger(u: HasCRDT | RefLedger): u is RefLedger {
   return !!(u as RefLedger).ledger;
 }
 
-export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
+export function index<T extends DocTypes = NonNullable<unknown>, K extends IndexKeyType = string, R extends DocFragment = T>(
   refDb: HasLogger & HasSuperThis & (HasCRDT | RefLedger),
   name: string,
   mapFn?: MapFn<T>,
   meta?: IdxMeta,
-): Index<K, T, R> {
+): Index<T, K, R> {
   const crdt = refLedger(refDb) ? refDb.ledger.crdt : refDb.crdt;
 
   if (mapFn && meta) throw refDb.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
   if (mapFn && mapFn.constructor.name !== "Function") throw refDb.logger.Error().Msg("mapFn must be a function").AsError();
   if (crdt.indexers.has(name)) {
-    const idx = crdt.indexers.get(name) as unknown as Index<K, T>;
+    const idx = crdt.indexers.get(name) as unknown as Index<T, K>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<K, T>(refDb.sthis, crdt, name, mapFn, meta);
-    crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
+    const idx = new Index<T, K>(refDb.sthis, crdt, name, mapFn, meta);
+    crdt.indexers.set(name, idx as unknown as Index<NonNullable<unknown>, string, NonNullable<unknown>>);
   }
-  return crdt.indexers.get(name) as unknown as Index<K, T, R>;
+  return crdt.indexers.get(name) as unknown as Index<T, K, R>;
 }
 
 // interface ByIdIndexIten<K extends IndexKeyType> {
@@ -68,7 +69,7 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
 //   readonly value: [K, K];
 // }
 
-export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
+export class Index<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T> {
   readonly blockstore: BaseBlockstore;
   readonly crdt: CRDT;
   readonly name: string;
@@ -189,7 +190,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
   }
 
-  async query(opts: QueryOpts<K> = {}): Promise<IndexRows<K, T, R>> {
+  async query(opts: QueryOpts<K> = {}): Promise<IndexRows<T, K, R>> {
     this.logger.Debug().Msg("enter query");
     await this.ready();
     // this._resetIndex();
@@ -199,25 +200,31 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     await this._hydrateIndex();
     this.logger.Debug().Msg("post _hydrateIndex query");
     if (!this.byKey.root) {
-      return await applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
+      return await applyQuery<T, K, R>(this.crdt, { result: [] }, opts);
     }
     if (opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       const eRange = encodeRange(opts.range);
-      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
+      return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
-      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
+      return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
     }
     if (Array.isArray(opts.keys)) {
       const results = await Promise.all(
         opts.keys.map(async (key: DocFragment) => {
           const encodedKey = encodeKey(key);
-          return (await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
+          return (await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
         }),
       );
-      return { rows: results.flat() };
+      return {
+        rows: results.flat(),
+        docs: results
+          .flat()
+          .map((r) => r.doc)
+          .filter((r): r is DocWithId<T> => !!r),
+      };
     }
     if (opts.prefix) {
       if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
@@ -228,10 +235,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
     const all = await this.byKey.root.getAllEntries(); // funky return type
-    return await applyQuery<K, T, R>(
+    return await applyQuery<T, K, R>(
       this.crdt,
       {
-        // @ts-expect-error getAllEntries returns a different type than range
+        // getAllEntries returns a different type than range
         result: all.result.map(({ key: [k, id], value }) => ({
           key: k,
           id,
