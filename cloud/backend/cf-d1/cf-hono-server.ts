@@ -1,6 +1,5 @@
 import { Logger, LoggerImpl, URI } from "@adviser/cement";
 import { drizzle as d1Drizzle } from "drizzle-orm/d1";
-// import { drizzle as doDrizzle } from 'drizzle-orm/durable-sqlite';
 import { Context, Hono } from "hono";
 import {
   ConnMiddleware,
@@ -16,13 +15,11 @@ import {
 import { SendOptions, WSContextInit, WSMessageReceive, WSReadyState } from "hono/ws";
 // import { RequestInfo as CFRequestInfo } from "@cloudflare/workers-types";
 // import { defaultMsgParams, jsonEnDe } from "../msger.js";
-import { ensureLogger, ensureSuperThis, SuperThis, ps, rt } from "@fireproof/core";
+import { ensureLogger, ensureSuperThis, SuperThis, ps, rt, Writable } from "@fireproof/core";
 import { Env } from "./env.js";
 import { WSRoom } from "../ws-room.js";
 import { FPRoomDurableObject } from "./server.js";
 import { ConnItem } from "../msg-dispatch.js";
-import { Writable } from "../../../src/utils.js";
-import { envKeyDefaults } from "../../../src/runtime/sts-service/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRoomDurableObject(env: Env, _id: string) {
@@ -305,7 +302,7 @@ export class CFHonoFactory implements HonoServerFactory {
     }
 
     const stsService = await rt.sts.SessionTokenService.create({
-      token: sthis.env.get(envKeyDefaults.PUBLIC) ?? "",
+      token: sthis.env.get(rt.sts.envKeyDefaults.PUBLIC) ?? "",
     });
     const wsRoom = new CFWSRoom(sthis);
     const item = CFExposeCtx.attach(c.env, id, sthis, logger, NaN, ende, gs, stsService, db, wsRoom);

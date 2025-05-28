@@ -3,8 +3,6 @@ import { URI } from "@adviser/cement";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, wsStyle } from "./node/test-helper.js";
 import { testSuperThis } from "../test-super-this.js";
-import { VirtualConnected } from "../../src/protocols/cloud/msger.js";
-import { buildReqChat, buildReqClose, QSId } from "../../src/protocols/cloud/msg-types.js";
 
 const {
   buildReqGestalt,
@@ -138,7 +136,7 @@ describe("Connection", () => {
         }
         await sleep(100);
       }
-      await c.close(buildReqClose(sthis, auth.authType, c.conn));
+      await c.close(ps.cloud.buildReqClose(sthis, auth.authType, c.conn));
     });
 
     // const app = new Hono();
@@ -174,7 +172,7 @@ describe("Connection", () => {
     });
 
     describe(`connection`, () => {
-      let c: VirtualConnected;
+      let c: ps.cloud.VirtualConnected;
       beforeEach(async () => {
         // const rC = await style.ok.open().then((r) => Msger.connect(sthis, style.ok.url(), {}, {}, {
         //   openHttp: async () => r,
@@ -193,7 +191,7 @@ describe("Connection", () => {
       });
       afterEach(async () => {
         // we might not have a connected
-        await c.close(buildReqClose(sthis, auth.authType, c.virtualConn as QSId));
+        await c.close(ps.cloud.buildReqClose(sthis, auth.authType, c.virtualConn as ps.cloud.QSId));
       });
 
       it("kaputt url http", async () => {
@@ -262,7 +260,7 @@ describe("Connection", () => {
       });
       expect(rC.isOk()).toBeTruthy();
       const c = rC.Ok(); //.attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
-      await c.request(buildReqChat(sthis, auth.authType, c.opts.conn, "test-open"), {
+      await c.request(ps.cloud.buildReqChat(sthis, auth.authType, c.opts.conn, "test-open"), {
         waitFor: ps.cloud.MsgIsResChat,
       });
       // expect(c.conn).toEqual({
@@ -274,17 +272,17 @@ describe("Connection", () => {
         my,
         remote: { ...style.remoteGestalt, id: c.exchangedGestalt?.remote.id },
       });
-      await c.close(buildReqClose(sthis, auth.authType, c.conn));
+      await c.close(ps.cloud.buildReqClose(sthis, auth.authType, c.conn));
     });
     describe(`${honoServer.name} - Msgs`, () => {
       let gwCtx: GwCtx;
-      let conn: VirtualConnected;
+      let conn: ps.cloud.VirtualConnected;
       beforeAll(async () => {
         const rC = await Msger.connect(sthis, style.ok.url(), msgP, qOpen.conn);
         expect(rC.isOk()).toBeTruthy();
         conn = rC.Ok(); // .attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
 
-        const ret = await conn.request(buildReqChat(sthis, auth.authType, qOpen.conn, "test-open"), {
+        const ret = await conn.request(ps.cloud.buildReqChat(sthis, auth.authType, qOpen.conn, "test-open"), {
           waitFor: ps.cloud.MsgIsResChat,
         });
         if (MsgIsError(ret)) {
@@ -299,7 +297,7 @@ describe("Connection", () => {
         };
       });
       afterAll(async () => {
-        await conn.close(buildReqClose(sthis, auth.authType, conn.virtualConn as QSId));
+        await conn.close(ps.cloud.buildReqClose(sthis, auth.authType, conn.virtualConn as ps.cloud.QSId));
       });
       it("Open", async () => {
         const res = await conn.request(buildReqOpen(sthis, auth.authType, conn.conn), {
