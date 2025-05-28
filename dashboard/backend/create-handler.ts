@@ -1,8 +1,8 @@
 // import { auth } from "./better-auth.ts";
-import { exception2Result, LoggerImpl, Result, URI, utils } from "@adviser/cement";
+import { LoggerImpl, Result, exception2Result } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis, ps } from "@fireproof/core";
+import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
 import type { Env } from "./cf-serve.ts";
 // import { jwtVerify } from "jose/jwt/verify";
@@ -183,6 +183,10 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
 
       case FPAPIMsg.isReqTokenByResultId(jso):
         res = fpApi.getTokenByResultId(jso);
+        break;
+
+      case jso.type === "reqExtendToken":
+        res = fpApi.extendToken(jso);
         break;
 
       default:

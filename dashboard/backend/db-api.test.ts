@@ -6,15 +6,14 @@
 // import { eq } from 'drizzle-orm';
 // import { userRef } from "./db-api-schema";
 
-import { createClient } from "@libsql/client/node";
-import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiSQL, FPApiToken } from "./api.js";
-import { ensureSuperThis, SuperThis } from "@fireproof/core";
-import { queryEmail, queryNick } from "./sql-helper.ts";
-import { jwtVerify } from "jose/jwt/verify";
-import { rt } from "@fireproof/core";
 import { Result } from "@adviser/cement";
-import { AdminTenant, AuthType, QueryUser, ReqEnsureUser, ResEnsureUser, VerifiedAuth } from "./fp-dash-types.ts";
+import { SuperThis, ensureSuperThis, rt } from "@fireproof/core";
+import { createClient } from "@libsql/client/node";
+import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
+import { jwtVerify } from "jose/jwt/verify";
+import { FPApiSQL, type FPApiToken } from "./api.js";
+import { type AdminTenant, type AuthType, type QueryUser, type ReqEnsureUser, type ResEnsureUser, type VerifiedAuth } from "./fp-dash-types.ts";
+import { queryEmail, queryNick } from "./sql-helper.ts";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -90,7 +89,7 @@ describe("db-api", () => {
         })),
     );
     for (const d of data) {
-      const rRes = await fpApi.ensureUser(d.reqs!);
+      const rRes = await fpApi.ensureUser(d.reqs);
       const res = rRes.Ok();
       d.ress = res;
       // console.log("res", res);
@@ -565,7 +564,10 @@ describe("db-api", () => {
       auth: data[1].reqs.auth,
     });
     expect(rRedeem.isOk()).toBeTruthy();
-    const rRedeemedInvites = rRedeem.Ok().invites?.find((i) => i.inviteId === invite.Ok().invite.inviteId)!;
+    const rRedeemedInvites = rRedeem.Ok().invites?.find((i) => i.inviteId === invite.Ok().invite.inviteId);
+    if (!rRedeemedInvites) {
+      throw new Error("Redeemed invite not found");
+    }
     expect(rRedeemedInvites).toEqual({
       createdAt: rRedeemedInvites.createdAt,
       expiresAfter: rRedeemedInvites.expiresAfter,
@@ -935,6 +937,71 @@ describe("db-api", () => {
         tenantId: data[0].ress.tenants[0].tenantId,
       },
     });
+  });
+
+  it("extend token with 6 hours expiry", async () => {
+    const auth: AuthType = data[0].reqs.auth;
+    
+    // Create a session token first
+    const resSt = await fpApi.getCloudSessionToken(
+      {
+        type: "reqCloudSessionToken",
+        auth,
+        selected: {
+          tenant: data[0].ress.tenants[0].tenantId,
+        },
+      },
+      {
+        secretToken:
+          "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+        issuer: "TEST_I",
+        audience: "TEST_A",
+        validFor: 3600000, // 1 hour
+      },
+    );
+    expect(resSt.isOk()).toBeTruthy();
+    
+    // Set up environment for extendToken
+    fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi");
+    fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_PUBLIC", "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue");
+    fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_ISSUER", "TEST_I");
+    fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_AUDIENCE", "TEST_A");
+    
+    // Extend the token
+    const extendResult = await fpApi.extendToken({
+      type: "reqExtendToken",
+      token: resSt.Ok().token
+    });
+    
+    if (extendResult.isErr()) {
+      console.log("extendToken error:", extendResult.Err());
+    }
+    
+    expect(extendResult.isOk()).toBeTruthy();
+    const extendedResponse = extendResult.Ok();
+    
+    // Verify the response structure
+    expect(extendedResponse.type).toBe("resExtendToken");
+    expect(typeof extendedResponse.token).toBe("string");
+    
+    // Verify the new token is valid and has extended expiry
+    const pub = await rt.sts.env2jwk(
+      "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
+      "ES256",
+    );
+    const verifyExtended = await jwtVerify(extendedResponse.token, pub);
+    
+    // Check that the new expiry is approximately 6 hours from now
+    const sixHoursFromNow = Date.now() + (6 * 60 * 60 * 1000);
+    const tokenExpiry = (verifyExtended.payload.exp ?? 0) * 1000;
+    
+    // Allow for some variance (within 1 minute)
+    expect(Math.abs(tokenExpiry - sixHoursFromNow)).toBeLessThan(60000);
+    
+    // Verify the payload content is preserved
+    expect(verifyExtended.payload.userId).toBe(data[0].ress.user.userId);
+    expect(verifyExtended.payload.iss).toBe("TEST_I");
+    expect(verifyExtended.payload.aud).toBe("TEST_A");
   });
 });
 
