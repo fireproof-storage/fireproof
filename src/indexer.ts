@@ -207,14 +207,22 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     if (opts.range) {
       const eRange = encodeRange(opts.range);
       const result = await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
-      // Ensure docs property exists by creating a new object if needed
-      return result.docs ? result : { ...result, docs: [] };
+      // If docs are missing, extract them from the rows
+      if (!result.docs) {
+        const docs = result.rows.map((r) => (r as { doc?: DocWithId<T> }).doc).filter(Boolean) as DocWithId<T>[];
+        return { ...result, docs };
+      }
+      return result;
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
       const result = await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
-      // Ensure docs property exists by creating a new object if needed
-      return result.docs ? result : { ...result, docs: [] };
+      // If docs are missing, extract them from the rows
+      if (!result.docs) {
+        const docs = result.rows.map((r) => (r as { doc?: DocWithId<T> }).doc).filter(Boolean) as DocWithId<T>[];
+        return { ...result, docs };
+      }
+      return result;
     }
     if (Array.isArray(opts.keys)) {
       const results = await Promise.all(
@@ -235,8 +243,12 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       const end = [...opts.prefix, Infinity];
       const encodedR = encodeRange([start, end]);
       const result = await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
-      // Ensure docs property exists by creating a new object if needed
-      return result.docs ? result : { ...result, docs: [] };
+      // If docs are missing, extract them from the rows
+      if (!result.docs) {
+        const docs = result.rows.map((r) => (r as { doc?: DocWithId<T> }).doc).filter(Boolean) as DocWithId<T>[];
+        return { ...result, docs };
+      }
+      return result;
     }
     const all = await this.byKey.root.getAllEntries(); // funky return type
     return await applyQuery<K, T, R>(
