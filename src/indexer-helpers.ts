@@ -15,21 +15,30 @@ import { nocache as cache } from "prolly-trees/cache";
 import { ProllyNode as BaseNode } from "prolly-trees/db-index";
 
 import {
+  CRDT,
+  DocFragment,
+  DocLiteral,
+  DocObject,
+  DocTypes,
   DocUpdate,
   MapFn,
-  DocFragment,
   IndexUpdate,
+  IndexUpdateString,
   QueryOpts,
   IndexRow,
+  IndexRows,
   DocWithId,
   IndexKeyType,
   IndexKey,
-  DocTypes,
-  DocObject,
-  IndexUpdateString,
   CarTransaction,
-  CRDT,
 } from "./types.js";
+
+// Define ProllyNode type locally since it's not exported from types.js
+interface ProllyNode<K, V> {
+  get(key: any): Promise<{ result: ProllyIndexRow<K, V>[] }>;
+  range(start: any, end: any): Promise<{ result: ProllyIndexRow<K, V>[] }>;
+  getAllEntries(): Promise<{ result: { key: [K, string]; value: V }[] }>;
+}
 import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { Logger } from "@adviser/cement";
 import { anyBlock2FPBlock } from "./blockstore/loader-helpers.js";
@@ -166,9 +175,7 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
   crdt: CRDT,
   resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K>,
-): Promise<{
-  rows: IndexRow<K, T, R>[];
-}> {
+): Promise<IndexRows<K, T, R>> {
   if (query.descending) {
     resp.result = resp.result.reverse();
   }
@@ -184,13 +191,20 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
       }),
     );
   }
+  const rows = resp.result.map(({ key, ...row }) => {
+    return {
+      key: charwise.decode(key),
+      ...row,
+    };
+  });
+
+  // Extract docs from rows for compatibility with IndexRows interface
+  // Since the doc property might not exist on all row objects, we need to handle it safely
+  const docs = rows.map((r) => (r as any).doc).filter(Boolean) as unknown as DocWithId<T>[];
+
   return {
-    rows: resp.result.map(({ key, ...row }) => {
-      return {
-        key: charwise.decode(key),
-        ...row,
-      };
-    }),
+    rows,
+    docs,
   };
 }
 

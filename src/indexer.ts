@@ -11,6 +11,7 @@ import {
   type IndexRows,
   type DocTypes,
   type IndexUpdateString,
+  type DocWithId,
   throwFalsy,
   type IndexTransactionMeta,
   type SuperThis,
@@ -199,16 +200,21 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     await this._hydrateIndex();
     this.logger.Debug().Msg("post _hydrateIndex query");
     if (!this.byKey.root) {
-      return await applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
+      // When no results, return empty arrays for both rows and docs
+      return { rows: [], docs: [] };
     }
     if (opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       const eRange = encodeRange(opts.range);
-      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
+      const result = await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
+      // Ensure docs property exists by creating a new object if needed
+      return result.docs ? result : { ...result, docs: [] };
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
-      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
+      const result = await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
+      // Ensure docs property exists by creating a new object if needed
+      return result.docs ? result : { ...result, docs: [] };
     }
     if (Array.isArray(opts.keys)) {
       const results = await Promise.all(
@@ -217,7 +223,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           return (await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
         }),
       );
-      return { rows: results.flat() };
+      // Extract docs from the rows array
+      const flatRows = results.flat();
+      const docs = flatRows.map((r) => (r as any).doc).filter(Boolean) as DocWithId<T>[];
+      return { rows: flatRows, docs };
     }
     if (opts.prefix) {
       if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
@@ -225,7 +234,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       const start = [...opts.prefix, NaN];
       const end = [...opts.prefix, Infinity];
       const encodedR = encodeRange([start, end]);
-      return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
+      const result = await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
+      // Ensure docs property exists by creating a new object if needed
+      return result.docs ? result : { ...result, docs: [] };
     }
     const all = await this.byKey.root.getAllEntries(); // funky return type
     return await applyQuery<K, T, R>(
