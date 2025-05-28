@@ -34,9 +34,9 @@ import {
 } from "./types.js";
 
 // Define ProllyNode type locally since it's not exported from types.js
-interface ProllyNode<K, V extends DocFragment, T = any> {
-  get(key: any): Promise<{ result: ProllyIndexRow<K, V>[] }>;
-  range(start: any, end: any): Promise<{ result: ProllyIndexRow<K, V>[] }>;
+interface ProllyNode<K, V extends DocFragment, T extends DocFragment = V> {
+  get(key: K): Promise<{ result: ProllyIndexRow<K, V>[] }>;
+  range(start: K, end: K): Promise<{ result: ProllyIndexRow<K, V>[] }>;
   getAllEntries(): Promise<{ result: { key: [K, string]; value: V }[] }>;
 }
 import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
@@ -200,7 +200,7 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
 
   // Extract docs from rows for compatibility with IndexRows interface
   // Since the doc property might not exist on all row objects, we need to handle it safely
-  const docs = rows.map((r) => (r as any).doc).filter(Boolean) as unknown as DocWithId<T>[];
+  const docs = rows.map((r) => (r as { doc?: DocWithId<T> }).doc).filter(Boolean) as DocWithId<T>[];
 
   return {
     rows,
