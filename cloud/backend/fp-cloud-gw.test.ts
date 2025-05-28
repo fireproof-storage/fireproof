@@ -1,20 +1,17 @@
-import { fireproof } from "@fireproof/core";
-import { FireproofCloudGateway } from "../../src/runtime/gateways/cloud/gateway.js";
+import { fireproof, rt, bs } from "@fireproof/core";
 import { BuildURI, URI } from "@adviser/cement";
-import { SerdeGatewayCtx } from "../../src/blockstore/serde-gateway.js";
 import { MockJWK, mockJWK } from "./node/test-helper.js";
-import { SimpleTokenStrategy, toCloud } from "../../src/runtime/gateways/cloud/to-cloud.js";
 import { testSuperThis } from "../test-super-this.js";
 
 describe("fp-cloud", () => {
   const sthis = testSuperThis();
-  let fpgw: FireproofCloudGateway;
+  let fpgw: rt.gw.cloud.FireproofCloudGateway;
   let auth: MockJWK;
 
   let fpGwUrl: URI;
 
   beforeAll(async () => {
-    fpgw = new FireproofCloudGateway(sthis);
+    fpgw = new rt.gw.cloud.FireproofCloudGateway(sthis);
     auth = await mockJWK(sthis);
 
     fpGwUrl = BuildURI.from(sthis.env.get("FP_ENDPOINT"))
@@ -33,7 +30,7 @@ describe("fp-cloud", () => {
   // const port = +(process.env.FP_WRANGLER_PORT || 0) || 1024 + Math.floor(Math.random() * (65536 - 1024));
 
   it("not ready getCloudConnectionItem", async () => {
-    const ret = await fpgw.start({} as SerdeGatewayCtx, fpGwUrl.build().hostname("kaputt").URI());
+    const ret = await fpgw.start({} as bs.SerdeGatewayCtx, fpGwUrl.build().hostname("kaputt").URI());
     expect(ret.isErr()).toBeFalsy();
     const item = await fpgw.getCloudConnectionItem(sthis.logger, fpGwUrl);
     expect(item).toBeDefined();
@@ -42,7 +39,7 @@ describe("fp-cloud", () => {
 
   it("ready getCloudConnectionItem", async () => {
     const url = fpGwUrl.build().setParam("authJWK", auth.authType.params.jwk).URI();
-    const ret = await fpgw.start({} as SerdeGatewayCtx, url);
+    const ret = await fpgw.start({} as bs.SerdeGatewayCtx, url);
     expect(ret.isErr()).toBeFalsy();
     const item = await fpgw.getCloudConnectionItem(sthis.logger, BuildURI.from(url).setParam("store", "test").URI());
     expect(item).toBeDefined();
@@ -63,9 +60,9 @@ describe("fp-cloud", () => {
         .fill(0)
         .map(() => {
           const x = db.attach(
-            toCloud({
+            rt.gw.cloud.toCloud({
               urls: { base: fpGwUrl },
-              strategy: new SimpleTokenStrategy(auth.authType.params.jwk),
+              strategy: new rt.gw.cloud.SimpleTokenStrategy(auth.authType.params.jwk),
             }),
           );
           return x;
