@@ -86,12 +86,9 @@ describe("query return value consistency", function () {
       includeDocs: true,
     });
 
-    // EXPECTED BEHAVIOR: Should only return docs where active is false (1 doc)
-    // CURRENT BUGGY BEHAVIOR: Returns all docs, but false ones are first
-    
     // Should only return documents where active is false
     expect(result.rows.length).toBe(1); // We only have one document with active: false
-    
+
     // Check docs property exists and matches rows length
     expect(result).toHaveProperty("docs");
     expect(result.docs.length).toBe(result.rows.length);
@@ -100,7 +97,7 @@ describe("query return value consistency", function () {
     result.docs.forEach((doc) => {
       expect((doc as DocWithId<TestDoc>).active).toBe(false);
     });
-    
+
     // Make sure no documents with active: true are included
     const activeTrue = result.docs.filter((doc) => (doc as DocWithId<TestDoc>).active === true);
     expect(activeTrue.length).toBe(0); // No active: true docs should be included

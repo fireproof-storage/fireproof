@@ -207,7 +207,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       const eRange = encodeRange(opts.range);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
     }
-    if (opts.key) {
+    if (opts.key !== undefined) {
       const encodedKey = encodeKey(opts.key);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
     }
