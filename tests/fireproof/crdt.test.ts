@@ -356,7 +356,7 @@ describe("Compact a named CRDT with writes", function () {
 
 describe("CRDT with an index", function () {
   let crdt: CRDT;
-  let idx: Index<number, CRDTTestType>;
+  let idx: Index<CRDTTestType, number>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await crdt.close();
@@ -378,7 +378,7 @@ describe("CRDT with an index", function () {
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<number, CRDTTestType>(crdt, "points");
+    idx = await index<CRDTTestType, number>(crdt, "points");
   });
   it("should query the data", async () => {
     const got = await idx.query({ range: [9, 12] });
@@ -387,7 +387,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("should register the index", async () => {
-    const rIdx = await index<number, CRDTTestType>(crdt, "points");
+    const rIdx = await index<CRDTTestType, number>(crdt, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
     const got = await rIdx.query({ range: [9, 12] });

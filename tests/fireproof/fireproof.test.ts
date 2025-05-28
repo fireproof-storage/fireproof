@@ -39,7 +39,7 @@ describe("dreamcode", function () {
   }
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
-  let result: IndexRows<string, Doc>;
+  let result: IndexRows<Doc, string>;
   let db: Database;
   const sthis = ensureSuperThis();
   afterEach(async () => {
@@ -67,7 +67,7 @@ describe("dreamcode", function () {
     expect(result.rows[0].key).toBe("fireproof");
   });
   it("should query with function", async () => {
-    const result = await db.query<boolean, Doc>((doc) => doc.dream);
+    const result = await db.query<Doc, boolean>((doc) => doc.dream);
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toBe(1);
@@ -82,7 +82,7 @@ describe("public API", function () {
   let db: Database;
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
-  let query: IndexRows<string, Doc>;
+  let query: IndexRows<Doc, string>;
   const sthis = ensureSuperThis();
 
   afterEach(async () => {
@@ -96,7 +96,7 @@ describe("public API", function () {
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
-    query = await db.query<string, Doc>((doc) => doc.foo);
+    query = await db.query<Doc, string>((doc) => doc.foo);
   });
   it("should be a ledger instance", function () {
     expect(db).toBeTruthy();
@@ -199,7 +199,7 @@ describe("basic ledger", function () {
   it("can define an index", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
+    const idx = index<{ foo: string }, string>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -223,10 +223,10 @@ describe("basic ledger", function () {
       baz: string;
     }
     await db.put<TestDoc>({ _id: "test", foo: "bar", baz: "qux" });
-    const query1 = await db.query<string, TestDoc>((doc) => {
+    const query1 = await db.query<TestDoc, string>((doc) => {
       return doc.foo;
     });
-    const query2 = await db.query<string, TestDoc>((doc) => {
+    const query2 = await db.query<TestDoc, string>((doc) => {
       return doc.baz;
     });
     expect(query1).toBeTruthy();
@@ -550,7 +550,7 @@ describe("Reopening a ledger with indexes", function () {
     foo: string;
   }
   let db: Database;
-  let idx: Index<string, Doc>;
+  let idx: Index<Doc, string>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
   const sthis = ensureSuperThis();
@@ -570,13 +570,13 @@ describe("Reopening a ledger with indexes", function () {
       didMap = true;
       return doc.foo;
     };
-    idx = index<string, Doc>(db, "foo", mapFn);
+    idx = index<Doc, string>(db, "foo", mapFn);
   });
 
   it("should persist data", async () => {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
-    const idx2 = index<string, Doc>(db, "foo");
+    const idx2 = index<Doc, string>(db, "foo");
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();

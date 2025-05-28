@@ -28,7 +28,7 @@ describe("query return value consistency", function () {
 
   it("database query should return docs property like useLiveQuery", async function () {
     // This test should initially fail because the query method doesn't return docs yet
-    const result = await db.query<string, TestDoc>("category");
+    const result = await db.query<TestDoc>("category");
 
     // Check that rows property exists (this should pass)
     expect(result).toHaveProperty("rows");
@@ -45,7 +45,7 @@ describe("query return value consistency", function () {
   });
 
   it("should return docs with the same order as rows", async function () {
-    const result = await db.query<string, TestDoc>("category");
+    const result = await db.query<TestDoc>("category");
 
     // Ensure docs array exists
     expect(result).toHaveProperty("docs");
@@ -60,7 +60,7 @@ describe("query return value consistency", function () {
 
   it("should work with complex map functions and query options", async function () {
     // Test with a map function and query options
-    const result = await db.query<boolean, TestDoc>((doc) => doc.active, {
+    const result = await db.query<TestDoc, boolean>((doc) => doc.active, {
       key: true,
       includeDocs: true,
     });

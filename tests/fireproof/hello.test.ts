@@ -24,7 +24,7 @@ describe("hello public API", () => {
   beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-public-api");
-    index<string, TestDoc>(db, "test-index", (doc) => doc.foo);
+    index<TestDoc, string>(db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
   });
