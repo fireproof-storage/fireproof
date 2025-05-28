@@ -1,8 +1,9 @@
+import { LRUMap } from "@adviser/cement";
 import { DocFileMeta } from "@fireproof/core";
 import React, { useState, useEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
 
 // Cache for object URLs to avoid recreating them unnecessarily
-const objectUrlCache = new Map<string, string>();
+const objectUrlCache = new LRUMap<string, string>();
 
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
@@ -26,6 +27,83 @@ function isFileMeta(obj: FileType): obj is DocFileMeta {
   return "type" in obj && "size" in obj && "file" in obj && typeof obj.file === "function";
 }
 
+// Generate a cache key for file objects
+function getCacheKey(fileObj: File): string {
+  return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
+}
+
+// Get or create an object URL with caching
+function getObjectUrl(fileObj: File): string {
+  const cacheKey = getCacheKey(fileObj);
+
+  if (!objectUrlCache.has(cacheKey)) {
+    // eslint-disable-next-line no-restricted-globals
+    objectUrlCache.set(cacheKey, URL.createObjectURL(fileObj));
+  }
+
+  return objectUrlCache.get(cacheKey) as string;
+}
+
+async function loadFile({
+  fileData,
+  fileObjRef,
+  cleanupRef,
+  setImgDataUrl,
+}: {
+  fileData?: FileType;
+  fileObjRef: React.RefObject<File | null>;
+  setImgDataUrl: React.Dispatch<React.SetStateAction<string>>;
+  cleanupRef: React.RefObject<(() => void) | null>;
+}) {
+  let fileObj: File | null = null;
+  let fileType = "";
+
+  // Make sure fileData is defined before checking its type
+  if (fileData) {
+    switch (true) {
+      case isFile(fileData):
+        fileObj = fileData;
+        fileType = fileData.type;
+        break;
+      case isFileMeta(fileData):
+        fileType = fileData.type;
+        fileObj = typeof fileData.file === "function" ? await fileData.file() : null;
+        break;
+    }
+  }
+
+  // Clean up previous object URL if it exists and we're loading a new file
+  if (fileObjRef.current !== fileObj && cleanupRef.current) {
+    cleanupRef.current();
+    cleanupRef.current = null;
+  }
+
+  if (fileObj && /image/.test(fileType)) {
+    // Skip if it's the same exact file object
+    if (fileObjRef.current !== fileObj) {
+      const src = getObjectUrl(fileObj);
+      setImgDataUrl(src);
+      fileObjRef.current = fileObj;
+
+      // Store cleanup function
+      cleanupRef.current = () => {
+        const cacheKey = getCacheKey(fileObj);
+        if (objectUrlCache.has(cacheKey)) {
+          // eslint-disable-next-line no-restricted-globals
+          URL.revokeObjectURL(objectUrlCache.get(cacheKey) as string);
+          objectUrlCache.delete(cacheKey);
+        }
+      };
+
+      return cleanupRef.current;
+    }
+
+    // Return existing cleanup if same file
+    return cleanupRef.current;
+  }
+  return null;
+}
+
 export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const [imgDataUrl, setImgDataUrl] = useState("");
   const fileObjRef = useRef<File | null>(null);
@@ -37,79 +115,10 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
     return file || meta;
   }, [file, meta]);
 
-  // Generate a cache key for file objects
-  function getCacheKey(fileObj: File): string {
-    return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
-  }
-
-  // Get or create an object URL with caching
-  function getObjectUrl(fileObj: File): string {
-    const cacheKey = getCacheKey(fileObj);
-
-    if (!objectUrlCache.has(cacheKey)) {
-      // eslint-disable-next-line no-restricted-globals
-      objectUrlCache.set(cacheKey, URL.createObjectURL(fileObj));
-    }
-
-    return objectUrlCache.get(cacheKey) as string;
-  }
-
   useEffect(() => {
     if (!fileData) return;
-
-    async function loadFile() {
-      let fileObj: File | null = null;
-      let fileType = "";
-
-      // Make sure fileData is defined before checking its type
-      if (fileData) {
-        switch (true) {
-          case isFile(fileData):
-            fileObj = fileData;
-            fileType = fileData.type;
-            break;
-          case isFileMeta(fileData):
-            fileType = fileData.type;
-            fileObj = typeof fileData.file === "function" ? await fileData.file() : null;
-            break;
-        }
-      }
-
-      // Clean up previous object URL if it exists and we're loading a new file
-      if (fileObjRef.current !== fileObj && cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-
-      if (fileObj && /image/.test(fileType)) {
-        // Skip if it's the same exact file object
-        if (fileObjRef.current !== fileObj) {
-          const src = getObjectUrl(fileObj);
-          setImgDataUrl(src);
-          fileObjRef.current = fileObj;
-
-          // Store cleanup function
-          cleanupRef.current = function cleanup() {
-            const cacheKey = getCacheKey(fileObj);
-            if (objectUrlCache.has(cacheKey)) {
-              // eslint-disable-next-line no-restricted-globals
-              URL.revokeObjectURL(objectUrlCache.get(cacheKey) as string);
-              objectUrlCache.delete(cacheKey);
-            }
-          };
-
-          return cleanupRef.current;
-        }
-
-        // Return existing cleanup if same file
-        return cleanupRef.current;
-      }
-      return null;
-    }
-
     let isMounted = true;
-
-    loadFile().then(function handleResult(result) {
+    loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl }).then(function handleResult(result) {
       if (isMounted) {
         // Store the result in cleanupRef.current if component is still mounted
         cleanupRef.current = result;
