@@ -232,7 +232,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       const start = [...opts.prefix, NaN];
       const end = [...opts.prefix, Infinity];
       const encodedR = encodeRange([start, end]);
-      return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
+      return await applyQuery<T, K, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
     const all = await this.byKey.root.getAllEntries(); // funky return type
     return await applyQuery<T, K, R>(
