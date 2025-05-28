@@ -460,7 +460,7 @@ export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRD
 
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore?: BaseBlockstore;
-  readonly indexers: Map<string, Index<IndexKeyType, DocTypes>>;
+  readonly indexers: Map<string, Index<DocTypes, IndexKeyType>>;
 
   bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta>;
   ready(): Promise<void>;

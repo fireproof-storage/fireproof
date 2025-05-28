@@ -51,7 +51,7 @@ export class CRDTImpl implements CRDT {
   readonly blockstore: BaseBlockstore;
   // we can run without an index instance
   readonly indexBlockstore?: BaseBlockstore;
-  readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
+  readonly indexers = new Map<string, Index<DocTypes, IndexKeyType>>();
   readonly clock: CRDTClock;
 
   readonly logger: Logger;

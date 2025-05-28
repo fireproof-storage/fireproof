@@ -44,7 +44,7 @@ function refLedger(u: HasCRDT | RefLedger): u is RefLedger {
   return !!(u as RefLedger).ledger;
 }
 
-export function index<T extends DocTypes = NonNullable<unknown>, K extends IndexKeyType = string, R extends DocFragment = T>(
+export function index<T extends DocTypes = DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   refDb: HasLogger & HasSuperThis & (HasCRDT | RefLedger),
   name: string,
   mapFn?: MapFn<T>,
@@ -59,7 +59,7 @@ export function index<T extends DocTypes = NonNullable<unknown>, K extends Index
     idx.applyMapFn(name, mapFn, meta);
   } else {
     const idx = new Index<T, K>(refDb.sthis, crdt, name, mapFn, meta);
-    crdt.indexers.set(name, idx as unknown as Index<NonNullable<unknown>, string, NonNullable<unknown>>);
+    crdt.indexers.set(name, idx as unknown as Index<DocTypes, K, DocTypes>);
   }
   return crdt.indexers.get(name) as unknown as Index<T, K, R>;
 }
@@ -240,7 +240,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       {
         // getAllEntries returns a different type than range
         result: all.result.map(({ key: [k, id], value }) => ({
-          key: k,
+          key: k as [K, string],
           id,
           value,
         })),
