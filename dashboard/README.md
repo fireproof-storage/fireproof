@@ -47,11 +47,13 @@ Additionally, you need to create a token template named `with-email` in your Cle
 To set up and run the project locally:
 
 1. Set up the database schema:
+
    ```
    pnpm drizzle:d1-local
    ```
 
 2. Start the frontend development server:
+
    ```
    pnpm dev
    ```

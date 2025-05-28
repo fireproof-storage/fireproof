@@ -51,7 +51,7 @@ import {
   ResUpdateUserTenant,
   RoleType,
   User,
-  UserStatus
+  UserStatus,
 } from "./fp-dash-types.ts";
 import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
@@ -1931,7 +1931,7 @@ export class FPApiSQL implements FPApiInterface {
     try {
       // Get the public key for verification
       const pubKey = await rt.sts.env2jwk(ctx.publicToken, "ES256");
-      
+
       // Verify the token
       const verifyResult = await jwtVerify(req.token, pubKey, {
         issuer: ctx.issuer,
