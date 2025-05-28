@@ -114,7 +114,7 @@
     "@ipld/dag-json": "^10.2.4",
     "@libsql/client": "^0.15.6",
     "@web3-storage/pail": "^0.6.2",
-    "cborg": "^4.2.10",
+    "cborg": "^4.2.11",
     "charwise": "^3.0.1",
     "drizzle-orm": "^0.43.1",
     "esbuild-plugin-replace": "^1.4.0",
