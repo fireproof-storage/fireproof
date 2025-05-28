@@ -1,16 +1,9 @@
 import { Result } from "@adviser/cement";
-import { rt, ps } from "@fireproof/core";
-import { SuperThis } from "@fireproof/core";
+import { SuperThis, ps, rt } from "@fireproof/core";
+import { gte } from "drizzle-orm";
 import { and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
-import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
-import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.ts";
-import { sqlTenantUsers, sqlTenants } from "./tenants.ts";
-import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.ts";
-import { SignJWT } from "jose";
-import { sqlTokenByResultId } from "./token-by-result-id.ts";
-import { gte, sql } from "drizzle-orm";
+import { SignJWT, jwtVerify } from "jose";
 import {
   AuthType,
   ClerkClaim,
@@ -27,6 +20,7 @@ import {
   ReqDeleteLedger,
   ReqDeleteTenant,
   ReqEnsureUser,
+  ReqExtendToken,
   ReqFindUser,
   ReqInviteUser,
   ReqListInvites,
@@ -44,6 +38,7 @@ import {
   ResDeleteLedger,
   ResDeleteTenant,
   ResEnsureUser,
+  ResExtendToken,
   ResFindUser,
   ResInviteUser,
   ResListInvites,
@@ -56,8 +51,14 @@ import {
   ResUpdateUserTenant,
   RoleType,
   User,
-  UserStatus,
+  UserStatus
 } from "./fp-dash-types.ts";
+import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
+import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
+import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.ts";
+import { sqlTenantUsers, sqlTenants } from "./tenants.ts";
+import { sqlTokenByResultId } from "./token-by-result-id.ts";
+import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.ts";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -110,6 +111,7 @@ export interface FPApiInterface {
   // attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger>
   getCloudSessionToken(req: ReqCloudSessionToken): Promise<Result<ResCloudSessionToken>>;
   getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>>;
+  extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>>;
 }
 
 export const FPAPIMsg = new ps.dashboard.FAPIMsgImpl();
@@ -1824,7 +1826,7 @@ export class FPApiSQL implements FPApiInterface {
       .setIssuedAt()
       .setIssuer(ctx.issuer) // issuer
       .setAudience(ctx.audience) // audience
-      .setExpirationTime(Date.now() + validFor) // expiration time
+      .setExpirationTime(Math.floor((Date.now() + validFor) / 1000)) // expiration time
       .sign(privKey);
 
     console.log("getCloudSessionToken", {
@@ -1905,6 +1907,67 @@ export class FPApiSQL implements FPApiInterface {
       token: out.token,
       status: "found",
     });
+  }
+
+  /**
+   * Extract token from request, validate it, and extend expiry by 1 day
+   */
+  async extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>> {
+    const ctx = {
+      secretToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_SECRET"),
+      publicToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC"),
+      issuer: this.sthis.env.get("CLOUD_SESSION_TOKEN_ISSUER") ?? "FP_CLOUD",
+      audience: this.sthis.env.get("CLOUD_SESSION_TOKEN_AUDIENCE") ?? "PUBLIC",
+    };
+
+    if (!ctx.secretToken) {
+      return Result.Err("CLOUD_SESSION_TOKEN_SECRET not configured");
+    }
+
+    if (!ctx.publicToken) {
+      return Result.Err("CLOUD_SESSION_TOKEN_PUBLIC not configured");
+    }
+
+    try {
+      // Get the public key for verification
+      const pubKey = await rt.sts.env2jwk(ctx.publicToken, "ES256");
+      
+      // Verify the token
+      const verifyResult = await jwtVerify(req.token, pubKey, {
+        issuer: ctx.issuer,
+        audience: ctx.audience,
+      });
+
+      const payload = verifyResult.payload as ps.cloud.FPCloudClaim;
+
+      // Check if token is expired
+      const now = Date.now();
+      if (payload.exp && payload.exp * 1000 <= now) {
+        return Result.Err("Token is expired");
+      }
+
+      // Extend expiry by 6 hours (6 * 60 * 60 * 1000 = 21600000 ms)
+      const sixHoursInMs = 6 * 60 * 60 * 1000;
+      const newExpirationTime = now + sixHoursInMs;
+
+      // Create new token with extended expiry using the private key
+      // JWT expects expiration time in seconds, not milliseconds
+      const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
+      const newToken = await new SignJWT(payload)
+        .setProtectedHeader({ alg: "ES256" })
+        .setIssuedAt()
+        .setIssuer(ctx.issuer)
+        .setAudience(ctx.audience)
+        .setExpirationTime(Math.floor(newExpirationTime / 1000))
+        .sign(privKey);
+
+      return Result.Ok({
+        type: "resExtendToken",
+        token: newToken,
+      });
+    } catch (error) {
+      return Result.Err(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 }
 
