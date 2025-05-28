@@ -17,7 +17,6 @@ import { ProllyNode as BaseNode } from "prolly-trees/db-index";
 import {
   CRDT,
   DocFragment,
-  DocLiteral,
   DocObject,
   DocTypes,
   DocUpdate,
@@ -25,7 +24,6 @@ import {
   IndexUpdate,
   IndexUpdateString,
   QueryOpts,
-  IndexRow,
   IndexRows,
   DocWithId,
   IndexKeyType,
@@ -33,11 +31,21 @@ import {
   CarTransaction,
 } from "./types.js";
 
-// Define ProllyNode type locally since it's not exported from types.js
-interface ProllyNode<K, V extends DocFragment, T extends DocFragment = V> {
-  get(key: K): Promise<{ result: ProllyIndexRow<K, V>[] }>;
-  range(start: K, end: K): Promise<{ result: ProllyIndexRow<K, V>[] }>;
-  getAllEntries(): Promise<{ result: { key: [K, string]; value: V }[] }>;
+// Define ProllyNode interface based on prolly-trees/base
+interface ProllyNode<K extends IndexKeyType, V extends DocFragment> extends BaseNode {
+  getAllEntries(): PromiseLike<{ [x: string]: unknown; result: ProllyIndexRow<K, V>[] }>;
+  getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
+  range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, V>[] }>;
+  get(key: string): Promise<{ result: ProllyIndexRow<K, V>[] }>;
+  bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
+    readonly root?: ProllyNode<K, V>;
+    readonly blocks: Block[];
+  }>;
+  readonly address: Promise<Link>;
+  readonly distance: number;
+  compare: (a: unknown, b: unknown) => number;
+  readonly cache: unknown;
+  readonly block: Promise<Block>;
 }
 import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { Logger } from "@adviser/cement";
@@ -222,24 +230,7 @@ export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
   readonly value: T;
 }
 
-// ProllyNode type based on the ProllyNode from 'prolly-trees/base'
-interface ProllyNode<K extends IndexKeyType, V extends DocFragment, T extends DocFragment> extends BaseNode {
-  getAllEntries(): PromiseLike<{ [x: string]: unknown; result: ProllyIndexRow<K, T>[] }>;
-  getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
-  range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
-  get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
-  bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
-    readonly root?: ProllyNode<K, T>;
-    readonly blocks: Block[];
-  }>;
-  readonly address: Promise<Link>;
-  readonly distance: number;
-  compare: (a: unknown, b: unknown) => number;
-  readonly cache: unknown;
-  readonly block: Promise<Block>;
-}
-
-interface StaticProllyOptions<T> {
+export interface StaticProllyOptions<T> {
   readonly cache: unknown;
   chunker: (entry: T, distance: number) => boolean;
   readonly codec: unknown;
