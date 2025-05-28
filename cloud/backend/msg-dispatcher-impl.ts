@@ -2,9 +2,6 @@ import { SuperThis, ps } from "@fireproof/core";
 import { MsgDispatcher, MsgDispatcherCtx } from "./msg-dispatch.js";
 import { metaMerger } from "./meta-merger/meta-merger.js";
 import { Promisable } from "@adviser/cement";
-import { TenantLedger } from "../../src/protocols/cloud/msg-types.js";
-// import { isAuthTypeFPCloud, MsgBase, MsgIsTenantLedger } from "../../src/protocols/cloud/msg-types.js";
-// import { WSRoom } from "./ws-room.js";
 
 const {
   MsgIsReqGetData,
@@ -70,7 +67,7 @@ export function ensureTendantLedger<T extends ps.cloud.MsgBase>(
     const tl = {
       tenant: optionalTenantLedger.tenant?.tenant ?? msg.auth.params.claim.selected.tenant,
       ledger: optionalTenantLedger.tenant?.ledger ?? msg.auth.params.claim.selected.ledger,
-    } satisfies TenantLedger;
+    } satisfies ps.cloud.TenantLedger;
     const tlMsg = { ...msg, auth: msg.auth, tenant: tl };
 
     if (!tlMsg.auth.params.claim.tenants.map((i) => i.id).includes(tl.tenant)) {

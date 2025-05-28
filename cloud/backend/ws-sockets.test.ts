@@ -2,7 +2,6 @@ import { ps } from "@fireproof/core";
 import { MockJWK, mockJWK } from "./node/test-helper.js";
 import { Future, URI } from "@adviser/cement";
 import { testSuperThis } from "../test-super-this.js";
-import { buildReqClose, buildReqOpen, MsgBase } from "../../src/protocols/cloud/msg-types.js";
 
 const { MsgIsResChat, Msger, buildReqChat } = ps.cloud;
 
@@ -36,7 +35,10 @@ describe("test multiple connections", () => {
     // await hserv.close();
   });
 
-  function consumeStream(stream: ReadableStream<ps.cloud.MsgWithError<ps.cloud.MsgWithConn>>, cb: (msg: MsgBase) => void): void {
+  function consumeStream(
+    stream: ReadableStream<ps.cloud.MsgWithError<ps.cloud.MsgWithConn>>,
+    cb: (msg: ps.cloud.MsgBase) => void,
+  ): void {
     const reader = stream.getReader();
     async function readNext() {
       const { done, value } = await reader.read();
@@ -66,7 +68,7 @@ describe("test multiple connections", () => {
     // const recvSet = new Set(conns.map((c) => c.conn.reqId));
     for (const rC of conns) {
       const c = rC.Ok();
-      const stream = c.bind(buildReqOpen(sthis, auth.authType, {}), {
+      const stream = c.bind(ps.cloud.buildReqOpen(sthis, auth.authType, {}), {
         waitFor: () => true, // MsgIsResOpen, // All
       });
 
@@ -95,7 +97,7 @@ describe("test multiple connections", () => {
       } else {
         assert.fail(`Expected a response:${JSON.stringify(act)}`);
       }
-      await c.close(buildReqClose(sthis, auth.authType, c.conn));
+      await c.close(ps.cloud.buildReqClose(sthis, auth.authType, c.conn));
       rest.shift();
     }
 
