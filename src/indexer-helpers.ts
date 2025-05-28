@@ -34,7 +34,7 @@ import {
 } from "./types.js";
 
 // Define ProllyNode type locally since it's not exported from types.js
-interface ProllyNode<K, V> {
+interface ProllyNode<K, V extends DocFragment, T = any> {
   get(key: any): Promise<{ result: ProllyIndexRow<K, V>[] }>;
   range(start: any, end: any): Promise<{ result: ProllyIndexRow<K, V>[] }>;
   getAllEntries(): Promise<{ result: { key: [K, string]; value: V }[] }>;
@@ -223,7 +223,7 @@ export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
 }
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
-interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode {
+interface ProllyNode<K extends IndexKeyType, V extends DocFragment, T extends DocFragment> extends BaseNode {
   getAllEntries(): PromiseLike<{ [x: string]: unknown; result: ProllyIndexRow<K, T>[] }>;
   getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
   range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
