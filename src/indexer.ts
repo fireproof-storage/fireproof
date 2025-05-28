@@ -225,7 +225,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       );
       // Extract docs from the rows array
       const flatRows = results.flat();
-      const docs = flatRows.map((r) => (r as any).doc).filter(Boolean) as DocWithId<T>[];
+      const docs = flatRows.map((r) => (r as { doc?: DocWithId<T> }).doc).filter(Boolean) as DocWithId<T>[];
       return { rows: flatRows, docs };
     }
     if (opts.prefix) {
