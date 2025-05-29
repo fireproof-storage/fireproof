@@ -185,7 +185,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
         res = fpApi.getTokenByResultId(jso);
         break;
 
-      case jso.type === "reqExtendToken":
+      case FPAPIMsg.isReqExtendToken(jso):
         res = fpApi.extendToken(jso);
         break;
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { redirect } from "react-router-dom";
 import { fireproof } from "@fireproof/core";
 import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "../../helpers.ts";
@@ -17,7 +16,6 @@ export async function connectDatabasesLoader({ request }: { request: Request }) 
 
   const syncDb = fireproof(SYNC_DB_NAME);
   const result = await syncDb.query<
-    string,
     {
       localName: string;
       remoteName: string;

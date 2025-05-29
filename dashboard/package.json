@@ -27,7 +27,7 @@
     "@clerk/backend": "^1.25.8",
     "@clerk/clerk-js": "^5.58.1",
     "@clerk/clerk-react": "^5.25.5",
-    "@fireproof/core": "^0.20.5-dev-preview-8",
+    "@fireproof/core": "^v0.21.0-dev-preview-5",
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/react-query": "^5.66.0",
@@ -42,8 +42,7 @@
     "react-hook-form": "^7.53.2",
     "react-router-dom": "^7.0.2",
     "react-simple-code-editor": "^0.14.1",
-    "use-editable": "^2.3.3",
-    "use-fireproof": "^0.20.5-dev-preview-6"
+    "use-editable": "^2.3.3"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^0.1.19",
@@ -71,8 +70,8 @@
     "tailwindcss": "^3.4.16",
     "typescript": "^5.8.3",
     "vite": "^6.1.0",
-    "vitest": "^3.1.1",
-    "wrangler": "^4.12.1",
+    "vitest": "^3.1.4",
+    "wrangler": "^4.17.0",
     "zx": "^8.5.3"
   },
   "pnpm": {

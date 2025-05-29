@@ -74,12 +74,5 @@ export type ResCloudSessionToken = ps.dashboard.ResCloudSessionToken;
 export type ReqTokenByResultId = ps.dashboard.ReqTokenByResultId;
 export type ResTokenByResultId = ps.dashboard.ResTokenByResultId;
 
-export type ReqExtendToken = {
-  readonly type: "reqExtendToken";
-  readonly token: string;
-};
-
-export type ResExtendToken = {
-  readonly type: "resExtendToken";
-  readonly token: string;
-};
+export type ReqExtendToken = ps.dashboard.ReqExtendToken;
+export type ResExtendToken = ps.dashboard.ResExtendToken;
