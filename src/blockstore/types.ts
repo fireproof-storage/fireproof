@@ -262,6 +262,7 @@ export interface StoreUrlsOpts {
   readonly data?: Partial<StoreUrls>;
   readonly idx?: Partial<StoreUrls>;
   readonly indexName?: string; // Added for specifying custom index name parameter
+  readonly public?: boolean; // Flag for databases that are public (no encryption)
 }
 
 export interface StoreURIs {

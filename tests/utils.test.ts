@@ -171,20 +171,20 @@ describe("ensureURIDefaults", () => {
     expect(resultUri.getParam(PARAM.STORE_KEY)).toBe(`@${defaultName}-wal-idx@`);
   });
 
-  it("should use opts.curi as base and correctly apply other params (e.g., public affects STORE_KEY)", () => {
+  it("should use opts.uri as base and correctly apply other params (e.g., public affects STORE_KEY)", () => {
     const sthis = mockSuperThisMinimal() as SuperThis;
-    const customCuriString = "fireproof://custombase/path";
-    const optsCuri = BuildURI.from(customCuriString).URI();
+    const customUriString = "fireproof://custombase/path";
+    const optsUri = BuildURI.from(customUriString).URI();
     const names = { name: defaultName };
     // Set public to true to check interaction: STORE_KEY should be 'insecure'
-    const opts = { curi: optsCuri, public: true };
+    const opts = { uri: optsUri, public: true };
     const store: StoreType = "file"; // Changed 'data' to 'file' (a valid StoreType)
-    // This baseUri should be overridden by opts.curi
+    // This baseUri should be overridden by opts.uri
     const originalUri = BuildURI.from("fireproof://original/ignored").URI();
 
     const resultUri = ensureURIDefaults(sthis, names, opts, originalUri, store);
 
-    expect(resultUri.pathname.startsWith(optsCuri.pathname)).toBe(true);
+    expect(resultUri.pathname.startsWith(optsUri.pathname)).toBe(true);
     expect(resultUri.getParam(PARAM.STORE_KEY)).toBe("insecure");
     expect(resultUri.getParam(PARAM.STORE)).toBe(store);
     expect(resultUri.getParam(PARAM.NAME)).toBe(defaultName);

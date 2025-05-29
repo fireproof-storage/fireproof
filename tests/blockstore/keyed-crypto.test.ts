@@ -475,11 +475,13 @@ describe("KeyedCryptoStore", () => {
       type: "secret",
       usages: [], // CryptoKeyUsage[]
     };
-    await expect(kc._encrypt({ bytes: testData, key: dummyCryptoKey, iv })).rejects.toThrow("noCrypto.encrypt not implemented");
-    // Assuming the _decrypt also needs a similar structure if it were to be tested after a (failing) encrypt
-    // For now, we'll just test _encrypt's throw. If _encrypt was a no-op, then we'd test _decrypt:
-    // const blk = testData; // If _encrypt was a no-op
-    // await expect(kc._decrypt({ bytes: blk, key: currentKey.key, iv })).rejects.toThrow("noCrypto.decrypt not implemented");
+    // For public databases, noCrypto now returns the bytes unchanged instead of throwing
+    const encryptedData = await kc._encrypt({ bytes: testData, key: dummyCryptoKey, iv });
+    expect(encryptedData).toEqual(testData); // Expect the same bytes to be returned
+
+    // Test decrypt also returns the original bytes
+    const decryptedData = await kc._decrypt({ bytes: testData, key: dummyCryptoKey, iv });
+    expect(decryptedData).toEqual(testData);
   });
 });
 

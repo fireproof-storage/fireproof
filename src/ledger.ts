@@ -304,34 +304,39 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
   // readonly persistIndexes?: boolean;
   // readonly autoCompact?: number;
   // readonly threshold?: number;
+  // Extract the public flag from sopts
+  const dbIsPublic = sopts?.public === true;
+
   return {
     idx: {
-      car: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.car ?? sopts.data?.car }, base, "car", {
+      car: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.car ?? sopts.data?.car, public: dbIsPublic }, base, "car", {
         idx: true,
         // indexName: sopts?.indexName, // Removed
       }),
       file: ensureURIDefaults(
         sthis,
         { name },
-        { uri: sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car },
+        { uri: sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car, public: dbIsPublic },
         base,
         "file",
         { idx: true /*, indexName: sopts?.indexName */ }, // Removed indexName
       ),
-      meta: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.meta ?? sopts.data?.meta }, base, "meta", {
+      meta: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.meta ?? sopts.data?.meta, public: dbIsPublic }, base, "meta", {
         idx: true,
         // indexName: sopts?.indexName, // Removed
       }),
-      wal: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.wal ?? sopts.data?.wal }, base, "wal", {
+      wal: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.wal ?? sopts.data?.wal, public: dbIsPublic }, base, "wal", {
         idx: true,
         // indexName: sopts?.indexName, // Removed
       }),
     },
     data: {
-      car: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.car }, base, "car"),
-      file: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.file ?? sopts.data?.car }, base, "file", { file: true }), // file:true is kept
-      meta: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.meta }, base, "meta"),
-      wal: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.wal }, base, "wal"),
+      car: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.car, public: dbIsPublic }, base, "car"),
+      file: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.file ?? sopts.data?.car, public: dbIsPublic }, base, "file", {
+        file: true,
+      }), // file:true is kept
+      meta: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.meta, public: dbIsPublic }, base, "meta"),
+      wal: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.wal, public: dbIsPublic }, base, "wal"),
     },
   };
 }

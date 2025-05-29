@@ -481,7 +481,8 @@ export function ensureURIDefaults(
     baseUriSource = opts as CoerceURI;
   }
 
-  let builder: Builder;
+  // Using ReturnType to infer the type from URI.build() method
+  let builder = {} as ReturnType<typeof URI.prototype.build>;
   if (baseUriSource) {
     if (baseUriSource instanceof URI) {
       builder = baseUriSource.build(); // If it's already a URI instance
@@ -500,9 +501,10 @@ export function ensureURIDefaults(
     builder.delParam(PARAM.STORE_KEY);
   } else if (typeof explicitStoreKey === "string") {
     builder.setParam(PARAM.STORE_KEY, explicitStoreKey);
-  } else { // explicitStoreKey is undefined
+  } else {
+    // explicitStoreKey is undefined
     if (isPublic) {
-      builder.setParam(PARAM.STORE_KEY, 'insecure');
+      builder.setParam(PARAM.STORE_KEY, "insecure");
     } else {
       // Not public and no explicit key: behave like main
       if (names.localURI) {
@@ -512,10 +514,10 @@ export function ensureURIDefaults(
         });
         // Only proceed if Ok and storeKey is present
         if (localParamsResult.isOk()) {
-            const localParams = localParamsResult.Ok();
-            if (localParams[PARAM.STORE_KEY]) {
-                builder.defParam(PARAM.STORE_KEY, localParams[PARAM.STORE_KEY]);
-            }
+          const localParams = localParamsResult.Ok();
+          if (localParams[PARAM.STORE_KEY]) {
+            builder.defParam(PARAM.STORE_KEY, localParams[PARAM.STORE_KEY]);
+          }
         }
       }
 
@@ -523,10 +525,11 @@ export function ensureURIDefaults(
       // This only runs if storeKey wasn't set by explicitStoreKey, public, or localURI
       if (!builder.hasParam(PARAM.STORE_KEY)) {
         const storeKeyBaseName = builder.getParam(PARAM.NAME) as string;
-        if (storeKeyBaseName) { // Ensure name is present for default key
+        if (storeKeyBaseName) {
+          // Ensure name is present for default key
           const storeKeyType = storeType2DataMetaWal(store);
           // Item 1 (partially): Revert indexAffix for storeKey
-          const indexAffix = effectiveCtx.idx ? '-idx' : '';
+          const indexAffix = effectiveCtx.idx ? "-idx" : "";
           builder.defParam(PARAM.STORE_KEY, `@${storeKeyBaseName}-${storeKeyType}${indexAffix}@`);
         }
       }
@@ -536,14 +539,14 @@ export function ensureURIDefaults(
   // localName handling (kept from existing refactor, similar to main's localURI param handling)
   if (names.localURI) {
     const localParamsResult = names.localURI.getParamsResult({ [PARAM.NAME]: param.OPTIONAL });
-     if (localParamsResult.isOk()) {
-        const localParams = localParamsResult.Ok();
-        if (localParams[PARAM.NAME]) {
-            builder.defParam(PARAM.LOCAL_NAME, localParams[PARAM.NAME]);
-        }
+    if (localParamsResult.isOk()) {
+      const localParams = localParamsResult.Ok();
+      if (localParams[PARAM.NAME]) {
+        builder.defParam(PARAM.LOCAL_NAME, localParams[PARAM.NAME]);
+      }
     }
   }
-  
+
   if (store === "car") {
     builder.defParam(PARAM.SUFFIX, ".car");
   }
