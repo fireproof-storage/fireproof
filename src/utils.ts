@@ -500,6 +500,12 @@ export function ensureURIDefaults(
       // This part of the logic might need review based on desired precedence
       // The original code copied from localURI if present.
       // Now, opts.storeKey (derived from BlockstoreOpts.storeUrls) takes precedence if not public.
+      const localStoreKey = names.localURI.getParam(PARAM.STORE_KEY);
+      if (localStoreKey) { // Should always be true due to hasParam check
+        ret.defParam(PARAM.STORE_KEY, localStoreKey);
+      }
+      // If localStoreKey were somehow null despite hasParam, it would fall through to default naming,
+      // which is safer than a potential runtime error with a ! assertion if hasParam was flawed.
     } else {
       // Default naming convention if not public and no specific key provided
       if (ctx.idx) {
