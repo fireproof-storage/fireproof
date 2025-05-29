@@ -331,14 +331,14 @@ export interface QueryOpts<K extends IndexKeyType> {
 }
 
 export interface AllDocsQueryOpts extends QueryOpts<string> {
-  readonly key?: string;
-  readonly keys?: string[];
-  prefix?: string;
+  readonly key: string;
+  readonly keys: string[];
+  readonly prefix: string;
   /**
    * Whether to include documents marked as deleted (_deleted: true).
    * Default is false - deleted documents are excluded.
    */
-  includeDeleted?: boolean;
+  readonly includeDeleted: boolean;
 }
 
 export interface AllDocsResponse<T extends DocTypes> {
@@ -600,7 +600,7 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   del(id: string): Promise<DocResponse>;
   remove(id: string): Promise<DocResponse>;
   changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
-  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
+  allDocs<T extends DocTypes>(opts?: Partial<AllDocsQueryOpts>): Promise<AllDocsResponse<T>>;
   allDocuments<T extends DocTypes>(): Promise<{
     rows: {
       key: string;
