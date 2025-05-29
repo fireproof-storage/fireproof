@@ -38,6 +38,7 @@ interface FPApiMsgInterface {
   isCreateLedger(jso: unknown): jso is ReqCreateLedger;
   isUpdateLedger(jso: unknown): jso is ReqUpdateLedger;
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger;
+  isResExtendToken(jso: unknown): jso is ResTokenByResultId;
 }
 
 function hasType(jso: unknown, t: string): jso is { type: string } {
@@ -97,5 +98,8 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isResTokenByResultId(jso: unknown): jso is ResTokenByResultId {
     return hasType(jso, "resTokenByResultId");
+  }
+  isResExtendToken(jso: unknown): jso is ResTokenByResultId {
+    return hasType(jso, "resExtendToken");
   }
 }
