@@ -109,6 +109,7 @@ class WebCtxImpl implements WebToCloudCtx {
     if (this.opts.resetToken) {
       return this.opts.resetToken();
     }
+    this._tokenAndClaims.reset();
     await this.keyBag?.del(`${this.dbId}/urlToken`);
     this.onAction();
   }
