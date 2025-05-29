@@ -14,8 +14,6 @@ import {
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-import { CarBlockItem, CarGroup, FPBlock } from "../src/blockstore/index.js";
-import { CommitQueue } from "../src/blockstore/commit-queue.js";
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 export function tracer() {}
@@ -97,7 +95,7 @@ class MockLoader implements bs.Loadable {
   readonly carLog: bs.CarLog;
   readonly attachedStores: bs.AttachedStores;
   readonly taskManager: bs.TaskManager;
-  readonly commitQueue: CommitQueue<unknown>;
+  readonly commitQueue: bs.CommitQueue<unknown>;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -118,7 +116,7 @@ class MockLoader implements bs.Loadable {
       retryTimeout: 50,
     });
     this.attachedStores = new bs.AttachedRemotesImpl(this);
-    this.commitQueue = new CommitQueue({
+    this.commitQueue = new bs.CommitQueue({
       tracer,
     });
   }
@@ -137,7 +135,7 @@ class MockLoader implements bs.Loadable {
     return rt.kb.getKeyBag(this.sthis, {});
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<CarGroup> {
+  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<bs.CarGroup> {
     // throw new Error("Method not implemented.");
     return Promise.resolve([]);
   }
@@ -149,15 +147,15 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock | Falsy> {
+  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.FPBlock | Falsy> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock<CarBlockItem>> {
+  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.FPBlock<bs.CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<FPBlock<CarBlockItem>> {
+  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.FPBlock<bs.CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -165,7 +163,7 @@ class MockLoader implements bs.Loadable {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  entries(cache?: boolean): AsyncIterableIterator<FPBlock> {
+  entries(cache?: boolean): AsyncIterableIterator<bs.FPBlock> {
     throw new Error("Method not implemented.");
   }
 }
