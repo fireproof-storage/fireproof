@@ -1,0 +1,72 @@
+import { useFireproof } from "use-fireproof"
+import { useState } from "react"
+
+export default function App() {
+  const { database, useDocument, useLiveQuery } = useFireproof("user-access-db")
+  const { doc, merge, submit } = useDocument({ name: "", access: "read", action: "" })
+  const { docs } = useLiveQuery("name", {})
+  const [filter, setFilter] = useState("")
+
+  const demo = () => {
+    const demoData = [
+      { name: "Alice", access: "admin", action: "Created project" },
+      { name: "Bob", access: "read", action: "Viewed report" },
+      { name: "Carol", access: "write", action: "Updated record" },
+    ]
+    demoData.forEach((d) => database.put({ ...d, createdAt: Date.now() }))
+  }
+
+  const filtered = docs.filter((d) => d.name.toLowerCase().includes(filter.toLowerCase()))
+
+  return (
+    <div className="max-w-xl mx-auto p-4 bg-gradient-to-br from-orange-700 to-pink-600 text-white rounded-2xl shadow-lg">
+      <h1 className="text-3xl font-bold mb-2">🔐 User Access & Activity Tracker</h1>
+      <p className="italic text-sm mb-4">*Track user access levels and log actions in real time. Add users, set permissions, and log actions. Use the filter to search by name.*</p>
+
+      <input
+        value={doc.name}
+        onChange={(e) => merge({ name: e.target.value })}
+        placeholder="User name"
+        className="mb-2 p-2 rounded w-full text-black"
+      />
+      <select
+        value={doc.access}
+        onChange={(e) => merge({ access: e.target.value })}
+        className="mb-2 p-2 rounded w-full text-black"
+      >
+        <option value="read">Read</option>
+        <option value="write">Write</option>
+        <option value="admin">Admin</option>
+      </select>
+      <input
+        value={doc.action}
+        onChange={(e) => merge({ action: e.target.value })}
+        placeholder="Action performed"
+        className="mb-2 p-2 rounded w-full text-black"
+      />
+      <button onClick={submit} className="mb-4 bg-orange-500 hover:bg-orange-600 p-2 rounded w-full font-bold">
+        Log Action
+      </button>
+      <button onClick={demo} className="mb-4 bg-yellow-400 hover:bg-yellow-500 p-2 rounded w-full font-bold">
+        Demo data
+      </button>
+
+      <input
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        placeholder="Search by name"
+        className="mb-4 p-2 rounded w-full text-black"
+      />
+
+      <ul>
+        {filtered.map((d) => (
+          <li key={d._id} className="mb-3 p-3 bg-white bg-opacity-10 rounded shadow">
+            <div className="text-lg font-semibold">{d.name} - <span className="italic">{d.access}</span></div>
+            <div className="text-sm">{d.action}</div>
+            <div className="text-xs text-gray-300">{new Date(d.createdAt || d._id.substring(0, 8) * 1000).toLocaleString()}</div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
