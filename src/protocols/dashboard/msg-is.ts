@@ -17,6 +17,7 @@ import {
   ReqUpdateLedger,
   ReqDeleteLedger,
   ResTokenByResultId,
+  ReqExtendToken,
 } from "./msg-types.js";
 
 interface FPApiMsgInterface {
@@ -38,7 +39,7 @@ interface FPApiMsgInterface {
   isCreateLedger(jso: unknown): jso is ReqCreateLedger;
   isUpdateLedger(jso: unknown): jso is ReqUpdateLedger;
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger;
-  isReqExtendToken(jso: unknown): jso is ReqTokenByResultId;
+  isReqExtendToken(jso: unknown): jso is ReqExtendToken;
 }
 
 function hasType(jso: unknown, t: string): jso is { type: string } {
@@ -99,7 +100,7 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   isResTokenByResultId(jso: unknown): jso is ResTokenByResultId {
     return hasType(jso, "resTokenByResultId");
   }
-  isReqExtendToken(jso: unknown): jso is ReqTokenByResultId {
+  isReqExtendToken(jso: unknown): jso is ReqExtendToken {
     return hasType(jso, "reqExtendToken");
   }
 }
