@@ -12,10 +12,6 @@ describe("charwise boolean handling", () => {
     // Test false
     const falseEncoded = charwise.encode(false);
     expect(charwise.decode(falseEncoded)).toBe(false);
-
-    // Log encoded values for inspection
-    console.log("true encoded:", trueEncoded);
-    console.log("false encoded:", falseEncoded);
   });
 
   it("should differentiate between boolean values", () => {
@@ -27,7 +23,6 @@ describe("charwise boolean handling", () => {
 
     // Test ordering
     const orderedArray = [falseEncoded, trueEncoded].sort();
-    console.log("Sorted encoded values:", orderedArray);
 
     // In most collation systems, false should come before true
     expect(orderedArray[0]).toBe(falseEncoded);
@@ -40,12 +35,6 @@ describe("charwise boolean handling", () => {
     const undefinedEncoded = charwise.encode(undefined);
     const zeroEncoded = charwise.encode(0);
     const emptyStringEncoded = charwise.encode("");
-
-    console.log("false encoded:", falseEncoded);
-    console.log("null encoded:", nullEncoded);
-    console.log("undefined encoded:", undefinedEncoded);
-    console.log("0 encoded:", zeroEncoded);
-    console.log("empty string encoded:", emptyStringEncoded);
 
     // Ensure false is different from other "falsy" values
     expect(falseEncoded).not.toBe(nullEncoded);
@@ -62,9 +51,6 @@ describe("charwise boolean handling", () => {
     // Test with Fireproof's encodeKey function
     const falseFireproofEncoded = encodeKey(false);
     const trueFireproofEncoded = encodeKey(true);
-
-    console.log("Fireproof false encoded:", falseFireproofEncoded);
-    console.log("Fireproof true encoded:", trueFireproofEncoded);
 
     // Check if Fireproof's encoding matches charwise directly
     expect(falseFireproofEncoded).toBe(falseEncoded);
