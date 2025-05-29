@@ -78,4 +78,42 @@ describe("query return value consistency", function () {
       expect((doc as DocWithId<TestDoc>).active).toBe(true);
     });
   });
+
+  it("should only return docs with false value when queried with {key: false}", async function () {
+    // Test with a map function and query options for false value
+    const result = await db.query<TestDoc, boolean>((doc) => doc.active, {
+      key: false,
+      includeDocs: true,
+    });
+
+    // Should only return documents where active is false
+    expect(result.rows.length).toBe(1); // We only have one document with active: false
+
+    // Check docs property exists and matches rows length
+    expect(result).toHaveProperty("docs");
+    expect(result.docs.length).toBe(result.rows.length);
+
+    // Verify all returned docs have active set to false
+    result.docs.forEach((doc) => {
+      expect((doc as DocWithId<TestDoc>).active).toBe(false);
+    });
+
+    // Make sure no documents with active: true are included
+    const activeTrue = result.docs.filter((doc) => (doc as DocWithId<TestDoc>).active === true);
+    expect(activeTrue.length).toBe(0); // No active: true docs should be included
+
+    // Now run a query with key: true for comparison
+    const trueResult = await db.query<TestDoc, boolean>((doc) => doc.active, {
+      key: true,
+      includeDocs: true,
+    });
+
+    // This correctly returns only active: true documents
+    expect(trueResult.rows.length).toBe(2);
+
+    // All returned docs have active set to true
+    trueResult.docs.forEach((doc) => {
+      expect((doc as DocWithId<TestDoc>).active).toBe(true);
+    });
+  });
 });

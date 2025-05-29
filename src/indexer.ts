@@ -207,23 +207,36 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       const eRange = encodeRange(opts.range);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
     }
-    if (opts.key) {
+    if (opts.key !== undefined) {
       const encodedKey = encodeKey(opts.key);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
     }
     if (Array.isArray(opts.keys)) {
+      // Store the original limit
+      const originalLimit = opts.limit;
+
+      // Create a new options object without the limit to avoid limiting individual key results
+      const optsWithoutLimit = { ...opts, limit: undefined };
+
+      // Process each key separately but don't apply limit yet
       const results = await Promise.all(
         opts.keys.map(async (key: DocFragment) => {
           const encodedKey = encodeKey(key);
-          return (await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
+          return (await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), optsWithoutLimit)).rows;
         }),
       );
+
+      // Flatten all results into a single array
+      let flattenedRows = results.flat();
+
+      // Apply the original limit to the combined results if it was specified
+      if (originalLimit !== undefined) {
+        flattenedRows = flattenedRows.slice(0, originalLimit);
+      }
+
       return {
-        rows: results.flat(),
-        docs: results
-          .flat()
-          .map((r) => r.doc)
-          .filter((r): r is DocWithId<T> => !!r),
+        rows: flattenedRows,
+        docs: flattenedRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
       };
     }
     if (opts.prefix) {

@@ -181,11 +181,11 @@ async function prepareCarFiles(
   let clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });
   // console.log("prepareCarFiles-root", rootBlock.cid.toString());
   clonedt.putSync(rootBlock);
-  let newsize = CBW.blockLength(rootBlock);
+  let newsize = CBW.blockLength({ cid: rootBlock.cid as CID<unknown, number, number, 1>, bytes: rootBlock.bytes } as CBW.Block);
   let cidRootBlock = rootBlock;
   for await (const fpblock of t.entries()) {
     // console.log("prepareCarFiles", cid.toString(), bytes.length);
-    newsize += CBW.blockLength(fpblock);
+    newsize += CBW.blockLength({ cid: fpblock.cid as CID<unknown, number, number, 1>, bytes: fpblock.bytes } as CBW.Block);
     // ktoCIDBlock({ cid: cid, bytes }));
     // console.log("prepareCarFiles", cid.toString(), bytes.length)
     if (newsize >= threshold) {
@@ -193,7 +193,7 @@ async function prepareCarFiles(
       clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });
       clonedt.putSync(fpblock);
       cidRootBlock = fpblock;
-      newsize = CBW.blockLength(fpblock);
+      newsize = CBW.blockLength({ cid: fpblock.cid as CID<unknown, number, number, 1>, bytes: fpblock.bytes } as CBW.Block);
     } else {
       clonedt.putSync(fpblock);
     }

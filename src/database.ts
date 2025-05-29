@@ -138,13 +138,25 @@ export class DatabaseImpl implements Database {
 
   async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
     await this.ready();
-    void opts;
     this.logger.Debug().Msg("allDocs");
     const { result, head } = await this.ledger.crdt.allDocs();
-    const rows = result.map(({ id: key, value, del }) => ({
+
+    // Map all docs to the expected format
+    let rows = result.map(({ id: key, value, del }) => ({
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
+
+    // Filter out deleted documents unless includeDeleted is true
+    if (opts.includeDeleted !== true) {
+      rows = rows.filter((row) => !(row.value as DocWithId<T> & { _deleted?: boolean })._deleted);
+    }
+
+    // Apply limit if specified
+    if (opts.limit !== undefined && opts.limit >= 0) {
+      rows = rows.slice(0, opts.limit);
+    }
+
     return { rows, clock: head, name: this.name };
   }
 
