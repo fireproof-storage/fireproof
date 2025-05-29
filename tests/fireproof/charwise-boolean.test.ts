@@ -1,7 +1,6 @@
-import { describe, it, expect } from "vitest";
 // @ts-expect-error "charwise" has no types
 import charwise from "charwise";
-import { encodeKey } from "../../src/indexer-helpers.js";
+import { encodeKey } from "@fireproof/core";
 
 describe("charwise boolean handling", () => {
   it("should encode and decode boolean values correctly", () => {

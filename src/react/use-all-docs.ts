@@ -6,7 +6,7 @@ import type { AllDocsResult } from "./types.js";
  * Implementation of the useAllDocs hook
  */
 export function createUseAllDocs(database: Database) {
-  return function useAllDocs<T extends DocTypes>(query: AllDocsQueryOpts = {}): AllDocsResult<T> {
+  return function useAllDocs<T extends DocTypes>(query: Partial<AllDocsQueryOpts> = {}): AllDocsResult<T> {
     const [result, setResult] = useState<AllDocsResult<T>>({
       docs: [],
     });

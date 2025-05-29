@@ -5,6 +5,7 @@ export * from "./types.js";
 export * from "./crdt.js";
 
 export * from "./indexer.js";
+export * from "./indexer-helpers.js";
 
 export { defaultWriteQueueOpts } from "./write-queue.js";
 

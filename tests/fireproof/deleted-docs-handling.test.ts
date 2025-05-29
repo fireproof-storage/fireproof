@@ -1,4 +1,3 @@
-import { describe, it, beforeEach, afterEach, expect } from "vitest";
 import { Database, fireproof } from "@fireproof/core";
 
 describe("allDocs deleted document handling", () => {

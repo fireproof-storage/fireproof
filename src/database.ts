@@ -136,7 +136,7 @@ export class DatabaseImpl implements Database {
     return { rows, clock: head, name: this.name };
   }
 
-  async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
+  async allDocs<T extends DocTypes>(opts: Partial<AllDocsQueryOpts> = {}): Promise<AllDocsResponse<T>> {
     await this.ready();
     this.logger.Debug().Msg("allDocs");
     const { result, head } = await this.ledger.crdt.allDocs();
@@ -148,12 +148,12 @@ export class DatabaseImpl implements Database {
     }));
 
     // Filter out deleted documents unless includeDeleted is true
-    if (opts.includeDeleted !== true) {
+    if (!opts.includeDeleted) {
       rows = rows.filter((row) => !(row.value as DocWithId<T> & { _deleted?: boolean })._deleted);
     }
 
     // Apply limit if specified
-    if (opts.limit !== undefined && opts.limit >= 0) {
+    if (typeof opts.limit === "number" && opts.limit >= 0) {
       rows = rows.slice(0, opts.limit);
     }
 

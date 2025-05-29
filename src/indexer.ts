@@ -207,16 +207,14 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       const eRange = encodeRange(opts.range);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
     }
-    if (opts.key !== undefined) {
+    if (typeof opts.key === "boolean" || opts.key) {
       const encodedKey = encodeKey(opts.key);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
     }
     if (Array.isArray(opts.keys)) {
-      // Store the original limit
-      const originalLimit = opts.limit;
-
       // Create a new options object without the limit to avoid limiting individual key results
-      const optsWithoutLimit = { ...opts, limit: undefined };
+      const optsWithoutLimit = { ...opts };
+      delete optsWithoutLimit.limit;
 
       // Process each key separately but don't apply limit yet
       const results = await Promise.all(
@@ -230,8 +228,8 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       let flattenedRows = results.flat();
 
       // Apply the original limit to the combined results if it was specified
-      if (originalLimit !== undefined) {
-        flattenedRows = flattenedRows.slice(0, originalLimit);
+      if (opts) {
+        flattenedRows = flattenedRows.slice(0, opts.limit);
       }
 
       return {

@@ -36,7 +36,7 @@ export interface ChangesResult<T extends DocTypes> {
   readonly docs: DocWithId<T>[];
 }
 
-export type UseAllDocs = <T extends DocTypes>(query?: AllDocsQueryOpts) => AllDocsResult<T>;
+export type UseAllDocs = <T extends DocTypes>(query?: Partial<AllDocsQueryOpts>) => AllDocsResult<T>;
 
 export type UseChanges = <T extends DocTypes>(since: ClockHead, opts: ChangesOptions) => ChangesResult<T>;
 
