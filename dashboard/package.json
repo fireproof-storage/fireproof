@@ -48,7 +48,7 @@
     "@cloudflare/vite-plugin": "^0.1.19",
     "@cloudflare/workers-types": "^4.20250327.0",
     "@eslint/js": "^9.16.0",
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.15.7",
     "@libsql/kysely-libsql": "^0.4.1",
     "@rollup/plugin-replace": "^6.0.1",
     "@testing-library/react": "^16.3.0",
