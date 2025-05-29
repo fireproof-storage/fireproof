@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: qurcebuunk6oqtltwdee4xtzuy
+    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
     path: patches/drizzle-kit.patch
 
 importers:
@@ -20,8 +20,8 @@ importers:
         specifier: ^5.4.1
         version: 5.4.1
       '@ipld/dag-cbor':
-        specifier: ^9.2.4
-        version: 9.2.4
+        specifier: ^9.2.3
+        version: 9.2.3
       '@ipld/dag-json':
         specifier: ^10.2.4
         version: 10.2.4
@@ -130,7 +130,7 @@ importers:
         version: 0.13.0
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       esbuild:
         specifier: ^0.25.4
         version: 0.25.4
@@ -978,8 +978,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inquirer/confirm@5.1.12':
-    resolution: {integrity: sha512-dpq+ielV9/bqgXRUbNH//KsY6WEw9DrGPmipkpmgC1Y46cwuBTNx7PXFWTjc3MQ+urcc0QxoVHcMI0FW4Ok0hg==}
+  '@inquirer/confirm@5.1.10':
+    resolution: {integrity: sha512-FxbQ9giWxUWKUk2O5XZ6PduVnH2CZ/fmMKMBkH71MHJvWr7WL5AHKevhzF1L5uYWB2P548o1RzVxrNd3dpmk6g==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -987,8 +987,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/core@10.1.13':
-    resolution: {integrity: sha512-1viSxebkYN2nJULlzCxES6G9/stgHSepZ9LqqfdIGPHj5OHhiBUXVS0a6R0bEC2A+VL4D9w6QB66ebCr6HGllA==}
+  '@inquirer/core@10.1.11':
+    resolution: {integrity: sha512-BXwI/MCqdtAhzNQlBEFE7CEflhPkl/BqvAuV/aK6lW3DClIfYVDWPP/kXuXHtBWC7/EEbNqd/1BGq2BGBBnuxw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -996,12 +996,12 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/figures@1.0.12':
-    resolution: {integrity: sha512-MJttijd8rMFcKJC8NYmprWr6hD3r9Gd9qUC0XwPNwoEPWSMVJwA2MlXxF+nhZZNMY+HXsWa+o7KY2emWYIn0jQ==}
+  '@inquirer/figures@1.0.11':
+    resolution: {integrity: sha512-eOg92lvrn/aRUqbxRyvpEWnrvRuTYRifixHkYVpJiygTgVSBIHDqLh0SrMQXkafvULg3ck11V7xvR+zcgvpHFw==}
     engines: {node: '>=18'}
 
-  '@inquirer/type@3.0.7':
-    resolution: {integrity: sha512-PfunHQcjwnju84L+ycmcMKB/pTPIngjUJvfnRhKY6FKPuYXlM4aQCb/nIdTFR6BEhMjFvngzvng/vBAJMZpLSA==}
+  '@inquirer/type@3.0.6':
+    resolution: {integrity: sha512-/mKVCtVpyBu3IDarv0G+59KC4stsD5mDsGpYh+GKs1NZT88Jh52+cuoA1AtLk2Q0r/quNl+1cSUyLRHBFeD0XA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -1013,8 +1013,8 @@ packages:
     resolution: {integrity: sha512-dThVbtNlN3jwf2owmImuPPo4QIrhTZYHtVbBf55oJTD7WZMLYq+hdh15qp1eMykh9tfdYb2URHoHOWUKAS0UhA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-cbor@9.2.4':
-    resolution: {integrity: sha512-GbDWYl2fdJgkYtIJN0HY9oO0o50d1nB4EQb7uYWKUd2ztxCjxiEW3PjwGG0nqUpN1G4Cug6LX8NzbA7fKT+zfA==}
+  '@ipld/dag-cbor@9.2.3':
+    resolution: {integrity: sha512-x78CdVhtctIMBpwOnzbojsvDy6qNxdeR3RC2W+/fMo2sccqlYkPXbjpmghAVdKx/g0xfHYvSMU8cgCnYvLwRag==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-json@10.2.4':
@@ -1994,15 +1994,6 @@ packages:
 
   bare-fs@4.1.2:
     resolution: {integrity: sha512-8wSeOia5B7LwD4+h465y73KOdj5QHsbbuoUfPBi+pXgFJIPuG7SsiOdJuijWMyfid49eD+WivpfY7KT8gbAzBA==}
-    engines: {bare: '>=1.16.0'}
-    peerDependencies:
-      bare-buffer: '*'
-    peerDependenciesMeta:
-      bare-buffer:
-        optional: true
-
-  bare-fs@4.1.5:
-    resolution: {integrity: sha512-1zccWBMypln0jEE05LzZt+V/8y8AQsQQqxtklqaIyg5nu6OAYFhZxPXinJTSG+kU5qyNmeLgcn9AW7eHiCHVLA==}
     engines: {bare: '>=1.16.0'}
     peerDependencies:
       bare-buffer: '*'
@@ -4223,9 +4214,6 @@ packages:
   tar-fs@3.0.8:
     resolution: {integrity: sha512-ZoROL70jptorGAlgAYiLoBLItEKw/fUxg9BSYK/dF/GAGYFJOJJJMvjPAKDJraCXFwadD456FCuvLWgfhMsPwg==}
 
-  tar-fs@3.0.9:
-    resolution: {integrity: sha512-XF4w9Xp+ZQgifKakjZYmFdkLoSWd34VGKcsTCwlNWM7QG3ZbaxnTsaBwnjFZqHRf/rROxaR8rXnbtwdvaDI+lA==}
-
   tar-stream@2.2.0:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
     engines: {node: '>=6'}
@@ -5391,18 +5379,18 @@ snapshots:
   '@img/sharp-win32-x64@0.33.5':
     optional: true
 
-  '@inquirer/confirm@5.1.12(@types/node@22.15.19)':
+  '@inquirer/confirm@5.1.10(@types/node@22.15.19)':
     dependencies:
-      '@inquirer/core': 10.1.13(@types/node@22.15.19)
-      '@inquirer/type': 3.0.7(@types/node@22.15.19)
+      '@inquirer/core': 10.1.11(@types/node@22.15.19)
+      '@inquirer/type': 3.0.6(@types/node@22.15.19)
     optionalDependencies:
       '@types/node': 22.15.19
     optional: true
 
-  '@inquirer/core@10.1.13(@types/node@22.15.19)':
+  '@inquirer/core@10.1.11(@types/node@22.15.19)':
     dependencies:
-      '@inquirer/figures': 1.0.12
-      '@inquirer/type': 3.0.7(@types/node@22.15.19)
+      '@inquirer/figures': 1.0.11
+      '@inquirer/type': 3.0.6(@types/node@22.15.19)
       ansi-escapes: 4.3.2
       cli-width: 4.1.0
       mute-stream: 2.0.0
@@ -5413,22 +5401,22 @@ snapshots:
       '@types/node': 22.15.19
     optional: true
 
-  '@inquirer/figures@1.0.12':
+  '@inquirer/figures@1.0.11':
     optional: true
 
-  '@inquirer/type@3.0.7(@types/node@22.15.19)':
+  '@inquirer/type@3.0.6(@types/node@22.15.19)':
     optionalDependencies:
       '@types/node': 22.15.19
     optional: true
 
   '@ipld/car@5.4.1':
     dependencies:
-      '@ipld/dag-cbor': 9.2.4
+      '@ipld/dag-cbor': 9.2.3
       cborg: 4.2.10
       multiformats: 13.3.4
       varint: 6.0.0
 
-  '@ipld/dag-cbor@9.2.4':
+  '@ipld/dag-cbor@9.2.3':
     dependencies:
       cborg: 4.2.10
       multiformats: 13.3.4
@@ -5604,7 +5592,7 @@ snapshots:
       progress: 2.0.3
       proxy-agent: 6.5.0
       semver: 7.7.2
-      tar-fs: 3.0.9
+      tar-fs: 3.0.8
       yargs: 17.7.2
     transitivePeerDependencies:
       - bare-buffer
@@ -6268,7 +6256,7 @@ snapshots:
   '@web3-storage/pail@0.6.2':
     dependencies:
       '@ipld/car': 5.4.1
-      '@ipld/dag-cbor': 9.2.4
+      '@ipld/dag-cbor': 9.2.3
       archy: 1.0.0
       carstream: 2.3.0
       cli-color: 2.0.4
@@ -6536,13 +6524,6 @@ snapshots:
       bare-stream: 2.6.5(bare-events@2.5.4)
     optional: true
 
-  bare-fs@4.1.5:
-    dependencies:
-      bare-events: 2.5.4
-      bare-path: 3.0.0
-      bare-stream: 2.6.5(bare-events@2.5.4)
-    optional: true
-
   bare-os@3.6.1:
     optional: true
 
@@ -6666,7 +6647,7 @@ snapshots:
 
   carstream@2.3.0:
     dependencies:
-      '@ipld/dag-cbor': 9.2.4
+      '@ipld/dag-cbor': 9.2.3
       multiformats: 13.3.4
       uint8arraylist: 2.4.8
 
@@ -6953,7 +6934,7 @@ snapshots:
       domhandler: 5.0.3
     optional: true
 
-  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
+  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -7557,7 +7538,7 @@ snapshots:
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       node-fetch: 3.3.2
-      tar-fs: 3.0.9
+      tar-fs: 3.0.8
       which: 5.0.0
     transitivePeerDependencies:
       - bare-buffer
@@ -8220,7 +8201,7 @@ snapshots:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
       '@bundled-es-modules/tough-cookie': 0.1.6
-      '@inquirer/confirm': 5.1.12(@types/node@22.15.19)
+      '@inquirer/confirm': 5.1.10(@types/node@22.15.19)
       '@mswjs/interceptors': 0.37.6
       '@open-draft/deferred-promise': 2.2.0
       '@open-draft/until': 2.1.0
@@ -9123,17 +9104,6 @@ snapshots:
       bare-path: 3.0.0
     transitivePeerDependencies:
       - bare-buffer
-
-  tar-fs@3.0.9:
-    dependencies:
-      pump: 3.0.2
-      tar-stream: 3.1.7
-    optionalDependencies:
-      bare-fs: 4.1.5
-      bare-path: 3.0.0
-    transitivePeerDependencies:
-      - bare-buffer
-    optional: true
 
   tar-stream@2.2.0:
     dependencies:
