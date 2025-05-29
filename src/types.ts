@@ -334,6 +334,11 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
   readonly key?: string;
   readonly keys?: string[];
   prefix?: string;
+  /**
+   * Whether to include documents marked as deleted (_deleted: true).
+   * Default is false - deleted documents are excluded.
+   */
+  includeDeleted?: boolean;
 }
 
 export interface AllDocsResponse<T extends DocTypes> {

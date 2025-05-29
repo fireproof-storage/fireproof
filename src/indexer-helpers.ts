@@ -184,8 +184,33 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
     );
   }
   const rows = resp.result.map(({ key, ...row }) => {
+    // First decode the key
+    const decodedKey = charwise.decode(key);
+
+    // Use a type-safe approach with Record to check for potentially missing properties
+    // This handles the case where some query results use 'row' instead of 'value'
+    const dynamicRow = row as Record<string, unknown>;
+    if ("row" in dynamicRow && !("value" in dynamicRow)) {
+      // We found a result with 'row' property but no 'value' property
+      // Create a new normalized object with the 'value' property
+      const normalizedRow: Record<string, unknown> = {};
+      Object.keys(dynamicRow).forEach((k) => {
+        if (k === "row") {
+          normalizedRow.value = dynamicRow[k];
+        } else {
+          normalizedRow[k] = dynamicRow[k];
+        }
+      });
+
+      return {
+        key: decodedKey,
+        ...normalizedRow,
+      } as IndexRow<K, T, R>;
+    }
+
+    // Standard case - use the properties as they are
     return {
-      key: charwise.decode(key),
+      key: decodedKey,
       ...row,
     } as IndexRow<K, T, R>;
   });
