@@ -48,6 +48,8 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
 
   readonly #onMsg = new Map<string, OnMsgFn>();
 
+  readonly isReady = true;
+
   constructor(sthis: SuperThis, uris: URI[], msgP: MsgerParamsWithEnDe, exGestalt: ExchangedGestalt) {
     super(sthis, exGestalt);
     this.logger = ensureLogger(sthis, "HttpConnection");
@@ -92,7 +94,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     return () => this.#onMsg.delete(key);
   }
 
-  #poll(state: ActiveStream<MsgBase, MsgBase>): void {
+  #poll(state: ActiveStream): void {
     this.request(state.bind.msg, state.bind.opts)
       .then((msg) => {
         try {
@@ -113,15 +115,15 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
       });
   }
 
-  readonly activeBinds = new Map<string, ActiveStream<MsgBase, MsgBase>>();
+  readonly activeBinds = new Map<string, ActiveStream>();
   bind<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
-    const state: ActiveStream<S, Q> = {
+    const state: ActiveStream = {
       id: this.sthis.nextId().str,
       bind: {
         msg: req,
         opts,
       },
-    } satisfies ActiveStream<S, Q>;
+    } satisfies ActiveStream;
     this.activeBinds.set(state.id, state);
     return new ReadableStream<MsgWithError<S>>({
       cancel: () => {

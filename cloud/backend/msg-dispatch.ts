@@ -6,7 +6,7 @@ import { WSRoom } from "./ws-room.js";
 type MsgBase = ps.cloud.MsgBase;
 type MsgWithError<T extends MsgBase> = ps.cloud.MsgWithError<T>;
 type QSId = ps.cloud.QSId;
-type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConnAuth<T>;
+type MsgWithConn<T extends MsgBase> = ps.cloud.MsgWithConn<T>;
 type FPJWKCloudAuthType = ps.cloud.FPJWKCloudAuthType;
 type AuthType = ps.cloud.AuthType;
 type PreSignedMsg = ps.cloud.PreSignedMsg;
@@ -40,7 +40,8 @@ export type Promisable<T> = T | Promise<T>;
 // }
 
 export interface ConnItem<T = unknown> {
-  readonly conn: QSId;
+  readonly id: string;
+  readonly conns: QSId[];
   touched: Date;
   readonly ws: WSContextWithId<T>;
 }
@@ -124,14 +125,13 @@ export class MsgDispatcher {
   async validateConn<T extends MsgBase>(
     ctx: MsgDispatcherCtx,
     msg: T,
-    fn: (msg: MsgWithConnAuth<T>) => Promisable<MsgWithError<MsgBase>>,
-  ): Promise<Response> {
+    fn: (msg: MsgWithConn<T>) => Promisable<MsgWithError<MsgBase>>,
+  ): Promise<MsgWithError<MsgBase>> {
     if (!ctx.wsRoom.isConnected(msg)) {
-      return this.send(ctx, buildErrorMsg(ctx, { ...msg }, new Error("dispatch missing connection")));
+      return buildErrorMsg(ctx, { ...msg }, new Error("dispatch missing connection"));
       // return send(buildErrorMsg(this.sthis, this.logger, msg, new Error("non open connection")));
     }
-    const r = await this.validateAuth(ctx, msg, (msg) => fn(msg));
-    return Promise.resolve(this.send(ctx, r));
+    return this.validateAuth(ctx, msg, (msg) => fn(msg));
   }
 
   async validateAuth<T extends MsgBase>(
@@ -169,19 +169,24 @@ export class MsgDispatcher {
   }
 
   async dispatch(ctx: MsgDispatcherCtx, msg: MsgBase): Promise<Response> {
+    const res = await this.dispatchImpl(ctx, msg);
+    return this.send(ctx, res);
+  }
+
+  private async dispatchImpl(ctx: MsgDispatcherCtx, msg: MsgBase): Promise<MsgWithError<MsgBase>> {
     // const id = this.sthis.nextId(12).str;
     try {
       const found = Array.from(this.items.values()).find((item) => item.match(msg));
       if (!found) {
-        return this.send(ctx, buildErrorMsg(ctx, msg, new Error(`unexpected message`)));
+        return buildErrorMsg(ctx, msg, new Error(`unexpected message`));
       }
       if (!found.isNotConn) {
         const ret = await this.validateConn(ctx, msg, (msg) => found.fn(ctx, msg));
         return ret;
       }
-      return this.send(ctx, await this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg)));
+      return this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg));
     } catch (e) {
-      return this.send(ctx, buildErrorMsg(ctx, msg, e as Error));
+      return buildErrorMsg(ctx, msg, e as Error);
       // } finally {
       //   console.log("dispatch-5", id);
     }

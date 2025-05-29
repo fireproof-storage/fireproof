@@ -1,6 +1,6 @@
 import { ps } from "@fireproof/core";
 import { MockJWK, mockJWK } from "./node/test-helper.js";
-import { Future, Result, URI } from "@adviser/cement";
+import { Future, URI } from "@adviser/cement";
 import { testSuperThis } from "../test-super-this.js";
 
 const { MsgIsResChat, Msger, buildReqChat } = ps.cloud;
@@ -35,6 +35,20 @@ describe("test multiple connections", () => {
     // await hserv.close();
   });
 
+  function consumeStream(
+    stream: ReadableStream<ps.cloud.MsgWithError<ps.cloud.MsgWithConn>>,
+    cb: (msg: ps.cloud.MsgBase) => void,
+  ): void {
+    const reader = stream.getReader();
+    async function readNext() {
+      const { done, value } = await reader.read();
+      if (done) return;
+      cb(value);
+      readNext();
+    }
+    readNext();
+  }
+
   it("could open multiple connections", async () => {
     const conns = await Promise.all(
       Array(connections)
@@ -45,17 +59,21 @@ describe("test multiple connections", () => {
             .pathname("fp")
             .setParam("protocol", fpUrl.protocol.startsWith("https") ? "wss" : "ws")
             .setParam("random", sthis.nextId(12).str);
-          return Msger.connect(sthis, auth.authType, url);
+          return Msger.connect(sthis, url);
         }),
-    ).then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
+    ); // .then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
 
     const ready = new Future<void>();
     let total = (connections * (connections + 1)) / 2;
     // const recvSet = new Set(conns.map((c) => c.conn.reqId));
-    for (const c of conns) {
-      c.onMsg((m) => {
+    for (const rC of conns) {
+      const c = rC.Ok();
+      const stream = c.bind(ps.cloud.buildReqOpen(sthis, auth.authType, {}), {
+        waitFor: () => true, // MsgIsResOpen, // All
+      });
+
+      consumeStream(stream, (m) => {
         if (MsgIsResChat(m)) {
-          // console.log("Got a chat response", total--, qsidKey(m.conn));
           total--;
           if (total === 0) {
             ready.resolve();
@@ -63,23 +81,23 @@ describe("test multiple connections", () => {
           // recvSet.delete(m.conn.reqId);
           // if (recvSet.size === 0) {
           // ready.resolve();
-          // }
         }
       });
     }
 
     const rest = [...conns];
-    for (const c of conns) {
+    for (const rC of conns) {
+      const c = rC.Ok();
       // console.log("Sending a chat request", rest.length, conns.length);
-      const act = await c.request(buildReqChat(sthis, auth.authType, c.conn, "Hello"), {
+      const act = await c.request(buildReqChat(sthis, auth.authType, {}, "Hello"), {
         waitFor: MsgIsResChat,
       });
       if (MsgIsResChat(act)) {
         expect(act.targets.length).toBeGreaterThanOrEqual(rest.length);
       } else {
-        assert.fail("Expected a response");
+        assert.fail(`Expected a response:${JSON.stringify(act)}`);
       }
-      await c.close((await c.msgConnAuth()).Ok());
+      await c.close(ps.cloud.buildReqClose(sthis, auth.authType, c.conn));
       rest.shift();
     }
 

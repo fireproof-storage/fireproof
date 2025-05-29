@@ -19,7 +19,7 @@ import {
   PARAM,
 } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
-import { ensureLogger, ensureSuperThis, ensureURIDefaults } from "./utils.js";
+import { ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts } from "./runtime/key-bag.js";
@@ -105,9 +105,13 @@ export class LedgerShell implements Ledger {
     return this.ref.ctx;
   }
 
-  get id(): string {
-    return this.ref.id;
+  refId(): Promise<string> {
+    return this.ref.refId();
   }
+
+  // get id(): string {
+  //   return this.ref.id;
+  // }
   get logger(): Logger {
     return this.ref.logger;
   }
@@ -164,6 +168,11 @@ class LedgerImpl implements Ledger {
     this.shells.add(shell);
   }
 
+  readonly _refid = new ResolveOnce<string>();
+  refId(): Promise<string> {
+    return this._refid.once(() => hashObject(this.opts.storeUrls));
+  }
+
   readonly _onClosedFns = new Map<string, () => void>();
   onClosed(fn: () => void): () => void {
     const id = this.sthis.nextId().str;
@@ -207,7 +216,7 @@ class LedgerImpl implements Ledger {
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly id: string;
+  // readonly id: string;
 
   constructor(sthis: SuperThis, opts: LedgerOptsOptionalTracer) {
     this.opts = {
@@ -219,7 +228,7 @@ class LedgerImpl implements Ledger {
     // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
     this.sthis = sthis;
     this.ctx = opts.ctx;
-    this.id = sthis.timeOrderedNextId().str;
+    // this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
     this.crdt = new CRDTImpl(this.sthis, this.opts, this);
     this.writeQueue = writeQueue(

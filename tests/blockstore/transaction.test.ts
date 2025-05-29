@@ -1,9 +1,9 @@
 import { CID } from "multiformats";
 import { BaseBlockstore, bs, CarTransaction, ensureSuperThis } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
-import { anyBlock2FPBlock } from "../../src/blockstore/loader-helpers.js";
-import { AnyLink } from "../../src/blockstore/index.js";
 import { to_uint8 } from "@adviser/cement";
+
+const { anyBlock2FPBlock } = bs;
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: BaseBlockstore;
@@ -20,7 +20,7 @@ describe("Fresh TransactionBlockstore", function () {
   // });
   it("should not put", async () => {
     const value = sthis.txt.encode("value");
-    const e = await blocks.put(await anyBlock2FPBlock({ cid: "key" as unknown as AnyLink, bytes: value })).catch((e) => e);
+    const e = await blocks.put(await anyBlock2FPBlock({ cid: "key" as unknown as bs.AnyLink, bytes: value })).catch((e) => e);
     expect(e.message).toMatch(/transaction/g);
   });
   it("should yield a transaction", async () => {
