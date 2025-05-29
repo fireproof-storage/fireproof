@@ -13,8 +13,8 @@ import {
   JSONFormatter,
   YAMLFormatter,
   CoerceURI,
+  param,
   AppContext,
-  param, // Corrected import
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
@@ -494,9 +494,6 @@ export function ensureURIDefaults(
   }
   builder.setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
 
-  // Item 4: Remove Environment Variable Parameters - These are removed from this version
-
-  // Item 3: Adjust storeKey setting logic
   if (explicitStoreKey === null) {
     builder.delParam(PARAM.STORE_KEY);
   } else if (typeof explicitStoreKey === "string") {
@@ -509,7 +506,6 @@ export function ensureURIDefaults(
       // Not public and no explicit key: behave like main
       if (names.localURI) {
         const localParamsResult = names.localURI.getParamsResult({
-          // [PARAM.NAME]: param.OPTIONAL, // localName handling is separate
           [PARAM.STORE_KEY]: param.OPTIONAL,
         });
         // Only proceed if Ok and storeKey is present
@@ -526,9 +522,7 @@ export function ensureURIDefaults(
       if (!builder.hasParam(PARAM.STORE_KEY)) {
         const storeKeyBaseName = builder.getParam(PARAM.NAME) as string;
         if (storeKeyBaseName) {
-          // Ensure name is present for default key
           const storeKeyType = storeType2DataMetaWal(store);
-          // Item 1 (partially): Revert indexAffix for storeKey
           const indexAffix = effectiveCtx.idx ? "-idx" : "";
           builder.defParam(PARAM.STORE_KEY, `@${storeKeyBaseName}-${storeKeyType}${indexAffix}@`);
         }
@@ -536,7 +530,6 @@ export function ensureURIDefaults(
     }
   }
 
-  // localName handling (kept from existing refactor, similar to main's localURI param handling)
   if (names.localURI) {
     const localParamsResult = names.localURI.getParamsResult({ [PARAM.NAME]: param.OPTIONAL });
     if (localParamsResult.isOk()) {
@@ -551,15 +544,9 @@ export function ensureURIDefaults(
     builder.defParam(PARAM.SUFFIX, ".car");
   }
 
-  // Item 1 (partially): Revert PARAM.INDEX setting
   if (effectiveCtx.idx) {
-    builder.defParam(PARAM.INDEX, "idx"); // Set to literal "idx"
+    builder.defParam(PARAM.INDEX, "idx");
   }
-
-  // Item 2: Remove effectiveCtx.file influencing PARAM.STORE - This block is removed:
-  // if (effectiveCtx.file) {
-  //   builder.setParam(PARAM.STORE, "file");
-  // }
 
   return builder.URI();
 }

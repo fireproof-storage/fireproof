@@ -1,12 +1,3 @@
-/**
- * Current status for 'public: true results in insecure STORE_KEY and noCrypto' test (KeyedCryptoStore suite):
- * - The test aims to verify that BlockstoreOpts with `public: true` correctly configures stores to use 'insecure' STORE_KEY and noCrypto.
- * - It currently expects `kc.key.get()` and `kc._encrypt()` (for noCrypto instances) to throw 'not implemented' errors,
- *   reflecting the current state of the `noCrypto` class in `src/runtime/keyed-crypto.ts`.
- * - A dummy CTCryptoKey object is being constructed to satisfy type requirements for the throwing `_encrypt` call.
- * - Outstanding lint errors related to importing CTCryptoKey and typing the dummy key object are pending.
- * - The overall goal is to make this test pass by correctly aligning with or mocking the noCrypto behavior.
- */
 import { bs, ensureSuperThis, PARAM, rt, StoreType, storeType2DataMetaWal } from "@fireproof/core";
 import { BuildURI, LogCollector, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
