@@ -14,6 +14,7 @@ import {
   YAMLFormatter,
   CoerceURI,
   AppContext,
+  param, // Corrected import
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
@@ -457,119 +458,89 @@ export function storeType2DataMetaWal(store: StoreType) {
 export function ensureURIDefaults(
   sthis: SuperThis,
   names: { name: string; localURI?: URI },
-  optsInput: { curi?: CoerceURI; public?: boolean; storeKey?: string | null } | CoerceURI | undefined,
+  opts: { uri?: CoerceURI; public?: boolean; storeKey?: string | null } | CoerceURI | undefined,
   uriFallback: URI,
   store: StoreType,
-  ctxParam?: Partial<{
+  ctxInput?: Partial<{
     readonly idx: boolean;
-    readonly file: boolean;
+    readonly file?: boolean;
     readonly indexName?: string;
   }>,
 ): URI {
-  const ctx = ctxParam || {}; // Ensure ctx is an object
+  const effectiveCtx = ctxInput || {};
 
-  let effectiveOpts: { curi?: CoerceURI; public?: boolean; storeKey?: string | null } = {};
-  let primaryUriSource: CoerceURI | undefined;
+  let baseUriSource: CoerceURI | undefined;
+  let isPublic = false;
+  let explicitStoreKey: string | null | undefined = undefined;
 
-  // Discriminate optsInput
-  if (optsInput === undefined) {
-    // No optsInput provided; primaryUriSource remains undefined, effectiveOpts remains {}
-  } else if (typeof optsInput === "string" || optsInput instanceof URI) {
-    // optsInput is a direct URI string or a URI object instance
-    primaryUriSource = optsInput;
-  } else if (typeof optsInput === "object" && optsInput !== null && ("public" in optsInput || "storeKey" in optsInput)) {
-    // optsInput is an object and has properties characteristic of the options object ({ curi?, public?, storeKey? })
-    // This check helps distinguish it from other CoerceURI object types that might not have 'public' or 'storeKey'.
-    effectiveOpts = optsInput as { curi?: CoerceURI; public?: boolean; storeKey?: string | null };
-    primaryUriSource = effectiveOpts.curi;
-  } else if (typeof optsInput === "object" && optsInput !== null) {
-    // optsInput is an object, not undefined, not a string/URI, and not the options object identified above.
-    // It's assumed to be one of the other CoerceURI types (e.g., BuildURI, MutableURL, or a plain object intended as a URI source).
-    // URI.from() is expected to handle these CoerceURI types.
-    primaryUriSource = optsInput as CoerceURI;
-  }
-  // If optsInput didn't match any condition (should not happen if types are correct), primaryUriSource is undefined and effectiveOpts is empty.
-
-  // 1. Determine the base URI for parameter derivation
-  const baseForParams = primaryUriSource ? URI.from(primaryUriSource) : URI.from(uriFallback);
-
-  // 2. Determine the effective name and index name, prioritizing values from baseForParams
-  const effectiveName = baseForParams.getParam(PARAM.NAME) || names.name;
-  // For storeKey generation, use the index name from baseForParams if available, otherwise from ctxParam
-  const storeKeyEffectiveIndexName = baseForParams.getParam(PARAM.INDEX) || ctxParam?.indexName;
-  // For the final URI's PARAM.INDEX, also prioritize baseForParams, then ctxParam
-  const uriEffectiveIndexName = baseForParams.getParam(PARAM.INDEX) || ctxParam?.indexName;
-
-  // 3. Build the result URI, starting from baseForParams to inherit its other parameters
-  const ret = baseForParams.build();
-
-  // 4. Set core parameters
-  ret.setParam(PARAM.STORE, store); // Set initial store type
-  ret.setParam(PARAM.NAME, effectiveName);
-
-  // 5. Suffix logic
-  if (store === "car") {
-    // If it's a car store, ensure it has the .car suffix.
-    // Check if it's already there to avoid double suffixes if baseForParams already had it.
-    if (ret.getParam(PARAM.SUFFIX) !== ".car") {
-       ret.setParam(PARAM.SUFFIX, ".car");
-    }
-  }
-  // For non-CAR stores, we do not modify the suffix. It remains as inherited from baseForParams.
-
-  // 6. StoreKey logic
-  let storeKeyVal: string;
-  const skName = effectiveName;
-  
-  // Determine the part of the storeKey derived from the 'store' type
-  let skStorePart: string;
-  if (store === "car" || store === "file") {
-    skStorePart = "data";
-  } else {
-    skStorePart = store; // "meta" or "wal"
-  }
-  
-  const skIndexAffix = ctxParam?.idx ? `-${storeKeyEffectiveIndexName || "idx"}` : "";
-
-  if (effectiveOpts.public === true) {
-    storeKeyVal = `@insecure-${skName}-${skStorePart}${skIndexAffix}@`;
-  } else if (effectiveOpts.storeKey) {
-    storeKeyVal = effectiveOpts.storeKey;
-  } else {
-    storeKeyVal = `@${skName}-${skStorePart}${skIndexAffix}@`;
-  }
-  ret.setParam(PARAM.STORE_KEY, storeKeyVal);
-
-  // 7. Set index parameter on the URI if it's an index store
-  if (ctxParam?.idx) {
-    ret.setParam(PARAM.INDEX, uriEffectiveIndexName || "idx");
+  // Check if opts is the structured options object
+  if (opts && typeof opts === "object" && !(opts instanceof URI) && ("public" in opts || "storeKey" in opts || "uri" in opts)) {
+    const optsObj = opts as { uri?: CoerceURI; public?: boolean; storeKey?: string | null }; // Type assertion for clarity
+    baseUriSource = optsObj.uri;
+    isPublic = !!optsObj.public;
+    explicitStoreKey = optsObj.storeKey;
+  } else if (opts !== undefined) {
+    // opts is CoerceURI or undefined, but not the structured object
+    baseUriSource = opts as CoerceURI; // Explicitly cast to CoerceURI if it's not undefined
   }
 
-  // 8. Override store to "file" if ctxParam.file is true (must be after storeKey generation)
-  if (ctxParam?.file) {
-    ret.setParam(PARAM.STORE, "file");
+  const builder = (baseUriSource ? URI.from(baseUriSource) : uriFallback).build();
+  builder.setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
+
+  if (explicitStoreKey === null) {
+    builder.delParam(PARAM.STORE_KEY);
+  } else if (typeof explicitStoreKey === "string") {
+    builder.setParam(PARAM.STORE_KEY, explicitStoreKey);
   }
 
-  // 9. Handle localName
+  if (typeof process !== "undefined" && process.env?.FP_VERSION) {
+    builder.defParam(PARAM.VERSION, process.env.FP_VERSION);
+  }
+  if (typeof process !== "undefined" && process.env?.FP_URL_GEN_RUNTIME) {
+    builder.defParam(PARAM.RUNTIME, process.env.FP_URL_GEN_RUNTIME);
+  }
+
   if (names.localURI) {
-    const localNameFromURI = names.localURI.getParam(PARAM.NAME);
-    if (localNameFromURI) {
-      ret.setParam(PARAM.LOCAL_NAME, localNameFromURI);
+    const localParams = names.localURI
+      .getParamsResult({
+        [PARAM.NAME]: param.OPTIONAL,
+        [PARAM.STORE_KEY]: param.OPTIONAL,
+      })
+      .Ok();
+
+    if (localParams[PARAM.NAME]) {
+      builder.defParam(PARAM.LOCAL_NAME, localParams[PARAM.NAME]);
+    }
+    if (localParams[PARAM.STORE_KEY] && explicitStoreKey === undefined) {
+      builder.defParam(PARAM.STORE_KEY, localParams[PARAM.STORE_KEY]);
     }
   }
 
-  // Version and other defaults
-  const fpVersion = sthis.env.get("FP_VERSION");
-  if (fpVersion) {
-    ret.defParam(PARAM.VERSION, fpVersion);
+  if (isPublic && explicitStoreKey === undefined) {
+    builder.setParam(PARAM.STORE_KEY, 'insecure');
+  } else if (!isPublic && explicitStoreKey === undefined) {
+    // Generate default storeKey if not public and no explicit key
+    const storeKeyBaseName = builder.getParam(PARAM.NAME) as string;
+    if (storeKeyBaseName) {
+      const storeKeyType = storeType2DataMetaWal(store);
+      const indexAffix = effectiveCtx.idx ? `-${effectiveCtx.indexName || 'idx'}` : '';
+      builder.defParam(PARAM.STORE_KEY, `@${storeKeyBaseName}-${storeKeyType}${indexAffix}@`);
+    }
   }
-  // If FP_VERSION is not set, do not add &version=unknown by default.
 
-  if (sthis.env.get("FP_URL_GEN_RUNTIME")) {
-    ret.defParam(PARAM.RUNTIME, sthis.env.get("FP_URL_GEN_RUNTIME"));
+  if (store === "car") {
+    builder.defParam(PARAM.SUFFIX, ".car");
   }
 
-  return ret.URI();
+  if (effectiveCtx.idx) {
+    builder.defParam(PARAM.INDEX, effectiveCtx.indexName || "idx");
+  }
+
+  if (effectiveCtx.file) {
+    builder.setParam(PARAM.STORE, "file");
+  }
+
+  return builder.URI();
 }
 
 export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV") {
