@@ -496,3 +496,13 @@ export interface ReqInsertTenant {
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
+
+export interface ReqExtendToken {
+  readonly type: "reqExtendToken";
+  readonly token: string;
+}
+
+export interface ResExtendToken {
+  readonly type: "resExtendToken";
+  readonly token: string;
+}
