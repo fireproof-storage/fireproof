@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach, expect } from "vitest";
-import { Database, ensureSuperThis, fireproof } from "@fireproof/core";
+import { Database, fireproof } from "@fireproof/core";
 
 interface TestDoc {
   text: string;
@@ -9,10 +8,8 @@ interface TestDoc {
 
 describe("query property inconsistency issue", function () {
   let db: Database;
-  const sthis = ensureSuperThis();
 
   beforeEach(async () => {
-    await sthis.start();
     db = fireproof("test-query-property-inconsistency");
 
     // Add test documents
