@@ -1,5 +1,6 @@
 import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI, AppContext } from "@adviser/cement";
 import { toSortedArray } from "@adviser/cement/utils";
+import { PARAM } from "@fireproof/core";
 import { Attached, Attachable, GatewayUrls, GatewayUrlsParam, DataAndMetaAndWalAndBaseStore, AttachContext } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import {
@@ -381,7 +382,7 @@ export class AttachedRemotesImpl implements AttachedStores {
           url: ensureURIDefaults(
             this.loadable.sthis,
             { name: attachable.name, localURI: this._local?.gatewayUrls.car.url },
-            undefined,
+            { public: this.loadable.ebOpts.public, storeKey: this.loadable.ebOpts.storeUrls.car?.getParam(PARAM.STORE_KEY) },
             URI.from(gwp.car.url),
             "car",
           ),
@@ -391,7 +392,7 @@ export class AttachedRemotesImpl implements AttachedStores {
           url: ensureURIDefaults(
             this.loadable.sthis,
             { name: attachable.name, localURI: this._local?.gatewayUrls.file.url },
-            undefined,
+            { public: this.loadable.ebOpts.public, storeKey: this.loadable.ebOpts.storeUrls.file?.getParam(PARAM.STORE_KEY) },
             URI.from(gwp.file.url),
             "file",
             { file: true },
@@ -402,7 +403,7 @@ export class AttachedRemotesImpl implements AttachedStores {
           url: ensureURIDefaults(
             this.loadable.sthis,
             { name: attachable.name, localURI: this._local?.gatewayUrls.meta.url },
-            undefined,
+            { public: this.loadable.ebOpts.public, storeKey: this.loadable.ebOpts.storeUrls.meta?.getParam(PARAM.STORE_KEY) },
             URI.from(gwp.meta.url),
             "meta",
           ),
@@ -413,7 +414,7 @@ export class AttachedRemotesImpl implements AttachedStores {
               url: ensureURIDefaults(
                 this.loadable.sthis,
                 { name: attachable.name, localURI: this._local?.gatewayUrls.wal?.url },
-                undefined,
+                { public: this.loadable.ebOpts.public, storeKey: this.loadable.ebOpts.storeUrls.wal?.getParam(PARAM.STORE_KEY) },
                 URI.from(gwp.wal.url),
                 "wal",
               ),

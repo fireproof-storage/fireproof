@@ -537,7 +537,7 @@ export interface BlockstoreRuntime {
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly taskManager: TaskManagerParams;
   // readonly storeEnDeFile: StoreEnDeFile;
-  // readonly public: boolean;
+  readonly public: boolean;
   readonly meta?: DbMeta;
   // readonly name?: string;
   readonly threshold: number;

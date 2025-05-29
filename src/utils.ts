@@ -458,7 +458,7 @@ export function storeType2DataMetaWal(store: StoreType) {
 export function ensureURIDefaults(
   sthis: SuperThis,
   names: { name: string; localURI?: URI },
-  curi: CoerceURI | undefined,
+  opts: { curi?: CoerceURI; public?: boolean; storeKey?: string | null },
   uri: URI,
   store: StoreType,
   ctx?: Partial<{
@@ -467,7 +467,8 @@ export function ensureURIDefaults(
   }>,
 ): URI {
   ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
+  const baseURI = opts.curi ? URI.from(opts.curi) : uri;
+  const ret = baseURI.build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
   if (names.localURI) {
     const rParams = names.localURI.getParamsResult({
       [PARAM.NAME]: param.OPTIONAL,
@@ -488,11 +489,26 @@ export function ensureURIDefaults(
   //   // }
   //   // ret.setParam(PARAM.NAME, name);
   // }
-  if (ctx.idx) {
-    ret.defParam(PARAM.INDEX, "idx");
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
+
+  if (opts.public) {
+    ret.defParam(PARAM.STORE_KEY, "insecure");
   } else {
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}@`);
+    if (opts.storeKey) { // if a specific storeKey is provided via opts (and not public)
+      ret.defParam(PARAM.STORE_KEY, opts.storeKey);
+    } else if (names.localURI && names.localURI.hasParam(PARAM.STORE_KEY)) {
+      // Fallback to localURI's storeKey if present and no explicit opts.storeKey
+      // This part of the logic might need review based on desired precedence
+      // The original code copied from localURI if present.
+      // Now, opts.storeKey (derived from BlockstoreOpts.storeUrls) takes precedence if not public.
+    } else {
+      // Default naming convention if not public and no specific key provided
+      if (ctx.idx) {
+        ret.defParam(PARAM.INDEX, "idx");
+        ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
+      } else {
+        ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}@`);
+      }
+    }
   }
   if (store === "car") {
     ret.defParam(PARAM.SUFFIX, ".car");

@@ -1,6 +1,7 @@
 import { bs, ensureSuperThis, PARAM, rt, StoreType, storeType2DataMetaWal } from "@fireproof/core";
 import { BuildURI, LogCollector, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
+import { CID } from "multiformats/cid";
 // import { sha256 as hasher } from "multiformats/hashes/sha2";
 // import * as dagCodec from "@ipld/dag-cbor";
 import * as cborg from "cborg";
@@ -323,6 +324,99 @@ describe("KeyedCryptoStore", () => {
       const dec = await kc._decrypt({ bytes: blk, key: ks.key, iv });
       expect(dec).toEqual(testData);
     }
+  });
+
+  it("public: true results in insecure STORE_KEY and noCrypto", async () => {
+    // Ensure baseUrl from the outer describe's beforeEach is available
+    // For standalone execution or clarity, you might redefine it or pass it explicitly.
+    // This test assumes 'baseUrl' and 'kb' are initialized by the parent describe's beforeEach.
+    if (!baseUrl) {
+      throw new Error("baseUrl not initialized. Check test setup.");
+    }
+    if (!kb) {
+      throw new Error("kb not initialized. Check test setup.");
+    }
+    const mockStethis = mockSuperThis();
+    await mockStethis.start();
+
+    // kb is defined in the beforeEach of the KeyedCryptoStore describe block
+
+
+    const initialCarUrl = baseUrl.build()
+      .setParam(PARAM.STORE_KEY, "@test-car-key@")
+      .setParam(PARAM.STORE, "car")
+      .URI();
+    const initialMetaUrl = baseUrl.build()
+      .setParam(PARAM.STORE_KEY, "@test-meta-key@")
+      .setParam(PARAM.STORE, "meta")
+      .URI();
+    const initialFileUrl = baseUrl.build()
+      .setParam(PARAM.STORE_KEY, "@test-file-key@")
+      .setParam(PARAM.STORE, "file")
+      .URI();
+    const initialWalUrl = baseUrl.build()
+      .setParam(PARAM.STORE_KEY, "@test-wal-key@")
+      .setParam(PARAM.STORE, "wal")
+      .URI();
+
+    const dbMeta: bs.DbMeta = { cars: [] }; // Initialize with an empty car group
+    const bsOpts: bs.BlockstoreOpts = {
+      public: true, // Key setting!
+      storeUrls: { // With non-insecure keys
+        car: initialCarUrl,
+        meta: initialMetaUrl,
+        file: initialFileUrl,
+        wal: initialWalUrl,
+      },
+      keyBag: kb.rt, // kb is KeyBag, kb.rt is KeyBagRuntime
+      logger: mockStethis.logger,
+      applyMeta: async () => Promise.resolve(),
+      compact: async () => ({ car: CID.parse("bafyreibv2h6gs6lgjpmwj2k2qflgsemg32ufoq2t3r24g7myr5gc5a2vta"), blocks: [], size:0, meta: CID.parse("bafyreibv2h6gs6lgjpmwj2k2qflgsemg32ufoq2t3r24g7myr5gc5a2vta") }),
+      autoCompact: 0,
+      crypto: toCryptoRuntime(),
+      meta: dbMeta,
+      threshold: 10,
+      taskManager: {
+        removeAfter: 3, // default from TaskManagerParams
+        retryTimeout: 50 // default from TaskManagerParams
+      },
+      storeRuntime: bs.toStoreRuntime(mockStethis, {}),
+      tracer: () => { /* noop */ },
+    };
+
+    const encBlockstore = new bs.EncryptedBlockstore(mockStethis, bsOpts);
+    expect(encBlockstore.loader.ebOpts.storeUrls.meta.getParam(PARAM.STORE_KEY), "Intermediate check of meta store URL's STORE_KEY").toBe("insecure");
+    // .start() is not a method on EncryptedBlockstore, components are started via loader
+
+    const storeFactoryItem: bs.StoreFactoryItem = {
+      loader: encBlockstore.loader,
+      byStore: {
+        meta: { url: encBlockstore.loader.ebOpts.storeUrls.meta },
+        car: { url: encBlockstore.loader.ebOpts.storeUrls.car },
+        file: { url: encBlockstore.loader.ebOpts.storeUrls.file },
+        wal: { url: encBlockstore.loader.ebOpts.storeUrls.wal }
+      }
+    };
+    const stores = await encBlockstore.loader.ebOpts.storeRuntime.makeStores(storeFactoryItem);
+    const resolvedMetaStore = stores.meta;
+    expect(resolvedMetaStore.url().getParam(PARAM.STORE_KEY)).toBe("insecure");
+    let kc = await resolvedMetaStore.keyedCrypto();
+    expect(kc.constructor.name).toBe("noCrypto");
+
+    const resolvedCarStore = stores.car;
+    expect(resolvedCarStore.url().getParam(PARAM.STORE_KEY)).toBe("insecure");
+    kc = await resolvedCarStore.keyedCrypto();
+    expect(kc.constructor.name).toBe("noCrypto");
+
+    // Check encryption is no-op
+    const testData = kb.rt.crypto.randomBytes(1024);
+    const iv = kb.rt.crypto.randomBytes(12);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const blk = await kc._encrypt({ bytes: testData, key: (await kc.key.get())!.key, iv });
+    expect(blk).toEqual(testData);
+
+    // .stop() is not a method on EncryptedBlockstore
+    // Teardown would typically be handled by the test framework or SuperThis instance if needed
   });
 });
 
