@@ -493,7 +493,8 @@ export function ensureURIDefaults(
   if (opts.public) {
     ret.defParam(PARAM.STORE_KEY, "insecure");
   } else {
-    if (opts.storeKey) { // if a specific storeKey is provided via opts (and not public)
+    if (opts.storeKey) {
+      // if a specific storeKey is provided via opts (and not public)
       ret.defParam(PARAM.STORE_KEY, opts.storeKey);
     } else if (names.localURI && names.localURI.hasParam(PARAM.STORE_KEY)) {
       // Fallback to localURI's storeKey if present and no explicit opts.storeKey
@@ -501,7 +502,8 @@ export function ensureURIDefaults(
       // The original code copied from localURI if present.
       // Now, opts.storeKey (derived from BlockstoreOpts.storeUrls) takes precedence if not public.
       const localStoreKey = names.localURI.getParam(PARAM.STORE_KEY);
-      if (localStoreKey) { // Should always be true due to hasParam check
+      if (localStoreKey) {
+        // Should always be true due to hasParam check
         ret.defParam(PARAM.STORE_KEY, localStoreKey);
       }
       // If localStoreKey were somehow null despite hasParam, it would fall through to default naming,

@@ -1,7 +1,7 @@
 /**
  * Current status for 'public: true results in insecure STORE_KEY and noCrypto' test (KeyedCryptoStore suite):
  * - The test aims to verify that BlockstoreOpts with `public: true` correctly configures stores to use 'insecure' STORE_KEY and noCrypto.
- * - It currently expects `kc.key.get()` and `kc._encrypt()` (for noCrypto instances) to throw 'not implemented' errors, 
+ * - It currently expects `kc.key.get()` and `kc._encrypt()` (for noCrypto instances) to throw 'not implemented' errors,
  *   reflecting the current state of the `noCrypto` class in `src/runtime/keyed-crypto.ts`.
  * - A dummy CTCryptoKey object is being constructed to satisfy type requirements for the throwing `_encrypt` call.
  * - Outstanding lint errors related to importing CTCryptoKey and typing the dummy key object are pending.
@@ -351,22 +351,26 @@ describe("KeyedCryptoStore", () => {
     const dbMeta: bs.DbMeta = { cars: [] };
 
     // Constructing storeUrls with 'insecure' for public: true
-    const metaUri = baseUrl.build()
+    const metaUri = baseUrl
+      .build()
       .setParam(PARAM.NAME, `${testDbName}-meta`)
       .setParam(PARAM.STORE, "meta" as StoreType)
       .setParam(PARAM.STORE_KEY, "insecure")
       .URI();
-    const carUri = baseUrl.build()
+    const carUri = baseUrl
+      .build()
       .setParam(PARAM.NAME, `${testDbName}-car`)
       .setParam(PARAM.STORE, "car" as StoreType)
       .setParam(PARAM.STORE_KEY, "insecure")
       .URI();
-    const fileUri = baseUrl.build()
+    const fileUri = baseUrl
+      .build()
       .setParam(PARAM.NAME, `${testDbName}-file`)
       .setParam(PARAM.STORE, "file" as StoreType)
       .setParam(PARAM.STORE_KEY, "insecure")
       .URI();
-    const walUri = baseUrl.build()
+    const walUri = baseUrl
+      .build()
       .setParam(PARAM.NAME, `${testDbName}-wal`)
       .setParam(PARAM.STORE, "wal" as StoreType)
       .setParam(PARAM.STORE_KEY, "insecure")
@@ -384,23 +388,38 @@ describe("KeyedCryptoStore", () => {
       storeUrls: insecureStoreUrls, // Use the correctly configured insecure URLs
       keyBag: kb.rt,
       meta: dbMeta,
-      compact: async () => ({ car: CID.parse("bafyreibv2h6gs6lgjpmwj2k2qflgsemg32ufoq2t3r24g7myr5gc5a2vta"), blocks: [], size:0, meta: CID.parse("bafyreibv2h6gs6lgjpmwj2k2qflgsemg32ufoq2t3r24g7myr5gc5a2vta") }),
+      compact: async () => ({
+        car: CID.parse("bafyreibv2h6gs6lgjpmwj2k2qflgsemg32ufoq2t3r24g7myr5gc5a2vta"),
+        blocks: [],
+        size: 0,
+        meta: CID.parse("bafyreibv2h6gs6lgjpmwj2k2qflgsemg32ufoq2t3r24g7myr5gc5a2vta"),
+      }),
       autoCompact: 0,
       crypto: toCryptoRuntime(),
       threshold: 10,
       taskManager: { removeAfter: 3, retryTimeout: 50 },
       storeRuntime: bs.toStoreRuntime(mockStethis, {}),
-      tracer: () => { /* noop */ },
+      tracer: () => {
+        /* noop */
+      },
       logger: mockStethis.logger,
       applyMeta: async () => Promise.resolve(),
     };
 
     const encBlockstore = new bs.EncryptedBlockstore(mockStethis, bsOpts);
-    
-    expect(encBlockstore.loader.ebOpts.storeUrls.meta.getParam(PARAM.STORE_KEY), "Meta store URL's STORE_KEY in loader opts").toBe("insecure");
-    expect(encBlockstore.loader.ebOpts.storeUrls.car.getParam(PARAM.STORE_KEY), "Car store URL's STORE_KEY in loader opts").toBe("insecure");
-    expect(encBlockstore.loader.ebOpts.storeUrls.file.getParam(PARAM.STORE_KEY), "File store URL's STORE_KEY in loader opts").toBe("insecure");
-    expect(encBlockstore.loader.ebOpts.storeUrls.wal.getParam(PARAM.STORE_KEY), "Wal store URL's STORE_KEY in loader opts").toBe("insecure");
+
+    expect(encBlockstore.loader.ebOpts.storeUrls.meta.getParam(PARAM.STORE_KEY), "Meta store URL's STORE_KEY in loader opts").toBe(
+      "insecure",
+    );
+    expect(encBlockstore.loader.ebOpts.storeUrls.car.getParam(PARAM.STORE_KEY), "Car store URL's STORE_KEY in loader opts").toBe(
+      "insecure",
+    );
+    expect(encBlockstore.loader.ebOpts.storeUrls.file.getParam(PARAM.STORE_KEY), "File store URL's STORE_KEY in loader opts").toBe(
+      "insecure",
+    );
+    expect(encBlockstore.loader.ebOpts.storeUrls.wal.getParam(PARAM.STORE_KEY), "Wal store URL's STORE_KEY in loader opts").toBe(
+      "insecure",
+    );
 
     const storeFactoryItem: bs.StoreFactoryItem = {
       loader: encBlockstore.loader,
@@ -408,8 +427,8 @@ describe("KeyedCryptoStore", () => {
         meta: { url: encBlockstore.loader.ebOpts.storeUrls.meta },
         car: { url: encBlockstore.loader.ebOpts.storeUrls.car },
         file: { url: encBlockstore.loader.ebOpts.storeUrls.file },
-        wal: { url: encBlockstore.loader.ebOpts.storeUrls.wal }
-      }
+        wal: { url: encBlockstore.loader.ebOpts.storeUrls.wal },
+      },
     };
     const stores = await encBlockstore.loader.ebOpts.storeRuntime.makeStores(storeFactoryItem);
 
@@ -422,7 +441,7 @@ describe("KeyedCryptoStore", () => {
     expect(resolvedCarStore.url().getParam(PARAM.STORE_KEY), "Resolved car store's STORE_KEY").toBe("insecure");
     kc = await resolvedCarStore.keyedCrypto();
     expect(kc.constructor.name).toBe("noCrypto");
-    
+
     const resolvedFileStore = stores.file;
     expect(resolvedFileStore).toBeDefined();
     if (resolvedFileStore) {
@@ -450,18 +469,17 @@ describe("KeyedCryptoStore", () => {
     // Test noCrypto's _encrypt behavior (currently throws)
     // Since key.get() throws, we can't get a real key. _encrypt in noCrypto also throws and doesn't use the key.
     // The key parameter in _encrypt is optional, so we can pass undefined or a dummy.
-    const dummyCryptoKey: any = {
-      algorithm: { name: 'NONE' }, // Or simply {} if that's too specific
+    const dummyCryptoKey: CryptoKey = {
+      algorithm: { name: "NONE" }, // Or simply {} if that's too specific
       extractable: false,
-      type: 'secret',
-      usages: [] // CryptoKeyUsage[]
+      type: "secret",
+      usages: [], // CryptoKeyUsage[]
     };
-    await expect(kc._encrypt({ bytes: testData, key: dummyCryptoKey as CTCryptoKey, iv })).rejects.toThrow("noCrypto.encrypt not implemented");
+    await expect(kc._encrypt({ bytes: testData, key: dummyCryptoKey, iv })).rejects.toThrow("noCrypto.encrypt not implemented");
     // Assuming the _decrypt also needs a similar structure if it were to be tested after a (failing) encrypt
     // For now, we'll just test _encrypt's throw. If _encrypt was a no-op, then we'd test _decrypt:
     // const blk = testData; // If _encrypt was a no-op
     // await expect(kc._decrypt({ bytes: blk, key: currentKey.key, iv })).rejects.toThrow("noCrypto.decrypt not implemented");
-
   });
 });
 
