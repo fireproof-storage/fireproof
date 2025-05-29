@@ -222,10 +222,12 @@ class noCrypto implements CryptoAction {
       tagLength: 0,
     };
   }
-  _decrypt(data: IvAndKeyAndBytes): Promise<Uint8Array> { // Added parameter to match CryptoAction interface
+  _decrypt(data: IvAndKeyAndBytes): Promise<Uint8Array> {
+    // Added parameter to match CryptoAction interface
     return Promise.resolve(data.bytes); // Return the original bytes for no-op
   }
-  _encrypt(data: BytesAndKeyWithIv): Promise<Uint8Array> { // Added parameter to match CryptoAction interface
+  _encrypt(data: BytesAndKeyWithIv): Promise<Uint8Array> {
+    // Added parameter to match CryptoAction interface
     return Promise.resolve(data.bytes); // Return the original bytes for no-op
   }
 }

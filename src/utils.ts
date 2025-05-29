@@ -474,15 +474,15 @@ export function ensureURIDefaults(
   // Discriminate optsInput
   if (optsInput === undefined) {
     // No optsInput provided; primaryUriSource remains undefined, effectiveOpts remains {}
-  } else if (typeof optsInput === 'string' || optsInput instanceof URI) {
+  } else if (typeof optsInput === "string" || optsInput instanceof URI) {
     // optsInput is a direct URI string or a URI object instance
     primaryUriSource = optsInput;
-  } else if (typeof optsInput === 'object' && optsInput !== null && ('public' in optsInput || 'storeKey' in optsInput)) {
+  } else if (typeof optsInput === "object" && optsInput !== null && ("public" in optsInput || "storeKey" in optsInput)) {
     // optsInput is an object and has properties characteristic of the options object ({ curi?, public?, storeKey? })
     // This check helps distinguish it from other CoerceURI object types that might not have 'public' or 'storeKey'.
     effectiveOpts = optsInput as { curi?: CoerceURI; public?: boolean; storeKey?: string | null };
     primaryUriSource = effectiveOpts.curi;
-  } else if (typeof optsInput === 'object' && optsInput !== null) {
+  } else if (typeof optsInput === "object" && optsInput !== null) {
     // optsInput is an object, not undefined, not a string/URI, and not the options object identified above.
     // It's assumed to be one of the other CoerceURI types (e.g., BuildURI, MutableURL, or a plain object intended as a URI source).
     // URI.from() is expected to handle these CoerceURI types.
@@ -491,7 +491,7 @@ export function ensureURIDefaults(
   // If optsInput didn't match any condition (should not happen if types are correct), primaryUriSource is undefined and effectiveOpts is empty.
 
   const baseURI = primaryUriSource ? URI.from(primaryUriSource) : uriFallback;
-  
+
   const ret = baseURI.build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
 
   // Suffix logic: Apply CAR suffix specifically, otherwise preserve from base.
