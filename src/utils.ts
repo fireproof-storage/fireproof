@@ -464,7 +464,6 @@ export function ensureURIDefaults(
   ctxInput?: Partial<{
     readonly idx: boolean;
     readonly file?: boolean;
-    readonly indexName?: string;
   }>,
 ): URI {
   const effectiveCtx = ctxInput || {};
@@ -473,72 +472,91 @@ export function ensureURIDefaults(
   let isPublic = false;
   let explicitStoreKey: string | null | undefined = undefined;
 
-  // Check if opts is the structured options object
   if (opts && typeof opts === "object" && !(opts instanceof URI) && ("public" in opts || "storeKey" in opts || "uri" in opts)) {
-    const optsObj = opts as { uri?: CoerceURI; public?: boolean; storeKey?: string | null }; // Type assertion for clarity
+    const optsObj = opts as { uri?: CoerceURI; public?: boolean; storeKey?: string | null };
     baseUriSource = optsObj.uri;
     isPublic = !!optsObj.public;
     explicitStoreKey = optsObj.storeKey;
   } else if (opts !== undefined) {
-    // opts is CoerceURI or undefined, but not the structured object
-    baseUriSource = opts as CoerceURI; // Explicitly cast to CoerceURI if it's not undefined
+    baseUriSource = opts as CoerceURI;
   }
 
-  const builder = (baseUriSource ? URI.from(baseUriSource) : uriFallback).build();
+  let builder: Builder;
+  if (baseUriSource) {
+    if (baseUriSource instanceof URI) {
+      builder = baseUriSource.build(); // If it's already a URI instance
+    } else {
+      builder = URI.from(baseUriSource).build(); // If it's a string or other CoerceURI
+    }
+  } else {
+    builder = uriFallback.build();
+  }
   builder.setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
 
+  // Item 4: Remove Environment Variable Parameters - These are removed from this version
+
+  // Item 3: Adjust storeKey setting logic
   if (explicitStoreKey === null) {
     builder.delParam(PARAM.STORE_KEY);
   } else if (typeof explicitStoreKey === "string") {
     builder.setParam(PARAM.STORE_KEY, explicitStoreKey);
+  } else { // explicitStoreKey is undefined
+    if (isPublic) {
+      builder.setParam(PARAM.STORE_KEY, 'insecure');
+    } else {
+      // Not public and no explicit key: behave like main
+      if (names.localURI) {
+        const localParamsResult = names.localURI.getParamsResult({
+          // [PARAM.NAME]: param.OPTIONAL, // localName handling is separate
+          [PARAM.STORE_KEY]: param.OPTIONAL,
+        });
+        // Only proceed if Ok and storeKey is present
+        if (localParamsResult.isOk()) {
+            const localParams = localParamsResult.Ok();
+            if (localParams[PARAM.STORE_KEY]) {
+                builder.defParam(PARAM.STORE_KEY, localParams[PARAM.STORE_KEY]);
+            }
+        }
+      }
+
+      // Generate default storeKey (using reverted generic indexAffix)
+      // This only runs if storeKey wasn't set by explicitStoreKey, public, or localURI
+      if (!builder.hasParam(PARAM.STORE_KEY)) {
+        const storeKeyBaseName = builder.getParam(PARAM.NAME) as string;
+        if (storeKeyBaseName) { // Ensure name is present for default key
+          const storeKeyType = storeType2DataMetaWal(store);
+          // Item 1 (partially): Revert indexAffix for storeKey
+          const indexAffix = effectiveCtx.idx ? '-idx' : '';
+          builder.defParam(PARAM.STORE_KEY, `@${storeKeyBaseName}-${storeKeyType}${indexAffix}@`);
+        }
+      }
+    }
   }
 
-  if (typeof process !== "undefined" && process.env?.FP_VERSION) {
-    builder.defParam(PARAM.VERSION, process.env.FP_VERSION);
-  }
-  if (typeof process !== "undefined" && process.env?.FP_URL_GEN_RUNTIME) {
-    builder.defParam(PARAM.RUNTIME, process.env.FP_URL_GEN_RUNTIME);
-  }
-
+  // localName handling (kept from existing refactor, similar to main's localURI param handling)
   if (names.localURI) {
-    const localParams = names.localURI
-      .getParamsResult({
-        [PARAM.NAME]: param.OPTIONAL,
-        [PARAM.STORE_KEY]: param.OPTIONAL,
-      })
-      .Ok();
-
-    if (localParams[PARAM.NAME]) {
-      builder.defParam(PARAM.LOCAL_NAME, localParams[PARAM.NAME]);
-    }
-    if (localParams[PARAM.STORE_KEY] && explicitStoreKey === undefined) {
-      builder.defParam(PARAM.STORE_KEY, localParams[PARAM.STORE_KEY]);
+    const localParamsResult = names.localURI.getParamsResult({ [PARAM.NAME]: param.OPTIONAL });
+     if (localParamsResult.isOk()) {
+        const localParams = localParamsResult.Ok();
+        if (localParams[PARAM.NAME]) {
+            builder.defParam(PARAM.LOCAL_NAME, localParams[PARAM.NAME]);
+        }
     }
   }
-
-  if (isPublic && explicitStoreKey === undefined) {
-    builder.setParam(PARAM.STORE_KEY, 'insecure');
-  } else if (!isPublic && explicitStoreKey === undefined) {
-    // Generate default storeKey if not public and no explicit key
-    const storeKeyBaseName = builder.getParam(PARAM.NAME) as string;
-    if (storeKeyBaseName) {
-      const storeKeyType = storeType2DataMetaWal(store);
-      const indexAffix = effectiveCtx.idx ? `-${effectiveCtx.indexName || 'idx'}` : '';
-      builder.defParam(PARAM.STORE_KEY, `@${storeKeyBaseName}-${storeKeyType}${indexAffix}@`);
-    }
-  }
-
+  
   if (store === "car") {
     builder.defParam(PARAM.SUFFIX, ".car");
   }
 
+  // Item 1 (partially): Revert PARAM.INDEX setting
   if (effectiveCtx.idx) {
-    builder.defParam(PARAM.INDEX, effectiveCtx.indexName || "idx");
+    builder.defParam(PARAM.INDEX, "idx"); // Set to literal "idx"
   }
 
-  if (effectiveCtx.file) {
-    builder.setParam(PARAM.STORE, "file");
-  }
+  // Item 2: Remove effectiveCtx.file influencing PARAM.STORE - This block is removed:
+  // if (effectiveCtx.file) {
+  //   builder.setParam(PARAM.STORE, "file");
+  // }
 
   return builder.URI();
 }

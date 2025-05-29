@@ -308,7 +308,7 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
     idx: {
       car: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.car ?? sopts.data?.car }, base, "car", {
         idx: true,
-        indexName: sopts?.indexName,
+        // indexName: sopts?.indexName, // Removed
       }),
       file: ensureURIDefaults(
         sthis,
@@ -316,20 +316,20 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
         { uri: sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car },
         base,
         "file",
-        { idx: true, indexName: sopts?.indexName },
+        { idx: true /*, indexName: sopts?.indexName */ }, // Removed indexName
       ),
       meta: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.meta ?? sopts.data?.meta }, base, "meta", {
         idx: true,
-        indexName: sopts?.indexName,
+        // indexName: sopts?.indexName, // Removed
       }),
       wal: ensureURIDefaults(sthis, { name }, { uri: sopts.idx?.wal ?? sopts.data?.wal }, base, "wal", {
         idx: true,
-        indexName: sopts?.indexName,
+        // indexName: sopts?.indexName, // Removed
       }),
     },
     data: {
       car: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.car }, base, "car"),
-      file: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.file ?? sopts.data?.car }, base, "file", { file: true }),
+      file: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.file ?? sopts.data?.car }, base, "file", { file: true }), // file:true is kept
       meta: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.meta }, base, "meta"),
       wal: ensureURIDefaults(sthis, { name }, { uri: sopts.data?.wal }, base, "wal"),
     },

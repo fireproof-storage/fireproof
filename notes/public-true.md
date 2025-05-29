@@ -11,38 +11,34 @@ This refactoring aims to minimize overall code changes where possible and ensure
 ## Current Progress
 
 1.  **`ensureURIDefaults` Refactoring (`src/utils.ts`):**
-    *   The function signature was changed to accept an `opts` parameter. This parameter can be a `CoerceURI` directly, or an object of the shape `{ uri?: CoerceURI; public?: boolean; storeKey?: string | null }`.
-    *   Logic has been implemented to handle the `opts` object:
-        *   If `opts.public` is `true` and `opts.storeKey` is not explicitly provided, the function currently results in `storeKey` being `undefined` (this needs to be changed to `'insecure'`).
-        *   If `opts.storeKey` is provided as a string, that value is used.
-        *   If `opts.storeKey` is `null`, the `storeKey` parameter is removed from the URI.
-        *   If `opts.public` is `false` (or undefined) and `opts.storeKey` is not provided, a default `storeKey` is generated (e.g., `@dbName-data@`).
-    *   Environment variable parameters (`FP_VERSION`, `FP_URL_GEN_RUNTIME`) are conditionally added.
-    *   Corrected import and usage of `param.OPTIONAL` from `@adviser/cement`.
+    *   The import for a local `./uri` module (which was causing "Cannot find module" errors) has been removed. The code now relies on `URI` and its builder pattern from `@adviser/cement`.
+    *   The explicit `Builder` type annotation in `ensureURIDefaults` is now technically incorrect (as `Builder` was from the removed import) and should be removed or adjusted to align with the type returned by `@adviser/cement`'s `URI.build()`. However, JavaScript execution proceeds as the builder object has the necessary methods.
+    *   The function signature accepts an `opts` parameter: `CoerceURI` or `{ uri?: CoerceURI; public?: boolean; storeKey?: string | null }`.
+    *   Logic handles `opts`:
+        *   If `opts.public` is `true` and `opts.storeKey` is not explicitly provided, `storeKey` is currently set to `'insecure'`.
+        *   If `opts.storeKey` is a string, it's used.
+        *   If `opts.storeKey` is `null`, the `storeKey` parameter is removed.
+        *   If `opts.public` is `false` (or undefined) and `opts.storeKey` is not provided, a default `storeKey` is generated.
 
 2.  **Caller Update (`src/ledger.ts`):**
-    *   The `toStoreURIRuntime` function, a primary caller of `ensureURIDefaults`, has been updated. Its calls to `ensureURIDefaults` now wrap the URI argument in the new `{ uri: ... }` structure. The `public` flag is not currently passed through `toStoreURIRuntime`.
+    *   `toStoreURIRuntime` calls `ensureURIDefaults` with the `{ uri: ... }` structure. The `public` flag is not yet passed through.
 
 3.  **Linting:**
-    *   `src/utils.ts` and `src/ledger.ts` are currently lint-free after the changes.
+    *   `src/utils.ts` (excluding the `Builder` type annotation) and `src/ledger.ts` are expected to be lint-free.
 
 4.  **Testing (`tests/utils.test.ts`):**
-    *   A targeted run of `pnpm test utils.test.ts` shows **9 failing tests** related to `ensureURIDefaults`.
-    *   Key failures include:
-        *   `AssertionError: expected undefined to be 'insecure'`: This occurs in tests where `opts.public` is true. The current implementation results in `storeKey` being `undefined`, but the tests (and desired behavior) expect it to be the string `'insecure'`.
-        *   `AssertionError: expected false to be true`: This relates to `resultUri.pathname.startsWith(optsCuri.pathname)`, indicating an issue with how the base URI's path is being preserved or modified.
+    *   A targeted run of `pnpm test utils.test.ts` now shows **3 failing tests** (down from 9).
+    *   The consistent failure is: `AssertionError: expected false to be true` related to `resultUri.pathname.startsWith(optsCuri.pathname)`. This indicates the primary remaining issue: the base URI's path is not correctly preserved when `opts.uri` is provided.
 
 ## Implementation Next Steps
 
-1.  **Address Test Failures in `utils.test.ts` (Focus on `ensureURIDefaults` direct behavior):**
-    *   **`storeKey` for `public: true`:**
-        *   **Desired Behavior Confirmed:** When `opts.public` is `true` and no explicit `opts.storeKey` is provided, `PARAM.STORE_KEY` should be set to `'insecure'`.
-        *   **Action:** Modify `ensureURIDefaults` in `src/utils.ts` to set `builder.setParam(PARAM.STORE_KEY, 'insecure')` when `isPublic` is true and `explicitStoreKey` is `undefined`.
+1.  **Address Remaining Test Failures in `utils.test.ts`:**
     *   **Pathname Mismatch (`pathname.startsWith` failure):**
-        *   Investigate why the pathname of the resulting URI is not matching the expectation when `opts.uri` is provided. Check how `URIBuilder` handles path construction from a base URI and parameters.
+        *   **Focus:** This is the primary blocker. Investigate how `URI.build()` (from `@adviser/cement`) and subsequent parameter settings in `ensureURIDefaults` affect the `pathname` when `baseUriSource` is derived from `opts.uri`. Ensure the original pathname from `opts.uri` is the basis for the resulting URI's pathname.
+    *   **Cleanup `Builder` Type:** Remove or correct the explicit `Builder` type annotation in `ensureURIDefaults` in `src/utils.ts` to align with TypeScript best practices and the actual type returned by `@adviser/cement`'s `URI.build()`.
     *   **Iterate on Fixes:**
-        *   Modify `src/utils.ts` based on the decisions above.
-        *   Re-run `pnpm test utils.test.ts` to verify fixes.
+        *   Modify `src/utils.ts`.
+        *   Re-run `pnpm test utils.test.ts`.
 
 2.  **Implement `public` Flag Propagation:**
     *   **Modify `toStoreURIRuntime` (`src/ledger.ts`):**
