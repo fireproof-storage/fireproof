@@ -1,9 +1,8 @@
 import { Result } from "@adviser/cement";
 import { SuperThis, ps, rt } from "@fireproof/core";
-import { gte } from "drizzle-orm";
-import { and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
+import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { SignJWT, jwtVerify } from "jose";
+import { jwtVerify } from "jose";
 import {
   AuthType,
   ClerkClaim,
@@ -59,6 +58,7 @@ import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql
 import { sqlTenantUsers, sqlTenants } from "./tenants.ts";
 import { sqlTokenByResultId } from "./token-by-result-id.ts";
 import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.ts";
+import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.ts";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -1724,15 +1724,7 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  async getCloudSessionToken(
-    req: ReqCloudSessionToken,
-    ictx: Partial<{
-      secretToken: string;
-      validFor: number;
-      issuer: string;
-      audience: string;
-    }> = {},
-  ): Promise<Result<ResCloudSessionToken>> {
+  async getCloudSessionToken(req: ReqCloudSessionToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResCloudSessionToken>> {
     const resListTenants = await this.listTenantsByUser({
       type: "reqListTenantsByUser",
       auth: req.auth,
@@ -1749,13 +1741,11 @@ export class FPApiSQL implements FPApiInterface {
     if (resListLedgers.isErr()) {
       return Result.Err(resListLedgers.Err());
     }
-    const ctx = {
-      secretToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_SECRET")!,
-      validFor: parseInt(this.sthis.env.get("CLOUD_SESSION_TOKEN_VALID_FOR") ?? "3600000", 10),
-      issuer: this.sthis.env.get("CLOUD_SESSION_TOKEN_ISSUER") ?? "FP_CLOUD",
-      audience: this.sthis.env.get("CLOUD_SESSION_TOKEN_AUDIENCE") ?? "PUBLIC",
-      ...ictx,
-    };
+    const rCtx = await getFPTokenContext(this.sthis, ictx);
+    if (rCtx.isErr()) {
+      return Result.Err(rCtx.Err());
+    }
+    const ctx = rCtx.Ok();
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
@@ -1764,12 +1754,7 @@ export class FPApiSQL implements FPApiInterface {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
-    // console.log(">>>>-pre:", ctx, privKey, (privKey as any)[Symbol.toStringTag], privKey.constructor?.name)
-    let validFor = ctx.validFor;
-    if (!(0 <= validFor && validFor <= 3600000)) {
-      validFor = 3600000;
-    }
+
     // verify if tenant and ledger are valid
     const selected = {
       tenant: resListTenants.Ok().tenants[0]?.tenantId,
@@ -1793,7 +1778,7 @@ export class FPApiSQL implements FPApiInterface {
     ) {
       selected.ledger = req.selected?.ledger;
     }
-    const token = await new SignJWT({
+    const token = await createFPToken(ctx, {
       userId: auth.user.userId,
       tenants: resListTenants.Ok().tenants.map((i) => ({
         id: i.tenantId,
@@ -1821,17 +1806,11 @@ export class FPApiSQL implements FPApiInterface {
         tenant: req.selected?.tenant ?? resListTenants.Ok().tenants[0]?.tenantId,
         ledger: req.selected?.ledger ?? resListLedgers.Ok().ledgers[0]?.ledgerId,
       },
-    } satisfies ps.cloud.FPCloudClaim)
-      .setProtectedHeader({ alg: "ES256" }) // algorithm
-      .setIssuedAt()
-      .setIssuer(ctx.issuer) // issuer
-      .setAudience(ctx.audience) // audience
-      .setExpirationTime(Math.floor((Date.now() + validFor) / 1000)) // expiration time
-      .sign(privKey);
+    } satisfies ps.cloud.FPCloudClaim);
 
-    console.log("getCloudSessionToken", {
-      result: req.resultId,
-    });
+    // console.log("getCloudSessionToken", {
+    //   result: req.resultId,
+    // });
     if (req.resultId && req.resultId.length > "laenger".length) {
       await this.addTokenByResultId({
         status: "found",
@@ -1839,16 +1818,15 @@ export class FPApiSQL implements FPApiInterface {
         token,
         now: new Date(),
       });
-      console.log("getCloudSessionToken-ok", {
-        result: req.resultId,
-      });
+      // console.log("getCloudSessionToken-ok", {
+      //   result: req.resultId,
+      // });
     } else if (req.resultId) {
       this.sthis.logger.Warn().Any({ resultId: req.resultId }).Msg("resultId too short");
       console.log("getCloudSessionToken-failed", {
         result: req.resultId,
       });
     }
-
     // console.log(">>>>-post:", ctx, privKey)
     return Result.Ok({
       type: "resCloudSessionToken",
@@ -1912,22 +1890,12 @@ export class FPApiSQL implements FPApiInterface {
   /**
    * Extract token from request, validate it, and extend expiry by 1 day
    */
-  async extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>> {
-    const ctx = {
-      secretToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_SECRET"),
-      publicToken: this.sthis.env.get("CLOUD_SESSION_TOKEN_PUBLIC"),
-      issuer: this.sthis.env.get("CLOUD_SESSION_TOKEN_ISSUER") ?? "FP_CLOUD",
-      audience: this.sthis.env.get("CLOUD_SESSION_TOKEN_AUDIENCE") ?? "PUBLIC",
-    };
-
-    if (!ctx.secretToken) {
-      return Result.Err("CLOUD_SESSION_TOKEN_SECRET not configured");
+  async extendToken(req: ReqExtendToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResExtendToken>> {
+    const rCtx = await getFPTokenContext(this.sthis, ictx);
+    if (rCtx.isErr()) {
+      return Result.Err(rCtx.Err());
     }
-
-    if (!ctx.publicToken) {
-      return Result.Err("CLOUD_SESSION_TOKEN_PUBLIC not configured");
-    }
-
+    const ctx = rCtx.Ok();
     try {
       // Get the public key for verification
       const pubKey = await rt.sts.env2jwk(ctx.publicToken, "ES256");
@@ -1937,30 +1905,22 @@ export class FPApiSQL implements FPApiInterface {
         issuer: ctx.issuer,
         audience: ctx.audience,
       });
-
       const payload = verifyResult.payload as ps.cloud.FPCloudClaim;
 
       // Check if token is expired
       const now = Date.now();
-      if (payload.exp && payload.exp * 1000 <= now) {
+      if (!payload.exp || payload.exp * 1000 <= now) {
         return Result.Err("Token is expired");
       }
-
-      // Extend expiry by 6 hours (6 * 60 * 60 * 1000 = 21600000 ms)
-      const sixHoursInMs = 6 * 60 * 60 * 1000;
-      const newExpirationTime = now + sixHoursInMs;
-
       // Create new token with extended expiry using the private key
       // JWT expects expiration time in seconds, not milliseconds
-      const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
-      const newToken = await new SignJWT(payload)
-        .setProtectedHeader({ alg: "ES256" })
-        .setIssuedAt()
-        .setIssuer(ctx.issuer)
-        .setAudience(ctx.audience)
-        .setExpirationTime(Math.floor(newExpirationTime / 1000))
-        .sign(privKey);
-
+      const newToken = await createFPToken(
+        {
+          ...ctx,
+          validFor: ctx.extendValidFor,
+        },
+        payload,
+      );
       return Result.Ok({
         type: "resExtendToken",
         token: newToken,

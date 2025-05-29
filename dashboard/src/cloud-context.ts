@@ -255,7 +255,7 @@ export class CloudContext {
     return useQuery({
       queryKey: [this._ensureUser.data?.user.userId],
       queryFn: () => {
-        console.log("getCloudSessionToken", this._ensureUser.data?.user.userId);
+        // console.log("getCloudSessionToken", this._ensureUser.data?.user.userId);
         return wrapResultToPromise(() => this.api.getCloudSessionToken({}))();
       },
       enabled: this.activeApi(),

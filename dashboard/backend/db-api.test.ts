@@ -876,6 +876,8 @@ describe("db-api", () => {
       {
         secretToken:
           "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+        publicToken:
+          "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
         issuer: "TEST_I",
         audience: "TEST_A",
         validFor: 40000000,
@@ -961,6 +963,8 @@ describe("db-api", () => {
       {
         secretToken:
           "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+        publicToken:
+          "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
         issuer: "TEST_I",
         audience: "TEST_A",
         validFor: 3600000, // 1 hour
@@ -968,28 +972,28 @@ describe("db-api", () => {
     );
     expect(resSt.isOk()).toBeTruthy();
 
-    // Set up environment for extendToken
-    fpApi.sthis.env.set(
-      "CLOUD_SESSION_TOKEN_SECRET",
-      "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
-    );
-    fpApi.sthis.env.set(
-      "CLOUD_SESSION_TOKEN_PUBLIC",
-      "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
-    );
-    fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_ISSUER", "TEST_I");
-    fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_AUDIENCE", "TEST_A");
-
+    const validFor = 40000; // 40000 seconds
     // Extend the token
-    const extendResult = await fpApi.extendToken({
-      type: "reqExtendToken",
-      token: resSt.Ok().token,
-    });
+    const extendResult = await fpApi.extendToken(
+      {
+        type: "reqExtendToken",
+        token: resSt.Ok().token,
+      },
+      {
+        secretToken:
+          "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+        publicToken:
+          "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
+        issuer: "TEST_I",
+        audience: "TEST_A",
+        validFor: 60 * 60, // 1 hour
+        extendValidFor: validFor, // 40000 seconds (approximately 6 hours)
+      },
+    );
 
     if (extendResult.isErr()) {
       console.log("extendToken error:", extendResult.Err());
     }
-
     expect(extendResult.isOk()).toBeTruthy();
     const extendedResponse = extendResult.Ok();
 
@@ -1005,11 +1009,10 @@ describe("db-api", () => {
     const verifyExtended = await jwtVerify(extendedResponse.token, pub);
 
     // Check that the new expiry is approximately 6 hours from now
-    const sixHoursFromNow = Date.now() + 6 * 60 * 60 * 1000;
-    const tokenExpiry = (verifyExtended.payload.exp ?? 0) * 1000;
+    const tokenExpiry = verifyExtended.payload.exp ?? 0;
 
     // Allow for some variance (within 1 minute)
-    expect(Math.abs(tokenExpiry - sixHoursFromNow)).toBeLessThan(60000);
+    expect(Math.abs(tokenExpiry - Date.now() / 1000) - validFor).toBeLessThanOrEqual(60);
 
     // Verify the payload content is preserved
     expect(verifyExtended.payload.userId).toBe(data[0].ress.user.userId);
