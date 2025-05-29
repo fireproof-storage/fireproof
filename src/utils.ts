@@ -13,7 +13,6 @@ import {
   JSONFormatter,
   YAMLFormatter,
   CoerceURI,
-  param,
   AppContext,
 } from "@adviser/cement";
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
@@ -458,68 +457,78 @@ export function storeType2DataMetaWal(store: StoreType) {
 export function ensureURIDefaults(
   sthis: SuperThis,
   names: { name: string; localURI?: URI },
-  opts: { curi?: CoerceURI; public?: boolean; storeKey?: string | null },
-  uri: URI,
+  optsInput: { curi?: CoerceURI; public?: boolean; storeKey?: string | null } | CoerceURI | undefined,
+  uriFallback: URI,
   store: StoreType,
-  ctx?: Partial<{
+  ctxParam?: Partial<{
     readonly idx: boolean;
     readonly file: boolean;
+    readonly indexName?: string;
   }>,
 ): URI {
-  ctx = ctx || {};
-  const baseURI = opts.curi ? URI.from(opts.curi) : uri;
-  const ret = baseURI.build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
-  if (names.localURI) {
-    const rParams = names.localURI.getParamsResult({
-      [PARAM.NAME]: param.OPTIONAL,
-      [PARAM.STORE_KEY]: param.OPTIONAL,
-    });
-    const params = rParams.Ok();
-    if (params[PARAM.NAME]) {
-      ret.defParam(PARAM.LOCAL_NAME, params[PARAM.NAME]);
-    }
-    if (params[PARAM.STORE_KEY]) {
-      ret.defParam(PARAM.STORE_KEY, params[PARAM.STORE_KEY]);
-    }
-  }
-  // if (!ret.hasParam(PARAM.NAME)) {
-  //   // const name = sthis.pathOps.basename(ret.URI().pathname);
-  //   // if (!name) {
-  //   throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-  //   // }
-  //   // ret.setParam(PARAM.NAME, name);
-  // }
+  const ctx = ctxParam || {}; // Ensure ctx is an object
 
-  if (opts.public) {
-    ret.defParam(PARAM.STORE_KEY, "insecure");
-  } else {
-    if (opts.storeKey) {
-      // if a specific storeKey is provided via opts (and not public)
-      ret.defParam(PARAM.STORE_KEY, opts.storeKey);
-    } else if (names.localURI && names.localURI.hasParam(PARAM.STORE_KEY)) {
-      // Fallback to localURI's storeKey if present and no explicit opts.storeKey
-      // This part of the logic might need review based on desired precedence
-      // The original code copied from localURI if present.
-      // Now, opts.storeKey (derived from BlockstoreOpts.storeUrls) takes precedence if not public.
-      const localStoreKey = names.localURI.getParam(PARAM.STORE_KEY);
-      if (localStoreKey) {
-        // Should always be true due to hasParam check
-        ret.defParam(PARAM.STORE_KEY, localStoreKey);
-      }
-      // If localStoreKey were somehow null despite hasParam, it would fall through to default naming,
-      // which is safer than a potential runtime error with a ! assertion if hasParam was flawed.
-    } else {
-      // Default naming convention if not public and no specific key provided
-      if (ctx.idx) {
-        ret.defParam(PARAM.INDEX, "idx");
-        ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
-      } else {
-        ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}@`);
-      }
-    }
+  let effectiveOpts: { curi?: CoerceURI; public?: boolean; storeKey?: string | null } = {};
+  let primaryUriSource: CoerceURI | undefined;
+
+  // Discriminate optsInput
+  if (optsInput === undefined) {
+    // No optsInput provided; primaryUriSource remains undefined, effectiveOpts remains {}
+  } else if (typeof optsInput === 'string' || optsInput instanceof URI) {
+    // optsInput is a direct URI string or a URI object instance
+    primaryUriSource = optsInput;
+  } else if (typeof optsInput === 'object' && optsInput !== null && ('public' in optsInput || 'storeKey' in optsInput)) {
+    // optsInput is an object and has properties characteristic of the options object ({ curi?, public?, storeKey? })
+    // This check helps distinguish it from other CoerceURI object types that might not have 'public' or 'storeKey'.
+    effectiveOpts = optsInput as { curi?: CoerceURI; public?: boolean; storeKey?: string | null };
+    primaryUriSource = effectiveOpts.curi;
+  } else if (typeof optsInput === 'object' && optsInput !== null) {
+    // optsInput is an object, not undefined, not a string/URI, and not the options object identified above.
+    // It's assumed to be one of the other CoerceURI types (e.g., BuildURI, MutableURL, or a plain object intended as a URI source).
+    // URI.from() is expected to handle these CoerceURI types.
+    primaryUriSource = optsInput as CoerceURI;
   }
+  // If optsInput didn't match any condition (should not happen if types are correct), primaryUriSource is undefined and effectiveOpts is empty.
+
+  const baseURI = primaryUriSource ? URI.from(primaryUriSource) : uriFallback;
+  
+  const ret = baseURI.build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
+
+  // Suffix logic: Apply CAR suffix specifically, otherwise preserve from base.
   if (store === "car") {
     ret.defParam(PARAM.SUFFIX, ".car");
+  } else {
+    const suffix = baseURI.getParam(PARAM.SUFFIX);
+    if (suffix) {
+      ret.setParam(PARAM.SUFFIX, suffix);
+    }
+  }
+
+  // Store key logic using effectiveOpts
+  if (effectiveOpts.public) {
+    ret.defParam(PARAM.STORE_KEY, "insecure");
+  } else {
+    if (effectiveOpts.storeKey) {
+      ret.defParam(PARAM.STORE_KEY, effectiveOpts.storeKey);
+    } else if (names.localURI && names.localURI.hasParam(PARAM.STORE_KEY)) {
+      const localStoreKey = names.localURI.getParam(PARAM.STORE_KEY);
+      if (localStoreKey) {
+        ret.defParam(PARAM.STORE_KEY, localStoreKey);
+      }
+    } else {
+      // Generate a store key if none is provided and not public
+      const storeTypeName = storeType2DataMetaWal(store);
+      let keyName = `@${names.name}-${storeTypeName}@`;
+      if (ctx.idx) {
+        keyName = `@${names.name}-${storeTypeName}-idx@`;
+        if (ctx.indexName) {
+          ret.setParam(PARAM.INDEX, ctx.indexName);
+        } else {
+          ret.setParam(PARAM.INDEX, "idx"); // Default if no specific indexName provided
+        }
+      }
+      ret.defParam(PARAM.STORE_KEY, keyName);
+    }
   }
   return ret.URI();
 }

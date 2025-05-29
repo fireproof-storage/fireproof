@@ -195,7 +195,7 @@ class noCrypto implements CryptoAction {
       id: sthis.nextId().str,
       name: "noCrypto",
       get: () => {
-        throw this.logger.Error().Msg("noCrypto.get not implemented").AsError();
+        return Promise.resolve(undefined); // No specific key for noCrypto
       },
       upsert: () => {
         throw this.logger.Error().Msg("noCrypto.upsert not implemented").AsError();
@@ -222,11 +222,11 @@ class noCrypto implements CryptoAction {
       tagLength: 0,
     };
   }
-  _decrypt(): Promise<Uint8Array> {
-    throw this.logger.Error().Msg("noCrypto.decrypt not implemented").AsError();
+  _decrypt(data: IvAndKeyAndBytes): Promise<Uint8Array> { // Added parameter to match CryptoAction interface
+    return Promise.resolve(data.bytes); // Return the original bytes for no-op
   }
-  _encrypt(): Promise<Uint8Array> {
-    throw this.logger.Error().Msg("noCrypto.decrypt not implemented").AsError();
+  _encrypt(data: BytesAndKeyWithIv): Promise<Uint8Array> { // Added parameter to match CryptoAction interface
+    return Promise.resolve(data.bytes); // Return the original bytes for no-op
   }
 }
 

@@ -464,7 +464,7 @@ describe("KeyedCryptoStore", () => {
     const testData = kb.rt.crypto.randomBytes(1024);
     const iv = kb.rt.crypto.randomBytes(12);
     // Test noCrypto's key.get() behavior (currently throws)
-    await expect(kc.key.get()).rejects.toThrow("noCrypto.get not implemented");
+    await expect(kc.key.get()).resolves.toBeUndefined();
 
     // Test noCrypto's _encrypt behavior (currently throws)
     // Since key.get() throws, we can't get a real key. _encrypt in noCrypto also throws and doesn't use the key.

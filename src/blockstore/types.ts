@@ -261,6 +261,7 @@ export interface StoreUrlsOpts {
   readonly base?: CoerceURI;
   readonly data?: Partial<StoreUrls>;
   readonly idx?: Partial<StoreUrls>;
+  readonly indexName?: string; // Added for specifying custom index name parameter
 }
 
 export interface StoreURIs {

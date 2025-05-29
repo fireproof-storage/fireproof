@@ -306,20 +306,17 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
   // readonly threshold?: number;
   return {
     idx: {
-      car: ensureURIDefaults(sthis, { name }, sopts.idx?.car ?? sopts.data?.car, base, "car", { idx: true }),
+      car: ensureURIDefaults(sthis, { name }, sopts.idx?.car ?? sopts.data?.car, base, "car", { idx: true, indexName: sopts?.indexName }),
       file: ensureURIDefaults(
         sthis,
         { name },
         sopts.idx?.file ?? sopts.idx?.car ?? sopts.data?.file ?? sopts.data?.car,
         base,
         "file",
-        {
-          file: true,
-          idx: true,
-        },
+        { idx: true, indexName: sopts?.indexName },
       ),
-      meta: ensureURIDefaults(sthis, { name }, sopts.idx?.meta ?? sopts.data?.meta, base, "meta", { idx: true }),
-      wal: ensureURIDefaults(sthis, { name }, sopts.idx?.wal ?? sopts.data?.wal, base, "wal", { idx: true }),
+      meta: ensureURIDefaults(sthis, { name }, sopts.idx?.meta ?? sopts.data?.meta, base, "meta", { idx: true, indexName: sopts?.indexName }),
+      wal: ensureURIDefaults(sthis, { name }, sopts.idx?.wal ?? sopts.data?.wal, base, "wal", { idx: true, indexName: sopts?.indexName }),
     },
     data: {
       car: ensureURIDefaults(sthis, { name }, sopts.data?.car, base, "car"),
