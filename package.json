@@ -32,7 +32,7 @@
     "test:indexeddb": "vitest --config vitest.indexeddb.config.ts --run",
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
-    "check": "pnpm format --write && pnpm lint && pnpm test",
+    "check": "pnpm format --write && pnpm lint && pnpm test && pnpm build",
     "lint": "eslint",
     "drizzle:libsql": "drizzle-kit push --config ./cloud/backend/node/drizzle.cloud.libsql.config.ts",
     "drizzle:d1-local": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts",
