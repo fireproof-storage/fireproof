@@ -490,46 +490,85 @@ export function ensureURIDefaults(
   }
   // If optsInput didn't match any condition (should not happen if types are correct), primaryUriSource is undefined and effectiveOpts is empty.
 
-  const baseURI = primaryUriSource ? URI.from(primaryUriSource) : uriFallback;
+  // 1. Determine the base URI for parameter derivation
+  const baseForParams = primaryUriSource ? URI.from(primaryUriSource) : URI.from(uriFallback);
 
-  const ret = baseURI.build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
+  // 2. Determine the effective name and index name, prioritizing values from baseForParams
+  const effectiveName = baseForParams.getParam(PARAM.NAME) || names.name;
+  // For storeKey generation, use the index name from baseForParams if available, otherwise from ctxParam
+  const storeKeyEffectiveIndexName = baseForParams.getParam(PARAM.INDEX) || ctxParam?.indexName;
+  // For the final URI's PARAM.INDEX, also prioritize baseForParams, then ctxParam
+  const uriEffectiveIndexName = baseForParams.getParam(PARAM.INDEX) || ctxParam?.indexName;
 
-  // Suffix logic: Apply CAR suffix specifically, otherwise preserve from base.
+  // 3. Build the result URI, starting from baseForParams to inherit its other parameters
+  const ret = baseForParams.build();
+
+  // 4. Set core parameters
+  ret.setParam(PARAM.STORE, store); // Set initial store type
+  ret.setParam(PARAM.NAME, effectiveName);
+
+  // 5. Suffix logic
   if (store === "car") {
-    ret.defParam(PARAM.SUFFIX, ".car");
+    // If it's a car store, ensure it has the .car suffix.
+    // Check if it's already there to avoid double suffixes if baseForParams already had it.
+    if (ret.getParam(PARAM.SUFFIX) !== ".car") {
+       ret.setParam(PARAM.SUFFIX, ".car");
+    }
+  }
+  // For non-CAR stores, we do not modify the suffix. It remains as inherited from baseForParams.
+
+  // 6. StoreKey logic
+  let storeKeyVal: string;
+  const skName = effectiveName;
+  
+  // Determine the part of the storeKey derived from the 'store' type
+  let skStorePart: string;
+  if (store === "car" || store === "file") {
+    skStorePart = "data";
   } else {
-    const suffix = baseURI.getParam(PARAM.SUFFIX);
-    if (suffix) {
-      ret.setParam(PARAM.SUFFIX, suffix);
+    skStorePart = store; // "meta" or "wal"
+  }
+  
+  const skIndexAffix = ctxParam?.idx ? `-${storeKeyEffectiveIndexName || "idx"}` : "";
+
+  if (effectiveOpts.public === true) {
+    storeKeyVal = `@insecure-${skName}-${skStorePart}${skIndexAffix}@`;
+  } else if (effectiveOpts.storeKey) {
+    storeKeyVal = effectiveOpts.storeKey;
+  } else {
+    storeKeyVal = `@${skName}-${skStorePart}${skIndexAffix}@`;
+  }
+  ret.setParam(PARAM.STORE_KEY, storeKeyVal);
+
+  // 7. Set index parameter on the URI if it's an index store
+  if (ctxParam?.idx) {
+    ret.setParam(PARAM.INDEX, uriEffectiveIndexName || "idx");
+  }
+
+  // 8. Override store to "file" if ctxParam.file is true (must be after storeKey generation)
+  if (ctxParam?.file) {
+    ret.setParam(PARAM.STORE, "file");
+  }
+
+  // 9. Handle localName
+  if (names.localURI) {
+    const localNameFromURI = names.localURI.getParam(PARAM.NAME);
+    if (localNameFromURI) {
+      ret.setParam(PARAM.LOCAL_NAME, localNameFromURI);
     }
   }
 
-  // Store key logic using effectiveOpts
-  if (effectiveOpts.public) {
-    ret.defParam(PARAM.STORE_KEY, "insecure");
-  } else {
-    if (effectiveOpts.storeKey) {
-      ret.defParam(PARAM.STORE_KEY, effectiveOpts.storeKey);
-    } else if (names.localURI && names.localURI.hasParam(PARAM.STORE_KEY)) {
-      const localStoreKey = names.localURI.getParam(PARAM.STORE_KEY);
-      if (localStoreKey) {
-        ret.defParam(PARAM.STORE_KEY, localStoreKey);
-      }
-    } else {
-      // Generate a store key if none is provided and not public
-      const storeTypeName = storeType2DataMetaWal(store);
-      let keyName = `@${names.name}-${storeTypeName}@`;
-      if (ctx.idx) {
-        keyName = `@${names.name}-${storeTypeName}-idx@`;
-        if (ctx.indexName) {
-          ret.setParam(PARAM.INDEX, ctx.indexName);
-        } else {
-          ret.setParam(PARAM.INDEX, "idx"); // Default if no specific indexName provided
-        }
-      }
-      ret.defParam(PARAM.STORE_KEY, keyName);
-    }
+  // Version and other defaults
+  const fpVersion = sthis.env.get("FP_VERSION");
+  if (fpVersion) {
+    ret.defParam(PARAM.VERSION, fpVersion);
   }
+  // If FP_VERSION is not set, do not add &version=unknown by default.
+
+  if (sthis.env.get("FP_URL_GEN_RUNTIME")) {
+    ret.defParam(PARAM.RUNTIME, sthis.env.get("FP_URL_GEN_RUNTIME"));
+  }
+
   return ret.URI();
 }
 
