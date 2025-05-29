@@ -1,16 +1,5 @@
 import { Result, URI } from "@adviser/cement";
 import { ensureSuperThis, ps, SuperThis } from "@fireproof/core";
-import {
-  buildResChat,
-  buildResGestalt,
-  buildResOpen,
-  MsgIsError,
-  MsgIsReqChat,
-  MsgIsReqGestalt,
-  MsgIsReqOpen,
-  NotReadyErrorMsg,
-} from "../../../src/protocols/cloud/msg-types.js";
-import { VirtualConnected } from "../../../src/protocols/cloud/msger.js";
 
 const sthis = ensureSuperThis();
 
@@ -205,9 +194,9 @@ class MockHttpConnection extends TestConnection implements ps.cloud.MsgRawConnec
   ): Promise<ps.cloud.MsgWithError<S>> {
     super.request(req, opts);
     switch (true) {
-      case MsgIsReqGestalt(req):
+      case ps.cloud.MsgIsReqGestalt(req):
         // console.log("http-request-gestalt", req, opts);
-        return Promise.resolve(buildResGestalt(req, this.exchangedGestalt.remote, req.auth) as unknown as S);
+        return Promise.resolve(ps.cloud.buildResGestalt(req, this.exchangedGestalt.remote, req.auth) as unknown as S);
     }
     // console.log("http-request", req, opts);
     return Promise.resolve({
@@ -307,13 +296,13 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
         auth: {
           type: "error",
         },
-      } satisfies NotReadyErrorMsg);
+      } satisfies ps.cloud.NotReadyErrorMsg);
     }
 
     switch (true) {
-      case MsgIsReqOpen(req):
+      case ps.cloud.MsgIsReqOpen(req):
         // console.log("ws-request-open", req);
-        return Promise.resolve(buildResOpen(this.sthis, req) as unknown as S);
+        return Promise.resolve(ps.cloud.buildResOpen(this.sthis, req) as unknown as S);
     }
     // console.log("ws-request", req, opts);
     return Promise.resolve({
@@ -328,8 +317,8 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
   send<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(msg: Q): Promise<ps.cloud.MsgWithError<S>> {
     super.send(msg);
     // console.log("ws-send", msg);
-    if (MsgIsReqChat(msg)) {
-      const res = buildResChat(msg, msg.conn, `got[${msg.message}]`);
+    if (ps.cloud.MsgIsReqChat(msg)) {
+      const res = ps.cloud.buildResChat(msg, msg.conn, `got[${msg.message}]`);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for (const [_, bind] of this.activeBinds.entries()) {
         // console.log("ws-to-bind", res);
@@ -370,7 +359,7 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
 
 describe("retry-connection", () => {
   let wsMock: MockWSConnection;
-  let connected: VirtualConnected;
+  let connected: ps.cloud.VirtualConnected;
   beforeEach(async () => {
     const rMsc = await ps.cloud.Msger.connect(
       sthis,
@@ -437,7 +426,7 @@ describe("retry-connection", () => {
 
     const { done, value: msg } = await reader.read();
     expect(done).toBe(false);
-    if (msg && !MsgIsError(msg)) {
+    if (msg && !ps.cloud.MsgIsError(msg)) {
       expect(msg).toEqual({
         auth: {
           type: "error",
@@ -468,7 +457,7 @@ describe("retry-connection", () => {
       if (i > 0) {
         const { done, value: msgl } = await reader.read();
         expect(done).toBe(false);
-        if (msgl && !MsgIsError(msgl)) {
+        if (msgl && !ps.cloud.MsgIsError(msgl)) {
           expect(msgl).toEqual({
             auth: {
               type: "error",
@@ -484,7 +473,7 @@ describe("retry-connection", () => {
       }
       const { done, value: msgl } = await reader.read();
       expect(done).toBe(false);
-      if (msgl && !MsgIsError(msgl)) {
+      if (msgl && !ps.cloud.MsgIsError(msgl)) {
         expect(msgl).toEqual({
           auth: {
             type: "error",

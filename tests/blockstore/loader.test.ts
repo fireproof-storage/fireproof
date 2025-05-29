@@ -3,8 +3,9 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
-import { FPBlock, isCarBlockItemReady, isCarBlockItemStale } from "../../src/blockstore/index.js";
-import { anyBlock2FPBlock } from "../../src/blockstore/loader-helpers.js";
+
+const { isCarBlockItemReady, isCarBlockItemStale, anyBlock2FPBlock } = bs;
+type FPBlock = bs.FPBlock;
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new Map<string, FPBlock>();
