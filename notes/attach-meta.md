@@ -2,10 +2,10 @@
 
 ### Why This Document Exists
 
-Fireproof’s power comes from **keeping data portable** while still enforcing encryption, access control, and multi-device synchronization. All of those guarantees rely on _metadata_ travelling alongside the actual user data blocks.  
+Fireproof's power comes from **keeping data portable** while still enforcing encryption, access control, and multi-device synchronization. All of those guarantees rely on _metadata_ travelling alongside the actual user data blocks.  
 If you are new to the project, understanding _what_ metadata we keep and _where_ it flows is the fastest path to being productive: nearly every feature (queries, encryption, collaboration, replication) is implemented by _reading_ or _writing_ one of the metadata fields described below.
 
-> **Take-away:** Whenever you touch a Fireproof component, ask yourself _“Which piece of metadata is this code responsible for?”_
+> **Take-away:** Whenever you touch a Fireproof component, ask yourself _"Which piece of metadata is this code responsible for?"_
 
 ### Reading the Codebase – Style Primer
 
@@ -15,7 +15,7 @@ Fireproof is written in modern **TypeScript** with a functional flavour:
   Always check `.isErr()` rather than relying on `try/catch`.
 * **Async/await everywhere.** You will rarely find raw Promises being chained – keep stack traces clean by awaiting.
 * **Immutability first.** Functions avoid mutating arguments; instead they return new objects or update class-private state.
-* **Small building blocks.** Large flows (like loading a CAR file) are composed from many tiny helpers – lean on your editor’s *go-to-definition*.
+* **Small building blocks.** Large flows (like loading a CAR file) are composed from many tiny helpers – lean on your editor's *go-to-definition*.
 * **Structured logging** via `logger.Info().Any({ key: value }).Msg("message")`.  
   Add context objects generously; logs are rendered in Loki/Grafana.
 
@@ -29,92 +29,572 @@ _Code layout conventions_
 
 ---
 
-## Core Components and Metadata Flow
+## Metadata Flow Map: From UI to Storage
 
-We will examine the following components:
-- Keybag
-- Blockstore
-- Loader
-- WebSocket (Cloud Protocol)
-- Dashboard API
-- `useAttach` (React Hook)
+Fireproof's architecture flows from UI components down to persistent storage, with metadata guiding the journey:
+
+```
+┌───────────────┐     Authentication & Identity     ┌──────────────┐
+│  React Hooks  │─────┐ (JWT, tenant, ledger) ┌─────│ Dashboard API │
+└───────────────┘     │                       │     └──────────────┘
+        │             ▼                       ▼             
+        │      ┌─────────────┐        ┌─────────────┐      
+        └─────▶│  WebSocket  │◀───────│    Msger    │      
+               └─────────────┘        └─────────────┘      
+                      │                     ▲               
+                      │   ┌────────────┐   │               
+                      └──▶│   Loader   │───┘               
+                          └────────────┘                    
+                           │         ▲                      
+             ┌─────────────┘         │                      
+             ▼                       │                      
+      ┌────────────┐          ┌────────────┐               
+      │ Blockstore │◀─────────│   KeyBag   │               
+      └────────────┘          └────────────┘               
+```
+
+### Key Components and Their Responsibilities
+
+Fireproof's metadata flow includes these essential components:
+
+- **KeyBag**: Cryptographic key management, resolution, and persistence
+- **Blockstore**: Data blocks and metadata storage with encryption support
+- **Loader**: Orchestrates data loading, commits, and multi-store coordination
+- **WebSocket Protocol**: Cloud communication, authentication, and session handling
+- **Dashboard API**: Authentication and account management services
+- **React Hooks**: UI integration for cloud attachment and token management
+
+---
+
+## 1. KeyBag (`src/runtime/key-bag.ts`)
+
+### What It Does
+
+The Keybag is Fireproof's **cryptographic keyring**. It manages encryption keys across browser sessions, devices, and storage backends. Think of it as a small secure vault that accompanies your data everywhere.
+
+### Why This Matters
+
+For developers, Keybag is your entry point to Fireproof's encryption system. Every database needs keys, and Keybag provides them consistently regardless of environment (browser, Node.js, etc). When data flows through the system, its identity is tied to these keys.
+
+```typescript
+// How you'll typically interact with KeyBag:
+const keyBag = await rt.kb.getKeyBag(sthis);
+const cryptoKey = await keyBag.getNamedKey('myDatabaseName');
+```
+
+### Key Metadata Structures
+
+*   **`KeyBagRuntime`**: The runtime configuration for key management
+    *   `url: URI`: ⭐ The **primary identifier** for a Keybag instance (e.g., `indexeddb://fp-keybag`, `file:///path/to/keybag`). This URI's scheme (`indexeddb:`, `file:`) dictates the storage backend. It's derived from options, environment variables (`FP_KEYBAG_URL`), or defaults.
+    *   `sthis: SuperThis`: Runtime environment access and ID generation
+
+*   **`KeysByFingerprint` / `KeysItem`**: How keys are persisted
+    *   `name: string`: ⭐ A logical **name for a key set** (e.g., a database name) - crucial for retrieving related keys as a group
+
+*   **`KeyWithFingerPrint` / `V2StorageKeyItem`**: Individual key management
+    *   `fingerPrint: string`: ⭐ A unique **hash of the key material**, used for content-addressable lookup
+    *   `default: boolean`: Indicates if this is the default key in a named set
+    *   `key: string`: The key material itself (typically base58btc encoded)
+
+### Metadata Lifecycle
+
+1. **🏁 Initialization**: `KeyBagRuntime.url` determines *where* and *how* keys are stored
+   ```typescript
+   // URL format influences storage backend selection:
+   const keyBag = await getKeyBag({ url: 'indexeddb://fp-keybag-custom' });
+   ```
+
+2. **📝 Key Requests**: Components request keys using a `name` 
+   ```typescript 
+   const cryptoKey = await keyBag.getNamedKey('myDatabase');
+   ```
+
+3. **🔍 Resolution**: Keys are located by their `fingerPrint` internally
+
+4. **💾 Persistence**: `KeyBagProvider` implementations store `KeysItem` objects keyed by `name`
+
+5. **🔗 URI Parameters**: The system can extract key material from URIs (e.g., `url.getParam(PARAM.KEY)`)
+   ```typescript
+   // For debugging only - masterkey in URL params is forbidden for production
+   const uri = BuildURI.new().param('key', 'directKey123').URI();
+   ```
+
+> **For New Devs**: When designing database operations, think about how you'll identify and retrieve keys. The `name` parameter serves as your primary key grouping mechanism.
+
+---
+
+## 2. Blockstore - Stores (`src/blockstore/store.ts`)
+
+### What It Does
+
+Blockstore is Fireproof's **storage subsystem**. It translates operations like "save this document" into "encrypt these blocks and store them persistently." The `BaseStoreImpl` hierarchy (`MetaStoreImpl`, `DataStoreImpl`, `WALStoreImpl`) provides the foundation for Fireproof's content-addressable storage model.
+
+### Why This Matters
+
+For developers, understanding Blockstore means understanding _where_ data lives. All user content eventually passes through these stores, where encryption happens and persistence choices are made. As you build features on Fireproof, you'll rarely call these APIs directly, but they determine your app's performance characteristics.
+
+```typescript
+// Stores are typically created by the Loader, not directly:
+const gateway = new IndexedDBGateway(ebOpts);
+const dataStore = new DataStoreImpl(url, { loader, gateway });
+
+// But you'll recognize the effects of operations that use them:
+await database.put({ _id: "doc1", content: "Hello" });
+// ↓↓↓ eventually flows into ↓↓↓
+await dataStore.save(block); // encrypted, stored in IndexedDB
+```
+
+### Key Metadata Structures
+
+*   **`_url: URI` (in `BaseStoreImpl`)**:  ⭐ **Primary store identifier and configurator**
+    *   **Database Identification**: Contains `PARAM.NAME` (e.g., `dbName=myDatabase`) to identify the database
+    *   **Store Type**: Uses `PARAM.STORE` (e.g., `store=meta`, `store=data`) to define the store's role
+    *   **Encryption Context**: May contain `PARAM.KEY` or `PARAM.KEY_NAME` for crypto configuration
+    *   **Gateway Selection**: URI scheme dictates which storage backend is used
+
+*   **`opts.loader: Loadable`**: Provides access to shared resources, especially `KeyBag` via `loader.keyBag()`
+
+*   **`DbMeta` (handled by `MetaStoreImpl`)**: ⭐ The **canonical state record** for your database
+    *   `keyName?: string`: ⭐ **Encryption key identifier** - links stored blocks to their encryption key
+    *   `branch: string`: The active branch (when using branching)
+    *   `writer?: string`: Origin identifier for multi-writer scenarios
+    *   `clock`, `cars`, `files`: The database's structural pointers
+
+### Metadata Lifecycle
+
+1. **🏁 Initialization**: Store creation requires two key items:
+   ```typescript
+   const store = new MetaStoreImpl(
+     url, // Contains PARAM.NAME, KEY_NAME/KEY params
+     { loader } // Provides access to Keybag for encryption
+   );
+   ```
+
+2. **🔐 Encryption Setup** (`keyedCrypto()` in `BaseStoreImpl`):
+   ```typescript
+   // Simplified internal flow:
+   const crypto = await keyedCryptoFactory(
+     this._url, // Provides key params
+     await this.loader.keyBag(), // Resolves key names
+     this.sthis
+   );
+   ```
+
+3. **💾 Metadata Persistence** (`MetaStoreImpl.save(meta: DbMeta)`):
+   ```typescript
+   // DbMeta includes keyName, linking data to encryption key
+   await metaStore.save({ 
+     keyName: "dbKey1", 
+     branch: "main",
+     // ... other metadata
+   });
+   ```
+
+4. **📑 Data Storage** (`DataStoreImpl.save(block)`):
+   - Data is encrypted using key from `DbMeta.keyName` or URL params
+   - Content-addressed blocks are stored in the gateway
+
+5. **🔍 Reading Data**: When loading, `MetaStoreImpl` fetches `DbMeta` first
+   - `DbMeta.keyName` + `loader.keyBag()` = correct decryption key
+
+> **For New Devs**: When troubleshooting data access issues, remember that both the URL and DbMeta influence encryption. If data can't be decrypted, check both sources to ensure the right key is found.
+
+---
+
+## 3. Blockstore - Loader (`src/blockstore/loader.ts`)
+
+### What It Does
+
+The `Loader` is Fireproof's **data orchestrator**. It coordinates between local storage, remote replicas, and the KeyBag. When your app says "load this database," the Loader handles fetching blocks from appropriate stores, decrypting them, and resolving dependencies.
+
+### Why This Matters
+
+For developers, the Loader is the gateway to remote synchronization. Every database operation that fetches or saves data must go through the Loader. When building features that involve multi-device or cloud replication, you'll be interacting with the Loader's `attach()` method to connect remote stores.
+
+```typescript
+// How attachment flow usually works:
+const db = new Database("mydb");
+await db.attach({
+  name: "cloud",
+  url: "wss://fireproof.storage/sync",
+  opts: {
+    tenant: "my-account",
+    ledger: "my-database"
+  }
+});
+```
+
+### Key Metadata Structures
+
+*   **`ebOpts: BlockstoreOpts` (constructor parameter)**: ⭐ **Primary configuration**
+    *   `url: URI`: Base URI with crucial parameters:
+        *   `PARAM.NAME`: Database name
+        *   `PARAM.KEY_NAME` or `PARAM.KEY`: Default encryption settings
+        *   `PARAM.TENANT`, `PARAM.LEDGER`: Namespacing for cloud operations
+    *   `keybag?: Partial<KeyBagOpts>`: KeyBag configuration
+
+*   **`attachedStores: AttachedStores`**: Manages both local and remote stores
+    *   Each `ActiveStore` is initialized with metadata from `ebOpts.url` or `attachable.url`
+
+*   **`DbMeta`**: ⭐ Runtime state metadata about the database
+    *   `keyName?: string`: Encryption key for referenced data blocks
+    *   `writer?: string`: Source identifier
+    *   `branch?: string`: Branch name for versioned data
+
+*   **`Attachable` (used in `Loader.attach`)**: ⭐ Remote connection specification
+    *   `url: URI`: Remote endpoint with potential metadata (tenant, ledger, etc.)
+    *   `name: string`: Local alias for the connection
+
+### Metadata Lifecycle
+
+1. **🏁 Initialization**: The Loader configures itself from `BlockstoreOpts`
+   ```typescript
+   // url with parameters flows through to stores:
+   const loader = new Loader({
+     url: BuildURI.new()
+       .param('dbName', 'my-database')
+       .param('keyName', 'db1-key')
+       .URI()
+   });
+   ```
+
+2. **🔑 KeyBag Access**: `loader.keyBag()` provides crypto capabilities to stores
+   ```typescript 
+   // Internal flow for encryption operations:
+   const keyBag = await loader.keyBag();
+   const crypto = await keyedCryptoFactory(url, keyBag);
+   ```
+
+3. **🔄 Attaching Remotes**: `attachable.url` metadata configures how remote stores connect
+   ```typescript
+   // Remote connection with tenant/ledger metadata:
+   await loader.attach({
+     name: "cloud",
+     url: BuildURI.from("wss://api.fireproof.host/sync")
+       .param('tenant', 'acme-corp')
+       .param('ledger', 'inventory-db')
+       .URI()
+   });
+   ```
+
+4. **📦 Loading Data**: `Loader` uses `DbMeta.keyName` to decrypt CARs from the right store
+   ```typescript
+   // Internally, local and remote stores are checked:
+   const car = await loader.loadCar(carCid, preferredStore);
+   ```
+
+5. **💾 Committing Data**: `Loader` writes `DbMeta` with the proper `keyName`
+   ```typescript
+   // During saves, keyName is recorded with the data:
+   await loader.commit(blocks, { keyName: 'db1-key' });
+   ```
+
+> **For New Devs**: The Loader's attach mechanism is the bridge to multi-device synchronization. Understanding how metadata flows between local and remote stores is key to troubleshooting replication issues.
 
 ---
 
 ## 6. React Hook - UI Attachment (`src/react/use-attach.ts`)
 
-This React hook (`createAttach`) manages attaching a local Fireproof database to a cloud backend. It handles UI state and, crucially, authentication token management via `WebCtxImpl` (`WebToCloudCtx`).
+### What It Does
 
-**Key Metadata Structures & Locus:**
+The `createAttach` hook is Fireproof's **bridge to the UI layer**. It manages the React state for cloud connections, handles authentication tokens, and provides feedback about attachment status to your components. This hook transforms complex cloud synchronization into simple React state that your UI can respond to.
 
-*   **`config: UseFPConfig` (parameter to `createAttach`)**: Contains the attachment configuration.
-    *   `attach?: ToCloudAttachable`: Primary cloud connection config.
-        *   `url: URI`: Base URL for the cloud service (passed to `Msger`).
-        *   `opts: ToCloudOptionalOpts`:
-            *   `context: AppContext`: Holds shared instances, notably `WebToCloudCtx`.
-            *   `strategy?: TokenStrategie`: Defines how tokens are obtained/managed.
-            *   `tenant?: string`, `ledger?: string`: Tenant/ledger IDs for `Msger`'s `ReqOpenConn`.
-            *   `initialGestalt?: Gestalt`: Client's initial capabilities for `Msger`.
-*   **`WebCtxImpl` (implements `WebToCloudCtx`)**: Manages cloud connection context, retrieved from `AppContext`.
-    *   `dashboardURI`, `tokenApiURI`: URLs related to token acquisition/management UIs.
-    *   `keyBag?: rt.KeyBagProvider`: Used to store the JWT token persistently (namespaced by `dbId`).
-    *   `dbId: string`: ID of the local database.
-    *   `_tokenAndClaims: ResolveOnce<TokenAndClaims>`: Holds the current JWT and its decoded claims.
-        *   `TokenAndClaims`: Contains `token: string` (the JWT) and `claims: FPCloudClaim`.
-        *   `FPCloudClaim` (from `msg-types.js`): Decoded JWT claims, including standard JWT fields (`iss`, `sub`, `aud`, `exp`) and Fireproof-specific claims (`tenant`, `ledger`, `session`, `name`, `email`). This is rich metadata from the auth provider.
+### Why This Matters
 
-**Metadata Propagation & Management:**
+For application developers, this hook is your primary integration point with Fireproof's cloud features. It's designed to handle all the token management complexity so your components can focus on core UI concerns. When building multi-device or collaborative apps, you'll use this hook to connect your local database with cloud storage.
 
-1.  **Initialization (`createAttach` hook)**:
-    *   Retrieves `WebToCloudCtx` (e.g., `WebCtxImpl`) from `config.attach.opts.context`.
-    *   `webCtx.ready(database)` initializes `dbId` and `keyBag` in `WebCtxImpl`.
-    *   Subscribes to token changes via `webCtx.onTokenChange()`. When a token is available, React state is updated with `TokenAndClaims`, making it available to the UI.
-2.  **Token Management (`WebCtxImpl`)**:
-    *   `token()`: Loads JWT from `KeyBag` (or `opts.token`), decodes it into `FPCloudClaim`, caches it, and notifies listeners.
-    *   `setToken()`: Stores JWT in `KeyBag`, updates cache, notifies listeners.
-    *   `resetToken()`: Clears JWT from `KeyBag`, clears cache, notifies listeners.
-3.  **Attaching (`database.attach(attachable)`)**: The `ToCloudAttachable` object is passed.
-    *   This leads to `ToCloudGateway` instantiation, which receives `opts` from `ToCloudAttachable` (including `tenant`, `ledger`, `context` with `WebToCloudCtx`).
-    *   `ToCloudGateway` uses `WebToCloudCtx.token()` to get the JWT. This token becomes the `AuthType` for the `Msger` instance it creates.
-    *   `tenant` and `ledger` from `ToCloudAttachable.opts` are passed to `MsgerOpts.conn` for the `ReqOpen` message.
+```typescript
+// How you'll typically use the hook in a React component:
+import { useFireproof } from '@fireproof/react';
 
-**Summary for `use-attach.ts`:** This hook bridges UI configuration and authentication with the backend connection logic.
-It takes `ToCloudAttachable` (with cloud URL, tenant, ledger). `WebCtxImpl` manages the JWT (`TokenAndClaims`), storing it in `KeyBag` and providing decoded `FPCloudClaim` (which includes tenant/ledger from the token). The JWT is passed to `Msger` as `AuthType`. Configured tenant/ledger are passed to `Msger` for `ReqOpen`. The hook exposes token/claims and attachment status to React components.
+function MyApp() {
+  const { database, attach } = useFireproof('my-database');
+  const [cloudStatus, setCloudStatus] = useState('disconnected');
+  
+  const connectToCloud = async () => {
+    // This will trigger the auth flow and handle tokens
+    await database.attach({
+      name: "cloud",
+      url: "wss://fireproof.storage/sync",
+      opts: {
+        tenant: "acme-corp", 
+        ledger: "inventory-db"
+      }
+    });
+  };
+  
+  // Attach state tells you connection status
+  if (attach.state === "attached") {
+    setCloudStatus("connected");
+  }
+}
+```
+
+### Key Metadata Structures
+
+*   **`config: UseFPConfig`**: The attachment configuration
+    *   `attach?: ToCloudAttachable`: ⭐ **Primary cloud connection spec**
+        *   `url: URI`: Cloud service endpoint 
+        *   `opts.tenant`, `opts.ledger`: Database namespace identifiers
+        *   `opts.context`: Application context with shared services
+        *   `opts.strategy`: How to obtain auth tokens (iframe, redirect, etc.)
+
+*   **`WebCtxImpl` (`WebToCloudCtx`)**: ⭐ **Authentication context manager**
+    *   `dashboardURI`, `tokenApiURI`: Auth UI endpoints
+    *   `keyBag`: Persistent storage for tokens (namespaced by `dbId`)
+    *   `_tokenAndClaims`: ⭐ Current JWT and its decoded claims
+        *   `token`: The raw JWT string
+        *   `claims`: ⭐ Decoded metadata from token including:
+            *   Standard JWT fields: `iss`, `sub`, `exp`, `aud`
+            *   Fireproof-specific: `tenant`, `ledger`, `session`, `email`
+
+*   **`AttachHook` (React state)**: User-facing connection status
+    *   `state`: "initial", "attaching", "attached", or "error"
+    *   `ctx.tokenAndClaims`: Token info exposed to UI
+
+### Metadata Lifecycle
+
+1. **🏁 Hook Initialization**: React component triggers hook
+   ```typescript
+   // In a React component:
+   const { attach } = useFireproof('my-database');
+   ```
+
+2. **🔑 Token Acquisition & Management**: UI flow or API provides JWT
+   ```typescript 
+   // Inside WebCtxImpl:
+   async setToken(token: TokenAndClaims) {
+     this._tokenAndClaims.reset();
+     this._tokenAndClaims.once(() => token);
+     await this.keyBag?.set({
+       name: `${this.dbId}/urlToken`,
+       keys: { [this.tokenParam]: { key: token.token, ... } }
+     });
+   }
+   ```
+
+3. **🔄 Database Attachment**: Token and config flow to `ToCloudGateway`
+   ```typescript
+   // The hook orchestrates this flow:
+   webCtx.onTokenChange(token => {
+     if (token) {
+       setAttachState({ state: "attaching" });
+       // Token flows to Msger for auth
+       database.attach(attachable);
+     }
+   });
+   ```
+
+4. **📡 UI State Updates**: React components get connection status
+   ```typescript
+   // UI can respond to attachment state:
+   {attachState.state === "attached" && (
+     <div>Connected to cloud! 
+       User: {attachState.ctx.tokenAndClaims?.claims.email}
+     </div>
+   )}
+   ```
+
+5. **🔒 Token Persistence**: JWTs are stored in KeyBag for future sessions
+   ```typescript
+   // KeyBag stores token namespaced by database ID:
+   await keyBag.set(`${dbId}/urlToken`, { key: token });
+   ```
+
+> **For New Devs**: The React hook abstracts away most complexity of cloud connections, but understanding the token flow is important for troubleshooting. If your app can't connect to the cloud, check that the token acquisition strategy is working and examine the JWT claims for correct tenant/ledger values.
+
+---
+
+## 4. WebSocket - Connection (`src/protocols/cloud/ws-connection.ts`)
+
+### What It Does
+
+The `WSConnection` class is Fireproof's **transport layer** for cloud synchronization. It wraps a raw WebSocket connection and manages message serialization/deserialization, request/response tracking, and stream binding. Think of it as the reliable courier that ensures your data packets reach the cloud server and come back intact.
+
+### Why This Matters
+
+For developers, the WebSocket connection is where protocol meets network. While you won't directly instantiate this class (the `Msger` handles that), understanding WebSocket connection metadata helps troubleshoot synchronization issues. The transaction IDs (`tid`) and protocol paths in this layer determine whether messages reach their destination correctly.
+
+```typescript
+// WebSockets are typically created by the Msger:
+const ws = new WebSocket("wss://fireproof.storage/api/v0/sync");
+const wsConn = new WSConnection(sthis, ws, msgParams, exchangedGestalt);
+
+// Then messages flow through it:
+await wsConn.send(someMessage); // Serializes and transmits
+```
+
+### Key Metadata Structures
+
+*   **`ws: WebSocket`**: ⭐ The underlying browser WebSocket instance
+    *   The WebSocket **URL** contains critical initial metadata:
+    *   Server endpoint (e.g., `wss://fireproof.storage/api/v0/...`)
+    *   Query parameters may include initial `tenant`, `ledger`, or `token`
+
+*   **`msgP: MsgerParamsWithEnDe`**: Message protocol configuration
+    *   `ende: MsgEnDe`: Encoder/decoder for serialization
+    *   `timeout: number`: Operation timeouts
+
+*   **`MsgBase` & derivatives**: ⭐ Message structure with transaction tracking
+    *   `tid: string`: Transaction ID for request/response correlation
+    *   Message-specific fields like `ReqOpen` with connection parameters
+
+*   **`WaitForTids`**: Transaction tracking system for async operations
+
+### Metadata Lifecycle
+
+1. **🏁 Connection Establishment**: WebSocket URL carries initial metadata
+   ```typescript
+   // This happens before WSConnection is created
+   const ws = new WebSocket(
+     "wss://fireproof.storage/api/v0/sync?tenant=acme&ledger=db1"
+   );
+   ```
+
+2. **🔑 Initialization**: `WSConnection` construction with encoding setup
+   ```typescript
+   const conn = new WSConnection(
+     sthis,
+     ws, // Already-connected WebSocket
+     msgParams // Includes ende (encoder/decoder)
+   );
+   ```
+
+3. **📣 Sending Messages**: Every outgoing message includes a `tid`
+   ```typescript
+   // Internal message tracking with transaction ID
+   await conn.send({
+     tid: generateTransactionId(),
+     type: "req_pull",
+     // ...message contents
+   });
+   ```
+
+4. **📢 Receiving Messages**: Incoming messages are matched to pending requests by `tid`
+   ```typescript
+   // Inside WSConnection's message handler:
+   this.waitForTid.resolve(msg); // Finds the matching request by tid
+   ```
+
+5. **📰 Stream Binding**: For continuous data flow like replication streams
+   ```typescript
+   // Creates a ReadableStream bound to a specific message type:
+   const carStream = conn.bind(requestMessage, {
+     waitFor: (msg) => msg.type === "res_car"
+   });
+   ```
+
+> **For New Devs**: While you won't directly work with WSConnection, examining its logs during debugging reveals important connection state. Look for transaction IDs (`tid`) to trace request/response pairs when troubleshooting synchronization issues.
 
 ---
 
 ## 5. WebSocket - Messenger (`src/protocols/cloud/msger.ts`)
 
-The `Msger` class is a higher-level abstraction over `WSConnection` (or `HttpConnection`). It manages the full connection lifecycle, including protocol negotiation (`Gestalt` exchange) and establishing a "virtual connection" with the server, which includes tenant and ledger context.
+### What It Does
 
-**Key Metadata Structures & Locus:**
+The `Msger` class is Fireproof's **protocol negotiator** for cloud connections. It manages high-level communication patterns, handling server discovery, authentication, and session establishment. It knows _which_ endpoint to connect to and _how_ to set up a compatible communication session.
 
-*   **`opts: MsgerOpts` (constructor parameter)**: Primary configuration.
-    *   `urls: URI[]`: Potential base URLs for the server.
-    *   `initialGestalt?: Gestalt`: Client's proposed capabilities (protocol version, ws/http endpoints, auth type).
-    *   `conn?: ReqOpenConn`: Initial connection parameters for `ReqOpen`, including `tenant`, `ledger`, `reqId`, `app`, `appVersion`, `user`, `session`.
-    *   `imsgP?`: Parameters for message encoding/decoding and timeouts.
-*   **`ExchangedGestalt` (stored as `this.exchangedGestalt`)**: Results of negotiation.
-    *   `my: Gestalt`: Client's final gestalt.
-    *   `remote: Gestalt`: Server's gestalt, confirming protocol features, server endpoints (WS/HTTP), and auth requirements. This is metadata about the server's capabilities.
-*   **`virtualConn?: ReqOpenConn` (stored as `this.virtualConn`)**: Populated from `ResOpen` from the server.
-    *   Represents the established "virtual connection" with server-acknowledged/assigned metadata (e.g., server-assigned `session` ID, confirmed `tenant`, `ledger`).
-*   **`MsgBase.auth?: AuthType`**: Attached to messages, can be `FPJWKCloudAuthType` which includes `token: string`.
+### Why This Matters
 
-**Metadata Propagation & Management:**
+For developers building cloud-sync features, understanding `Msger` helps you diagnose authentication problems and tenant/ledger configuration issues. This component translates your high-level "connect to cloud" requests into the specific protocols and endpoints needed, while handling retries and connection management.
 
-1.  **Initialization (`Msger.constructor`)**: Receives `MsgerOpts` (URLs, initial `Gestalt`, initial `ReqOpenConn` params like tenant/ledger).
-2.  **Connection (`Msger.connect`)**: Critical for metadata exchange.
-    *   Takes `auth: AuthType` (with token) and a `curl` (specific URL to try).
-    *   **Gestalt Exchange**: Sends `ReqGestalt` (with client's `initialGestalt` and `auth` token) to the `/gestalt` HTTP endpoint. Receives `ResGestalt`. The `remote` gestalt is stored in `this.exchangedGestalt`, providing server capabilities and correct service endpoints.
-    *   **Protocol Selection & Real Connection**: Based on `remote.protocolCapabilities`, connects to the appropriate WS or HTTP endpoint (from `remote.wsEndpoints` or `remote.httpEndpoints`) using `WSConnection` or `HttpConnection`.
-3.  **Opening Virtual Connection (`Msger.getQSIdWithSideEffect`)**: After physical connection, sends `ReqOpen`.
-    *   `buildReqOpen` uses the `auth` token and `ReqOpenConn` (from `this.opts.conn` and any existing `this.virtualConn`).
-    *   Receives `ResOpen`. The `conn` field from `ResOpen` (type `ReqOpenConn`) is stored in `this.virtualConn`, holding server-acknowledged session parameters (session ID, tenant, ledger).
-4.  **Subsequent Requests**: Messages carry the `auth` token and often `this.virtualConn` details (tenant, ledger, session ID) as required by the message type (e.g., `MsgWithConn`).
+```typescript
+// Msger is typically created by a ToCloudGateway
+const msger = new Msger({
+  urls: ["https://fireproof.storage/api/v0"],
+  conn: { tenant: "acme-corp", ledger: "inventory" },
+  initialGestalt: defaultGestalt,
+});
 
-**Summary for `msger.ts`:** `Msger` handles session establishment and protocol negotiation.
-It uses `MsgerOpts` for initial config (URLs, client Gestalt, tenant/ledger). `AuthType` (token) is used for authentication. Gestalt exchange negotiates protocols and server endpoints. `ReqOpen`/`ResOpen` establishes a logical session, exchanging tenant, ledger, app info, and obtaining a server session ID, all stored in `virtualConn`. Subsequent messages use this established context.
+// Then you can make authenticated requests
+const response = await msger.request(pullRequest, {
+  waitFor: (msg) => msg.type === "res_pull"
+});
+```
+
+### Key Metadata Structures
+
+*   **`opts: MsgerOpts`**: ⭐ **Primary configuration**
+    *   `urls: URI[]`: Potential server endpoints to try
+    *   `initialGestalt?: Gestalt`: Client capabilities (protocol version, auth type)
+    *   `conn?: ReqOpenConn`: ⭐ **Crucial identification metadata**:
+        *   `tenant`, `ledger`: Database namespace identifiers
+        *   `reqId`, `app`, `appVersion`, `user`, `session`: Context metadata
+
+*   **`ExchangedGestalt` (in `this.exchangedGestalt`)**: Result of capability negotiation
+    *   `my: Gestalt`: Client's capabilities
+    *   `remote: Gestalt`: ⭐ **Server capabilities** and endpoint information
+
+*   **`virtualConn` (in `this.virtualConn`)**: ⭐ **Established session context**
+    *   Server-acknowledged `tenant`, `ledger`, server-assigned `session` ID
+
+*   **`MsgBase.auth?: AuthType`**: ⭐ Authentication metadata (JWT token)
+
+### Metadata Lifecycle
+
+1. **🏁 Initialization**: `MsgerOpts` sets initial configuration
+   ```typescript
+   const msger = new Msger({
+     urls: ["https://api.fireproof.host/api/v0"],
+     conn: {
+       tenant: "acme-corp", 
+       ledger: "inventory-db"
+     }
+   });
+   ```
+
+2. **🔎 Capability Discovery**: Exchange capabilities with server
+   ```typescript 
+   // Internal flow during connection:
+   const gestaltResponse = await httpClient.send(
+     buildReqGestalt(sthis, auth, initialGestalt)
+   );
+   // Server capabilities determine how to connect
+   this.exchangedGestalt = { 
+     my: initialGestalt,
+     remote: gestaltResponse.gestalt
+   };
+   ```
+
+3. **📰 Protocol Selection**: Choose WebSocket or HTTP based on `remote.protocolCapabilities`
+   ```typescript
+   // Inside Msger.connect:
+   if (remote.protocolCapabilities.includes("stream")) {
+     // Use WebSocket with endpoint from remote.wsEndpoints
+     connection = await this.openWS(selectedEndpoint);
+   } else {
+     // Fall back to HTTP with endpoint from remote.httpEndpoints
+     connection = await this.openHttp(selectedEndpoint);
+   }
+   ```
+
+4. **🔐 Session Establishment**: Send `ReqOpen` with tenant/ledger, get session ID
+   ```typescript
+   // During connection initialization:
+   const openResponse = await this.request(
+     buildReqOpen(this.sthis, auth, {
+       tenant: "acme-corp",
+       ledger: "inventory-db"
+     }),
+     { waitFor: MsgIsResOpen }
+   );
+   // Store server-issued parameters
+   this.virtualConn = openResponse.conn;
+   ```
+
+5. **📢 Ongoing Communication**: All messages include auth and session context
+   ```typescript
+   // For example, when pulling data:
+   const response = await this.request({
+     type: "req_pull",
+     tid: this.sthis.nextId().str,
+     auth: this.authToken,
+     conn: this.virtualConn, // Contains tenant, ledger, session
+     branch: "main"
+   });
+   ```
+
+> **For New Devs**: The Mesger's `virtualConn` contains your active session information after connection. If sync isn't working, examining this session metadata helps identify mismatched tenant/ledger settings between client and server.
 
 ---
 
@@ -185,61 +665,137 @@ The `Loader` orchestrates data loading, committing, and manages interactions bet
 
 ## 2. Blockstore - Stores (`src/blockstore/store.ts`)
 
-The `BaseStoreImpl` and its derivatives (`MetaStoreImpl`, `DataStoreImpl`, `WALStoreImpl`) manage the persistence of data (blocks) and metadata (database state).
+### What It Does
 
-**Key Metadata Structures & Locus:**
+Blockstore is Fireproof's **storage subsystem**. It translates operations like "save this document" into "encrypt these blocks and store them persistently." The `BaseStoreImpl` hierarchy (`MetaStoreImpl`, `DataStoreImpl`, `WALStoreImpl`) provides the foundation for Fireproof's content-addressable storage model.
 
-*   **`_url: URI` (in `BaseStoreImpl`)**: This is a primary metadata carrier for each store instance.
-    *   **Database Identification**: Must contain `PARAM.NAME` (e.g., `dbName=myDatabase`) to identify the database.
-    *   **Store Type**: Augmented with `PARAM.STORE` (e.g., `store=meta`, `store=data`) to define the store's role.
-    *   **Encryption Context**: Can carry `PARAM.KEY` (raw key material) or `PARAM.KEY_NAME` (a name referencing a key set in the Keybag). This is vital for `keyedCryptoFactory`.
-    *   **Gateway Configuration**: The `_url`'s scheme (`file:`, `indexeddb:`, etc.) and path determine the storage backend (`SerdeGateway`) and location.
-    *   **Other Context**: May include `PARAM.TENANT`, `PARAM.LEDGER`, `PARAM.VERSION`.
-*   **`opts.loader: Loadable` (passed to Store constructor)**: This `loader` instance provides access to shared resources, most importantly the `KeyBag` via `loader.keyBag()`. This allows the store to resolve `PARAM.KEY_NAME` from its `_url` into cryptographic keys.
-*   **`DbMeta` (handled by `MetaStoreImpl`)**: A critical metadata object representing database state.
-    *   `keyName?: string`: **Crucially**, this stores the name of the key set (from Keybag) used to encrypt the data blocks (CAR files) associated with this database state. This ensures the correct decryption key can be retrieved later.
-    *   `branch: string`, `writer?: string`, `clock`, `cars`, `files`: Other structural and contextual metadata.
+### Why This Matters
 
-**Metadata Propagation & Management:**
+For developers, understanding Blockstore means understanding _where_ data lives. All user content eventually passes through these stores, where encryption happens and persistence choices are made. As you build features on Fireproof, you'll rarely call these APIs directly, but they determine your app's performance characteristics.
 
-1.  **Initialization**: A store is created with a base `url` (containing `PARAM.NAME`) and `opts` (providing the `loader`).
-2.  **Encryption Setup (`keyedCrypto()` method in `BaseStoreImpl`)**:
-    *   Invoked for operations requiring crypto.
-    *   Uses `keyedCryptoFactory(this._url, await this.loader.keyBag(), ...)`. The `_url` provides `PARAM.KEY` or `PARAM.KEY_NAME`, and `loader.keyBag()` supplies the Keybag instance to resolve key names or use provided material.
-3.  **Saving Metadata (`MetaStoreImpl.save(meta: DbMeta)`)**:
-    *   The `DbMeta` object, including its `keyName`, is persisted. This `keyName` is essential for linking the database state to its encryption key.
-4.  **Saving Data (`DataStoreImpl.save(block)`)**:
-    *   If encryption is active, the block is encrypted using the key derived from `DbMeta.keyName` (or `_url`'s key parameters) via `keyedCrypto`.
-5.  **Loading Data/Metadata**: When loading, `MetaStoreImpl` retrieves `DbMeta`. The `DbMeta.keyName` (or `_url`'s key params) is used with `keyedCryptoFactory` and `loader.keyBag()` to obtain the correct decryption key.
+```typescript
+// Stores are typically created by the Loader, not directly:
+const gateway = new IndexedDBGateway(ebOpts);
+const dataStore = new DataStoreImpl(url, { loader, gateway });
 
-**Summary for `store.ts` Metadata:** The `_url` (with `PARAM.NAME`, `PARAM.KEY_NAME`/`PARAM.KEY`) and `DbMeta.keyName` are central. The `_url` sets up the store's identity and initial encryption context. `DbMeta.keyName` explicitly links a database state to its encryption key. The `loader` acts as a bridge to the `KeyBag`.
+// But you'll recognize the effects of operations that use them:
+await database.put({ _id: "doc1", content: "Hello" });
+// ↓↓↓ eventually flows into ↓↓↓
+await dataStore.save(block); // encrypted, stored in IndexedDB
+```
+
+### Key Metadata Structures
+
+*   **`_url: URI` (in `BaseStoreImpl`)**:  ⭐ **Primary store identifier and configurator**
+    *   **Database Identification**: Contains `PARAM.NAME` (e.g., `dbName=myDatabase`) to identify the database
+    *   **Store Type**: Uses `PARAM.STORE` (e.g., `store=meta`, `store=data`) to define the store's role
+    *   **Encryption Context**: May contain `PARAM.KEY` or `PARAM.KEY_NAME` for crypto configuration
+    *   **Gateway Selection**: URI scheme dictates which storage backend is used
+
+*   **`opts.loader: Loadable`**: Provides access to shared resources, especially `KeyBag` via `loader.keyBag()`
+
+*   **`DbMeta` (handled by `MetaStoreImpl`)**: ⭐ The **canonical state record** for your database
+    *   `keyName?: string`: ⭐ **Encryption key identifier** - links stored blocks to their encryption key
+    *   `branch: string`: The active branch (when using branching)
+    *   `writer?: string`: Origin identifier for multi-writer scenarios
+    *   `clock`, `cars`, `files`: The database's structural pointers
+
+### Metadata Lifecycle
+
+1. **🏁 Initialization**: Store creation requires two key items:
+   ```typescript
+   const store = new MetaStoreImpl(
+     url, // Contains PARAM.NAME, KEY_NAME/KEY params
+     { loader } // Provides access to Keybag for encryption
+   );
+   ```
+
+2. **🔐 Encryption Setup** (`keyedCrypto()` in `BaseStoreImpl`):
+   ```typescript
+   // Simplified internal flow:
+   const crypto = await keyedCryptoFactory(
+     this._url, // Provides key params
+     await this.loader.keyBag(), // Resolves key names
+     this.sthis
+   );
+   ```
+
+3. **💾 Metadata Persistence** (`MetaStoreImpl.save(meta: DbMeta)`):
+   ```typescript
+   // DbMeta includes keyName, linking data to encryption key
+   await metaStore.save({ 
+     keyName: "dbKey1", 
+     branch: "main",
+     // ... other metadata
+   });
+   ```
+
+4. **📑 Data Storage** (`DataStoreImpl.save(block)`):
+   - Data is encrypted using key from `DbMeta.keyName` or URL params
+   - Content-addressed blocks are stored in the gateway
+
+5. **🔍 Reading Data**: When loading, `MetaStoreImpl` fetches `DbMeta` first
+   - `DbMeta.keyName` + `loader.keyBag()` = correct decryption key
+
+> **For New Devs**: When troubleshooting data access issues, remember that both the URL and DbMeta influence encryption. If data can't be decrypted, check both sources to ensure the right key is found.
 
 ---
 
 ## 1. Keybag (`src/runtime/key-bag.ts`)
 
-The Keybag is responsible for managing cryptographic keys. Metadata here relates to key identification, storage, and grouping.
+### What It Does
 
-**Key Metadata Structures:**
+The Keybag is Fireproof's **cryptographic keyring**. It manages encryption keys across browser sessions, devices, and storage backends. Think of it as a small secure vault that accompanies your data everywhere.
 
-*   `KeyBagRuntime`:
-    *   `url: URI`: The primary identifier for a Keybag instance (e.g., `indexeddb://fp-keybag`, `file:///path/to/keybag`). This URI's scheme (`indexeddb:`, `file:`) dictates the storage backend, and the path/name specifies the location. It's derived from options, environment variables (`FP_KEYBAG_URL`), or defaults.
-    *   `sthis: SuperThis`: Provides access to environment context and ID generation.
-*   `KeysByFingerprint` / `KeysItem` (for persistence):
-    *   `name: string`: A logical name for a set of keys (e.g., a database name). This is crucial for grouping and retrieving related keys.
-*   `KeyWithFingerPrint` / `V2StorageKeyItem` (for persistence):
-    *   `fingerPrint: string`: A unique hash of the key material, used for content-addressable lookup within a named set.
-    *   `default: boolean`: Indicates if this is the default key in a named set.
-    *   `key: string`: The key material itself (e.g., base58btc encoded string in `V2StorageKeyItem`).
+### Why This Matters
 
-**Metadata Propagation & Management:**
+For developers, Keybag is your entry point to Fireproof's encryption system. Every database needs keys, and Keybag provides them consistently regardless of environment (browser, Node.js, etc). When data flows through the system, its identity is tied to these keys.
 
-1.  **Initialization & Configuration:** The `KeyBagRuntime.url` is the central piece of configuration metadata, determining *where* and *how* keys are stored (e.g., IndexedDB vs. file system).
-2.  **Named Key Sets:** External components request keys using a `name` (e.g., `database.getNamedKey('myDB')`). This `name` is persisted with the keys, allowing them to be retrieved as a group.
-3.  **Key Identification:** Internally, keys are identified by their `fingerPrint`.
-4.  **Persistence:** The `KeyBagProvider` (selected based on the `url`'s scheme) stores `KeysItem` objects, using the `name` as the primary lookup identifier for a collection of keys.
-5.  **URI Parameters:** The system can also extract key material or related parameters if they are encoded in URIs (e.g., `url.getParam(PARAM.KEY)`), though `masterkey` in URL params is explicitly disallowed.
+```typescript
+// How you'll typically interact with KeyBag:
+const keyBag = await rt.kb.getKeyBag(sthis);
+const cryptoKey = await keyBag.getNamedKey('myDatabaseName');
+```
 
-**Summary for Keybag Metadata:** The `name` of a key set (often a database name) and the `KeyBagRuntime.url` (defining storage type and location) are the most critical pieces of metadata. These are used to associate keys with their respective databases or purposes and to manage their persistence.
+### Key Metadata Structures
+
+*   **`KeyBagRuntime`**: The runtime configuration for key management
+    *   `url: URI`: ⭐ The **primary identifier** for a Keybag instance (e.g., `indexeddb://fp-keybag`, `file:///path/to/keybag`). This URI's scheme (`indexeddb:`, `file:`) dictates the storage backend. It's derived from options, environment variables (`FP_KEYBAG_URL`), or defaults.
+    *   `sthis: SuperThis`: Runtime environment access and ID generation
+
+*   **`KeysByFingerprint` / `KeysItem`**: How keys are persisted
+    *   `name: string`: ⭐ A logical **name for a key set** (e.g., a database name) - crucial for retrieving related keys as a group
+
+*   **`KeyWithFingerPrint` / `V2StorageKeyItem`**: Individual key management
+    *   `fingerPrint: string`: ⭐ A unique **hash of the key material**, used for content-addressable lookup
+    *   `default: boolean`: Indicates if this is the default key in a named set
+    *   `key: string`: The key material itself (typically base58btc encoded)
+
+### Metadata Lifecycle
+
+1. **🏁 Initialization**: `KeyBagRuntime.url` determines *where* and *how* keys are stored
+   ```typescript
+   // URL format influences storage backend selection:
+   const keyBag = await getKeyBag({ url: 'indexeddb://fp-keybag-custom' });
+   ```
+
+2. **📝 Key Requests**: Components request keys using a `name` 
+   ```typescript 
+   const cryptoKey = await keyBag.getNamedKey('myDatabase');
+   ```
+
+3. **🔍 Resolution**: Keys are located by their `fingerPrint` internally
+
+4. **💾 Persistence**: `KeyBagProvider` implementations store `KeysItem` objects keyed by `name`
+
+5. **🔗 URI Parameters**: The system can extract key material from URIs (e.g., `url.getParam(PARAM.KEY)`)
+   ```typescript
+   // For debugging only - masterkey in URL params is forbidden for production
+   const uri = BuildURI.new().param('key', 'directKey123').URI();
+   ```
+
+> **For New Devs**: When designing database operations, think about how you'll identify and retrieve keys. The `name` parameter serves as your primary key grouping mechanism.
+
+---
 
 ---
