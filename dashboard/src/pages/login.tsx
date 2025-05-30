@@ -43,11 +43,20 @@ export function Login() {
     const tos = buri.getParam("redirect_url");
     if (!tos) {
       return <Navigate to="/fp/cloud" />;
-    } else {
-      const to = URI.from(new TextDecoder().decode(base64url.decode(tos))).withoutHostAndSchema;
-      console.log("login-tos", to);
-      return <Navigate to={to} />;
     }
+
+    let decodedUrl = tos;
+    try {
+      // Only decode if it's base64 encoded
+      decodedUrl = new TextDecoder().decode(base64url.decode(tos));
+    } catch {
+      // If decoding fails, use original URL
+      decodedUrl = tos;
+    }
+
+    const to = URI.from(decodedUrl).withoutHostAndSchema;
+    console.log("login-tos", to);
+    return <Navigate to={to} />;
   }
 
   // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")

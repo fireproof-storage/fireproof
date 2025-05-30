@@ -184,7 +184,18 @@ export function ApiToken() {
   }
 
   if (cloud._clerkSession?.isSignedIn === false) {
-    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", buri.toString()).URI();
+    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", btoa(buri.toString()));
+
+    const fromApp = buri.getParam("fromApp");
+    if (fromApp) {
+      tos.setParam("fromApp", fromApp);
+    }
+
+    // const resultId = buri.getParam("result_id");
+    // if (result_id) {
+    //   tos.setParam("resultId", result_id);
+    // }
+
     console.log("tos", tos);
     return <Navigate to={tos.withoutHostAndSchema} />;
     // return <div>Not logged in:{tos}</div>;
