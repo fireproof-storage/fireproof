@@ -37,6 +37,8 @@ function MyApp() {
 
 ### Key Metadata Structures
 
+These structures manage the authentication, identity, and connection state between user interfaces and cloud backends. They handle how credentials flow from UI components to storage systems and maintain session state.
+
 *   **`config: UseFPConfig`**: The attachment configuration
     *   `attach?: ToCloudAttachable`: ⭐ **Primary cloud connection spec**
         *   `url: URI`: Cloud service endpoint 

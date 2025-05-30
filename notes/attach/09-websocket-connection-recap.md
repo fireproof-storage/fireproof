@@ -4,6 +4,8 @@ This component wraps a raw WebSocket and manages message serialization/deseriali
 
 **Key Metadata Structures & Locus:**
 
+These structures enable reliable communication between clients and cloud servers through the WebSocket transport layer. They handle message framing, transaction tracking, and protocol-specific encoding/decoding.
+
 *   **`ws: WebSocket` (constructor parameter)**: The underlying WebSocket instance. The **URL** used to create this WebSocket (externally, before passing to `WSConnection`) is critical initial metadata. This URL would contain:
     *   The WebSocket server endpoint (e.g., `wss://fireproof.storage/api/v0/...`).
     *   Potentially, query parameters carrying `tenant`, `ledger`, or an initial `token`.

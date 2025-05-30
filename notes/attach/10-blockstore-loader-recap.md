@@ -4,6 +4,8 @@ The `Loader` orchestrates data loading, committing, and manages interactions bet
 
 **Key Metadata Structures & Locus:**
 
+These structures coordinate data flow between local and remote storage systems. They manage encryption contexts, store connections, and maintain database state across synchronization boundaries.
+
 *   **`ebOpts: BlockstoreOpts` (constructor param, stored as `this.ebOpts`)**: The primary source of initial configuration.
     *   `url: URI`: Base URI for the database, expected to contain `PARAM.NAME`, `PARAM.KEY_NAME`/`PARAM.KEY` (for default encryption), `PARAM.TENANT`, `PARAM.LEDGER`.
     *   `keybag?: Partial<KeyBagOpts>`: Configuration for the `KeyBag` (e.g., Keybag's own `url`).

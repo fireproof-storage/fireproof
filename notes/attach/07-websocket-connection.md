@@ -19,6 +19,8 @@ await wsConn.send(someMessage); // Serializes and transmits
 
 ### Key Metadata Structures
 
+These structures manage network communication and message routing between clients and cloud servers. They track transaction state, handle serialization/deserialization, and ensure reliable message delivery.
+
 *   **`ws: WebSocket`**: ⭐ The underlying browser WebSocket instance
     *   The WebSocket **URL** contains critical initial metadata:
     *   Server endpoint (e.g., `wss://fireproof.storage/api/v0/...`)

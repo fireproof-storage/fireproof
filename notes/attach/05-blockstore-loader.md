@@ -6,6 +6,8 @@ The `Loader` is Fireproof's **data orchestrator**. It coordinates between local 
 
 ### Key Metadata Structures
 
+These structures coordinate how data flows between local and remote stores while maintaining cryptographic consistency. They define the configuration, connection parameters, and runtime state needed for multi-device synchronization.
+
 **BlockstoreOpts**  
 > `BlockstoreOpts` is the main configuration object for Fireproof's block storage layer. It lets you specify which storage backends to use, how encryption keys are managed, and other advanced options like logging and compaction that affect storage behavior.
 
@@ -27,6 +29,8 @@ await db.attach({
 ```
 
 ### Key Metadata Structures
+
+These structures define how the Loader orchestrates data operations across local and remote stores, ensuring consistent encryption and synchronization between devices.
 
 *   **`ebOpts: BlockstoreOpts` (constructor parameter)**: ⭐ **Primary configuration**
     *   `url: URI`: Base URI with crucial parameters:

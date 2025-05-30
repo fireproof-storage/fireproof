@@ -16,6 +16,8 @@ const cryptoKey = await keyBag.getNamedKey('myDatabaseName');
 
 ### Key Metadata Structures
 
+These structures define how encryption keys are managed, identified, and retrieved throughout the Fireproof ecosystem. They form the backbone of Fireproof's secure content-addressable storage model.
+
 *   **`KeyBagRuntime`**: The runtime configuration for key management
     *   `url: URI`: ⭐ The **primary identifier** for a Keybag instance (e.g., `indexeddb://fp-keybag`, `file:///path/to/keybag`). This URI's scheme (`indexeddb:`, `file:`) dictates the storage backend. It's derived from options, environment variables (`FP_KEYBAG_URL`), or defaults.
     *   `sthis: SuperThis`: Runtime environment access and ID generation

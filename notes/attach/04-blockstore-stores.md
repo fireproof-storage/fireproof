@@ -21,6 +21,8 @@ await dataStore.save(block); // encrypted, stored in IndexedDB
 
 ### Key Metadata Structures
 
+These structures define how data is identified, encrypted, and persisted in Fireproof's storage system. They establish the connections between database identity, encryption keys, and the actual storage locations.
+
 *   **`_url: URI` (in `BaseStoreImpl`)**:  ⭐ **Primary store identifier and configurator**
     *   **Database Identification**: Contains `PARAM.NAME` (e.g., `dbName=myDatabase`) to identify the database
     *   **Store Type**: Uses `PARAM.STORE` (e.g., `store=meta`, `store=data`) to define the store's role

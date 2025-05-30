@@ -24,6 +24,8 @@ const response = await msger.request(pullRequest, {
 
 ### Key Metadata Structures
 
+These structures define how clients establish and manage protocol-level connections with cloud services. They handle authentication, session negotiation, and capability discovery between endpoints.
+
 *   **`opts: MsgerOpts`**: ⭐ **Primary configuration**
     *   `urls: URI[]`: Potential server endpoints to try
     *   `initialGestalt?: Gestalt`: Client capabilities (protocol version, auth type)
