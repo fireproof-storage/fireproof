@@ -207,6 +207,11 @@ await dataStore.save(block); // encrypted, stored in IndexedDB
 
 The `Loader` is Fireproof's **data orchestrator**. It coordinates between local storage, remote replicas, and the KeyBag. When your app says "load this database," the Loader handles fetching blocks from appropriate stores, decrypting them, and resolving dependencies.
 
+### Key Metadata Structures
+
+**BlockstoreOpts**  
+> `BlockstoreOpts` is the main configuration object for Fireproof's block storage layer. It lets you specify which storage backends to use, how encryption keys are managed, and other advanced options like logging and compaction that affect storage behavior.
+
 ### Why This Matters
 
 For developers, the Loader is the gateway to remote synchronization. Every database operation that fetches or saves data must go through the Loader. When building features that involve multi-device or cloud replication, you'll be interacting with the Loader's `attach()` method to connect remote stores.
@@ -236,10 +241,16 @@ await db.attach({
 *   **`attachedStores: AttachedStores`**: Manages both local and remote stores
     *   Each `ActiveStore` is initialized with metadata from `ebOpts.url` or `attachable.url`
 
+**DbMeta**  
+> `DbMeta` holds runtime metadata about the database, including which encryption key is active, the current writer, and branch information. It ensures that all data operations use the correct context.
+
 *   **`DbMeta`**: ⭐ Runtime state metadata about the database
     *   `keyName?: string`: Encryption key for referenced data blocks
     *   `writer?: string`: Source identifier
     *   `branch?: string`: Branch name for versioned data
+
+**Attachable (used in Loader.attach)**  
+> The `Attachable` structure specifies how to connect to a remote store, including the remote endpoint and any relevant metadata such as tenant or ledger identifiers.
 
 *   **`Attachable` (used in `Loader.attach`)**: ⭐ Remote connection specification
     *   `url: URI`: Remote endpoint with potential metadata (tenant, ledger, etc.)
