@@ -147,10 +147,22 @@ abstract class BaseGateway {
     this.logger.Debug().Any("url", { uploadUrl, uri }).Msg("put-fetch-url");
     const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body }));
     if (rUpload.isErr()) {
-      return this.logger.Error().Url(uploadUrl, "uploadUrl").Err(rUpload).Msg("Error in put fetch").ResultError();
+      return this.logger
+        .Error()
+        .Url(uploadUrl, "uploadUrl")
+        .Err(rUpload)
+        .Msg(
+          "Failed to upload object to cloud storage - network request error. Check your network connection and cloud server status.",
+        )
+        .ResultError();
     }
     if (!rUpload.Ok().ok) {
-      return this.logger.Error().Url(uploadUrl, "uploadUrl").Http(rUpload.Ok()).Msg("Error in put fetch").ResultError();
+      return this.logger
+        .Error()
+        .Url(uploadUrl, "uploadUrl")
+        .Http(rUpload.Ok())
+        .Msg("Failed to upload object to cloud storage - server rejected the request. Verify your authentication and permissions.")
+        .ResultError();
     }
     if (uri.getParam("testMode")) {
       conn.citem.trackPuts.add(uri.toString());
@@ -163,14 +175,28 @@ abstract class BaseGateway {
     this.logger.Debug().Any("url", { downloadUrl, uri }).Msg("get-fetch-url");
     const rDownload = await exception2Result(async () => fetch(downloadUrl.toString(), { method: "GET" }));
     if (rDownload.isErr()) {
-      return this.logger.Error().Url(downloadUrl, "uploadUrl").Err(rDownload).Msg("Error in get downloadUrl").ResultError();
+      return this.logger
+        .Error()
+        .Url(downloadUrl, "downloadUrl")
+        .Err(rDownload)
+        .Msg(
+          "Failed to retrieve download URL for cloud object - network request error. Check your network connection and cloud server status.",
+        )
+        .ResultError();
     }
     const download = rDownload.Ok();
     if (!download.ok) {
       if (download.status === 404) {
         return Result.Err(new NotFoundError("Not found"));
       }
-      return this.logger.Error().Url(downloadUrl, "uploadUrl").Err(rDownload).Msg("Error in get fetch").ResultError();
+      return this.logger
+        .Error()
+        .Url(downloadUrl, "downloadUrl")
+        .Err(rDownload)
+        .Msg(
+          "Failed to download object from cloud storage - network request error. Check your network connection and verify the object exists.",
+        )
+        .ResultError();
     }
     return Result.Ok(to_uint8(await download.arrayBuffer()));
   }
@@ -180,14 +206,28 @@ abstract class BaseGateway {
     this.logger.Debug().Any("url", { deleteUrl, uri }).Msg("get-fetch-url");
     const rDelete = await exception2Result(async () => fetch(deleteUrl.toString(), { method: "DELETE" }));
     if (rDelete.isErr()) {
-      return this.logger.Error().Url(deleteUrl, "deleteUrl").Err(rDelete).Msg("Error in get deleteURL").ResultError();
+      return this.logger
+        .Error()
+        .Url(deleteUrl, "deleteUrl")
+        .Err(rDelete)
+        .Msg(
+          "Failed to retrieve delete URL for cloud object - network request error. Check your network connection and cloud server status.",
+        )
+        .ResultError();
     }
     const download = rDelete.Ok();
     if (!download.ok) {
       if (download.status === 404) {
         return Result.Err(new NotFoundError("Not found"));
       }
-      return this.logger.Error().Url(deleteUrl, "deleteUrl").Err(rDelete).Msg("Error in del fetch").ResultError();
+      return this.logger
+        .Error()
+        .Url(deleteUrl, "deleteUrl")
+        .Err(rDelete)
+        .Msg(
+          "Failed to delete object from cloud storage - network request error. Check your permissions and verify the object exists.",
+        )
+        .ResultError();
     }
     return Result.Ok(undefined);
   }
@@ -597,12 +637,24 @@ export class FireproofCloudGateway implements SerdeGateway {
     }
     const rConn = await this.getCloudConnectionItem(ctx.loader.logger, uri);
     if (rConn.conn.isErr()) {
-      return this.logger.Error().Err(rConn).Msg("Error in getCloudConnection").ResultError();
+      return this.logger
+        .Error()
+        .Err(rConn)
+        .Msg(
+          "Failed to close cloud connection - connection retrieval error. The connection may already be closed or was never properly established.",
+        )
+        .ResultError();
     }
     const conn = rConn.conn.Ok();
     const rAuth = await authTypeFromUri(this.logger, uri);
     if (rAuth.isErr()) {
-      this.logger.Error().Err(rAuth).Msg("Error in authTypeFromUri").ResultError();
+      this.logger
+        .Error()
+        .Err(rAuth)
+        .Msg(
+          "Failed to determine authentication type from URI during connection close. This may prevent proper cleanup of cloud resources.",
+        )
+        .ResultError();
     } else {
       await conn.close(buildReqClose(this.sthis, rAuth.Ok(), conn.conn));
     }
@@ -641,14 +693,30 @@ export class FireproofCloudGateway implements SerdeGateway {
     const item = this.#connectionURIs.get(this.matchURI(uri));
     const bestMatch = item.value;
     if (!item.ready || !bestMatch) {
-      return { conn: logger.Error().Url(uri).Msg("Connection not ready").ResultError(), citem: {} as ConnectionItem };
+      return {
+        conn: logger
+          .Error()
+          .Url(uri)
+          .Msg(
+            "Cloud connection not ready - attempted to use connection before initialization complete. This may indicate a timing issue in the application.",
+          )
+          .ResultError(),
+        citem: {} as ConnectionItem,
+      };
     }
     const rConn = await bestMatch.connection.once(async () => {
       const rParams = uri.getParamsResult({
         protocol: "https",
       });
       if (rParams.isErr()) {
-        return this.logger.Error().Url(uri).Err(rParams).Msg("getCloudConnection:err").ResultError<VirtualConnected>();
+        return this.logger
+          .Error()
+          .Url(uri)
+          .Err(rParams)
+          .Msg(
+            "Failed to establish cloud connection - could not parse connection parameters. Verify your cloud configuration URLs and authentication settings.",
+          )
+          .ResultError<VirtualConnected>();
       }
       const params = rParams.Ok();
       const rAuth = await authTypeFromUri(this.logger, uri);
