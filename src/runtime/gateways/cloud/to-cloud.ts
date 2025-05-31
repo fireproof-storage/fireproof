@@ -172,7 +172,13 @@ class TokenObserver {
     if (this.currentTokenAndClaim) {
       return this.currentTokenAndClaim;
     }
-    throw logger.Error().Msg("Token not found").AsError();
+    throw logger
+      .Error()
+      .Str("strategy", this.opts.strategy.constructor.name)
+      .Msg(
+        "Authentication token not found - cloud operations will fail. This may indicate the token has expired, was never provided, or the authentication flow was interrupted.",
+      )
+      .AsError();
   }
 
   async reset() {

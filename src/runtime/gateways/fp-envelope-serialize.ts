@@ -103,7 +103,12 @@ export async function fpSerialize<T>(
     case FPEnvelopeTypes.META:
       return encoder.meta(sthis, await dbMetaEvent2Serialized(sthis, (env as FPEnvelopeMeta).payload));
     default:
-      throw sthis.logger.Error().Str("type", env.type).Msg("unsupported store").AsError();
+      throw sthis.logger
+        .Error()
+        .Str("type", env.type)
+        .Str("supportedTypes", Object.values(FPEnvelopeTypes).join(", "))
+        .Msg("Unsupported envelope type during serialization. The envelope type is not recognized by any available encoder.")
+        .AsError();
   }
 }
 
@@ -233,6 +238,14 @@ export async function fpDeserialize<S>(
         FPEnvelope<S>
       >;
     default:
-      return sthis.logger.Error().Str("store", url.getParam(PARAM.STORE)).Msg("unsupported store").ResultError();
+      return sthis.logger
+        .Error()
+        .Str("store", url.getParam(PARAM.STORE))
+        .Str("url", url.toString())
+        .Str("supportedTypes", ["data", "wal", "meta"].join(", "))
+        .Msg(
+          "Unsupported store type during deserialization. The requested store type cannot be processed by any available decoder.",
+        )
+        .ResultError();
   }
 }
