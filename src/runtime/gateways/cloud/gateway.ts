@@ -309,10 +309,22 @@ class CurrentMeta {
             }
           }
         }
-        ctx.loader.logger.Error().Msg("Error bind should not end");
+        ctx.loader.logger
+          .Error()
+          .Str("stream", "metadata")
+          .Str("requestKey", key)
+          .Msg(
+            "Metadata stream unexpectedly terminated - cloud synchronization may be interrupted. This could be due to network issues, token expiration, or server disconnection.",
+          );
       })
       .catch((err) => {
-        ctx.loader.logger.Error().Err(err).Msg("Error in bindGetMeta");
+        ctx.loader.logger
+          .Error()
+          .Err(err)
+          .Str("requestKey", key)
+          .Msg(
+            "Failed to bind metadata listener - cloud metadata synchronization error. Check network connectivity and authentication status.",
+          );
       });
     // console.log("cloud-get-3")
     return this.currentMeta.get(key).once(async () => {
@@ -323,7 +335,11 @@ class CurrentMeta {
       }
       const rDbMeta = this.value;
       if (!rDbMeta) {
-        return ctx.loader.logger.Error().Msg("No value").ResultError();
+        return ctx.loader.logger
+          .Error()
+          .Str("requestKey", key)
+          .Msg("No metadata value available after stream completed - synchronization may be incomplete or failed to initialize")
+          .ResultError();
       }
       return rDbMeta;
     });
