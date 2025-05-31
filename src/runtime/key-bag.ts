@@ -37,7 +37,9 @@ class keyWithFingerPrint implements KeyWithFingerPrint {
     } else if (typeof material === "string") {
       this.#material = material;
     } else {
-      throw new Error("material must be string or Uint8Array");
+      throw new Error(
+        `Invalid encryption key material format: expected string or Uint8Array but got ${typeof material}. This may indicate corrupted key data or an incorrect key generation process.`,
+      );
     }
   }
 
@@ -362,7 +364,14 @@ export class KeyBag {
       if (!named && failIfNotFound) {
         // do not cache
         this._namedKeyCache.unget(name);
-        return this.logger.Debug().Str("id", id).Str("name", name).Msg("failIfNotFound getNamedKey").ResultError();
+        return this.logger
+          .Error()
+          .Str("id", id)
+          .Str("name", name)
+          .Msg(
+            "Encryption key not found. The requested named key does not exist in the key storage and 'failIfNotFound' was set to true.",
+          )
+          .ResultError();
       }
 
       const kp = new keysByFingerprint(this, name);
@@ -375,7 +384,15 @@ export class KeyBag {
         } else if (material instanceof Uint8Array) {
           keyMaterial = material;
         } else {
-          return this.logger.Error().Msg("material must be string or Uint8Array").ResultError();
+          return this.logger
+            .Error()
+            .Str("name", name)
+            .Str("providedType", typeof material)
+            .Str("expectedTypes", "string or Uint8Array")
+            .Msg(
+              "Invalid encryption key material format during key retrieval. The key material must be provided as either a base58 encoded string or a Uint8Array.",
+            )
+            .ResultError();
         }
       }
       const res = await kp.upsert(keyMaterial, true);

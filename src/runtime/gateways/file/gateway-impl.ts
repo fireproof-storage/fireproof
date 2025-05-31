@@ -24,7 +24,15 @@ export class FileGateway implements Gateway {
         await this.fs.writefile(sthis.pathOps.join(path, "version"), FILESTORE_VERSION);
         return FILESTORE_VERSION;
       } else if (!vFileStat.isFile()) {
-        throw sthis.logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
+        throw sthis.logger
+          .Error()
+          .Str("file", vFile)
+          .Str("expectedType", "file")
+          .Str("actualType", "directory")
+          .Msg(
+            `File storage version error - version marker is unexpectedly a directory instead of a file. This may indicate file system corruption or unauthorized modifications.`,
+          )
+          .AsError();
       }
       const v = await this.fs.readfile(vFile);
       const vStr = sthis.txt.decode(v);
@@ -61,7 +69,14 @@ export class FileGateway implements Gateway {
 
   getFilePath(url: URI, sthis: SuperThis): string {
     const key = url.getParam(PARAM.KEY);
-    if (!key) throw sthis.logger.Error().Url(url).Msg(`key not found`).AsError();
+    if (!key)
+      throw sthis.logger
+        .Error()
+        .Url(url)
+        .Msg(
+          `Key parameter missing from file URI - cannot determine file path. This may indicate a malformed request or internal URI generation error.`,
+        )
+        .AsError();
     // const urlGen = url.getParam(PARAM.URL_GEN);
     // switch (urlGen) {
     //   case "default":
@@ -113,7 +128,12 @@ export class FileGateway implements Gateway {
       files = await this.fs.readdir(filepath);
     } catch (e: unknown) {
       if (!isNotFoundError(e)) {
-        throw sthis.logger.Error().Err(e).Str("dir", filepath).Msg("destroy:readdir").AsError();
+        throw sthis.logger
+          .Error()
+          .Err(e)
+          .Str("dir", filepath)
+          .Msg("Failed to read directory during file store destruction. Check file system permissions and path validity.")
+          .AsError();
       }
     }
     for (const file of files) {
@@ -122,7 +142,14 @@ export class FileGateway implements Gateway {
         await this.fs.unlink(pathed);
       } catch (e: unknown) {
         if (!isNotFoundError(e)) {
-          throw sthis.logger.Error().Err(e).Str("file", pathed).Msg("destroy:unlink").AsError();
+          throw sthis.logger
+            .Error()
+            .Err(e)
+            .Str("file", pathed)
+            .Msg(
+              "Failed to delete file during file store destruction. Check file permissions, if file is locked by another process, or still in use.",
+            )
+            .AsError();
         }
       }
     }

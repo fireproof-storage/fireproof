@@ -16,11 +16,11 @@ interface IDBConn {
 }
 const onceIndexedDB = new KeyedResolvOnce<IDBConn>();
 
-function sanitzeKey(key: string | string[]): string | string[] {
-  if (key.length === 1) {
-    key = key[0];
-  }
-  return key;
+function sanitzeKey(key: string): string {
+  // Sanitize IndexedDB keys to avoid invalid character issues
+  // Replace sequences of slashes with a single dash and multiple dots with a single dot
+  const sanitized = key.replace(/\/+/g, "-").replace(/\.[.]+/g, ".");
+  return sanitized;
 }
 
 async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
@@ -100,21 +100,39 @@ export class IndexedDBGateway implements bs.Gateway {
   }
   async destroy(baseUrl: URI, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
-      // return deleteDB(getIndexedDBName(this.url).fullDb);
       const type = getStore(baseUrl, sthis, joinDBName).name;
       const idb = this._db;
-      const trans = idb.transaction(type, "readwrite");
-      const object_store = trans.objectStore(type);
-      // console.log("IndexedDBDataStore:destroy", type);
-      const toDelete = [];
-      for (let cursor = await object_store.openCursor(); cursor; cursor = await cursor.continue()) {
-        toDelete.push(cursor.primaryKey);
+
+      try {
+        const trans = idb.transaction(type, "readwrite");
+        const object_store = trans.objectStore(type);
+        sthis.logger.Debug().Str("store", type).Msg("Clearing IndexedDB object store");
+
+        const toDelete = [];
+        for (let cursor = await object_store.openCursor(); cursor; cursor = await cursor.continue()) {
+          toDelete.push(cursor.primaryKey);
+        }
+
+        if (toDelete.length > 0) {
+          sthis.logger.Debug().Int("count", toDelete.length).Str("store", type).Msg("Deleting IndexedDB records");
+          for (const key of toDelete) {
+            await trans.db.delete(type, key);
+          }
+        }
+
+        await trans.done;
+        sthis.logger.Debug().Str("store", type).Msg("IndexedDB store destruction completed");
+      } catch (err) {
+        throw sthis.logger
+          .Error()
+          .Err(err)
+          .Str("store", type)
+          .Str("dbName", this._db.name)
+          .Msg(
+            "Failed to clear IndexedDB store. This may be due to quota limitations, permissions, or browser storage constraints.",
+          )
+          .AsError();
       }
-      for (const key of toDelete) {
-        await trans.db.delete(type, key);
-      }
-      await trans.done;
-      // console.log("IndexedDBDataStore:destroy-completed", type);
     });
   }
 
