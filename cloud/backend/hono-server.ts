@@ -98,30 +98,9 @@ export interface HonoServerImpl {
 // }
 
 export abstract class HonoServerBase implements HonoServerImpl {
-  // readonly _gs: Gestalt;
-  // readonly sthis: SuperThis;
-  // readonly logger: Logger;
-  // readonly metaMerger: MetaMerger;
-  // readonly headers: HttpHeader;
-  // readonly wsRoom: WSRoom;
   readonly id: string;
-  constructor(
-    id: string,
-    // sthis: SuperThis,
-    // logger: Logger,
-    // gs: Gestalt,
-    // sqlDb: SQLDatabase,
-    // wsRoom: WSRoom,
-    // headers?: HttpHeader
-  ) {
-    // this.logger = logger;
-    // this._gs = gs;
-    // this.sthis = sthis;
-    // this.wsRoom = wsRoom;
-    // this.metaMerger = new MetaMerger(id, sqlDb);
-    // this.headers = headers ? headers.Clone().Merge(CORS) : CORS.Clone();
+  constructor(id: string) {
     this.id = id;
-    // console.log("HonoServerBase-ctor", this.id, sqlDb);
   }
 
   abstract upgradeWebSocket(
@@ -134,7 +113,6 @@ export abstract class HonoServerBase implements HonoServerImpl {
     }
     // console.log("validateAuth-0", auth.params.jwk, ctx.stsService);
     const rAuth = await ctx.stsService.validate(auth.params.jwk);
-    // console.log("validateAuth-1", auth.params.jwk, ctx.stsService, rAuth);
     if (rAuth.isErr()) {
       return Result.Err(rAuth);
     }
@@ -151,13 +129,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
   start(ctx: ExposeCtxItem<WSRoom>): Promise<HonoServerImpl> {
     metaMerger(ctx);
     return Promise.resolve(this);
-    // .createSchema(drop)
-    // .then(() => this);
   }
-
-  // gestalt(): Gestalt {
-  //   return this._gs;
-  // }
 
   async handleReqPutMeta(ctx: MsgDispatcherCtx, msg: MsgWithConn<ReqPutMeta>): Promise<MsgWithError<ResPutMeta>> {
     const rUrl = await buildRes({ method: "PUT", store: "meta" }, "resPutMeta", ctx, msg, this);

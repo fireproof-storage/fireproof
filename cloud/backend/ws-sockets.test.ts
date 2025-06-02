@@ -66,13 +66,22 @@ describe("test multiple connections", () => {
     const ready = new Future<void>();
     let total = (connections * (connections + 1)) / 2;
     // const recvSet = new Set(conns.map((c) => c.conn.reqId));
+    const reOpenOk = new Future<void>();
+    let waitOpen = 0;
     for (const rC of conns) {
       const c = rC.Ok();
       const stream = c.bind(ps.cloud.buildReqOpen(sthis, auth.authType, {}), {
         waitFor: () => true, // MsgIsResOpen, // All
       });
+      // console.log("Sending an open request", c.id, c.conn);
 
       consumeStream(stream, (m) => {
+        if (ps.cloud.MsgIsResOpen(m)) {
+          waitOpen++;
+          if (waitOpen >= conns.length) {
+            reOpenOk.resolve();
+          }
+        }
         if (MsgIsResChat(m)) {
           total--;
           if (total === 0) {
@@ -85,10 +94,11 @@ describe("test multiple connections", () => {
       });
     }
 
+    await reOpenOk.asPromise();
+
     const rest = [...conns];
     for (const rC of conns) {
       const c = rC.Ok();
-      // console.log("Sending a chat request", rest.length, conns.length);
       const act = await c.request(buildReqChat(sthis, auth.authType, {}, "Hello"), {
         waitFor: MsgIsResChat,
       });
