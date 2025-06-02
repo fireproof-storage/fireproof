@@ -1,10 +1,10 @@
 import { ensureSuperThis } from "@fireproof/core";
 import { run, subcommands } from "cmd-ts";
-import { GenerateKeyPairCmd } from "../cloud/cli-cloud-token-keypair.js";
+import { keyCmd } from "../cloud/cli-cloud-token-key-cmd.js";
 import { writeEnvCmd } from "../cloud/backend/cf-d1/cli-write-env.js";
+import { preSignedUrlCmd } from "../cloud/cli-pre-signed-url.js";
 
 import { dotenv } from "zx";
-import { preSignedUrlCmd } from "../cloud/cli-pre-signed-url.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -14,7 +14,7 @@ import { preSignedUrlCmd } from "../cloud/cli-pre-signed-url.js";
     description: "fireproof cli",
     version: "1.0.0",
     cmds: {
-      generateKey: GenerateKeyPairCmd,
+      key: keyCmd(sthis),
       writeEnv: writeEnvCmd(sthis),
       preSigned: preSignedUrlCmd(sthis),
     },

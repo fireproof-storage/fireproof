@@ -1,7 +1,6 @@
 import { BuildURI, Logger } from "@adviser/cement";
 import { rt, SuperThis } from "@fireproof/core";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core/react";
-import { TokenAndClaims } from "../runtime/gateways/cloud/to-cloud.js";
 
 export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
   fpIframeOverlay() {
@@ -77,7 +76,7 @@ export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     document.body.appendChild(this.overlayDiv(deviceId, redirectCtx.dashboardURI));
   }
-  async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<TokenAndClaims | undefined> {
+  async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     // const uri = URI.from(window.location.href);
     // const uriFpToken = uri.getParam(redirectCtx.tokenParam);
@@ -90,7 +89,7 @@ export class IframeStrategy implements rt.gw.cloud.TokenStrategie {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<TokenAndClaims | undefined> {
+  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
     // throw new Error("waitForToken not implemented");
     return new Promise(() => {
       /* */

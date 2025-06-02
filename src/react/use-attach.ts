@@ -1,12 +1,10 @@
 /// <reference lib="dom" />
 
-import { Database, ensureSuperThis, hashString, rt, SuperThis } from "@fireproof/core";
+import { Database, ensureSuperThis, hashString, rt, SuperThis, ps } from "@fireproof/core";
 import { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
 import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
-import { ToCloudAttachable, TokenAndClaims } from "../runtime/gateways/cloud/to-cloud.js";
 import { decodeJwt } from "jose/jwt/decode";
-import { FPCloudClaim } from "../protocols/cloud/msg-types.js";
 
 export const WebCtx = "webCtx";
 
@@ -14,7 +12,7 @@ export type ToCloudParam = Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy"> &
   Partial<WebToCloudCtx> & { readonly strategy?: rt.gw.cloud.TokenStrategie; readonly context?: AppContext };
 
 class WebCtxImpl implements WebToCloudCtx {
-  readonly onActions = new Set<(token?: TokenAndClaims) => void>();
+  readonly onActions = new Set<(token?: rt.gw.cloud.TokenAndClaims) => void>();
   readonly dashboardURI: string;
   readonly tokenApiURI: string;
   // readonly uiURI: string;
@@ -54,13 +52,13 @@ class WebCtxImpl implements WebToCloudCtx {
     this.keyBag = this.keyBag ?? (await db.ledger.opts.keyBag.getBagProvider());
   }
 
-  async onAction(token?: TokenAndClaims) {
+  async onAction(token?: rt.gw.cloud.TokenAndClaims) {
     for (const action of this.onActions.values()) {
       action(token);
     }
   }
 
-  onTokenChange(on: (token?: TokenAndClaims) => void) {
+  onTokenChange(on: (token?: rt.gw.cloud.TokenAndClaims) => void) {
     if (this.opts.onTokenChange) {
       return this.opts.onTokenChange(on);
     }
@@ -74,7 +72,7 @@ class WebCtxImpl implements WebToCloudCtx {
     };
   }
 
-  readonly _tokenAndClaims = new ResolveOnce<TokenAndClaims>();
+  readonly _tokenAndClaims = new ResolveOnce<rt.gw.cloud.TokenAndClaims>();
 
   async token() {
     if (this.opts.token) {
@@ -93,7 +91,7 @@ class WebCtxImpl implements WebToCloudCtx {
       } else {
         return undefined;
       }
-      const claims = decodeJwt(token) as FPCloudClaim;
+      const claims = decodeJwt(token) as ps.cloud.FPCloudClaim;
       return {
         token,
         claims,
@@ -114,7 +112,7 @@ class WebCtxImpl implements WebToCloudCtx {
     this.onAction();
   }
 
-  async setToken(token: TokenAndClaims) {
+  async setToken(token: rt.gw.cloud.TokenAndClaims) {
     if (this.opts.setToken) {
       return this.opts.setToken(token);
     }
@@ -160,7 +158,7 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
           // const id = database.sthis.nextId().str;
           setAttachState((prev) => ({ ...prev, state: "attaching" }));
 
-          async function prepareWebctx(attachable: ToCloudAttachable) {
+          async function prepareWebctx(attachable: rt.gw.cloud.ToCloudAttachable) {
             const webCtx = attachable.opts.context.get<WebToCloudCtx>(WebCtx);
             if (!webCtx) {
               throw database.logger.Error().Msg("WebCtx not found").AsError();

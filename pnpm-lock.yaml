@@ -14,7 +14,7 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ~0.4.15
+        specifier: ^0.4.15
         version: 0.4.15(typescript@5.8.3)
       '@ipld/car':
         specifier: ^5.4.1
