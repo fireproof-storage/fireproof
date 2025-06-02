@@ -219,6 +219,7 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<ps.cloud.TokenFor
     sthis.env.get(rt.sts.envKeyDefaults.SECRET) ??
     "z33KxHvFS3jLz72v9DeyGBqo79qkbpv5KNP43VKUKSh1fcLb629pFTFyiJEosZ9jCrr8r9TE44KXCPZ2z1FeWGsV1N5gKjGWmZvubUwNHPynxNjCYy4GeYoQ8ukBiKjcPG22pniWCnRMwZvueUBkVk6NdtNY1uwyPk2HAGTsfrw5CBJvTcYsaFeG11SKZ9Q55Xk1W2p4gtZQHzkYHdfQQhgZ73Ttq7zmFoms73kh7MsudYzErx";
   const privateJWK = await rt.sts.env2jwk(privateJWKStr, "ES256", sthis);
+  // console.log(">>>>>", publicJWKStr, privateJWKStr);
 
   sthis.env.set(rt.sts.envKeyDefaults.PUBLIC, publicJWKStr);
   sthis.env.set(rt.sts.envKeyDefaults.SECRET, privateJWKStr);

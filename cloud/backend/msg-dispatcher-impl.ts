@@ -131,10 +131,7 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
       fn: (ctx, msg: MsgWithConn<ReqChat>) => {
         const connItems = ctx.wsRoom.getConns(msg.conn);
         const ci = connItems.map((i) => i.conns).flat();
-        // console.log("ReqChat", msg.conn, connItems.length);
-        // if (!ci) {
-        //   return buildErrorMsg(ctx, msg, new Error("missing connection in chat"));
-        // }
+
         for (const item of connItems) {
           for (const conn of item.conns) {
             if (qsidEqual(conn, msg.conn)) {

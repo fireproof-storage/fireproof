@@ -118,7 +118,7 @@ export class FPRoomDurableObject extends DurableObject<Env> {
   }
 
   webSocketClose(ws: WebSocket, code: number, reason: string): void | Promise<void> {
-    const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onClose(id, { code, reason } as CloseEvent, ws);
+    const dat = ws.deserializeAttachment();
+    this.env.FP_EXPOSE_CTX.get(dat.id).ctx.wsRoom.events.onClose(dat.id, { code, reason } as CloseEvent, ws);
   }
 }

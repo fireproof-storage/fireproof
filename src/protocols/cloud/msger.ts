@@ -28,7 +28,7 @@ import {
 } from "./msg-types.js";
 import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
-import { SuperThis } from "../../types.js";
+import type { SuperThis } from "../../types.js";
 import { ensureLogger, sleep } from "../../utils.js";
 import pLimit from "p-limit";
 
@@ -612,16 +612,14 @@ export class VirtualConnected {
   readonly activeBinds = new Map<string, ActiveStream>();
 
   private async handleBindRealConn(realConn: MsgRawConnection, req: MsgWithOptionalConn, as: ActiveStream): Promise<void> {
-    const stream = realConn.bind<MsgBase, MsgWithConn>(
-      { ...as.bind.msg, auth: req.auth, conn: { ...this.conn, ...req.conn } },
-      as.bind.opts,
-    );
+    const conn = { ...this.conn, ...req.conn } satisfies QSId;
+    const stream = realConn.bind<MsgBase, MsgWithConn>({ ...as.bind.msg, auth: req.auth, conn }, as.bind.opts);
     for await (const msg of stream) {
       // if (!MsgIsTid(msg, req.tid)) {
       //   break
       // }
       try {
-        if (MsgIsConnected(msg, this.conn)) {
+        if (MsgIsConnected(msg, this.conn) || MsgIsConnected(msg, conn)) {
           as.controller?.enqueue(msg);
         }
       } catch (err) {

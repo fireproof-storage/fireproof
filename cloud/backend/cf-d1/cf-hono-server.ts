@@ -38,7 +38,9 @@ function webSocket2WSContextInit(ws: WebSocket): WSContextInit<WebSocket> {
     send: (data: string | ArrayBuffer, _options: SendOptions): void => {
       ws.send(data);
     },
-    close: (code?: number, reason?: string): void => ws.close(code, reason),
+    close: (code?: number, reason?: string): void => {
+      return ws.close(code, reason);
+    },
     raw: ws,
     readyState: ws.readyState as WSReadyState,
     url: ws.url,
