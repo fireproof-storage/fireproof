@@ -106,8 +106,9 @@ describe("Connection", () => {
       // sthis.env.sets((await resolveToml()).env as unknown as Record<string, string>);
     });
     it("reconnect", async () => {
-      const rC = await Msger.connect(sthis, style.ok.url(), msgP, {
-        reqId: "req-reconnect-test",
+      const rC = await Msger.connect(sthis, style.ok.url(), {
+        msgerParam: msgP,
+        conn: { reqId: "req-reconnect-test" },
       });
       expect(rC.isOk()).toBeTruthy();
       const c = rC.Ok(); // .attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
@@ -179,7 +180,7 @@ describe("Connection", () => {
         //   openWS: async () => r,
         // }));
 
-        const rC = await Msger.connect(sthis, style.ok.url(), msgP, qOpen.conn);
+        const rC = await Msger.connect(sthis, style.ok.url(), { msgerParam: msgP, conn: qOpen.conn });
 
         // auth.authType, r, { reqId: "req-open-testx" }));
         expect(rC.isOk()).toBeTruthy();
@@ -255,8 +256,11 @@ describe("Connection", () => {
     });
 
     it("open", async () => {
-      const rC = await Msger.connect(sthis, style.ok.url(), msgP, {
-        reqId: "req-open-testy",
+      const rC = await Msger.connect(sthis, style.ok.url(), {
+        msgerParam: msgP,
+        conn: {
+          reqId: "req-open-testy",
+        },
       });
       expect(rC.isOk()).toBeTruthy();
       const c = rC.Ok(); //.attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
@@ -278,7 +282,7 @@ describe("Connection", () => {
       let gwCtx: GwCtx;
       let conn: ps.cloud.VirtualConnected;
       beforeAll(async () => {
-        const rC = await Msger.connect(sthis, style.ok.url(), msgP, qOpen.conn);
+        const rC = await Msger.connect(sthis, style.ok.url(), { msgerParam: msgP, conn: qOpen.conn });
         expect(rC.isOk()).toBeTruthy();
         conn = rC.Ok(); // .attachAuth(() => Promise.resolve(Result.Ok(auth.authType)));
 

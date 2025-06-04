@@ -97,7 +97,7 @@ it("queued-raw-connection", async () => {
 
   const vconn = new ps.cloud.VirtualConnected(sthis, {
     curl: "http://localhost:8080",
-    imsgP: msgP,
+    msgerParams: msgP,
     openWSorHttp: {
       openHttp: async function (): Promise<Result<ps.cloud.MsgRawConnection>> {
         return Result.Ok(
@@ -361,12 +361,8 @@ describe("retry-connection", () => {
   let wsMock: MockWSConnection;
   let connected: ps.cloud.VirtualConnected;
   beforeEach(async () => {
-    const rMsc = await ps.cloud.Msger.connect(
-      sthis,
-      "http://localhost:8080",
-      {},
-      {},
-      {
+    const rMsc = await ps.cloud.Msger.connect(sthis, "http://localhost:8080", {
+      mowh: {
         openHttp: async function (
           sthis: SuperThis,
           urls: URI[],
@@ -388,7 +384,7 @@ describe("retry-connection", () => {
           return Result.Ok(wsMock);
         },
       },
-    );
+    });
 
     expect(rMsc.isOk()).toBe(true);
     connected = rMsc.unwrap();
