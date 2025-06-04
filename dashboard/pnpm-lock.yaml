@@ -26,8 +26,8 @@ importers:
         specifier: ^5.25.5
         version: 5.31.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@fireproof/core':
-        specifier: ^v0.21.0-dev-preview-5
-        version: 0.21.0-dev-preview-6(@adviser/cement@0.4.15(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@19.1.0)
+        specifier: v0.20.5-dev-preview-8
+        version: 0.20.5-dev-preview-8(@adviser/cement@0.4.15(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@19.1.0)
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1040,8 +1040,8 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.21.0-dev-preview-6':
-    resolution: {integrity: sha512-XqlNNfjqqtdmnAPVWQ4YGtwfDNpbBl0tFEQ//9dcs4VnQPfHDFENllihwj+IH+E1k09n5tRcQchLyKTpD34yIw==}
+  '@fireproof/core@0.20.5-dev-preview-8':
+    resolution: {integrity: sha512-C/wHmGLnE7ZmAf7iiLmWpnDoqarxmf+Cwxc/ojV6iYHYT2/QT2QSHSqeuFcSSM07ham/6ndwVy03QkHGXun3lw==}
     hasBin: true
     peerDependencies:
       '@adviser/cement': ~0.4.2
@@ -4453,7 +4453,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.21.0-dev-preview-6(@adviser/cement@0.4.15(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@19.1.0)':
+  '@fireproof/core@0.20.5-dev-preview-8(@adviser/cement@0.4.15(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@19.1.0)':
     dependencies:
       '@adviser/cement': 0.4.15(typescript@5.8.3)
       '@fireproof/vendor': 2.0.1
