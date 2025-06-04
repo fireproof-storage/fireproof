@@ -7,11 +7,12 @@
     "test": "vitest --run --testTimeout=90000"
   },
   "devDependencies": {
-    "playwright": "^1.51.0",
-    "playwright-chromium": "^1.51.0",
-    "@vitest/browser": "^3.0.9",
-    "@vitest/ui": "^3.0.9",
-    "vitest": "^3.0.9"
+    "typescript": "^5.8.3",
+    "playwright": "^1.52.0",
+    "playwright-chromium": "^1.52.0",
+    "@vitest/browser": "^3.2.1",
+    "@vitest/ui": "^3.2.1",
+    "vitest": "^3.2.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "msw", "playwright-chromium"]
