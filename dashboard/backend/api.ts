@@ -1,6 +1,6 @@
 import { Result } from "@adviser/cement";
 import { SuperThis, ps, rt } from "@fireproof/core";
-import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/expressions";
+import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose";
 import {
