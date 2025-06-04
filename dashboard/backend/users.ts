@@ -3,7 +3,7 @@ import { ps } from "@fireproof/core";
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
 import { queryCondition, toUndef } from "./sql-helper.ts";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, and, inArray } from "drizzle-orm/expressions";
+import { eq, and, inArray } from "drizzle-orm/sql/expressions";
 
 type QueryUser = ps.dashboard.QueryUser;
 type User = ps.dashboard.User;

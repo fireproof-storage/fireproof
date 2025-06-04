@@ -1,4 +1,4 @@
-import { and, eq, or } from "drizzle-orm/expressions";
+import { and, eq, or } from "drizzle-orm/sql/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { Queryable, QueryUser } from "./fp-dash-types.ts";
 
