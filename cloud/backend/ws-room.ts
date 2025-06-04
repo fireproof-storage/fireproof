@@ -1,6 +1,6 @@
 import { ps } from "@fireproof/core";
 
-import { WSContextWithId } from "./hono-server.js";
+import { ExposeCtxItem, WSContextWithId } from "./hono-server.js";
 import { ConnItem } from "./msg-dispatch.js";
 
 type QSId = ps.cloud.QSId;
@@ -12,6 +12,7 @@ export interface WSRoom {
 
   getConns(conn: QSId): ConnItem[];
   removeConn(...conns: QSId[]): void;
-  addConn(ws: WSContextWithId<unknown>, conn: QSId): QSId;
+  // addConn<T extends WSRoom, W extends WSContextInit<S>, S>(ctx: ExposeCtxItem<T>, ws: WSContextWithId<W>, conn: QSId): QSId;
+  addConn<T extends WSRoom, WS>(ctx: ExposeCtxItem<T>, ws: WSContextWithId<WS> | undefined, conn: QSId): QSId;
   isConnected(msg: MsgBase): msg is MsgWithConn<MsgBase>;
 }
