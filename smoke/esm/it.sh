@@ -76,7 +76,7 @@ EOF
 
 pnpm install
 pnpm run test
-deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
+pnpm exec deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
 
 if [ -z "$NO_CLEANUP" ]
 then
