@@ -58,7 +58,7 @@
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.4.7",
     "drizzle-kit": "0.30.6",
-    "drizzle-orm": "^0.40.0",
+    "drizzle-orm": "^0.44.2",
     "eslint": "^9.16.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "5.2.0",
