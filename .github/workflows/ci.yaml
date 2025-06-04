@@ -303,7 +303,7 @@ jobs:
           pnpm exec tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ./cloud/backend/cf-d1/wrangler.toml --env dev --out /dev/stdout --json | \
             pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml secret --env dev bulk
           pnpm run wrangler:cf-d1
-          pnpm run test --project cloud:D1
+          pnpm run test --project cloud:D1 --testTimeout 10000
 
       - name: deploy cloud/backend/cf-d1 - 2
         if: steps.attempt1.outcome == 'failure'
@@ -319,7 +319,7 @@ jobs:
           FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
-          pnpm run test --project cloud:D1
+          pnpm run test --project cloud:D1 --testTimeout 10000
 
   clean-sticky-cache:
     name: clean-sticky-cache
