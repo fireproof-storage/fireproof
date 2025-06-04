@@ -43,7 +43,7 @@ export interface ConnItem<T = unknown> {
   readonly id: string;
   readonly conns: QSId[];
   touched: Date;
-  readonly ws: WSContextWithId<T>;
+  readonly ws?: WSContextWithId<T>;
 }
 
 // const connManager = new ConnectionManager();
@@ -59,7 +59,7 @@ export interface MsgDispatcherCtx extends ExposeCtxItemWithImpl<WSRoom> {
   readonly impl: HonoServerImpl;
   readonly stsService: rt.sts.SessionTokenService;
   // readonly auth: AuthFactory;
-  readonly ws: WSContextWithId<unknown>;
+  readonly ws?: WSContextWithId<unknown>;
 }
 
 export interface MsgDispatchItem<S extends MsgBase, Q extends MsgBase> {
@@ -114,7 +114,10 @@ export class MsgDispatcher {
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {
     const isError = MsgIsError(msg);
     const str = ctx.ende.encode(msg);
-    ctx.ws.send(str);
+    // if (ps.cloud.MsgIsResChat(msg)) {
+    //   console.log("send", msg.tid, ctx.ws);
+    // }
+    ctx.ws?.send(str);
     return new Response(str, {
       status: isError ? 500 : 200,
       headers: CORS.AsHeaderInit(),

@@ -62,6 +62,11 @@ export interface ExposeCtxItem<T extends WSRoom> {
   readonly stsService: rt.sts.SessionTokenService;
   readonly gestalt: ps.cloud.Gestalt;
   readonly dbFactory: () => DrizzleDatebase;
+  readonly req: {
+    readonly method: string;
+    readonly url: string;
+    readonly headers: HttpHeader;
+  };
   // readonly metaMerger: MetaMerger;
   readonly id: string;
 }
@@ -231,9 +236,11 @@ class NoBackChannel implements MsgDispatcherCtx {
     this.logger = ctx.logger;
     this.ende = ctx.ende;
     this.gestalt = ctx.gestalt;
+    this.req = this.ctx.req;
     this.dbFactory = ctx.dbFactory;
     this.stsService = ctx.stsService;
   }
+  readonly req: MsgDispatcherCtx["req"];
   readonly impl: HonoServerImpl;
   readonly port: number;
   readonly sthis: SuperThis;
@@ -354,7 +361,18 @@ export class HonoServer {
                 );
               } else {
                 // console.log("dp-dispatch", rMsg.Ok(), dp);
-                await dp.dispatch({ ...ctx, ws }, rMsg.Ok());
+                await dp.dispatch(
+                  {
+                    ...ctx,
+                    ws,
+                    req: {
+                      method: c.req.method,
+                      url: c.req.url,
+                      headers: HttpHeader.from(c.req.header()),
+                    },
+                  },
+                  rMsg.Ok(),
+                );
               }
             },
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
