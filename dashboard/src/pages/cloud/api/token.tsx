@@ -1,6 +1,7 @@
 import { URI } from "@adviser/cement";
 import { ps } from "@fireproof/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { base64url } from "jose";
 import { useContext, useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.tsx";
@@ -184,7 +185,7 @@ export function ApiToken() {
   }
 
   if (cloud._clerkSession?.isSignedIn === false) {
-    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", btoa(buri.toString()));
+    const tos = buri.build().pathname("/login").cleanParams().setParam("redirect_url", base64url.encode(buri.toString()));
 
     const fromApp = buri.getParam("fromApp");
     if (fromApp) {
