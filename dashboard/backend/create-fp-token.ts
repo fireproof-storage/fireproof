@@ -12,7 +12,6 @@ export interface FPTokenContext {
 }
 
 export async function createFPToken(ctx: FPTokenContext, claim: ps.cloud.FPCloudClaim) {
-  console.log("createFPToken", ctx.secretToken)
   const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
   let validFor = ctx.validFor;
   if (validFor <= 0) {

@@ -1,9 +1,11 @@
 name: CI
 on:
-  - push
-      branches: [mabels/backend]
-  - pull_request
-      branches: [mabels/backend]
+  push:
+    branches:
+      - "mabels/backend"
+  pull_request:
+    branches:
+      - "mabels/backend"
 jobs:
   #  deploy-staging:
   #    environment: staging
