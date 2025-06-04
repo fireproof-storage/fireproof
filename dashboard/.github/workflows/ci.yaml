@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     tags:
+      - '**'
     branches:
       - "mabels/backend"
   pull_request:
