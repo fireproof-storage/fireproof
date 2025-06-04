@@ -102,8 +102,8 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
     }, this.msgP.timeout);
 
     this.ws.onopen = () => {
-      onOpenFuture.resolve(Result.Ok(undefined));
       this.isReady = true;
+      onOpenFuture.resolve(Result.Ok(undefined));
     };
     this.ws.onerror = (ierr) => {
       // console.log("onerror", this.id, ierr);
@@ -164,6 +164,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
     this.#onClose.forEach((fn) => fn());
     this.#onClose.clear();
     this.#onMsg.clear();
+    // console.lows.id, ion", this.id, new Error().stack);
     this.ws.close();
     return Result.Ok(undefined);
   }

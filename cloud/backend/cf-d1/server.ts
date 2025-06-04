@@ -2,6 +2,7 @@
 // import { Logger } from "@adviser/cement";
 // import { Hono } from "hono";
 import { DurableObject } from "cloudflare:workers";
+import { WebSocket as CFWebSocket } from "@cloudflare/workers-types";
 import { HonoServer } from "../hono-server.js";
 import { Hono } from "hono";
 import { Env } from "./env.js";
@@ -51,10 +52,10 @@ export interface ExecSQLResult {
 // }
 
 export interface CFWSEvents {
-  readonly onOpen: (evt: Event, ws: WebSocket) => void;
-  readonly onMessage: (evt: MessageEvent<WSMessageReceive>, ws: WebSocket) => void;
-  readonly onClose: (evt: CloseEvent, ws: WebSocket) => void;
-  readonly onError: (evt: Event, ws: WebSocket) => void;
+  readonly onOpen: (evt: Event, ws: CFWebSocket) => void;
+  readonly onMessage: (evt: MessageEvent<WSMessageReceive>, ws: CFWebSocket) => void;
+  readonly onClose: (evt: CloseEvent, ws: CFWebSocket) => void;
+  readonly onError: (evt: Event, ws: CFWebSocket) => void;
 }
 
 export class FPRoomDurableObject extends DurableObject<Env> {
@@ -104,21 +105,21 @@ export class FPRoomDurableObject extends DurableObject<Env> {
 
   webSocketOpen(ws: WebSocket): void | Promise<void> {
     const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onOpen(id, {} as Event, ws);
+    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onOpen(id, {} as Event, ws as CFWebSocket);
   }
 
   webSocketError(ws: WebSocket, error: unknown): void | Promise<void> {
     const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onError(id, error as Event, ws);
+    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onError(id, error as Event, ws as CFWebSocket);
   }
 
   async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer): Promise<void> {
     const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onMessage(id, { data: msg } as MessageEvent, ws);
+    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onMessage(id, { data: msg } as MessageEvent, ws as CFWebSocket);
   }
 
   webSocketClose(ws: WebSocket, code: number, reason: string): void | Promise<void> {
     const dat = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(dat.id).ctx.wsRoom.events.onClose(dat.id, { code, reason } as CloseEvent, ws);
+    this.env.FP_EXPOSE_CTX.get(dat.id).ctx.wsRoom.events.onClose(dat.id, { code, reason } as CloseEvent, ws as CFWebSocket);
   }
 }

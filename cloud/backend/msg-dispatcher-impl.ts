@@ -113,9 +113,9 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
           return buildResOpen(ctx.sthis, msg, msg.conn.resId);
         }
         // const resId = sthis.nextId(12).str;
-        const resId = ctx.ws.id;
+        const resId = ctx.ws?.id;
         const resOpen = buildResOpen(ctx.sthis, msg, resId);
-        ctx.wsRoom.addConn(ctx.ws, resOpen.conn);
+        ctx.wsRoom.addConn(ctx, ctx.ws, resOpen.conn);
         return resOpen;
       },
     },
@@ -135,25 +135,24 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
         for (const item of connItems) {
           for (const conn of item.conns) {
             if (qsidEqual(conn, msg.conn)) {
+              if (msg.message.startsWith("/close-connection")) {
+                setTimeout(() => {
+                  item.ws?.close();
+                  ctx.wsRoom.removeConn(...item.conns);
+                }, 50);
+              }
               continue;
             }
             if (msg.message.startsWith("/ping")) {
               continue;
             }
-            // console.log("me", msg.message);
-            if (msg.message.startsWith("/close-connection")) {
-              setTimeout(() => {
-                item.ws.close();
-                ctx.wsRoom.removeConn(...item.conns);
-              }, 50);
-            }
-            //}
+            const resChat = buildResChat(msg, conn, `[${msg.conn.reqId}]: ${msg.message}`, ci);
             dp.send(
               {
                 ...ctx,
                 ws: item.ws,
               },
-              buildResChat(msg, conn, `[${msg.conn.reqId}]: ${msg.message}`, ci),
+              resChat,
             );
           }
         }

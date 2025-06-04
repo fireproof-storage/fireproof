@@ -1,4 +1,4 @@
-import { Logger, LoggerImpl, URI } from "@adviser/cement";
+import { HttpHeader, Logger, LoggerImpl, URI } from "@adviser/cement";
 import { drizzle as d1Drizzle } from "drizzle-orm/d1";
 import { Context, Hono } from "hono";
 import {
@@ -16,10 +16,16 @@ import { SendOptions, WSContextInit, WSMessageReceive, WSReadyState } from "hono
 // import { RequestInfo as CFRequestInfo } from "@cloudflare/workers-types";
 // import { defaultMsgParams, jsonEnDe } from "../msger.js";
 import { ensureLogger, ensureSuperThis, SuperThis, ps, rt, Writable } from "@fireproof/core";
+import { WebSocket as CFWebSocket } from "@cloudflare/workers-types";
 import { Env } from "./env.js";
 import { WSRoom } from "../ws-room.js";
 import { FPRoomDurableObject } from "./server.js";
 import { ConnItem } from "../msg-dispatch.js";
+
+function cfWebSocketPair() {
+  const pair = new WebSocketPair();
+  return [pair[0] as CFWebSocket, pair[1] as CFWebSocket] as const;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRoomDurableObject(env: Env, _id: string) {
@@ -32,7 +38,7 @@ export function getRoomDurableObject(env: Env, _id: string) {
   return dObjNs.get(did);
 }
 
-function webSocket2WSContextInit(ws: WebSocket): WSContextInit<WebSocket> {
+function webSocket2WSContextInit(ws: CFWebSocket): WSContextInit<CFWebSocket> {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     send: (data: string | ArrayBuffer, _options: SendOptions): void => {
@@ -55,9 +61,9 @@ class CFWSRoom implements WSRoom {
   // readonly eventsWithConnId = eventsWithConnId;
 
   isWebsocket = false;
-  readonly notWebSockets: ConnItem<WebSocket>[] = [];
+  readonly notWebSockets: ConnItem<CFWebSocket>[] = [];
 
-  #events?: WSEventsConnId<WebSocket>;
+  #events?: WSEventsConnId<CFWebSocket>;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -65,19 +71,19 @@ class CFWSRoom implements WSRoom {
     // console.log("CFWSRoom", this.id);
   }
 
-  #getWebSockets?: () => WebSocket[];
-  applyGetWebSockets(_id: string, fn: () => WebSocket[]): void {
+  #getWebSockets?: () => CFWebSocket[];
+  applyGetWebSockets(_id: string, fn: () => CFWebSocket[]): void {
     this.isWebsocket = true;
     this.#getWebSockets = fn;
   }
 
-  applyEvents(_id: string, events: WSEventsConnId<WebSocket>): void {
+  applyEvents(_id: string, events: WSEventsConnId<CFWebSocket>): void {
     this.#events = events;
   }
 
-  getConns(): ConnItem<WebSocket>[] {
+  getConns(): ConnItem<CFWebSocket>[] {
     if (!this.isWebsocket) {
-      return this.notWebSockets as ConnItem<WebSocket>[];
+      return this.notWebSockets as ConnItem<CFWebSocket>[];
     }
     const getWebSockets = this.#getWebSockets;
     if (!getWebSockets) {
@@ -123,22 +129,23 @@ class CFWSRoom implements WSRoom {
         return;
       }
       // console.log("removeConn", this.id, conn);
-      const s = found.ws.raw?.deserializeAttachment() as Writable<ConnItem<WebSocket>>;
+      const s = found.ws?.raw?.deserializeAttachment() as Writable<ConnItem<WebSocket>>;
       if (s && s.conns) {
         s.conns = s.conns.filter((c) => !ps.cloud.qsidEqual(c, conn));
       }
-      found.ws.raw?.serializeAttachment(s);
+      found.ws?.raw?.serializeAttachment(s);
     }
 
     // throw new Error("Method not implemented.");
   }
-  addConn(ws: WSContextWithId<WebSocket>, conn: ps.cloud.QSId): ps.cloud.QSId {
+  addConn<T extends WSRoom, WS>(ctx: ExposeCtxItem<T>, iws: WSContextWithId<WS> | undefined, conn: ps.cloud.QSId): ps.cloud.QSId {
     const id = this.sthis.nextId(12).str;
-    if (!this.isWebsocket) {
-      this.notWebSockets.push({ id, conns: [conn], touched: new Date(), ws } satisfies ConnItem<WebSocket>);
+    if (!this.isWebsocket || !iws) {
+      this.notWebSockets.push({ id, conns: [conn], touched: new Date() } satisfies ConnItem<WebSocket>);
       return conn;
     }
-    if (!ws.raw) {
+    const ws = iws as WSContextWithId<WebSocket>;
+    if (!ws?.raw) {
       throw new Error("CFWSRoom.addConn: missing raw WebSocket");
     }
     const preSockAttach = {
@@ -164,17 +171,17 @@ class CFWSRoom implements WSRoom {
   }
 
   readonly events = {
-    onOpen: (id: string, evt: Event, ws: WebSocket) => {
+    onOpen: (id: string, evt: Event, ws: CFWebSocket) => {
       this.#events?.onOpen(evt, new WSContextWithId(id, webSocket2WSContextInit(ws)));
     },
-    onMessage: (id: string, evt: MessageEvent<WSMessageReceive>, ws: WebSocket) => {
+    onMessage: (id: string, evt: MessageEvent<WSMessageReceive>, ws: CFWebSocket) => {
       const wci = new WSContextWithId(id, webSocket2WSContextInit(ws));
       this.#events?.onMessage(evt, wci);
     },
-    onClose: (id: string, evt: CloseEvent, ws: WebSocket) => {
+    onClose: (id: string, evt: CloseEvent, ws: CFWebSocket) => {
       this.#events?.onClose(evt, new WSContextWithId(id, webSocket2WSContextInit(ws)));
     },
-    onError: (id: string, evt: Event, ws: WebSocket) => {
+    onError: (id: string, evt: Event, ws: CFWebSocket) => {
       this.#events?.onError(evt, new WSContextWithId(id, webSocket2WSContextInit(ws)));
     },
   };
@@ -214,11 +221,12 @@ export class CFExposeCtx {
     stsService: rt.sts.SessionTokenService,
     dbFactory: () => DrizzleDatebase,
     wsRoom: CFWSRoom,
+    req: ExposeCtxItem<CFWSRoom>["req"],
   ): CFExposeCtxItem {
     if (!env.FP_EXPOSE_CTX) {
       throw new Error(`CFExposeCtx: missing FP_EXPOSE_CTX`);
     }
-    return env.FP_EXPOSE_CTX.attach(id, sthis, logger, port, ende, gs, stsService, dbFactory, wsRoom);
+    return env.FP_EXPOSE_CTX.attach(id, sthis, logger, port, ende, gs, stsService, dbFactory, wsRoom, req);
   }
 
   private constructor() {
@@ -243,12 +251,13 @@ export class CFExposeCtx {
     stsService: rt.sts.SessionTokenService,
     dbFactory: () => DrizzleDatebase,
     wsRoom: CFWSRoom,
+    req: ExposeCtxItem<CFWSRoom>["req"],
   ) {
     const item = this.#ctxs.get(id);
     if (!item) {
       throw new Error(`CFExposeCtx: missing ${id}`);
     }
-    item.ctx = { id, sthis, logger, ende, gestalt, dbFactory, wsRoom, stsService, port };
+    item.ctx = { id, sthis, logger, ende, gestalt, dbFactory, wsRoom, stsService, port, req };
     //this.#ctxs.set(id, item);
     return item as CFExposeCtxItem;
   }
@@ -307,7 +316,11 @@ export class CFHonoFactory implements HonoServerFactory {
       token: sthis.env.get(rt.sts.envKeyDefaults.PUBLIC) ?? "",
     });
     const wsRoom = new CFWSRoom(sthis);
-    const item = CFExposeCtx.attach(c.env, id, sthis, logger, NaN, ende, gs, stsService, db, wsRoom);
+    const item = CFExposeCtx.attach(c.env, id, sthis, logger, NaN, ende, gs, stsService, db, wsRoom, {
+      method: c.req.method,
+      url: c.req.url,
+      headers: HttpHeader.from(c.req.header()),
+    });
     const chs = new CFHonoServer(item);
 
     return chs.start(item.ctx).then((chs) => fn({ ...item.ctx, impl: chs }));
@@ -335,7 +348,9 @@ export class CFHonoServer extends HonoServerBase {
     this.cfCtx = ctx;
   }
 
-  upgradeWebSocket(createEvents: (c: Context) => WSEventsConnId<WebSocket> | Promise<WSEventsConnId<WebSocket>>): ConnMiddleware {
+  upgradeWebSocket(
+    createEvents: (c: Context) => WSEventsConnId<CFWebSocket> | Promise<WSEventsConnId<CFWebSocket>>,
+  ): ConnMiddleware {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return async (_conn, c, _next) => {
       const upgradeHeader = c.req.header("Upgrade");
@@ -347,19 +362,18 @@ export class CFHonoServer extends HonoServerBase {
           },
         );
       }
-      const webSocketPair = new WebSocketPair();
-      const [client, server] = Object.values(webSocketPair);
+      const [client, server] = cfWebSocketPair();
       const cfEnv = c.env as Env;
       const cfCtx = cfEnv.FP_EXPOSE_CTX.get(this.id);
-      cfCtx.cfObj.ctx.acceptWebSocket(server, [cfCtx.id]);
-      cfCtx.ctx.wsRoom.applyGetWebSockets(this.id, () => cfCtx.cfObj.ctx.getWebSockets());
+      cfCtx.cfObj.ctx.acceptWebSocket(server as WebSocket, [cfCtx.id]);
+      cfCtx.ctx.wsRoom.applyGetWebSockets(this.id, () => cfCtx.cfObj.ctx.getWebSockets() as CFWebSocket[]);
       cfCtx.ctx.wsRoom.applyEvents(this.id, await createEvents(c));
       server.serializeAttachment({ id: cfCtx.id });
       cfCtx.ctx.wsRoom.events.onOpen(this.id, {} as Event, server);
       return new Response(null, {
         status: 101,
         headers: CORS.AsHeaderInit(),
-        webSocket: client,
+        webSocket: client as WebSocket,
       });
     };
   }

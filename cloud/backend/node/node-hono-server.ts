@@ -9,7 +9,7 @@ import {
   WSContextWithId,
   WSEventsConnId,
 } from "../hono-server.js";
-import { ResolveOnce, URI } from "@adviser/cement";
+import { HttpHeader, ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
 import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
@@ -49,15 +49,15 @@ class NodeWSRoom implements WSRoom {
   }
 
   getConns(): ConnItem[] {
-    return Array.from(this._conns.values());
+    const res = Array.from(this._conns.values());
+    return res;
   }
   removeConn(...conns: QSId[]): void {
-    // console.log("removeConn", this.id, qsidKey(conn));
-    for (const conn of conns) {
+    for (const conn of conns.flat()) {
       this._conns.delete(qsidKey(conn));
     }
   }
-  addConn(ws: WSContextWithId<unknown>, conn: QSId): QSId {
+  addConn<T extends WSRoom, WS>(ctx: ExposeCtxItem<T>, ws: WSContextWithId<WS>, conn: QSId): QSId {
     // console.log("addConn", this.id, qsidKey(conn));
     const key = qsidKey(conn);
     let ci = this._conns.get(key);
@@ -75,24 +75,6 @@ class NodeWSRoom implements WSRoom {
     }
     return this._conns.has(qsidKey(msg.conn));
   }
-
-  // addConn(ws: WSContextWithId): void {
-  //   wsConnections.add(ws);
-  // }
-
-  // delConn(ws: WSContextWithId): void {
-  //   wsConnections.delete(ws);
-  // }
-
-  // #ensureWSContextWithId(id: string, ws: WSContext) {
-  //   let wsId = wsConnections.get(id);
-  //   if (wsId) {
-  //     return wsId;
-  //   }
-  //   wsId = new WSContextWithId(this.sthis.nextId(12).str, ws);
-  //   wsConnections.set(id, wsId);
-  //   return wsId;
-  // }
 
   createEvents(outer: WSEventsConnId<unknown>): (c: Context) => WSEvents<unknown> {
     const id = this.sthis.nextId(12).str;
@@ -118,36 +100,7 @@ class NodeWSRoom implements WSRoom {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   acceptConnection(ws: WebSocket, wse: WSEvents): Promise<void> {
-    // const id = this.sthis.nextId(12).str;
-    // wsConnections.set(id, ws);
-    // this.
-
     throw new Error("Method not implemented.");
-    // const wsCtx = new WSContextWithId(this.sthis.nextId(12).str, ws as WSContextInit);
-
-    // console.log("acceptConnection", wsCtx);
-    // ws.onopen = function(this, ev) {
-    //   console.log("onopen", ev);
-    //   wsConnections.set(wsCtx.id, wsCtx);
-    //   wse.onOpen?.(ev, wsCtx);
-    // }
-    // ws.onerror = (err) => {
-    //   console.log("onerror", err);
-    //   wse.onError?.(err, wsCtx);
-    // };
-    // ws.onclose = function(this, ev) {
-    //   console.log("onclose", ev);
-    //   wse.onClose?.(ev, wsCtx);
-    //   wsConnections.delete(wsCtx.id);
-    // };
-    // ws.onmessage = (evt) => {
-    //   console.log("onmessage", evt);
-    //   // wsCtx.send("Hellox from server");
-    //   wse.onMessage?.(evt, wsCtx);
-    // };
-
-    // ws.accept();
-    // return Promise.resolve();
   }
 }
 
@@ -155,7 +108,7 @@ const createDB = new ResolveOnce();
 
 export class NodeHonoFactory implements HonoServerFactory {
   _upgradeWebSocket!: UpgradeWebSocket;
-  _injectWebSocket!: (t: unknown) => void;
+  _injectWebSocket!: (t: ServerType) => void;
   _serve!: serveFn;
   _server!: ServerType;
 
@@ -212,6 +165,11 @@ export class NodeHonoFactory implements HonoServerFactory {
       stsService,
       gestalt,
       ende,
+      req: {
+        url: c.req.url,
+        method: c.req.method,
+        headers: HttpHeader.from(c.req.header()),
+      },
       dbFactory: () => this.params.sql,
     };
 
@@ -231,7 +189,7 @@ export class NodeHonoFactory implements HonoServerFactory {
       this._serve = serve as serveFn;
       const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
       this._upgradeWebSocket = upgradeWebSocket;
-      this._injectWebSocket = injectWebSocket as (t: unknown) => void;
+      this._injectWebSocket = injectWebSocket as (t: ServerType) => void;
     } catch (e) {
       throw this.sthis.logger.Error().Err(e).Msg("Failed to start NodeHonoFactory").AsError();
     }

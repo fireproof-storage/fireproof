@@ -92,134 +92,6 @@ export interface MsgRawConnection<T extends MsgBase = MsgBase> {
   close(o: T): Promise<Result<void>>;
 }
 
-// interface Thenable<R> {
-//   then(fn: () => void): Promise<R>;
-// }
-
-// class RequestAction<Q extends MsgBase, S extends MsgBase> implements Thenable<MsgWithError<S>> {
-//   readonly type = "request";
-//   readonly req: Q;
-//   readonly opts: RequestOpts;
-//   readonly rc: VirtualConnected;
-//   constructor(rc: VirtualConnected, req: Q, opts: RequestOpts) {
-//     this.req = req;
-//     this.opts = opts;
-//     this.rc = rc;
-//   }
-//   then(): Promise<MsgWithError<S>> {
-//     return this.rc.request(this.req, this.opts) as Promise<MsgWithError<S>>;
-//   }
-// }
-
-// class SendAction<Q extends MsgBase, S extends MsgBase> implements Thenable<MsgWithError<S>> {
-//   readonly type = "send";
-//   readonly msg: Q;
-//   readonly realConn: MsgRawConnection;
-//   constructor(realConn: MsgRawConnection, msg: Q) {
-//     this.msg = msg;
-//     this.realConn = realConn;
-//   }
-//   then(): Promise<MsgWithError<S>> {
-//     return this.realConn.send(this.msg);
-//   }
-// }
-
-// class StartAction implements Thenable<Result<void>> {
-//   readonly type = "start";
-//   readonly realConn: MsgRawConnection;
-//   constructor(realConn: MsgRawConnection) {
-//     this.realConn = realConn;
-//   }
-//   then(): Promise<Result<void>> {
-//     return this.realConn.start();
-//   }
-// }
-
-// class CloseAction implements Thenable<Result<void>> {
-//   readonly type = "close";
-//   readonly msg: MsgBase;
-//   readonly realConn: MsgRawConnection;
-//   constructor(realConn: MsgRawConnection, msg: MsgBase) {
-//     this.msg = msg;
-//     this.realConn = realConn;
-//   }
-//   then(): Promise<Result<void>> {
-//     return this.realConn.close(this.msg);
-//   }
-// }
-
-// type Actions = RequestAction<MsgBase, MsgBase> | SendAction<MsgBase, MsgBase> | StartAction | CloseAction;
-
-// interface ActionQueueItem {
-//   readonly id: string;
-//   readonly action: Actions;
-//   readonly start: Future<unknown>;
-//   readonly done: Future<unknown>;
-// }
-
-// class ActionsQueue {
-//   readonly actionQueue: ActionQueueItem[] = [];
-//   readonly sthis: SuperThis;
-
-//   constructor(sthis: SuperThis) {
-//     this.sthis = sthis;
-//   }
-
-//   next() {
-//     const action = this.actionQueue.shift();
-//     if (!action) {
-//       return;
-//     }
-//     const { id, action: act, start, done } = action;
-//     this.sthis.logger.Debug().Msg("process", id, act.type);
-//     start.resolve(undefined);
-//     done.asPromise().finally(() => {
-//       this.next();
-//     });
-//   }
-
-//   req<T extends Actions>(action: T): T {
-//     // if ((action as RequestAction<MsgBase, MsgBase>).req?.type !== "test") {
-//     // console.log("req--->", action.type, action as RequestAction<MsgBase, MsgBase>, this.actionQueue.length);
-//     // }
-//     const id = this.sthis.nextId().str;
-//     const start = new Future();
-//     const done = new Future();
-//     const qAction = {
-//       ...action,
-//       then: () => {
-//         start.asPromise().then(() => {
-//           const x = action.then();
-//           if (isPromise(x)) {
-//             x.finally(() => {
-//               this.actionQueue.splice(
-//                 this.actionQueue.findIndex((i) => i.id === id),
-//                 1,
-//               );
-//               done.resolve(x);
-//             });
-//           } else {
-//             this.actionQueue.splice(
-//               this.actionQueue.findIndex((i) => i.id === id),
-//               1,
-//             );
-//             done.resolve(x);
-//           }
-//         });
-//         this.next();
-//         return done.asPromise();
-//       },
-//     };
-//     this.actionQueue.push({
-//       id,
-//       action: qAction,
-//       start,
-//       done,
-//     });
-//     return qAction as T;
-//   }
-// }
-
 export function jsonEnDe(sthis: SuperThis): EnDeCoder {
   return {
     encode: (node: unknown) => sthis.txt.encode(JSON.stringify(node)),
@@ -276,166 +148,6 @@ export async function authTypeFromUri(logger: Logger, curi: CoerceURI): Promise<
   } satisfies FPJWKCloudAuthType);
 }
 
-// export class MsgConnected implements MsgRawConnection<MsgWithConn> {
-//   static async connect(
-//     auth: AuthType,
-//     mrc: Result<MsgRawConnection> | MsgRawConnection,
-//     conn: Partial<QSId> = {},
-//   ): Promise<Result<MsgConnected>> {
-//     if (Result.Is(mrc)) {
-//       if (mrc.isErr()) {
-//         return Result.Err(mrc.Err());
-//       }
-//       mrc = mrc.Ok();
-//     }
-//     const res = await mrc.request(buildReqOpen(mrc.sthis, auth, conn), { waitFor: MsgIsResOpen });
-//     if (MsgIsError(res) || !MsgIsResOpen(res)) {
-//       return mrc.sthis.logger.Error().Err(res).Msg("unexpected response").ResultError();
-//     }
-//     return Result.Ok(new MsgConnected(mrc, res.conn));
-//   }
-
-//   readonly sthis: SuperThis;
-//   readonly conn: QSId;
-//   private readonly raw: MsgRawConnection;
-//   readonly exchangedGestalt: ExchangedGestalt;
-//   // private readonly activeBinds: Map<string, ActiveStream<MsgWithConnAuth, MsgBase>>;
-//   readonly id: string;
-
-//   private queued!: MsgRawConnectionQueued;
-
-//   private constructor(raw: MsgRawConnection, conn: QSId) {
-//     this.sthis = raw.sthis;
-//     this.raw = raw;
-//     this.exchangedGestalt = raw.exchangedGestalt;
-//     this.conn = conn;
-//     // this.activeBinds = raw.activeBinds;
-//     this.id = this.sthis.nextId().str;
-//   }
-
-//   get activeBinds(): Map<string, ActiveStream<MsgWithConn, MsgBase>> {
-//     throw new Error("Method not implemented.");
-//   }
-
-//   transport(): MsgRawConnection {
-//     return this.queued.realConn;
-//   }
-
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   bind<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
-//     throw new Error("Method not implemented.");
-//   }
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   request<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
-//     throw new Error("Method not implemented.");
-//   }
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   send<S extends MsgWithConn, Q extends MsgWithOptionalConn>(msg: Q): Promise<MsgWithError<S>> {
-//     throw new Error("Method not implemented.");
-//   }
-//   start(): Promise<Result<void>> {
-//     throw new Error("Method not implemented.");
-//   }
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   close(o: MsgWithOptionalConn): Promise<Result<void>> {
-//     throw new Error("Method not implemented.");
-//   }
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   onMsg(msg: OnMsgFn<MsgWithConn>): UnReg {
-//     throw new Error("Method not implemented.");
-//   }
-
-//   attachAuth(auth: AuthFactory): MsgConnectedAuth {
-//     return new MsgConnectedAuth(this, auth);
-//   }
-// }
-
-// type MsgWithOptionalConn = Omit<MsgWithConnAuth, "conn"> & { readonly conn?: QSId };
-
-// export class MsgConnectedAuth /* implements MsgRawConnection<MsgWithConn> */ {
-//   readonly sthis: SuperThis;
-//   // readonly raw: MsgRawConnection;
-//   readonly connnected: VirtualConnected;
-//   readonly exchangedGestalt: ExchangedGestalt;
-//   // readonly activeBinds: Map<string, ActiveStream<MsgWithConnAuth, MsgBase>>;
-//   readonly id: string;
-//   readonly authFactory: AuthFactory;
-
-//   constructor(conn: VirtualConnected, authFactory: AuthFactory) {
-//     this.id = conn.id;
-//     this.connnected = conn;
-//     // this.raw = conn.raw;
-//     this.sthis = conn.sthis;
-//     this.authFactory = authFactory;
-//     this.exchangedGestalt = conn.exchangedGestalt;
-//     // this.activeBinds = conn.activeBinds;
-//   }
-
-//   get conn(): QSId {
-//     return this.connnected.conn;
-//   }
-
-//   get activeBinds(): Map<string, ActiveStream<MsgWithConn, MsgBase>> {
-//     return this.connnected.activeBinds;
-//   }
-
-//   bind<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
-//     const stream = this.connnected.bind({ ...req, conn: req.conn || this.connnected.conn }, opts);
-//     const ts = new TransformStream<MsgWithError<S>, MsgWithError<S>>({
-//       transform: (chunk, controller) => {
-//         if (!MsgIsTid(chunk, req.tid)) {
-//           return;
-//         }
-//         if (MsgIsConnected(chunk, this.connnected.conn)) {
-//           if (opts.waitFor?.(chunk) || MsgIsError(chunk)) {
-//             controller.enqueue(chunk);
-//           }
-//         }
-//       },
-//     });
-
-//     // why the hell pipeTo sends an error that is undefined?
-//     stream.pipeThrough(ts);
-//     // stream.pipeTo(ts.writable).catch((err) => err && err.message && console.error("bind error", err));
-//     return ts.readable;
-//   }
-
-//   authType(): Promise<Result<AuthType>> {
-//     return this.authFactory();
-//   }
-
-//   msgConnAuth(): Promise<Result<MsgWithConn>> {
-//     return this.authType().then((r) => {
-//       if (r.isErr()) {
-//         return Result.Err(r);
-//       }
-//       return Result.Ok({ conn: this.connnected.conn, auth: r.Ok() } as MsgWithConn);
-//     });
-//   }
-
-//   request<S extends MsgWithConn, Q extends MsgWithOptionalConn | ReqOpen>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
-//     return this.connnected.request({ ...req, conn: (req.conn || this.connnected.conn) as QSId }, opts);
-//   }
-
-//   send<S extends MsgWithConn, Q extends MsgWithOptionalConn>(msg: Q): Promise<MsgWithError<S>> {
-//     return this.connnected.send({ ...msg, conn: msg.conn || this.connnected.conn });
-//   }
-
-//   async close(t: MsgWithConn): Promise<Result<void>> {
-//     await this.request(buildReqClose(this.sthis, t.auth, this.connnected.conn), { waitFor: MsgIsResClose, noRetry: true });
-//     return await this.connnected.close(t);
-//     // return Result.Ok(undefined);
-//   }
-//   onMsg(msgFn: OnMsgFn<MsgWithConn>): UnReg {
-//     return this.connnected.onMsg((msg) => {
-//       // possibly test of a proper auth from the server
-//       if (MsgIsConnected(msg, this.connnected.conn)) {
-//         msgFn(msg);
-//       }
-//     });
-//   }
-// }
-
 function initialFPUri(curl: CoerceURI): URI {
   let gestaltUrl = URI.from(curl);
   if (["", "/"].includes(gestaltUrl.pathname)) {
@@ -444,16 +156,22 @@ function initialFPUri(curl: CoerceURI): URI {
   return gestaltUrl;
 }
 
+export interface MsgerConnectParams {
+  readonly msgerParam: Partial<MsgerParamsWithEnDe>;
+  readonly conn: Partial<ReqOpenConn>;
+  readonly mowh: MsgOpenWSAndHttp;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Msger {
-  static connect(
-    sthis: SuperThis,
-    curl: CoerceURI,
-    imsgP: Partial<MsgerParamsWithEnDe> = {},
-    conn?: Partial<ReqOpenConn>,
-    mowh?: MsgOpenWSAndHttp,
-  ): Promise<Result<VirtualConnected>> {
-    const vc = new VirtualConnected(sthis, { curl, imsgP, conn, openWSorHttp: mowh });
+  static connect(sthis: SuperThis, curl: CoerceURI, mParam: Partial<MsgerConnectParams>): Promise<Result<VirtualConnected>> {
+    const vc = new VirtualConnected(sthis, {
+      curl,
+      conn: mParam.conn,
+      openWSorHttp: mParam.mowh,
+      msgerParams: mParam.msgerParam ?? {},
+    });
+
     return Promise.resolve(Result.Ok(vc));
     // return vc.connect();
   }
@@ -480,7 +198,7 @@ export class MsgOpenWSAndHttp {
     exGestalt: ExchangedGestalt,
   ): Promise<Result<MsgRawConnection>> {
     // const { encode } = jsonEnDe(sthis);
-    url = url.build().setParam("random", vc.nextId().str).URI();
+    url = url.build().defParam("random", vc.nextId().str).URI();
     // console.log("openWS", url.toString());
     // .setParam("reqOpen", sthis.txt.decode(encode(qOpen)))
     const wsUrl = ensurePath(url, "ws");
@@ -491,70 +209,10 @@ export class MsgOpenWSAndHttp {
     } else {
       wsFactory = () => new WebSocket(wsUrl);
     }
-    return Result.Ok(new WSConnection(vc, wsFactory(), msgP, exGestalt));
+    const wsc = new WSConnection(vc, wsFactory(), msgP, exGestalt);
+    return Result.Ok(wsc);
   }
 }
-
-// export class VirtualConnection {
-//   readonly sthis: SuperThis;
-//   readonly auth: AuthType;
-//   readonly curl: CoerceURI;
-//   readonly imsgP: Partial<MsgerParamsWithEnDe> = {};
-//   readonly conn: Partial<QSId> = {};
-//   connFactory?: () => Promise<Result<MsgRawConnection>>;
-
-//   constructor(sthis: SuperThis, auth: AuthType, curl: CoerceURI, imsgP: Partial<MsgerParamsWithEnDe>, conn: Partial<QSId>, mowh?: MsgOpenWSAndHttp) {
-//     this.sthis = sthis;
-//     this.auth = auth;
-//     this.curl = curl;
-//     this.imsgP = imsgP;
-//     this.conn = conn;
-//   }
-
-//   setConnFactory(fn: () => Promise<Result<MsgRawConnection>>) {
-//     this.connFactory = fn;
-//   }
-
-//   async reconnect(retryCount = 0): Promise<Result<MsgRawConnection>> {
-//     if (retryCount > 3) {
-//       return Result.Err(new Error("retry count exceeded"));
-//     }
-//     // MISSING close the existing connection to have a proper livecycle
-//     this.sthis.logger.Warn().Any({ retryCount, url: this.curl }).Msg("restart");
-//     await sleep(retryCount * 500);
-//     const r =  await this.connect();
-//     if (r.isErr()) {
-//       return Result.Err(r);
-//     }
-//     // const rRc = await this.start();
-//     // if (rRc.isErr()) {
-//     //   return Result.Err(rRc);
-//     // }
-//     return Result.Ok(r.Ok());
-//   }
-
-//   connect() {
-//     return this.open(this.sthis, this.auth, this.curl, this.imsgP).then((srv) => MsgConnected.connect(this.auth, srv, this.conn));
-//   }
-
-//   async start(): Promise<Result<MsgRawConnection>> {
-//     if (!this.connFactory) {
-//       return Result.Err(new Error("connFactory is not set"));
-//     }
-//     const rRawConn = await this.connFactory();
-//     if (rRawConn.isErr()) {
-//       return rRawConn;
-//     }
-//     const rc = rRawConn.Ok();
-//     const c = new MsgRawConnectionQueued(rc)
-//     return c.start().then((r) => {
-//       if (r.isErr()) {
-//         return Result.Err(r.Err());
-//       }
-//       return Result.Ok(c);
-//     });
-//   }
-// }
 
 interface RetryItem {
   readonly retryCount: number;
@@ -569,7 +227,7 @@ export interface VirtualConnectedOptionals {
 export interface VirtualConnectedRequired {
   // readonly auth: AuthType;
   readonly curl: CoerceURI;
-  readonly imsgP: Partial<MsgerParamsWithEnDe>;
+  readonly msgerParams: Partial<MsgerParamsWithEnDe>;
 }
 
 export type VirtualConnectedOpts = Partial<VirtualConnectedOptionals> & Required<VirtualConnectedRequired>;
@@ -628,7 +286,15 @@ export class VirtualConnected {
     }
   }
 
-  bind<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+  private ensureOpts(opts: RequestOpts): RequestOpts {
+    return {
+      ...opts,
+      timeout: opts.timeout ?? this.opts.msgerParams.timeout ?? 3000,
+    };
+  }
+
+  bind<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, iopts: RequestOpts): ReadableStream<MsgWithError<S>> {
+    const opts = this.ensureOpts(iopts);
     const id = this.sthis.nextId().str;
     return new ReadableStream<MsgWithError<S>>({
       cancel: (err) => {
@@ -663,7 +329,8 @@ export class VirtualConnected {
     });
   }
 
-  request<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
+  request<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, iopts: RequestOpts): Promise<MsgWithError<S>> {
+    const opts = this.ensureOpts(iopts);
     return this.getRealConn(req, opts, (realConn: MsgRawConnection) =>
       realConn.request<S, Q>(
         {
@@ -782,9 +449,10 @@ export class VirtualConnected {
 
   private async getRealConn<S extends MsgBase, Q extends MsgBase, X extends MsgWithError<S> | Result<void>>(
     msg: Q,
-    opts: RequestOpts,
+    iopts: RequestOpts,
     action: (realConn: MsgRawConnection) => Promise<X>,
   ): Promise<X> {
+    const opts = this.ensureOpts(iopts);
     // const id = this.sthis.nextId().str;
     if (!this.realConn) {
       await this.mutex(async () => {
@@ -800,7 +468,7 @@ export class VirtualConnected {
           } satisfies ErrorMsg as unknown as X);
         }
         // needs to connected
-        const rConn = await this.connect(msg.auth, this.opts.curl, this.opts.imsgP);
+        const rConn = await this.connect(msg.auth, this.opts.curl, this.opts.msgerParams);
         if (rConn.isErr()) {
           this.retries.push({ retryCount: this.retries.length + 1 });
           await sleep(this.opts.retryDelay * this.retries.length);

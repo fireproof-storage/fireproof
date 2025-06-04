@@ -1,4 +1,4 @@
-import { ps } from "@fireproof/core";
+import { ps, sleep } from "@fireproof/core";
 import { MockJWK, mockJWK } from "./node/test-helper.js";
 import { Future, URI } from "@adviser/cement";
 import { testSuperThis } from "../test-super-this.js";
@@ -50,16 +50,17 @@ describe("test multiple connections", () => {
   }
 
   it("could open multiple connections", async () => {
+    const id = sthis.nextId(4).str;
     const conns = await Promise.all(
       Array(connections)
         .fill(0)
-        .map(() => {
+        .map((_, i) => {
           const url = fpUrl
             .build()
             .pathname("fp")
             .setParam("protocol", fpUrl.protocol.startsWith("https") ? "wss" : "ws")
-            .setParam("random", sthis.nextId(12).str);
-          return Msger.connect(sthis, url);
+            .setParam("random", `multi-conn-${sthis.nextId(12).str}`);
+          return Msger.connect(sthis, url, { conn: { reqId: `test-multi-conn-${i}-${id}` } });
         }),
     ); // .then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
 
@@ -68,15 +69,24 @@ describe("test multiple connections", () => {
     // const recvSet = new Set(conns.map((c) => c.conn.reqId));
     const reOpenOk = new Future<void>();
     let waitOpen = 0;
+    let i = 0;
+    const setResOpen = new Set<string>();
     for (const rC of conns) {
       const c = rC.Ok();
-      const stream = c.bind(ps.cloud.buildReqOpen(sthis, auth.authType, {}), {
+      const reqId = `test-multi-conn-open-${i}-${id}`;
+      setResOpen.add(reqId);
+      const stream = c.bind(ps.cloud.buildReqOpen(sthis, auth.authType, { reqId }), {
         waitFor: () => true, // MsgIsResOpen, // All
       });
+      i++;
       // console.log("Sending an open request", c.id, c.conn);
 
       consumeStream(stream, (m) => {
         if (ps.cloud.MsgIsResOpen(m)) {
+          if (!setResOpen.has(m.conn.reqId)) {
+            return;
+          }
+          setResOpen.delete(m.conn.reqId);
           waitOpen++;
           if (waitOpen >= conns.length) {
             reOpenOk.resolve();
@@ -95,14 +105,21 @@ describe("test multiple connections", () => {
     }
 
     await reOpenOk.asPromise();
+    await sleep(1000); // wait for the connections to be re-opened
 
     const rest = [...conns];
     for (const rC of conns) {
       const c = rC.Ok();
-      const act = await c.request(buildReqChat(sthis, auth.authType, {}, "Hello"), {
+      const act = await c.request(buildReqChat(sthis, auth.authType, {}, `Hello ${c.id}`), {
         waitFor: MsgIsResChat,
       });
       if (MsgIsResChat(act)) {
+        if (act.targets.length < rest.length) {
+          //console.log("Response received", act);
+          expect(act).toEqual({
+            a: "chat",
+          });
+        }
         expect(act.targets.length).toBeGreaterThanOrEqual(rest.length);
       } else {
         assert.fail(`Expected a response:${JSON.stringify(act)}`);
