@@ -40,7 +40,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.53.2",
-    "react-router-dom": "^7.0.2",
+    "react-router-dom": "^7.6.2",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3"
   },
