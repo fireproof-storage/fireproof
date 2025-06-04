@@ -39,7 +39,9 @@ async function main() {
   // const doc =
   await db.get("test");
 
-  console.log(`${rt.runtimeFn().isDeno ? "DENO" : "NODE"} test working version:${PACKAGE_VERSION}`);
+  console.log(
+    `${rt.runtimeFn().isDeno ? "DENO" : "NODE"} test working version:${PACKAGE_VERSION} --> ${JSON.stringify(Deno.version)}`,
+  );
 }
 
 main().catch((e) => {
