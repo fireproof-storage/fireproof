@@ -71,7 +71,7 @@
     "typescript": "^5.8.3",
     "vite": "^6.1.0",
     "vitest": "^3.1.4",
-    "wrangler": "^4.17.0",
+    "wrangler": "^4.19.1",
     "zx": "^8.5.3"
   },
   "pnpm": {
