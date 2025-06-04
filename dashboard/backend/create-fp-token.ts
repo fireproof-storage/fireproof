@@ -12,6 +12,7 @@ export interface FPTokenContext {
 }
 
 export async function createFPToken(ctx: FPTokenContext, claim: ps.cloud.FPCloudClaim) {
+  console.log("createFPToken", ctx.secretToken)
   const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
   let validFor = ctx.validFor;
   if (validFor <= 0) {
@@ -47,5 +48,5 @@ export async function getFPTokenContext(sthis: SuperThis, ictx: Partial<FPTokenC
     validFor: parseInt(ctx.CLOUD_SESSION_TOKEN_VALID_FOR, 10),
     extendValidFor: parseInt(ctx.CLOUD_SESSION_TOKEN_EXTEND_VALID_FOR, 10),
     ...ictx,
-  });
+  } satisfies FPTokenContext);
 }
