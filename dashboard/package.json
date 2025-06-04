@@ -30,7 +30,7 @@
     "@fireproof/core": "^v0.21.0-dev-preview-5",
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@tanstack/react-query": "^5.66.0",
+    "@tanstack/react-query": "^5.80.2",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
     "jose": "^6.0.10",
