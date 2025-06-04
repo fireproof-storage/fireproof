@@ -1,5 +1,5 @@
 import { JSX, useCallback, useEffect, useState } from "react";
-// import Editor from "react-simple-code-editor";
+import Editor from "react-simple-code-editor";
 
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
@@ -65,11 +65,13 @@ export function EditableCodeHighlight({
     setCode(code);
   }, [code]);
 
+  const EditorComponent = Editor as any;
+
   return (
-    <Editor
+    <EditorComponent
       value={liveCode}
       onValueChange={onEditableChange}
-      highlight={(code) => <HighlightedCode code={code} language={language} />}
+      highlight={(code: string) => <HighlightedCode code={code} language={language} />}
       padding={10}
       style={codeStyle}
       autoFocus
