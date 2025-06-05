@@ -30,7 +30,7 @@ import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
 import type { SuperThis } from "../../types.js";
 import { ensureLogger, sleep } from "../../utils.js";
-import pLimit from "p-limit";
+import pLimit from "@fireproof/vendor/p-limit";
 
 // const headers = {
 //     "Content-Type": "application/json",
