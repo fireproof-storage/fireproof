@@ -110,6 +110,7 @@
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
     "@adviser/cement": "^0.4.15",
+    "@fireproof/vendor": "^3.0.0",
     "@ipld/car": "^5.4.1",
     "@ipld/dag-cbor": "^9.2.4",
     "@ipld/dag-json": "^10.2.4",
@@ -122,7 +123,6 @@
     "idb": "^8.0.3",
     "jose": "^6.0.11",
     "multiformats": "^13.3.4",
-    "p-limit": "^6.2.0",
     "p-map": "^7.0.3",
     "p-retry": "^6.2.1",
     "prolly-trees": "^1.0.4",
