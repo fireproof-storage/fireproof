@@ -136,6 +136,9 @@
     "max-overall-size": "1MB"
   },
   "pnpm": {
+    "overrides": {
+      "yocto-queue": "^1.2.1"
+    },
     "onlyBuiltDependencies": [
       "core-js",
       "deno",
