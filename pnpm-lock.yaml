@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  yocto-queue: ^1.2.1
-
 patchedDependencies:
   drizzle-kit:
     hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
@@ -4688,6 +4685,10 @@ packages:
   yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
 
+  yocto-queue@0.1.0:
+    resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
+    engines: {node: '>=10'}
+
   yocto-queue@1.2.1:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
@@ -8169,7 +8170,7 @@ snapshots:
 
   p-limit@3.1.0:
     dependencies:
-      yocto-queue: 1.2.1
+      yocto-queue: 0.1.0
 
   p-limit@6.2.0:
     dependencies:
@@ -9494,6 +9495,8 @@ snapshots:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
     optional: true
+
+  yocto-queue@0.1.0: {}
 
   yocto-queue@1.2.1: {}
 
