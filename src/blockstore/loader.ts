@@ -1,4 +1,4 @@
-import pLimit from "p-limit";
+import pLimit from "@fireproof/vendor/p-limit";
 import { CarReader } from "@ipld/car/reader";
 import { exception2Result, KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result, URI } from "@adviser/cement";
 

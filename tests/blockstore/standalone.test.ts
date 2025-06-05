@@ -2,7 +2,7 @@ import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { ensureSuperThis, PARAM, CRDTImpl, CRDT, LedgerOpts, fireproof, bs, sleep } from "@fireproof/core";
 import { Link } from "multiformats";
 import { stripper } from "@adviser/cement/utils";
-import pLimit from "p-limit";
+import pLimit from "@fireproof/vendor/p-limit";
 
 describe("standalone", () => {
   const sthis = ensureSuperThis();
