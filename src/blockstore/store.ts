@@ -489,7 +489,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     const noLoaderOps = [...this.walState.noLoaderOps];
     const fileOperations = [...this.walState.fileOperations];
 
-      if (operations.length + fileOperations.length + noLoaderOps.length === 0) return;
+    if (operations.length + fileOperations.length + noLoaderOps.length === 0) return;
 
     const concurrencyLimit = 3;
 

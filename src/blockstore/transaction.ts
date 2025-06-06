@@ -33,9 +33,6 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
     }
     this.parent = parent;
   }
-  entries(): Iterable<AnyBlock> {
-    throw new Error("Method not implemented.");
-  }
 
   async get(cid: AnyLink): Promise<FPBlock | Falsy> {
     const sg = await this.superGet(cid);
