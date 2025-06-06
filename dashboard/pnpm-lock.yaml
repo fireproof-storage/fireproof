@@ -26,8 +26,8 @@ importers:
         specifier: ^5.25.5
         version: 5.31.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@fireproof/core':
-        specifier: 0.21.0-dev-preview-5
-        version: 0.21.0-dev-preview-5(@adviser/cement@0.4.15(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@19.1.0)
+        specifier: ^v0.21.0-dev-preview-7
+        version: 0.21.0-dev-preview-7(@adviser/cement@0.4.15(typescript@5.8.3))(react@19.1.0)
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1036,16 +1036,15 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.21.0-dev-preview-5':
-    resolution: {integrity: sha512-du0Iu11rCM5ouH2j+g/YZiTBiqatqE1AQNHSUKrI/LRc0bdGGHKpr2i1wjoCWGKeBgLL0ae6NFxZvbNRRVePlQ==}
+  '@fireproof/core@0.21.0-dev-preview-7':
+    resolution: {integrity: sha512-V6w3AQQE8mxAj5yEZzaw6SvSqTrXK4haepyJ0qwK//jtN/WiiA37+XLroZXhXW6rco4Yd2zRd8FlWvIlkaDU/A==}
     hasBin: true
     peerDependencies:
       '@adviser/cement': ~0.4.2
-      '@fireproof/vendor': ~2.0.0
       react: '>=18.0.0'
 
-  '@fireproof/vendor@2.0.1':
-    resolution: {integrity: sha512-MrPNoq8ElPvg4RcYW4QU/NwQl3n6DLeG3fK4srzSUZBmX4exhOG6KP0GcCHbJPHAmWI85pCAon4Tyu64drOBRw==}
+  '@fireproof/vendor@3.0.0':
+    resolution: {integrity: sha512-d2aoTkxWN9wYQ6pOafGxifxIijEvTpX3sBIJSaTrEqhorxRWdIZm8PC84kNV6qQqMr2GNfCUfgqn1mgR54M2rQ==}
 
   '@floating-ui/core@1.6.9':
     resolution: {integrity: sha512-uMXCuQ3BItDUbAMhIXw7UPXRfAlOAvZzdK9BWpE60MCn+Svt3aLn9jsPTi/WNGlRUu2uI0v5S7JiIUsbsvh3fw==}
@@ -2951,10 +2950,6 @@ packages:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
     engines: {node: '>=10'}
 
-  p-limit@6.2.0:
-    resolution: {integrity: sha512-kuUqqHNUqoIWp/c467RI4X6mmyuojY5jGutNU0wVTmEOOfcuwLqyMVoAi9MKi2Ak+5i9+nhmrK4ufZE8069kHA==}
-    engines: {node: '>=18'}
-
   p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
@@ -3763,8 +3758,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yocto-queue@1.2.0:
-    resolution: {integrity: sha512-KHBC7z61OJeaMGnF3wqNZj+GGNXOyypZviiKpQeiHirG5Ib1ImwcLBH70rbMSkKfSmUNBsdf2PwaEJtKvgmkNw==}
+  yocto-queue@1.2.1:
+    resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
   youch@3.3.4:
@@ -4457,10 +4452,10 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.21.0-dev-preview-5(@adviser/cement@0.4.15(typescript@5.8.3))(@fireproof/vendor@2.0.1)(react@19.1.0)':
+  '@fireproof/core@0.21.0-dev-preview-7(@adviser/cement@0.4.15(typescript@5.8.3))(react@19.1.0)':
     dependencies:
       '@adviser/cement': 0.4.15(typescript@5.8.3)
-      '@fireproof/vendor': 2.0.1
+      '@fireproof/vendor': 3.0.0
       '@ipld/car': 5.4.2
       '@ipld/dag-cbor': 9.2.4
       '@ipld/dag-json': 10.2.5
@@ -4470,7 +4465,6 @@ snapshots:
       idb: 8.0.3
       jose: 6.0.11
       multiformats: 13.3.6
-      p-limit: 6.2.0
       p-map: 7.0.3
       p-retry: 6.2.1
       prolly-trees: 1.0.4
@@ -4480,10 +4474,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@fireproof/vendor@2.0.1':
+  '@fireproof/vendor@3.0.0':
     dependencies:
-      '@ipld/dag-cbor': 9.2.4
-      multiformats: 13.3.6
+      yocto-queue: 1.2.1
 
   '@floating-ui/core@1.6.9':
     dependencies:
@@ -6488,10 +6481,6 @@ snapshots:
     dependencies:
       yocto-queue: 0.1.0
 
-  p-limit@6.2.0:
-    dependencies:
-      yocto-queue: 1.2.0
-
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
@@ -7386,7 +7375,7 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  yocto-queue@1.2.0: {}
+  yocto-queue@1.2.1: {}
 
   youch@3.3.4:
     dependencies:
