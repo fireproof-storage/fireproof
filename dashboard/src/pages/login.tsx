@@ -1,9 +1,9 @@
-import { SignIn } from "@clerk/clerk-react";
-import { useContext, useState } from "react";
-import { AppContext } from "../app-context.tsx";
-import { Link, Navigate } from "react-router-dom";
 import { URI } from "@adviser/cement";
+import { SignIn } from "@clerk/clerk-react";
 import { base64url } from "jose";
+import { useContext, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { AppContext } from "../app-context.tsx";
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
   { text: "Fastest I’ve ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },
@@ -71,6 +71,7 @@ export function Login() {
       <div style={{ backgroundColor: bg }} className="h-screen flex items-center justify-center">
         <SignIn
           forceRedirectUrl={redirect_url}
+          signUpForceRedirectUrl={redirect_url}
           appearance={{
             elements: {
               headerSubtitle: { display: "none" },
