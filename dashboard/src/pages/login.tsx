@@ -66,7 +66,7 @@ export function Login() {
   const fromApp = URI.from(window.location.href).getParam("fromApp");
   if (fromApp) {
     // treat any value as generic until we make a special one
-    let bg = isDarkMode ? "#212A4A" : "#CCE5F3";
+    const bg = isDarkMode ? "#212A4A" : "#CCE5F3";
     return (
       <div style={{ backgroundColor: bg }} className="h-screen flex items-center justify-center">
         <SignIn

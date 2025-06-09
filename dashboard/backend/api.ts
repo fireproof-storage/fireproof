@@ -120,17 +120,7 @@ export interface FPApiToken {
   verify(token: string): Promise<Result<ps.dashboard.VerifiedAuth>>;
 }
 
-interface ReqInsertTenant {
-  readonly tenantId: string;
-  readonly name?: string;
-  readonly ownerUserId: string;
-  readonly adminUserIds?: string[];
-  readonly memberUserIds?: string[];
-  readonly maxAdminUsers?: number;
-  readonly maxMemberUsers?: number;
-  readonly createdAt?: Date;
-  readonly updatedAt?: Date;
-}
+
 
 // interface ResInsertTenant {
 //     readonly tenantId: string;
@@ -705,7 +695,7 @@ export class FPApiSQL implements FPApiInterface {
         ),
       );
 
-    let tenantUsers = await q.all();
+    const tenantUsers = await q.all();
     // console.log(">>>>>>", tenantUsers.toString());
     const tenantUserFilter = tenantUsers.reduce(
       (acc, lu) => {

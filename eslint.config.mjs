@@ -39,6 +39,15 @@ const opts = tseslint.config(
       "no-restricted-globals": ["error", "URL", "TextDecoder", "TextEncoder"],
     },
   },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      globals: {
+        module: "readonly",
+        require: "readonly",
+      },
+    },
+  },
 );
 
 export default opts;

@@ -5,10 +5,10 @@ import { AppContext } from "../../../app-context.js";
 import { Button } from "../../../components/Button.tsx";
 import { tenantName } from "../../../helpers.ts";
 
-type TenantFormData = {
+interface TenantFormData {
   tenantName: string;
   tenantId: string;
-};
+}
 
 export function CloudTenantAdmin() {
   const { tenantId } = useParams();

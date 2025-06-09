@@ -5,11 +5,11 @@ import { AppContext } from "../../../../app-context.js";
 import { Button } from "../../../../components/Button.tsx";
 import { ledgerName, tenantName } from "../../../../helpers.ts";
 
-type LedgerFormData = {
+interface LedgerFormData {
   ledgerName: string;
   ledgerId: string;
   tenantId: string;
-};
+}
 
 export function LedgerAdmin() {
   const { ledgerId } = useParams();
