@@ -3,7 +3,6 @@ on:
   push:
     paths-ignore:
       - "dashboard/**"
-
   pull_request:
     paths-ignore:
       - "dashboard/**"
