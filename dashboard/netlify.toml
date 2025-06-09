@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/*"
+  to = "/"
+  status = 200
+
+[build]
+  command = "pnpm run build"
+
+
