@@ -7,13 +7,13 @@ on:
     branches:
       - "mabels/backend"
     paths:
-      - 'dashboard/**'
+      - "dashboard/**"
 
   pull_request:
     branches:
       - "mabels/backend"
     paths:
-      - 'dashboard/**'
+      - "dashboard/**"
 
 concurrency:
   group: dashboard-${{ github.workflow }}-${{ github.ref }}
