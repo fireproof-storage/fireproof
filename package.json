@@ -118,7 +118,7 @@
     "@web3-storage/pail": "^0.6.2",
     "cborg": "^4.2.10",
     "charwise": "^3.0.1",
-    "drizzle-orm": "^0.44.1",
+    "drizzle-orm": "^0.44.2",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.3",
     "jose": "^6.0.11",
