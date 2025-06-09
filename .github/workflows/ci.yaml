@@ -1,7 +1,12 @@
 name: CI
 on:
-  - push
-  - pull_request
+  - push:
+      paths-ignore:
+        - "dashboard/**"
+
+  - pull_request:
+      paths-ignore:
+        - "dashboard/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -217,9 +222,9 @@ jobs:
     timeout-minutes: 3
     name: publish
     needs: ["test-node", "smoke", "build"]
-    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
+    environment: ${{ startsWith(github.ref, 'refs/tags/core@s') && 'staging' || startsWith(github.ref, 'refs/tags/core@p') && 'production' || 'dev' }}
     runs-on: blacksmith-2vcpu-ubuntu-2204
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/core@v')
     steps:
       - uses: actions/checkout@v4
 
@@ -260,7 +265,7 @@ jobs:
   cf-deploy:
     name: cf-deploy
     needs: test-node
-    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
+    environment: ${{ startsWith(github.ref, 'refs/tags/core@s') && 'staging' || startsWith(github.ref, 'refs/tags/core@p') && 'production' || 'dev' }}
     runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4

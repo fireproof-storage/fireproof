@@ -3,12 +3,22 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "**"
+      - "dashboard@**"
     branches:
       - "mabels/backend"
+    paths:
+      - 'dashboard/**'
+
   pull_request:
     branches:
       - "mabels/backend"
+    paths:
+      - 'dashboard/**'
+
+concurrency:
+  group: dashboard-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   #  deploy-staging:
   #    environment: staging
@@ -19,7 +29,7 @@ jobs:
   #
   quality-checks:
     name: Testit Runit Buildit
-    environment: ${{ startsWith(github.ref, 'refs/tags/s') && 'staging' || startsWith(github.ref, 'refs/tags/p') && 'production' || 'dev' }}
+    environment: ${{ startsWith(github.ref, 'refs/tags/dashboard@s') && 'staging' || startsWith(github.ref, 'refs/tags/dashboard@p') && 'production' || 'dev' }}
     #runs-on: blacksmith-4vcpu-ubuntu-2204
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
@@ -45,25 +55,31 @@ jobs:
       #      cache: pnpm
 
       - name: install
+        working-directory: dashboard
         run: pnpm install
 
       - name: format-check
+        working-directory: dashboard
         run: pnpm run format --check
 
       - name: lint
+        working-directory: dashboard
         run: pnpm run lint
 
       - name: build
+        working-directory: dashboard
         env:
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
         run: pnpm run build
 
       - name: test
+        working-directory: dashboard
         run: |
           pnpm run test
 
       - name: deploy cf
         id: attempt1
+        working-directory: dashboard
         env:
           # need for drizzle
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -4,6 +4,9 @@
   "private": true,
   "description": "Live ledger for the web",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "fppublish": "pnpm run '/publish:/'",
     "fppublish:fireproof-core": "tsx ./publish-package.ts ./dist/fireproof-core/package.json",
@@ -57,6 +60,7 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.5.0",
     "@cloudflare/workers-types": "^4.20250519.0",
     "@eslint/js": "^9.27.0",
     "@hono/node-server": "^1.14.1",
@@ -87,6 +91,7 @@
     "prettier": "^3.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "rollup-plugin-visualizer": "^6.0.3",
     "semver": "^7.7.2",
     "tsup": "^8.5.0",
     "tsx": "^4.19.4",
