@@ -4,11 +4,13 @@ import { defineConfig } from "vite";
 import { visualizer } from "rollup-plugin-visualizer";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     // multilines
+    tsconfigPaths(),
     react(),
     cloudflare(),
     visualizer(),
