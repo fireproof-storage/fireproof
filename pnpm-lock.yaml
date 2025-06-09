@@ -192,8 +192,8 @@ importers:
         specifier: ^4.18.0
         version: 4.18.0(@cloudflare/workers-types@4.20250601.0)
       zx:
-        specifier: ^8.5.4
-        version: 8.5.4
+        specifier: ^8.5.5
+        version: 8.5.5
 
 packages:
 
@@ -4716,8 +4716,8 @@ packages:
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
-  zx@8.5.4:
-    resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
+  zx@8.5.5:
+    resolution: {integrity: sha512-kzkjV3uqyEthw1IBDbA7Co2djji77vCP1DRvt58aYSMwiX4nyvAkFE8OBSEsOUbDJAst0Yo4asNvMTGG5HGPXA==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -9535,4 +9535,4 @@ snapshots:
 
   zod@3.22.3: {}
 
-  zx@8.5.4: {}
+  zx@8.5.5: {}
