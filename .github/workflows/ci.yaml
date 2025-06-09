@@ -1,12 +1,12 @@
 name: "@fireproof/core"
 on:
-  - push:
-      paths-ignore:
-        - "dashboard/**"
+  push:
+    paths-ignore:
+      - "dashboard/**"
 
-  - pull_request:
-      paths-ignore:
-        - "dashboard/**"
+  pull_request:
+    paths-ignore:
+      - "dashboard/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
