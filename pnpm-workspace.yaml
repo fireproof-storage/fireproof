@@ -1,8 +1,8 @@
 packages:
-  - 'dashboard/*'
+  - "dashboard/*"
 
 catalog:
-   adviserCement: ^0.4.15
+  adviserCement: ^0.4.15
 #    react: 18.3.1
 #    typescript: 5.4.5
 #    lodash: 4.17.21
