@@ -1,4 +1,4 @@
-name: @fireproof/dashboard
+name: "@fireproof/dashboard"
 on:
   workflow_dispatch:
   push:

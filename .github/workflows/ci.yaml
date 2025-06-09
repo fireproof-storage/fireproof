@@ -1,4 +1,4 @@
-name: @fireproof/core
+name: "@fireproof/core"
 on:
   - push
   - pull_request
