@@ -1,12 +1,13 @@
 name: CI
-on:
-  - push:
-      paths-ignore:
-        - "dashboard/**"
 
-  - pull_request:
-      paths-ignore:
-        - "dashboard/**"
+on:
+  push:
+    paths-ignore:
+      - "dashboard/**"
+
+  pull_request:
+    paths-ignore:
+      - "dashboard/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
