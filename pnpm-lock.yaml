@@ -81,11 +81,11 @@ importers:
         specifier: ^9.27.0
         version: 9.28.0
       '@hono/node-server':
-        specifier: ^1.14.1
-        version: 1.14.3(hono@4.7.11)
+        specifier: ^1.14.4
+        version: 1.14.4(hono@4.7.11)
       '@hono/node-ws':
         specifier: ^1.1.7
-        version: 1.1.7(@hono/node-server@1.14.3(hono@4.7.11))(hono@4.7.11)
+        version: 1.1.7(@hono/node-server@1.14.4(hono@4.7.11))(hono@4.7.11)
       '@testing-library/react':
         specifier: ^16.3.0
         version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1019,8 +1019,8 @@ packages:
   '@gerrit0/mini-shiki@3.3.0':
     resolution: {integrity: sha512-frvArO0+s5Viq68uSod5SieLPVM2cLpXoQ1e07lURwgADXpL/MOypM7jPz9otks0g2DIe2YedDAeVrDyYJZRxA==}
 
-  '@hono/node-server@1.14.3':
-    resolution: {integrity: sha512-KuDMwwghtFYSmIpr4WrKs1VpelTrptvJ+6x6mbUcZnFcc213cumTF5BdqfHyW93B19TNI4Vaev14vOI2a0Ie3w==}
+  '@hono/node-server@1.14.4':
+    resolution: {integrity: sha512-DnxpshhYewr2q9ZN8ez/M5mmc3sucr8CT1sIgIy1bkeUXut9XWDkqHoFHRhWIQgkYnKpVRxunyhK7WzpJeJ6qQ==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -5317,13 +5317,13 @@ snapshots:
       '@shikijs/types': 3.4.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@hono/node-server@1.14.3(hono@4.7.11)':
+  '@hono/node-server@1.14.4(hono@4.7.11)':
     dependencies:
       hono: 4.7.11
 
-  '@hono/node-ws@1.1.7(@hono/node-server@1.14.3(hono@4.7.11))(hono@4.7.11)':
+  '@hono/node-ws@1.1.7(@hono/node-server@1.14.4(hono@4.7.11))(hono@4.7.11)':
     dependencies:
-      '@hono/node-server': 1.14.3(hono@4.7.11)
+      '@hono/node-server': 1.14.4(hono@4.7.11)
       hono: 4.7.11
       ws: 8.18.2
     transitivePeerDependencies:
