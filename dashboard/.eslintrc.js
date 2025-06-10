@@ -5,7 +5,7 @@
  */
 
 /** @type {import('eslint').Linter.Config} */
-module.exports = {
+export default {
   root: true,
   parserOptions: {
     ecmaVersion: "latest",
