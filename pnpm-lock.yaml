@@ -46,9 +46,6 @@ importers:
       '@web3-storage/pail':
         specifier: ^0.6.2
         version: 0.6.2
-      autoprefixer:
-        specifier: ^10.4.21
-        version: 10.4.21(postcss@8.5.3)
       cborg:
         specifier: ^4.2.10
         version: 4.2.11
@@ -152,6 +149,9 @@ importers:
       '@vitest/ui':
         specifier: ^3.2.1
         version: 3.2.1(vitest@3.2.1)
+      autoprefixer:
+        specifier: ^10.4.21
+        version: 10.4.21(postcss@8.5.3)
       aws4fetch:
         specifier: ^1.0.20
         version: 1.0.20
