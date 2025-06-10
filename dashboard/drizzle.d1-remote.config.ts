@@ -1,7 +1,7 @@
 import { defineConfig } from "drizzle-kit";
-import { config } from "dotenv";
+import { dotenv } from "zx";
 
-config({ path: ".env.local" });
+dotenv.config(".env.local");
 
 export default defineConfig({
   dialect: "sqlite",
