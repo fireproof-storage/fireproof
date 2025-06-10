@@ -97,7 +97,7 @@
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.1",
-    "wrangler": "^4.18.0",
+    "wrangler": "^4.19.1",
     "zx": "^8.5.5"
   },
   "repository": {
