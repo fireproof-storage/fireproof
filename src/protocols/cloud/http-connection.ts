@@ -1,11 +1,10 @@
 import { HttpHeader, Logger, Result, URI, exception2Result } from "@adviser/cement";
 import { ensureLogger } from "../../utils.js";
-import { MsgBase, buildErrorMsg, MsgWithError, RequestOpts, MsgIsError } from "./msg-types.js";
+import { MsgBase, buildErrorMsg, MsgWithError, RequestOpts, MsgIsError, MsgRawConnection } from "./msg-types.js";
 import {
   ActiveStream,
   ExchangedGestalt,
   MsgerParamsWithEnDe,
-  MsgRawConnection,
   OnMsgFn,
   selectRandom,
   timeout,
