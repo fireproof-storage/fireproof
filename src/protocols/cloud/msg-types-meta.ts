@@ -42,9 +42,9 @@ export function buildReqPutMeta(
 ): ReqPutMeta {
   return {
     auth,
-    tid: sthis.nextId().str,
     type: "reqPutMeta",
     ...gwCtx,
+    tid: gwCtx.tid ?? sthis.nextId().str,
     version: VERSION,
     methodParam: {
       method: "PUT",

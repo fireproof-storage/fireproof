@@ -1,6 +1,15 @@
 import { exception2Result, Future, Logger, Result, top_uint8 } from "@adviser/cement";
-import { MsgBase, MsgIsError, buildErrorMsg, ReqOpen, WaitForTid, MsgWithError, RequestOpts } from "./msg-types.js";
-import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, MsgRawConnection, OnMsgFn, UnReg } from "./msger.js";
+import {
+  MsgBase,
+  MsgIsError,
+  buildErrorMsg,
+  ReqOpen,
+  WaitForTid,
+  MsgWithError,
+  RequestOpts,
+  MsgRawConnection,
+} from "./msg-types.js";
+import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, OnMsgFn, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
 import { SuperThis } from "../../types.js";
 import { ensureLogger } from "../../utils.js";
@@ -151,6 +160,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       this.logger.Error().Err(rMsg).Any({ event }).Msg("Invalid message");
       return;
     }
+    // console.log("wsOnMessage", this.id, rMsg);
     const msg = rMsg.Ok();
     this.waitForTid.resolve(msg);
     // console.log("wsOnMessage", msg, this.#onMsg.size);

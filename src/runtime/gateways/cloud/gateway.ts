@@ -353,7 +353,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (MsgIsError(reqSignedUrl)) {
       return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
     }
-    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().opts.conn, uri);
     if (rGwCtx.isErr()) {
       return Result.Err(rGwCtx);
     }
@@ -403,7 +403,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
     if (MsgIsError(reqSignedUrl)) {
       return this.logger.Error().Err(reqSignedUrl).Msg("Error in buildReqSignedUrl").ResultError();
     }
-    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().conn, uri);
+    const rGwCtx = getGwCtx(ctx.conn.conn.Ok().opts.conn, uri);
     if (rGwCtx.isErr()) {
       return Result.Err(rGwCtx);
     }
