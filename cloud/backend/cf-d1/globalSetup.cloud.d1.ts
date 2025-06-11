@@ -20,7 +20,7 @@ export async function setup(project: TestProject) {
 
   const testEnv = {
     [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
-    STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://localhost:9000/testbucket",
+    STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://127.0.0.1:9000/testbucket",
     ACCESS_KEY_ID: sthis.env.get("ACCESS_KEY_ID") ?? "minioadmin",
     SECRET_ACCESS_KEY: sthis.env.get("SECRET_ACCESS_KEY") ?? "minioadmin",
   };

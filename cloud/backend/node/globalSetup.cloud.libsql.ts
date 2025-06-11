@@ -22,7 +22,7 @@ export async function setup(project: TestProject) {
     //   .toString(),
     [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
     [rt.sts.envKeyDefaults.SECRET]: keys.keys.strings.privateKey,
-    STORAGE_URL: "http://localhost:9000/testbucket",
+    STORAGE_URL: "http://127.0.0.1:9000/testbucket",
     ACCESS_KEY_ID: "minioadmin",
     FP_ENDPOINT: sthis.env.get("FP_ENDPOINT") ?? `http://localhost:${port}`,
     SECRET_ACCESS_KEY: "minioadmin",
