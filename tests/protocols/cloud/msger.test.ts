@@ -347,7 +347,7 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
       try {
         bind.controller?.close();
       } catch (e) {
-        this.sthis.logger.Error().Err(e).Msg("Error closing bind controller")
+        this.sthis.logger.Error().Err(e).Msg("Error closing bind controller");
       }
     }
     if (!this.isReady) {
