@@ -35,7 +35,7 @@ head_sampling_rate = 1
 
 [env.test.vars]
 VERSION = "FP-MSG-1.0"
-#STORAGE_URL = "http://localhost:9000/testbucket"
+#STORAGE_URL = "http://127.0.0.1:9000/testbucket"
 #ACCESS_KEY_ID = "minioadmin"
 #SECRET_ACCESS_KEY = "minioadmin"
 #FP_DEBUG = "FPMetaGroups"
