@@ -344,11 +344,21 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
     super.close(o);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [_, bind] of this.activeBinds.entries()) {
+<<<<<<< HEAD
       try {
         bind.controller?.close();
       } catch (e) {
         this.sthis.logger.Error().Err(e).Msg("Error closing bind controller");
       }
+||||||| parent of 1250f48b (chore: better but not good --- chrome stales)
+      bind.controller?.close();
+=======
+      try {
+        bind.controller?.close();
+      } catch (e) {
+        this.sthis.logger.Error().Err(e).Msg("Error closing bind controller")
+      }
+>>>>>>> 1250f48b (chore: better but not good --- chrome stales)
     }
     if (!this.isReady) {
       return Promise.resolve(Result.Err("Not ready"));

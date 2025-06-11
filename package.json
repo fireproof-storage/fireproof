@@ -29,8 +29,14 @@
     "env": "env",
     "dev": "pnpm run '/^dev:/'",
     "dev:3rd-party": "npx vite -c vite.config.ts cloud/3rd-party --port 3001",
+<<<<<<< HEAD
     "dev:todo-app": "npx vite -c vite.config.ts cloud/todo-app --port 3002",
     "dev:cf-d1": "wrangler dev -c cloud/backend/cf-d1/wrangler.toml --env dev",
+||||||| parent of 1250f48b (chore: better but not good --- chrome stales)
+    "dev:dashboard": "npx vite -c vite.config.ts cloud/dashboard --port 3002",
+=======
+    "dev:cf-d1": "wrangler dev -c cloud/backend/cf-d1/wrangler.toml --env dev",
+>>>>>>> 1250f48b (chore: better but not good --- chrome stales)
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexeddb": "vitest --config vitest.indexeddb.config.ts --run",
@@ -157,6 +163,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@clerk/shared",
       "core-js",
       "deno",
       "edgedriver",
