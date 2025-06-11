@@ -118,7 +118,7 @@ function definedExp(exp?: number): number {
   if (typeof exp === "number") {
     return exp;
   }
-  return new Date().getTime();
+  return new Date().getTime() / 1000;
 }
 
 class TokenObserver {
@@ -154,7 +154,7 @@ class TokenObserver {
 
   readonly _token = new ResolveOnce<TokenAndClaims>();
   async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
-    const now = new Date().getTime();
+    const now = ~~(new Date().getTime() / 1000); // current time in seconds
     let activeTokenAndClaim = this.currentTokenAndClaim;
     if (!this.currentTokenAndClaim || definedExp(this.currentTokenAndClaim.claims.exp) - this.opts.refreshTokenPreset < now) {
       await this.opts.events?.changed(undefined);
@@ -221,7 +221,7 @@ class ToCloud implements ToCloudAttachable {
     if (!ledger) {
       throw new Error("Ledger is required");
     }
-    const logger = ensureLogger(ledger.sthis, "ToCloud").SetDebug("ToCloud");
+    const logger = ensureLogger(ledger.sthis, "ToCloud"); // .SetDebug("ToCloud");
     // console.log("ToCloud prepare", this.opts);
 
     this._tokenObserver = new TokenObserver(this.opts);

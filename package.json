@@ -5,7 +5,7 @@
   "description": "Live ledger for the web",
   "type": "module",
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=22"
   },
   "scripts": {
     "fppublish": "pnpm run '/publish:/'",
@@ -29,7 +29,7 @@
     "env": "env",
     "dev": "pnpm run '/^dev:/'",
     "dev:3rd-party": "npx vite -c vite.config.ts cloud/3rd-party --port 3001",
-    "dev:dashboard": "npx vite -c vite.config.ts cloud/dashboard --port 3002",
+    "dev:cf-d1": "wrangler dev -c cloud/backend/cf-d1/wrangler.toml --env dev",
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexeddb": "vitest --config vitest.indexeddb.config.ts --run",
@@ -119,7 +119,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "^0.4.15",
+    "@adviser/cement": "0.4.15",
     "@clerk/backend": "^2.0.0",
     "@clerk/clerk-react": "^5.31.9",
     "@fireproof/vendor": "^3.0.0",

@@ -98,6 +98,13 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),
   } as unknown as SuperThisOpts);
+  // try {
+  //   if (import.meta && import.meta.env) {
+  //     sthis.env.sets(import.meta.env as unknown as Record<string, string>);
+  //   }
+  // } catch (e) {
+  //   sthis.logger.Error().Err(e).Msg("Error setting import.meta.env");
+  // }
   sthis.env.sets(env as unknown as Record<string, string>);
   const logger = ensureLogger(sthis, "createHandler");
   const fpApi = new FPApiSQL(sthis, db, {
@@ -120,7 +127,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
     }
     const rJso = await exception2Result(async () => await req.json());
     if (rJso.isErr()) {
-      logger.Error().Err(rJso.Err()).Msg("Error");
+      logger.Error().Err(rJso.Err()).Msg("createhandler-Error");
       return new Response("Invalid request", { status: 404, headers: CORS });
     }
     const jso = rJso.Ok();
@@ -228,7 +235,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
         },
       });
     } catch (e) {
-      logger.Error().Any({ request: jso.type }).Err(e).Msg("Error");
+      logger.Error().Any({ request: jso.type }).Err(e).Msg("global-Error");
       const endTime = performance.now();
       const duration = endTime - startTime;
       return new Response(

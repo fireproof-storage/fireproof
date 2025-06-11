@@ -56,7 +56,7 @@
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^4.5.1",
     "autoprefixer": "^10.4.20",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "drizzle-kit": "0.30.6",
     "drizzle-orm": "^0.44.2",
     "eslint": "^9.16.0",
