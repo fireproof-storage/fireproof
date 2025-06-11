@@ -79,12 +79,32 @@ export interface PreSignedMsg extends MsgWithTenantLedger<MsgWithConn> {
   readonly urlParam: SignedUrlParam;
 }
 
+export interface MsgRawConnection<T extends MsgBase = MsgBase> {
+  // readonly ws: WebSocket;
+  // readonly params: ConnectionKey;
+  // qsOpen: ReqRes<ReqOpen, ResOpen>;
+  readonly sthis: SuperThis;
+  // readonly exchangedGestalt: ExchangedGestalt;
+  // readonly activeBinds: Map<string, ActiveStream<T, MsgBase>>;
+
+  // readonly vconn: VirtualConnection;
+
+  isReady: boolean;
+
+  bind<S extends T, Q extends T>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>>;
+  request<S extends T, Q extends T>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>>;
+  send<S extends T, Q extends T>(msg: Q): Promise<MsgWithError<S>>;
+  start(): Promise<Result<void>>;
+  close(o: T): Promise<Result<void>>;
+}
+
 export interface RequestOpts {
   readonly waitFor: (msg: MsgBase) => boolean;
   readonly noConn?: boolean; // if true, no connection is required
   readonly pollInterval?: number; // 1000ms
   readonly timeout?: number; // ms
   readonly noRetry?: boolean;
+  readonly rawConn?: MsgRawConnection;
 }
 
 export interface EnDeCoder {

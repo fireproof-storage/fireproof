@@ -138,12 +138,6 @@ class CommitAction implements CommitParams {
     this.attached.remotes().forEach((r) => {
       this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.meta.url()).Msg("remote-writeMeta");
-        // console.log(
-        //   "writeMeta",
-        //   this.attached.local().active.meta.url().pathname,
-        //   r.active.meta.url().pathname,
-        //   meta.cars.map((i) => i.toString()),
-        // );
         await r.active.meta.save(meta);
         return [];
       });

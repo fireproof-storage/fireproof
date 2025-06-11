@@ -25,6 +25,7 @@ import {
   MsgWithOptionalConn,
   MsgIsConnected,
   MsgIsWithConn,
+  MsgRawConnection,
 } from "./msg-types.js";
 import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
@@ -71,25 +72,6 @@ export interface ActiveStream {
   };
   timeout?: unknown;
   controller?: ReadableStreamDefaultController<MsgWithError<MsgBase>>;
-}
-
-export interface MsgRawConnection<T extends MsgBase = MsgBase> {
-  // readonly ws: WebSocket;
-  // readonly params: ConnectionKey;
-  // qsOpen: ReqRes<ReqOpen, ResOpen>;
-  readonly sthis: SuperThis;
-  // readonly exchangedGestalt: ExchangedGestalt;
-  // readonly activeBinds: Map<string, ActiveStream<T, MsgBase>>;
-
-  // readonly vconn: VirtualConnection;
-
-  isReady: boolean;
-
-  bind<S extends T, Q extends T>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>>;
-  request<S extends T, Q extends T>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>>;
-  send<S extends T, Q extends T>(msg: Q): Promise<MsgWithError<S>>;
-  start(): Promise<Result<void>>;
-  close(o: T): Promise<Result<void>>;
 }
 
 export function jsonEnDe(sthis: SuperThis): EnDeCoder {
@@ -232,6 +214,11 @@ export interface VirtualConnectedRequired {
 
 export type VirtualConnectedOpts = Partial<VirtualConnectedOptionals> & Required<VirtualConnectedRequired>;
 
+interface ActionWhatToDo<S extends MsgBase, X extends MsgWithError<S> | Result<void>> {
+  readonly whatToDo: "recurse" | "return" | "action";
+  readonly value?: X;
+}
+
 export class VirtualConnected {
   readonly sthis: SuperThis;
   // readonly actionQueue: ActionsQueue;
@@ -262,7 +249,8 @@ export class VirtualConnected {
 
   get conn(): QSId {
     if (!this.virtualConn) {
-      throw new Error("conn is not set");
+      const err = new Error("conn is not set");
+      throw err;
     }
     return this.virtualConn;
   }
@@ -331,15 +319,19 @@ export class VirtualConnected {
 
   request<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, iopts: RequestOpts): Promise<MsgWithError<S>> {
     const opts = this.ensureOpts(iopts);
-    return this.getRealConn(req, opts, (realConn: MsgRawConnection) =>
+    const realFn = (realConn: MsgRawConnection) =>
       realConn.request<S, Q>(
         {
           ...req,
           conn: { ...this.virtualConn, ...req.conn },
         },
         opts,
-      ),
-    );
+      );
+    if (opts.rawConn) {
+      // if rawConn is provided, use it directly
+      return realFn(opts.rawConn);
+    }
+    return this.getRealConn(req, opts, realFn);
   }
 
   send<S extends MsgWithConn, Q extends MsgWithOptionalConn>(msg: Q): Promise<MsgWithError<S>> {
@@ -433,10 +425,12 @@ export class VirtualConnected {
     return rRealConn;
   }
 
-  private async getQSIdWithSideEffect(msg: MsgBase, conn: ReqOpenConn): Promise<MsgWithError<ResOpen>> {
+  private async getQSIdWithSideEffect(rawConn: MsgRawConnection, msg: MsgBase, conn: ReqOpenConn): Promise<MsgWithError<ResOpen>> {
+    // console.log("getQSIdWithSideEffect", this.id, msg, conn);
     const mOpen = await this.request<ResOpen, ReqOpen>(buildReqOpen(this.sthis, msg.auth, conn), {
       waitFor: MsgIsResOpen,
       noConn: true,
+      rawConn,
     });
     if (MsgIsError(mOpen)) {
       return mOpen;
@@ -454,68 +448,101 @@ export class VirtualConnected {
   ): Promise<X> {
     const opts = this.ensureOpts(iopts);
     // const id = this.sthis.nextId().str;
-    if (!this.realConn) {
-      await this.mutex(async () => {
+    const whatToDo = await this.mutex(async (): Promise<ActionWhatToDo<S, X>> => {
+      if (!this.realConn) {
         if (this.retries.length >= this.opts.retryCount) {
-          return Promise.resolve({
-            type: "error",
-            src: "VirtualConnection:getRealConn",
-            message: "retry count exceeded",
-            tid: msg.tid,
-            version: msg.version,
-            auth: msg.auth,
-            stack: [],
-          } satisfies ErrorMsg as unknown as X);
+          return {
+            whatToDo: "return",
+            value: {
+              type: "error",
+              src: "VirtualConnection:getRealConn",
+              message: "retry count exceeded",
+              tid: msg.tid,
+              version: msg.version,
+              auth: msg.auth,
+              stack: [],
+            } satisfies ErrorMsg as unknown as X,
+          };
         }
         // needs to connected
         const rConn = await this.connect(msg.auth, this.opts.curl, this.opts.msgerParams);
         if (rConn.isErr()) {
           this.retries.push({ retryCount: this.retries.length + 1 });
           await sleep(this.opts.retryDelay * this.retries.length);
-          return this.getRealConn(msg, opts, action);
+          return {
+            whatToDo: "recurse",
+            // this.getRealConn(msg, opts, action);
+          };
         }
         this.realConn = rConn.Ok();
-        const mQSid = await this.getQSIdWithSideEffect(msg, {
+        const mQSid = await this.getQSIdWithSideEffect(this.realConn, msg, {
           reqId: this.sthis.nextId().str,
           ...this.virtualConn,
           ...this.opts.conn,
         });
         if (MsgIsError(mQSid)) {
           return {
-            ...mQSid,
-            tid: msg.tid,
-            // type: msg.type,
-          } as unknown as X;
+            whatToDo: "return",
+            value: {
+              ...mQSid,
+              tid: msg.tid,
+              // type: msg.type,
+            } as unknown as X,
+          };
         }
         for (const as of this.activeBinds.values()) {
           // async
           void this.handleBindRealConn(this.realConn, msg, as);
         }
-      });
-      const ret = await this.getRealConn(msg, opts, action);
-      return ret;
-    } else {
-      if (!this.realConn.isReady) {
-        await this.realConn.close(msg);
-        this.realConn = undefined; // trigger reconnect
-        this.retries = [];
-        return this.getRealConn(msg, opts, action);
-      }
-      if (!opts.noConn && !this.virtualConn) {
-        const conn = MsgIsWithConn(msg) ? { conn: msg.conn } : {};
         return {
-          type: "error",
-          src: msg,
-          message: "virtualConn is not set",
-          tid: msg.tid,
-          ...conn,
-          version: msg.version,
-          auth: msg.auth,
-          stack: [],
-        } satisfies ErrorMsg as unknown as X;
+          whatToDo: "recurse",
+        };
+        // const ret = await this.getRealConn(msg, opts, action);
+        // return ret;
+      } else {
+        if (!this.realConn.isReady) {
+          await this.realConn.close(msg);
+          this.realConn = undefined; // trigger reconnect
+          this.retries = [];
+          return { whatToDo: "recurse" };
+          // return this.getRealConn(msg, opts, action);
+        }
+        if (!opts.noConn && !this.virtualConn) {
+          const conn = MsgIsWithConn(msg) ? { conn: msg.conn } : {};
+          return {
+            whatToDo: "return",
+            value: {
+              type: "error",
+              src: msg,
+              message: "virtualConn is not set",
+              tid: msg.tid,
+              ...conn,
+              version: msg.version,
+              auth: msg.auth,
+              stack: [],
+            } satisfies ErrorMsg as unknown as X,
+          };
+        }
+        return {
+          whatToDo: "action",
+        };
+        //const ret = await action(this.realConn);
+        //return ret;
       }
-      const ret = await action(this.realConn);
-      return ret;
+    });
+    // need to not stuck in the mutex
+    switch (whatToDo.whatToDo) {
+      case "recurse":
+        return this.getRealConn(msg, opts, action);
+      case "return":
+        return whatToDo.value as X;
+      case "action":
+        if (!this.realConn) {
+          throw new Error("realConn is not set, this should not happen");
+        }
+        return action(this.realConn);
+      default:
+        throw new Error(`Unknown action: ${whatToDo.whatToDo} for msg: ${msg.type} with id: ${this.id}`);
     }
   }
 }

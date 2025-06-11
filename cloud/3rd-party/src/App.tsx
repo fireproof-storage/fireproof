@@ -6,11 +6,11 @@ import "./App.css";
 function App() {
   const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
-      // dashboardURI: "http://localhost:3000/fp/cloud/api/token",
-      tokenApiURI: "https://dev.connect.fireproof.direct/api",
-      urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
+      dashboardURI: "http://localhost:7370/fp/cloud/api/token",
+      tokenApiURI: "http://localhost:7370/api",
+      urls: { base: "fpcloud://localhost:8787?protocol=ws" },
       // tenant: "3rd-party",
-      // ledger: "have-four-drinks",
+      // ledger: "vibes",
     }),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
