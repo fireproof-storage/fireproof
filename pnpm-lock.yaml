@@ -54,7 +54,7 @@ importers:
         version: 3.0.1
       drizzle-orm:
         specifier: ^0.44.2
-        version: 0.44.2(@cloudflare/workers-types@4.20250610.0)(@libsql/client@0.15.8)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1)
+        version: 0.44.2(@cloudflare/workers-types@4.20250614.0)(@libsql/client@0.15.8)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1)
       esbuild-plugin-replace:
         specifier: ^1.4.0
         version: 1.4.0
@@ -103,10 +103,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.5.0
-        version: 1.5.0(rollup@4.41.0)(vite@6.3.5(@types/node@24.0.0)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))(workerd@1.20250525.0)(wrangler@4.19.1(@cloudflare/workers-types@4.20250610.0))
+        version: 1.5.0(rollup@4.41.0)(vite@6.3.5(@types/node@24.0.0)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))(workerd@1.20250525.0)(wrangler@4.19.1(@cloudflare/workers-types@4.20250614.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20250610.0
-        version: 4.20250610.0
+        specifier: ^4.20250614.0
+        version: 4.20250614.0
       '@eslint/js':
         specifier: ^9.27.0
         version: 9.28.0
@@ -238,7 +238,7 @@ importers:
         version: 3.2.1(@types/node@24.0.0)(@vitest/browser@3.2.1)(@vitest/ui@3.2.1)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.0)(typescript@5.8.3))(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1)
       wrangler:
         specifier: ^4.19.1
-        version: 4.19.1(@cloudflare/workers-types@4.20250610.0)
+        version: 4.19.1(@cloudflare/workers-types@4.20250614.0)
       zx:
         specifier: ^8.5.5
         version: 8.5.5
@@ -429,8 +429,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20250610.0':
-    resolution: {integrity: sha512-HxnUoey3QxCEfy07pUm7J42jBi9YPHq/hA3fw6JmOqYLHdviHI28OA8lup+2RUaHwDzh6q1DSfrBvvDqde645A==}
+  '@cloudflare/workers-types@4.20250614.0':
+    resolution: {integrity: sha512-a2r9Yamj+7YlXUeGbnpwZdxGyTx1rMyLdt2xtzk46HgpGq3QV8ka8s3B+tB4OzDPXH9x5TmplwlO9vTJkCXG1w==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -1765,6 +1765,9 @@ packages:
   '@types/node@24.0.0':
     resolution: {integrity: sha512-yZQa2zm87aRVcqDyH5+4Hv9KYgSdgwX1rFnGvpbzMaC7YAljmhBET93TPiTd3ObwTL+gSpIzPKg5BqVxdCvxKg==}
 
+  '@types/node@24.0.1':
+    resolution: {integrity: sha512-MX4Zioh39chHlDJbKmEgydJDS3tspMP/lnQC67G3SWsTnb9NeYVWOjkxpOSy4oMfPs4StcWHwBrvUb4ybfnuaw==}
+
   '@types/randombytes@2.0.3':
     resolution: {integrity: sha512-+NRgihTfuURllWCiIAhm1wsJqzsocnqXM77V/CalsdJIYSRGEHMnritxh+6EsBklshC+clo1KgnN14qgSGeQdw==}
 
@@ -2291,6 +2294,9 @@ packages:
 
   brace-expansion@2.0.1:
     resolution: {integrity: sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==}
+
+  brace-expansion@2.0.2:
+    resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
@@ -5346,7 +5352,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20250525.0
 
-  '@cloudflare/vite-plugin@1.5.0(rollup@4.41.0)(vite@6.3.5(@types/node@24.0.0)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))(workerd@1.20250525.0)(wrangler@4.19.1(@cloudflare/workers-types@4.20250610.0))':
+  '@cloudflare/vite-plugin@1.5.0(rollup@4.41.0)(vite@6.3.5(@types/node@24.0.0)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))(workerd@1.20250525.0)(wrangler@4.19.1(@cloudflare/workers-types@4.20250614.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.3.2(unenv@2.0.0-rc.17)(workerd@1.20250525.0)
       '@mjackson/node-fetch-server': 0.6.1
@@ -5357,7 +5363,7 @@ snapshots:
       tinyglobby: 0.2.14
       unenv: 2.0.0-rc.17
       vite: 6.3.5(@types/node@24.0.0)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1)
-      wrangler: 4.19.1(@cloudflare/workers-types@4.20250610.0)
+      wrangler: 4.19.1(@cloudflare/workers-types@4.20250614.0)
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
@@ -5380,7 +5386,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20250525.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20250610.0': {}
+  '@cloudflare/workers-types@4.20250614.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -6327,7 +6333,7 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 24.0.0
+      '@types/node': 24.0.1
     optional: true
 
   '@types/chai@5.2.2':
@@ -6357,6 +6363,11 @@ snapshots:
   '@types/node@24.0.0':
     dependencies:
       undici-types: 7.8.0
+
+  '@types/node@24.0.1':
+    dependencies:
+      undici-types: 7.8.0
+    optional: true
 
   '@types/randombytes@2.0.3':
     dependencies:
@@ -6392,7 +6403,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 24.0.0
+      '@types/node': 24.0.1
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.33.0(@typescript-eslint/parser@8.33.0(eslint@9.28.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.28.0(jiti@1.21.7))(typescript@5.8.3)':
@@ -7007,6 +7018,11 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
 
+  brace-expansion@2.0.2:
+    dependencies:
+      balanced-match: 1.0.2
+    optional: true
+
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
@@ -7409,9 +7425,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.2(@cloudflare/workers-types@4.20250610.0)(@libsql/client@0.15.8)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1):
+  drizzle-orm@0.44.2(@cloudflare/workers-types@4.20250614.0)(@libsql/client@0.15.8)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250610.0
+      '@cloudflare/workers-types': 4.20250614.0
       '@libsql/client': 0.15.8
       '@types/better-sqlite3': 7.6.13
       better-sqlite3: 11.9.1
@@ -8727,7 +8743,7 @@ snapshots:
 
   minimatch@5.1.6:
     dependencies:
-      brace-expansion: 2.0.1
+      brace-expansion: 2.0.2
     optional: true
 
   minimatch@9.0.5:
@@ -10333,7 +10349,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20250525.0
       '@cloudflare/workerd-windows-64': 1.20250525.0
 
-  wrangler@4.19.1(@cloudflare/workers-types@4.20250610.0):
+  wrangler@4.19.1(@cloudflare/workers-types@4.20250614.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.3.2(unenv@2.0.0-rc.17)(workerd@1.20250525.0)
@@ -10344,7 +10360,7 @@ snapshots:
       unenv: 2.0.0-rc.17
       workerd: 1.20250525.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250610.0
+      '@cloudflare/workers-types': 4.20250614.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
