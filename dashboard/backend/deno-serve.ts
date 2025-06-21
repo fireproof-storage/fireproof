@@ -10,8 +10,9 @@ function getClient() {
 }
 
 async function main() {
+  const port = 7370;
   Deno.serve({
-    port: 7370,
+    port,
     handler: createHandler(getClient(), Deno.env.toObject()),
   });
 }

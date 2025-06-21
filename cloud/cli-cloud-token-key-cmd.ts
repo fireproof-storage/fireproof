@@ -1,6 +1,7 @@
-import { rt, SuperThis } from "@fireproof/core";
-import { command, flag, option, string } from "cmd-ts";
+import { ensureSuperThis, rt, SuperThis } from "@fireproof/core";
+import { command, flag, option, run, string } from "cmd-ts";
 import { exportJWK } from "jose/key/export";
+import process from "node:process";
 
 export function keyCmd(sthis: SuperThis) {
   return command({
@@ -47,3 +48,5 @@ export function keyCmd(sthis: SuperThis) {
     },
   });
 }
+
+run(keyCmd(ensureSuperThis({})), process.argv.slice(2));

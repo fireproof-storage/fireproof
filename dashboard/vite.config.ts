@@ -29,8 +29,10 @@ export default defineConfig({
     port: 3000,
     hmr: false,
     proxy: {
-      "/*": {
-        rewrite: (path) => "/index.html",
+      "/fp/cloud/api": {
+        target: "http://localhost:7370",
+        changeOrigin: true,
+
       },
     },
   },
