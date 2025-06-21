@@ -122,6 +122,13 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
         },
       });
     }
+    if (req.method === "GET") {
+      // simple health check endpoints
+      if (new URL(req.url).pathname === "/" || new URL(req.url).pathname === "/health") {
+        return new Response("ok", { status: 200, headers: CORS });
+      }
+      return new Response("Invalid request", { status: 404, headers: CORS });
+    }
     if (!["POST", "PUT"].includes(req.method)) {
       return new Response("Invalid request", { status: 404, headers: CORS });
     }

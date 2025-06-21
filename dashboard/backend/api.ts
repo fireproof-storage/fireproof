@@ -1865,13 +1865,26 @@ export class FPApiSQL implements FPApiInterface {
 
   // this is why to expensive --- why not kv or other simple storage
   async getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>> {
-    const past = new Date(new Date().getTime() - 15 * 60 * 1000).toISOString();
-    const out = await this.db
-      .select()
-      .from(sqlTokenByResultId)
-      .where(and(eq(sqlTokenByResultId.resultId, req.resultId), gte(sqlTokenByResultId.updatedAt, past)))
-      .get();
-    if (!out || out.status !== "found" || !out.token) {
+    const logger = this.sthis.logger.Info().Any({ req }).Msg("getTokenByResultId-start");
+    const pastIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    let out: typeof sqlTokenByResultId.$inferSelect | undefined;
+    try {
+      // NOTE: gte() over ISO-text can fail with libsql+drizzle; fetch by PK only and filter in JS.
+      out = await this.db
+        .select()
+        .from(sqlTokenByResultId)
+        .where(eq(sqlTokenByResultId.resultId, req.resultId))
+        .get();
+    } catch (e) {
+      this.sthis.logger.Error().Any({ req }).Err(e).Msg("getTokenByResultId-query-failed");
+      // treat query failure like not-found to avoid breaking flow
+      return Result.Ok({
+        type: "resTokenByResultId",
+        resultId: req.resultId,
+        status: "not-found",
+      });
+    }
+    if (!out || out.status !== "found" || !out.token || new Date(out.updatedAt).getTime() < new Date(pastIso).getTime()) {
       return Result.Ok({
         type: "resTokenByResultId",
         resultId: req.resultId,

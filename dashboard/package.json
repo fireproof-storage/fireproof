@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "npx concurrently \"pnpm:backend:deno\" \"vite\"",
+    "dev": "npx concurrently \"pnpm:backend:deno\" \"vite\" 2>&1 | tee dashboard-dev.log",
     "backend:deno": "deno run --config deno.jsonc --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.ts 2>&1 | tee backend.log",
     "backend:d1": "wrangler dev -c wrangler.toml --port 7370",
     "deploy:cf": "wrangler deploy -c wrangler.toml",
