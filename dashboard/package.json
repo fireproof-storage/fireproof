@@ -7,8 +7,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "vite",
-    "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.ts",
+    "dev": "npx concurrently \"pnpm:backend:deno\" \"vite\"",
+    "backend:deno": "deno run --config deno.jsonc --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.ts 2>&1 | tee backend.log",
     "backend:d1": "wrangler dev -c wrangler.toml --port 7370",
     "deploy:cf": "wrangler deploy -c wrangler.toml",
     "build": "vite build",
@@ -20,6 +20,7 @@
     "check": "pnpm format --write && tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
     "drizzle:d1-local": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
+    "db:push:sqlite": "drizzle-kit push --config ./drizzle.sqlite.config.ts",
     "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.d1-remote.config.ts"
   },
   "dependencies": {
@@ -55,6 +56,7 @@
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^4.5.1",
+    "concurrently": "^8.2.2",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.5.0",
     "drizzle-kit": "0.30.6",

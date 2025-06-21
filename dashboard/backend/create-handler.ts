@@ -132,6 +132,8 @@ export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<strin
     }
     const jso = rJso.Ok();
 
+    logger.Info().Any("json_payload", jso).Msg("Received API request");
+
     // console.log(jso);
     let res: Promise<Result<unknown>>;
     switch (true) {
