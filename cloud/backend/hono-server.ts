@@ -319,7 +319,14 @@ export class HonoServer {
     app.put("/fp", (c) =>
       this.factory.inject(c, async (ctx) => {
         Object.entries(c.req.header()).forEach(([k, v]) => c.res.headers.set(k, v[0]));
-        const rMsg = await exception2Result(() => c.req.json() as Promise<MsgBase>);
+        const rMsg = await exception2Result(async () => {
+          const ctype = c.req.header("content-type")?.[0] ?? "";
+          if (ctype.includes("application/json")) {
+            return (await c.req.json()) as MsgBase;
+          }
+          const bytes = new Uint8Array(await c.req.arrayBuffer());
+          return ctx.ende.decode(bytes) as MsgBase;
+        });
         if (rMsg.isErr()) {
           return c.json(buildErrorMsg(ctx, { tid: "internal" }, rMsg.Err()), 400, CORS.AsRecordStringString());
         }

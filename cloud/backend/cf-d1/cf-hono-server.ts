@@ -374,11 +374,11 @@ export class CFHonoServer extends HonoServerBase {
         );
       }
       const [client, server] = cfWebSocketPair();
-      const cfEnv = c.env as Env;
-      const cfCtx = cfEnv.FP_EXPOSE_CTX.get(this.id);
+      // Re-use the already attached context rather than re-fetching
+      const cfCtx = this.cfCtx;
       // Accept the server side of the pair inside the Durable Object context
-    // Using single-argument signature for compatibility with current Workers runtime
-    cfCtx.cfObj.ctx.acceptWebSocket(server as WebSocket);
+      // Using single-argument signature for compatibility with current Workers runtime
+      cfCtx.cfObj.ctx.acceptWebSocket(server as WebSocket);
       cfCtx.ctx.wsRoom.applyGetWebSockets(this.id, () => cfCtx.cfObj.ctx.getWebSockets() as CFWebSocket[]);
       cfCtx.ctx.wsRoom.applyEvents(this.id, await createEvents(c));
       server.serializeAttachment({ id: cfCtx.id });
