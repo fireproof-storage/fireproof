@@ -11,9 +11,9 @@ async function getClient() {
   // debug list tables
   try {
     const res = await client.execute("SELECT name FROM sqlite_master WHERE type='table';");
-    console.log('Tables:', res.rows);
+    console.log("Tables:", res.rows);
   } catch (e) {
-    console.error('Error listing tables', e);
+    console.error("Error listing tables", e);
   }
   return db;
 }
@@ -22,11 +22,7 @@ async function main() {
   const port = 7370;
   const env = Deno.env.toObject();
   // Basic sanity check of critical env vars for easier debugging
-  const requiredKeys = [
-    "CLERK_PUB_JWT_KEY",
-    "CLOUD_SESSION_TOKEN_PUBLIC",
-    "CLOUD_SESSION_TOKEN_SECRET",
-  ];
+  const requiredKeys = ["CLERK_PUB_JWT_KEY", "CLOUD_SESSION_TOKEN_PUBLIC", "CLOUD_SESSION_TOKEN_SECRET"];
   for (const k of requiredKeys) {
     const present = env[k] && env[k].length > 0;
     console.log(`ENV ${k}: ${present ? "✅ present" : "❌ MISSING"}`);

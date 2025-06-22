@@ -13,8 +13,33 @@ import { BuildURI, LoggerImpl } from "@adviser/cement";
 // import { ExportedHandler, WebSocket } from "@cloudflare/workers-types";
 
 export default {
-  fetch: async (req, env): Promise<Response> => {
-    return getRoomDurableObject(env, "V1").fetch(req);
+  async fetch(req, env): Promise<Response> {
+    // CORS pre-flight
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
+          "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
+
+    const res = await getRoomDurableObject(env, "V1").fetch(req);
+
+    const outHeaders = new Headers(res.headers);
+    outHeaders.set("Access-Control-Allow-Origin", "*");
+    outHeaders.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,DELETE");
+    outHeaders.set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept");
+    outHeaders.set("Access-Control-Max-Age", "86400");
+
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: outHeaders,
+    });
   },
 } satisfies ExportedHandler<Env>;
 /*
@@ -99,7 +124,27 @@ export class FPRoomDurableObject extends DurableObject<Env> {
 
     const uri = BuildURI.from(request.url).setParam("ctxId", id).URI();
 
-    const ret = await this.honoApp.fetch(new Request(uri.toString(), request), this.env);
+    // Cloudflare Workers request bodies are single-read streams. To avoid the
+    // "Can't read from request stream after it has been read" error, we read
+    // the body here (only once) and re-inject it into a brand-new Request.
+    let body: ArrayBuffer | undefined;
+    // Only methods that are allowed to carry a body should attempt to read it.
+    if (!["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase())) {
+      // Clone before reading so that any further middleware reading from the
+      // original request does not throw. The clone shares a tee'd body stream
+      // so we can safely consume this copy.
+      const clone = request.clone();
+      body = await clone.arrayBuffer();
+    }
+
+    const forwardedReq = new Request(uri.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: body ? body : undefined,
+      // Preserve other relevant init properties if needed in future
+    });
+
+    const ret = await this.honoApp.fetch(forwardedReq, this.env);
     return ret;
   }
 

@@ -1870,11 +1870,7 @@ export class FPApiSQL implements FPApiInterface {
     let out: typeof sqlTokenByResultId.$inferSelect | undefined;
     try {
       // NOTE: gte() over ISO-text can fail with libsql+drizzle; fetch by PK only and filter in JS.
-      out = await this.db
-        .select()
-        .from(sqlTokenByResultId)
-        .where(eq(sqlTokenByResultId.resultId, req.resultId))
-        .get();
+      out = await this.db.select().from(sqlTokenByResultId).where(eq(sqlTokenByResultId.resultId, req.resultId)).get();
     } catch (e) {
       this.sthis.logger.Error().Any({ req }).Err(e).Msg("getTokenByResultId-query-failed");
       // treat query failure like not-found to avoid breaking flow

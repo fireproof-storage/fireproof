@@ -57,7 +57,7 @@ database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
 
 [env.dev.vars]
 VERSION = "FP-MSG-1.0"
-#CLOUD_SESSION_TOKEN_PUBLIC = "should-be-set-by-dot-dev"
+CLOUD_SESSION_TOKEN_PUBLIC = "zeWndr5LEoaySgKSo2aZniYqYewyJxWprzom6BuXx7J2Ue3LhuutafLoQXsS6r5N8xkZZYPFYLWG7rwhJtfN9sbMyWW7A7BBxkRTzSXM8qgBTDwJF7iLrqF1NtmeUxXn8iPZtKfs5CRWY7paMnPopXi9DV3DaEhXZeVSdSYbMhYAQ"
 #STORAGE_URL = "should-be-set-by-dot-dev"
 
 

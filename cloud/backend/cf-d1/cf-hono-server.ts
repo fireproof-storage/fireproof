@@ -312,9 +312,20 @@ export class CFHonoFactory implements HonoServerFactory {
         break;
     }
 
-    const stsService = await rt.sts.SessionTokenService.create({
-      token: sthis.env.get(rt.sts.envKeyDefaults.PUBLIC) ?? "",
-    });
+    let stsService: rt.sts.SessionTokenService;
+    const envToken = sthis.env.get(rt.sts.envKeyDefaults.PUBLIC);
+    if (envToken) {
+      stsService = await rt.sts.SessionTokenService.create({ token: envToken });
+    } else {
+      // In local dev the session token keys might not be configured yet.
+      // Generate a throw-away key pair so that the service still functions
+      // without environment configuration.
+      const keys = await rt.sts.SessionTokenService.generateKeyPair();
+      // Persist in SuperThis env so subsequent requests reuse the same key pair.
+      sthis.env.set(rt.sts.envKeyDefaults.PUBLIC, keys.strings.publicKey);
+      sthis.env.set(rt.sts.envKeyDefaults.SECRET, keys.strings.privateKey);
+      stsService = await rt.sts.SessionTokenService.create({ token: keys.strings.publicKey });
+    }
     const wsRoom = new CFWSRoom(sthis);
     const item = CFExposeCtx.attach(c.env, id, sthis, logger, NaN, ende, gs, stsService, db, wsRoom, {
       method: c.req.method,
@@ -354,7 +365,7 @@ export class CFHonoServer extends HonoServerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return async (_conn, c, _next) => {
       const upgradeHeader = c.req.header("Upgrade");
-      if (!upgradeHeader || upgradeHeader !== "websocket") {
+      if (!upgradeHeader || upgradeHeader.toLowerCase() !== "websocket") {
         return new Response(
           this.cfCtx.ctx.ende.encode(ps.cloud.buildErrorMsg(this.cfCtx.ctx, {}, new Error("expected Upgrade: websocket"))),
           {
@@ -365,7 +376,9 @@ export class CFHonoServer extends HonoServerBase {
       const [client, server] = cfWebSocketPair();
       const cfEnv = c.env as Env;
       const cfCtx = cfEnv.FP_EXPOSE_CTX.get(this.id);
-      cfCtx.cfObj.ctx.acceptWebSocket(server as WebSocket, [cfCtx.id]);
+      // Accept the server side of the pair inside the Durable Object context
+    // Using single-argument signature for compatibility with current Workers runtime
+    cfCtx.cfObj.ctx.acceptWebSocket(server as WebSocket);
       cfCtx.ctx.wsRoom.applyGetWebSockets(this.id, () => cfCtx.cfObj.ctx.getWebSockets() as CFWebSocket[]);
       cfCtx.ctx.wsRoom.applyEvents(this.id, await createEvents(c));
       server.serializeAttachment({ id: cfCtx.id });

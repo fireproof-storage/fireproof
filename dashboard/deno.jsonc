@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["deno.ns", "dom"]
+    "lib": ["deno.ns", "dom"],
   },
   "imports": {
     "@fireproof/core": "../src/index.ts",
-    "@fireproof/core/": "../src/"
-  }
+    "@fireproof/core/": "../src/",
+  },
 }
-

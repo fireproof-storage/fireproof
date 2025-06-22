@@ -8,14 +8,14 @@ This document walks a **new developer** from a fresh clone to a fully-running lo
 
 ## 1. Prerequisites
 
-| Tool | Version | Notes |
-|------|---------|-------|
-| Node | ≥ 22 | Install via Volta, nvm or Homebrew. |
-| pnpm | ≥ 8 | `npm i -g pnpm` |
-| Deno | ≥ 1.43 | `brew install deno` |
-| Wrangler | ≥ 4.19 | Cloudflare Workers CLI – `npm i -g wrangler` |
-| SQLite3 | any | Used by the local dashboard backend. |
-| Git | ≥ 2.40 | |
+| Tool     | Version | Notes                                        |
+| -------- | ------- | -------------------------------------------- |
+| Node     | ≥ 22    | Install via Volta, nvm or Homebrew.          |
+| pnpm     | ≥ 8     | `npm i -g pnpm`                              |
+| Deno     | ≥ 1.43  | `brew install deno`                          |
+| Wrangler | ≥ 4.19  | Cloudflare Workers CLI – `npm i -g wrangler` |
+| SQLite3  | any     | Used by the local dashboard backend.         |
+| Git      | ≥ 2.40  |                                              |
 
 ## 2. Clone and checkout
 
@@ -74,28 +74,28 @@ $ pnpm dev
 
 This launches **four** processes via the root `package.json` scripts:
 
-| Service | Port | Script |
-|---------|------|--------|
-| 3rd-party demo | 3001 | `dev:3rd-party` |
-| Todo-app frontend | 3002 | `dev:todo-app` |
+| Service                | Port | Script                                      |
+| ---------------------- | ---- | ------------------------------------------- |
+| 3rd-party demo         | 3001 | `dev:3rd-party`                             |
+| Todo-app frontend      | 3002 | `dev:todo-app`                              |
 | Dashboard (React+Vite) | 3000 | `dev:dashboard` → proxies API calls to 7370 |
-| Cloudflare D1 worker | 8787 | `dev:cf-d1` |
+| Cloudflare D1 worker   | 8787 | `dev:cf-d1`                                 |
 
 Backend API (Deno) listens on **7370** and is started by the dashboard script; logs are tailed to `dashboard/backend.log`.
 
 Open:
 
-* `http://localhost:3002` – Todo demo
-* `http://localhost:3000` – Dashboard UI (auth required)
+- `http://localhost:3002` – Todo demo
+- `http://localhost:3000` – Dashboard UI (auth required)
 
 ---
 
 ## 7. Common dev tasks
 
-* **Format:** `pnpm format --write`
-* **Lint:** `pnpm run lint`
-* **Tests:** `pnpm run test`
-* **Build:** `pnpm run build`
+- **Format:** `pnpm format --write`
+- **Lint:** `pnpm run lint`
+- **Tests:** `pnpm run test`
+- **Build:** `pnpm run build`
 
 > Always run the checklist above before pushing (see project memory).
 
@@ -118,12 +118,12 @@ $ pnpm db:push:sqlite
 
 ## 8. Troubleshooting
 
-| Symptom | Likely Cause | Fix |
-|---------|--------------|-----|
+| Symptom                        | Likely Cause                  | Fix                                                                                              |
+| ------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | `Invalid request` from backend | Auth keys missing / malformed | Verify `.env.local` keys – each must be ONE line with `\n` separators. Restart dashboard server. |
-| Deno import errors | Wrong path mapping | `deno.jsonc` is already configured. Ensure you start Deno via the `backend:deno` script. |
-| DB query fails | Schema not migrated | Run `pnpm db:push:sqlite` again or delete DB and rerun. |
-| Ports already in use | Another dev server running | Kill old `pnpm dev` or change ports in root `package.json`. |
+| Deno import errors             | Wrong path mapping            | `deno.jsonc` is already configured. Ensure you start Deno via the `backend:deno` script.         |
+| DB query fails                 | Schema not migrated           | Run `pnpm db:push:sqlite` again or delete DB and rerun.                                          |
+| Ports already in use           | Another dev server running    | Kill old `pnpm dev` or change ports in root `package.json`.                                      |
 
 ---
 
