@@ -20,13 +20,14 @@ async function defaultChanged() {
   throw new Error("not ready");
 }
 
-export function toCloud(opts: UseFpToCloudParam): rt.gw.cloud.ToCloudAttachable {
+export function toCloud(opts: UseFpToCloudParam = {}): rt.gw.cloud.ToCloudAttachable {
   const mergedEvents = { ...opts.events, changed: opts.events?.changed ?? defaultChanged };
   const myOpts = {
     ...opts,
     events: mergedEvents,
     context: opts.context ?? new AppContext(),
     strategy: opts.strategy ?? new RedirectStrategy(),
+    urls: opts.urls ?? { }
   };
   const webCtx = defaultWebToCloudOpts(myOpts);
   if (!opts.events) {
