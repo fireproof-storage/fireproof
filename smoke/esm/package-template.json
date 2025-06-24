@@ -7,13 +7,14 @@
     "test": "vitest --run --testTimeout=90000"
   },
   "devDependencies": {
-    "deno": "^2.3.5",
+    "deno": "^2.3.6",
     "typescript": "^5.8.3",
-    "playwright": "^1.52.0",
-    "playwright-chromium": "^1.52.0",
-    "@vitest/browser": "^3.2.1",
-    "@vitest/ui": "^3.2.1",
-    "vitest": "^3.2.1"
+    "playwright": "^1.53.0",
+    "playwright-chromium": "^1.53.0",
+    "@vitest/browser": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "vitest": "^3.2.4",
+    "vite": "^7.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "msw", "playwright-chromium", "deno"]
