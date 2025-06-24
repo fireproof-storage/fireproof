@@ -99,7 +99,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "semver": "^7.7.2",
     "tsup": "^8.5.0",
-    "tsx": "^4.19.4",
+    "tsx": "^4.20.3",
     "typedoc": "^0.28.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1",
