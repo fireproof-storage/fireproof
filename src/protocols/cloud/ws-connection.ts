@@ -214,7 +214,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       controller: undefined,
     } satisfies ActiveStream;
     this.activeBinds.set(state.id, state);
-    return new ReadableStream<MsgWithError<S>>({
+    const ret = new ReadableStream<MsgWithError<S>>({
       cancel: () => {
         // clearTimeout(state.timeout as number);
         this.activeBinds.delete(state.id);
@@ -248,6 +248,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
         });
       },
     });
+    return ret;
   }
 
   async request<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
