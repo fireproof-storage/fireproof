@@ -120,7 +120,7 @@
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
     "@adviser/cement": "^0.4.16",
-    "@clerk/backend": "^2.0.0",
+    "@clerk/backend": "^2.2.0",
     "@clerk/clerk-react": "^5.32.1",
     "@fireproof/vendor": "^3.0.0",
     "@ipld/car": "^5.4.1",
