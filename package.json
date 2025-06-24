@@ -107,7 +107,7 @@
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.1",
-    "wrangler": "^4.20.0",
+    "wrangler": "^4.21.0",
     "zx": "^8.5.5"
   },
   "repository": {
@@ -119,7 +119,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "^0.4.16",
+    "@adviser/cement": "^0.4.18",
     "@clerk/backend": "^2.2.0",
     "@clerk/clerk-react": "^5.32.1",
     "@fireproof/vendor": "^3.0.0",
