@@ -147,11 +147,13 @@ abstract class BaseGateway {
     this.logger.Debug().Any("url", { uploadUrl, uri }).Msg("put-fetch-url");
     const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body }));
     if (rUpload.isErr()) {
-      return this.logger.Error().Url(uploadUrl, "uploadUrl").Err(rUpload).Msg("Error in put fetch").ResultError();
+      return this.logger.Error().Url(uploadUrl, "uploadUrl").Err(rUpload).Msg("Expection in put fetch").ResultError();
     }
     if (!rUpload.Ok().ok) {
-      return this.logger.Error().Url(uploadUrl, "uploadUrl").Http(rUpload.Ok()).Msg("Error in put fetch").ResultError();
+      return this.logger.Error().Url(uploadUrl, "uploadUrl").Http(rUpload.Ok()).Msg("Status in put fetch").ResultError();
     }
+    await rUpload.Ok().arrayBuffer()
+
     if (uri.getParam("testMode")) {
       conn.citem.trackPuts.add(uri.toString());
     }
