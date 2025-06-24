@@ -102,7 +102,7 @@
     "tsx": "^4.20.3",
     "typedoc": "^0.28.4",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.32.1",
+    "typescript-eslint": "^8.35.0",
     "uuidv7": "^1.0.2",
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4",
