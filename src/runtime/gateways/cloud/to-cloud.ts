@@ -46,7 +46,7 @@ export interface ToCloudRequiredOpts {
 
 export type ToCloudOpts = ToCloudRequiredOpts & ToCloudBase;
 
-export type ToCloudOptionalOpts = Partial<ToCloudBase> & ToCloudRequiredOpts;
+export type ToCloudOptionalOpts = Partial<ToCloudBase> & Partial<ToCloudRequiredOpts>;
 
 export interface FPCloudUri {
   readonly car: URI;
@@ -85,6 +85,7 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
     },
     context: opts.context ?? new AppContext(),
     urls: param,
+    strategy: opts.strategy ?? new SimpleTokenStrategy(""),
   } satisfies ToCloudOpts;
   return defOpts;
 }
