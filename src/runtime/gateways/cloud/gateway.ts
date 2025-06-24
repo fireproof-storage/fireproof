@@ -152,7 +152,7 @@ abstract class BaseGateway {
     if (!rUpload.Ok().ok) {
       return this.logger.Error().Url(uploadUrl, "uploadUrl").Http(rUpload.Ok()).Msg("Status in put fetch").ResultError();
     }
-    await rUpload.Ok().arrayBuffer()
+    await rUpload.Ok().arrayBuffer();
 
     if (uri.getParam("testMode")) {
       conn.citem.trackPuts.add(uri.toString());
@@ -286,7 +286,19 @@ class CurrentMeta {
           .bind<EventGetMeta, BindGetMeta>(buildBindGetMeta(ctx.loader.sthis, authType, reqSignedUrl, gwCtx), {
             waitFor: MsgIsEventGetMeta,
           });
-        for await (const msg of res) {
+        const sreader = res.getReader();
+        while (true) {
+          const { done, value: msg } = await sreader.read();
+          if (done) {
+            break;
+          }
+          if (MsgIsError(msg)) {
+            ctx.loader.logger.Error().Err(msg).Msg("Error in bindGetMeta");
+            this.valueReady.resolve();
+            this.valueReady = new Future();
+            this.currentMeta.get(key).reset();
+            return;
+          }
           if (MsgIsEventGetMeta(msg)) {
             const rV2Meta = await V2SerializedMetaKeyExtractKey(ctx, msg.meta);
             const r = await decode2DbMetaEvents(ctx.loader.sthis, rV2Meta);

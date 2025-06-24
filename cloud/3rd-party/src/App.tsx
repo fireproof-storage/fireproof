@@ -6,9 +6,9 @@ import "./App.css";
 function App() {
   const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
-      dashboardURI: "http://localhost:7370/fp/cloud/api/token",
-      tokenApiURI: "http://localhost:7370/api",
-      urls: { base: "fpcloud://localhost:8787?protocol=ws" },
+      // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
+      // tokenApiURI: "http://localhost:7370/api",
+      // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
       // tenant: "3rd-party",
       // ledger: "vibes",
     }),
