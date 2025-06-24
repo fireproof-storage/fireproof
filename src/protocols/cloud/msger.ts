@@ -260,10 +260,12 @@ export class VirtualConnected {
   private async handleBindRealConn(realConn: MsgRawConnection, req: MsgWithOptionalConn, as: ActiveStream): Promise<void> {
     const conn = { ...this.conn, ...req.conn } satisfies QSId;
     const stream = realConn.bind<MsgBase, MsgWithConn>({ ...as.bind.msg, auth: req.auth, conn }, as.bind.opts);
-    for await (const msg of stream) {
-      // if (!MsgIsTid(msg, req.tid)) {
-      //   break
-      // }
+    const sreader = stream.getReader();
+    while (true) {
+      const { done, value: msg } = await sreader.read();
+      if (done) {
+        return;
+      }
       try {
         if (MsgIsConnected(msg, this.conn) || MsgIsConnected(msg, conn)) {
           as.controller?.enqueue(msg);

@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 7370,
     hmr: false,
     proxy: {
       "/*": {

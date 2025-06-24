@@ -27,7 +27,7 @@ export function toCloud(opts: UseFpToCloudParam = {}): rt.gw.cloud.ToCloudAttach
     events: mergedEvents,
     context: opts.context ?? new AppContext(),
     strategy: opts.strategy ?? new RedirectStrategy(),
-    urls: opts.urls ?? { }
+    urls: opts.urls ?? {},
   };
   const webCtx = defaultWebToCloudOpts(myOpts);
   if (!opts.events) {
