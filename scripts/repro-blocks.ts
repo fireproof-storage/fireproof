@@ -41,7 +41,7 @@ async function writeSampleData(db: Database): Promise<void> {
 
   
 async function main() {
-  const db = fireproof('test-db5');
+  const db = fireproof('test-db6');
 
   await writeSampleData(db);
 
