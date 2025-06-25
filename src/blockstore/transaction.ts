@@ -276,6 +276,10 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   }
 
   async compact() {
+    this.logger
+      .Debug()
+      .Uint64("carLogLen_before", this.loader?.carLog.length || 0)
+      .Msg("compact() – start");
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to compact").AsError();
     if (this.loader.carLog.length < 2) return;
@@ -283,12 +287,30 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     if (!compactFn || this.compacting) return;
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
-    const meta = await compactFn(blockLog);
+    let meta: TransactionMeta;
+    try {
+      meta = await compactFn(blockLog);
+    } catch (err) {
+      this.logger
+        .Error()
+        .Any("err", err)
+        .Uint64("carLogLen", this.loader.carLog.length)
+        .Any(
+          "carLogCids",
+          this.loader.carLog
+            .asArray()
+            .flat()
+            .map((cid) => cid.toString()),
+        )
+        .Msg("compact inner fn threw");
+      throw err;
+    }
     await this.loader.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true,
     });
     this.compacting = false;
+    this.logger.Debug().Uint64("carLogLen_after", this.loader.carLog.length).Msg("compact() – finished");
   }
 
   async defaultCompact(blocks: CompactionFetcher, logger: Logger): Promise<TransactionMeta> {

@@ -47,12 +47,12 @@ import { anyBlock2FPBlock, doc2FPBlock, fileBlock2FPBlock } from "./blockstore/l
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
-  // console.time(tag)
+  console.time(tag);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function timeEnd(tag: string) {
-  // console.timeEnd(tag)
+  console.timeEnd(tag);
 }
 
 function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
