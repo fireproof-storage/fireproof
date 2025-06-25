@@ -278,6 +278,10 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   }
 
   async compact() {
+    this.logger
+      .Debug()
+      .Uint64("carLogLen_before", this.loader?.carLog.length || 0)
+      .Msg("compact() – start");
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to compact").AsError();
     if (this.loader.carLog.length < 2) return;
