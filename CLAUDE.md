@@ -11,6 +11,7 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 - `pnpm run check` - Run format, lint, test, and build in sequence
 
 ### Building and Development
+
 - `pnpm run build` - Build all packages (runs prebuild, build scripts, and pub scripts)
 - `pnpm run build:tsc` - Build using TypeScript compiler
 - `pnpm run build:tsup` - Build using tsup bundler
@@ -19,6 +20,7 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 - `pnpm run dev:3rd-party` - Start 3rd-party development server on port 3001
 
 ### Testing
+
 - `pnpm run test` - Run all tests using vitest
 - `pnpm run test:file` - Run file-based tests
 - `pnpm run test:indexeddb` - Run IndexedDB-specific tests
@@ -27,10 +29,12 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 - `FP_DEBUG=Loader pnpm run test --project file -t 'codec implicit iv' crdt` - Run specific test with debugging
 
 ### Code Quality
+
 - `pnpm run lint` - Run ESLint
 - `pnpm run format` - Run Prettier formatting
 
 ### Docker Management
+
 - `pnpm run docker:down` - Stop Docker containers
 - `pnpm run docker:up` - Start Docker containers
 - `pnpm run docker:restart` - Restart Docker containers
@@ -38,6 +42,7 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 - `pnpm run docker:health` - Check Docker container and MinIO health
 
 ### Publishing and Distribution
+
 - `pnpm run smoke` - Run smoke tests against built packages
 - `pnpm run fppublish` - Publish packages to npm
 - `pnpm run presmoke` - Build and publish to local registry for smoke testing
@@ -47,23 +52,27 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 ### Core Components
 
 **Database Layer (`src/database.ts`, `src/ledger.ts`)**
+
 - `DatabaseImpl` - Main database implementation with CRUD operations
 - `Ledger` - Lower-level data storage and versioning layer
 - CRDT (Conflict-free Replicated Data Types) implementation for distributed consistency
 
 **Blockstore (`src/blockstore/`)**
+
 - Content-addressed storage system using IPLD blocks
 - Multiple gateway implementations (file, IndexedDB, memory, cloud)
 - Encryption and serialization handling
 - Transaction management and commit queues
 
 **Runtime (`src/runtime/`)**
+
 - Platform-specific implementations (Node.js, Deno, browser)
 - File system abstractions
 - Key management and cryptography
 - Storage gateway factory patterns
 
 **React Integration (`src/react/`)**
+
 - `useFireproof` - Main hook for database access
 - `useLiveQuery` - Real-time query results
 - `useDocument` - Document-level operations
@@ -71,6 +80,7 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 - `ImgFile` component for file attachments
 
 **Protocols (`src/protocols/`)**
+
 - Cloud synchronization protocols
 - Dashboard API protocols
 - Message passing and connection management
@@ -78,6 +88,7 @@ Fireproof is a lightweight embedded document database with encrypted live sync f
 ### Storage Gateways
 
 The system supports multiple storage backends:
+
 - **File** - Local file system storage (Node.js/Deno)
 - **IndexedDB** - Browser-based storage
 - **Memory** - In-memory storage for testing
@@ -86,6 +97,7 @@ The system supports multiple storage backends:
 ### Testing Infrastructure
 
 Uses Vitest with multiple configurations:
+
 - `vitest.workspace.ts` - Main workspace configuration
 - Separate configs for file, memory, IndexedDB, and cloud testing
 - Screenshot testing for React components
@@ -117,6 +129,7 @@ Uses Vitest with multiple configurations:
 ## React Development
 
 When working with React components:
+
 - Use `useFireproof` hook to access database functionality
 - `useLiveQuery` provides real-time query results that update automatically
 - `useDocument` handles individual document operations with optimistic updates
