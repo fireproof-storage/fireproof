@@ -14,8 +14,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: 0.4.18
-        version: 0.4.18(typescript@5.8.3)
+        specifier: 0.4.19
+        version: 0.4.19(typescript@5.8.3)
       '@clerk/backend':
         specifier: ^2.2.0
         version: 2.2.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -248,8 +248,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.4.18':
-    resolution: {integrity: sha512-ahz4Vz/oNNt1sQTOOkuI/l3FGo5tzFSz5znmNPnZpfUfaaNoMIaO2Fpvfl5FT8uzaCS3dx2VmnETQbUfuDg8eQ==}
+  '@adviser/cement@0.4.19':
+    resolution: {integrity: sha512-g6posWvSq2c4yRQcPvPGHspb+lQWBvONsu86N3lt6jGmQK4vNG0Tq7ebmR51fKYm+TORFaMe0SqHNafz3TIBmg==}
     engines: {node: '>=20'}
 
   '@alloc/quick-lru@5.2.0':
@@ -5043,7 +5043,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.4.18(typescript@5.8.3)':
+  '@adviser/cement@0.4.19(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.1.1(typescript@5.8.3)
       yaml: 2.8.0

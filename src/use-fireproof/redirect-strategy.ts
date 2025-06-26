@@ -3,7 +3,7 @@ import { rt, ps, SuperThis } from "@fireproof/core";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core/react";
 import { decodeJwt } from "jose";
 
-function overlayHtml(redirectLink: string) {
+function defaultOverlayHtml(redirectLink: string) {
   return `
     <div class="fpOverlayContent">
       <div class="fpCloseButton">&times;</div>
@@ -11,11 +11,10 @@ function overlayHtml(redirectLink: string) {
       Sign in to Fireproof Dashboard
       <a href="${redirectLink}" target="_blank">Redirect to Fireproof</a>
     </div>
-`;
-  // <iframe src="${redirectLink}" style="width: 100%; height: 100%; border: none;"></iframe>
+  `;
 }
 
-const overlayCss = `
+const defaultOverlayCss = `
 .fpContainer {
   position: relative; /* Needed for absolute positioning of the overlay */
 }
@@ -56,10 +55,23 @@ const overlayCss = `
 }
 `;
 
+interface RedirectStrategyOpts {
+  readonly overlayCss: string;
+  readonly overlayHtml?: (redirectLink: string) => string;
+}
+
 export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
   resultId?: string;
   overlayNode?: HTMLElement;
   waitState: "started" | "stopped" = "stopped";
+
+  readonly overlayCss: string;
+  readonly overlayHtml: (redirectLink: string) => string;
+
+  constructor(opts: Partial<RedirectStrategyOpts> = {}) {
+    this.overlayCss = opts.overlayCss ?? defaultOverlayCss;
+    this.overlayHtml = opts.overlayHtml ?? defaultOverlayHtml;
+  }
 
   open(sthis: SuperThis, logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
@@ -80,12 +92,12 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     let overlayNode = document.body.querySelector("#fpOverlay");
     if (!overlayNode) {
       const styleNode = document.createElement("style");
-      styleNode.innerHTML = overlayCss;
+      styleNode.innerHTML = this.overlayCss;
       document.head.appendChild(styleNode);
       overlayNode = document.createElement("div");
       overlayNode.id = "fpOverlay";
       overlayNode.className = "fpOverlay";
-      overlayNode.innerHTML = overlayHtml(url.toString());
+      overlayNode.innerHTML = this.overlayHtml(url.toString());
       document.body.appendChild(overlayNode);
       overlayNode.querySelector(".fpCloseButton")?.addEventListener("click", () => {
         if (overlayNode) {
@@ -100,11 +112,32 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     }
     overlayNode.style.display = "block";
     this.overlayNode = overlayNode;
+    const width = 800;
+    const height = 600;
+    const parentScreenX = window.screenX || window.screenLeft; // Cross-browser compatibility
+    const parentScreenY = window.screenY || window.screenTop; // Cross-browser compatibility
 
+    // Get the parent window's outer dimensions (including chrome)
+    const parentOuterWidth = window.outerWidth;
+    const parentOuterHeight = window.outerHeight;
+
+    // Calculate the left position for the new window
+    // Midpoint of parent window's width - half of new window's width
+    const left = parentScreenX + parentOuterWidth / 2 - width / 2;
+
+    // Calculate the top position for the new window
+    // Midpoint of parent window's height - half of new window's height
+    const top = parentScreenY + parentOuterHeight / 2 - height / 2;
+
+    window.open(
+      url.asURL(),
+      "Fireproof Login",
+      `left=${left},top=${top},width=${width},height=${height},scrollbars=yes,resizable=yes,popup=yes`,
+    );
     // window.location.href = url.toString();
   }
 
-  currentToken?: rt.gw.cloud.TokenAndClaims;
+  private currentToken?: rt.gw.cloud.TokenAndClaims;
 
   waiting?: ReturnType<typeof setTimeout>;
 
@@ -120,6 +153,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     if (!this.currentToken) {
       const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
       this.currentToken = await webCtx.token();
+      console.log("RedirectStrategy tryToken - ctx", this.currentToken);
     }
     return this.currentToken;
   }
@@ -138,7 +172,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     if (this.waitState !== "started") {
       return;
     }
-    if (attempts * opts.interval > opts.tokenWaitTime) {
+    if (attempts * opts.intervalSec > opts.tokenWaitTimeSec) {
       logger.Error().Uint64("attempts", attempts).Msg("Token polling timed out");
       this.stop();
       return;
@@ -155,7 +189,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
       resolve({ token, claims });
       return;
     }
-    this.waiting = setTimeout(() => this.getTokenAndClaimsByResultId(logger, dashApi, resultId, opts, resolve), opts.interval);
+    this.waiting = setTimeout(() => this.getTokenAndClaimsByResultId(logger, dashApi, resultId, opts, resolve), opts.intervalSec);
   }
 
   async waitForToken(

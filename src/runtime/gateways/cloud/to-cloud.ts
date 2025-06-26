@@ -27,9 +27,9 @@ export interface TokenAndClaimsEvents {
 
 interface ToCloudBase {
   readonly name: string; // default "toCloud"
-  readonly interval: number; // default 1000 or 1 second
-  readonly tokenWaitTime: number; // default 90 seconds
-  readonly refreshTokenPreset: number; // default 2 minutes this is the time before the token expires
+  readonly intervalSec: number; // default 1 second
+  readonly tokenWaitTimeSec: number; // default 90 seconds
+  readonly refreshTokenPresetSec: number; // default 120 sec this is the time before the token expires
   readonly context: AppContext;
   readonly events: TokenAndClaimsEvents;
   readonly tenant?: string; // default undefined
@@ -74,9 +74,9 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
   } satisfies FPCloudUri;
   const defOpts = {
     name: ToCloudName,
-    interval: 1000,
-    tokenWaitTime: 90 * 1000, // 90 seconds
-    refreshTokenPreset: 2 * 60 * 1000, // 2 minutes
+    intervalSec: 1,
+    tokenWaitTimeSec: 90, // 90 seconds
+    refreshTokenPresetSec: 2 * 60, // 2 minutes
     ...opts,
     events: opts.events ?? {
       changed: async () => {
@@ -142,7 +142,8 @@ class TokenObserver {
 
   async refreshToken(logger: Logger, ledger: Ledger) {
     let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
-    if (!token) {
+    console.log("refreshToken", token);
+    if (this.isExpired(token)) {
       logger.Debug().Msg("waiting for token");
       this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
       token = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
@@ -153,15 +154,20 @@ class TokenObserver {
     return token;
   }
 
+  isExpired(token?: TokenAndClaims): boolean {
+    const now = ~~(new Date().getTime() / 1000); // current time in seconds
+    return !token || definedExp(token.claims.exp) - this.opts.refreshTokenPresetSec < now;
+  }
+
   readonly _token = new ResolveOnce<TokenAndClaims>();
   async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
-    const now = ~~(new Date().getTime() / 1000); // current time in seconds
     let activeTokenAndClaim = this.currentTokenAndClaim;
-    if (!this.currentTokenAndClaim || definedExp(this.currentTokenAndClaim.claims.exp) - this.opts.refreshTokenPreset < now) {
+    if (this.isExpired(activeTokenAndClaim)) {
+      console.log("refreshing token", this.currentTokenAndClaim?.claims.exp);
       await this.opts.events?.changed(undefined);
       logger
         .Debug()
-        .Any({ claims: this.currentTokenAndClaim?.claims, now, exp: definedExp(this.currentTokenAndClaim?.claims.exp) })
+        .Any({ claims: this.currentTokenAndClaim?.claims, exp: definedExp(this.currentTokenAndClaim?.claims.exp) })
         .Msg("refresh token");
       activeTokenAndClaim = await this.refreshToken(logger, ledger);
     }

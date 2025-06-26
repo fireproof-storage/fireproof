@@ -1,4 +1,4 @@
-import { DocWithId, useFireproof, toCloud } from "use-fireproof";
+import { DocWithId, useFireproof, toCloud, RedirectStrategy } from "use-fireproof";
 import { useState, useEffect } from "react";
 import "./App.css";
 // import { URI } from "@adviser/cement";
@@ -6,6 +6,15 @@ import "./App.css";
 function App() {
   const { database, attach } = useFireproof("fireproof-4-party", {
     attach: toCloud({
+      strategy: new RedirectStrategy({
+        //   overlayCss: defaultOverlayCss,
+        overlayHtml: (url: string) => `<div class="fpOverlayContent">
+          <div class="fpCloseButton">&times;</div>
+          Fireproof Dashboard<br />
+          Sign in to Fireproof Dashboard
+          <a href="${url}" target="_blank">Redirect to Fireproof</a>
+        </div>`,
+      }),
       // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
       // tokenApiURI: "http://localhost:7370/api",
       // urls: { base: "fpcloud://localhost:8787?protocol=ws" },

@@ -1,4 +1,4 @@
-import { FilterType } from "../types";
+import { FilterType } from "../types.js";
 
 interface TodoFiltersProps {
   currentFilter: FilterType;
