@@ -1,5 +1,5 @@
-import { FilterType, Todo } from "../types";
-import TodoItem from "./TodoItem";
+import { FilterType, Todo } from "../types.js";
+import TodoItem from "./TodoItem.js";
 
 interface TodoListProps {
   todos: Todo[];

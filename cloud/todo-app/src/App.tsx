@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { toCloud, useFireproof } from "use-fireproof";
 import "./App.css";
-import TodoFilters from "./components/TodoFilters";
-import TodoForm from "./components/TodoForm";
-import TodoList from "./components/TodoList";
-import { FilterType, Todo } from "./types";
+import TodoFilters from "./components/TodoFilters.js";
+import TodoForm from "./components/TodoForm.js";
+import TodoList from "./components/TodoList.js";
+import { FilterType, Todo } from "./types.js";
 
 /**
  * Main Todo App component with Fireproof cloud sync
