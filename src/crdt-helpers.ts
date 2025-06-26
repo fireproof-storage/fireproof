@@ -45,14 +45,12 @@ import { NotFoundError } from "./utils.js";
 import { Link, Version } from "multiformats";
 import { anyBlock2FPBlock, doc2FPBlock, fileBlock2FPBlock } from "./blockstore/loader-helpers.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function time(tag: string) {
-  console.time(tag);
+function time(logger: Logger, tag: string) {
+  logger.Debug().TimerStart(tag).Msg("Timing started");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function timeEnd(tag: string) {
-  console.timeEnd(tag);
+function timeEnd(logger: Logger, tag: string) {
+  logger.Debug().TimerEnd(tag).Msg("Timing ended");
 }
 
 function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
@@ -420,12 +418,12 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
   }
   isCompacting = true;
 
-  time("compact head");
+  time(logger, "compact head");
   for (const cid of head) {
     const bl = await blockLog.get(cid);
     if (!bl) throw logger.Error().Ref("cid", cid).Msg("Missing head block").AsError();
   }
-  timeEnd("compact head");
+  timeEnd(logger, "compact head");
 
   // for await (const blk of  blocks.entries()) {
   //   const bl = await blockLog.get(blk.cid)
@@ -438,14 +436,14 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
   //   if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
   // }
 
-  time("compact all entries");
+  time(logger, "compact all entries");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _entry of getAllEntries(blockLog, head, logger)) {
     // result.push(entry)
     // void 1;
     // continue;
   }
-  timeEnd("compact all entries");
+  timeEnd(logger, "compact all entries");
 
   // time("compact crdt entries")
   // for await (const [, link] of entries(blockLog, head)) {
@@ -454,26 +452,26 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
   // }
   // timeEnd("compact crdt entries")
 
-  time("compact clock vis");
+  time(logger, "compact clock vis");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _line of vis(toPailFetcher(blockLog), head)) {
     void 1;
   }
-  timeEnd("compact clock vis");
+  timeEnd(logger, "compact clock vis");
 
-  time("compact root");
+  time(logger, "compact root");
   const result = await root(toPailFetcher(blockLog), head);
-  timeEnd("compact root");
+  timeEnd(logger, "compact root");
 
-  time("compact root blocks");
+  time(logger, "compact root blocks");
   for (const block of [...result.additions, ...result.removals]) {
     blockLog.loggedBlocks.putSync(await anyBlock2FPBlock(block));
   }
-  timeEnd("compact root blocks");
+  timeEnd(logger, "compact root blocks");
 
-  time("compact changes");
+  time(logger, "compact changes");
   await clockChangesSince(blockLog, head, [], {}, logger);
-  timeEnd("compact changes");
+  timeEnd(logger, "compact changes");
 
   isCompacting = false;
 }

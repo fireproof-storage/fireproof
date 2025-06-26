@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "file",
-    exclude: ["tests/react/**", "examples/**", "tests/gateway/indexeddb"],
-    include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
+    exclude: ["react/**", "examples/**", "gateway/indexeddb"],
+    include: ["**/*test.?(c|m)[jt]s?(x)"],
     globals: true,
-    setupFiles: "./tests/setup.file.ts",
+    setupFiles: "./setup.file.ts",
   },
 });
