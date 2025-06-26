@@ -53,10 +53,10 @@ async function runReproBlocksOnce(iter: number) {
 
   const all = await db.allDocs<Record>();
   const records = await findAll(db);
-  
+
   console.log(`repro-blocks run ${iter}: Found records:`, all.rows.length, records.length);
   console.log(`repro-blocks run ${iter}: ok`); // useful in CI logs
-  
+
   // Clean up the database after the test
   await db.destroy();
 }
