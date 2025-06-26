@@ -186,29 +186,33 @@ export class BaseBlockstoreImpl implements BlockFetcher {
     return new CarTransactionImpl(this, opts);
   }
 
+  inflightCompaction = false;
+
+  needsCompaction() {
+    if (!this.inflightCompaction && this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
+      this.inflightCompaction = true;
+      // Wait until the commit queue is idle before triggering compaction to
+      // ensure no commits are still in-flight. This prevents race conditions
+      // where compaction runs before all blocks have been persisted.
+      this.loader.commitQueue
+        .waitIdle()
+        .then(() => this.compact())
+        .catch((err) => {
+          this.logger.Warn().Err(err).Msg("autoCompact scheduling failed");
+        })
+        .finally(() => {
+          this.inflightCompaction = false;
+        });
+    }
+  }
+
   async commitTransaction<M extends TransactionMeta>(
     t: CarTransaction,
     done: M,
     opts: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
-    if (!this.loader) throw this.logger.Error().Msg("loader required to commit").AsError();
     const cars = await this.loader.commit<M>(t, done, opts);
-    if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
-      // Wait until the commit queue is idle before triggering compaction to
-      // ensure no commits are still in-flight. This prevents race conditions
-      // where compaction runs before all blocks have been persisted.
-      void (async () => {
-        try {
-          await (this.loader as Loader).commitQueue.waitIdle();
-          await this.compact();
-        } catch (err) {
-          this.logger
-            .Warn()
-            .Err(err as Error)
-            .Msg("autoCompact scheduling failed");
-        }
-      })();
-    }
+    this.needsCompaction();
     if (cars) {
       this.transactions.delete(t);
       return { meta: done, cars, t };
@@ -269,22 +273,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     this.logger.Debug().Msg("post super.transaction");
     const cars = await this.loader.commit<M>(t, done, opts);
     this.logger.Debug().Msg("post this.loader.commit");
-    if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
-      // Wait until the commit queue is idle before triggering compaction to
-      // ensure no commits are still in-flight. This prevents race conditions
-      // where compaction runs before all blocks have been persisted.
-      void (async () => {
-        try {
-          await (this.loader as Loader).commitQueue.waitIdle();
-          await this.compact();
-        } catch (err) {
-          this.logger
-            .Warn()
-            .Err(err as Error)
-            .Msg("autoCompact scheduling failed");
-        }
-      })();
-    }
+    this.needsCompaction();
     if (cars) {
       this.transactions.delete(t);
       return { meta: done, cars, t };
@@ -305,10 +294,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   }
 
   async compact() {
-    this.logger
-      .Debug()
-      .Uint64("carLogLen_before", this.loader?.carLog.length || 0)
-      .Msg("compact() – start");
+    this.logger.Debug().Any({ carLogLen_before: this.loader?.carLog.length }).Msg("compact() – start");
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to compact").AsError();
     if (this.loader.carLog.length < 2) return;
@@ -316,30 +302,30 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     if (!compactFn || this.compacting) return;
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
-    let meta: TransactionMeta;
     try {
-      meta = await compactFn(blockLog);
-    } catch (err) {
-      this.logger
-        .Error()
-        .Any("err", err)
-        .Uint64("carLogLen", this.loader.carLog.length)
-        .Any(
-          "carLogCids",
-          this.loader.carLog
-            .asArray()
-            .flat()
-            .map((cid) => cid.toString()),
-        )
-        .Msg("compact inner fn threw");
-      throw err;
+      const resMeta = await exception2Result(async () => compactFn(blockLog));
+      if (resMeta.isErr()) {
+        this.logger
+          .Error()
+          .Err(resMeta)
+          .Any({
+            carLogLen: this.loader.carLog.length,
+            carLogCids: this.loader.carLog
+              .asArray()
+              .flat()
+              .map((cid) => cid.toString()),
+          })
+          .Msg("compact inner fn threw");
+        return;
+      }
+      await this.loader.commit(blockLog.loggedBlocks, resMeta.Ok(), {
+        compact: true,
+        noLoader: true,
+      });
+    } finally {
+      this.compacting = false;
+      this.logger.Debug().Uint64("carLogLen_after", this.loader.carLog.length).Msg("compact() – finished");
     }
-    await this.loader.commit(blockLog.loggedBlocks, meta, {
-      compact: true,
-      noLoader: true,
-    });
-    this.compacting = false;
-    this.logger.Debug().Uint64("carLogLen_after", this.loader.carLog.length).Msg("compact() – finished");
   }
 
   async defaultCompact(blocks: CompactionFetcher, logger: Logger): Promise<TransactionMeta> {
