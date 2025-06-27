@@ -9,29 +9,19 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "indexeddb",
-    exclude: ["examples/**", "tests/gateway/file"],
-    include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
+    exclude: ["examples/**", "gateway/file"],
+    include: ["**/*test.?(c|m)[jt]s?(x)"],
     browser: {
       enabled: true,
       headless: true,
       provider: "playwright",
-      // provider: "webdriverio",
-      // name: "chrome",
       instances: [
         {
           browser: "chromium",
-          //setupFile: './chromium-setup.js',
         },
       ],
-
-      // name: process.env.FP_BROWSER || "chrome", // browser name is required
-      // instances: [
-      //   {
-      //     browser: process.env.FP_BROWSER || "chrome", // browser name is required
-      //   },
-      // ],
     },
     globals: true,
-    setupFiles: "./tests/setup.indexeddb.ts",
+    setupFiles: "./setup.indexeddb.ts",
   },
 });

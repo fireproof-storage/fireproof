@@ -6,23 +6,11 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "cloud:d1",
-    exclude: [
-      "tests/react/**",
-      "**/smoke/**",
-      "**/scripts/**",
-      "**/examples/**",
-      "tests/gateway/indexeddb",
-      "tests/gateway/file",
-      "tests/blockstore/keyed-crypto-indexeddb-file.test.ts",
-      "cloud/backend/meta-merger/**",
-    ],
+    exclude: ["../meta-merger/**"],
     // WARNING TODO the hole suite is not working
-    include: ["xtests/**/*test.?(c|m)[jt]s?(x)", "cloud/**/*test.?(c|m)[jt]s?(x)"],
-    coverage: {
-      exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
-    },
+    include: ["../**/*test.?(c|m)[jt]s?(x)"],
     globals: true,
-    globalSetup: ["./cloud/backend/globalSetup.spin-minio.ts", "./cloud/backend/cf-d1/globalSetup.cloud.d1.ts"],
-    setupFiles: "./cloud/backend/cf-d1/setup.cloud.d1.js",
+    globalSetup: ["../globalSetup.spin-minio.ts", "./globalSetup.cloud.d1.ts"],
+    setupFiles: "./setup.cloud.d1.js",
   },
 });

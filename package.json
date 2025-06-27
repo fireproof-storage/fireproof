@@ -40,7 +40,12 @@
     "drizzle:libsql": "drizzle-kit push --config ./cloud/backend/node/drizzle.cloud.libsql.config.ts",
     "drizzle:d1-local": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts",
     "drizzle:d1-remote": "drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-remote.config.ts",
-    "wrangler:cf-d1": "wrangler deploy -c cloud/backend/cf-d1/wrangler.toml --env dev"
+    "wrangler:cf-d1": "wrangler deploy -c cloud/backend/cf-d1/wrangler.toml --env dev",
+    "docker:down": "cd cloud && docker-compose down",
+    "docker:up": "cd cloud && docker-compose up -d",
+    "docker:restart": "pnpm run docker:down && pnpm run docker:up",
+    "docker:logs": "cd cloud && docker-compose logs",
+    "docker:health": "cd cloud && docker-compose ps && curl -f http://localhost:9000/minio/health/live"
   },
   "keywords": [
     "ledger",
@@ -119,7 +124,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "^0.4.18",
+    "@adviser/cement": "^0.4.19",
     "@clerk/backend": "^2.2.0",
     "@clerk/clerk-react": "^5.32.1",
     "@fireproof/vendor": "^3.0.0",
