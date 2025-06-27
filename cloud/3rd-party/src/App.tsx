@@ -4,7 +4,7 @@ import "./App.css";
 // import { URI } from "@adviser/cement";
 
 function App() {
-  const { database, attach } = useFireproof("fireproof-4-party", {
+  const { database, attach } = useFireproof("fireproof-5-party", {
     attach: toCloud({
       strategy: new RedirectStrategy({
         //   overlayCss: defaultOverlayCss,

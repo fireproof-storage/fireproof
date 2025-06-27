@@ -209,36 +209,40 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
           return ret;
         }
         const conns = ctx.wsRoom.getConns(req.conn);
+        // console.log("MsgIsReqPutMeta conns", conns.length, req.conn, conns);
         for (const conn of conns) {
-          const myConn = conn.conns.find((i) => qsidEqual(i, req.conn));
-          if (!myConn) {
-            continue;
-          }
-          // pretty bad but ok for now we should be able to
-          // filter by tenant and ledger on a connection level
-          const res = await metaMerger(ctx).metaToSend({
-            conn: myConn,
-            tenant: req.tenant,
-          });
-          if (res.metas.length === 0) {
-            continue;
-          }
-          dp.send(
-            {
-              ...ctx,
-              ws: conn.ws,
-            },
-            ps.cloud.buildEventGetMeta(
-              ctx,
-              req,
-              res,
+          for (const rConn of conn.conns) {
+            if (qsidEqual(rConn, req.conn)) {
+              continue;
+            }
+            // pretty bad but ok for now we should be able to
+            // filter by tenant and ledger on a connection level
+            const res = await metaMerger(ctx).metaToSend({
+              conn: rConn,
+              tenant: req.tenant,
+            });
+            if (res.metas.length === 0) {
+              console.log("MsgIsReqPutMeta skip empty", conns.length, rConn, req.conn, conn.conns);
+              continue;
+            }
+            console.log("MsgIsReqPutMeta send", conns.length, rConn, req.conn, conn.conns);
+            dp.send(
               {
-                conn: myConn,
-                tenant: req.tenant,
+                ...ctx,
+                ws: conn.ws,
               },
-              ret.signedUrl,
-            ),
-          );
+              ps.cloud.buildEventGetMeta(
+                ctx,
+                req,
+                res,
+                {
+                  conn: rConn,
+                  tenant: req.tenant,
+                },
+                ret.signedUrl,
+              ),
+            );
+          }
         }
         return ret;
       }),
