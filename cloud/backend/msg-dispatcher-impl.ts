@@ -222,10 +222,10 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
               tenant: req.tenant,
             });
             if (res.metas.length === 0) {
-              console.log("MsgIsReqPutMeta skip empty", conns.length, rConn, req.conn, conn.conns);
+              // console.log("MsgIsReqPutMeta skip empty", conns.length, rConn, req.conn, conn.conns);
               continue;
             }
-            console.log("MsgIsReqPutMeta send", conns.length, rConn, req.conn, conn.conns);
+            // console.log("MsgIsReqPutMeta send", conns.length, rConn, req.conn, conn.conns);
             dp.send(
               {
                 ...ctx,
