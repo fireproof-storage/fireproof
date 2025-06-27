@@ -79,7 +79,7 @@ abstract class BaseGateway {
     this.logger = ensureLogger(sthis, module);
   }
 
-  async buildReqSignedUrl(
+  protected async buildReqSignedUrl(
     type: string,
     method: HttpMethods,
     store: FPStoreTypes,
@@ -128,7 +128,7 @@ abstract class BaseGateway {
     } satisfies ReqSignedUrl;
   }
 
-  async getReqSignedUrl<S extends ResSignedUrl>(
+  protected async getReqSignedUrl<S extends ResSignedUrl>(
     type: string,
     method: HttpMethods,
     store: FPStoreTypes,
@@ -143,7 +143,8 @@ abstract class BaseGateway {
     return conn.conn.Ok().request<S, ReqSignedUrl>(rsu, { waitFor: waitForFn });
   }
 
-  async putObject(uri: URI, uploadUrl: string, body: Uint8Array, conn: VConnItems): Promise<Result<void>> {
+  protected async putObject(uri: URI, uploadUrl: string, body: Uint8Array, conn: VConnItems): Promise<Result<void>> {
+    // console.log("putObject", uri.toString(), uploadUrl, body.length);
     this.logger.Debug().Any("url", { uploadUrl, uri }).Msg("put-fetch-url");
     const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body }));
     if (rUpload.isErr()) {
@@ -161,24 +162,24 @@ abstract class BaseGateway {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getObject(uri: URI, downloadUrl: string, _conn: VConnItems): Promise<Result<Uint8Array>> {
+  protected async getObject(uri: URI, downloadUrl: string, _conn: VConnItems): Promise<Result<Uint8Array>> {
     this.logger.Debug().Any("url", { downloadUrl, uri }).Msg("get-fetch-url");
     const rDownload = await exception2Result(async () => fetch(downloadUrl.toString(), { method: "GET" }));
     if (rDownload.isErr()) {
-      return this.logger.Error().Url(downloadUrl, "uploadUrl").Err(rDownload).Msg("Error in get downloadUrl").ResultError();
+      return this.logger.Error().Url(downloadUrl, "downloadUrl").Err(rDownload).Msg("Error in get downloadUrl").ResultError();
     }
     const download = rDownload.Ok();
     if (!download.ok) {
       if (download.status === 404) {
         return Result.Err(new NotFoundError("Not found"));
       }
-      return this.logger.Error().Url(downloadUrl, "uploadUrl").Err(rDownload).Msg("Error in get fetch").ResultError();
+      return this.logger.Error().Url(downloadUrl, "downloadUrl").Err(rDownload).Msg("Error in get fetch").ResultError();
     }
     return Result.Ok(to_uint8(await download.arrayBuffer()));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async delObject(uri: URI, deleteUrl: string, _conn: VConnItems): Promise<Result<void>> {
+  protected async delObject(uri: URI, deleteUrl: string, _conn: VConnItems): Promise<Result<void>> {
     this.logger.Debug().Any("url", { deleteUrl, uri }).Msg("get-fetch-url");
     const rDelete = await exception2Result(async () => fetch(deleteUrl.toString(), { method: "DELETE" }));
     if (rDelete.isErr()) {
@@ -197,7 +198,7 @@ abstract class BaseGateway {
 
 class DataGateway extends BaseGateway implements StoreTypeGateway {
   constructor(sthis: SuperThis) {
-    super(sthis, "DataGateway");
+    super(sthis, "Cloud-DataGateway");
   }
   async get<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
     // type: string, method: HttpMethods, store: FPStoreTypes, waitForFn:
@@ -207,6 +208,7 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
       return this.logger.Error().Err(rResSignedUrl).Msg("Error in buildResSignedUrl").ResultError();
     }
     const { signedUrl: downloadUrl } = rResSignedUrl;
+    // console.log("DataGateway get", uri.toString(), rResSignedUrl);
     const r = await fpDeserialize(this.sthis, uri, this.getObject(uri, downloadUrl, ctx.conn));
     return r as SerdeGetResult<S>;
   }
@@ -217,6 +219,7 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
       return this.logger.Error().Err(rResSignedUrl).Msg("Error in buildResSignedUrl").ResultError();
     }
     const { signedUrl: uploadUrl } = rResSignedUrl;
+    // console.log("DataGateway put", uri.toString(), rResSignedUrl);
     const rBlob = await fpSerialize(ctx.loader.sthis, data);
     if (rBlob.isErr()) {
       return rBlob;
@@ -225,6 +228,7 @@ class DataGateway extends BaseGateway implements StoreTypeGateway {
     return r;
   }
   async delete(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<Result<void>> {
+    // console.log("Dataateway delete", uri.toString(), uri);
     const store = coerceFPStoreTypes(uri.getParam("store"));
     const rResSignedUrl = await this.getReqSignedUrl<ResDelData>("reqDelData", "DELETE", store, MsgIsResDelData, uri, ctx.conn);
     if (MsgIsError(rResSignedUrl)) {
@@ -349,7 +353,7 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
   readonly currentMeta = new CurrentMeta(this.subscriptions);
 
   constructor(sthis: SuperThis) {
-    super(sthis, "MetaGateway");
+    super(sthis, "Cloud-MetaGateway");
   }
   async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     const key = ctx.loader.sthis.nextId().str;
@@ -440,7 +444,7 @@ class WALGateway extends BaseGateway implements StoreTypeGateway {
   // WAL will not pollute to the cloud
   readonly wals = new Map<string, FPEnvelopeWAL>();
   constructor(sthis: SuperThis) {
-    super(sthis, "WALGateway");
+    super(sthis, "Cloud-WALGateway");
   }
   getWalKeyFromUri(uri: URI): Result<string> {
     const rKey = uri.getParamsResult({

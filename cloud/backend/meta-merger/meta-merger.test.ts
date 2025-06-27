@@ -271,4 +271,209 @@ describe("$name - MetaMerger", () => {
     expect(rowsDel.metas.length).toBe(0);
     expect(rowsDel.keys.length).toBe(0);
   });
+
+  it("like-with-websocket", async () => {
+    const tenant = `tenant${sthis.timeOrderedNextId().str}`;
+    const ledger = "ledger";
+    const resId = `resId-${sthis.timeOrderedNextId().str}`;
+    const reqId = `reqId-${sthis.timeOrderedNextId().str}`;
+
+    const conns = [];
+
+    // putMeta
+    for (let i = 0; i < 10; i++) {
+      const conn = {
+        reqId: `${reqId}-${i}`,
+        resId: `${resId}-${i}`,
+      };
+      conns.push(conn);
+
+      await mm.addMeta({
+        connection: {
+          tenant: {
+            tenant,
+            ledger,
+          },
+          conn,
+        },
+        meta: {
+          metas: [
+            {
+              cid: `cid-${i}`,
+              parents: [],
+              data: `data-${i}`,
+            },
+          ],
+          keys: [`key-${i}`],
+        },
+      });
+    }
+
+    const res = await mm.metaToSend({
+      tenant: {
+        tenant,
+        ledger,
+      },
+      conn: {
+        reqId: `${reqId}-new`,
+        resId: `${resId}-new`,
+      },
+    });
+
+    expect(res).toEqual({
+      keys: conns.map((_, i) => `key-${i}`),
+      metas: conns.map((_, i) => ({
+        cid: `cid-${i}`,
+        parents: [],
+        data: `data-${i}`,
+      })),
+    });
+
+    for (const conn of conns) {
+      const res = await mm.metaToSend({
+        tenant: {
+          tenant,
+          ledger,
+        },
+        conn: {
+          reqId: conn.reqId,
+          resId: conn.resId,
+        },
+      });
+      expect(res).toEqual({
+        keys: conns.map((_, i) => `key-${i}`),
+        metas: conns.map((_, i) => ({
+          cid: `cid-${i}`,
+          parents: [],
+          data: `data-${i}`,
+        })),
+      });
+
+      for (let i = 0; i < 3; i++) {
+        const resAgain = await mm.metaToSend({
+          tenant: {
+            tenant,
+            ledger,
+          },
+          conn: {
+            reqId: conn.reqId,
+            resId: conn.resId,
+          },
+        });
+        expect(resAgain).toEqual({
+          keys: conns.map((_, i) => `key-${i}`),
+          metas: [],
+        });
+      }
+    }
+
+    for (let i = 0; i < conns.length; i++) {
+      await mm.addMeta({
+        connection: {
+          tenant: {
+            tenant,
+            ledger,
+          },
+          conn: conns[i],
+        },
+        meta: {
+          metas: [
+            {
+              cid: `cid-${i}-again`,
+              parents: [],
+              data: `data-${i}-again`,
+            },
+          ],
+          keys: [`key-${i}`],
+        },
+      });
+      for (const conn of conns) {
+        const res = await mm.metaToSend({
+          tenant: {
+            tenant,
+            ledger,
+          },
+          conn: {
+            reqId: conn.reqId,
+            resId: conn.resId,
+          },
+        });
+        expect(res).toEqual({
+          keys: conns.map((_, i) => `key-${i}`),
+          metas: [
+            {
+              cid: `cid-${i}-again`,
+              parents: [],
+              data: `data-${i}-again`,
+            },
+          ],
+        });
+      }
+    }
+
+    for (let i = 0; i < conns.length; i += 2) {
+      await mm.addMeta({
+        connection: {
+          tenant: {
+            tenant,
+            ledger,
+          },
+          conn: conns[i],
+        },
+        meta: {
+          metas: [
+            {
+              cid: `cid-${i}-again-1`,
+              parents: [],
+              data: `data-${i}-again-1`,
+            },
+          ],
+          keys: [`key-${i}`],
+        },
+      });
+      await mm.metaToSend({
+        tenant: {
+          tenant,
+          ledger,
+        },
+        conn: conns[i],
+      });
+    }
+
+    for (let i = 0; i < conns.length; i++) {
+      const res = await mm.metaToSend({
+        tenant: {
+          tenant,
+          ledger,
+        },
+        conn: {
+          reqId: conns[i].reqId,
+          resId: conns[i].resId,
+        },
+      });
+      if (i % 2 === 0) {
+        expect(res).toEqual({
+          keys: conns.map((_, i) => `key-${i}`),
+          metas: conns
+            .filter((_, j) => j % 2 === 0 && j !== i)
+            .map((_, j) => ({
+              cid: `cid-${j * 2}-again-1`,
+              parents: [],
+              data: `data-${j * 2}-again-1`,
+            })),
+        });
+      } else {
+        expect(res).toEqual({
+          keys: conns.map((_, i) => `key-${i}`),
+          metas: conns
+            .filter((_, j) => j % 2 === 0)
+            .map((_, j) => ({
+              cid: `cid-${j * 2}-again-1`,
+              parents: [],
+              data: `data-${j * 2}-again-1`,
+            })),
+        });
+      }
+    }
+  });
 });

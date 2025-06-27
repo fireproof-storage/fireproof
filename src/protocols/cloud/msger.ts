@@ -343,10 +343,12 @@ export class VirtualConnected {
         waitFor: () => true,
       },
       async (realConn: MsgRawConnection) => {
-        const ret = await realConn.send<S, Q>({
+        const myMsg = {
           ...msg,
           conn: { ...this.conn, ...msg.conn },
-        });
+        };
+        // console.log("VirtualConnected:send", this.id, myMsg);
+        const ret = await realConn.send<S, Q>(myMsg);
         return ret;
       },
     );
