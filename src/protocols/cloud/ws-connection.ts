@@ -161,7 +161,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       return;
     }
     const msg = rMsg.Ok();
-    console.log("wsOnMessage", this.id, msg);
+    // console.log("wsOnMessage", this.id, msg);
     this.waitForTid.resolve(msg);
     // console.log("wsOnMessage", msg, this.#onMsg.size);
     Array.from(this.#onMsg.values()).forEach((cb) => {
@@ -185,7 +185,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   }
 
   send<Q extends MsgBase, S extends MsgBase>(msg: Q): Promise<S> {
-    console.log("send", msg);
+    // console.log("send", msg);
     this.ws.send(this.msgP.ende.encode(msg));
     return Promise.resolve(msg as unknown as S);
   }

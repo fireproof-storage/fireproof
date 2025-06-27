@@ -142,7 +142,7 @@ class TokenObserver {
 
   async refreshToken(logger: Logger, ledger: Ledger) {
     let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
-    console.log("refreshToken", token);
+    // console.log("refreshToken", token);
     if (this.isExpired(token)) {
       logger.Debug().Msg("waiting for token");
       this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
@@ -163,7 +163,7 @@ class TokenObserver {
   async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
     let activeTokenAndClaim = this.currentTokenAndClaim;
     if (this.isExpired(activeTokenAndClaim)) {
-      console.log("refreshing token", this.currentTokenAndClaim?.claims.exp);
+      // console.log("refreshing token", this.currentTokenAndClaim?.claims.exp);
       await this.opts.events?.changed(undefined);
       logger
         .Debug()

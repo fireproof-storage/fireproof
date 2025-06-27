@@ -153,7 +153,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     if (!this.currentToken) {
       const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
       this.currentToken = await webCtx.token();
-      console.log("RedirectStrategy tryToken - ctx", this.currentToken);
+      // console.log("RedirectStrategy tryToken - ctx", this.currentToken);
     }
     return this.currentToken;
   }
