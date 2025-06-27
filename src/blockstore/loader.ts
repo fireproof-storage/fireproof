@@ -458,7 +458,8 @@ export class Loader implements Loadable {
     this.seenCompacted = new LRUSet({
       maxEntries: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_COMPACT_CACHE_SIZE, "1000"), 10),
     });
-    this.maxConcurrentCarReader = pLimit(parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_PARALLEL, "5"), 10));
+    this.maxConcurrentCarReader = pLimit(parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_PARALLEL, "10"), 10));
+    // console.log("maxConcurrentCarReader", this.maxConcurrentCarReader.concurrency);
 
     this.taskManager = new TaskManager(
       sthis,
