@@ -95,7 +95,7 @@
     "hono": "^4.7.10",
     "playwright": "^1.53.1",
     "playwright-chromium": "^1.53.1",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "rollup-plugin-visualizer": "^6.0.3",
