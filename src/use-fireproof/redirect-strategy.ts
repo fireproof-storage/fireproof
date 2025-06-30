@@ -2,6 +2,7 @@ import { BuildURI, Logger } from "@adviser/cement";
 import { rt, ps, SuperThis } from "@fireproof/core";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core/react";
 import { decodeJwt } from "jose";
+import DOMPurify from "dompurify";
 
 function defaultOverlayHtml(redirectLink: string) {
   return `
@@ -92,12 +93,12 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     let overlayNode = document.body.querySelector("#fpOverlay");
     if (!overlayNode) {
       const styleNode = document.createElement("style");
-      styleNode.innerHTML = this.overlayCss;
+      styleNode.innerHTML = DOMPurify.sanitize(this.overlayCss);
       document.head.appendChild(styleNode);
       overlayNode = document.createElement("div");
       overlayNode.id = "fpOverlay";
       overlayNode.className = "fpOverlay";
-      overlayNode.innerHTML = this.overlayHtml(url.toString());
+      overlayNode.innerHTML = DOMPurify.sanitize(this.overlayHtml(url.toString()));
       document.body.appendChild(overlayNode);
       overlayNode.querySelector(".fpCloseButton")?.addEventListener("click", () => {
         if (overlayNode) {
