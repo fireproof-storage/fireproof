@@ -428,11 +428,7 @@ export class AttachedRemotesImpl implements AttachedStores {
           walUrl: gws.wal?.url.toString(),
         }),
       );
-      // console.log("keyed-preleaving", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
-
-      // console.log("keyed-premotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const ret = await this._remotes.get(key).once(async () => {
-        // console.log("keyed-enter-2", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
         const rt = toStoreRuntime(this.loadable.sthis);
         const result = new AttachedImpl(
           keyed,
@@ -456,15 +452,11 @@ export class AttachedRemotesImpl implements AttachedStores {
           }
           this._local = result;
         }
-        // console.log("keyed-postRemotes", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
         return result;
       });
-      // console.log("keyed-preOnAttach", this.id, key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       const rex = await onAttach?.(ret);
-      // console.log("keyed-postOnAttach", key, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
       return rex;
     });
-    // console.log("attach-leave", this.id, keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
     return ret;
   }
 }

@@ -528,7 +528,7 @@ export interface ReqOpen extends Omit<MsgWithConn, "conn"> {
 }
 
 export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>): ReqOpen {
-  return {
+  const req = {
     tid: sthis.nextId().str,
     auth,
     type: "reqOpen",
@@ -537,7 +537,8 @@ export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>)
       ...conn,
       reqId: conn.reqId || sthis.nextId().str,
     },
-  };
+  } satisfies ReqOpen;
+  return req;
 }
 
 // export function MsgIsReqOpenWithConn(imsg: MsgBase): imsg is MsgWithConn<ReqOpen> {

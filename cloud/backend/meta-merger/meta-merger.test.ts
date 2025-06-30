@@ -446,21 +446,23 @@ describe("$name - MetaMerger", () => {
           tenant,
           ledger,
         },
-        conn: {
-          reqId: conns[i].reqId,
-          resId: conns[i].resId,
-        },
+        conn: conns[i],
       });
       if (i % 2 === 0) {
         expect(res).toEqual({
           keys: conns.map((_, i) => `key-${i}`),
           metas: conns
-            .filter((_, j) => j % 2 === 0 && j !== i)
-            .map((_, j) => ({
-              cid: `cid-${j * 2}-again-1`,
-              parents: [],
-              data: `data-${j * 2}-again-1`,
-            })),
+            .map((_, j) => {
+              if (!(j % 2 === 0 && i < j)) {
+                return undefined;
+              }
+              return {
+                cid: `cid-${j}-again-1`,
+                parents: [],
+                data: `data-${j}-again-1`,
+              };
+            })
+            .filter((i) => !!i),
         });
       } else {
         expect(res).toEqual({
