@@ -80,7 +80,7 @@
     "autoprefixer": "^10.4.21",
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.13.0",
-    "deno": "^2.3.6",
+    "deno": "^2.3.7",
     "dotenv": "^16.5.0",
     "drizzle-kit": "0.30.6",
     "esbuild": "^0.25.4",
