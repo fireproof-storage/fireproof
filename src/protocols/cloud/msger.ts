@@ -430,7 +430,6 @@ export class VirtualConnected {
   }
 
   private async getQSIdWithSideEffect(rawConn: MsgRawConnection, msg: MsgBase, conn: ReqOpenConn): Promise<MsgWithError<ResOpen>> {
-    // console.log("getQSIdWithSideEffect", this.id, msg, conn);
     const mOpen = await this.request<ResOpen, ReqOpen>(buildReqOpen(this.sthis, msg.auth, conn), {
       waitFor: MsgIsResOpen,
       noConn: true,

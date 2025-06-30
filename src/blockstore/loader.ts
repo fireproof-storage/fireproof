@@ -213,25 +213,16 @@ export class Loader implements Loadable {
   }
 
   async attach(attachable: Attachable): Promise<Attached> {
-    return await this.attachedStores.attach(attachable, async (at) => {
+    const ret = await this.attachedStores.attach(attachable, async (at) => {
       if (!at.stores.wal) {
         try {
           const store = this.attachedStores.activate(at.stores);
-          // console.log("enter-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
-          // console.log("attach-1", store.active.car.url().pathname)
           await this.tryToLoadStaleCars(store);
-          // console.log("attach-2", store.active.car.url().pathname, "local", store.local().carStore().active.url().pathname)
           const localDbMeta = this.currentMeta; // await store.local().active.meta.load();
-          // console.log("attach-local", localDbMeta, store.local().active.meta.url().pathname);
-          // remote Store need to kick off the sync by requesting the latest meta
           const remoteDbMeta = store.active.meta.stream();
-          // console.log("attach-remote", store.active.meta.url().pathname, store.local().active.car.url().pathname);
           await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
-          // console.log("remote-sycned-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           if (localDbMeta) {
-            // console.log("attach-ensure", store.active.car.url().pathname);
             await this.ensureAttachedStore(store, localDbMeta);
-            // console.log("outbound-attach", store.local().active.meta.url().pathname, at.stores.car.url().pathname);
           }
           /* ultra hacky */
           await (this.blockstoreParent as BaseBlockstore).commitTransaction(
@@ -252,6 +243,7 @@ export class Loader implements Loadable {
       }
       return at;
     });
+    return ret;
   }
 
   private async ensureAttachedStore(store: ActiveStore, localDbMeta: CarGroup) {

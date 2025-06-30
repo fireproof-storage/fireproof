@@ -1,4 +1,4 @@
-import { BuildURI, runtimeFn, URI } from "@adviser/cement";
+import { BuildURI, ResolveOnce, runtimeFn, URI } from "@adviser/cement";
 import { PARAM, SuperThis } from "../types.js";
 import type { SerdeGateway } from "./serde-gateway.js";
 import type { Gateway } from "./gateway.js";
@@ -12,24 +12,43 @@ import { FireproofCloudGateway } from "../runtime/gateways/cloud/gateway.js";
 
 export interface SerdeGatewayFactoryItem {
   readonly protocol: string;
-  // readonly overrideBaseURL?: string; // if this set it overrides the defaultURL
-  // readonly overrideRegistration?: boolean; // if this is set, it will override the registration
   readonly isDefault?: boolean;
-
   defaultURI(sthis: SuperThis): URI;
-
   serdegateway(sthis: SuperThis): Promise<SerdeGateway>;
-
-  // readonly gateway?: (sthis: SuperThis) => Promise<SerdeGateway>;
-  // readonly test: (sthis: SuperThis, gfi: GatewayFactoryItem) => Promise<TestGateway>;
-  // which switches between file and indexeddb
-  // readonly data: (logger: Logger) => Promise<Gateway>;
-  // readonly meta: (logger: Logger) => Promise<Gateway>;
-  // readonly wal: (logger: Logger) => Promise<Gateway>;
-  // readonly test: (logger: Logger) => Promise<TestStore>;
 }
 
-const storeFactory = new Map<string, SerdeGatewayFactoryItem>();
+class OneSerdeGatewayFactoryItem implements SerdeGatewayFactoryItem {
+  readonly once = new ResolveOnce<SerdeGateway>();
+
+  readonly item: SerdeGatewayFactoryItem;
+
+  constructor(sgfi: SerdeGatewayFactoryItem) {
+    this.item = sgfi;
+  }
+
+  get protocol(): string {
+    return this.item.protocol;
+  }
+
+  get isDefault(): boolean {
+    return this.item.isDefault ?? false;
+  }
+
+  set isDefault(value: boolean) {
+    // test only
+    (this.item as { isDefault: boolean }).isDefault = value;
+  }
+
+  defaultURI(sthis: SuperThis): URI {
+    return this.item.defaultURI(sthis);
+  }
+
+  async serdegateway(sthis: SuperThis): Promise<SerdeGateway> {
+    return this.once.once(() => this.item.serdegateway(sthis));
+  }
+}
+
+const storeFactory = new Map<string, OneSerdeGatewayFactoryItem>();
 
 export function getDefaultURI(sthis: SuperThis, protocol?: string): URI {
   if (protocol) {
@@ -84,10 +103,13 @@ export function registerStoreProtocol(item: SerdeOrGatewayFactoryItem): () => vo
     });
   }
   // console.log("registerStoreProtocol", protocol, item.isDefault);
-  storeFactory.set(protocol, {
-    ...item,
-    serdegateway,
-  });
+  storeFactory.set(
+    protocol,
+    new OneSerdeGatewayFactoryItem({
+      ...item,
+      serdegateway,
+    }),
+  );
   return () => {
     storeFactory.delete(protocol);
   };
