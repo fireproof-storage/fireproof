@@ -62,7 +62,7 @@
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.7.4",
-    "@cloudflare/workers-types": "^4.20250620.0",
+    "@cloudflare/workers-types": "^4.20250628.0",
     "@eslint/js": "^9.29.0",
     "@hono/node-server": "^1.14.4",
     "@hono/node-ws": "^1.1.7",
