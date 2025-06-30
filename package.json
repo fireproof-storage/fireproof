@@ -82,7 +82,7 @@
     "cmd-ts": "^0.13.0",
     "deno": "^2.3.6",
     "dotenv": "^16.5.0",
-    "drizzle-kit": "0.30.6",
+    "drizzle-kit": "0.31.4",
     "esbuild": "^0.25.4",
     "esbuild-plugin-replace": "^1.4.0",
     "eslint": "^9.29.0",
