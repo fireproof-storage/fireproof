@@ -2,13 +2,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core/react";
-import { TableRow, DynamicTable } from "../../components/DynamicTable.tsx";
-import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
-import { SYNC_DB_NAME, truncateDbName } from "../../helpers.ts";
+import { useFireproof } from "use-fireproof";
+import { TableRow, DynamicTable } from "../../components/DynamicTable.jsx";
+import { headersForDocs } from "../../components/dynamicTableHelpers.js";
+import { SYNC_DB_NAME, truncateDbName } from "../../helpers.js";
 
 export function DatabasesShow() {
-  const { name, endpoint } = useParams();
+  const { name } = useParams();
   if (!name) {
     throw new Error("Name is required");
   }
@@ -29,7 +29,7 @@ function TableView({ name }: { name: string }) {
     left: 0,
   });
 
-  const { useLiveQuery: usePetnameLiveQuery, useAllDocs } = useFireproof(SYNC_DB_NAME);
+  const { useLiveQuery: usePetnameLiveQuery } = useFireproof(SYNC_DB_NAME);
 
   const myPetnames = usePetnameLiveQuery<{
     localName: string;
@@ -45,7 +45,7 @@ function TableView({ name }: { name: string }) {
 
   let connection, remoteName;
   if (myPetnames.docs.length > 0) {
-    const endpoint = myPetnames.docs[0].endpoint;
+    // const endpoint = myPetnames.docs[0].endpoint;
     remoteName = myPetnames.docs[0].remoteName;
     // if (endpoint) {
     //   connection = rawConnect(database as any, remoteName, endpoint);
@@ -61,7 +61,7 @@ function TableView({ name }: { name: string }) {
     if (window.confirm(`Are you sure you want to delete the database "${name}"?`)) {
       const DBDeleteRequest = window.indexedDB.deleteDatabase(`fp.${name}`);
 
-      DBDeleteRequest.onerror = (event) => {
+      DBDeleteRequest.onerror = () => {
         console.error("Error deleting database.");
       };
 
@@ -175,7 +175,7 @@ function TableView({ name }: { name: string }) {
               {activeTab === "react" && (
                 <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
                   {`
-import { useFireproof } from "@fireproof/core/react";
+import { useFireproof } from "@fireproof/core-react";
 import { connect } from "@fireproof/cloud";
 
 export default function App() {

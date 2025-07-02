@@ -1,8 +1,8 @@
 import { int, sqliteTable, text, primaryKey, index, unique } from "drizzle-orm/sqlite-core";
-import { sqlTenants } from "./tenants.ts";
-import { sqlUsers } from "./users.ts";
-import { toUndef } from "./sql-helper.ts";
-import { LedgerUser } from "./fp-dash-types.ts";
+import { sqlTenants } from "./tenants.js";
+import { sqlUsers } from "./users.js";
+import { toUndef } from "./sql-helper.js";
+import { LedgerUser } from "@fireproof/core-protocols-dashboard";
 
 export const sqlLedgers = sqliteTable(
   "Ledgers",

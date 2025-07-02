@@ -62,7 +62,7 @@ function gthis() {
 }
 
 function getVersion() {
-  let version = "refs/tags/v$(cat $projectBase/dist/fp-version)";
+  let version = "refs/tags/v$(cat $projectBase/dist/fp-version.txt)";
   if ("$GITHUB_REF" && "$GITHUB_REF".startsWith("refs/tags/v")) {
     version = "$GITHUB_REF";
   }
@@ -74,7 +74,7 @@ gthis()["FP_DEBUG"]="*"
 gthis()["FP_VERSION"]=getVersion()
 EOF
 
-pnpm install
+pnpm install --prefer-offline --package-import-method=hardlink
 pnpm run test
 pnpm exec deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
 

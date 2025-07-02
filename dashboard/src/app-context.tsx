@@ -1,8 +1,8 @@
-import { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { SuperThis } from "@fireproof/core";
-import { ensureSuperThis } from "@fireproof/core";
-import { CloudContext } from "./cloud-context.ts";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { CloudContext } from "./cloud-context.js";
 
 export interface AppContextType {
   sthis: SuperThis;
@@ -28,14 +28,26 @@ export const AppContext = createContext<AppContextType>({
   cloud: cloudContext,
   sideBar: {
     openMenu: null,
-    setOpenMenu: () => {},
+    setOpenMenu: () => {
+      /* no-op */
+    },
     isSidebarOpen: false,
-    setIsSidebarOpen: () => {},
+    setIsSidebarOpen: () => {
+      /* no-op */
+    },
     isDarkMode: false,
-    setIsDarkMode: () => {},
-    toggleMenu: () => {},
-    toggleDarkMode: () => {},
-    toggleSidebar: () => {},
+    setIsDarkMode: () => {
+      /* no-op */
+    },
+    toggleMenu: () => {
+      /* no-op */
+    },
+    toggleDarkMode: () => {
+      /* no-op */
+    },
+    toggleSidebar: () => {
+      /* no-op */
+    },
   },
 });
 

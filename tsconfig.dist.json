@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+
+    "jsx": "react",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "noEmit": false,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "alwaysStrict": true,
+    "skipLibCheck": true,
+    "types": ["node", "deno"]
+  }
+}

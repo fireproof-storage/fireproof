@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { IconButton } from "./Button.tsx";
-import { User } from "./User.tsx";
+import React, { useEffect } from "react";
+import { IconButton } from "./Button.jsx";
+import { User } from "./User.jsx";
 
 export default function Header({ isDarkMode, setIsDarkMode }: { isDarkMode: boolean; setIsDarkMode: (x: boolean) => void }) {
   useEffect(() => {

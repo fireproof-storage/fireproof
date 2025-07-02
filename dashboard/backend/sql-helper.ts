@@ -1,6 +1,6 @@
+import { Queryable, QueryUser } from "@fireproof/core-protocols-dashboard";
 import { and, eq, or } from "drizzle-orm/sql/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
-import { Queryable, QueryUser } from "./fp-dash-types.ts";
 
 export function toUndef(v: string | null | undefined): string | undefined {
   return v ? v : undefined;
@@ -83,7 +83,7 @@ export function queryEmail(email?: string): string | undefined {
   if (!splitEmail) {
     return undefined;
   }
-  const splitPlus = splitEmail[1].match(/(.*)\+[^\+]*$/);
+  const splitPlus = splitEmail[1].match(/(.*)\+[^+]*$/);
   if (!splitPlus) {
     return splitEmail[1].replace(/[^a-z0-9]/g, "") + "@" + splitEmail[2];
   }

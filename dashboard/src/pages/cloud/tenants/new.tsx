@@ -1,14 +1,17 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import type { FieldValues } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { redirect, useNavigate } from "react-router-dom";
-import type { AppContextType } from "../../../app-context.tsx";
-import { AppContext } from "../../../app-context.tsx";
-import { Button } from "../../../components/Button.tsx";
+import type { AppContextType } from "../../../app-context.jsx";
+import { AppContext } from "../../../app-context.jsx";
+import { Button } from "../../../components/Button.jsx";
 
 export function newCloudAction(ctx: AppContextType) {
   return async ({ request }: { request: Request }) => {
-    const tenantName = (await request.json()).tenantName;
+    const tenantName = ((await request.json()) as { tenantName?: string }).tenantName;
+    if (!tenantName || tenantName.trim() === "") {
+      return new Response("Tenant name is required", { status: 400 });
+    }
     const rTenant = await ctx.cloud.api.createTenant({
       tenant: {
         name: tenantName,

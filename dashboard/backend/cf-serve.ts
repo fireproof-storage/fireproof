@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/d1";
 import { D1Database, Fetcher, Request as CFRequest, Response as CFResponse } from "@cloudflare/workers-types";
-import { CORS, createHandler } from "./create-handler.ts";
+import { CORS, createHandler } from "./create-handler.js";
 import { URI } from "@adviser/cement";
 
 export interface Env {

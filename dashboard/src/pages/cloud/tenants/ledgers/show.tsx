@@ -1,11 +1,12 @@
-import { Outlet, useParams } from "react-router-dom";
-import { TabNavigation } from "../../../../components/TabNavigation.tsx";
+import React from "react";
+import { Outlet } from "react-router-dom";
+import { TabNavigation } from "../../../../components/TabNavigation.jsx";
 
 /**
  * Main component for displaying ledger details with tabbed navigation
  */
 export function CloudTenantLedgersShow() {
-  const { ledgerId } = useParams();
+  // const { ledgerId } = useParams();
 
   const tabs = [
     { id: "overview", label: "Overview" },

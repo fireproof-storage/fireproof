@@ -1,32 +1,38 @@
 {
-  "name": "dashboard-react-router-dev",
+  "name": "@fireproof/dashboard",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
     "dev": "vite",
-    "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.ts",
+    "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.js",
     "backend:d1": "wrangler dev -c wrangler.toml --port 7370",
     "deploy:cf": "wrangler deploy -c wrangler.toml",
-    "build": "vite build",
-    "build:tsc": "tsc",
+    "build": "tsc; pnpm run build:vite",
+    "build:vite": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest --run",
-    "format": "prettier .",
+    "format": "prettier --config ../.prettierrc .",
     "check": "pnpm format --write && tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
     "drizzle:d1-local": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
-    "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.d1-remote.config.ts"
+    "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.d1-remote.config.ts",
+    "pack": "echo dashboard need not to pack",
+    "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "~0.4.14",
+    "@adviser/cement": "^0.4.20",
     "@clerk/backend": "^1.25.8",
     "@clerk/clerk-js": "^5.58.1",
     "@clerk/clerk-react": "^5.25.5",
+    "@fireproof/core": "workspace:0.0.0",
+    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "^3.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/react-query": "^5.80.2",
@@ -41,7 +47,8 @@
     "react-hook-form": "^7.53.2",
     "react-router-dom": "^7.6.2",
     "react-simple-code-editor": "^0.14.1",
-    "use-editable": "^2.3.3"
+    "use-editable": "^2.3.3",
+    "use-fireproof": "workspace:0.0.0"
   },
   "devDependencies": {
     "@clerk/clerk-react": "^5.31.9",
@@ -69,19 +76,10 @@
     "rollup-plugin-visualizer": "^6.0.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5",
-    "vitest": "^3.2.1",
-    "wrangler": "^4.19.1",
-    "zx": "^8.5.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@clerk/shared",
-      "browser-tabs-lock",
-      "core-js",
-      "esbuild",
-      "sharp",
-      "workerd"
-    ]
+    "vite": "^7.0.2",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.23.0",
+    "zx": "^8.5.3",
+    "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { toCloud, useFireproof } from "use-fireproof";
 import "./App.css";
-import TodoFilters from "./components/TodoFilters.js";
+import TodoFilters from "./components/TodoFilters.jsx";
 import TodoForm from "./components/TodoForm.js";
 import TodoList from "./components/TodoList.js";
 import { FilterType, Todo } from "./types.js";

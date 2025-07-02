@@ -1,9 +1,6 @@
-import { createContext, JSX, useContext, useEffect, useState } from "react";
-import { Outlet, useParams } from "react-router-dom";
-import { ButtonToggleSidebar } from "../components/ButtonToggleSidebar.tsx";
-import { Sidebar } from "../components/Sidebar.tsx";
-import { TopArea } from "../components/TopArea.tsx";
-import { AppContext } from "../app-context.tsx";
+import React from "react";
+import { Outlet } from "react-router-dom";
+import { TopArea } from "../components/TopArea.jsx";
 
 export function WithoutSidebar() {
   return (

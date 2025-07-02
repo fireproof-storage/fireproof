@@ -26,7 +26,7 @@ const external = [
   "@fireproof/core/node",
   "@fireproof/core/mem",
   "@fireproof/core/indexeddb",
-  "@fireproof/core/react",
+  "@fireproof/core-react",
 ];
 
 // function skipper(suffix: string[], target: string) {
@@ -212,7 +212,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   //   ...LIBRARY_BUNDLE_OPTIONS,
   //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core"],
   //   format: ["esm", "cjs"],
-  //   name: "@fireproof/core/react",
+  //   name: "@fireproof/core-react",
   //   entry: ["src/react/index.ts"],
   //   platform: "browser",
   //   outDir: "dist/fireproof-core/react",
@@ -227,12 +227,12 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   //     // }),
   //   ],
   //   dts: {
-  //     footer: "declare module '@fireproof/core/react'",
+  //     footer: "declare module '@fireproof/core-react'",
   //   },
   // },
   // {
   //   ...LIBRARY_BUNDLE_OPTIONS,
-  //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core/react"],
+  //   external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core-react"],
   //   treeshake: true,
   //   format: ["esm", "cjs"],
   //   //    minify: true,

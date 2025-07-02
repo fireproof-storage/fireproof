@@ -1,7 +1,7 @@
 import { Result } from "@adviser/cement";
-import { SuperThis, ps, rt } from "@fireproof/core";
+import { SuperThis } from "@fireproof/core";
 import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+// import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose";
 import {
   AuthType,
@@ -51,14 +51,19 @@ import {
   RoleType,
   User,
   UserStatus,
-} from "./fp-dash-types.ts";
-import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.ts";
-import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.ts";
-import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.ts";
-import { sqlTenantUsers, sqlTenants } from "./tenants.ts";
-import { sqlTokenByResultId } from "./token-by-result-id.ts";
-import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.ts";
-import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.ts";
+  VerifiedAuth,
+  FAPIMsgImpl,
+} from "@fireproof/core-protocols-dashboard";
+import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.js";
+import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.js";
+import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.js";
+import { sqlTenantUsers, sqlTenants } from "./tenants.js";
+import { sqlTokenByResultId } from "./token-by-result-id.js";
+import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.js";
+import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
+import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
+import { sts } from "@fireproof/core-runtime";
+import { DashSqlite } from "./create-handler.js";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -114,23 +119,23 @@ export interface FPApiInterface {
   extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>>;
 }
 
-export const FPAPIMsg = new ps.dashboard.FAPIMsgImpl();
+export const FPAPIMsg = new FAPIMsgImpl();
 
 export interface FPApiToken {
-  verify(token: string): Promise<Result<ps.dashboard.VerifiedAuth>>;
+  verify(token: string): Promise<Result<VerifiedAuth>>;
 }
 
-interface ReqInsertTenant {
-  readonly tenantId: string;
-  readonly name?: string;
-  readonly ownerUserId: string;
-  readonly adminUserIds?: string[];
-  readonly memberUserIds?: string[];
-  readonly maxAdminUsers?: number;
-  readonly maxMemberUsers?: number;
-  readonly createdAt?: Date;
-  readonly updatedAt?: Date;
-}
+// interface ReqInsertTenant {
+//   readonly tenantId: string;
+//   readonly name?: string;
+//   readonly ownerUserId: string;
+//   readonly adminUserIds?: string[];
+//   readonly memberUserIds?: string[];
+//   readonly maxAdminUsers?: number;
+//   readonly maxMemberUsers?: number;
+//   readonly createdAt?: Date;
+//   readonly updatedAt?: Date;
+// }
 
 // interface ResInsertTenant {
 //     readonly tenantId: string;
@@ -158,7 +163,7 @@ interface AddUserToTenant {
   readonly tenantId: string;
   readonly userId: string;
   readonly default?: boolean;
-  readonly role: ps.cloud.Role;
+  readonly role: Role;
   readonly status?: UserStatus;
   readonly statusReason?: string;
 }
@@ -172,8 +177,8 @@ interface AddUserToLedger {
   readonly default?: boolean;
   readonly status?: UserStatus;
   readonly statusReason?: string;
-  readonly role: ps.cloud.Role;
-  readonly right: ps.cloud.ReadWrite;
+  readonly role: Role;
+  readonly right: ReadWrite;
 }
 
 // interface ResAddUserToTenant {
@@ -200,7 +205,7 @@ interface ActiveUser<T extends AuthType = ClerkVerifyAuth> {
   readonly user?: User;
 }
 
-type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUser<ClerkVerifyAuth>, "user"> & {
+type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
   user: {
     userId: string;
     maxTenants: number;
@@ -216,10 +221,10 @@ function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
 }
 
 export class FPApiSQL implements FPApiInterface {
-  readonly db: LibSQLDatabase;
+  readonly db: DashSqlite;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
-  constructor(sthis: SuperThis, db: LibSQLDatabase, token: Record<string, FPApiToken>) {
+  constructor(sthis: SuperThis, db: DashSqlite, token: Record<string, FPApiToken>) {
     this.db = db;
     this.tokenApi = token;
     this.sthis = sthis;
@@ -243,6 +248,7 @@ export class FPApiSQL implements FPApiInterface {
     return Result.Ok(auth);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async activeUser(req: WithAuth, status: UserStatus[] = ["active"]): Promise<Result<ActiveUser>> {
     // console.log("activeUser-1", req);
     const rAuth = await this._authVerifyAuth(req);
@@ -311,7 +317,7 @@ export class FPApiSQL implements FPApiInterface {
         maxAdminUsers: 5,
         maxMemberUsers: 5,
       });
-      const res = await this.addUserToTenant(this.db, {
+      await this.addUserToTenant(this.db, {
         userName: nameFromAuth(undefined, authWithUserId),
         tenantId: rTenant.Ok().tenantId,
         userId: userId,
@@ -332,7 +338,7 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  private async addUserToTenant(db: LibSQLDatabase, req: Omit<AddUserToTenant, "tenantName">): Promise<Result<AddUserToTenant>> {
+  private async addUserToTenant(db: DashSqlite, req: Omit<AddUserToTenant, "tenantName">): Promise<Result<AddUserToTenant>> {
     const tenant = await db
       .select()
       .from(sqlTenants)
@@ -366,7 +372,7 @@ export class FPApiSQL implements FPApiInterface {
         tenantId: req.tenantId,
         userId: req.userId,
         default: !!tenantUser.default,
-        role: ps.cloud.toRole(tenantUser.role),
+        role: toRole(tenantUser.role),
         status: tenantUser.status as UserStatus,
         statusReason: tenantUser.statusReason,
       });
@@ -408,7 +414,7 @@ export class FPApiSQL implements FPApiInterface {
       default: ret.default ? true : false,
       status: ret.status as UserStatus,
       statusReason: ret.statusReason,
-      role: ps.cloud.toRole(ret.role),
+      role: toRole(ret.role),
     });
   }
 
@@ -444,7 +450,7 @@ export class FPApiSQL implements FPApiInterface {
     return Result.Ok(undefined);
   }
 
-  private async addUserToLedger(db: LibSQLDatabase, req: AddUserToLedger): Promise<Result<AddUserToLedger>> {
+  private async addUserToLedger(db: DashSqlite, req: AddUserToLedger): Promise<Result<AddUserToLedger>> {
     const ledger = await db
       .select()
       .from(sqlLedgers)
@@ -483,8 +489,8 @@ export class FPApiSQL implements FPApiInterface {
         default: !!ledgerUser.LedgerUsers.default,
         status: ledgerUser.LedgerUsers.status as UserStatus,
         statusReason: ledgerUser.LedgerUsers.statusReason,
-        role: ps.cloud.toRole(ledgerUser.LedgerUsers.role),
-        right: ps.cloud.toReadWrite(ledgerUser.LedgerUsers.right),
+        role: toRole(ledgerUser.LedgerUsers.role),
+        right: toReadWrite(ledgerUser.LedgerUsers.right),
       });
     }
     const rCheck = await this.checkMaxRoles(ledger.Tenants, req.role);
@@ -526,8 +532,8 @@ export class FPApiSQL implements FPApiInterface {
       statusReason: ret.statusReason,
       userId: req.userId,
       default: req.default ?? false,
-      role: ps.cloud.toRole(ret.role),
-      right: ps.cloud.toReadWrite(ret.right),
+      role: toRole(ret.role),
+      right: toReadWrite(ret.right),
     });
   }
 
@@ -682,7 +688,7 @@ export class FPApiSQL implements FPApiInterface {
       }, ledgerUsersFilter);
       // remove other users if you are not admin
       Array.from(ledgerUsersFilter.values()).forEach((item) => {
-        item.users = item.users.filter((u) => item.my!.role === "admin" || (item.my!.role !== "admin" && u.userId === userId));
+        item.users = item.users.filter((u) => item.my?.role === "admin" || (item.my?.role !== "admin" && u.userId === userId));
       });
     }
     const tenantIds = ledgers.length
@@ -705,7 +711,7 @@ export class FPApiSQL implements FPApiInterface {
         ),
       );
 
-    let tenantUsers = await q.all();
+    const tenantUsers = await q.all();
     // console.log(">>>>>>", tenantUsers.toString());
     const tenantUserFilter = tenantUsers.reduce(
       (acc, lu) => {
@@ -732,22 +738,22 @@ export class FPApiSQL implements FPApiInterface {
     );
     // remove other users if you are not admin
     Array.from(tenantUserFilter.values()).forEach((item) => {
-      item.users = item.users.filter((u) => item.my!.role === "admin" || (item.my!.role !== "admin" && u.userId === userId));
+      item.users = item.users.filter((u) => item.my?.role === "admin" || (item.my?.role !== "admin" && u.userId === userId));
     });
 
     return [
       ...Array.from(tenantUserFilter.values()).map((item) => ({
         userId: userId,
         tenantId: item.users[0].tenantId,
-        role: ps.cloud.toRole(item.my!.role),
+        role: toRole(item.my?.role),
         adminUserIds: item.users.filter((u) => u.role === "admin").map((u) => u.userId),
         memberUserIds: item.users.filter((u) => u.role !== "admin").map((u) => u.userId),
       })),
       ...Array.from(ledgerUsersFilter.values()).map((item) => ({
         userId: userId,
         ledgerId: item.ledger.ledgerId,
-        role: ps.cloud.toRole(item.my!.role),
-        right: ps.cloud.toReadWrite(item.my!.right),
+        role: toRole(item.my?.role),
+        right: toReadWrite(item.my?.right),
         adminUserIds: item.users.filter((u) => u.role === "admin").map((u) => u.userId),
         memberUserIds: item.users.filter((u) => u.role !== "admin").map((u) => u.userId),
       })),
@@ -789,10 +795,13 @@ export class FPApiSQL implements FPApiInterface {
                 if (!tenant) {
                   throw new Error("tenant not found");
                 }
+                if (!auth.user) {
+                  throw new UserNotFoundError();
+                }
                 await this.addUserToTenant(this.db, {
                   userName: `invited from [${tenant.name}]`,
                   tenantId: tenant.tenantId,
-                  userId: auth.user!.userId,
+                  userId: auth.user?.userId,
                   role: invite.invitedParams.tenant.role,
                 });
               }
@@ -805,11 +814,14 @@ export class FPApiSQL implements FPApiInterface {
                 if (!ledger) {
                   throw new Error("ledger not found");
                 }
+                if (!auth.user) {
+                  throw new UserNotFoundError();
+                }
                 await this.addUserToLedger(this.db, {
                   userName: `invited-${ledger.name}`,
                   ledgerId: ledger.ledgerId,
                   tenantId: ledger.tenantId,
-                  userId: auth.user!.userId,
+                  userId: auth.user?.userId,
                   role: invite.invitedParams.ledger.role,
                   right: invite.invitedParams.ledger.right,
                 });
@@ -818,9 +830,9 @@ export class FPApiSQL implements FPApiInterface {
                 await this.db
                   .update(sqlInviteTickets)
                   .set({
-                    invitedUserId: auth.user!.userId,
+                    invitedUserId: auth.user?.userId,
                     status: "accepted",
-                    statusReason: `accepted: ${auth.user!.userId}`,
+                    statusReason: `accepted: ${auth.user?.userId}`,
                     updatedAt: new Date().toISOString(),
                   })
                   .where(eq(sqlInviteTickets.inviteId, invite.inviteId))
@@ -1201,14 +1213,14 @@ export class FPApiSQL implements FPApiInterface {
             sqlInviteTickets.invitedTenantId,
             roles
               .filter((i) => i.role === "admin" && i.tenantId)
-              .map((i) => i.tenantId!)
+              .map((i) => i.tenantId as string)
               .flat(2),
           ),
           inArray(
             sqlInviteTickets.invitedLedgerId,
             roles
               .filter((i) => i.role === "admin" && i.ledgerId)
-              .map((i) => i.ledgerId!)
+              .map((i) => i.ledgerId as string)
               .flat(2),
           ),
         ),
@@ -1357,7 +1369,7 @@ export class FPApiSQL implements FPApiInterface {
       if (req.name) {
         updateSet.name = req.name;
       }
-      const ret = await this.db
+      await this.db
         .update(sqlTenantUsers)
         .set(updateSet)
         .where(and(eq(sqlTenantUsers.userId, userId), eq(sqlTenantUsers.tenantId, req.tenantId)))
@@ -1379,7 +1391,7 @@ export class FPApiSQL implements FPApiInterface {
       type: "resUpdateUserTenant",
       tenantId: ret.TenantUsers.tenantId,
       userId: ret.TenantUsers.userId,
-      role: ps.cloud.toRole(ret.TenantUsers.role),
+      role: toRole(ret.TenantUsers.role),
       default: !!ret.TenantUsers.default,
       name: toUndef(ret.TenantUsers.name),
     });
@@ -1629,8 +1641,8 @@ export class FPApiSQL implements FPApiInterface {
       readonly updatedAt: string;
       default?: number;
       name?: string;
-      role?: ps.cloud.Role;
-      right?: ps.cloud.ReadWrite;
+      role?: Role;
+      right?: ReadWrite;
     };
     if (typeof req.ledger.default === "boolean") {
       role.default = req.ledger.default ? 1 : 0;
@@ -1685,7 +1697,7 @@ export class FPApiSQL implements FPApiInterface {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    const now = new Date().toISOString();
+    // const now = new Date().toISOString();
     // check if owner or admin of tenant
     if (!(await this.isAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
       return Result.Err("not owner or admin of tenant");
@@ -1706,7 +1718,7 @@ export class FPApiSQL implements FPApiInterface {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    const now = new Date().toISOString();
+    // const now = new Date().toISOString();
     let condition = and(eq(sqlLedgerUsers.userId, auth.user.userId));
     if (req.tenantIds && req.tenantIds.length) {
       condition = and(condition, inArray(sqlLedgers.tenantId, req.tenantIds));
@@ -1787,7 +1799,7 @@ export class FPApiSQL implements FPApiInterface {
       ledgers: resListLedgers
         .Ok()
         .ledgers.map((i) => {
-          const rights = i.users.find((u) => u.userId === auth.user!.userId);
+          const rights = i.users.find((u) => u.userId === auth.user?.userId);
           if (!rights) {
             return undefined;
           }
@@ -1797,7 +1809,7 @@ export class FPApiSQL implements FPApiInterface {
             right: rights.right,
           };
         })
-        .filter((i) => i) as ps.cloud.FPCloudClaim["ledgers"],
+        .filter((i) => i) as FPCloudClaim["ledgers"],
       email: auth.verifiedAuth.params.email,
       nickname: auth.verifiedAuth.params.nick,
       provider: toProvider(auth.verifiedAuth),
@@ -1806,7 +1818,7 @@ export class FPApiSQL implements FPApiInterface {
         tenant: req.selected?.tenant ?? resListTenants.Ok().tenants[0]?.tenantId,
         ledger: req.selected?.ledger ?? resListLedgers.Ok().ledgers[0]?.ledgerId,
       },
-    } satisfies ps.cloud.FPCloudClaim);
+    } satisfies FPCloudClaim);
 
     // console.log("getCloudSessionToken", {
     //   result: req.resultId,
@@ -1898,14 +1910,14 @@ export class FPApiSQL implements FPApiInterface {
     const ctx = rCtx.Ok();
     try {
       // Get the public key for verification
-      const pubKey = await rt.sts.env2jwk(ctx.publicToken, "ES256");
+      const pubKey = await sts.env2jwk(ctx.publicToken, "ES256");
 
       // Verify the token
       const verifyResult = await jwtVerify(req.token, pubKey, {
         issuer: ctx.issuer,
         audience: ctx.audience,
       });
-      const payload = verifyResult.payload as ps.cloud.FPCloudClaim;
+      const payload = verifyResult.payload as FPCloudClaim;
 
       // Check if token is expired
       const now = Date.now();
@@ -1931,7 +1943,7 @@ export class FPApiSQL implements FPApiInterface {
   }
 }
 
-function toProvider(i: ClerkVerifyAuth): ps.cloud.FPCloudClaim["provider"] {
+function toProvider(i: ClerkVerifyAuth): FPCloudClaim["provider"] {
   if (i.params.nick) {
     return "github";
   }

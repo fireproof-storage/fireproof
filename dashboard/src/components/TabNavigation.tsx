@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Tab {
@@ -18,7 +18,7 @@ interface TabNavigationProps {
 export function TabNavigation({ tabs, className = "" }: TabNavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const tabsRef = useRef<Array<HTMLButtonElement | null>>([]);
+  const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
   // Helper function to check if a tab is active

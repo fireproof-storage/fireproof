@@ -1,4 +1,4 @@
-import { setPresetEnv } from "@fireproof/core";
+import { setPresetEnv } from "@fireproof/core-runtime";
 
 // console.log("setup:libsql", process.env);
 setPresetEnv({

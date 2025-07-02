@@ -9,15 +9,18 @@ pail.car
 .nyc_output
 build
 coverage
-dist
-node_modules
+**/node_modules/**
 out
 logs
 
+*.d.ts.map
+*.js.map
+
 # Artifacts
 *.log
-*.tgz
+**/*.tgz
 *.zip
+*.tgz
 
 smoke/package.json
 smoke/pnpm-lock.yaml
@@ -29,6 +32,7 @@ smoke/react/pnpm-lock.yaml
 /blob-report/
 /playwright/.cache/
 **/.env
+**/dist/**
 **/.esm-cache/**
 **/.cache/**
 **/.vite/**

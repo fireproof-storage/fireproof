@@ -1,9 +1,12 @@
+/// <reference types="vite/client" />
+
+import React from "react";
 import ReactDOM from "react-dom/client";
 
 import { ClerkProvider } from "@clerk/clerk-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AppContextProvider } from "./app-context.tsx";
-import { App } from "./components/App.tsx";
+import { AppContextProvider } from "./app-context.jsx";
+import { App } from "./components/App.jsx";
 import "./styles/tailwind.css";
 
 const rootElement = import.meta.env.VITE_CHROME_EXTENSION

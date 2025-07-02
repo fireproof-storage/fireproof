@@ -1,0 +1,58 @@
+name: '@fireproof/core-cloud-cf-deploy'
+on:
+  push:
+    tags:
+      - 'core-cf@*'
+
+env:
+  FP_CI: 'fp_ci'
+
+jobs:
+  cf-deploy:
+    name: cf-deploy
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    environment: ${{ startsWith(github.ref, 'refs/tags/core-cf@s') && 'staging' || startsWith(github.ref, 'refs/tags/core-cf@p') && 'production' || 'dev' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./actions/base
+
+      - name: deploy cloud/backend/cf-d1 - 1
+        id: attempt1
+        continue-on-error: true
+        working-directory: cloud/backend/cf-d1
+        env:
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
+          STORAGE_URL: ${{ vars.STORAGE_URL }}
+        run: |
+          pnpm run drizzle:d1-remote
+          pnpm exec core-cli writeEnv --wranglerToml ./wrangler.toml --env ${{ vars.CLOUDFLARE_ENV }} --out /dev/stdout --json | \
+            pnpm exec wrangler -c ./wrangler.toml secret --env ${{ vars.CLOUDFLARE_ENV }} bulk
+          pnpm run wrangler:deploy
+          pnpm run test --project cloud:D1 --testTimeout 10000
+
+      - name: deploy cloud/backend/cf-d1 - 2
+        if: steps.attempt1.outcome == 'failure'
+        working-directory: cloud/backend/cf-d1
+        env:
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
+          STORAGE_URL: ${{ vars.STORAGE_URL }}
+        run: |
+          pnpm run test --project cloud:D1 --testTimeout 10000
