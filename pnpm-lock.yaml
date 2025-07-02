@@ -47,8 +47,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       cborg:
-        specifier: ^4.2.10
-        version: 4.2.11
+        specifier: ^4.2.12
+        version: 4.2.12
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -2274,8 +2274,8 @@ packages:
   carstream@2.3.0:
     resolution: {integrity: sha512-2YwFg5Kxs2tqVCJv7sthWbYoUpALCYBBfTdpQcpicV7ipi6bBb1h9M4MNb1vm+724f39lUNp5VWhW43IFxfPlA==}
 
-  cborg@4.2.11:
-    resolution: {integrity: sha512-7gs3iaqtsD9OHowgqzc6ixQGwSBONqosVR2co0Bg0pARgrLap+LCcEIXJuuIz2jHy0WWQeDMFPEsU2r17I2XPQ==}
+  cborg@4.2.12:
+    resolution: {integrity: sha512-z126yLoavS75cdTuiKu61RC3Y3trqtDAgQRa5Q0dpHn1RmqhIedptWXKnk0lQ5yo/GmcV9myvIkzFgZ8GnqSog==}
     hasBin: true
 
   chai@5.2.0:
@@ -5787,18 +5787,18 @@ snapshots:
   '@ipld/car@5.4.2':
     dependencies:
       '@ipld/dag-cbor': 9.2.4
-      cborg: 4.2.11
+      cborg: 4.2.12
       multiformats: 13.3.7
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.4':
     dependencies:
-      cborg: 4.2.11
+      cborg: 4.2.12
       multiformats: 13.3.7
 
   '@ipld/dag-json@10.2.5':
     dependencies:
-      cborg: 4.2.11
+      cborg: 4.2.12
       multiformats: 13.3.7
 
   '@isaacs/cliui@8.0.2':
@@ -6927,7 +6927,7 @@ snapshots:
       multiformats: 13.3.7
       uint8arraylist: 2.4.8
 
-  cborg@4.2.11: {}
+  cborg@4.2.12: {}
 
   chai@5.2.0:
     dependencies:
