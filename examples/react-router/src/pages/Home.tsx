@@ -53,7 +53,9 @@ export function Home() {
           <div key={priority} className="mb-8">
             <h2 className="text-xl font-semibold capitalize mb-4">{label} Priority</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTodos[priority]?.map((todo) => <TodoCard key={todo._id} todo={todo} />)}
+              {groupedTodos[priority]?.map((todo) => (
+                <TodoCard key={todo._id} todo={todo} />
+              ))}
             </div>
           </div>
         ))}
