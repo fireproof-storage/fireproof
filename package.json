@@ -106,7 +106,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0",
     "uuidv7": "^1.0.2",
-    "vite": "^6.3.5",
+    "vite": "^7.0.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "wrangler": "^4.22.0",
@@ -149,7 +149,7 @@
     "react-hook-form": "^7.59.0",
     "react-router-dom": "^7.6.3",
     "react-simple-code-editor": "^0.14.1",
-    "tailwindcss": "^4.1.11",
+    "tailwindcss": "^3.4.17",
     "ws": "^8.18.3"
   },
   "bundle-phobia": {
