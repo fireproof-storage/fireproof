@@ -130,7 +130,7 @@
     "@ipld/dag-json": "^10.2.4",
     "@libsql/client": "^0.15.9",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@tanstack/react-query": "^5.81.2",
+    "@tanstack/react-query": "^5.81.5",
     "@web3-storage/pail": "^0.6.2",
     "cborg": "^4.2.10",
     "charwise": "^3.0.1",
