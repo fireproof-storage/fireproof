@@ -270,8 +270,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     platform: "node",
     outDir: "dist/fireproof-core/cli",
     banner: {
-      js: `import { createRequire } from 'module';
-           const require = createRequire(import.meta.url);
+      js: `import * as __module from 'module';
+           const require = __module.createRequire(import.meta.url);
            const __dirname = new URL('.', import.meta.url).pathname;
            const __filename = new URL(import.meta.url).pathname;
            `,

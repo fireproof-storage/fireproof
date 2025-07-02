@@ -246,7 +246,7 @@ importers:
         specifier: ^4.22.0
         version: 4.22.0(@cloudflare/workers-types@4.20250702.0)
       zx:
-        specifier: ^8.6.1
+        specifier: ^8.6.1-lite
         version: 8.6.1
 
 packages:
