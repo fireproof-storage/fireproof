@@ -4,13 +4,12 @@ import { visualizer } from "rollup-plugin-visualizer";
 import * as path from "node:path";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     // multilines
-    tsconfigPaths(),
+    // tsconfigPaths(),
     react(),
     cloudflare(),
     visualizer(),
@@ -30,15 +29,15 @@ export default defineConfig({
     hmr: false,
     proxy: {
       "/*": {
-        rewrite: (path) => "/index.html",
+        rewrite: () => "/index.html",
       },
     },
   },
   resolve: process.env.USE_SOURCE
     ? {
         alias: {
-          "react-router": path.resolve(__dirname, "../../packages/react-router/index.ts"),
-          "react-router-dom": path.resolve(__dirname, "../../packages/react-router-dom/index.tsx"),
+          "react-router": path.resolve(__dirname, "../../packages/react-router/index.js"),
+          "react-router-dom": path.resolve(__dirname, "../../packages/react-router-dom/index.jsx"),
         },
       }
     : {},

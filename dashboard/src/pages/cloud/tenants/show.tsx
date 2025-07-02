@@ -1,7 +1,7 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { Outlet, useParams } from "react-router-dom";
-import { AppContext } from "../../../app-context.tsx";
-import { TabNavigation } from "../../../components/TabNavigation.tsx";
+import { AppContext } from "../../../app-context.jsx";
+import { TabNavigation } from "../../../components/TabNavigation.jsx";
 
 export async function clientLoader() {
   return {

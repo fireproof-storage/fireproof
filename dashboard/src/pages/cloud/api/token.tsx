@@ -1,11 +1,12 @@
+import React, { useContext, useEffect, useState } from "react";
 import { URI } from "@adviser/cement";
-import { ps } from "@fireproof/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base64url } from "jose";
-import { useContext, useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { AppContext } from "../../../app-context.tsx";
-import { SelectedTenantLedger } from "./selected-tenant-ledger.tsx";
+import { AppContext } from "../../../app-context.jsx";
+import { SelectedTenantLedger } from "./selected-tenant-ledger.jsx";
+import { TenantLedger } from "@fireproof/core-types-protocols-cloud";
+import { LedgerUser, UserTenant } from "@fireproof/core-protocols-dashboard";
 
 export function redirectBackUrl() {
   const uri = URI.from(window.location.href);
@@ -18,7 +19,7 @@ export function redirectBackUrl() {
   }
 }
 
-interface TenantLedgerWithName extends ps.cloud.TenantLedger {
+interface TenantLedgerWithName extends TenantLedger {
   readonly name: string;
 }
 
@@ -154,7 +155,7 @@ export function ApiToken() {
     }
     setInitialParameters(true);
     let justOneLedgerSelected = 0;
-    let ledgerSelected: (ps.dashboard.LedgerUser & { selected: boolean }) | undefined = undefined;
+    let ledgerSelected: (LedgerUser & { selected: boolean }) | undefined = undefined;
     tenantsData.forEach((tenant) => {
       tenant.ledgers.forEach((ledger) => {
         if (ledger.selected) {
@@ -167,7 +168,7 @@ export function ApiToken() {
       return;
     }
     // typescript o my typescript
-    const l = ledgerSelected as ps.dashboard.LedgerUser;
+    const l = ledgerSelected as LedgerUser;
     const ledgerFromUrl = searchParams.get("ledger");
     if (ledgerFromUrl && ledgerFromUrl !== l.ledgerId) {
       return;
@@ -308,14 +309,14 @@ function AddIfNotSelectedLedger({
   ledgers,
   onAdd,
 }: {
-  tenant: ps.dashboard.UserTenant;
+  tenant: UserTenant;
   urlLedgerName: string;
-  ledgers: (ps.dashboard.LedgerUser & { selected: boolean })[];
+  ledgers: (LedgerUser & { selected: boolean })[];
   onAdd: (ledger: TenantLedgerWithName) => void;
 }) {
   const { cloud } = useContext(AppContext);
   const mutation = useMutation({
-    mutationFn: async ({ tenant, ledgerName }: { tenant: ps.dashboard.UserTenant; ledgerName: string }) => {
+    mutationFn: async ({ tenant, ledgerName }: { tenant: UserTenant; ledgerName: string }) => {
       const res = await cloud.api.createLedger({
         ledger: {
           tenantId: tenant.tenantId,
@@ -386,8 +387,8 @@ function SelectLedger({
   ledger,
   onSelect,
 }: {
-  ledger: ps.dashboard.LedgerUser & { selected: boolean };
-  onSelect: (ledger: ps.cloud.TenantLedger) => void;
+  ledger: LedgerUser & { selected: boolean };
+  onSelect: (ledger: TenantLedger) => void;
 }) {
   return (
     <button
@@ -420,8 +421,8 @@ function ChooseLedger({
   searchParams: URLSearchParams;
   couldSelected: boolean;
   tenantsData?: {
-    tenant: ps.dashboard.UserTenant & { selected: boolean };
-    ledgers: (ps.dashboard.LedgerUser & { selected: boolean })[];
+    tenant: UserTenant & { selected: boolean };
+    ledgers: (LedgerUser & { selected: boolean })[];
   }[];
   onSelect: (ledger: TenantLedgerWithName) => void;
   onAdd: (ledger: TenantLedgerWithName) => void;

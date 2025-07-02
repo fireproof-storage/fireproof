@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from "react";
+
 import { useNavigate } from "react-router-dom";
-import { DocBase, DocTypes, DocWithId } from "@fireproof/core";
+import { DocBase, DocWithId } from "@fireproof/core";
 
 // export interface TableRow extends DocBase {
 //   // readonly _id: string;
@@ -19,7 +20,7 @@ interface TableProps {
   readonly onDelete?: (id: string) => Promise<void>;
 }
 
-export function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id", link = ["_id"] }: TableProps) {
+export function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id" /*link = ["_id"]*/ }: TableProps) {
   const navigate = useNavigate();
 
   function handleRowClick(fields: DocBase) {

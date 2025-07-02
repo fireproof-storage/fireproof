@@ -1,12 +1,17 @@
 import fs from "fs/promises";
-import { $ } from "zx";
+import path from "node:path";
+import { cd, $ } from "zx";
 import type { TestProject } from "vitest/node";
 
 export async function setup(project: TestProject) {
-  await fs.mkdir("dist", { recursive: true });
+  const root = project.toJSON().serializedConfig.root;
 
   $.verbose = true;
-  await $`npx drizzle-kit push --config ./drizzle.libsql.config.ts`;
+  cd(root);
+  await fs.mkdir(path.join(root, "dist"), { recursive: true });
+  await $`pnpm exec drizzle-kit push --config ./drizzle.libsql.config.ts`;
 
-  return () => {};
+  return () => {
+    /* */
+  };
 }

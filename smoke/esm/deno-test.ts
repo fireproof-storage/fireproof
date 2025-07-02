@@ -12,7 +12,7 @@ interface DenoIF {
 const Deno: DenoIF = (globalThis as unknown as { Deno: DenoIF }).Deno;
 
 async function getVersion() {
-  const fpVersion = await Deno.readFile(`${Deno.env.get("projectBase")}/dist/fp-version`).then((b) =>
+  const fpVersion = await Deno.readFile(`${Deno.env.get("projectBase")}/dist/fp-version.txt`).then((b) =>
     // eslint-disable-next-line no-restricted-globals
     new TextDecoder().decode(b).trim(),
   );
@@ -27,7 +27,8 @@ async function getVersion() {
 async function main() {
   const url = `http://localhost:4874/@fireproof/core@${await getVersion()}`;
   console.log("loading fireproof from ", url);
-  const { fireproof, PACKAGE_VERSION, rt } = await import(url);
+  const { fireproof, PACKAGE_VERSION } = await import(url);
+  const rt = await import(`http://localhost:4874/@fireproof/core-runtime@${await getVersion()}`);
 
   const db = fireproof("test-node", { storageUrls: { base: "memory://xxx" } });
 

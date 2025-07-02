@@ -36,9 +36,9 @@ import type {
   ResUpdateUserTenant,
   AuthType,
   InviteTicket,
-  UserTenant,
-} from "../backend/fp-dash-types.ts";
-import { API_URL } from "./helpers.ts";
+  // UserTenant,
+} from "@fireproof/core-protocols-dashboard";
+import { API_URL } from "./helpers.js";
 
 interface TypeString {
   type: string;
@@ -50,17 +50,17 @@ interface WithType<T extends TypeString> {
 
 export type WithoutTypeAndAuth<T> = Omit<T, "type" | "auth">;
 
-const emptyListTenantsByUser: ResListTenantsByUser = {
-  type: "resListTenantsByUser",
-  userId: "unk",
-  authUserId: "unk",
-  tenants: [] as UserTenant[],
-};
+// const emptyListTenantsByUser: ResListTenantsByUser = {
+//   type: "resListTenantsByUser",
+//   userId: "unk",
+//   authUserId: "unk",
+//   tenants: [] as UserTenant[],
+// };
 
-const emptyListInvites: ResListInvites = {
-  type: "resListInvites",
-  tickets: [],
-};
+// const emptyListInvites: ResListInvites = {
+//   type: "resListInvites",
+//   tickets: [],
+// };
 
 export interface InviteItem {
   tenantId: string;
@@ -186,7 +186,9 @@ export class CloudContext {
     });
     if (!this._tenantsForInvites.has(tenantId)) {
       this._tenantsForInvites.add(tenantId);
-      this.activeApi(this._tenantsForInvites.size > 0) && listInvites.refetch();
+      if (this.activeApi(this._tenantsForInvites.size > 0)) {
+        listInvites.refetch();
+      }
     }
     return listInvites;
   }
@@ -211,7 +213,9 @@ export class CloudContext {
 
     this.addTenantToListLedgerByUser(tenantId, () => {
       console.log("ledger - refetch", tenantId, this.activeApi(this._tenantIdForLedgers.size > 0));
-      this.activeApi(this._tenantIdForLedgers.size > 0) && listLedgers.refetch();
+      if (this.activeApi(this._tenantIdForLedgers.size > 0)) {
+        listLedgers.refetch();
+      }
     });
     return listLedgers;
   }
@@ -378,7 +382,7 @@ class CloudApi {
     if (res.ok) {
       const jso = await res.json();
       // console.log("jso", jso);
-      return Result.Ok(jso);
+      return Result.Ok(jso as S);
     }
     const body = await res.text();
     return Result.Err(`HTTP: ${res.status} ${res.statusText}: ${body}`);

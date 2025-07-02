@@ -1,19 +1,19 @@
-import { BuildURI, URI } from "@adviser/cement";
-import { ps } from "@fireproof/core";
+import { BuildURI } from "@adviser/cement";
+import { LedgerUser, UserTenant } from "@fireproof/core-protocols-dashboard";
 
 export function truncateDbName(name: string, maxLength: number) {
   if (name.length <= maxLength) return name;
   return `${name.substring(0, maxLength - 3)}...`;
 }
 
-export function tenantName(tenant: ps.dashboard.UserTenant) {
+export function tenantName(tenant: UserTenant) {
   // if (tenant.default) {
   //   return "Default";
   // }
   return tenant.user.name || tenant.tenant.name || tenant.tenantId;
 }
 
-export function ledgerName(ledger: ps.dashboard.LedgerUser) {
+export function ledgerName(ledger: LedgerUser) {
   // if (tenant.default) {
   //   return "Default";
   // }

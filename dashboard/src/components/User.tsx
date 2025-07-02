@@ -1,5 +1,5 @@
-import { URI } from "@adviser/cement";
-import { SignedIn, SignedOut, SignInButton, UserButton, useSession } from "@clerk/clerk-react";
+import React from "react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
 // let user;
 
@@ -18,7 +18,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton, useSession } from "@cler
 // export const authResult = { user };
 
 export function User() {
-  const { isLoaded, session, isSignedIn } = useSession();
+  // const { isLoaded, session, isSignedIn } = useSession();
   /*
     if (!authResult.user) {
         return redirect(`/login?next_url=${encodeURIComponent(window.location.href)}`);

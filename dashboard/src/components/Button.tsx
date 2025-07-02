@@ -1,5 +1,5 @@
-import { ElementType, ReactNode, useContext } from "react";
-import { AppContext } from "../app-context.tsx";
+import React, { ElementType, ReactNode, useContext } from "react";
+import { AppContext } from "../app-context.jsx";
 
 type ButtonProps<T extends ElementType> = {
   children: ReactNode;

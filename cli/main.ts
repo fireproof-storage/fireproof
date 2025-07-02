@@ -1,10 +1,11 @@
-import { ensureSuperThis } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { run, subcommands } from "cmd-ts";
-import { keyCmd } from "../cloud/cli-cloud-token-key-cmd.js";
-import { writeEnvCmd } from "../cloud/backend/cf-d1/cli-write-env.js";
-import { preSignedUrlCmd } from "../cloud/cli-pre-signed-url.js";
+import { keyCmd, preSignedUrlCmd } from "@fireproof/cloud-base";
+import { writeEnvCmd } from "@fireproof/cloud-backend-cf-d1";
 
 import { dotenv } from "zx";
+import { buildCmd } from "./build-cmd.js";
+import { setDependenciesCmd, setScriptsCmd } from "./set-scripts-cmd.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -17,6 +18,9 @@ import { dotenv } from "zx";
       key: keyCmd(sthis),
       writeEnv: writeEnvCmd(sthis),
       preSigned: preSignedUrlCmd(sthis),
+      build: buildCmd(sthis),
+      setScripts: setScriptsCmd(sthis),
+      setDependencies: setDependenciesCmd(sthis),
     },
   });
 

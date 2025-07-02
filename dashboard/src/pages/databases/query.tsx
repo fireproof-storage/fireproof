@@ -1,12 +1,12 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { MapFn } from "@fireproof/core";
-import { useFireproof } from "@fireproof/core/react";
-import { EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
-import { DynamicTable, TableRow } from "../../components/DynamicTable.tsx";
-import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
+// import { MapFn } from "@fireproof/core";
+import { useFireproof } from "use-fireproof";
+import { EditableCodeHighlight } from "../../components/CodeHighlight.jsx";
+import { DynamicTable, TableRow } from "../../components/DynamicTable.jsx";
+import { headersForDocs } from "../../components/dynamicTableHelpers.js";
 
-type AnyMapFn = MapFn<object>;
+// type AnyMapFn = MapFn<object>;
 
 export function DatabasesQuery() {
   const { name } = useParams();

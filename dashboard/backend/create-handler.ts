@@ -1,10 +1,13 @@
-// import { auth } from "./better-auth.ts";
+// import { auth } from "./better-auth.js";
 import { LoggerImpl, Result, exception2Result } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
-import { SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis, ps } from "@fireproof/core";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
-import type { Env } from "./cf-serve.ts";
+import { SuperThis, SuperThisOpts } from "@fireproof/core";
+import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
+import type { Env } from "./cf-serve.js";
+import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
+import { ensureSuperThis, ensureLogger } from "@fireproof/core-runtime";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { ResultSet } from "@libsql/client";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -16,7 +19,7 @@ export const CORS = {
 };
 
 interface ClerkTemplate {
-  readonly app_metadata: {};
+  readonly app_metadata: unknown;
   readonly azp: string;
   readonly exp: number;
   readonly iat: number;
@@ -38,7 +41,7 @@ class ClerkApiToken implements FPApiToken {
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
   }
-  async verify(token: string): Promise<Result<ps.dashboard.VerifiedAuth>> {
+  async verify(token: string): Promise<Result<VerifiedAuth>> {
     const jwtKey = this.sthis.env.get("CLERK_PUB_JWT_KEY");
     if (!jwtKey) {
       return Result.Err("Invalid CLERK_PUB_JWT_KEY");
@@ -93,7 +96,10 @@ class ClerkApiToken implements FPApiToken {
 //   }
 // }
 
-export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<string, string> | Env) {
+export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
+
+// BaseSQLiteDatabase<'async', ResultSet, TSchema>
+export function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),

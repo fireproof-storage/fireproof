@@ -10,7 +10,8 @@ cp $projectRoot/dist/npmrc-smoke .npmrc
 rm -rf pnpm-lock.yaml node_modules
 cp package-template.json package.json
 # pnpm install
-pnpm add @fireproof/core@$(cat $projectRoot/dist/fp-version)
+pnpm add @fireproof/core@$(cat $projectRoot/dist/fp-version.txt) --prefer-offline --package-import-method=hardlink
+pnpm add @fireproof/core-runtime@$(cat $projectRoot/dist/fp-version.txt) --prefer-offline --package-import-method=hardlink
 cat package.json
 npx tsx ./node-test.ts
 command -v deno && \

@@ -1,17 +1,23 @@
 import fs from "fs/promises";
-import { mockJWK } from "../node/test-helper.js";
-import { ensureSuperThis, rt } from "@fireproof/core";
-import { $, dotenv } from "zx";
+import { cd, $, dotenv } from "zx";
 import { setupBackendD1 } from "./setup-backend-d1.js";
 import type { TestProject } from "vitest/node";
-import { setTestEnv } from "../../test-global-helper.js";
+import { ensureSuperThis, sts } from "@fireproof/core-runtime";
+import { mockJWK } from "@fireproof/cloud-backend-base";
+import { setTestEnv } from "@fireproof/cloud-base";
 
 export async function setup(project: TestProject) {
+  const root = project.toJSON().serializedConfig.root;
+
+  $.verbose = true;
+  cd(root);
+
   if (typeof process.env.FP_ENV === "string") {
     dotenv.config(process.env.FP_ENV ?? ".env");
     // eslint-disable-next-line no-console
     console.log("Loaded env from", process.env.FP_ENV);
   }
+
   const sthis = ensureSuperThis();
   const keys = await mockJWK(sthis);
 
@@ -19,7 +25,7 @@ export async function setup(project: TestProject) {
   let FP_ENDPOINT = sthis.env.get("FP_ENDPOINT");
 
   const testEnv = {
-    [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
+    [sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
     STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://127.0.0.1:9000/testbucket",
     ACCESS_KEY_ID: sthis.env.get("ACCESS_KEY_ID") ?? "minioadmin",
     SECRET_ACCESS_KEY: sthis.env.get("SECRET_ACCESS_KEY") ?? "minioadmin",
@@ -32,11 +38,11 @@ export async function setup(project: TestProject) {
 
     $.verbose = !!sthis.env.get("FP_DEBUG");
     // create db
-    await $`wrangler -c cloud/backend/cf-d1/wrangler.toml -e test d1  execute test-meta-merge --local --command "select 'meno'"`;
+    await $`wrangler -c ./wrangler.toml -e test d1 execute test-meta-merge --local --command "select 'meno'"`;
     // setup sql
-    await $`npx drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts --force`;
+    await $`npx drizzle-kit push --config ./drizzle.cloud.d1-local.config.ts --force`;
 
-    params = await setupBackendD1(sthis, "cloud/backend/cf-d1/wrangler.toml", "test");
+    params = await setupBackendD1(sthis, "./wrangler.toml", "test");
     FP_ENDPOINT = `http://localhost:${params.port}`;
   }
 

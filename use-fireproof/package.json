@@ -1,0 +1,59 @@
+{
+  "name": "use-fireproof",
+  "version": "0.0.0",
+  "description": "Fireproof live ledger, JavaScript API and React hooks",
+  "type": "module",
+  "main": "./index.js",
+  "homepage": "https://use-fireproof.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest --run",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
+  },
+  "author": "J Chris Anderson",
+  "license": "Apache-2.0 OR MIT",
+  "gptdoc": "Fireproof/React/Usage: import { useFireproof } from 'use-fireproof'; function WordCounterApp() { const { useLiveQuery, useDocument } = useFireproof('my-word-app'); const { doc: wordInput, merge: updateWordInput, save: saveWordInput, reset: clearWordInput } = useDocument({ word: '', timestamp: Date.now() }); const recentWords = useLiveQuery('timestamp', { descending: true, limit: 10 }); const { doc: { totalSubmitted }, merge: updateTotalSubmitted, save: saveTotalSubmitted } = useDocument({ _id: 'word-counter', totalSubmitted: 0 }); const handleWordSubmission = (e) => { e.preventDefault(); updateTotalSubmitted({ totalSubmitted: totalSubmitted + 1 }); saveTotalSubmitted(); saveWordInput(); clearWordInput();}; return (<><p>{totalSubmitted} words submitted</p><form onSubmit={handleWordSubmission}><input type='text' value={wordInput.word} onChange={e => updateWordInput({ word: e.target.value })} placeholder='Enter a word' /></form><ul>{recentWords.docs.map(entry => (<li key={entry._id}>{entry.word}</li>))} </ul></>) } export default WordCounterApp;",
+  "dependencies": {
+    "@adviser/cement": "^0.4.20",
+    "@fireproof/core-base": "workspace:0.0.0",
+    "@fireproof/core-gateways-cloud": "workspace:0.0.0",
+    "@fireproof/core-keybag": "workspace:0.0.0",
+    "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-blockstore": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "^3.0.0",
+    "dompurify": "^3.2.6",
+    "jose": "^6.0.11"
+  },
+  "peerDependencies": {
+    "@adviser/cement": "^0.4.20",
+    "react": ">=18.0.0"
+  },
+  "keywords": [
+    "react",
+    "ledger",
+    "json",
+    "live",
+    "sync"
+  ],
+  "devDependencies": {
+    "@types/deno": "^2.3.0",
+    "@fireproof/core-cli": "workspace:0.0.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.1.8",
+    "@vitest/browser": "^3.2.4",
+    "playwright": "^1.53.2",
+    "playwright-chromium": "^1.53.2",
+    "vitest": "^3.2.4"
+  }
+}

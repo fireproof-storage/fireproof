@@ -1,5 +1,6 @@
 import { command, option, string, flag, optional, array, multioption } from "cmd-ts";
-import { rt, SuperThis } from "@fireproof/core";
+import * as rt from "@fireproof/core-runtime";
+import { SuperThis } from "@fireproof/core-types-base";
 import { param } from "@adviser/cement";
 import fs from "fs/promises";
 

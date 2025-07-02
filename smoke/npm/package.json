@@ -4,10 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "core-cli build --doPack",
+    "build": "tsc",
+    "publish": "core-cli build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@adviser/cement": "^0.4.20",
+    "@fireproof/vendor": "^3.0.0"
+  }
 }

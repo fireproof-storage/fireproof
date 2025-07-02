@@ -1,5 +1,7 @@
 import { param, Result } from "@adviser/cement";
-import { rt, ps, SuperThis } from "@fireproof/core";
+import { SuperThis } from "@fireproof/core";
+import { sts } from "@fireproof/core-runtime";
+import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { SignJWT } from "jose/jwt/sign";
 
 export interface FPTokenContext {
@@ -11,8 +13,8 @@ export interface FPTokenContext {
   readonly extendValidFor: number; // seconds
 }
 
-export async function createFPToken(ctx: FPTokenContext, claim: ps.cloud.FPCloudClaim) {
-  const privKey = await rt.sts.env2jwk(ctx.secretToken, "ES256");
+export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
+  const privKey = await sts.env2jwk(ctx.secretToken, "ES256");
   let validFor = ctx.validFor;
   if (validFor <= 0) {
     validFor = 60 * 60; // 1 hour

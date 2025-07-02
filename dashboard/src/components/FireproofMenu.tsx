@@ -1,3 +1,4 @@
+import React from "react";
 export function FireproofMenu() {
   return (
     <header className=" bg-gray-800 pt-3 pb-1 px-5 flex items-center justify-between">

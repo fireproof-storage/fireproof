@@ -1,10 +1,10 @@
-import { useContext } from "react";
-import { User } from "./User.tsx";
-import { AppContext } from "../app-context.tsx";
-import { FireproofHome } from "./FireproofHome.tsx";
+import React, { useContext } from "react";
+import { User } from "./User.jsx";
+import { AppContext } from "../app-context.jsx";
+import { FireproofHome } from "./FireproofHome.jsx";
 
 export function TopArea({ withSidebar }: { withSidebar?: boolean }) {
-  const { isSidebarOpen, toggleDarkMode, isDarkMode } = useContext(AppContext).sideBar;
+  const { toggleDarkMode, isDarkMode } = useContext(AppContext).sideBar;
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <header className="flex h-14 items-center gap-4 border-b bg-background px-6 shadow-sm flex-shrink-0">

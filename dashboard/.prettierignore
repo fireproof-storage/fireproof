@@ -1,5 +1,0 @@
-**/pnpm-lock.yaml
-scripts/
-**/.esm-cache/**
-**/dist/**
-**/coverage/**

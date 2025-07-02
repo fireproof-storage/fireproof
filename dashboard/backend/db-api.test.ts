@@ -7,7 +7,7 @@
 // import { userRef } from "./db-api-schema";
 
 import { Result } from "@adviser/cement";
-import { SuperThis, ensureSuperThis, rt } from "@fireproof/core";
+import { SuperThis } from "@fireproof/core";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
@@ -19,8 +19,10 @@ import {
   type ReqEnsureUser,
   type ResEnsureUser,
   type VerifiedAuth,
-} from "./fp-dash-types.ts";
-import { queryEmail, queryNick } from "./sql-helper.ts";
+} from "@fireproof/core-protocols-dashboard";
+import { queryEmail, queryNick } from "./sql-helper.js";
+import { ensureSuperThis, sts } from "@fireproof/core-runtime";
+import { describe, beforeAll, expect, it } from "vitest";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -375,7 +377,9 @@ describe("db-api", () => {
     });
   });
 
-  it("invite non existing user to a ledger", async () => {});
+  it("invite non existing user to a ledger", async () => {
+    /* */
+  });
 
   it("try find an user by string(email)", async () => {
     const res = await fpApi.findUser({
@@ -682,7 +686,9 @@ describe("db-api", () => {
     ).toEqual([]);
   });
 
-  it("listInvites with a user with all tenants", async () => {});
+  it("listInvites with a user with all tenants", async () => {
+    /* */
+  });
 
   it("listInvites with one tenant per user", async () => {
     const invites = await Promise.all(
@@ -811,7 +817,7 @@ describe("db-api", () => {
       updatedAt: rUpdate.Ok().ledger.updatedAt,
     });
 
-    const rDelete = await fpApi.deleteLedger({
+    await fpApi.deleteLedger({
       type: "reqDeleteLedger",
       auth: data[0].reqs.auth,
       ledger: {
@@ -884,7 +890,7 @@ describe("db-api", () => {
       },
     );
     expect(resSt.isOk()).toBeTruthy();
-    const pub = await rt.sts.env2jwk(
+    const pub = await sts.env2jwk(
       "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
       "ES256",
     );
@@ -1002,7 +1008,7 @@ describe("db-api", () => {
     expect(typeof extendedResponse.token).toBe("string");
 
     // Verify the new token is valid and has extended expiry
-    const pub = await rt.sts.env2jwk(
+    const pub = await sts.env2jwk(
       "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
       "ES256",
     );

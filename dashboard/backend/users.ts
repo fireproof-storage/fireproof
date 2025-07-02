@@ -1,15 +1,9 @@
 import { Result } from "@adviser/cement";
-import { ps } from "@fireproof/core";
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { queryCondition, toUndef } from "./sql-helper.ts";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
+import { queryCondition, toUndef } from "./sql-helper.js";
 import { eq, and, inArray } from "drizzle-orm/sql/expressions";
-
-type QueryUser = ps.dashboard.QueryUser;
-type User = ps.dashboard.User;
-type UserStatus = ps.dashboard.UserStatus;
-type AuthProvider = ps.dashboard.AuthProvider;
-type UserByProvider = ps.dashboard.UserByProvider;
+import { AuthProvider, QueryUser, User, UserByProvider, UserStatus } from "@fireproof/core-protocols-dashboard";
+import { DashSqlite } from "./create-handler.js";
 
 export const sqlUsers = sqliteTable("Users", {
   userId: text().primaryKey(),
@@ -59,7 +53,7 @@ export const sqlUserByProviders = sqliteTable(
   ],
 );
 
-export async function queryUser(db: LibSQLDatabase, req: QueryUser): Promise<Result<User[]>> {
+export async function queryUser(db: DashSqlite, req: QueryUser): Promise<Result<User[]>> {
   const condition = queryCondition(req, sqlUserByProviders);
   if (!condition) {
     return Result.Err("invalid query");
@@ -67,7 +61,7 @@ export async function queryUser(db: LibSQLDatabase, req: QueryUser): Promise<Res
   return getUsers(db, [condition]);
 }
 
-export async function getUsers(db: LibSQLDatabase, condition: ReturnType<typeof and>[]) {
+export async function getUsers(db: DashSqlite, condition: ReturnType<typeof and>[]) {
   const rows = await db
     .select()
     .from(sqlUserByProviders)
@@ -77,7 +71,7 @@ export async function getUsers(db: LibSQLDatabase, condition: ReturnType<typeof 
   return Result.Ok(sqlToUser(rows));
 }
 
-export async function getUser(db: LibSQLDatabase, authUserId: string): Promise<Result<User>> {
+export async function getUser(db: DashSqlite, authUserId: string): Promise<Result<User>> {
   const rRows = await getUsers(db, [inArray(sqlUsers.status, ["active"]), eq(sqlUserByProviders.providerUserId, authUserId)]);
   if (rRows.isErr()) {
     return Result.Err(rRows.Err());
@@ -127,7 +121,7 @@ function sqlToUser(
   return result;
 }
 
-function upsetUsers(db: LibSQLDatabase, req: UserWithoutDate, now = new Date()) {
+function upsetUsers(db: DashSqlite, req: UserWithoutDate, now = new Date()) {
   return db
     .insert(sqlUsers)
     .values(prepareInsertUsers(req, now))
@@ -155,7 +149,7 @@ export type UserWithoutDate = Omit<Omit<Omit<User, "byProviders">, "createdAt">,
   readonly byProviders: UserByProviderWithoutDate[];
 };
 
-export async function upsetUserByProvider(db: LibSQLDatabase, req: UserWithoutDate, now = new Date()) {
+export async function upsetUserByProvider(db: DashSqlite, req: UserWithoutDate, now = new Date()) {
   await upsetUsers(db, req, now);
   for (const byProvider of req.byProviders) {
     await db

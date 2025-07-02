@@ -1,8 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core/react";
-import { Button } from "../../../../../components/Button.tsx";
-import { CodeHighlight, EditableCodeHighlight } from "../../../../../components/CodeHighlight.tsx";
+import { useFireproof } from "use-fireproof";
+import { Button } from "../../../../../components/Button.jsx";
+import { CodeHighlight, EditableCodeHighlight } from "../../../../../components/CodeHighlight.jsx";
 
 export function ShowLedgerDocument() {
   const { tenantId, ledgerId, documentId } = useParams();
@@ -23,29 +23,29 @@ export function ShowLedgerDocument() {
     }
   }
 
-  async function deleteDocument() {
-    if (!window.confirm("Are you sure you want to delete this document?")) return;
-    try {
-      if (!documentId) return;
-      await database.del(documentId);
-      navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`);
-    } catch (error) {
-      console.error("Failed to delete document:", error);
-    }
-  }
+  // async function deleteDocument() {
+  //   if (!window.confirm("Are you sure you want to delete this document?")) return;
+  //   try {
+  //     if (!documentId) return;
+  //     await database.del(documentId);
+  //     navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`);
+  //   } catch (error) {
+  //     console.error("Failed to delete document:", error);
+  //   }
+  // }
 
   function editorChanged({ code, valid }: { code: string; valid: boolean }) {
     setNeedsSave(valid);
     setDocToSave(code);
   }
 
-  const { _id, ...data } = doc || {};
+  // const { _id, ...data } = doc || {};
   const idFirstMeta = { _id: documentId };
 
   return (
     <div className="p-6 bg-[--muted]">
       <h2 className="mt-6 mb-[20px]">Editable data fields</h2>
-      <EditableCodeHighlight onChange={editorChanged} code={JSON.stringify(data, null, 2)} />
+      <EditableCodeHighlight onChange={editorChanged} code={JSON.stringify(doc || {}, null, 2)} />
       <div className="flex gap-[14px] justify-end mt-[14px] mb-[32px]">
         <Button
           variation="secondary"
