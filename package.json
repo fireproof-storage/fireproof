@@ -65,7 +65,7 @@
     "@cloudflare/workers-types": "^4.20250620.0",
     "@eslint/js": "^9.29.0",
     "@hono/node-server": "^1.14.4",
-    "@hono/node-ws": "^1.1.7",
+    "@hono/node-ws": "^1.2.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.0.3",
     "@types/randombytes": "^2.0.3",
