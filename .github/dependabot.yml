@@ -12,4 +12,4 @@ updates:
     open-pull-requests-limit: 20
     ignore:
       - dependency-name: "drizzle-kit:*"
-        versions: [ ">=0.30.7" ]
+        versions: [">=0.30.7"]
