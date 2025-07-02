@@ -1,6 +1,6 @@
 import type { Block } from "multiformats";
 import { Logger, ResolveOnce } from "@adviser/cement";
-import { EncryptedBlockstore, type TransactionMeta, CompactFetcher, toStoreRuntime } from "./blockstore/index.js";
+import { EncryptedBlockstore, toStoreRuntime } from "@fireproof/core-blockstore";
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -32,11 +32,12 @@ import {
   PARAM,
   Ledger,
   TraceEvent,
-} from "./types.js";
+} from "@fireproof/core-types";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
-import { ensureLogger } from "./utils.js";
+import { ensureLogger } from "@fireproof/core-runtime";
 import { CRDTClockImpl } from "./crdt-clock.js";
+import { TransactionMeta, CompactFetcher } from "@fireproof/core-types/blockstore";
 
 export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
   readonly storeUrls: {

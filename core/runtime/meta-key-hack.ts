@@ -1,12 +1,18 @@
 import { exception2Result, Result, URI } from "@adviser/cement";
-import { SerializedMeta } from "./gateways/fp-envelope-serialize.js";
-import { SerdeGateway, SerdeGatewayCtx } from "../blockstore/serde-gateway.js";
-import { PARAM, SuperThis } from "../types.js";
-import { FPEnvelope, FPEnvelopeMeta } from "../blockstore/fp-envelope.js";
-import { NotFoundError } from "../utils.js";
-import { DefSerdeGateway } from "./gateways/def-serde-gateway.js";
-import { Gateway } from "../blockstore/gateway.js";
-import { Loadable } from "../blockstore/types.js";
+import {
+  FPEnvelopeMeta,
+  SerializedMeta,
+  V2SerializedMetaKey,
+  Gateway,
+  Loadable,
+  FPEnvelope,
+  SerdeGateway,
+  SerdeGatewayCtx,
+} from "@fireproof/core-types/blockstore";
+
+import { PARAM, SuperThis } from "@fireproof/core-types";
+import { NotFoundError } from "./utils.js";
+import { DefSerdeGateway } from "@fireproof/core-gateways";
 
 type V1SerializedMetaKey = SerializedMeta & {
   // old version
@@ -14,11 +20,6 @@ type V1SerializedMetaKey = SerializedMeta & {
   // new version
   readonly keys?: string[];
 };
-
-export interface V2SerializedMetaKey {
-  readonly metas: SerializedMeta[];
-  readonly keys: string[];
-}
 
 // type SerializedMetaWithKey = V1SerializedMetaKey[] | V2SerializedMetaKey;
 

@@ -1,10 +1,11 @@
 /// <reference lib="dom" />
 
-import { Database, ensureSuperThis, hashString, rt, SuperThis, ps } from "@fireproof/core";
 import { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
 import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 import { decodeJwt } from "jose/jwt/decode";
+import { SuperThis, Database } from "@fireproof/core-types";
+import { ensureSuperThis, hashString } from "@fireproof/core-runtime";
 
 export const WebCtx = "webCtx";
 
@@ -38,6 +39,7 @@ class WebCtxImpl implements WebToCloudCtx {
 
     this.sthis = opts.sthis ?? ensureSuperThis();
     this.keyBag = opts.keyBag; // ?? rt.kb.getKeyBag(ensureSuperThis());
+
     // if (opts.keyBag) {
     //   this.keyBag = opts.keyBag;
     // } else {

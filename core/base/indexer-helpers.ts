@@ -1,5 +1,5 @@
 import type { Block, Link } from "multiformats";
-import { create } from "./runtime/wait-pr-multiformats/block.js";
+import { create } from "@fireproof/core-runtime/async-multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 
@@ -30,15 +30,11 @@ import {
   IndexUpdateString,
   CarTransaction,
   CRDT,
-} from "./types.js";
-import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
+} from "@fireproof/core-types";
+import { BlockFetcher, AnyLink, AnyBlock } from "@fireproof/core-types/blockstore";
 import { Logger } from "@adviser/cement";
-import { anyBlock2FPBlock } from "./blockstore/loader-helpers.js";
-
-export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
-  cid?: AnyLink;
-  root?: ProllyNode<K, R>;
-}
+import { anyBlock2FPBlock } from "@fireproof/core-blockstore"
+import { IndexTree } from "./indexer.js";
 
 type CompareRef = string | number;
 export type CompareKey = [string | number, CompareRef];

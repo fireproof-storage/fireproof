@@ -1,5 +1,5 @@
 import { LRUMap } from "@adviser/cement";
-import { DocFileMeta } from "@fireproof/core";
+import { DocFileMeta } from "@fireproof/core-types";
 import React, { useState, useEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
 
 // Cache for object URLs to avoid recreating them unnecessarily

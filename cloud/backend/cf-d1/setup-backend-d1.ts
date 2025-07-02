@@ -1,5 +1,5 @@
-import { SuperThis } from "@fireproof/core";
-import { portRandom } from "../node/test-helper.js";
+import { SuperThis } from "@fireproof/core-types";
+import { portRandom } from "@fireproof/cloud-base";
 import { $ } from "zx";
 import { Future } from "@adviser/cement";
 

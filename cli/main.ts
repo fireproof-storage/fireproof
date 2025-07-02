@@ -1,8 +1,7 @@
-import { ensureSuperThis } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { run, subcommands } from "cmd-ts";
-import { keyCmd } from "../cloud/cli-cloud-token-key-cmd.js";
+import { keyCmd, preSignedUrlCmd } from "@fireproof/cloud-base"
 import { writeEnvCmd } from "../cloud/backend/cf-d1/cli-write-env.js";
-import { preSignedUrlCmd } from "../cloud/cli-pre-signed-url.js";
 
 import { dotenv } from "zx";
 

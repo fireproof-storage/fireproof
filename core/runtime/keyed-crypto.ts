@@ -1,19 +1,23 @@
 import { CryptoRuntime, Logger, URI } from "@adviser/cement";
 import {
-  BytesAndKeyWithIv,
+
+  SuperThis, PARAM,
+  KeyBagIf
+} from "@fireproof/core-types"
+export {
+    BytesAndKeyWithIv,
   CodecOpts,
   IvAndKeyAndBytes,
   IvKeyIdData,
   CryptoAction,
   KeysByFingerprint,
-} from "../blockstore/index.js";
-import { ensureLogger, UInt8ArrayEqual } from "../utils.js";
-import { KeyBag } from "./key-bag.js";
-import type { AsyncBlockCodec, ByteView } from "./wait-pr-multiformats/codec-interface.js";
+} from "@fireproof/core-types/blockstore";
+import { ensureLogger, UInt8ArrayEqual } from "./utils.js";
+import type { AsyncBlockCodec, ByteView } from "@fireproof/core-types/runtime";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as CBOR from "cborg";
-import { PARAM, SuperThis } from "../types.js";
+import { BytesAndKeyWithIv, CodecOpts, CryptoAction, IvAndKeyAndBytes, IvKeyIdData, KeysByFingerprint } from "@fireproof/core-types/blockstore";
 
 interface GenerateIVFn {
   calc(ko: CryptoAction, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;
@@ -230,7 +234,7 @@ class noCrypto implements CryptoAction {
   }
 }
 
-export async function keyedCryptoFactory(url: URI, kb: KeyBag, sthis: SuperThis): Promise<CryptoAction> {
+export async function keyedCryptoFactory(url: URI, kb: KeyBagIf, sthis: SuperThis): Promise<CryptoAction> {
   const storekey = url.getParam(PARAM.STORE_KEY);
   if (storekey && storekey !== "insecure") {
     const rkey = await kb.getNamedKey(storekey, false);

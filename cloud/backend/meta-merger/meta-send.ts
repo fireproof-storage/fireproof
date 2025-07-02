@@ -1,11 +1,11 @@
 // import { ResolveOnce } from "@adviser/cement";
 import { sqlMetaByTenantLedger } from "./meta-by-tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
-import { CRDTEntry } from "@fireproof/core";
+import { CRDTEntry } from "@fireproof/core-types";
 // import { SQLDatabase, SQLStatement } from "./abstract-sql.js";
 import { foreignKey, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { and, eq, inArray, notInArray } from "drizzle-orm";
-import { DrizzleDatebase } from "../hono-server.js";
+import { DrizzleDatebase } from "@fireproof/cloud-backend-base";
 
 export interface MetaSendRow {
   readonly metaCID: string;

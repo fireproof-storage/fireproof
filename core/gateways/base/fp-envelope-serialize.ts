@@ -18,11 +18,6 @@ import { format, parse } from "@ipld/dag-json";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { coercePromiseIntoUint8 } from "../../utils.js";
 
-export interface SerializedMeta {
-  readonly data: string; // base64pad encoded
-  readonly parents: string[];
-  readonly cid: string;
-}
 
 export async function dbMetaEvent2Serialized(
   sthis: SuperThis,
@@ -61,21 +56,7 @@ function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
   return serializedWAL;
 }
 
-export type CAREncodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
-export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
-export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Result<Uint8Array>>;
-export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL) => Promise<Result<Uint8Array>>;
 
-// export type CAREncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
-// export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
-// export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[], base: METAEncodeEnvelopeBase) => Promise<Uint8Array>;
-// export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL, base: WALEncodeEnvelopeBase) => Promise<Uint8Array>;
-export interface FPEncoder {
-  readonly car: CAREncodeEnvelope;
-  readonly file: FILEEncodeEnvelope;
-  readonly meta: METAEncodeEnvelope;
-  readonly wal: WALEncodeEnvelope;
-}
 
 const defaultEncoder: FPEncoder = {
   car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
@@ -136,13 +117,8 @@ export async function decode2DbMetaEvents(
   );
 }
 
-type linkOrCid = { "/": string } | string;
 
-export interface SerializedWAL {
-  readonly fileOperations?: { cid: linkOrCid; public: boolean }[];
-  readonly noLoaderOps?: { cars: linkOrCid[] }[];
-  readonly operations?: { cars: linkOrCid[] }[];
-}
+
 
 function toCid(sthis: SuperThis, link: linkOrCid): CID {
   if (typeof link === "string") {
@@ -174,16 +150,7 @@ async function decode2WalState(sthis: SuperThis, rserializedWAL: Result<Serializ
 // export type WALDecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedWAL) => Promise<Result<SerializedWAL>>;
 // export type METADecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Result<SerializedMeta[]>>;
 
-export type CARDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
-export type FILEDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
-export type METADecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedMeta[]>>;
-export type WALDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedWAL>>;
-export interface FPDecoder {
-  readonly car: CARDecodeEnvelope;
-  readonly file: FILEDecodeEnvelope;
-  readonly meta: METADecodeEnvelope;
-  readonly wal: WALDecodeEnvelope;
-}
+
 
 const defaultDecoder = {
   car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),

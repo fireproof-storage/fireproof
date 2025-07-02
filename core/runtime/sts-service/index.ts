@@ -2,9 +2,9 @@ import { Result, exception2Result } from "@adviser/cement";
 import { exportJWK, importJWK, JWTVerifyResult, jwtVerify, SignJWT } from "jose";
 import { generateKeyPair, GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { base58btc } from "multiformats/bases/base58";
-import { ensureSuperThis } from "../../utils.js";
-import { SuperThis } from "../../types.js";
-import { BaseTokenParam, FPCloudClaim, TokenForParam } from "../../protocols/cloud/msg-types.js";
+import { ensureSuperThis } from "../utils.js";
+import { SuperThis } from "@fireproof/core-types";
+import { BaseTokenParam, FPCloudClaim, TokenForParam } from "@fireproof/core-types/protocols/cloud";
 
 export const envKeyDefaults = {
   SECRET: "CLOUD_SESSION_TOKEN_SECRET",

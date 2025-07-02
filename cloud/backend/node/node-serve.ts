@@ -1,10 +1,12 @@
 import { Hono } from "hono";
-import { HonoServer } from "../hono-server.js";
+import { HonoServer } from "@fireproof/cloud-backend-base";
 import { NodeHonoFactory } from "./node-hono-server.js";
 import { serve } from "@hono/node-server";
-import { ensureSuperThis, ps } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
+import { defaultMsgParams } from "@fireproof/core-protocols-cloud";
+import { defaultGestalt } from "@fireproof/core-types/protocols/cloud";
 
 // async function main() {
 //   Deno.serve({
@@ -21,10 +23,10 @@ import { drizzle } from "drizzle-orm/libsql";
 async function main() {
   const app = new Hono();
   const sthis = ensureSuperThis();
-  const msgP = ps.cloud.defaultMsgParams(sthis, {
+  const msgP = defaultMsgParams(sthis, {
     hasPersistent: true,
   });
-  const gestalt = ps.cloud.defaultGestalt(msgP, {
+  const gestalt = defaultGestalt(msgP, {
     id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
   });
 

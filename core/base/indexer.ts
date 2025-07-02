@@ -21,7 +21,8 @@ import {
   type HasSuperThis,
   type RefLedger,
   type DocWithId,
-} from "./types.js";
+  IndexIf,
+} from "@fireproof/core-types";
 // import { BaseBlockstore } from "./blockstore/index.js";
 
 import {
@@ -29,7 +30,6 @@ import {
   indexEntriesForChanges,
   byIdOpts,
   byKeyOpts,
-  IndexTree,
   applyQuery,
   encodeRange,
   encodeKey,
@@ -37,8 +37,13 @@ import {
   IndexDocString,
   CompareKey,
 } from "./indexer-helpers.js";
-import { ensureLogger } from "./utils.js";
+import { ensureLogger } from "@fireproof/core-runtime";
 import { Logger } from "@adviser/cement";
+import { AnyLink } from "@fireproof/core-types/blockstore";
+
+// @ts-expect-error "prolly-trees" has no types
+import { ProllyNode } from "prolly-trees/db-index";
+
 
 function refLedger(u: HasCRDT | RefLedger): u is RefLedger {
   return !!(u as RefLedger).ledger;
@@ -69,14 +74,20 @@ export function index<T extends DocTypes = DocTypes, K extends IndexKeyType = st
 //   readonly value: [K, K];
 // }
 
-export class Index<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T> {
+export interface IndexTree<K extends IndexKeyType, R extends DocFragment> {
+  cid?: AnyLink;
+  root?: ProllyNode<K, R>;
+}
+
+
+export class Index<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T> implements IndexIf<T, K, R> {
   readonly blockstore: BaseBlockstore;
   readonly crdt: CRDT;
   readonly name: string;
   mapFn?: MapFn<T>;
   mapFnString = "";
-  byKey: IndexTree<K, R> = new IndexTree<K, R>();
-  byId: IndexTree<K, R> = new IndexTree<K, R>();
+  byKey: IndexTree<K, R> = {}
+  byId: IndexTree<K, R> = {}
   indexHead?: ClockHead;
 
   initError?: Error;
@@ -261,8 +272,8 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
   }
 
   _resetIndex() {
-    this.byId = new IndexTree();
-    this.byKey = new IndexTree();
+    this.byId = {}
+    this.byKey = {}
     this.indexHead = undefined;
   }
 

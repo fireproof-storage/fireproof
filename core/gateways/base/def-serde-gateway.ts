@@ -1,9 +1,7 @@
 import { Result, URI } from "@adviser/cement";
-import type { Gateway } from "../../blockstore/gateway.js";
-import { FPEnvelopeTypes, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
-import { FPDecoder, fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
-import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult } from "../../blockstore/serde-gateway.js";
-import { PARAM, SuperThis } from "../../types.js";
+import { fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
+import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeTypes, type FPDecoder, type Gateway, type SerdeGateway, type SerdeGatewayCtx, type SerdeGetResult, type UnsubscribeResult } from "@fireproof/core-types/blockstore";
+import { PARAM, SuperThis } from "@fireproof/core-types";  
 
 const subscribeFn = new Map<string, Map<string, (raw: Uint8Array) => Promise<void>>>();
 

@@ -1,20 +1,22 @@
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
-import { rt, SuperThis } from "@fireproof/core";
-import { testSuperThis } from "../../test-super-this.js";
+import { SuperThis } from "@fireproof/core-types";
+import { V2SerializedMetaKey } from "@fireproof/core-types/blockstore";
+import { describe, beforeAll, beforeEach, afterEach, it, expect } from "vitest";
+import { testSuperThis } from "@fireproof/cloud-base";
 // import { SQLDatabase } from "./abstract-sql.js";
 // import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 
-function sortCRDTEntries(rows: rt.V2SerializedMetaKey) {
+function sortCRDTEntries(rows: V2SerializedMetaKey) {
   return rows.metas.sort((a, b) => a.cid.localeCompare(b.cid));
 }
 
-function sortKeysEntries(rows: rt.V2SerializedMetaKey) {
+function sortKeysEntries(rows: V2SerializedMetaKey) {
   return rows.keys.sort();
 }
 
 interface MetaConnection {
-  readonly meta: rt.V2SerializedMetaKey;
+  readonly meta: V2SerializedMetaKey;
   readonly connection: Connection;
 }
 
@@ -28,7 +30,7 @@ function toCRDTEntries(rows: MetaConnection[]) {
     {
       metas: [],
       keys: [],
-    } as rt.V2SerializedMetaKey,
+    } as V2SerializedMetaKey,
   );
 }
 

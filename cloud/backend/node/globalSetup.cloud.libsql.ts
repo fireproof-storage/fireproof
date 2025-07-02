@@ -1,11 +1,11 @@
 import fs from "fs/promises";
 import { drizzle } from "drizzle-orm/libsql";
-import { mockJWK, portRandom, setupBackendNode } from "./test-helper.js";
 import { createClient } from "@libsql/client";
 import { $ } from "zx";
-import { ensureSuperThis, rt } from "@fireproof/core";
 import type { TestProject } from "vitest/node";
-import { setTestEnv } from "../../test-global-helper.js";
+import { ensureSuperThis, sts } from "@fireproof/core-runtime";
+import { mockJWK, portRandom, setupBackendNode } from "@fireproof/cloud-backend-base";
+import { setTestEnv } from "@fireproof/cloud-base";
 
 export async function setup(project: TestProject) {
   const sthis = ensureSuperThis();
@@ -20,8 +20,8 @@ export async function setup(project: TestProject) {
     // FP_STORAGE_URL: keys
     //   .applyAuthToURI(`fpcloud://localhost:${port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`)
     //   .toString(),
-    [rt.sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
-    [rt.sts.envKeyDefaults.SECRET]: keys.keys.strings.privateKey,
+    [sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
+    [sts.envKeyDefaults.SECRET]: keys.keys.strings.privateKey,
     STORAGE_URL: "http://127.0.0.1:9000/testbucket",
     ACCESS_KEY_ID: "minioadmin",
     FP_ENDPOINT: sthis.env.get("FP_ENDPOINT") ?? `http://localhost:${port}`,

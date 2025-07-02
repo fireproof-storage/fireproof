@@ -1,9 +1,10 @@
 import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 
-import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
+import {  writeQueue } from "./write-queue.js";
 import {
   DocUpdate,
   ConfigOpts,
+  defaultWriteQueueOpts,
   DocWithId,
   ListenerFn,
   DocTypes,
@@ -17,16 +18,14 @@ import {
   Attached,
   LedgerOptsOptionalTracer,
   PARAM,
-} from "./types.js";
-import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
-import { ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject } from "./utils.js";
+} from "@fireproof/core-types";
+import { StoreURIRuntime, StoreUrlsOpts } from "@fireproof/core-types/blockstore";
+import { defaultKeyBagOpts, ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject, files } from "@fireproof/core-runtime";
 
-import { decodeFile, encodeFile } from "./runtime/files.js";
-import { defaultKeyBagOpts } from "./runtime/key-bag.js";
-import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
 import { toSortedArray } from "@adviser/cement/utils";
+import { getDefaultURI } from "@fireproof/core-blockstore";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
@@ -63,8 +62,8 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
         writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
         ctx: opts?.ctx ?? new AppContext(),
         storeEnDe: {
-          encodeFile,
-          decodeFile,
+          encodeFile: files.encodeFile,
+          decodeFile: files.decodeFile,
           ...opts?.storeEnDe,
         },
         tracer:

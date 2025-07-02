@@ -1,10 +1,10 @@
-import { CRDTEntry } from "@fireproof/core";
+import { CRDTEntry } from "@fireproof/core-types";
 import { sqlTenantLedger } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
 import { foreignKey, primaryKey, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 import { eq, and, inArray } from "drizzle-orm";
 import { sqlMetaSend } from "./meta-send.js";
-import { DrizzleDatebase } from "../hono-server.js";
+import { DrizzleDatebase } from "@fireproof/cloud-backend-base";
 
 export interface MetaByTenantLedgerRow {
   readonly tenant: string;

@@ -1,5 +1,5 @@
-import { ensureLogger } from "./utils.js";
-import { DocTypes, MetaType, DocUpdate, SuperThis, WriteQueue } from "./types.js";
+import { ensureLogger } from "@fireproof/core-runtime";
+import { DocTypes, MetaType, DocUpdate, SuperThis, WriteQueue, defaultWriteQueueOpts, WriteQueueParams } from "@fireproof/core-types";
 import { Future, Logger } from "@adviser/cement";
 
 type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;
@@ -11,18 +11,6 @@ interface WriteQueueItem<T extends DocTypes> {
   reject(error: Error): void;
 }
 
-export interface WriteQueueParams {
-  // default 32
-  // if chunkSize is 1 the result will be ordered in time
-  readonly chunkSize: number;
-}
-
-export function defaultWriteQueueOpts(opts: Partial<WriteQueueParams> = {}): WriteQueueParams {
-  return {
-    ...opts,
-    chunkSize: opts.chunkSize && opts.chunkSize > 0 ? opts.chunkSize : 32,
-  };
-}
 
 class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> implements WriteQueue<T> {
   private readonly opts: WriteQueueParams;

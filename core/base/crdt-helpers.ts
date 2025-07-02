@@ -1,4 +1,4 @@
-import { decode } from "./runtime/wait-pr-multiformats/block.js";
+import { decode } from "@fireproof/core-runtime/async-multiformats";
 import { parse } from "multiformats/link";
 import { Block } from "multiformats/block";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
@@ -15,13 +15,19 @@ import {
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import {
-  type EncryptedBlockstore,
   BlockFetcher,
   TransactionMeta,
   AnyLink,
   StoreRuntime,
   CompactFetcher,
-} from "./blockstore/index.js";
+} from "@fireproof/core-types/blockstore";
+import {
+  type EncryptedBlockstore,
+  CarTransactionImpl,
+  anyBlock2FPBlock,
+  doc2FPBlock,
+  fileBlock2FPBlock,
+} from "@fireproof/core-blockstore";
 import {
   type IndexKeyType,
   type DocUpdate,
@@ -38,12 +44,10 @@ import {
   CarTransaction,
   BaseBlockstore,
   PARAM,
-} from "./types.js";
+  NotFoundError,
+} from "@fireproof/core-types";
 import { Logger } from "@adviser/cement";
-import { CarTransactionImpl } from "./blockstore/transaction.js";
-import { NotFoundError } from "./utils.js";
 import { Link, Version } from "multiformats";
-import { anyBlock2FPBlock, doc2FPBlock, fileBlock2FPBlock } from "./blockstore/loader-helpers.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {

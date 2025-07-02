@@ -1,9 +1,8 @@
 import { HttpHeader, Logger, Result, URI, exception2Result } from "@adviser/cement";
-import { ensureLogger } from "../../utils.js";
+import { ensureLogger, SuperThis } from "@fireproof/core-types";
 import { MsgBase, buildErrorMsg, MsgWithError, RequestOpts, MsgIsError, MsgRawConnection } from "./msg-types.js";
 import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, OnMsgFn, selectRandom, timeout, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
-import { SuperThis } from "../../types.js";
 
 function toHttpProtocol(uri: URI): URI {
   const protocol = (uri.getParam("protocol") ?? uri.protocol).replace(/:$/, "");

@@ -1,4 +1,3 @@
-import { ps, rt } from "@fireproof/core";
 import { MetaByTenantLedgerSql } from "./meta-by-tenant-ledger.js";
 import { MetaSendSql } from "./meta-send.js";
 import { TenantLedgerSql } from "./tenant-ledger.js";
@@ -6,10 +5,10 @@ import { TenantSql } from "./tenant.js";
 // import { SQLDatabase } from "./abstract-sql.js";
 import { Logger } from "@adviser/cement";
 import { KeyByTenantLedgerSql } from "./key-by-tenant-ledger.js";
-import { DrizzleDatebase } from "../hono-server.js";
+import { QSId, TenantLedger } from "@fireproof/core-types/protocols/cloud";
+import { DrizzleDatebase } from "@fireproof/cloud-backend-base";
+import { V2SerializedMetaKey } from "@fireproof/core-types/blockstore";
 
-type TenantLedger = ps.cloud.TenantLedger;
-type QSId = ps.cloud.QSId;
 
 export interface Connection {
   readonly tenant: TenantLedger;
@@ -19,7 +18,7 @@ export interface Connection {
 export interface MetaMerge {
   // readonly logger Logger;
   readonly connection: Connection;
-  readonly meta: rt.V2SerializedMetaKey;
+  readonly meta: V2SerializedMetaKey;
   readonly now?: Date;
 }
 
@@ -134,7 +133,7 @@ export class MetaMerger {
     });
   }
 
-  async metaToSend(sink: Connection, now = new Date()): Promise<rt.V2SerializedMetaKey> {
+  async metaToSend(sink: Connection, now = new Date()): Promise<V2SerializedMetaKey> {
     const bySink = toByConnection(sink);
     const rows = await this.sql.metaSend.selectToAddSend({ ...bySink, now });
     // console.log("metaToSend", bySink, rows.length);

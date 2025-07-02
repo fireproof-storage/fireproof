@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import { $ } from "zx";
 import type { TestProject } from "vitest/node";
-import { setTestEnv } from "../../test-global-helper.js";
+import { setTestEnv } from "@fireproof/cloud-base";
 
 export async function setup(project: TestProject) {
   await fs.mkdir("dist", { recursive: true });

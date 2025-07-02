@@ -1,5 +1,6 @@
 import { UpgradeWebSocket, WSContext, WSEvents, WSMessageReceive } from "hono/ws";
 import {
+  ConnItem,
   ConnMiddleware,
   ExposeCtxItem,
   ExposeCtxItemWithImpl,
@@ -8,22 +9,16 @@ import {
   HonoServerImpl,
   WSContextWithId,
   WSEventsConnId,
-} from "../hono-server.js";
+  WSRoom,
+} from "@fireproof/cloud-backend-base";
 import { HttpHeader, ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
-import { ensureLogger, SuperThis, ps, rt } from "@fireproof/core";
+import { SuperThis } from "@fireproof/core-types";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
-import { WSRoom } from "../ws-room.js";
-import { ConnItem } from "../msg-dispatch.js";
-import { MetaMerger } from "../meta-merger/meta-merger.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-
-const { defaultGestalt, isProtocolCapabilities, MsgIsWithConn, qsidKey, jsonEnDe, defaultMsgParams } = ps.cloud;
-type Gestalt = ps.cloud.Gestalt;
-type MsgBase = ps.cloud.MsgBase;
-type MsgerParams = ps.cloud.MsgerParams;
-type MsgWithConnAuth<T extends MsgBase> = ps.cloud.MsgWithConn<T>;
-type QSId = ps.cloud.QSId;
+import { jsonEnDe, defaultMsgParams } from "@fireproof/core-protocols-cloud";
+import { ensureLogger, sts } from "@fireproof/core-runtime";
+import { MsgerParams, Gestalt, QSId, qsidKey, MsgBase, MsgIsWithConn, isProtocolCapabilities, defaultGestalt, MsgWithConn } from "@fireproof/core-types/protocols/cloud";
 
 interface ServerType {
   close(fn: () => void): void;
@@ -69,7 +64,7 @@ class NodeWSRoom implements WSRoom {
     return conn;
   }
 
-  isConnected(msg: MsgBase): msg is MsgWithConnAuth<MsgBase> {
+  isConnected(msg: MsgBase): msg is MsgWithConn<MsgBase> {
     if (!MsgIsWithConn(msg)) {
       return false;
     }
@@ -153,8 +148,8 @@ export class NodeHonoFactory implements HonoServerFactory {
         id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
       });
 
-    const stsService = await rt.sts.SessionTokenService.create({
-      token: sthis.env.get(rt.sts.envKeyDefaults.PUBLIC) ?? "",
+    const stsService = await sts.SessionTokenService.create({
+      token: sthis.env.get(sts.envKeyDefaults.PUBLIC) ?? "",
     });
     const ctx: ExposeCtxItem<NodeWSRoom> = {
       id,

@@ -1,6 +1,4 @@
 import {
-  CoerceURI,
-  CryptoRuntime,
   CTCryptoKey,
   KeyedResolvOnce,
   Logger,
@@ -11,10 +9,10 @@ import {
   toCryptoRuntime,
   URI,
 } from "@adviser/cement";
-import { KeyMaterial, KeysByFingerprint, KeyUpsertResult, KeyWithFingerPrint } from "../blockstore/types.js";
-import { ensureLogger } from "../utils.js";
+import { KeyMaterial, KeysByFingerprint, KeyUpsertResult, KeyWithFingerPrint } from "@fireproof/core-types/blockstore";
+import { ensureLogger } from "./utils.js";
 import { base58btc } from "multiformats/bases/base58";
-import { PARAM, SuperThis } from "../types.js";
+import { KeyBagIf, KeyBagOpts, KeyBagProvider, KeyBagRuntime, KeysItem, PARAM, SuperThis, V1StorageKeyItem, V2StorageKeyItem } from "@fireproof/core-types"
 import { KeyBagProviderFile } from "./gateways/file/key-bag-file.js";
 import { KeyBagProviderMemory } from "./key-bag-memory.js";
 
@@ -201,7 +199,7 @@ export class keysByFingerprint implements KeysByFingerprint {
   // }
 }
 
-export class KeyBag {
+export class KeyBag implements KeyBagIf {
   readonly logger: Logger;
   readonly rt: KeyBagRuntime;
 
@@ -302,7 +300,7 @@ export class KeyBag {
     };
   }
 
-  flush() {
+  flush(): Promise<Result<KeysByFingerprint>> {
     return this._seq.flush();
   }
 
@@ -396,38 +394,11 @@ export class KeyBag {
   }
 }
 
-export interface V1StorageKeyItem {
-  readonly name: string;
-  readonly key: string;
-}
-
-export interface V2StorageKeyItem {
-  readonly key: string; // material
-  readonly fingerPrint: string;
-  readonly default: boolean;
-}
-export interface KeysItem {
-  readonly name: string;
-  readonly keys: Record<string, V2StorageKeyItem>;
-}
 
 export type KeyBagFile = Record<string, KeysItem>;
 
-export interface KeyBagOpts {
-  // in future you can encrypt the keybag with ?masterkey=xxxxx
-  readonly url: CoerceURI;
-  // readonly key: string; // key to encrypt the keybag
-  readonly crypto: CryptoRuntime;
-  readonly keyLength: number; // default: 16
-  // readonly logger: Logger;
-  readonly keyRuntime: KeyBagRuntime;
-}
 
-export interface KeyBagProvider {
-  get(id: string): Promise<V1StorageKeyItem | KeysItem | undefined>;
-  set(item: KeysItem): Promise<void>;
-  del(id: string): Promise<void>;
-}
+
 
 export function isV1StorageKeyItem(item: V1StorageKeyItem | KeysItem): item is V1StorageKeyItem {
   return !!(item as V1StorageKeyItem).key;
@@ -437,16 +408,7 @@ export function isKeysItem(item: V1StorageKeyItem | KeysItem): item is KeysItem 
   return !!(item as KeysItem).keys;
 }
 
-export interface KeyBagRuntime {
-  readonly url: URI;
-  readonly crypto: CryptoRuntime;
-  readonly logger: Logger;
-  readonly sthis: SuperThis;
-  readonly keyLength: number;
-  // readonly key?: FPCryptoKey;
-  getBagProvider(): Promise<KeyBagProvider>;
-  id(): string;
-}
+
 
 export type KeyBackProviderFactory = (url: URI, sthis: SuperThis) => Promise<KeyBagProvider>;
 

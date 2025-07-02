@@ -4,7 +4,7 @@ import { ByConnection } from "./meta-merger.js";
 import { foreignKey, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sqlTenantLedger } from "./tenant-ledger.js";
 import { eq, and, inArray } from "drizzle-orm";
-import { DrizzleDatebase } from "../hono-server.js";
+import { DrizzleDatebase } from "@fireproof/cloud-backend-base";
 
 export interface KeysForTenantLedger {
   readonly tenant: string;

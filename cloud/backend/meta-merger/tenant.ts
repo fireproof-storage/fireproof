@@ -2,7 +2,7 @@
 // import { SQLStatement } from "./abstract-sql.js";
 
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { DrizzleDatebase } from "../hono-server.js";
+import { DrizzleDatebase } from "@fireproof/cloud-backend-base";
 
 export const sqlTenant = sqliteTable("Tenant", {
   tenant: text().primaryKey(),

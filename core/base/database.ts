@@ -24,8 +24,8 @@ import type {
   Ledger,
   Attachable,
   Attached,
-} from "./types.js";
-import { ensureLogger, NotFoundError, makeName } from "./utils.js";
+} from "@fireproof/core-types";
+import { ensureLogger, NotFoundError, makeName } from "@fireproof/core-runtime";
 
 export function isDatabase(db: unknown): db is Database {
   return db instanceof DatabaseImpl;

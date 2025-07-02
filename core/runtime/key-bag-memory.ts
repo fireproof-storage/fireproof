@@ -1,6 +1,5 @@
 import { URI } from "@adviser/cement";
-import { KeyBagProvider, KeysItem, V1StorageKeyItem } from "./key-bag.js";
-import { SuperThis } from "../types.js";
+import { KeyBagProvider, KeysItem, V1StorageKeyItem, SuperThis } from "@fireproof/core-types"
 
 const memoryKeyBag = new Map<string, Uint8Array>();
 

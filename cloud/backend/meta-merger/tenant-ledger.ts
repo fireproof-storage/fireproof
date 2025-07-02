@@ -1,7 +1,7 @@
 // import { ResolveOnce } from "@adviser/cement";
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sqlTenant } from "./tenant.js";
-import { DrizzleDatebase } from "../hono-server.js";
+import { DrizzleDatebase } from "@fireproof/cloud-backend-base";
 
 export const sqlTenantLedger = sqliteTable(
   "TenantLedger",

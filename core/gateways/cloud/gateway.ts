@@ -11,7 +11,7 @@ import {
   BuildURI,
   Future,
 } from "@adviser/cement";
-import type { SuperThis } from "../../../types.js";
+import type { SuperThis } from "@fireproof/core-types";
 import {
   buildErrorMsg,
   buildReqOpen,
@@ -27,7 +27,7 @@ import {
   AuthType,
   buildReqClose,
   ReqGwCtx,
-} from "../../../protocols/cloud/msg-types.js";
+} from "@fireproof/core-types/protocols/cloud";
 import { Msger, VirtualConnected, authTypeFromUri } from "../../../protocols/cloud/msger.js";
 import {
   MsgIsResDelData,

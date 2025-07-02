@@ -1,4 +1,4 @@
-import { ReadWrite, Role, TenantLedger } from "../cloud/msg-types.js";
+import { ReadWrite, Role, TenantLedger } from "@fireproof/core-types/protocols/cloud";
 
 export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
 
