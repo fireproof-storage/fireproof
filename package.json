@@ -147,7 +147,7 @@
     "randombytes": "^2.1.0",
     "react": "^19.1.0",
     "react-hook-form": "^7.59.0",
-    "react-router-dom": "^7.6.2",
+    "react-router-dom": "^7.6.3",
     "react-simple-code-editor": "^0.14.1",
     "tailwindcss": "^4.1.11",
     "ws": "^8.18.3"
