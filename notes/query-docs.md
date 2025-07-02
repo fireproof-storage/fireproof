@@ -160,12 +160,10 @@ test("query returns both rows and docs", async () => {
 This change should not break existing code for several reasons:
 
 1. **Return Values**:
-
    - Adding the `docs` property is additive and doesn't remove any existing functionality
    - Code that expects only `rows` will still work since that property remains unchanged
 
 2. **Type Parameter Reordering**:
-
    - TypeScript's type inference will handle most cases automatically
    - Explicit type usage like `db.query<string, MyDocType>()` would need updates, but this is rare
    - We'll search the codebase for explicit type usages and update them
