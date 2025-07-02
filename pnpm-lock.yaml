@@ -115,10 +115,10 @@ importers:
         version: 9.29.0
       '@hono/node-server':
         specifier: ^1.14.4
-        version: 1.14.4(hono@4.7.11)
+        version: 1.14.4(hono@4.8.3)
       '@hono/node-ws':
         specifier: ^1.1.7
-        version: 1.1.7(@hono/node-server@1.14.4(hono@4.7.11))(hono@4.7.11)
+        version: 1.1.7(@hono/node-server@1.14.4(hono@4.8.3))(hono@4.8.3)
       '@testing-library/react':
         specifier: ^16.3.0
         version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -195,8 +195,8 @@ importers:
         specifier: ^16.2.0
         version: 16.2.0
       hono:
-        specifier: ^4.7.10
-        version: 4.7.11
+        specifier: ^4.8.3
+        version: 4.8.3
       playwright:
         specifier: ^1.53.1
         version: 1.53.1
@@ -3246,8 +3246,8 @@ packages:
     resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
     engines: {node: '>=12.0.0'}
 
-  hono@4.7.11:
-    resolution: {integrity: sha512-rv0JMwC0KALbbmwJDEnxvQCeJh+xbS3KEWW5PC9cMJ08Ur9xgatI0HmtgYZfOdOSOeYsp5LO2cOhdI8cLEbDEQ==}
+  hono@4.8.3:
+    resolution: {integrity: sha512-jYZ6ZtfWjzBdh8H/0CIFfCBHaFL75k+KMzaM177hrWWm2TWL39YMYaJgB74uK/niRc866NMlH9B8uCvIo284WQ==}
     engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
@@ -5743,14 +5743,14 @@ snapshots:
       '@shikijs/types': 3.4.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@hono/node-server@1.14.4(hono@4.7.11)':
+  '@hono/node-server@1.14.4(hono@4.8.3)':
     dependencies:
-      hono: 4.7.11
+      hono: 4.8.3
 
-  '@hono/node-ws@1.1.7(@hono/node-server@1.14.4(hono@4.7.11))(hono@4.7.11)':
+  '@hono/node-ws@1.1.7(@hono/node-server@1.14.4(hono@4.8.3))(hono@4.8.3)':
     dependencies:
-      '@hono/node-server': 1.14.4(hono@4.7.11)
-      hono: 4.7.11
+      '@hono/node-server': 1.14.4(hono@4.8.3)
+      hono: 4.8.3
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -8240,7 +8240,7 @@ snapshots:
 
   highlight.js@11.11.1: {}
 
-  hono@4.7.11: {}
+  hono@4.8.3: {}
 
   html-escaper@2.0.2: {}
 
