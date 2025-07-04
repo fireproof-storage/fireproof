@@ -1,21 +1,29 @@
 import { BuildURI, URI } from "@adviser/cement";
-import { rt, bs, fireproof, PARAM, ensureSuperThis, Database } from "@fireproof/core";
+import { fireproof } from "@fireproof/core-base";
+import { registerStoreProtocol } from "@fireproof/core-blockstore";
+import { MemoryGateway } from "@fireproof/core-gateways-memory";
+import { DbMetaEvent, Loadable, V2SerializedMetaKey } from "@fireproof/core-types/blockstore";
+import { AddKeyToDbMetaGateway } from "@fireproof/core-gateways-base";
+import { beforeAll, describe, expect, it, vitest } from "vitest";
+import { KeyBag } from "@fireproof/core-keybag";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { Database, PARAM } from "@fireproof/core-types";
 
 describe("MetaKeyHack", () => {
   const storageMap = new Map();
 
   const sthis = ensureSuperThis();
-  const memGw = new rt.gw.memory.MemoryGateway(sthis, storageMap);
-  bs.registerStoreProtocol({
+  const memGw = new MemoryGateway(sthis, storageMap);
+  registerStoreProtocol({
     protocol: "hack:",
     defaultURI: () => URI.from(`hack://localhost?version=hack`),
     serdegateway: async () => {
-      return new rt.AddKeyToDbMetaGateway(memGw, "v2");
+      return new AddKeyToDbMetaGateway(memGw, "v2");
     },
   });
 
   let db: Database;
-  let ctx: { loader: bs.Loadable };
+  let ctx: { loader: Loadable };
   beforeAll(async () => {
     db = fireproof("test", {
       storeUrls: {
@@ -43,7 +51,7 @@ describe("MetaKeyHack", () => {
     await db.put({ val: "test" });
 
     const dataStore = loader.attachedStores.local().active.car;
-    const kb = new rt.KeyBag(db.ledger.opts.keyBag);
+    const kb = new KeyBag(db.ledger.opts.keyBag);
     const rDataStoreKeyItem = await kb.getNamedKey(dataStore.url().getParam(PARAM.STORE_KEY) ?? "");
 
     await rDataStoreKeyItem.Ok().upsert("zBUFMmu5c3VdCa4r2DZTzhR", false);
@@ -53,7 +61,7 @@ describe("MetaKeyHack", () => {
     const rUrl = await memGw.buildUrl(metaStore.url(), "main");
     // console.log(">>>>", rUrl.Ok().toString())
     const rGet = await memGw.get(rUrl.Ok(), sthis);
-    const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as rt.V2SerializedMetaKey;
+    const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as V2SerializedMetaKey;
     const keyMaterials = metas.keys;
     const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asKeysItem();
     expect(keyMaterials.length).toBeGreaterThan(0);
@@ -86,9 +94,9 @@ describe("MetaKeyHack", () => {
     // expect(keyMaterials.every((k) => k === dataStoreKeyMaterial.keyStr)).toBeTruthy()
     // expect(subscribeFn.mock.calls).toEqual([]);
     expect(subscribeFn).toHaveBeenCalledTimes(2);
-    const addKeyToDbMetaGateway = metaStore.realGateway as rt.AddKeyToDbMetaGateway;
+    const addKeyToDbMetaGateway = metaStore.realGateway as AddKeyToDbMetaGateway;
     expect(
-      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: bs.DbMetaEvent) => i.eventCid.toString()))).flat(2),
+      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: DbMetaEvent) => i.eventCid.toString()))).flat(2),
     ).toEqual(Array.from(new Set(addKeyToDbMetaGateway.lastDecodedMetas.map((i) => i.metas.map((i) => i.cid)).flat(2))));
     unreg.Ok()();
   });

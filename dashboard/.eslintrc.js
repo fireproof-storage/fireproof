@@ -59,7 +59,7 @@ export default {
         "import/internal-regex": "^~/",
         "import/resolver": {
           node: {
-            extensions: [".ts", ".tsx"],
+            extensions: [".js", ".jsx"],
           },
           typescript: {
             alwaysTryTypes: true,

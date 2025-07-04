@@ -1,9 +1,10 @@
+import React from "react";
 import { useEffect, useRef } from "react";
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
-import { ps } from "@fireproof/core";
 
 import "highlight.js/styles/github.css";
+import { TenantLedger } from "@fireproof/core-types/protocols/cloud";
 
 // Then register the languages you need
 hljs.registerLanguage("javascript", javascript);
@@ -11,7 +12,7 @@ hljs.registerLanguage("javascript", javascript);
 export interface SelectedTenantLedgerProps {
   readonly dbName: string;
   readonly cloudToken: string;
-  readonly tenantAndLedger: ps.cloud.TenantLedger;
+  readonly tenantAndLedger: TenantLedger;
 }
 
 export function SelectedTenantLedger(props: SelectedTenantLedgerProps) {

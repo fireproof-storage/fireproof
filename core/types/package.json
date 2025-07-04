@@ -19,13 +19,13 @@
       "require": "./blockstore/index.cjs",
       "types": "./blockstore/index.js"
     },
-     "./runtime": {
+    "./runtime": {
       "import": "./runtime/index.js",
       "browser": "./runtime/index.js",
       "require": "./runtime/index.cjs",
       "types": "./runtime/index.js"
     },
-     "./protocols/cloud": {
+    "./protocols/cloud": {
       "import": "./protocols/cloud/index.js",
       "browser": "./protocols/cloud/index.js",
       "require": "./protocols/cloud/index.cjs",
@@ -63,6 +63,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.20",
-    "multiformats": "^13.3.7"
+    "multiformats": "^13.3.7",
+    "prolly-trees": "^1.0.4"
   }
 }

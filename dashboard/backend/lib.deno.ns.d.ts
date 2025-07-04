@@ -17031,7 +17031,7 @@ interface WorkerOptions {
    * ```ts
    * // mod.ts
    * const worker = new Worker(
-   *   new URL("deno_worker.ts", import.meta.url).href, {
+   *   new URL("deno_worker.js", import.meta.url).href, {
    *     type: "module",
    *     deno: {
    *       permissions: {

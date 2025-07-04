@@ -17,7 +17,7 @@ import {
 } from "@fireproof/core-types/blockstore";
 import { PARAM, SuperThis } from "@fireproof/core-types";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
-import { InterceptorGateway } from "./interceptor-gateway.js";
+import { InterceptorGateway } from "@fireproof/core-gateways-base";
 
 // interface SerdeGatewayInstances {
 //   readonly gateway: InterceptorGateway;

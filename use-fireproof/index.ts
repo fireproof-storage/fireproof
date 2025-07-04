@@ -8,19 +8,20 @@ import { defaultWebToCloudOpts, WebCtx, WebToCloudCtx } from "@fireproof/core-re
 import { AppContext } from "@adviser/cement";
 
 import { RedirectStrategy } from "./redirect-strategy.js";
+import { ToCloudOptionalOpts, TokenStrategie, TokenAndClaimsEvents, ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types/protocols/cloud";
 
-export type UseFpToCloudParam = Omit<Omit<Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy">, "context">, "events"> &
+export type UseFpToCloudParam = Omit<Omit<Omit<ToCloudOptionalOpts, "strategy">, "context">, "events"> &
   Partial<WebToCloudCtx> & {
-    readonly strategy?: rt.gw.cloud.TokenStrategie;
+    readonly strategy?: TokenStrategie;
     readonly context?: AppContext;
-    readonly events?: rt.gw.cloud.TokenAndClaimsEvents;
+    readonly events?: TokenAndClaimsEvents;
   };
 
 async function defaultChanged() {
   throw new Error("not ready");
 }
 
-export function toCloud(opts: UseFpToCloudParam = {}): rt.gw.cloud.ToCloudAttachable {
+export function toCloud(opts: UseFpToCloudParam = {}): ToCloudAttachable {
   const mergedEvents = { ...opts.events, changed: opts.events?.changed ?? defaultChanged };
   const myOpts = {
     ...opts,
@@ -45,5 +46,5 @@ export function toCloud(opts: UseFpToCloudParam = {}): rt.gw.cloud.ToCloudAttach
   }
 
   myOpts.context.set(WebCtx, webCtx);
-  return rt.gw.cloud.toCloud(myOpts);
+  return toCloud(myOpts);
 }

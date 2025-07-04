@@ -7,9 +7,7 @@
   "main": "./index.cjs",
   "types": "./index.d.ts",
   "scripts": {
-    "prebuild": "rm -rf dist/fireproof-core dist/use-fireproof",
-    "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
-    "build:tsc": "rm -rf ./dist/tsc ; tsc",
+    "build": "rm -rf ./dist/tsc ; tsc",
     "build:tsup": "tsup"
   },
   "keywords": [
@@ -46,20 +44,9 @@
     "@adviser/cement": "from-package-json",
     "@fireproof/core-blockstore": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-keybag": "workspace:0.0.0",
     "@fireproof/core-types": "workspace:0.0.0",
     "@fireproof/vendor": "from-package-json",
-    "@ipld/car": "from-package-json",
-    "@ipld/dag-cbor": "from-package-json",
-    "@ipld/dag-json": "from-package-json",
-    "@web3-storage/pail": "from-package-json",
-    "cborg": "from-package-json",
-    "charwise": "from-package-json",
-    "idb": "from-package-json",
-    "jose": "from-package-json",
-    "multiformats": "from-package-json",
-    "p-map": "from-package-json",
-    "p-retry": "from-package-json",
-    "prolly-trees": "^1.0.4",
-    "ws": "from-package-json"
+    "@types/node": "^24.0.10"
   }
 }

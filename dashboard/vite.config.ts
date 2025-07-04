@@ -37,8 +37,8 @@ export default defineConfig({
   resolve: process.env.USE_SOURCE
     ? {
         alias: {
-          "react-router": path.resolve(__dirname, "../../packages/react-router/index.ts"),
-          "react-router-dom": path.resolve(__dirname, "../../packages/react-router-dom/index.tsx"),
+          "react-router": path.resolve(__dirname, "../../packages/react-router/index.js"),
+          "react-router-dom": path.resolve(__dirname, "../../packages/react-router-dom/index.jsx"),
         },
       }
     : {},

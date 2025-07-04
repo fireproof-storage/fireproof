@@ -1,7 +1,8 @@
+import React from "react";
 import { SignUp } from "@clerk/clerk-react";
 import { URI } from "@adviser/cement";
 import { useContext, useState } from "react";
-import { AppContext } from "../app-context.tsx";
+import { AppContext } from "../app-context.jsx";
 import { base64url } from "jose";
 
 const slides = [

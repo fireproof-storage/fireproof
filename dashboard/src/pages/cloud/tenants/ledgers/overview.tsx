@@ -1,7 +1,8 @@
+import React from "react";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
-import { AppContext } from "../../../../app-context.tsx";
-import { SelectedTenantLedger } from "../../api/selected-tenant-ledger.tsx";
+import { AppContext } from "../../../../app-context.jsx";
+import { SelectedTenantLedger } from "../../api/selected-tenant-ledger.jsx";
 
 export function LedgerOverview() {
   const { tenantId, ledgerId } = useParams();

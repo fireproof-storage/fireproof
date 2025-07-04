@@ -29,7 +29,7 @@ import {
   UnsubscribeResult,
   CommitQueueIf,
 } from "@fireproof/core-types/blockstore";
-import { Falsy, PARAM, StoreType, SuperThis } from "@fireproof/core-types";
+import { Falsy, isNotFoundError, PARAM, StoreType, SuperThis } from "@fireproof/core-types";
 import { carLogIncludesGroup } from "./loader.js";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { EventBlock } from "@web3-storage/pail/clock";
@@ -38,8 +38,9 @@ import { format } from "@ipld/dag-json";
 import pRetry from "p-retry";
 import pMap from "p-map";
 import { Link } from "multiformats";
-import { InterceptorGateway } from "./interceptor-gateway.js";
-import { hashString, ensureLogger, isNotFoundError, inplaceFilter, kc } from "@fireproof/core-runtime";
+// import { InterceptorGateway } from "./interceptor-gateway.js";
+import { hashString, ensureLogger, inplaceFilter, kc } from "@fireproof/core-runtime";
+import { InterceptorGateway } from "@fireproof/core-gateways-base";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {

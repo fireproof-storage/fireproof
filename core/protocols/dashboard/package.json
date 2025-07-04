@@ -5,7 +5,7 @@
   "type": "module",
   "module": "./index.js",
   "main": "./index.cjs",
-  "types": "./index.d.ts",
+  "types": "./index.d.js",
   "scripts": {
     "build": "rm -rf ./dist/tsc ; tsc"
   },

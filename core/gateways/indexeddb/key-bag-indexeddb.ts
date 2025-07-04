@@ -1,8 +1,9 @@
 import { IDBPDatabase, openDB } from "idb";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
-import { type SuperThis, rt } from "@fireproof/core";
+import { KeyBagProvider, KeysItem, V1StorageKeyItem, type SuperThis } from "@fireproof/core-types";
+import { getPath } from "@fireproof/core-gateways-base";
 
-export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
+export class KeyBagProviderIndexedDB implements KeyBagProvider {
   readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
 
   readonly dbName: string;
@@ -13,7 +14,7 @@ export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
     this.sthis = sthis;
     this.logger = sthis.logger;
     this.url = url;
-    this.dbName = rt.getPath(this.url, this.sthis);
+    this.dbName = getPath(this.url, this.sthis);
   }
 
   async _prepare(): Promise<IDBPDatabase<unknown>> {
@@ -38,7 +39,7 @@ export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
     await tx.done;
   }
 
-  async get(id: string): Promise<rt.kb.KeysItem | rt.kb.V1StorageKeyItem | undefined> {
+  async get(id: string): Promise<KeysItem | V1StorageKeyItem | undefined> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readonly");
     const keyItem = await tx.objectStore("bag").get(id);
@@ -49,7 +50,7 @@ export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
     return keyItem;
   }
 
-  async set(item: rt.kb.KeysItem): Promise<void> {
+  async set(item: KeysItem): Promise<void> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readwrite");
     await tx.objectStore("bag").put(item, item.name);

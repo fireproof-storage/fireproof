@@ -1,8 +1,13 @@
-import { bs, ensureSuperThis, PARAM, rt } from "@fireproof/core";
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockLoader, mockSuperThis } from "../helpers.js";
-import { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { KeysItem, PARAM } from "use-fireproof";
+import { describe, beforeAll, it, expect, beforeEach } from "vitest";
+import { getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
+import { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
+import { KeyWithFingerPrint } from "@fireproof/core-types/blockstore";
+import { createAttachedStores } from "@fireproof/core-blockstore";
 
 describe("KeyBag indexeddb and file", () => {
   let url: URI;
@@ -18,7 +23,7 @@ describe("KeyBag indexeddb and file", () => {
   it("default-path", async () => {
     const old = sthis.env.get("FP_KEYBAG_URL");
     sthis.env.delete("FP_KEYBAG_URL");
-    const kb = await rt.kb.getKeyBag(sthis);
+    const kb = await getKeyBag(sthis);
     if (runtimeFn().isBrowser) {
       expect(kb.rt.url.toString()).toBe(`indexeddb://fp-keybag`);
     } else {
@@ -29,12 +34,12 @@ describe("KeyBag indexeddb and file", () => {
   it("from env", async () => {
     const old = sthis.env.get("FP_KEYBAG_URL");
     sthis.env.set("FP_KEYBAG_URL", url.toString());
-    const kb = await rt.kb.getKeyBag(sthis);
+    const kb = await getKeyBag(sthis);
     expect(kb.rt.url.toString()).toBe(url.toString());
     sthis.env.set("FP_KEYBAG_URL", old);
   });
   it("simple add", async () => {
-    const kb = await rt.kb.getKeyBag(sthis, {
+    const kb = await getKeyBag(sthis, {
       url: url.toString(),
       crypto: toCryptoRuntime({
         randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
@@ -54,28 +59,28 @@ describe("KeyBag indexeddb and file", () => {
 
     expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
 
-    let diskBag: rt.kb.KeysItem;
-    let diskBag2: rt.kb.KeysItem;
+    let diskBag: KeysItem;
+    let diskBag2: KeysItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
       diskBag = await p._prepare().then((db) => db.get("bag", name));
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
-      const p = provider as rt.gw.file.KeyBagProviderFile;
+      const p = provider as KeyBagProviderFile;
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as KeysItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as KeysItem;
       });
     }
-    expect((await rt.kb.toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
+    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
       (await res.Ok().get())?.fingerPrint,
     );
-    expect((await rt.kb.toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
+    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
       (await created.Ok().get())?.fingerPrint,
     );
     const algo = {
@@ -84,8 +89,8 @@ describe("KeyBag indexeddb and file", () => {
       tagLength: 128,
     };
     const data = kb.rt.crypto.randomBytes(122);
-    const rkc = (await res.Ok().get()) as bs.KeyWithFingerPrint;
-    const ckc = (await created.Ok().get()) as bs.KeyWithFingerPrint;
+    const rkc = (await res.Ok().get()) as KeyWithFingerPrint;
+    const ckc = (await created.Ok().get()) as KeyWithFingerPrint;
     expect(await kb.rt.crypto.encrypt(algo, rkc.key, data)).toEqual(await kb.rt.crypto.encrypt(algo, ckc.key, data));
     expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.keys)[0].key), data)).toEqual(
       await kb.rt.crypto.encrypt(algo, ckc.key, data),
@@ -117,7 +122,7 @@ describe("KeyedCryptoStore", () => {
   });
   it("no crypto", async () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
-    for (const pstore of (await bs.createAttachedStores(url, loader, "insecure")).stores.baseStores) {
+    for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
       const store = await pstore;
       // await store.start();
       const kc = await store.keyedCrypto();

@@ -1,5 +1,5 @@
 import { DocWithId, useFireproof, toCloud, RedirectStrategy } from "use-fireproof";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 // import { URI } from "@adviser/cement";
 

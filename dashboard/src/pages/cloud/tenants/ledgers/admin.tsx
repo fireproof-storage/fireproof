@@ -1,9 +1,10 @@
+import React from "react";
 import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form, Link, useParams } from "react-router-dom";
 import { AppContext } from "../../../../app-context.js";
-import { Button } from "../../../../components/Button.tsx";
-import { ledgerName, tenantName } from "../../../../helpers.ts";
+import { Button } from "../../../../components/Button.jsx";
+import { ledgerName, tenantName } from "../../../../helpers.js";
 
 type LedgerFormData = {
   ledgerName: string;

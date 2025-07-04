@@ -1,6 +1,6 @@
+import { Queryable, QueryUser } from "@fireproof/core-protocols-dashboard";
 import { and, eq, or } from "drizzle-orm/sql/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
-import { Queryable, QueryUser } from "./fp-dash-types.ts";
 
 export function toUndef(v: string | null | undefined): string | undefined {
   return v ? v : undefined;

@@ -39,6 +39,12 @@
     "@adviser/cement": "from-package-json",
     "@fireproof/core-types": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-keybag": "workspace:0.0.0",
+    "@fireproof/core-gateways-base": "workspace:0.0.0",
+    "@fireproof/core-gateways-memory": "workspace:0.0.0",
+    "@fireproof/core-gateways-file": "workspace:0.0.0",
+    "@fireproof/core-gateways-cloud": "workspace:0.0.0",
+    "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
     "multiformats": "^13.3.7"
   }
 }

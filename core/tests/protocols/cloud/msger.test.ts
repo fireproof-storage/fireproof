@@ -1,17 +1,20 @@
 import { Result, URI } from "@adviser/cement";
-import { ensureSuperThis, ps, SuperThis } from "@fireproof/core";
-
+import { ExchangedGestalt, ActiveStream, OnMsgFn, defaultMsgParams, VirtualConnected, Msger, MsgerParamsWithEnDe } from "@fireproof/core-protocols-cloud";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { SuperThis, UnReg } from "@fireproof/core-types";
+import { MsgRawConnection, MsgBase, RequestOpts, MsgWithError, defaultGestalt, MsgIsReqGestalt, buildResGestalt, NotReadyErrorMsg, MsgIsReqOpen, buildResOpen, MsgIsReqChat, buildResChat, MsgIsError } from "@fireproof/core-types/protocols/cloud";
+import { vi, it, expect, describe, beforeEach, afterEach, assert } from "vitest";
 const sthis = ensureSuperThis();
 
-class TestConnection implements ps.cloud.MsgRawConnection {
+class TestConnection implements MsgRawConnection {
   readonly sthis: SuperThis;
-  readonly exchangedGestalt: ps.cloud.ExchangedGestalt;
-  readonly activeBinds: Map<string, ps.cloud.ActiveStream>;
+  readonly exchangedGestalt: ExchangedGestalt;
+  readonly activeBinds: Map<string, ActiveStream>;
   readonly id: string;
 
   isReady = true;
 
-  constructor(sthis: SuperThis, exGestalt: ps.cloud.ExchangedGestalt) {
+  constructor(sthis: SuperThis, exGestalt: ExchangedGestalt) {
     this.sthis = sthis;
     this.exchangedGestalt = exGestalt;
     this.activeBinds = new Map();
@@ -19,12 +22,12 @@ class TestConnection implements ps.cloud.MsgRawConnection {
   }
 
   readonly bindFn = vi.fn();
-  bind<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(
+  bind<S extends MsgBase, Q extends MsgBase>(
     req: Q,
-    opts: ps.cloud.RequestOpts,
-  ): ReadableStream<ps.cloud.MsgWithError<S>> {
+    opts: RequestOpts,
+  ): ReadableStream<MsgWithError<S>> {
     this.bindFn(req, opts);
-    return new ReadableStream<ps.cloud.MsgWithError<S>>({
+    return new ReadableStream<MsgWithError<S>>({
       start: (ctl) => {
         ctl.enqueue({
           tid: req.tid,
@@ -38,10 +41,10 @@ class TestConnection implements ps.cloud.MsgRawConnection {
     });
   }
   readonly requestFn = vi.fn();
-  request<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(
+  request<S extends MsgBase, Q extends MsgBase>(
     req: Q,
-    opts: ps.cloud.RequestOpts,
-  ): Promise<ps.cloud.MsgWithError<S>> {
+    opts: RequestOpts,
+  ): Promise<MsgWithError<S>> {
     this.requestFn(req, opts);
     // console.log("request", req);
     return Promise.resolve({
@@ -54,7 +57,7 @@ class TestConnection implements ps.cloud.MsgRawConnection {
     } as S);
   }
   readonly sendFn = vi.fn();
-  send<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(msg: Q): Promise<ps.cloud.MsgWithError<S>> {
+  send<S extends MsgBase, Q extends MsgBase>(msg: Q): Promise<MsgWithError<S>> {
     this.sendFn(msg);
     // console.log("send", msg);
     return Promise.resolve({
@@ -73,13 +76,13 @@ class TestConnection implements ps.cloud.MsgRawConnection {
     return Promise.resolve(Result.Ok(undefined));
   }
   readonly closeFn = vi.fn();
-  close(o: ps.cloud.MsgBase): Promise<Result<void>> {
+  close(o: MsgBase): Promise<Result<void>> {
     this.closeFn(o);
     // console.log("close", this.id); //, o, this.closeFn.mock.calls);
     return Promise.resolve(Result.Ok(undefined));
   }
   readonly onMsgFn = vi.fn();
-  onMsg(msg: ps.cloud.OnMsgFn<ps.cloud.MsgBase>): ps.cloud.UnReg {
+  onMsg(msg: OnMsgFn<MsgBase>): UnReg {
     this.onMsgFn(msg);
     return () => {
       /* no-op */
@@ -88,26 +91,26 @@ class TestConnection implements ps.cloud.MsgRawConnection {
 }
 
 it("queued-raw-connection", async () => {
-  const msgP = ps.cloud.defaultMsgParams(sthis, { hasPersistent: true });
-  const my = ps.cloud.defaultGestalt(msgP, { id: "FP-Universal-Client" });
+  const msgP = defaultMsgParams(sthis, { hasPersistent: true });
+  const my = defaultGestalt(msgP, { id: "FP-Universal-Client" });
   const realConn = new MockWSConnection(sthis, {
     my,
-    remote: ps.cloud.defaultGestalt(msgP, { id: "FP-Universal-Server" }),
+    remote: defaultGestalt(msgP, { id: "FP-Universal-Server" }),
   });
 
-  const vconn = new ps.cloud.VirtualConnected(sthis, {
+  const vconn = new VirtualConnected(sthis, {
     curl: "http://localhost:8080",
     msgerParams: msgP,
     openWSorHttp: {
-      openHttp: async function (): Promise<Result<ps.cloud.MsgRawConnection>> {
+      openHttp: async function (): Promise<Result<MsgRawConnection>> {
         return Result.Ok(
           new MockHttpConnection(sthis, {
             my,
-            remote: ps.cloud.defaultGestalt(msgP, { id: "FP-Universal-Server" }),
+            remote: defaultGestalt(msgP, { id: "FP-Universal-Server" }),
           }),
         );
       },
-      openWS: async function (): Promise<Result<ps.cloud.MsgRawConnection>> {
+      openWS: async function (): Promise<Result<MsgRawConnection>> {
         return Result.Ok(realConn);
       },
     },
@@ -155,27 +158,27 @@ it("queued-raw-connection", async () => {
   expect(realConn.requestFn).toHaveBeenCalledTimes(2); // open + test
 });
 
-class MockHttpConnection extends TestConnection implements ps.cloud.MsgRawConnection {
+class MockHttpConnection extends TestConnection implements MsgRawConnection {
   sthis: SuperThis;
-  exchangedGestalt: ps.cloud.ExchangedGestalt;
-  activeBinds: Map<string, ps.cloud.ActiveStream>;
+  exchangedGestalt: ExchangedGestalt;
+  activeBinds: Map<string, ActiveStream>;
 
   readonly isReady = true;
 
-  constructor(sthis: SuperThis, exGestalt: ps.cloud.ExchangedGestalt) {
+  constructor(sthis: SuperThis, exGestalt: ExchangedGestalt) {
     super(sthis, exGestalt);
     this.sthis = sthis;
     this.exchangedGestalt = exGestalt;
     this.activeBinds = new Map();
   }
 
-  bind<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(
+  bind<S extends MsgBase, Q extends MsgBase>(
     req: Q,
-    opts: ps.cloud.RequestOpts,
-  ): ReadableStream<ps.cloud.MsgWithError<S>> {
+    opts: RequestOpts,
+  ): ReadableStream<MsgWithError<S>> {
     super.bind(req, opts);
     // console.log("http-bind", req, opts);
-    return new ReadableStream<ps.cloud.MsgWithError<S>>({
+    return new ReadableStream<MsgWithError<S>>({
       start: (ctl) => {
         ctl.enqueue({
           tid: req.tid,
@@ -188,15 +191,15 @@ class MockHttpConnection extends TestConnection implements ps.cloud.MsgRawConnec
       },
     });
   }
-  request<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(
+  request<S extends MsgBase, Q extends MsgBase>(
     req: Q,
-    opts: ps.cloud.RequestOpts,
-  ): Promise<ps.cloud.MsgWithError<S>> {
+    opts: RequestOpts,
+  ): Promise<MsgWithError<S>> {
     super.request(req, opts);
     switch (true) {
-      case ps.cloud.MsgIsReqGestalt(req):
+      case MsgIsReqGestalt(req):
         // console.log("http-request-gestalt", req, opts);
-        return Promise.resolve(ps.cloud.buildResGestalt(req, this.exchangedGestalt.remote, req.auth) as unknown as S);
+        return Promise.resolve(buildResGestalt(req, this.exchangedGestalt.remote, req.auth) as unknown as S);
     }
     // console.log("http-request", req, opts);
     return Promise.resolve({
@@ -208,7 +211,7 @@ class MockHttpConnection extends TestConnection implements ps.cloud.MsgRawConnec
       },
     } as S);
   }
-  send<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(msg: Q): Promise<ps.cloud.MsgWithError<S>> {
+  send<S extends MsgBase, Q extends MsgBase>(msg: Q): Promise<MsgWithError<S>> {
     super.send(msg);
     // console.log("http-send", msg);
     return Promise.resolve({
@@ -225,12 +228,12 @@ class MockHttpConnection extends TestConnection implements ps.cloud.MsgRawConnec
     // console.log("http-start");
     return Promise.resolve(Result.Ok(undefined));
   }
-  close(o: ps.cloud.MsgBase): Promise<Result<void>> {
+  close(o: MsgBase): Promise<Result<void>> {
     // console.log("http-close");
     super.close(o);
     return Promise.resolve(Result.Ok(undefined));
   }
-  onMsg(msg: ps.cloud.OnMsgFn<ps.cloud.MsgBase>): ps.cloud.UnReg {
+  onMsg(msg: OnMsgFn<MsgBase>): UnReg {
     super.onMsg(msg);
     // console.log("http-onMsg", msg);
     return () => {
@@ -239,27 +242,27 @@ class MockHttpConnection extends TestConnection implements ps.cloud.MsgRawConnec
   }
 }
 
-class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnection {
+class MockWSConnection extends TestConnection implements MsgRawConnection {
   sthis: SuperThis;
-  exchangedGestalt: ps.cloud.ExchangedGestalt;
-  activeBinds: Map<string, ps.cloud.ActiveStream>;
+  exchangedGestalt: ExchangedGestalt;
+  activeBinds: Map<string, ActiveStream>;
 
   isReady = false;
 
-  constructor(sthis: SuperThis, exGestalt: ps.cloud.ExchangedGestalt) {
+  constructor(sthis: SuperThis, exGestalt: ExchangedGestalt) {
     super(sthis, exGestalt);
     this.sthis = sthis;
     this.exchangedGestalt = exGestalt;
     this.activeBinds = new Map();
   }
-  bind<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(
+  bind<S extends MsgBase, Q extends MsgBase>(
     req: Q,
-    opts: ps.cloud.RequestOpts,
-  ): ReadableStream<ps.cloud.MsgWithError<S>> {
+    opts: RequestOpts,
+  ): ReadableStream<MsgWithError<S>> {
     super.bind(req, opts);
     // console.log("ws-bind", req, opts);
     const id = this.sthis.nextId().str;
-    return new ReadableStream<ps.cloud.MsgWithError<S>>({
+    return new ReadableStream<MsgWithError<S>>({
       cancel: () => {
         // console.log("ws-bind-close");
         this.activeBinds.delete(id);
@@ -280,10 +283,10 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
       },
     });
   }
-  request<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(
+  request<S extends MsgBase, Q extends MsgBase>(
     req: Q,
-    opts: ps.cloud.RequestOpts,
-  ): Promise<ps.cloud.MsgWithError<S>> {
+    opts: RequestOpts,
+  ): Promise<MsgWithError<S>> {
     super.request(req, opts);
     if (!this.isReady) {
       return Promise.resolve({
@@ -296,13 +299,13 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
         auth: {
           type: "error",
         },
-      } satisfies ps.cloud.NotReadyErrorMsg);
+      } satisfies NotReadyErrorMsg);
     }
 
     switch (true) {
-      case ps.cloud.MsgIsReqOpen(req):
+      case MsgIsReqOpen(req):
         // console.log("ws-request-open", req);
-        return Promise.resolve(ps.cloud.buildResOpen(this.sthis, req) as unknown as S);
+        return Promise.resolve(buildResOpen(this.sthis, req) as unknown as S);
     }
     // console.log("ws-request", req, opts);
     return Promise.resolve({
@@ -314,11 +317,11 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
       },
     } as S);
   }
-  send<S extends ps.cloud.MsgBase, Q extends ps.cloud.MsgBase>(msg: Q): Promise<ps.cloud.MsgWithError<S>> {
+  send<S extends MsgBase, Q extends MsgBase>(msg: Q): Promise<MsgWithError<S>> {
     super.send(msg);
     // console.log("ws-send", msg);
-    if (ps.cloud.MsgIsReqChat(msg)) {
-      const res = ps.cloud.buildResChat(msg, msg.conn, `got[${msg.message}]`);
+    if (MsgIsReqChat(msg)) {
+      const res = buildResChat(msg, msg.conn, `got[${msg.message}]`);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for (const [_, bind] of this.activeBinds.entries()) {
         // console.log("ws-to-bind", res);
@@ -340,7 +343,7 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
     this.isReady = true;
     return Promise.resolve(Result.Ok(undefined));
   }
-  close(o: ps.cloud.MsgBase): Promise<Result<void>> {
+  close(o: MsgBase): Promise<Result<void>> {
     super.close(o);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [_, bind] of this.activeBinds.entries()) {
@@ -355,7 +358,7 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
     }
     return Promise.resolve(Result.Ok(undefined));
   }
-  onMsg(msg: ps.cloud.OnMsgFn<ps.cloud.MsgBase>): ps.cloud.UnReg {
+  onMsg(msg: OnMsgFn<MsgBase>): UnReg {
     super.onMsg(msg);
     throw new Error("Method not implemented.");
   }
@@ -363,24 +366,24 @@ class MockWSConnection extends TestConnection implements ps.cloud.MsgRawConnecti
 
 describe("retry-connection", () => {
   let wsMock: MockWSConnection;
-  let connected: ps.cloud.VirtualConnected;
+  let connected: VirtualConnected;
   beforeEach(async () => {
-    const rMsc = await ps.cloud.Msger.connect(sthis, "http://localhost:8080", {
+    const rMsc = await Msger.connect(sthis, "http://localhost:8080", {
       mowh: {
         openHttp: async function (
           sthis: SuperThis,
           urls: URI[],
-          msgP: ps.cloud.MsgerParamsWithEnDe,
-          exGestalt: ps.cloud.ExchangedGestalt,
-        ): Promise<Result<ps.cloud.MsgRawConnection>> {
+          msgP: MsgerParamsWithEnDe,
+          exGestalt: ExchangedGestalt,
+        ): Promise<Result<MsgRawConnection>> {
           return Result.Ok(new MockHttpConnection(sthis, exGestalt));
         },
         openWS: async function (
           sthis: SuperThis,
           url: URI,
-          msgP: ps.cloud.MsgerParamsWithEnDe,
-          exGestalt: ps.cloud.ExchangedGestalt,
-        ): Promise<Result<ps.cloud.MsgRawConnection>> {
+          msgP: MsgerParamsWithEnDe,
+          exGestalt: ExchangedGestalt,
+        ): Promise<Result<MsgRawConnection>> {
           // if (wsMock) {
           //   assert.fail("WS connection already created");
           // }
@@ -426,7 +429,7 @@ describe("retry-connection", () => {
 
     const { done, value: msg } = await reader.read();
     expect(done).toBe(false);
-    if (msg && !ps.cloud.MsgIsError(msg)) {
+    if (msg && !MsgIsError(msg)) {
       expect(msg).toEqual({
         auth: {
           type: "error",
@@ -457,7 +460,7 @@ describe("retry-connection", () => {
       if (i > 0) {
         const { done, value: msgl } = await reader.read();
         expect(done).toBe(false);
-        if (msgl && !ps.cloud.MsgIsError(msgl)) {
+        if (msgl && !MsgIsError(msgl)) {
           expect(msgl).toEqual({
             auth: {
               type: "error",
@@ -473,7 +476,7 @@ describe("retry-connection", () => {
       }
       const { done, value: msgl } = await reader.read();
       expect(done).toBe(false);
-      if (msgl && !ps.cloud.MsgIsError(msgl)) {
+      if (msgl && !MsgIsError(msgl)) {
         expect(msgl).toEqual({
           auth: {
             type: "error",
@@ -496,7 +499,7 @@ describe("retry-connection", () => {
       auth: {
         type: "error",
       },
-    } as ps.cloud.MsgBase);
+    } as MsgBase);
   });
 
   it("request", async () => {

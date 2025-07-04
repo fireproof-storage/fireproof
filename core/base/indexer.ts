@@ -1,3 +1,5 @@
+/// <reference types="./ts-types/prolly-trees.d.ts" />
+
 import {
   type ClockHead,
   type DocUpdate,
@@ -22,6 +24,7 @@ import {
   type RefLedger,
   type DocWithId,
   IndexIf,
+  IndexTree,
 } from "@fireproof/core-types";
 // import { BaseBlockstore } from "./blockstore/index.js";
 
@@ -39,11 +42,8 @@ import {
 } from "./indexer-helpers.js";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { Logger } from "@adviser/cement";
-import { AnyLink } from "@fireproof/core-types/blockstore";
 
-// @ts-expect-error "prolly-trees" has no types
-import { ProllyNode } from "prolly-trees/db-index";
-
+// import { ProllyNode } from "prolly-trees/base";
 
 function refLedger(u: HasCRDT | RefLedger): u is RefLedger {
   return !!(u as RefLedger).ledger;
@@ -73,12 +73,6 @@ export function index<T extends DocTypes = DocTypes, K extends IndexKeyType = st
 //   readonly key: K;
 //   readonly value: [K, K];
 // }
-
-export interface IndexTree<K extends IndexKeyType, R extends DocFragment> {
-  cid?: AnyLink;
-  root?: ProllyNode<K, R>;
-}
-
 
 export class Index<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T> implements IndexIf<T, K, R> {
   readonly blockstore: BaseBlockstore;
@@ -280,7 +274,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
   async _hydrateIndex() {
     if (this.byId.root && this.byKey.root) return;
     if (!this.byId.cid || !this.byKey.cid) return;
-    this.byId.root = await loadIndex<K, R, K>(this.blockstore, this.byId.cid, byIdOpts);
+    this.byId.root = await loadIndex<K, R, string|number>(this.blockstore, this.byId.cid, byIdOpts);
     this.byKey.root = await loadIndex<K, R, CompareKey>(this.blockstore, this.byKey.cid, byKeyOpts);
   }
 
@@ -332,7 +326,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
     }
     this.logger.Debug().Msg("pre this.blockstore.transaction");
     const { meta } = await this.blockstore.transaction<IndexTransactionMeta>(async (tblocks): Promise<IndexTransactionMeta> => {
-      this.byId = await bulkIndex<K, R, K>(
+      this.byId = await bulkIndex<K, R, string|number>(
         this.logger,
         tblocks,
         this.byId,

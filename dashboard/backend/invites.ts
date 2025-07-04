@@ -1,11 +1,11 @@
 import { stripper } from "@adviser/cement/utils";
 import { int, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
-import { sqlUsers } from "./users.ts";
-import { sqlTenants } from "./tenants.ts";
-import { sqlLedgers } from "./ledgers.ts";
-import { queryEmail, queryNick, toUndef } from "./sql-helper.ts";
-import { SuperThis, ps } from "@fireproof/core";
-import { InviteTicket, SqlInvitedParams, AuthProvider, InviteTicketStatus, QueryUser, InvitedParams } from "./fp-dash-types.ts";
+import { sqlUsers } from "./users.js";
+import { sqlTenants } from "./tenants.js";
+import { sqlLedgers } from "./ledgers.js";
+import { queryEmail, queryNick, toUndef } from "./sql-helper.js";
+import { SuperThis } from "@fireproof/core";
+import { AuthProvider, InvitedParams, InviteTicket, InviteTicketStatus, QueryUser, SqlInvitedParams } from "@fireproof/core-protocols-dashboard";
 
 export const sqlInviteTickets = sqliteTable(
   "InviteTickets",

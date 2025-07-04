@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 import type { Block } from "multiformats";
-import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext, URI } from "@adviser/cement";
+import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext, URI } from "@adviser/cement";
 
 import type {
   DbMeta,
@@ -282,7 +282,7 @@ export interface IndexUpdateString {
 // export type IndexRow<K extends IndexKeyType, T extends DocTypes> =
 //   T extends DocLiteral ? IndexRowLiteral<K, T> : IndexRowObject<K, T>
 
-export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> {
+export interface FPIndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> {
   readonly id: string;
   readonly key: K; // IndexKey<K>;
   readonly value: R;
@@ -290,7 +290,7 @@ export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends
 }
 
 export interface IndexRows<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T> {
-  readonly rows: IndexRow<K, T, R>[];
+  readonly rows: FPIndexRow<K, T, R>[];
   readonly docs: DocWithId<T>[];
 }
 export interface CRDTMeta {
@@ -757,3 +757,16 @@ export function defaultWriteQueueOpts(opts: Partial<WriteQueueParams> = {}): Wri
   };
 }
 
+
+export type Readonly2Writeable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
+export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
+  if (Result.Is(e)) {
+    if (e.isOk()) return false;
+    e = e.Err();
+  }
+  if ((e as NotFoundError).code === "ENOENT") return true;
+  return false;
+}

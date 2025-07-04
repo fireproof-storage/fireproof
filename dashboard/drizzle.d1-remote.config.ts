@@ -5,7 +5,7 @@ dotenv.config(".env.local");
 
 export default defineConfig({
   dialect: "sqlite",
-  schema: "./backend/db-api-schema.ts",
+  schema: "./backend/db-api-schema.js",
   out: "./dist",
   driver: "d1-http",
   dbCredentials: {

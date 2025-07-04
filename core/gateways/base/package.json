@@ -1,6 +1,6 @@
 {
-  "name": "@fireproof/core/gateways",
-  "version": "0.0.0.0",
+  "name": "@fireproof/core-gateways-base",
+  "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
   "module": "./index.js",

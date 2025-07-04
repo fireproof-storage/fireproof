@@ -1,8 +1,10 @@
 import { SuperThis, UnReg } from "@fireproof/core-types";
+import { sts } from "@fireproof/core-runtime"
 
-import { CORS, ExposeCtxItemWithImpl, HonoServerImpl, WSContextWithId } from "./hono-server.js";
+import { CORS } from "./hono-server.js";
 import { WSRoom } from "./ws-room.js";
 import { AuthType, buildErrorMsg, FPJWKCloudAuthType, isAuthTypeFPCloud, isAuthTypeFPCloudJWK, MsgBase, MsgIsError, MsgWithConn, MsgWithError, PreSignedMsg, QSId } from "@fireproof/core-types/protocols/cloud";
+import { WSContextWithId, ExposeCtxItemWithImpl, HonoServerImpl } from "./types.js";
 
 // type MsgBase = MsgBase;
 // type MsgWithError<T extends MsgBase> = MsgWithError<T>;
@@ -58,7 +60,7 @@ export interface ConnectionInfo {
 export interface MsgDispatcherCtx extends ExposeCtxItemWithImpl<WSRoom> {
   readonly id: string;
   readonly impl: HonoServerImpl;
-  readonly stsService: SessionTokenService;
+  readonly sts: sts.SessionTokenService;
   // readonly auth: AuthFactory;
   readonly ws?: WSContextWithId<unknown>;
 }

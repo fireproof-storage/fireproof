@@ -12,23 +12,23 @@ import type {
   DocTypes,
   DocWithId,
   IndexKeyType,
-  IndexRow,
+  FPIndexRow,
+  KeyBagProvider,
   MapFn,
   QueryOpts,
-  rt,
   SuperThis,
-} from "@fireproof/core";
-import { TokenAndClaims } from "../runtime/gateways/cloud/to-cloud.js";
+} from "@fireproof/core-types";
+import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types/protocols/cloud";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
-  readonly rows: IndexRow<K, T, R>[];
+  readonly rows: FPIndexRow<K, T, R>[];
 }
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   mapFn: string | MapFn<T>,
   query?: QueryOpts<K>,
-  initialRows?: IndexRow<K, T, R>[],
+  initialRows?: FPIndexRow<K, T, R>[],
 ) => LiveQueryResult<T, K, R>;
 
 export interface AllDocsResult<T extends DocTypes> {
@@ -125,7 +125,7 @@ export interface WebToCloudCtx {
   readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
   readonly tokenApiURI: string; // https://dev.connect.fireproof.direct/api
   // stores connection and token
-  keyBag?: rt.kb.KeyBagProvider;
+  keyBag?: KeyBagProvider;
   // readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
   // url param name for token
   readonly tokenParam: string;
@@ -138,4 +138,4 @@ export interface WebToCloudCtx {
   token(): Promise<TokenAndClaims | undefined>;
 }
 
-export type UseFPConfig = ConfigOpts & { readonly attach?: rt.gw.cloud.ToCloudAttachable };
+export type UseFPConfig = ConfigOpts & { readonly attach?: ToCloudAttachable };

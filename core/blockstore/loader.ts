@@ -28,11 +28,12 @@ import {
   BlockItem,
   CommitQueueIf,
 } from "@fireproof/core-types/blockstore";
+import { getKeyBag } from "@fireproof/core-keybag";
 
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
 
 import { CarTransactionImpl, defaultedBlockstoreRuntime } from "./transaction.js";
-import { CommitQueue, ensureLogger, TaskManager, getKeyBag, isNotFoundError } from "@fireproof/core-runtime"
+import { CommitQueue, ensureLogger, TaskManager, } from "@fireproof/core-runtime"
 import {
   PARAM,
   type Attachable,
@@ -48,6 +49,7 @@ import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "@fireproof/core-runtime/async-multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
+import { isNotFoundError } from "@fireproof/core-types";
 import { AsyncBlockEncoder } from "@fireproof/core-types/runtime";
 
 export function carLogIncludesGroup(list: FroozenCarLog, cids: CarGroup) {
@@ -943,3 +945,4 @@ export class Loader implements Loadable {
     // console.log("getMoreReaders<<<");
   }
 }
+

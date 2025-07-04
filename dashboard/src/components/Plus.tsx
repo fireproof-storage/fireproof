@@ -1,3 +1,4 @@
+import React from "react";
 export function Plus() {
   return (
     <svg

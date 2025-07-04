@@ -1,11 +1,12 @@
+import React from "react";
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.js";
 import { Minus } from "../../../components/Minus.js";
 import { Plus } from "../../../components/Plus.js";
+import { isAdmin, UserTenant, ResFindUser, User, QueryUser } from "@fireproof/core-protocols-dashboard";
 
-import { ps } from "@fireproof/core";
 
 const reEmail =
   /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -29,7 +30,7 @@ export function CloudTenantMembers() {
     return <div>Not found</div>;
   }
 
-  if (!ps.dashboard.isAdmin(tenant)) {
+  if (!isAdmin(tenant)) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-[--foreground] mb-6">Members</h1>
@@ -48,9 +49,9 @@ export function CloudTenantMembers() {
   );
 }
 
-function InviteMembers({ tenant, userId }: { tenant: ps.dashboard.UserTenant; userId: string }) {
+function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string }) {
   const { cloud } = useContext(AppContext);
-  const [queryResult, setQueryResult] = useState<ps.dashboard.ResFindUser>({
+  const [queryResult, setQueryResult] = useState<ResFindUser>({
     type: "resFindUser",
     query: {},
     results: [],
@@ -73,10 +74,10 @@ function InviteMembers({ tenant, userId }: { tenant: ps.dashboard.UserTenant; us
     setQueryResult(res.Ok());
   }
 
-  function addInvite(tenant: ps.dashboard.UserTenant, user: ps.dashboard.User) {
+  function addInvite(tenant: UserTenant, user: User) {
     return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       e.preventDefault();
-      let query: ps.dashboard.QueryUser;
+      let query: QueryUser;
       if (user.byProviders[0]?.queryProvider === "invite-per-email") {
         query = {
           byEmail: user.byProviders[0].cleanEmail,
@@ -167,7 +168,7 @@ function InviteMembers({ tenant, userId }: { tenant: ps.dashboard.UserTenant; us
   );
 }
 
-function CurrentInvites({ tenant }: { tenant: ps.dashboard.UserTenant }) {
+function CurrentInvites({ tenant }: { tenant: UserTenant }) {
   const { cloud } = useContext(AppContext);
   const listInvites = cloud.getListInvitesByTenant(tenant.tenantId);
 

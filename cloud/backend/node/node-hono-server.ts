@@ -10,6 +10,7 @@ import {
   WSContextWithId,
   WSEventsConnId,
   WSRoom,
+  mm
 } from "@fireproof/cloud-backend-base";
 import { HttpHeader, ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
@@ -157,7 +158,7 @@ export class NodeHonoFactory implements HonoServerFactory {
       logger,
       wsRoom: this._wsRoom,
       port: +(this.sthis.env.get("ENDPOINT_PORT") ?? "0"),
-      stsService,
+      sts: stsService,
       gestalt,
       ende,
       req: {
@@ -176,7 +177,7 @@ export class NodeHonoFactory implements HonoServerFactory {
   async start(app: Hono): Promise<void> {
     try {
       await createDB.once(() => {
-        return new MetaMerger("test", this.sthis.logger, this.params.sql); // .createSchema();
+        return new mm.MetaMerger("test", this.sthis.logger, this.params.sql); // .createSchema();
       });
 
       const { createNodeWebSocket } = await import("@hono/node-ws");

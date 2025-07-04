@@ -1,18 +1,14 @@
-import type { Block, Link } from "multiformats";
+/// <reference types="../types/prolly-trees.d.ts" />
+import type { Block } from "multiformats";
 import { create } from "@fireproof/core-runtime/async-multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 
 // @ts-expect-error "charwise" has no types
 import charwise from "charwise";
-// @ts-expect-error "prolly-trees" has no types
 import * as DbIndex from "prolly-trees/db-index";
-// @ts-expect-error "prolly-trees" has no types
 import { bf, simpleCompare } from "prolly-trees/utils";
-// @ts-expect-error "prolly-trees" has no types
 import { nocache as cache } from "prolly-trees/cache";
-// @ts-expect-error "prolly-trees" has no types
-import { ProllyNode as BaseNode } from "prolly-trees/db-index";
 
 import {
   DocUpdate,
@@ -20,7 +16,6 @@ import {
   DocFragment,
   IndexUpdate,
   QueryOpts,
-  IndexRow,
   IndexRows,
   DocWithId,
   IndexKeyType,
@@ -30,11 +25,13 @@ import {
   IndexUpdateString,
   CarTransaction,
   CRDT,
+  IndexTree,
+  FPIndexRow,
 } from "@fireproof/core-types";
 import { BlockFetcher, AnyLink, AnyBlock } from "@fireproof/core-types/blockstore";
 import { Logger } from "@adviser/cement";
 import { anyBlock2FPBlock } from "@fireproof/core-blockstore"
-import { IndexTree } from "./indexer.js";
+import { StaticProllyOptions, BaseNode as ProllyNode, IndexRow } from "prolly-trees/base";
 
 type CompareRef = string | number;
 export type CompareKey = [string | number, CompareRef];
@@ -57,9 +54,11 @@ function compare(a: CompareKey, b: CompareKey) {
   return refCompare(aRef, bRef);
 }
 
+  // declare function bf<T>(factor: number): (entry: T, dist: number) => Promise<boolean>;
+    // chunker: (entry: T, distance: number) => Promise<boolean>;
 export const byKeyOpts: StaticProllyOptions<CompareKey> = { cache, chunker: bf(30), codec, hasher, compare };
 
-export const byIdOpts: StaticProllyOptions<unknown> = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
+export const byIdOpts: StaticProllyOptions<string|number> = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
 
 export interface IndexDoc<K extends IndexKeyType> {
   readonly key: IndexKey<K>;
@@ -161,7 +160,7 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
 
 export async function applyQuery<T extends DocObject, K extends IndexKeyType, R extends DocFragment>(
   crdt: CRDT,
-  resp: { result: ProllyIndexRow<K, R>[] },
+  resp: { result: IndexRow<K, R>[] },
   query: QueryOpts<K>,
 ): Promise<IndexRows<T, K, R>> {
   if (query.descending) {
@@ -201,21 +200,21 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
       return {
         key: decodedKey,
         ...normalizedRow,
-      } as IndexRow<K, T, R>;
+      } as IndexRow<K, R>;
     }
 
     // Standard case - use the properties as they are
     return {
       key: decodedKey,
       ...row,
-    } as IndexRow<K, T, R>;
+    } as IndexRow<K, R>;
   });
 
   // We need to be explicit about the document types here
-  const typedRows = rows as IndexRow<K, T, R>[];
+  const typedRows = rows as FPIndexRow<K, T, R>[]
 
   // Simply filter out null/undefined docs and cast the result
-  const docs = typedRows.map((r) => r.doc).filter(Boolean) as unknown as DocWithId<T>[];
+  const docs = typedRows.filter((r) => !!r.doc) as unknown as DocWithId<T>[];
 
   return {
     rows: typedRows,
@@ -231,34 +230,34 @@ export function encodeKey(key: DocFragment): string {
   return charwise.encode(key) as string;
 }
 
-export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
-  readonly id: string;
-  readonly key: IndexKey<K>;
-  readonly value: T;
-  readonly doc?: DocWithId<DocObject>;
-}
+// export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
+//   readonly id: string;
+//   readonly key: IndexKey<K>;
+//   readonly value: T;
+//   readonly doc?: DocWithId<DocObject>;
+// }
 
-// ProllyNode type based on the ProllyNode from 'prolly-trees/base'
-interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode {
-  getAllEntries(): PromiseLike<{ [x: string]: unknown; result: ProllyIndexRow<K, T>[] }>;
-  getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
-  range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
-  get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
-  bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
-    readonly root?: ProllyNode<K, T>;
-    readonly blocks: Block[];
-  }>;
-  readonly address: Promise<Link>;
-  readonly distance: number;
-  compare: (a: unknown, b: unknown) => number;
-  readonly cache: unknown;
-  readonly block: Promise<Block>;
-}
+// // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
+// interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode<K, T> {
+//   getAllEntries(): PromiseLike<{ [x: string]: unknown; result: ProllyIndexRow<K, T>[] }>;
+//   getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
+//   range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
+//   get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
+//   bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
+//     readonly root?: ProllyNode<K, T>;
+//     readonly blocks: Block[];
+//   }>;
+//   readonly address: Promise<Link>;
+//   readonly distance: number;
+//   compare: (a: unknown, b: unknown) => number;
+//   readonly cache: unknown;
+//   readonly block: Promise<Block>;
+// }
 
-interface StaticProllyOptions<T> {
-  readonly cache: unknown;
-  chunker: (entry: T, distance: number) => boolean;
-  readonly codec: unknown;
-  readonly hasher: unknown;
-  compare: (a: T, b: T) => number;
-}
+// interface StaticProllyOptions<T> {
+//   readonly cache: unknown;
+//   chunker: (entry: T, distance: number) => boolean;
+//   readonly codec: unknown;
+//   readonly hasher: unknown;
+//   compare: (a: T, b: T) => number;
+// }

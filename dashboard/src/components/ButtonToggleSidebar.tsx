@@ -1,3 +1,4 @@
+import React from "react";
 export function ButtonToggleSidebar({ toggleSidebar }: { toggleSidebar: () => void }) {
   return (
     <button onClick={toggleSidebar} className="md:hidden absolute top-2 left-6 z-50 p-2 rounded-md bg-[--muted]">

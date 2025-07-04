@@ -1,5 +1,19 @@
+/// <reference types="./prolly-trees.d.ts" />
+
 import { Logger } from "@adviser/cement";
 import { BaseBlockstore, ClockHead, CRDT, DocFragment, DocTypes, IdxMeta, IndexKeyType, IndexRows, MapFn, QueryOpts } from "./types.js";
+import { AnyLink } from "./blockstore/types.js";
+
+import { BaseNode } from "prolly-trees/base";
+
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface IndexTree<K extends IndexKeyType, R extends DocFragment> {
+  cid?: AnyLink;
+  root?: BaseNode<K, R>;
+  // root?: ProllyNode<K, R>;
+}
+
 
 export interface IndexIf<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T> {
   readonly blockstore: BaseBlockstore;
@@ -10,6 +24,9 @@ export interface IndexIf<T extends DocTypes, K extends IndexKeyType = string, R 
   indexHead?: ClockHead;
 
   initError?: Error;
+
+  byKey: IndexTree<K, R>
+  byId: IndexTree<K, R>
 
   ready(): Promise<void>;
 

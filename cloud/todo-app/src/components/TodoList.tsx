@@ -1,3 +1,4 @@
+import React from "react";
 import { FilterType, Todo } from "../types.js";
 import TodoItem from "./TodoItem.js";
 

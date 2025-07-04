@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core/react";
+import { useFireproof } from "@fireproof/core-react";
 
-import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
+import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight.jsx";
 
 export function DocsShow() {
   const { name } = useParams();

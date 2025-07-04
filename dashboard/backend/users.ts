@@ -1,15 +1,9 @@
 import { Result } from "@adviser/cement";
-import { ps } from "@fireproof/core";
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { queryCondition, toUndef } from "./sql-helper.ts";
+import { queryCondition, toUndef } from "./sql-helper.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, inArray } from "drizzle-orm/sql/expressions";
-
-type QueryUser = ps.dashboard.QueryUser;
-type User = ps.dashboard.User;
-type UserStatus = ps.dashboard.UserStatus;
-type AuthProvider = ps.dashboard.AuthProvider;
-type UserByProvider = ps.dashboard.UserByProvider;
+import { AuthProvider, QueryUser, User, UserByProvider, UserStatus } from "@fireproof/core-protocols-dashboard";
 
 export const sqlUsers = sqliteTable("Users", {
   userId: text().primaryKey(),

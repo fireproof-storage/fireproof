@@ -1,31 +1,21 @@
-// / <reference types="@cloudflare/workers-types" />
-// import { Logger } from "@adviser/cement";
-// import { Hono } from "hono";
+/// <reference types="@cloudflare/workers-types" />
+
 import { DurableObject } from "cloudflare:workers";
-import { WebSocket as CFWebSocket, DurableObjectState, ExportedHandler } from "@cloudflare/workers-types";
+// import { WebSocket as CFWebSocket, ExportedHandler, Response as CFResponse } from "@cloudflare/workers-types";
 import { Hono } from "hono";
 import { Env } from "./env.js";
 import { CFExposeCtx, CFHonoFactory, getRoomDurableObject } from "./cf-hono-server.js";
-import { WSMessageReceive } from "hono/ws";
+
 import { BuildURI, LoggerImpl } from "@adviser/cement";
 import { HonoServer } from "@fireproof/cloud-backend-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-// import { ExportedHandler, WebSocket } from "@cloudflare/workers-types";
+
 
 export default {
   fetch: async (req, env): Promise<Response> => {
     return getRoomDurableObject(env, "V1").fetch(req);
   },
 } satisfies ExportedHandler<Env>;
-/*
-  async fetch(req, env, _ctx): Promise<Response> {
-    const id = env.FP_META_GROUPS.idFromName("fireproof");
-    const stub = env.FP_META_GROUPS.get(id);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return stub.fetch(req as any) as unknown as Promise<Response>;
-  },
-} satisfies ExportedHandler<Env>;
-*/
 
 export interface ExecSQLResult {
   readonly rowsRead: number;
@@ -33,44 +23,21 @@ export interface ExecSQLResult {
   readonly rawResults: unknown[];
 }
 
-// export class FPBackendDurableObject extends DurableObject<Env> {
-//   doneSchema = false;
-//   async execSql(sql: string, params: unknown[], schema?: boolean): Promise<ExecSQLResult> {
-//     if (schema && this.doneSchema) {
-//       return { rowsRead: 0, rowsWritten: 0, rawResults: [] };
-//     }
-//     const cursor = await this.ctx.storage.sql.exec(sql, ...params);
-//     const rawResults = cursor.toArray();
-//     const res = {
-//       rowsRead: cursor.rowsRead,
-//       rowsWritten: cursor.rowsWritten,
-//       rawResults,
-//     };
-//     // console.log("execSql", sql, params, res);
-//     return res;
-//   }
-// }
-
-export interface CFWSEvents {
-  readonly onOpen: (evt: Event, ws: CFWebSocket) => void;
-  readonly onMessage: (evt: MessageEvent<WSMessageReceive>, ws: CFWebSocket) => void;
-  readonly onClose: (evt: CloseEvent, ws: CFWebSocket) => void;
-  readonly onError: (evt: Event, ws: CFWebSocket) => void;
-}
-
 export class FPRoomDurableObject extends DurableObject<Env> {
+    // Add the brand property
+  // readonly [__DURABLE_OBJECT_BRAND]: never;
   // wsEvents?: CFWSEvents;
 
   readonly id = Math.random().toString(36).slice(2);
 
-  readonly honoApp: Hono;
-  readonly honoServer: HonoServer;
+  readonly honoApp: Hono = new Hono();
+  readonly honoServer: HonoServer = new HonoServer(new CFHonoFactory()).register(this.honoApp);
+    // this.honoApp = new Hono();
+    // this.honoServer = new HonoServer(new CFHonoFactory()).register(this.honoApp);
 
-  constructor(state: DurableObjectState, env: Env) {
-    super(state, env);
-    this.honoApp = new Hono();
-    this.honoServer = new HonoServer(new CFHonoFactory()).register(this.honoApp);
-  }
+  // constructor(state: DurableObjectState, env: Env) {
+  //   super(state, env);
+  // }
   // _id!: string;
 
   async fetch(request: Request): Promise<Response> {
@@ -99,27 +66,31 @@ export class FPRoomDurableObject extends DurableObject<Env> {
 
     const uri = BuildURI.from(request.url).setParam("ctxId", id).URI();
 
-    const ret = await this.honoApp.fetch(new Request(uri.toString(), request), this.env);
+    const ret = await this.honoApp.fetch(new Request(uri.toString(), request as unknown as Request), this.env)
     return ret;
   }
 
-  webSocketOpen(ws: WebSocket): void | Promise<void> {
+  webSocketOpen(iws: WebSocket): void | Promise<void> {
+    const ws = iws as unknown as WebSocket
     const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onOpen(id, {} as Event, ws as CFWebSocket);
+    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onOpen(id, {} as Event, ws);
   }
 
-  webSocketError(ws: WebSocket, error: unknown): void | Promise<void> {
+  webSocketError(iws: WebSocket, error: unknown): void | Promise<void> {
+    const ws = iws as unknown as WebSocket
     const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onError(id, error as Event, ws as CFWebSocket);
+    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onError(id, error as Event, ws);
   }
 
-  async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer): Promise<void> {
+  async webSocketMessage(iws: WebSocket, msg: string | ArrayBuffer): Promise<void> {
+    const ws = iws as unknown as WebSocket
     const { id } = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onMessage(id, { data: msg } as MessageEvent, ws as CFWebSocket);
+    this.env.FP_EXPOSE_CTX.get(id).ctx.wsRoom.events.onMessage(id, { data: msg } as globalThis.MessageEvent, ws);
   }
 
-  webSocketClose(ws: WebSocket, code: number, reason: string): void | Promise<void> {
+  webSocketClose(iws: WebSocket, code: number, reason: string): void | Promise<void> {
+    const ws = iws as unknown as WebSocket
     const dat = ws.deserializeAttachment();
-    this.env.FP_EXPOSE_CTX.get(dat.id).ctx.wsRoom.events.onClose(dat.id, { code, reason } as CloseEvent, ws as CFWebSocket);
+    this.env.FP_EXPOSE_CTX.get(dat.id).ctx.wsRoom.events.onClose(dat.id, { code, reason } as CloseEvent, ws);
   }
 }

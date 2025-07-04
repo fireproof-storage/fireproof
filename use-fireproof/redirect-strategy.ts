@@ -3,6 +3,8 @@ import { SuperThis } from "@fireproof/core-types";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core-react";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
+import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types/protocols/cloud";
+import { Api } from "@fireproof/core-protocols-dashboard";
 
 function defaultOverlayHtml(redirectLink: string) {
   return `
@@ -61,9 +63,10 @@ interface RedirectStrategyOpts {
   readonly overlayHtml?: (redirectLink: string) => string;
 }
 
-export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
+
+export class RedirectStrategy implements TokenStrategie {
   resultId?: string;
-  overlayNode?: HTMLElement;
+  overlayNode?: HTMLDivElement;
   waitState: "started" | "stopped" = "stopped";
 
   readonly overlayCss: string;
@@ -74,7 +77,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     this.overlayHtml = opts.overlayHtml ?? defaultOverlayHtml;
   }
 
-  open(sthis: SuperThis, logger: Logger, deviceId: string, opts: rt.gw.cloud.ToCloudOpts) {
+  open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     logger.Debug().Url(redirectCtx.dashboardURI).Msg("open redirect");
     this.resultId = sthis.nextId().str;
@@ -90,12 +93,12 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
       url.setParam("tenant", opts.tenant);
     }
 
-    let overlayNode = document.body.querySelector("#fpOverlay");
+    let overlayNode = document.body.querySelector("#fpOverlay") as HTMLDivElement;
     if (!overlayNode) {
       const styleNode = document.createElement("style");
       styleNode.innerHTML = DOMPurify.sanitize(this.overlayCss);
       document.head.appendChild(styleNode);
-      overlayNode = document.createElement("div");
+      overlayNode = document.createElement("div") as HTMLDivElement;
       overlayNode.id = "fpOverlay";
       overlayNode.className = "fpOverlay";
       overlayNode.innerHTML = DOMPurify.sanitize(this.overlayHtml(url.toString()));
@@ -138,7 +141,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     // window.location.href = url.toString();
   }
 
-  private currentToken?: rt.gw.cloud.TokenAndClaims;
+  private currentToken?: TokenAndClaims;
 
   waiting?: ReturnType<typeof setTimeout>;
 
@@ -150,7 +153,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     this.waitState = "stopped";
   }
 
-  async tryToken(sthis: SuperThis, logger: Logger, opts: rt.gw.cloud.ToCloudOpts): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
+  async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
     if (!this.currentToken) {
       const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
       this.currentToken = await webCtx.token();
@@ -161,10 +164,10 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
 
   async getTokenAndClaimsByResultId(
     logger: Logger,
-    dashApi: ps.dashboard.Api,
+    dashApi: Api,
     resultId: undefined | string,
-    opts: rt.gw.cloud.ToCloudOpts,
-    resolve: (value: rt.gw.cloud.TokenAndClaims) => void,
+    opts: ToCloudOpts,
+    resolve: (value: TokenAndClaims) => void,
     attempts = 0,
   ) {
     if (!resultId) {
@@ -185,7 +188,7 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     const waitedTokenByResultId = rWaitForToken.unwrap();
     if (waitedTokenByResultId.status === "found" && waitedTokenByResultId.token) {
       const token = waitedTokenByResultId.token;
-      const claims = decodeJwt(token) as ps.cloud.FPCloudClaim;
+      const claims = decodeJwt(token) as FPCloudClaim;
       this.overlayNode?.style.setProperty("display", "none");
       resolve({ token, claims });
       return;
@@ -197,15 +200,15 @@ export class RedirectStrategy implements rt.gw.cloud.TokenStrategie {
     sthis: SuperThis,
     logger: Logger,
     deviceId: string,
-    opts: rt.gw.cloud.ToCloudOpts,
-  ): Promise<rt.gw.cloud.TokenAndClaims | undefined> {
+    opts: ToCloudOpts,
+  ): Promise<TokenAndClaims | undefined> {
     if (!this.resultId) {
       throw new Error("waitForToken not working on redirect strategy");
     }
     const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    const dashApi = new ps.dashboard.Api(webCtx.tokenApiURI);
+    const dashApi = new Api(webCtx.tokenApiURI);
     this.waitState = "started";
-    return new Promise<rt.gw.cloud.TokenAndClaims | undefined>((resolve) => {
+    return new Promise<TokenAndClaims | undefined>((resolve) => {
       this.getTokenAndClaimsByResultId(logger, dashApi, this.resultId, opts, (tokenAndClaims) => {
         this.currentToken = tokenAndClaims;
         resolve(tokenAndClaims);

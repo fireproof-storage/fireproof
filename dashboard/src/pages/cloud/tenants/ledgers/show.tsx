@@ -1,5 +1,6 @@
+import React from "react";
 import { Outlet, useParams } from "react-router-dom";
-import { TabNavigation } from "../../../../components/TabNavigation.tsx";
+import { TabNavigation } from "../../../../components/TabNavigation.jsx";
 
 /**
  * Main component for displaying ledger details with tabbed navigation

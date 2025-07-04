@@ -1,6 +1,6 @@
 import { Logger } from "@adviser/cement";
 import { index } from "./indexer.js";
-import type {
+import {
   ClockHead,
   MapFn,
   QueryOpts,
@@ -24,8 +24,9 @@ import type {
   Ledger,
   Attachable,
   Attached,
+  NotFoundError
 } from "@fireproof/core-types";
-import { ensureLogger, NotFoundError, makeName } from "@fireproof/core-runtime";
+import { ensureLogger, makeName } from "@fireproof/core-runtime";
 
 export function isDatabase(db: unknown): db is Database {
   return db instanceof DatabaseImpl;

@@ -17,7 +17,7 @@ const opts = tseslint.config(
       "**/examples/",
       "scripts/",
       "smoke/react/",
-      "src/missingTypes/lib.deno.d.ts",
+      "src/missingTypes/lib.deno.d.js",
       "**/.esm-cache/**",
     ],
   },

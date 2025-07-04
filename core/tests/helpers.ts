@@ -1,19 +1,22 @@
 import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger, AppContext } from "@adviser/cement";
 import {
-  ensureSuperThis,
-  rt,
   SuperThis,
   SuperThisOpts,
-  bs,
   PARAM,
   Attachable,
   Attached,
   CarTransaction,
   Falsy,
+  DbMeta,
 } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
+import { CommitQueue, ensureSuperThis, files, TaskManager } from "@fireproof/core-runtime";
+import { defaultKeyBagOpts, getKeyBag, KeyBag } from "@fireproof/core-keybag";
+import { AttachedRemotesImpl, toStoreRuntime } from "@fireproof/core-blockstore";
+import { Loadable, BlockstoreRuntime, CarLog, AttachedStores, ActiveStore, CarGroup, CommitOpts, FPBlock, CarBlockItem, TransactionMeta } from "@fireproof/core-types/blockstore";
+import { AnyLink } from "prolly-trees/base";
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 export function tracer() {}
@@ -21,7 +24,7 @@ export function tracer() {}
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
     file: new File([new Blob([buffer])], name, opts),
-    cid: (await rt.files.encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
+    cid: (await files.encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
   };
 }
 
@@ -71,8 +74,8 @@ export function noopUrl(name?: string): URI {
 export function simpleBlockOpts(sthis: SuperThis, name?: string) {
   const url = noopUrl(name);
   return {
-    keyBag: rt.kb.defaultKeyBagOpts(sthis),
-    storeRuntime: bs.toStoreRuntime(sthis),
+    keyBag: defaultKeyBagOpts(sthis),
+    storeRuntime: toStoreRuntime(sthis),
     storeUrls: {
       file: url,
       wal: url,
@@ -88,14 +91,14 @@ export async function simpleCID(sthis: SuperThis) {
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash);
 }
-class MockLoader implements bs.Loadable {
+class MockLoader implements Loadable {
   readonly sthis: SuperThis;
   readonly logger: Logger;
-  readonly ebOpts: bs.BlockstoreRuntime;
-  readonly carLog: bs.CarLog;
-  readonly attachedStores: bs.AttachedStores;
-  readonly taskManager: bs.TaskManager;
-  readonly commitQueue: bs.CommitQueue<unknown>;
+  readonly ebOpts: BlockstoreRuntime;
+  readonly carLog: CarLog;
+  readonly attachedStores: AttachedStores;
+  readonly taskManager: TaskManager;
+  readonly commitQueue: CommitQueue<unknown>;
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
@@ -109,14 +112,14 @@ class MockLoader implements bs.Loadable {
         meta: noopUrl("test"),
         car: noopUrl("test"),
       },
-    } as bs.BlockstoreRuntime;
-    this.carLog = new bs.CarLog();
-    this.taskManager = new bs.TaskManager(sthis, () => Promise.resolve(), {
+    } as BlockstoreRuntime;
+    this.carLog = new CarLog();
+    this.taskManager = new TaskManager(sthis, () => Promise.resolve(), {
       removeAfter: 3,
       retryTimeout: 50,
     });
-    this.attachedStores = new bs.AttachedRemotesImpl(this);
-    this.commitQueue = new bs.CommitQueue({
+    this.attachedStores = new AttachedRemotesImpl(this);
+    this.commitQueue = new CommitQueue({
       tracer,
     });
   }
@@ -131,42 +134,42 @@ class MockLoader implements bs.Loadable {
   close(): Promise<void> {
     throw new Error("Method not implemented.");
   }
-  keyBag(): Promise<rt.KeyBag> {
-    return rt.kb.getKeyBag(this.sthis, {});
+  keyBag(): Promise<KeyBag> {
+    return getKeyBag(this.sthis, {});
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  handleDbMetasFromStore(metas: bs.DbMeta[], store: bs.ActiveStore): Promise<bs.CarGroup> {
+  handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<CarGroup> {
     // throw new Error("Method not implemented.");
     return Promise.resolve([]);
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  commit<T = unknown>(t: CarTransaction, done: T, opts: bs.CommitOpts): Promise<bs.CarGroup> {
+  commit<T = unknown>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup> {
     throw new Error("Method not implemented.");
   }
   destroy(): Promise<void> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getBlock(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.FPBlock | Falsy> {
+  getBlock(cid: AnyLink, store: ActiveStore): Promise<FPBlock | Falsy> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadFileCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.FPBlock<bs.CarBlockItem>> {
+  loadFileCar(cid: AnyLink, store: ActiveStore): Promise<FPBlock<CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadCar(cid: bs.AnyLink, store: bs.ActiveStore): Promise<bs.FPBlock<bs.CarBlockItem>> {
+  loadCar(cid: AnyLink, store: ActiveStore): Promise<FPBlock<CarBlockItem>> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  commitFiles(t: CarTransaction, done: bs.TransactionMeta): Promise<bs.CarGroup> {
+  commitFiles(t: CarTransaction, done: TransactionMeta): Promise<CarGroup> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  entries(cache?: boolean): AsyncIterableIterator<bs.FPBlock> {
+  entries(cache?: boolean): AsyncIterableIterator<FPBlock> {
     throw new Error("Method not implemented.");
   }
 }
-export function mockLoader(sthis: SuperThis): bs.Loadable {
+export function mockLoader(sthis: SuperThis): Loadable {
   return new MockLoader(sthis);
 }

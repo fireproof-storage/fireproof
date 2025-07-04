@@ -1,9 +1,8 @@
 import { Result, URI } from "@adviser/cement";
-import { Gateway, GetResult } from "../../../blockstore/gateway.js";
-import { PARAM, SuperThis } from "../../../types.js";
+import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types"
+import { Gateway, GetResult, VoidResult } from "@fireproof/core-types/blockstore";
 import { MEMORY_VERSION } from "./version.js";
-import { ensureLogger, NotFoundError } from "../../../utils.js";
-import { VoidResult } from "../../../blockstore/serde-gateway.js";
+import { ensureLogger } from "@fireproof/core-runtime";
 
 function cleanURI(uri: URI): URI {
   return uri

@@ -1,8 +1,10 @@
 import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 
-import { INDEXEDDB_VERSION } from "../indexeddb-version.js";
-import { NotFoundError, PARAM, exceptionWrapper, getKey, getStore, type SuperThis, bs } from "@fireproof/core";
+import { INDEXEDDB_VERSION } from "@fireproof/core-gateways-base";
+import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types";
+import { exceptionWrapper, getKey, getStore } from "@fireproof/core-runtime";
+import { Gateway, GetResult } from "@fireproof/core-types/blockstore";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXEDDB_VERSION).URI();
@@ -82,7 +84,7 @@ export function getIndexedDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexedDBGateway implements bs.Gateway {
+export class IndexedDBGateway implements Gateway {
   _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
   async start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
@@ -122,7 +124,7 @@ export class IndexedDBGateway implements bs.Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
+  async get(url: URI, sthis: SuperThis): Promise<GetResult> {
     return exceptionWrapper(async () => {
       const key = getKey(url, sthis.logger);
       const store = getStore(url, sthis, joinDBName).name;

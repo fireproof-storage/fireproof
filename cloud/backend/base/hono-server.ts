@@ -1,7 +1,6 @@
 import { exception2Result, HttpHeader, Logger, param, Result, top_uint8, URI } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types";
-import { Context, Hono, Next } from "hono";
-import { WSContext, WSContextInit, WSMessageReceive } from "hono/ws";
+import { Context, Hono } from "hono";
 // import { CFExposeCtxItem } from "./cf-hono-server.js";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { WSRoom } from "./ws-room.js";
@@ -10,77 +9,42 @@ import { calculatePreSignedUrl, PreSignedMsg } from "./pre-signed-url.js";
 import { buildMsgDispatcher } from "./msg-dispatcher-impl.js";
 // import type { LibSQLDatabase } from "drizzle-orm/libsql";
 // import type { drizzle as d1Drizzle } from 'drizzle-orm/d1';
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
-import type { ResultSet } from "@libsql/client";
-import type { D1Result } from "@cloudflare/workers-types";
-import { EnDeCoder, MsgTypesCtx, BindGetMeta, MsgWithError, EventGetMeta, ReqPutMeta, ResPutMeta, ReqDelMeta, ResDelMeta, AuthType, FPCloudAuthType, isAuthTypeFPCloudJWK, MsgWithConn, buildRes, MsgIsError, buildResPutMeta, buildResDelMeta, GwCtx, buildEventGetMeta, MsgBase, buildErrorMsg, Gestalt, ErrorMsg } from "@fireproof/core-types/protocols/cloud";
-import { SessionTokenService } from "../../../core/runtime/sts-service/index.js";
-// import type { SelectedFields } from "drizzle-orm
-// import type { drizzle as doDrizzle } from 'drizzle-orm/durable-sqlite';
-
-
-
-// export interface RunTimeParams {
-//   readonly sthis: SuperThis;
-//   readonly logger: Logger;
-//   readonly ende: EnDeCoder;
-//   readonly impl: HonoServerImpl;
-//   readonly wsRoom: WSRoom;
-// }
-
-export class WSContextWithId<T> extends WSContext<T> {
-  readonly id: string;
-  constructor(id: string, ws: WSContextInit<T>) {
-    super(ws);
-    this.id = id;
-  }
-}
-
-export type DrizzleDatebase = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>; //, ResultSet, TSchema>
-// export type x = LibSQLDatabase | ReturnType<typeof d1Drizzle/* | typeof doDrizzle*/>;
-
-export interface ExposeCtxItem<T extends WSRoom> {
-  readonly sthis: SuperThis;
-  readonly port: number;
-  readonly wsRoom: T;
-  readonly logger: Logger;
-  readonly ende: EnDeCoder;
-  readonly stsService: SessionTokenService;
-  readonly gestalt: Gestalt;
-  readonly dbFactory: () => DrizzleDatebase;
-  readonly req: {
-    readonly method: string;
-    readonly url: string;
-    readonly headers: HttpHeader;
-  };
-  // readonly metaMerger: MetaMerger;
-  readonly id: string;
-}
-
-export type ExposeCtxItemWithImpl<T extends WSRoom> = ExposeCtxItem<T> & { impl: HonoServerImpl };
-
-export interface WSEventsConnId<T> {
-  readonly onOpen: (evt: Event, ws: WSContextWithId<T>) => void;
-  readonly onMessage: (evt: MessageEvent<WSMessageReceive>, ws: WSContextWithId<T>) => void;
-  readonly onClose: (evt: CloseEvent, ws: WSContextWithId<T>) => void;
-  readonly onError: (evt: Event, ws: WSContextWithId<T>) => void;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type ConnMiddleware = (conn: WSConnectionPair, c: Context, next: Next) => Promise<Response | void>;
-export interface HonoServerImpl {
-  validateAuth(ctx: MsgDispatcherCtx, auth: AuthType): Promise<Result<FPCloudAuthType>>;
-
-  start<T extends WSRoom>(ctx: ExposeCtxItem<T>): Promise<HonoServerImpl>;
-  // gestalt(): Gestalt;
-  // getConnected(): Connected[];
-  calculatePreSignedUrl(msgCtx: MsgTypesCtx, p: PreSignedMsg): Promise<Result<URI>>;
-  upgradeWebSocket(createEvents: (c: Context) => WSEventsConnId<unknown> | Promise<WSEventsConnId<unknown>>): ConnMiddleware;
-  handleBindGetMeta(ctx: MsgDispatcherCtx, msg: BindGetMeta): Promise<MsgWithError<EventGetMeta>>;
-  handleReqPutMeta(ctx: MsgDispatcherCtx, msg: ReqPutMeta): Promise<MsgWithError<ResPutMeta>>;
-  handleReqDelMeta(ctx: MsgDispatcherCtx, msg: ReqDelMeta): Promise<MsgWithError<ResDelMeta>>;
-  // readonly headers: HttpHeader;
-}
+import {
+  EnDeCoder,
+  MsgTypesCtx,
+  BindGetMeta,
+  MsgWithError,
+  EventGetMeta,
+  ReqPutMeta,
+  ResPutMeta,
+  ReqDelMeta,
+  ResDelMeta,
+  AuthType,
+  FPCloudAuthType,
+  isAuthTypeFPCloudJWK,
+  MsgWithConn,
+  buildRes,
+  MsgIsError,
+  buildResPutMeta,
+  buildResDelMeta,
+  GwCtx,
+  buildEventGetMeta,
+  MsgBase,
+  buildErrorMsg,
+  Gestalt,
+  ErrorMsg,
+} from "@fireproof/core-types/protocols/cloud";
+import { sts } from "@fireproof/core-runtime";
+import {
+  ConnMiddleware,
+  DrizzleDatebase,
+  ExposeCtxItem,
+  ExposeCtxItemWithImpl,
+  HonoServerImpl,
+  WSContextWithId,
+  WSEventsConnId,
+} from "./types.js";
+import { metaMerger } from "./meta-merge/meta-merger.js";
 
 // export interface Connected {
 //   readonly connId: QSId
@@ -103,7 +67,7 @@ export abstract class HonoServerBase implements HonoServerImpl {
       return Promise.resolve(Result.Err("Only fp-cloud-jwt is supported"));
     }
     // console.log("validateAuth-0", auth.params.jwk, ctx.stsService);
-    const rAuth = await ctx.stsService.validate(auth.params.jwk);
+    const rAuth = await ctx.sts.validate(auth.params.jwk);
     if (rAuth.isErr()) {
       return Result.Err(rAuth);
     }
@@ -224,7 +188,7 @@ class NoBackChannel implements MsgDispatcherCtx {
     this.gestalt = ctx.gestalt;
     this.req = this.ctx.req;
     this.dbFactory = ctx.dbFactory;
-    this.stsService = ctx.stsService;
+    this.sts = ctx.sts;
   }
   readonly req: MsgDispatcherCtx["req"];
   readonly impl: HonoServerImpl;
@@ -235,7 +199,7 @@ class NoBackChannel implements MsgDispatcherCtx {
   readonly gestalt: Gestalt;
   readonly dbFactory: () => DrizzleDatebase;
   readonly id: string;
-  readonly stsService: SessionTokenService;
+  readonly sts: sts.SessionTokenService;
 
   get ws(): WSContextWithId<unknown> {
     return {
@@ -385,11 +349,10 @@ export class HonoServer {
   }
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function metaMerger(ctx: ExposeCtxItem<WSRoom>) {
-  throw new Error("Function not implemented.");
-}
+// function metaMerger(ctx: ExposeCtxItem<WSRoom>) {
+//   throw new Error("Function not implemented.");
+// }
 // export async function honoServer(_sthis: SuperThis, _msgP: MsgerParams, _gestalt: Gestalt) {
 //   const rt = runtimeFn();
 //   if (rt.isNodeIsh) {

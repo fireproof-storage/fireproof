@@ -1,7 +1,8 @@
+import React from "react";
 import { Link, redirect, useNavigate, useParams } from "react-router-dom";
-import { AppContext } from "../../../app-context.tsx";
+import { AppContext } from "../../../app-context.jsx";
 import { useContext } from "react";
-import { CloudContext } from "../../../cloud-context.ts";
+import { CloudContext } from "../../../cloud-context.js";
 
 export function CloudTenantDelete() {
   const { tenantId } = useParams();

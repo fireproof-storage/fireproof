@@ -26,10 +26,6 @@ import { toSortedArray } from "@adviser/cement/utils";
 //export type { Logger };
 //export { Result };
 
-export type Writable<T> = {
-  -readonly [P in keyof T]: T[P];
-};
-
 const _globalLogger = new ResolveOnce();
 function globalLogger(): Logger {
   return _globalLogger.once(() => new LoggerImpl());
@@ -363,18 +359,7 @@ export async function exceptionWrapper<T, E extends Error>(fn: () => Promise<Res
 //   // }
 // }
 
-export class NotFoundError extends Error {
-  readonly code = "ENOENT";
-}
 
-export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
-  if (Result.Is(e)) {
-    if (e.isOk()) return false;
-    e = e.Err();
-  }
-  if ((e as NotFoundError).code === "ENOENT") return true;
-  return false;
-}
 
 export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) {

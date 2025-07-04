@@ -5,8 +5,8 @@ packages:
   - "cli"
   - "core/gateways/*"
   - "core/protocols/*"
-  - "use-fireproof/*"
-  - "dashboard/*"
+  - "use-fireproof"
+  - "dashboard"
 
 catalog:
   adviserCement: ^0.4.20

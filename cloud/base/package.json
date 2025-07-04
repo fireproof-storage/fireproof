@@ -44,5 +44,8 @@
     "@fireproof/core-blockstore": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types": "workspace:0.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }

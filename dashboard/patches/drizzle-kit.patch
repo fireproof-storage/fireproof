@@ -152,7 +152,7 @@ index 24f82ccc03dde45b0c23cb2422345c22dc200a16..ea31782603804531e9ddc2c2efc83622
 -var prepareFromExports2, prepareFromSqliteImports;
 +var esbuild, import_promises, import_path, prepareFromExports2, prepareFromSqliteImports;
  var init_sqliteImports = __esm({
-   "src/serializer/sqliteImports.ts"() {
+   "src/serializer/sqliteImports.js"() {
      "use strict";
 +    init_source();
      init_dist();
@@ -344,7 +344,7 @@ index e95ffbb6d3b90b01cbfdaaee13e9ed5a6a979a56..1660a9de5dcd39155027e9debfc4eb9c
 +import { join, resolve } from "path";
  var prepareFromExports2, prepareFromSqliteImports;
  var init_sqliteImports = __esm({
-   "src/serializer/sqliteImports.ts"() {
+   "src/serializer/sqliteImports.js"() {
      "use strict";
 +    init_source();
      init_dist();
@@ -444,7 +444,7 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
 -var import_fs, import_path, import_url, copy, objectValues, assertV1OutFolder, dryJournal, prepareOutFolder, validatorForDialect, validateWithReport, prepareMigrationFolder, prepareMigrationMeta, schemaRenameKey, tableRenameKey, columnRenameKey, normaliseSQLiteUrl, normalisePGliteUrl;
 +var import_fs, import_path, import_url, copy, objectValues, assertV1OutFolder, dryJournal, prepareOutFolder, validatorForDialect, validateWithReport, prepareMigrationFolder, prepareMigrationMeta, schemaRenameKey, tableRenameKey, columnRenameKey, mkdirSQLiteUrl, normaliseSQLiteUrl, normalisePGliteUrl;
  var init_utils2 = __esm({
-   "src/utils.ts"() {
+   "src/utils.js"() {
      "use strict";
 @@ -8050,7 +8050,14 @@ var init_utils2 = __esm({
        const out = schema6 ? `"${schema6}"."${table6}"."${column11}"` : `"${table6}"."${column11}"`;
@@ -525,7 +525,7 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
 -var import_drizzle_orm5, import_sqlite_core, prepareFromExports3, prepareFromSqliteImports;
 +var import_drizzle_orm5, import_sqlite_core, esbuild, import_promises2, import_path4, prepareFromExports3, prepareFromSqliteImports;
  var init_sqliteImports = __esm({
-   "src/serializer/sqliteImports.ts"() {
+   "src/serializer/sqliteImports.js"() {
      "use strict";
 +    init_source();
      import_drizzle_orm5 = require("drizzle-orm");
@@ -571,7 +571,7 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
 -var import_fs4, glob, import_path4, serializeMySql, serializePg, serializeSQLite, serializeSingleStore, prepareFilenames;
 +var import_fs4, glob, import_path5, serializeMySql, serializePg, serializeSQLite, serializeSingleStore, prepareFilenames;
  var init_serializer = __esm({
-   "src/serializer/index.ts"() {
+   "src/serializer/index.js"() {
      "use strict";
      init_source();
      import_fs4 = __toESM(require("fs"));
@@ -599,7 +599,7 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
 -var import_fs6, import_hanji3, import_path5, schemasResolver, tablesResolver, viewsResolver, mySqlViewsResolver, sqliteViewsResolver, sequencesResolver, roleResolver, policyResolver, indPolicyResolver, enumsResolver, columnsResolver, prepareAndMigratePg, prepareAndExportPg, preparePgPush, prepareMySQLPush, prepareAndMigrateMysql, prepareSingleStorePush, prepareAndMigrateSingleStore, prepareAndExportSinglestore, prepareAndExportMysql, prepareAndMigrateSqlite, prepareAndExportSqlite, prepareAndMigrateLibSQL, prepareAndExportLibSQL, prepareSQLitePush, prepareLibSQLPush, promptColumnsConflicts, promptNamedConflict, promptNamedWithSchemasConflict, promptSchemasConflict, BREAKPOINT, writeResult, embeddedMigrations, prepareSnapshotFolderName, two;
 +var import_fs6, import_hanji3, import_path6, schemasResolver, tablesResolver, viewsResolver, mySqlViewsResolver, sqliteViewsResolver, sequencesResolver, roleResolver, policyResolver, indPolicyResolver, enumsResolver, columnsResolver, prepareAndMigratePg, prepareAndExportPg, preparePgPush, prepareMySQLPush, prepareAndMigrateMysql, prepareSingleStorePush, prepareAndMigrateSingleStore, prepareAndExportSinglestore, prepareAndExportMysql, prepareAndMigrateSqlite, prepareAndExportSqlite, prepareAndMigrateLibSQL, prepareAndExportLibSQL, prepareSQLitePush, prepareLibSQLPush, promptColumnsConflicts, promptNamedConflict, promptNamedWithSchemasConflict, promptSchemasConflict, BREAKPOINT, writeResult, embeddedMigrations, prepareSnapshotFolderName, two;
  var init_migrate = __esm({
-   "src/cli/commands/migrate.ts"() {
+   "src/cli/commands/migrate.js"() {
      "use strict";
 @@ -33452,7 +33470,7 @@ var init_migrate = __esm({
      init_migrationPreparator();
@@ -1479,7 +1479,7 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
 -var import_fs11, import_hanji14, import_path7, import_pluralize, introspectPostgres, introspectGel, introspectMysql, introspectSingleStore, introspectSqlite, introspectLibSQL, withCasing4, relationsToTypeScript;
 +var import_fs11, import_hanji14, import_path8, import_pluralize, introspectPostgres, introspectGel, introspectMysql, introspectSingleStore, introspectSqlite, introspectLibSQL, withCasing4, relationsToTypeScript;
  var init_introspect = __esm({
-   "src/cli/commands/introspect.ts"() {
+   "src/cli/commands/introspect.js"() {
      "use strict";
 @@ -85675,7 +85693,7 @@ var init_introspect = __esm({
      import_fs11 = require("fs");
@@ -1494,11 +1494,11 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
        const ts = schemaToTypeScript4(schema6, casing2);
        const relationsTs = relationsToTypeScript(schema6, casing2);
        const { internal, ...schemaWithoutInternals } = schema6;
--      const schemaFile = (0, import_path7.join)(out, "schema.ts");
-+      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+-      const schemaFile = (0, import_path7.join)(out, "schema.js");
++      const schemaFile = (0, import_path8.join)(out, "schema.js");
        (0, import_fs11.writeFileSync)(schemaFile, ts.file);
--      const relationsFile = (0, import_path7.join)(out, "relations.ts");
-+      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+-      const relationsFile = (0, import_path7.join)(out, "relations.js");
++      const relationsFile = (0, import_path8.join)(out, "relations.js");
        (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
        console.log();
        const { snapshots, journal } = prepareOutFolder(out, "postgresql");
@@ -1506,11 +1506,11 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
        const ts = schemaToTypeScript2(schema6, casing2);
        const relationsTs = relationsToTypeScript(schema6, casing2);
        const { internal, ...schemaWithoutInternals } = schema6;
--      const schemaFile = (0, import_path7.join)(out, "schema.ts");
-+      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+-      const schemaFile = (0, import_path7.join)(out, "schema.js");
++      const schemaFile = (0, import_path8.join)(out, "schema.js");
        (0, import_fs11.writeFileSync)(schemaFile, ts.file);
--      const relationsFile = (0, import_path7.join)(out, "relations.ts");
-+      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+-      const relationsFile = (0, import_path7.join)(out, "relations.js");
++      const relationsFile = (0, import_path8.join)(out, "relations.js");
        (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
        console.log();
        (0, import_hanji14.render)(
@@ -1518,11 +1518,11 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
        const ts = schemaToTypeScript3(schema6, casing2);
        const relationsTs = relationsToTypeScript(schema6, casing2);
        const { internal, ...schemaWithoutInternals } = schema6;
--      const schemaFile = (0, import_path7.join)(out, "schema.ts");
-+      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+-      const schemaFile = (0, import_path7.join)(out, "schema.js");
++      const schemaFile = (0, import_path8.join)(out, "schema.js");
        (0, import_fs11.writeFileSync)(schemaFile, ts.file);
--      const relationsFile = (0, import_path7.join)(out, "relations.ts");
-+      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+-      const relationsFile = (0, import_path7.join)(out, "relations.js");
++      const relationsFile = (0, import_path8.join)(out, "relations.js");
        (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
        console.log();
        const { snapshots, journal } = prepareOutFolder(out, "mysql");
@@ -1530,8 +1530,8 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
        const schema6 = { id: originUUID, prevId: "", ...res };
        const ts = schemaToTypeScript5(schema6, casing2);
        const { internal, ...schemaWithoutInternals } = schema6;
--      const schemaFile = (0, import_path7.join)(out, "schema.ts");
-+      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+-      const schemaFile = (0, import_path7.join)(out, "schema.js");
++      const schemaFile = (0, import_path8.join)(out, "schema.js");
        (0, import_fs11.writeFileSync)(schemaFile, ts.file);
        console.log();
        const { snapshots, journal } = prepareOutFolder(out, "postgresql");
@@ -1539,11 +1539,11 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
        const schema6 = { id: originUUID, prevId: "", ...res };
        const ts = schemaToTypeScript(schema6, casing2);
        const relationsTs = relationsToTypeScript(schema6, casing2);
--      const schemaFile = (0, import_path7.join)(out, "schema.ts");
-+      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+-      const schemaFile = (0, import_path7.join)(out, "schema.js");
++      const schemaFile = (0, import_path8.join)(out, "schema.js");
        (0, import_fs11.writeFileSync)(schemaFile, ts.file);
--      const relationsFile = (0, import_path7.join)(out, "relations.ts");
-+      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+-      const relationsFile = (0, import_path7.join)(out, "relations.js");
++      const relationsFile = (0, import_path8.join)(out, "relations.js");
        (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
        console.log();
        const { snapshots, journal } = prepareOutFolder(out, "sqlite");
@@ -1551,11 +1551,11 @@ index 959405ffb553981776dac860ff9a5c2853ceef70..a3b9b475867f6207ec019f2f82b91a24
        const schema6 = { id: originUUID, prevId: "", ...res };
        const ts = schemaToTypeScript(schema6, casing2);
        const relationsTs = relationsToTypeScript(schema6, casing2);
--      const schemaFile = (0, import_path7.join)(out, "schema.ts");
-+      const schemaFile = (0, import_path8.join)(out, "schema.ts");
+-      const schemaFile = (0, import_path7.join)(out, "schema.js");
++      const schemaFile = (0, import_path8.join)(out, "schema.js");
        (0, import_fs11.writeFileSync)(schemaFile, ts.file);
--      const relationsFile = (0, import_path7.join)(out, "relations.ts");
-+      const relationsFile = (0, import_path8.join)(out, "relations.ts");
+-      const relationsFile = (0, import_path7.join)(out, "relations.js");
++      const relationsFile = (0, import_path8.join)(out, "relations.js");
        (0, import_fs11.writeFileSync)(relationsFile, relationsTs.file);
        console.log();
        const { snapshots, journal } = prepareOutFolder(out, "sqlite");

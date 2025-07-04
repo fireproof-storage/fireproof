@@ -4,8 +4,9 @@ import { createClient } from "@libsql/client";
 import { $ } from "zx";
 import type { TestProject } from "vitest/node";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
-import { mockJWK, portRandom, setupBackendNode } from "@fireproof/cloud-backend-base";
+import { mockJWK, portRandom } from "@fireproof/cloud-backend-base";
 import { setTestEnv } from "@fireproof/cloud-base";
+import { setupBackendNode } from "./setup-backend-node.js";
 
 export async function setup(project: TestProject) {
   const sthis = ensureSuperThis();

@@ -1,12 +1,13 @@
+import React from "react";
 // import { rawConnect } from "@fireproof/cloud";
 import { useContext } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core/react";
-import { AppContext } from "../../../../app-context.tsx";
-import { Button } from "../../../../components/Button.tsx";
-import { DynamicTable } from "../../../../components/DynamicTable.tsx";
-import { headersForDocs } from "../../../../components/dynamicTableHelpers.ts";
-// import { DEFAULT_ENDPOINT } from "../../../../helpers.ts";
+import { useFireproof } from "@fireproof/core-react";
+import { AppContext } from "../../../../app-context.jsx";
+import { Button } from "../../../../components/Button.jsx";
+import { DynamicTable } from "../../../../components/DynamicTable.jsx";
+import { headersForDocs } from "../../../../components/dynamicTableHelpers.js";
+// import { DEFAULT_ENDPOINT } from "../../../../helpers.js";
 
 interface Document {
   _id: string;

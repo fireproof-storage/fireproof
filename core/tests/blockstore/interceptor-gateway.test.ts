@@ -1,7 +1,12 @@
 import { BuildURI, Result, URI } from "@adviser/cement";
-import { bs, rt, fireproof, SuperThis } from "@fireproof/core";
+import { fireproof, SuperThis } from "@fireproof/core";
+import * as bs from "@fireproof/core-types/blockstore";
+import { describe, expect, it, vitest } from "vitest";
+import { PassThroughGateway, URIInterceptor } from "@fireproof/core-gateways-base";
+import { MemoryGateway } from "@fireproof/core-gateways-memory";
+import { registerStoreProtocol } from "@fireproof/core-blockstore";
 
-class TestInterceptor extends bs.PassThroughGateway {
+class TestInterceptor extends PassThroughGateway {
   readonly fn = vitest.fn();
 
   async buildUrl(ctx: bs.SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<bs.SerdeGatewayBuildUrlReturn>> {
@@ -53,10 +58,10 @@ class TestInterceptor extends bs.PassThroughGateway {
 
 export class URITrackGateway implements bs.Gateway {
   readonly uris: Set<string>;
-  readonly memgw: rt.gw.memory.MemoryGateway;
+  readonly memgw: MemoryGateway;
 
   constructor(sthis: SuperThis, memorys: Map<string, Uint8Array>, uris: Set<string>) {
-    this.memgw = new rt.gw.memory.MemoryGateway(sthis, memorys);
+    this.memgw = new MemoryGateway(sthis, memorys);
     this.uris = uris;
   }
 
@@ -206,7 +211,7 @@ describe("InterceptorGateway", () => {
   it("use the uri-interceptor", async () => {
     let callCount = 0;
     const gwUris = new Set<string>();
-    const unreg = bs.registerStoreProtocol({
+    const unreg = registerStoreProtocol({
       protocol: "uriTest:",
       isDefault: false,
       defaultURI: () => {
@@ -220,7 +225,7 @@ describe("InterceptorGateway", () => {
       storeUrls: {
         base: "uriTest://inspector-gateway",
       },
-      gatewayInterceptor: bs.URIInterceptor.withMapper(async (uri: URI) =>
+      gatewayInterceptor: URIInterceptor.withMapper(async (uri: URI) =>
         uri
           .build()
           .setParam("itis", "" + ++callCount)

@@ -39,6 +39,7 @@
     "@adviser/cement": "from-package-json",
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-gateways-cloud": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types": "workspace:0.0.0",

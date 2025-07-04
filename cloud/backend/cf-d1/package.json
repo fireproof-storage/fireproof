@@ -37,10 +37,12 @@
   },
   "dependencies": {
     "@adviser/cement": "from-package-json",
-    "@fireproof/cloud-base": "workspace:0.0.0",
+    "@cloudflare/workers-types": "^4.20250703.0",
     "@fireproof/cloud-backend-base": "workspace:0.0.0",
-    "@fireproof/core-types": "workspace:0.0.0",
+    "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-types": "workspace:0.0.0",
     "multiformats": "^13.3.7"
   }
 }

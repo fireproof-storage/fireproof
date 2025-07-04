@@ -1,10 +1,11 @@
+import React from "react";
 import { useContext } from "react";
 import type { FieldValues } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { redirect, useNavigate } from "react-router-dom";
-import type { AppContextType } from "../../../app-context.tsx";
-import { AppContext } from "../../../app-context.tsx";
-import { Button } from "../../../components/Button.tsx";
+import type { AppContextType } from "../../../app-context.jsx";
+import { AppContext } from "../../../app-context.jsx";
+import { Button } from "../../../components/Button.jsx";
 
 export function newCloudAction(ctx: AppContextType) {
   return async ({ request }: { request: Request }) => {

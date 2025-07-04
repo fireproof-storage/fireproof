@@ -1,8 +1,9 @@
+import React from "react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core/react";
-import { Button } from "../../../../../components/Button.tsx";
-import { EditableCodeHighlight } from "../../../../../components/CodeHighlight.tsx";
+import { useFireproof } from "@fireproof/core-react";
+import { Button } from "../../../../../components/Button.jsx";
+import { EditableCodeHighlight } from "../../../../../components/CodeHighlight.jsx";
 
 export function NewLedgerDocument() {
   const { tenantId, ledgerId } = useParams();

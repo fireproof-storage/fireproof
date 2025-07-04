@@ -15,13 +15,13 @@ function getLocalD1DB() {
     console.log("getLocalD1DB:", url);
     return url;
   } catch (err) {
-    console.log(`Error  ${err.message}`);
+    console.log(`Error  ${(err as Error).message}`);
   }
 }
 
 export default defineConfig({
   dialect: "sqlite",
-  schema: "./backend/db-api-schema.ts",
+  schema: "./backend/db-api-schema.js",
   out: "./dist",
   dbCredentials: {
     url: getLocalD1DB(),

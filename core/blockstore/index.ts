@@ -2,7 +2,7 @@
 export * from "./store-factory.js";
 
 export * from "./store-factory.js";
-export * from "./interceptor-gateway.js";
+// export * from "./interceptor-gateway.js";
 
 export { createDbMetaEvent } from "./store.js";
 
@@ -12,7 +12,7 @@ export * from "./register-store-protocol.js";
 export * from "./attachable-store.js";
 
 
-export * from "./uri-interceptor.js";
+// export * from "./uri-interceptor.js";
 
 
 export {

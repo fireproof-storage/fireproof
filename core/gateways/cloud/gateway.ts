@@ -11,7 +11,7 @@ import {
   BuildURI,
   Future,
 } from "@adviser/cement";
-import type { SuperThis } from "@fireproof/core-types";
+import { NotFoundError, type SuperThis } from "@fireproof/core-types";
 import {
   buildErrorMsg,
   buildReqOpen,
@@ -27,22 +27,13 @@ import {
   AuthType,
   buildReqClose,
   ReqGwCtx,
-} from "@fireproof/core-types/protocols/cloud";
-import { Msger, VirtualConnected, authTypeFromUri } from "../../../protocols/cloud/msger.js";
-import {
   MsgIsResDelData,
   MsgIsResGetData,
   MsgIsResPutData,
   ResDelData,
   ResGetData,
   ResPutData,
-} from "../../../protocols/cloud/msg-types-data.js";
-import { ensureLogger, hashObject, NotFoundError } from "../../../utils.js";
-import { SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult } from "../../../blockstore/serde-gateway.js";
-import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeWAL } from "../../../blockstore/fp-envelope.js";
-import { dbMetaEvent2Serialized, decode2DbMetaEvents, fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
-import {
-  BindGetMeta,
+    BindGetMeta,
   buildBindGetMeta,
   buildReqDelMeta,
   buildReqPutMeta,
@@ -53,8 +44,12 @@ import {
   ReqPutMeta,
   ResDelMeta,
   ResPutMeta,
-} from "../../../protocols/cloud/msg-types-meta.js";
-import { encodeAsV2SerializedMetaKey, V2SerializedMetaKeyExtractKey } from "../../meta-key-hack.js";
+} from "@fireproof/core-types/protocols/cloud"
+ import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeWAL, SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult  } from "@fireproof/core-types/blockstore";
+import { ensureLogger, hashObject, } from "@fireproof/core-runtime";
+import { dbMetaEvent2Serialized, decode2DbMetaEvents, encodeAsV2SerializedMetaKey, fpDeserialize, fpSerialize, V2SerializedMetaKeyExtractKey } from "@fireproof/core-gateways-base"
+import { authTypeFromUri, Msger, VirtualConnected } from "@fireproof/core-protocols-cloud";
+
 
 const VERSION = "v0.1-fp-cloud";
 
@@ -65,7 +60,7 @@ export interface VConnItems {
 
 type ConnectedSerdeGatewayCtx = SerdeGatewayCtx & { conn: VConnItems };
 
-export interface StoreTypeGateway {
+interface StoreTypeGateway {
   get: <S>(ctx: ConnectedSerdeGatewayCtx, url: URI) => Promise<SerdeGetResult<S>>;
   put: <T>(ctx: ConnectedSerdeGatewayCtx, url: URI, body: FPEnvelope<T>) => Promise<VoidResult>;
   delete: (ctx: ConnectedSerdeGatewayCtx, url: URI) => Promise<VoidResult>;
@@ -519,17 +514,17 @@ interface Subscription {
 
 const subscriptions = new Map<string, Subscription[]>();
 // const doServerSubscribe = new KeyedResolvOnce();
-export class FireproofCloudGateway implements SerdeGateway {
+export class CloudGateway implements SerdeGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   readonly #connectionURIs = new KeyedResolvOnce<ConnectionItem>();
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
-    this.logger = ensureLogger(sthis, "FireproofCloudGateway", {
+    this.logger = ensureLogger(sthis, "CloudGateway", {
       this: true,
     });
-    // console.log("FireproofCloudGateway", this.sthis.nextId().str);
+    // console.log("CloudGateway", this.sthis.nextId().str);
   }
 
   async buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
@@ -685,3 +680,7 @@ export class FireproofCloudGateway implements SerdeGateway {
     return Result.Err(new Error("Not implemented"));
   }
 }
+// function authTypeFromUri(logger: Logger, uri: URI) {
+//   throw new Error("Function not implemented.");
+// }
+

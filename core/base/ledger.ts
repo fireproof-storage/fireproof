@@ -20,12 +20,13 @@ import {
   PARAM,
 } from "@fireproof/core-types";
 import { StoreURIRuntime, StoreUrlsOpts } from "@fireproof/core-types/blockstore";
-import { defaultKeyBagOpts, ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject, files } from "@fireproof/core-runtime";
+import { ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject, files } from "@fireproof/core-runtime";
 
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
 import { toSortedArray } from "@adviser/cement/utils";
 import { getDefaultURI } from "@fireproof/core-blockstore";
+import { defaultKeyBagOpts } from "@fireproof/core-keybag";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 

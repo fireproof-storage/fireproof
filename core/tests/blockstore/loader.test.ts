@@ -1,22 +1,25 @@
 import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
-import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
+import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
+import { EncryptedBlockstore, Loader, CompactionFetcher, CarTransactionImpl, anyBlock2FPBlock, parseCarFile } from "@fireproof/core-blockstore";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { FPBlock, TransactionMeta, isCarBlockItemReady, CarGroup, isCarBlockItemStale } from "@fireproof/core-types/blockstore";
+import { AnyLink } from "prolly-trees/base";
+import { describe, afterEach, beforeEach, it, expect, assert } from "vitest";
 
-const { isCarBlockItemReady, isCarBlockItemStale, anyBlock2FPBlock } = bs;
-type FPBlock = bs.FPBlock;
 
-class MyMemoryBlockStore extends bs.EncryptedBlockstore {
+class MyMemoryBlockStore extends EncryptedBlockstore {
   readonly memblock = new Map<string, FPBlock>();
-  loader: bs.Loader;
+  loader: Loader;
   constructor(sthis: SuperThis) {
     const ebOpts = simpleBlockOpts(sthis, "MyMemoryBlockStore"); //, "MyMemoryBlockStore");
     // const ebOpts = {
     //   name: "MyMemoryBlockStore",
-    // } as bs.BlockstoreOpts;
+    // } as BlockstoreOpts;
     super(sthis, ebOpts);
-    this.loader = new bs.Loader(sthis, ebOpts);
+    this.loader = new Loader(sthis, ebOpts);
   }
   ready(): Promise<void> {
     return Promise.resolve();
@@ -37,20 +40,20 @@ class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   // }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getFile(car: bs.AnyLink, cid: bs.AnyLink, isPublic?: boolean): Promise<Uint8Array> {
+  getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
   }
   compact(): Promise<void> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  defaultCompact(blocks: bs.CompactionFetcher): Promise<bs.TransactionMeta> {
+  defaultCompact(blocks: CompactionFetcher): Promise<TransactionMeta> {
     throw new Error("Method not implemented.");
   }
 }
 
 describe("basic Loader simple", function () {
-  let loader: bs.Loader;
+  let loader: Loader;
   let block: FPBlock;
   let t: CarTransaction;
   const sthis = ensureSuperThis();
@@ -64,8 +67,8 @@ describe("basic Loader simple", function () {
     const testDbName = "test-loader-commit";
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
-    t = new bs.CarTransactionImpl(mockM as bs.EncryptedBlockstore);
-    loader = new bs.Loader(sthis, {
+    t = new CarTransactionImpl(mockM as EncryptedBlockstore);
+    loader = new Loader(sthis, {
       ...simpleBlockOpts(sthis, testDbName),
       public: true,
     });
@@ -89,7 +92,7 @@ describe("basic Loader simple", function () {
     const reader = await loader.loadCar(carGroup[0], loader.attachedStores.local());
     assert(isCarBlockItemReady(reader));
     expect(reader).toBeTruthy();
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();
@@ -98,14 +101,14 @@ describe("basic Loader simple", function () {
 });
 
 describe("basic Loader with two commits", function () {
-  let loader: bs.Loader;
+  let loader: Loader;
   let block: FPBlock;
   let block2: FPBlock;
   let block3: FPBlock;
   let block4: FPBlock;
   let t: CarTransaction;
-  let carCid: bs.CarGroup;
-  let carCid0: bs.CarGroup;
+  let carCid: CarGroup;
+  let carCid0: CarGroup;
 
   const sthis = ensureSuperThis();
 
@@ -117,8 +120,8 @@ describe("basic Loader with two commits", function () {
   beforeEach(async () => {
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
-    t = new bs.CarTransactionImpl(mockM);
-    loader = new bs.Loader(sthis, {
+    t = new CarTransactionImpl(mockM);
+    loader = new Loader(sthis, {
       ...simpleBlockOpts(sthis, "test-loader-two-commit"),
       public: true,
     });
@@ -174,7 +177,7 @@ describe("basic Loader with two commits", function () {
     const reader = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(0);
     expect(parsed.cars.length).toBe(1);
@@ -189,7 +192,7 @@ describe("basic Loader with two commits", function () {
     const reader = await loader.loadCar(compactCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(2);
     expect(parsed.cars.length).toBe(0);
@@ -221,7 +224,7 @@ describe("basic Loader with two commits", function () {
 
 describe("basic Loader with index commits", function () {
   let block: FPBlock;
-  let ib: bs.EncryptedBlockstore;
+  let ib: EncryptedBlockstore;
   let indexerResult: IndexTransactionMeta;
   let cid: CID;
   // let indexMap: Map<string, CID>;
@@ -236,7 +239,7 @@ describe("basic Loader with index commits", function () {
     const name = "test-loader-index" + Math.random();
     await sthis.start();
     // t = new CarTransaction()
-    ib = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
+    ib = new EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
     await ib.ready();
     block = await anyBlock2FPBlock(
       await rt.mf.block.encode({
@@ -284,7 +287,7 @@ describe("basic Loader with index commits", function () {
     const reader = await ib.loader.loadCar(carCid![0], ib.loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
+    const parsed = await parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();

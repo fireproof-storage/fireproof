@@ -1,3 +1,4 @@
+import React from "react";
 import { useContext } from "react";
 import {
   Navigate,
@@ -7,38 +8,38 @@ import {
   createMemoryRouter,
   createRoutesFromElements,
 } from "react-router-dom";
-import { AppContext } from "../app-context.tsx";
-import { WithoutSidebar } from "../layouts/without-sidebar.tsx";
-import { Cloud } from "../pages/cloud.tsx";
-import CloudIndex from "../pages/cloud/index.tsx";
-import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
-import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
-import { CloudTenantLedgers, CloudTenantLedgersIndex } from "../pages/cloud/tenants/ledgers.tsx";
-import { LedgerDocuments } from "../pages/cloud/tenants/ledgers/documents.tsx";
-import { NewLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/new.tsx";
-import { ShowLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/show.tsx";
-import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.tsx";
-import { LedgerSharing } from "../pages/cloud/tenants/ledgers/sharing.tsx";
-import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
-import { CloudTenantMembers } from "../pages/cloud/tenants/members.tsx";
-import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.tsx";
-// import { CloudTenantOverview } from "../pages/cloud/tenants/overview.tsx";
-import { CloudTenantShow } from "../pages/cloud/tenants/show.tsx";
-import { Databases, databaseLoader } from "../pages/databases.tsx";
-import { DatabasesConnect, connectDatabasesLoader } from "../pages/databases/connect.tsx";
-import { DatabasesHistory } from "../pages/databases/history.tsx";
-import { DatabasesIndex } from "../pages/databases/index.tsx";
-import { DatabasesNew, newDatabaseAction } from "../pages/databases/new.tsx";
-import { DatabasesQuery } from "../pages/databases/query.tsx";
-import { DatabasesShow } from "../pages/databases/show.tsx";
-import { DocsShow } from "../pages/docs/show.tsx";
-import { Index, indexLoader } from "../pages/index.tsx";
-import { Login, loginLoader } from "../pages/login.tsx";
-import { SignUpPage, signupLoader } from "../pages/signup.tsx";
-import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.tsx";
-import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.tsx";
-import { LedgerAdmin } from "../pages/cloud/tenants/ledgers/admin.tsx";
-import { LedgerDelete } from "../pages/cloud/tenants/ledgers/delete.tsx";
+import { AppContext } from "../app-context.jsx";
+import { WithoutSidebar } from "../layouts/without-sidebar.jsx";
+import { Cloud } from "../pages/cloud.jsx";
+import CloudIndex from "../pages/cloud/index.jsx";
+import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.jsx";
+import { CloudTenantDelete } from "../pages/cloud/tenants/delete.jsx";
+import { CloudTenantLedgers, CloudTenantLedgersIndex } from "../pages/cloud/tenants/ledgers.jsx";
+import { LedgerDocuments } from "../pages/cloud/tenants/ledgers/documents.jsx";
+import { NewLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/new.jsx";
+import { ShowLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/show.jsx";
+import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.jsx";
+import { LedgerSharing } from "../pages/cloud/tenants/ledgers/sharing.jsx";
+import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.jsx";
+import { CloudTenantMembers } from "../pages/cloud/tenants/members.jsx";
+import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.jsx";
+// import { CloudTenantOverview } from "../pages/cloud/tenants/overview.jsx";
+import { CloudTenantShow } from "../pages/cloud/tenants/show.jsx";
+import { Databases, databaseLoader } from "../pages/databases.jsx";
+import { DatabasesConnect, connectDatabasesLoader } from "../pages/databases/connect.jsx";
+import { DatabasesHistory } from "../pages/databases/history.jsx";
+import { DatabasesIndex } from "../pages/databases/index.jsx";
+import { DatabasesNew, newDatabaseAction } from "../pages/databases/new.jsx";
+import { DatabasesQuery } from "../pages/databases/query.jsx";
+import { DatabasesShow } from "../pages/databases/show.jsx";
+import { DocsShow } from "../pages/docs/show.jsx";
+import { Index, indexLoader } from "../pages/index.jsx";
+import { Login, loginLoader } from "../pages/login.jsx";
+import { SignUpPage, signupLoader } from "../pages/signup.jsx";
+import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.jsx";
+import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.jsx";
+import { LedgerAdmin } from "../pages/cloud/tenants/ledgers/admin.jsx";
+import { LedgerDelete } from "../pages/cloud/tenants/ledgers/delete.jsx";
 
 export function App() {
   const ctx = useContext(AppContext);

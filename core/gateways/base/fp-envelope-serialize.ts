@@ -1,5 +1,5 @@
 import { exception2Result, Result, URI } from "@adviser/cement";
-import type { CarClockLink, DbMeta, DbMetaBinary, DbMetaEvent, WALState } from "../../blockstore/index.js";
+import type { CarClockLink, DbMeta, DbMetaBinary, DbMetaEvent, FPDecoder, FPEncoder, LinkOrCid, SerializedMeta, SerializedWAL, WALState } from "@fireproof/core-types/blockstore";
 import {
   FPEnvelope,
   FPEnvelopeCar,
@@ -8,15 +8,15 @@ import {
   FPEnvelopeType,
   FPEnvelopeTypes,
   FPEnvelopeWAL,
-} from "../../blockstore/fp-envelope.js";
-import { PARAM, PromiseToUInt8, SuperThis } from "../../types.js";
+} from "@fireproof/core-types/blockstore";
+import { PARAM, PromiseToUInt8, SuperThis } from "@fireproof/core-types";
 import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";
 import { fromJSON } from "multiformats/link";
 import { format, parse } from "@ipld/dag-json";
 import { EventView } from "@web3-storage/pail/clock/api";
-import { coercePromiseIntoUint8 } from "../../utils.js";
+import { coercePromiseIntoUint8 } from "@fireproof/core-runtime";
 
 
 export async function dbMetaEvent2Serialized(
@@ -117,10 +117,7 @@ export async function decode2DbMetaEvents(
   );
 }
 
-
-
-
-function toCid(sthis: SuperThis, link: linkOrCid): CID {
+function toCid(sthis: SuperThis, link: LinkOrCid): CID {
   if (typeof link === "string") {
     return CID.parse(link);
   }

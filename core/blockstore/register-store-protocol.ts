@@ -1,6 +1,10 @@
 import { BuildURI, ResolveOnce, runtimeFn, URI } from "@adviser/cement";
 import { SuperThis, PARAM } from "@fireproof/core-types";
 import { SerdeGateway, Gateway } from "@fireproof/core-types/blockstore";
+import { MemoryGateway } from "@fireproof/core-gateways-memory";
+import { FileGateway, FILESTORE_VERSION, sysFileSystemFactory } from "@fireproof/core-gateways-file";
+import { DefSerdeGateway, INDEXEDDB_VERSION } from "@fireproof/core-gateways-base";
+import { CloudGateway } from "@fireproof/core-gateways-cloud";
 
 export interface SerdeGatewayFactoryItem {
   readonly protocol: string;
@@ -155,7 +159,7 @@ if (runtimeFn().isBrowser) {
         .URI();
     },
     gateway: async () => {
-      const { GatewayImpl } = await import("@fireproof/core/indexeddb");
+      const { GatewayImpl } = await import("@fireproof/core-gateways-indexeddb");
       return new GatewayImpl();
     },
   });
@@ -183,6 +187,6 @@ registerStoreProtocol({
     return URI.from("fpcloud://fireproof.cloud/");
   },
   serdegateway: async (sthis: SuperThis) => {
-    return new FireproofCloudGateway(sthis);
+    return new CloudGateway(sthis);
   },
 });

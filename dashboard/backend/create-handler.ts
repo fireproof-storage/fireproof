@@ -1,10 +1,12 @@
-// import { auth } from "./better-auth.ts";
+// import { auth } from "./better-auth.js";
 import { LoggerImpl, Result, exception2Result } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
-import { SuperThis, SuperThisOpts, ensureLogger, ensureSuperThis, ps } from "@fireproof/core";
+import { SuperThis, SuperThisOpts } from "@fireproof/core";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.ts";
-import type { Env } from "./cf-serve.ts";
+import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
+import type { Env } from "./cf-serve.js";
+import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
+import { ensureSuperThis, ensureLogger } from "@fireproof/core-runtime";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -38,7 +40,7 @@ class ClerkApiToken implements FPApiToken {
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
   }
-  async verify(token: string): Promise<Result<ps.dashboard.VerifiedAuth>> {
+  async verify(token: string): Promise<Result<VerifiedAuth>> {
     const jwtKey = this.sthis.env.get("CLERK_PUB_JWT_KEY");
     if (!jwtKey) {
       return Result.Err("Invalid CLERK_PUB_JWT_KEY");

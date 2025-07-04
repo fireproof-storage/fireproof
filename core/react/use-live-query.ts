@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DocFragment, DocTypes, DocWithId, IndexKeyType, IndexRow, MapFn, Database } from "@fireproof/core-types";
+import type { DocFragment, DocTypes, DocWithId, IndexKeyType, FPIndexRow, MapFn, Database } from "@fireproof/core-types";
 import type { LiveQueryResult } from "./types.js";
 
 /**
@@ -9,7 +9,7 @@ export function createUseLiveQuery(database: Database) {
   return function useLiveQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
     mapFn: MapFn<T> | string,
     query = {},
-    initialRows: IndexRow<K, T, R>[] = [],
+    initialRows: FPIndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
     const [result, setResult] = useState<LiveQueryResult<T, K, R>>({
       docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),

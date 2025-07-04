@@ -4,22 +4,24 @@ import { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
 import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 import { decodeJwt } from "jose/jwt/decode";
-import { SuperThis, Database } from "@fireproof/core-types";
+import { SuperThis, Database, KeyBagProvider } from "@fireproof/core-types";
 import { ensureSuperThis, hashString } from "@fireproof/core-runtime";
+import { FPCloudClaim, ToCloudAttachable, ToCloudOptionalOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types/protocols/cloud";
+import { isV1StorageKeyItem, isKeysItem } from "../keybag/key-bag.js";
 
 export const WebCtx = "webCtx";
 
-export type ToCloudParam = Omit<rt.gw.cloud.ToCloudOptionalOpts, "strategy"> &
-  Partial<WebToCloudCtx> & { readonly strategy?: rt.gw.cloud.TokenStrategie; readonly context?: AppContext };
+export type ToCloudParam = Omit<ToCloudOptionalOpts, "strategy"> &
+  Partial<WebToCloudCtx> & { readonly strategy?: TokenStrategie; readonly context?: AppContext };
 
 class WebCtxImpl implements WebToCloudCtx {
-  readonly onActions = new Set<(token?: rt.gw.cloud.TokenAndClaims) => void>();
+  readonly onActions = new Set<(token?: TokenAndClaims) => void>();
   readonly dashboardURI: string;
   readonly tokenApiURI: string;
   // readonly uiURI: string;
   readonly tokenParam: string;
   // if not provided set in ready
-  keyBag?: rt.KeyBagProvider;
+  keyBag?: KeyBagProvider;
   readonly sthis: SuperThis;
 
   dbId!: string;
@@ -38,13 +40,13 @@ class WebCtxImpl implements WebToCloudCtx {
     this.tokenParam = opts.tokenParam ?? "fpToken";
 
     this.sthis = opts.sthis ?? ensureSuperThis();
-    this.keyBag = opts.keyBag; // ?? rt.kb.getKeyBag(ensureSuperThis());
+    this.keyBag = opts.keyBag; // ?? kb.getKeyBag(ensureSuperThis());
 
     // if (opts.keyBag) {
     //   this.keyBag = opts.keyBag;
     // } else {
     //   const sthis = opts.sthis ?? ensureSuperThis();
-    //   this.keyBag = rt.kb.getKeyBag(sthis)
+    //   this.keyBag = kb.getKeyBag(sthis)
     // }
     this.opts = opts;
   }
@@ -54,13 +56,13 @@ class WebCtxImpl implements WebToCloudCtx {
     this.keyBag = this.keyBag ?? (await db.ledger.opts.keyBag.getBagProvider());
   }
 
-  async onAction(token?: rt.gw.cloud.TokenAndClaims) {
+  async onAction(token?: TokenAndClaims) {
     for (const action of this.onActions.values()) {
       action(token);
     }
   }
 
-  onTokenChange(on: (token?: rt.gw.cloud.TokenAndClaims) => void) {
+  onTokenChange(on: (token?: TokenAndClaims) => void) {
     if (this.opts.onTokenChange) {
       return this.opts.onTokenChange(on);
     }
@@ -74,7 +76,7 @@ class WebCtxImpl implements WebToCloudCtx {
     };
   }
 
-  readonly _tokenAndClaims = new ResolveOnce<rt.gw.cloud.TokenAndClaims>();
+  readonly _tokenAndClaims = new ResolveOnce<TokenAndClaims>();
 
   async token() {
     if (this.opts.token) {
@@ -86,14 +88,14 @@ class WebCtxImpl implements WebToCloudCtx {
         return;
       }
       let token: string;
-      if (rt.isV1StorageKeyItem(ret)) {
+      if (isV1StorageKeyItem(ret)) {
         token = ret.key;
-      } else if (rt.isKeysItem(ret)) {
+      } else if (isKeysItem(ret)) {
         token = ret.keys[this.tokenParam].key;
       } else {
         return undefined;
       }
-      const claims = decodeJwt(token) as ps.cloud.FPCloudClaim;
+      const claims = decodeJwt(token) as FPCloudClaim;
       return {
         token,
         claims,
@@ -114,7 +116,7 @@ class WebCtxImpl implements WebToCloudCtx {
     this.onAction();
   }
 
-  async setToken(token: rt.gw.cloud.TokenAndClaims) {
+  async setToken(token: TokenAndClaims) {
     if (this.opts.setToken) {
       return this.opts.setToken(token);
     }
@@ -138,7 +140,7 @@ class WebCtxImpl implements WebToCloudCtx {
   }
 }
 
-// export type WebToCloudOpts = WebToCloudCtx & { readonly strategy?: rt.gw.cloud.TokenStrategie }
+// export type WebToCloudOpts = WebToCloudCtx & { readonly strategy?: TokenStrategie }
 
 export function defaultWebToCloudOpts(opts: ToCloudParam): WebToCloudCtx {
   return new WebCtxImpl(opts);
@@ -160,7 +162,7 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
           // const id = database.sthis.nextId().str;
           setAttachState((prev) => ({ ...prev, state: "attaching" }));
 
-          async function prepareWebctx(attachable: rt.gw.cloud.ToCloudAttachable) {
+          async function prepareWebctx(attachable: ToCloudAttachable) {
             const webCtx = attachable.opts.context.get<WebToCloudCtx>(WebCtx);
             if (!webCtx) {
               throw database.logger.Error().Msg("WebCtx not found").AsError();

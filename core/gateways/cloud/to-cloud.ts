@@ -1,58 +1,11 @@
 import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
+import { Ledger } from "@fireproof/core-types";
+import { FPCloudClaim, FPCloudUri, ToCloudAttachable, ToCloudBase, ToCloudName, ToCloudOptionalOpts, ToCloudOpts, ToCloudRequiredOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types/protocols/cloud";
+import { ensureLogger, hashObject } from "@fireproof/core-runtime";
 import { decodeJwt } from "jose/jwt/decode";
-import { FPCloudClaim } from "../../../protocols/cloud/msg-types.js";
-import { Attachable, Ledger, SuperThis } from "../../../types.js";
-import { ensureLogger, hashObject } from "../../../utils.js";
-import { URIInterceptor } from "../../../blockstore/uri-interceptor.js";
+import { URIInterceptor } from "@fireproof/core-gateways-base";
 
-export interface TokenStrategie {
-  open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): void;
-  tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
-  waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
-  stop(): void;
-}
 
-export const ToCloudName = "toCloud";
-
-export interface FPCloudRef {
-  readonly base: CoerceURI;
-  readonly car: CoerceURI;
-  readonly file: CoerceURI;
-  readonly meta: CoerceURI;
-}
-
-export interface TokenAndClaimsEvents {
-  changed(token?: TokenAndClaims): Promise<void>;
-}
-
-interface ToCloudBase {
-  readonly name: string; // default "toCloud"
-  readonly intervalSec: number; // default 1 second
-  readonly tokenWaitTimeSec: number; // default 90 seconds
-  readonly refreshTokenPresetSec: number; // default 120 sec this is the time before the token expires
-  readonly context: AppContext;
-  readonly events: TokenAndClaimsEvents;
-  readonly tenant?: string; // default undefined
-  readonly ledger?: string; // default undefined
-}
-
-export interface ToCloudRequiredOpts {
-  readonly urls: Partial<FPCloudRef>;
-  readonly strategy: TokenStrategie;
-  // readonly events: TokenAndClaimsEvents;
-  // readonly context: AppContext;
-  // readonly context: AppContext;
-}
-
-export type ToCloudOpts = ToCloudRequiredOpts & ToCloudBase;
-
-export type ToCloudOptionalOpts = Partial<ToCloudBase> & Partial<ToCloudRequiredOpts>;
-
-export interface FPCloudUri {
-  readonly car: URI;
-  readonly file: URI;
-  readonly meta: URI;
-}
 
 function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
   const buri = BuildURI.from(uri);
@@ -90,19 +43,7 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
   return defOpts;
 }
 
-export interface ToCloudAttachable extends Attachable {
-  token?: string;
-  readonly opts: ToCloudOpts;
-}
 
-export interface TokenAndClaims {
-  readonly token: string;
-  readonly claims: FPCloudClaim;
-  //   readonly exp: number;
-  //   readonly tenant?: string;
-  //   readonly ledger?: string;
-  // };
-}
 
 // function toTokenAndClaims(token: string): TokenAndClaims {
 //   const claims = decodeJwt(token);

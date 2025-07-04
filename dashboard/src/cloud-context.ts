@@ -37,8 +37,8 @@ import type {
   AuthType,
   InviteTicket,
   UserTenant,
-} from "../backend/fp-dash-types.ts";
-import { API_URL } from "./helpers.ts";
+} from "@fireproof/core-protocols-dashboard";
+import { API_URL } from "./helpers.js";
 
 interface TypeString {
   type: string;

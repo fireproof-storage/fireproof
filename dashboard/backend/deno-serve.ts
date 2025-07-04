@@ -1,6 +1,6 @@
 // deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env  backend/deno-serve.ts
 import { createClient } from "@libsql/client/node";
-import { createHandler } from "./create-handler.ts";
+import { createHandler } from "./create-handler.js";
 import { drizzle } from "drizzle-orm/libsql";
 
 function getClient() {

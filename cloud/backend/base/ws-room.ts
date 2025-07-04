@@ -1,6 +1,6 @@
 import * as ps from "@fireproof/core-types/protocols/cloud";
 
-import { ExposeCtxItem, WSContextWithId } from "./hono-server.js";
+import { ExposeCtxItem, WSContextWithId } from "./types.js";
 import { ConnItem } from "./msg-dispatch.js";
 
 type QSId = ps.QSId;

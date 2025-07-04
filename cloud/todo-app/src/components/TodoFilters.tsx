@@ -1,3 +1,4 @@
+import React from "react";
 import { FilterType } from "../types.js";
 
 interface TodoFiltersProps {

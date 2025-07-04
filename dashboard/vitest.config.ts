@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     globals: true,
-    globalSetup: "./globalSetup.libsql.ts",
+    globalSetup: "./globalSetup.libsql.js",
   },
 });

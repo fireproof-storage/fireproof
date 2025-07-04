@@ -1,9 +1,10 @@
+import React from "react";
 import { JSX, useContext } from "react";
 import { Outlet } from "react-router-dom";
-import { AppContext } from "../app-context.tsx";
-import { ButtonToggleSidebar } from "../components/ButtonToggleSidebar.tsx";
-import Header from "../components/Header.tsx";
-import { Sidebar } from "../components/Sidebar.tsx";
+import { AppContext } from "../app-context.jsx";
+import { ButtonToggleSidebar } from "../components/ButtonToggleSidebar.jsx";
+import Header from "../components/Header.jsx";
+import { Sidebar } from "../components/Sidebar.jsx";
 
 export function WithSidebar({
   sideBarComponent,
