@@ -1,5 +1,5 @@
 import * as raw from "multiformats/codecs/raw";
-import { DocFileMeta } from "@fireproof/core-types"
+import { DocFileMeta } from "@fireproof/core-types";
 import { AnyLink, AnyBlock } from "@fireproof/core-types/blockstore";
 import { CID } from "multiformats/cid";
 import { sha256 as hasher } from "multiformats/hashes/sha2";

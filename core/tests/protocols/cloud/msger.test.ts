@@ -1,8 +1,30 @@
 import { Result, URI } from "@adviser/cement";
-import { ExchangedGestalt, ActiveStream, OnMsgFn, defaultMsgParams, VirtualConnected, Msger, MsgerParamsWithEnDe } from "@fireproof/core-protocols-cloud";
+import {
+  ExchangedGestalt,
+  ActiveStream,
+  OnMsgFn,
+  defaultMsgParams,
+  VirtualConnected,
+  Msger,
+  MsgerParamsWithEnDe,
+} from "@fireproof/core-protocols-cloud";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { SuperThis, UnReg } from "@fireproof/core-types";
-import { MsgRawConnection, MsgBase, RequestOpts, MsgWithError, defaultGestalt, MsgIsReqGestalt, buildResGestalt, NotReadyErrorMsg, MsgIsReqOpen, buildResOpen, MsgIsReqChat, buildResChat, MsgIsError } from "@fireproof/core-types/protocols/cloud";
+import {
+  MsgRawConnection,
+  MsgBase,
+  RequestOpts,
+  MsgWithError,
+  defaultGestalt,
+  MsgIsReqGestalt,
+  buildResGestalt,
+  NotReadyErrorMsg,
+  MsgIsReqOpen,
+  buildResOpen,
+  MsgIsReqChat,
+  buildResChat,
+  MsgIsError,
+} from "@fireproof/core-types/protocols/cloud";
 import { vi, it, expect, describe, beforeEach, afterEach, assert } from "vitest";
 const sthis = ensureSuperThis();
 
@@ -22,10 +44,7 @@ class TestConnection implements MsgRawConnection {
   }
 
   readonly bindFn = vi.fn();
-  bind<S extends MsgBase, Q extends MsgBase>(
-    req: Q,
-    opts: RequestOpts,
-  ): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     this.bindFn(req, opts);
     return new ReadableStream<MsgWithError<S>>({
       start: (ctl) => {
@@ -41,10 +60,7 @@ class TestConnection implements MsgRawConnection {
     });
   }
   readonly requestFn = vi.fn();
-  request<S extends MsgBase, Q extends MsgBase>(
-    req: Q,
-    opts: RequestOpts,
-  ): Promise<MsgWithError<S>> {
+  request<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
     this.requestFn(req, opts);
     // console.log("request", req);
     return Promise.resolve({
@@ -172,10 +188,7 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
     this.activeBinds = new Map();
   }
 
-  bind<S extends MsgBase, Q extends MsgBase>(
-    req: Q,
-    opts: RequestOpts,
-  ): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     super.bind(req, opts);
     // console.log("http-bind", req, opts);
     return new ReadableStream<MsgWithError<S>>({
@@ -191,10 +204,7 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
       },
     });
   }
-  request<S extends MsgBase, Q extends MsgBase>(
-    req: Q,
-    opts: RequestOpts,
-  ): Promise<MsgWithError<S>> {
+  request<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
     super.request(req, opts);
     switch (true) {
       case MsgIsReqGestalt(req):
@@ -255,10 +265,7 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
     this.exchangedGestalt = exGestalt;
     this.activeBinds = new Map();
   }
-  bind<S extends MsgBase, Q extends MsgBase>(
-    req: Q,
-    opts: RequestOpts,
-  ): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     super.bind(req, opts);
     // console.log("ws-bind", req, opts);
     const id = this.sthis.nextId().str;
@@ -283,10 +290,7 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
       },
     });
   }
-  request<S extends MsgBase, Q extends MsgBase>(
-    req: Q,
-    opts: RequestOpts,
-  ): Promise<MsgWithError<S>> {
+  request<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
     super.request(req, opts);
     if (!this.isReady) {
       return Promise.resolve({

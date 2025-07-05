@@ -1,6 +1,5 @@
 import { Logger, URI, Result } from "@adviser/cement";
 
-import { files } from "@fireproof/core-runtime"
 import { CarStoreImpl, FileStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import {
   BaseStore,
@@ -18,6 +17,7 @@ import {
 import { PARAM, SuperThis } from "@fireproof/core-types";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
 import { InterceptorGateway } from "@fireproof/core-gateways-base";
+import { decodeFile, encodeFile } from "@fireproof/core-runtime";
 
 // interface SerdeGatewayInstances {
 //   readonly gateway: InterceptorGateway;
@@ -135,8 +135,8 @@ async function ensureStart<T extends Pick<BaseStore, "start"> & { logger: Logger
 export function ensureStoreEnDeFile(ende?: Partial<StoreEnDeFile>): StoreEnDeFile {
   ende = ende || {};
   return {
-    encodeFile: ende.encodeFile || files.encodeFile,
-    decodeFile: ende.decodeFile || files.decodeFile,
+    encodeFile: ende.encodeFile || encodeFile,
+    decodeFile: ende.decodeFile || decodeFile,
   };
 }
 

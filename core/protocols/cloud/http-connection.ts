@@ -3,7 +3,14 @@ import { SuperThis } from "@fireproof/core-types";
 import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, OnMsgFn, selectRandom, timeout, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
 import { ensureLogger } from "@fireproof/core-runtime";
-import { MsgRawConnection, MsgBase, MsgWithError, MsgIsError, RequestOpts, buildErrorMsg } from "@fireproof/core-types/protocols/cloud";
+import {
+  MsgRawConnection,
+  MsgBase,
+  MsgWithError,
+  MsgIsError,
+  RequestOpts,
+  buildErrorMsg,
+} from "@fireproof/core-types/protocols/cloud";
 
 function toHttpProtocol(uri: URI): URI {
   const protocol = (uri.getParam("protocol") ?? uri.protocol).replace(/:$/, "");

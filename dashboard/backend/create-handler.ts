@@ -7,6 +7,8 @@ import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
 import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
 import { ensureSuperThis, ensureLogger } from "@fireproof/core-runtime";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { ResultSet } from "@libsql/client";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -95,7 +97,10 @@ class ClerkApiToken implements FPApiToken {
 //   }
 // }
 
-export function createHandler<T extends LibSQLDatabase>(db: T, env: Record<string, string> | Env) {
+export interface DashSqlite extends BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>> {}
+
+// BaseSQLiteDatabase<'async', ResultSet, TSchema>
+export function createHandler<T extends DashSqlite, ResultSet>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),

@@ -33,7 +33,7 @@ import {
   ResDelData,
   ResGetData,
   ResPutData,
-    BindGetMeta,
+  BindGetMeta,
   buildBindGetMeta,
   buildReqDelMeta,
   buildReqPutMeta,
@@ -44,12 +44,27 @@ import {
   ReqPutMeta,
   ResDelMeta,
   ResPutMeta,
-} from "@fireproof/core-types/protocols/cloud"
- import { FPEnvelope, FPEnvelopeMeta, FPEnvelopeWAL, SerdeGateway, SerdeGatewayCtx, SerdeGetResult, UnsubscribeResult, VoidResult  } from "@fireproof/core-types/blockstore";
-import { ensureLogger, hashObject, } from "@fireproof/core-runtime";
-import { dbMetaEvent2Serialized, decode2DbMetaEvents, encodeAsV2SerializedMetaKey, fpDeserialize, fpSerialize, V2SerializedMetaKeyExtractKey } from "@fireproof/core-gateways-base"
+} from "@fireproof/core-types/protocols/cloud";
+import {
+  FPEnvelope,
+  FPEnvelopeMeta,
+  FPEnvelopeWAL,
+  SerdeGateway,
+  SerdeGatewayCtx,
+  SerdeGetResult,
+  UnsubscribeResult,
+  VoidResult,
+} from "@fireproof/core-types/blockstore";
+import { ensureLogger, hashObject } from "@fireproof/core-runtime";
+import {
+  dbMetaEvent2Serialized,
+  decode2DbMetaEvents,
+  encodeAsV2SerializedMetaKey,
+  fpDeserialize,
+  fpSerialize,
+  V2SerializedMetaKeyExtractKey,
+} from "@fireproof/core-gateways-base";
 import { authTypeFromUri, Msger, VirtualConnected } from "@fireproof/core-protocols-cloud";
-
 
 const VERSION = "v0.1-fp-cloud";
 
@@ -683,4 +698,3 @@ export class CloudGateway implements SerdeGateway {
 // function authTypeFromUri(logger: Logger, uri: URI) {
 //   throw new Error("Function not implemented.");
 // }
-

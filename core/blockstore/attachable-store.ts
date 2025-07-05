@@ -23,8 +23,15 @@ import {
   FileAttachedStores,
   FileStore,
 } from "@fireproof/core-types/blockstore";
-import { ensureURIDefaults, hashObject } from "@fireproof/core-runtime"
-import { Attachable, AttachContext, Attached, DataAndMetaAndWalAndBaseStore, GatewayUrls, GatewayUrlsParam } from "@fireproof/core-types";
+import { ensureURIDefaults, hashObject } from "@fireproof/core-runtime";
+import {
+  Attachable,
+  AttachContext,
+  Attached,
+  DataAndMetaAndWalAndBaseStore,
+  GatewayUrls,
+  GatewayUrlsParam,
+} from "@fireproof/core-types";
 
 class AttachedImpl implements Attached {
   readonly keyed: string;

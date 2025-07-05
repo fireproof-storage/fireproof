@@ -1,5 +1,5 @@
 {
-  "name": "dashboard-react-router-dev",
+  "name": "@fireproof/dashboard",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -80,15 +80,5 @@
     "vitest": "^3.2.4",
     "wrangler": "^4.22.1",
     "zx": "^8.5.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@clerk/shared",
-      "browser-tabs-lock",
-      "core-js",
-      "esbuild",
-      "sharp",
-      "workerd"
-    ]
   }
 }

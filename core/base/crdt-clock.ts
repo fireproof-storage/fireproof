@@ -16,7 +16,7 @@ import {
 } from "@fireproof/core-types";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "@fireproof/core-runtime";
-import { anyBlock2FPBlock } from "@fireproof/core-blockstore"
+import { anyBlock2FPBlock } from "@fireproof/core-blockstore";
 
 export class CRDTClockImpl {
   // todo: track local and remote clocks independently, merge on read

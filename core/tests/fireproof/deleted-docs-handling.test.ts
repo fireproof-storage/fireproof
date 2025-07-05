@@ -1,4 +1,5 @@
 import { Database, fireproof } from "@fireproof/core";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 
 describe("allDocs deleted document handling", () => {
   let db: Database;

@@ -267,4 +267,3 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<TokenForParam> = 
     applyAuthToURI: (uri: CoerceURI) => BuildURI.from(uri).setParam("authJWK", jwk).URI(),
   };
 }
-

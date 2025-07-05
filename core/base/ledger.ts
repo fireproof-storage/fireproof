@@ -1,6 +1,6 @@
 import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 
-import {  writeQueue } from "./write-queue.js";
+import { writeQueue } from "./write-queue.js";
 import {
   DocUpdate,
   ConfigOpts,
@@ -20,7 +20,7 @@ import {
   PARAM,
 } from "@fireproof/core-types";
 import { StoreURIRuntime, StoreUrlsOpts } from "@fireproof/core-types/blockstore";
-import { ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject, files } from "@fireproof/core-runtime";
+import { decodeFile, encodeFile, ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject } from "@fireproof/core-runtime";
 
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
@@ -63,8 +63,8 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
         writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
         ctx: opts?.ctx ?? new AppContext(),
         storeEnDe: {
-          encodeFile: files.encodeFile,
-          decodeFile: files.decodeFile,
+          encodeFile,
+          decodeFile,
           ...opts?.storeEnDe,
         },
         tracer:

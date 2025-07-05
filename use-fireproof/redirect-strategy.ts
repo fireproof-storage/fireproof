@@ -63,7 +63,6 @@ interface RedirectStrategyOpts {
   readonly overlayHtml?: (redirectLink: string) => string;
 }
 
-
 export class RedirectStrategy implements TokenStrategie {
   resultId?: string;
   overlayNode?: HTMLDivElement;
@@ -196,12 +195,7 @@ export class RedirectStrategy implements TokenStrategie {
     this.waiting = setTimeout(() => this.getTokenAndClaimsByResultId(logger, dashApi, resultId, opts, resolve), opts.intervalSec);
   }
 
-  async waitForToken(
-    sthis: SuperThis,
-    logger: Logger,
-    deviceId: string,
-    opts: ToCloudOpts,
-  ): Promise<TokenAndClaims | undefined> {
+  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
     if (!this.resultId) {
       throw new Error("waitForToken not working on redirect strategy");
     }

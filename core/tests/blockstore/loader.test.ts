@@ -1,14 +1,21 @@
 import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
-import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, } from "@fireproof/core";
+import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
-import { EncryptedBlockstore, Loader, CompactionFetcher, CarTransactionImpl, anyBlock2FPBlock, parseCarFile } from "@fireproof/core-blockstore";
+import {
+  EncryptedBlockstore,
+  Loader,
+  CompactionFetcher,
+  CarTransactionImpl,
+  anyBlock2FPBlock,
+  parseCarFile,
+} from "@fireproof/core-blockstore";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { FPBlock, TransactionMeta, isCarBlockItemReady, CarGroup, isCarBlockItemStale } from "@fireproof/core-types/blockstore";
 import { AnyLink } from "prolly-trees/base";
 import { describe, afterEach, beforeEach, it, expect, assert } from "vitest";
-
+import { asyncBlockEncode } from "../../runtime/async-block-encode.js";
 
 class MyMemoryBlockStore extends EncryptedBlockstore {
   readonly memblock = new Map<string, FPBlock>();
@@ -74,7 +81,7 @@ describe("basic Loader simple", function () {
     });
     await loader.ready();
     block = await anyBlock2FPBlock(
-      await rt.mf.block.encode({
+      await asyncBlockEncode({
         value: { hello: "world" },
         hasher,
         codec,
@@ -128,7 +135,7 @@ describe("basic Loader with two commits", function () {
     await loader.ready();
 
     block = await anyBlock2FPBlock(
-      await rt.mf.block.encode({
+      await asyncBlockEncode({
         value: { hello: "world" },
         hasher,
         codec,
@@ -138,7 +145,7 @@ describe("basic Loader with two commits", function () {
     carCid0 = await loader.commit(t, { head: [block.cid] });
 
     block2 = await anyBlock2FPBlock(
-      await rt.mf.block.encode({
+      await asyncBlockEncode({
         value: { hello: "universe" },
         hasher,
         codec,
@@ -148,7 +155,7 @@ describe("basic Loader with two commits", function () {
     carCid = await loader.commit(t, { head: [block2.cid] });
 
     block3 = await anyBlock2FPBlock(
-      await rt.mf.block.encode({
+      await asyncBlockEncode({
         value: { hello: "multiverse" },
         hasher,
         codec,
@@ -157,7 +164,7 @@ describe("basic Loader with two commits", function () {
     await t.put(block3);
 
     block4 = await anyBlock2FPBlock(
-      await rt.mf.block.encode({
+      await asyncBlockEncode({
         value: { hello: "megaverse" },
         hasher,
         codec,
@@ -242,7 +249,7 @@ describe("basic Loader with index commits", function () {
     ib = new EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
     await ib.ready();
     block = await anyBlock2FPBlock(
-      await rt.mf.block.encode({
+      await asyncBlockEncode({
         value: { hello: "world" },
         hasher,
         codec,

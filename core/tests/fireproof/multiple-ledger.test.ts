@@ -1,5 +1,7 @@
-import { Database, ensureSuperThis, fireproof } from "@fireproof/core";
-
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { Database } from "@fireproof/core-types";
+import { fireproof } from "@fireproof/core-base";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 interface DBItem {
   readonly db: Database;
   readonly name: string;

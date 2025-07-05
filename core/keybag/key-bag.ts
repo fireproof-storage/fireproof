@@ -12,7 +12,17 @@ import {
 import { KeyMaterial, KeysByFingerprint, KeyUpsertResult, KeyWithFingerPrint } from "@fireproof/core-types/blockstore";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { base58btc } from "multiformats/bases/base58";
-import { KeyBagIf, KeyBagOpts, KeyBagProvider, KeyBagRuntime, KeysItem, PARAM, SuperThis, V1StorageKeyItem, V2StorageKeyItem } from "@fireproof/core-types"
+import {
+  KeyBagIf,
+  KeyBagOpts,
+  KeyBagProvider,
+  KeyBagRuntime,
+  KeysItem,
+  PARAM,
+  SuperThis,
+  V1StorageKeyItem,
+  V2StorageKeyItem,
+} from "@fireproof/core-types";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { KeyBagProviderMemory } from "./key-bag-memory.js";
 
@@ -394,11 +404,7 @@ export class KeyBag implements KeyBagIf {
   }
 }
 
-
 export type KeyBagFile = Record<string, KeysItem>;
-
-
-
 
 export function isV1StorageKeyItem(item: V1StorageKeyItem | KeysItem): item is V1StorageKeyItem {
   return !!(item as V1StorageKeyItem).key;
@@ -407,8 +413,6 @@ export function isV1StorageKeyItem(item: V1StorageKeyItem | KeysItem): item is V
 export function isKeysItem(item: V1StorageKeyItem | KeysItem): item is KeysItem {
   return !!(item as KeysItem).keys;
 }
-
-
 
 export type KeyBackProviderFactory = (url: URI, sthis: SuperThis) => Promise<KeyBagProvider>;
 

@@ -2,7 +2,6 @@ import { Logger, CoerceURI, URI, AppContext } from "@adviser/cement";
 import { Attachable, SuperThis } from "../../types.js";
 import { FPCloudClaim } from "./msg-types.js";
 
-
 export interface ToCloudAttachable extends Attachable {
   token?: string;
   readonly opts: ToCloudOpts;
@@ -55,7 +54,6 @@ export interface ToCloudBase {
   readonly tenant?: string; // default undefined
   readonly ledger?: string; // default undefined
 }
-
 
 export type ToCloudOpts = ToCloudRequiredOpts & ToCloudBase;
 

@@ -24,7 +24,7 @@ import {
   Ledger,
   Attachable,
   Attached,
-  NotFoundError
+  NotFoundError,
 } from "@fireproof/core-types";
 import { ensureLogger, makeName } from "@fireproof/core-runtime";
 

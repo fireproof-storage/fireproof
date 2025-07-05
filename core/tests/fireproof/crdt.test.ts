@@ -1,12 +1,9 @@
 import {
   CRDT,
   defaultWriteQueueOpts,
-  ensureSuperThis,
   LedgerOpts,
   toStoreURIRuntime,
-  rt,
   CRDTImpl,
-  bs,
   CRDTMeta,
   DocValue,
   Index,
@@ -14,6 +11,11 @@ import {
 } from "@fireproof/core";
 import { tracer } from "../helpers.js";
 import { AppContext } from "@adviser/cement";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { describe, afterEach, beforeEach, it, expect, assert } from "vitest";
+import { ensureStoreEnDeFile, Loader, EncryptedBlockstore, parseCarFile } from "@fireproof/core-blockstore";
+import { defaultKeyBagOpts } from "@fireproof/core-keybag";
+import { AnyBlock, isCarBlockItemReady } from "@fireproof/core-types/blockstore";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;
@@ -27,9 +29,9 @@ describe("Fresh crdt", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
@@ -74,9 +76,9 @@ describe("CRDT with one record", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId().str}`),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
@@ -133,9 +135,9 @@ describe("CRDT with a multi-write", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
@@ -206,9 +208,9 @@ describe("CRDT with two multi-writes", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId().str}`),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
@@ -268,9 +270,9 @@ describe("Compact a named CRDT with writes", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction-${sthis.nextId().str}`),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
@@ -290,7 +292,7 @@ describe("Compact a named CRDT with writes", function () {
     expect(got.doc.points).toBe(11);
   });
   it("should start with blocks", async () => {
-    const blz: bs.AnyBlock[] = [];
+    const blz: AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
@@ -336,7 +338,7 @@ describe("Compact a named CRDT with writes", function () {
   });
   it.skip("should have fewer blocks after compact", async () => {
     await crdt.compact();
-    const blz: bs.AnyBlock[] = [];
+    const blz: AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
@@ -367,9 +369,9 @@ describe("CRDT with an index", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
@@ -404,8 +406,8 @@ describe("CRDT with an index", function () {
 });
 
 describe("Loader with a committed transaction", function () {
-  let loader: bs.Loader;
-  let blockstore: bs.EncryptedBlockstore;
+  let loader: Loader;
+  let blockstore: EncryptedBlockstore;
   let crdt: CRDT;
   let done: CRDTMeta;
   const dbname = "test-loader";
@@ -419,16 +421,16 @@ describe("Loader with a committed transaction", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, dbname),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
-    blockstore = crdt.blockstore as bs.EncryptedBlockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
-    loader = blockstore.loader as bs.Loader;
+    loader = blockstore.loader as Loader;
     done = await crdt.bulk([{ id: "foo", value: { foo: "bar" } }]);
   });
   // it("should have a name", function () {
@@ -449,8 +451,8 @@ describe("Loader with a committed transaction", function () {
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
-    assert(bs.isCarBlockItemReady(reader));
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
+    assert(isCarBlockItemReady(reader));
+    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
@@ -459,9 +461,9 @@ describe("Loader with a committed transaction", function () {
 });
 
 describe("Loader with two committed transactions", function () {
-  let loader: bs.Loader;
+  let loader: Loader;
   let crdt: CRDT;
-  let blockstore: bs.EncryptedBlockstore;
+  let blockstore: EncryptedBlockstore;
   let done1: CRDTMeta;
   let done2: CRDTMeta;
   const sthis = ensureSuperThis();
@@ -474,16 +476,16 @@ describe("Loader with two committed transactions", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader"),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
-    blockstore = crdt.blockstore as bs.EncryptedBlockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
-    loader = blockstore.loader as bs.Loader;
+    loader = blockstore.loader as Loader;
     done1 = await crdt.bulk([{ id: "apple", value: { foo: "bar" } }]);
     done2 = await crdt.bulk([{ id: "orange", value: { foo: "bar" } }]);
   });
@@ -506,8 +508,8 @@ describe("Loader with two committed transactions", function () {
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
-    assert(bs.isCarBlockItemReady(reader));
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
+    assert(isCarBlockItemReady(reader));
+    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(1 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
@@ -516,8 +518,8 @@ describe("Loader with two committed transactions", function () {
 });
 
 describe("Loader with many committed transactions", function () {
-  let loader: bs.Loader;
-  let blockstore: bs.EncryptedBlockstore;
+  let loader: Loader;
+  let blockstore: EncryptedBlockstore;
   let crdt: CRDT;
   let dones: CRDTMeta[];
   const count = 10;
@@ -531,16 +533,16 @@ describe("Loader with many committed transactions", function () {
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader-many"),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };
     crdt = new CRDTImpl(sthis, dbOpts);
-    blockstore = crdt.blockstore as bs.EncryptedBlockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
-    loader = blockstore.loader as bs.Loader;
+    loader = blockstore.loader as Loader;
     dones = [];
     for (let i = 0; i < count; i++) {
       const did = await crdt.bulk([{ id: `apple${i}`, value: { foo: "bar" } }]);
@@ -560,8 +562,8 @@ describe("Loader with many committed transactions", function () {
     // expect(dones[5].cars).toBeTruthy();
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
-    assert(bs.isCarBlockItemReady(reader));
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
+    assert(isCarBlockItemReady(reader));
+    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(7 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();

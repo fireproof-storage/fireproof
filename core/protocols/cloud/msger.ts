@@ -30,7 +30,7 @@ import {
 import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
 import type { SuperThis } from "@fireproof/core-types";
-import { ensureLogger, sleep } from "@fireproof/core-runtime"
+import { ensureLogger, sleep } from "@fireproof/core-runtime";
 import pLimit from "@fireproof/vendor/p-limit";
 
 // const headers = {

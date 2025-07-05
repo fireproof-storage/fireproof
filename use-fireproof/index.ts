@@ -8,7 +8,13 @@ import { defaultWebToCloudOpts, WebCtx, WebToCloudCtx } from "@fireproof/core-re
 import { AppContext } from "@adviser/cement";
 
 import { RedirectStrategy } from "./redirect-strategy.js";
-import { ToCloudOptionalOpts, TokenStrategie, TokenAndClaimsEvents, ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types/protocols/cloud";
+import {
+  ToCloudOptionalOpts,
+  TokenStrategie,
+  TokenAndClaimsEvents,
+  ToCloudAttachable,
+  TokenAndClaims,
+} from "@fireproof/core-types/protocols/cloud";
 
 export type UseFpToCloudParam = Omit<Omit<Omit<ToCloudOptionalOpts, "strategy">, "context">, "events"> &
   Partial<WebToCloudCtx> & {

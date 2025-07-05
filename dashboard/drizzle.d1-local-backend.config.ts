@@ -2,21 +2,17 @@ import { defineConfig } from "drizzle-kit";
 import * as path from "path";
 import * as fs from "fs";
 
-function getLocalD1DB() {
-  try {
-    const basePath = path.resolve("./.wrangler");
-    const dbFile = fs.readdirSync(basePath, { encoding: "utf-8", recursive: true }).find((f) => f.endsWith(".sqlite"));
+function getLocalD1DB(): string {
+  const basePath = path.resolve("./.wrangler");
+  const dbFile = fs.readdirSync(basePath, { encoding: "utf-8", recursive: true }).find((f) => f.endsWith(".sqlite"));
 
-    if (!dbFile) {
-      throw new Error(`.sqlite file not found in ${basePath}`);
-    }
-
-    const url = path.resolve(basePath, dbFile);
-    console.log("getLocalD1DB:", url);
-    return url;
-  } catch (err) {
-    console.log(`Error  ${(err as Error).message}`);
+  if (!dbFile) {
+    throw new Error(`.sqlite file not found in ${basePath}`);
   }
+
+  const url = path.resolve(basePath, dbFile);
+  console.log("getLocalD1DB:", url);
+  return url;
 }
 
 export default defineConfig({

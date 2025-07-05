@@ -24,7 +24,18 @@ import { Env } from "./env.js";
 import { FPRoomDurableObject } from "./server.js";
 import { ensureSuperThis, ensureLogger, sts } from "@fireproof/core-runtime";
 import { Readonly2Writeable, SuperThis } from "@fireproof/core-types";
-import { QSId, qsidEqual, MsgBase, MsgWithConn, MsgIsWithConn, EnDeCoder, Gestalt, isProtocolCapabilities, defaultGestalt, buildErrorMsg } from "@fireproof/core-types/protocols/cloud";
+import {
+  QSId,
+  qsidEqual,
+  MsgBase,
+  MsgWithConn,
+  MsgIsWithConn,
+  EnDeCoder,
+  Gestalt,
+  isProtocolCapabilities,
+  defaultGestalt,
+  buildErrorMsg,
+} from "@fireproof/core-types/protocols/cloud";
 import { jsonEnDe, defaultMsgParams } from "@fireproof/core-protocols-cloud";
 
 function cfWebSocketPair() {
@@ -353,9 +364,7 @@ export class CFHonoServer extends HonoServerBase {
     this.cfCtx = ctx;
   }
 
-  upgradeWebSocket(
-    createEvents: (c: Context) => WSEventsConnId<WebSocket> | Promise<WSEventsConnId<WebSocket>>,
-  ): ConnMiddleware {
+  upgradeWebSocket(createEvents: (c: Context) => WSEventsConnId<WebSocket> | Promise<WSEventsConnId<WebSocket>>): ConnMiddleware {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return async (_conn, c, _next) => {
       const upgradeHeader = c.req.header("Upgrade");

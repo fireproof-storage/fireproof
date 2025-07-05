@@ -1,4 +1,4 @@
-import { decode } from "@fireproof/core-runtime/async-multiformats";
+import { asyncBlockDecode } from "@fireproof/core-runtime";
 import { parse } from "multiformats/link";
 import { Block } from "multiformats/block";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
@@ -14,13 +14,7 @@ import {
 } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
-import {
-  BlockFetcher,
-  TransactionMeta,
-  AnyLink,
-  StoreRuntime,
-  CompactFetcher,
-} from "@fireproof/core-types/blockstore";
+import { BlockFetcher, TransactionMeta, AnyLink, StoreRuntime, CompactFetcher } from "@fireproof/core-types/blockstore";
 import {
   type EncryptedBlockstore,
   CarTransactionImpl,
@@ -298,7 +292,7 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
 async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: AnyLink, logger: Logger): Promise<DocValue<T>> {
   const block = await blocks.get(link);
   if (!block) throw logger.Error().Str("link", link.toString()).Msg(`Missing linked block`).AsError();
-  const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue<T> };
+  const { value } = (await asyncBlockDecode({ bytes: block.bytes, hasher, codec })) as { value: DocValue<T> };
   const cvalue = {
     ...value,
     cid: link,
@@ -485,6 +479,6 @@ export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logge
 export async function getBlock(blocks: BlockFetcher, cidString: string) {
   const block = await blocks.get(parse(cidString));
   if (!block) throw new Error(`Missing block ${cidString}`);
-  const { cid, value } = await decode({ bytes: block.bytes, codec, hasher });
+  const { cid, value } = await asyncBlockDecode({ bytes: block.bytes, codec, hasher });
   return new Block({ cid, value, bytes: block.bytes });
 }

@@ -12,12 +12,6 @@
       "browser": "./index.js",
       "require": "./index.cjs",
       "types": "./index.d.ts"
-    },
-    "./async-multiformats": {
-      "import": "./async-multiformats/block.js",
-      "browser": "./async-multiformats/block.js",
-      "require": "./async-multiformats/block.cjs",
-      "types": "./async-multiformats/block.d.ts"
     }
   },
   "scripts": {

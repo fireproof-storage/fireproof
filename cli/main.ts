@@ -1,6 +1,6 @@
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { run, subcommands } from "cmd-ts";
-import { keyCmd, preSignedUrlCmd } from "@fireproof/cloud-base"
+import { keyCmd, preSignedUrlCmd } from "@fireproof/cloud-base";
 import { writeEnvCmd } from "@fireproof/cloud-backend-cf-d1";
 
 import { dotenv } from "zx";

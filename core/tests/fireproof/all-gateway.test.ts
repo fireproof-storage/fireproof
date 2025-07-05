@@ -1,21 +1,37 @@
-import { Database, Ledger, LedgerFactory, PARAM, bs, ensureSuperThis, fireproof } from "@fireproof/core";
+import { Database, Ledger, LedgerFactory, PARAM, fireproof } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
 import { BuildURI, Future } from "@adviser/cement";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import {
+  CarStore,
+  MetaStore,
+  FileStore,
+  WALStore,
+  SerdeGateway,
+  Loadable,
+  FPEnvelopeTypes,
+  WALState,
+  SerdeGatewayCtx,
+  FPEnvelopeMeta,
+  UnsubscribeResult,
+  DbMetaEvent,
+} from "@fireproof/core-types/blockstore";
+import { describe, afterEach, beforeEach, it, expect } from "vitest";
 
 describe("noop Gateway", function () {
   let db: Ledger;
-  let carStore: bs.CarStore;
-  let metaStore: bs.MetaStore;
-  let fileStore: bs.FileStore;
-  let walStore: bs.WALStore;
-  let carGateway: bs.SerdeGateway;
-  let metaGateway: bs.SerdeGateway;
-  let fileGateway: bs.SerdeGateway;
-  let walGateway: bs.SerdeGateway;
+  let carStore: CarStore;
+  let metaStore: MetaStore;
+  let fileStore: FileStore;
+  let walStore: WALStore;
+  let carGateway: SerdeGateway;
+  let metaGateway: SerdeGateway;
+  let fileGateway: SerdeGateway;
+  let walGateway: SerdeGateway;
   const sthis = ensureSuperThis();
-  let ctx: { loader: bs.Loadable };
+  let ctx: { loader: Loadable };
 
   afterEach(async () => {
     await db.close();
@@ -102,7 +118,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(ctx, carStore.url(), fileContent.cid);
     await carGateway.start(ctx, carStore.url());
     const carPutResult = await carGateway.put(ctx, carUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.CAR,
+      type: FPEnvelopeTypes.CAR,
       payload: fileContent.block,
     });
     expect(carPutResult.isOk()).toBeTruthy();
@@ -112,7 +128,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(ctx, carStore.url(), fileContent.cid);
     await carGateway.start(ctx, carStore.url());
     await carGateway.put(ctx, carUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.CAR,
+      type: FPEnvelopeTypes.CAR,
       payload: fileContent.block,
     });
     const carGetResult = await carGateway.get(ctx, carUrl.Ok());
@@ -125,7 +141,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(ctx, carStore.url(), fileContent.cid);
     await carGateway.start(ctx, carStore.url());
     await carGateway.put(ctx, carUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.CAR,
+      type: FPEnvelopeTypes.CAR,
       payload: fileContent.block,
     });
     const carDeleteResult = await carGateway.delete(ctx, carUrl.Ok());
@@ -162,7 +178,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(ctx, fileStore.url(), fileContent.cid);
     await fileGateway.start(ctx, fileStore.url());
     const filePutResult = await fileGateway.put(ctx, fileUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.FILE,
+      type: FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
     expect(filePutResult.Ok()).toBeFalsy();
@@ -172,7 +188,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(ctx, fileStore.url(), fileContent.cid);
     await fileGateway.start(ctx, fileStore.url());
     await fileGateway.put(ctx, fileUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.FILE,
+      type: FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
     const fileGetResult = await fileGateway.get(ctx, fileUrl.Ok());
@@ -184,7 +200,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(ctx, fileStore.url(), fileContent.cid);
     await fileGateway.start(ctx, fileStore.url());
     await fileGateway.put(ctx, fileUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.FILE,
+      type: FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
     const fileDeleteResult = await fileGateway.delete(ctx, fileUrl.Ok());
@@ -211,7 +227,7 @@ describe("noop Gateway", function () {
     // const walTestDataString = JSON.stringify();
     // const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway.put(ctx, walUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.WAL,
+      type: FPEnvelopeTypes.WAL,
       payload: {
         operations: [],
         noLoaderOps: [],
@@ -225,7 +241,7 @@ describe("noop Gateway", function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(ctx, walStore.url(), testKey);
     await walGateway.start(ctx, walStore.url());
-    const ref: bs.WALState = {
+    const ref: WALState = {
       operations: [
         {
           cars: [await simpleCID(sthis)],
@@ -250,7 +266,7 @@ describe("noop Gateway", function () {
     // });
     // const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway.put(ctx, walUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.WAL,
+      type: FPEnvelopeTypes.WAL,
       payload: ref,
     });
     const walGetResult = await walGateway.get(ctx, walUrl.Ok());
@@ -264,7 +280,7 @@ describe("noop Gateway", function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(ctx, walStore.url(), testKey);
     await walGateway.start(ctx, walStore.url());
-    const ref: bs.WALState = {
+    const ref: WALState = {
       operations: [
         {
           cars: [await simpleCID(sthis)],
@@ -283,7 +299,7 @@ describe("noop Gateway", function () {
       ],
     };
     await walGateway.put(ctx, walUrl.Ok(), {
-      type: bs.FPEnvelopeTypes.WAL,
+      type: FPEnvelopeTypes.WAL,
       payload: ref,
     });
     const walDeleteResult = await walGateway.delete(ctx, walUrl.Ok());
@@ -343,11 +359,11 @@ describe("noop Gateway", function () {
 describe("noop Gateway subscribe", function () {
   let db: Database;
 
-  let metaStore: bs.MetaStore;
+  let metaStore: MetaStore;
 
-  let metaGateway: bs.SerdeGateway;
+  let metaGateway: SerdeGateway;
   const sthis = ensureSuperThis();
-  let ctx: bs.SerdeGatewayCtx;
+  let ctx: SerdeGatewayCtx;
 
   afterEach(async () => {
     await db.close();
@@ -385,13 +401,13 @@ describe("noop Gateway subscribe", function () {
     const metaSubscribeResult = (await metaGateway.subscribe(
       ctx,
       metaUrl.Ok().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
-      async (data: bs.FPEnvelopeMeta) => {
+      async (data: FPEnvelopeMeta) => {
         // const decodedData = sthis.txt.decode(data);
         expect(Array.isArray(data.payload)).toBeTruthy();
         didCall = true;
         p.resolve();
       },
-    )) as bs.UnsubscribeResult;
+    )) as UnsubscribeResult;
     expect(metaSubscribeResult.isOk()).toBeTruthy();
     const ok = await db.put({ _id: "key1", hello: "world1" });
     expect(ok).toBeTruthy();
@@ -404,16 +420,16 @@ describe("noop Gateway subscribe", function () {
 describe("Gateway", function () {
   let db: Database;
   // let carStore: ExtendedStore;
-  let metaStore: bs.MetaStore;
+  let metaStore: MetaStore;
   // let fileStore: ExtendedStore;
   // let walStore: ExtendedStore;
   // let carGateway: ExtendedGateway;
-  let metaGateway: bs.SerdeGateway;
+  let metaGateway: SerdeGateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
   const sthis = ensureSuperThis();
 
-  let ctx: bs.SerdeGatewayCtx;
+  let ctx: SerdeGatewayCtx;
 
   afterEach(async () => {
     await db.close();
@@ -444,7 +460,7 @@ describe("Gateway", function () {
     await metaGateway.start(ctx, metaStore.url());
     const metaGetResult = await metaGateway.get(ctx, metaUrl.Ok());
     expect(metaGetResult.isOk()).toBeTruthy();
-    const meta = metaGetResult.Ok().payload as bs.DbMetaEvent[];
+    const meta = metaGetResult.Ok().payload as DbMetaEvent[];
     // const metaGetResultOk = metaGetResult.Ok();
     // const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
     expect(meta.length).toBe(1);

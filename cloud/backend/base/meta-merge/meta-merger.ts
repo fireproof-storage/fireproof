@@ -9,7 +9,6 @@ import { QSId, TenantLedger } from "@fireproof/core-types/protocols/cloud";
 import { V2SerializedMetaKey } from "@fireproof/core-types/blockstore";
 import { DrizzleDatebase } from "../types.js";
 
-
 export interface Connection {
   readonly tenant: TenantLedger;
   readonly conn: QSId;

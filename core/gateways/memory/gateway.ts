@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types"
+import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types";
 import { Gateway, GetResult, VoidResult } from "@fireproof/core-types/blockstore";
 import { MEMORY_VERSION } from "./version.js";
 import { ensureLogger } from "@fireproof/core-runtime";

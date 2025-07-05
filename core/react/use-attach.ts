@@ -6,7 +6,13 @@ import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } 
 import { decodeJwt } from "jose/jwt/decode";
 import { SuperThis, Database, KeyBagProvider } from "@fireproof/core-types";
 import { ensureSuperThis, hashString } from "@fireproof/core-runtime";
-import { FPCloudClaim, ToCloudAttachable, ToCloudOptionalOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types/protocols/cloud";
+import {
+  FPCloudClaim,
+  ToCloudAttachable,
+  ToCloudOptionalOpts,
+  TokenAndClaims,
+  TokenStrategie,
+} from "@fireproof/core-types/protocols/cloud";
 import { isV1StorageKeyItem, isKeysItem } from "../keybag/key-bag.js";
 
 export const WebCtx = "webCtx";

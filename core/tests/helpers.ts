@@ -1,21 +1,23 @@
 import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger, AppContext } from "@adviser/cement";
-import {
-  SuperThis,
-  SuperThisOpts,
-  PARAM,
-  Attachable,
-  Attached,
-  CarTransaction,
-  Falsy,
-  DbMeta,
-} from "@fireproof/core";
+import { SuperThis, SuperThisOpts, PARAM, Attachable, Attached, CarTransaction, Falsy, DbMeta } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
-import { CommitQueue, ensureSuperThis, files, TaskManager } from "@fireproof/core-runtime";
+import { CommitQueue, encodeFile, ensureSuperThis, TaskManager } from "@fireproof/core-runtime";
 import { defaultKeyBagOpts, getKeyBag, KeyBag } from "@fireproof/core-keybag";
 import { AttachedRemotesImpl, toStoreRuntime } from "@fireproof/core-blockstore";
-import { Loadable, BlockstoreRuntime, CarLog, AttachedStores, ActiveStore, CarGroup, CommitOpts, FPBlock, CarBlockItem, TransactionMeta } from "@fireproof/core-types/blockstore";
+import {
+  Loadable,
+  BlockstoreRuntime,
+  CarLog,
+  AttachedStores,
+  ActiveStore,
+  CarGroup,
+  CommitOpts,
+  FPBlock,
+  CarBlockItem,
+  TransactionMeta,
+} from "@fireproof/core-types/blockstore";
 import { AnyLink } from "prolly-trees/base";
 
 /* eslint-disable @typescript-eslint/no-empty-function */
@@ -24,7 +26,7 @@ export function tracer() {}
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
     file: new File([new Blob([buffer])], name, opts),
-    cid: (await files.encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
+    cid: (await encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
   };
 }
 

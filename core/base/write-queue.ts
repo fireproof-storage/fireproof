@@ -1,5 +1,13 @@
 import { ensureLogger } from "@fireproof/core-runtime";
-import { DocTypes, MetaType, DocUpdate, SuperThis, WriteQueue, defaultWriteQueueOpts, WriteQueueParams } from "@fireproof/core-types";
+import {
+  DocTypes,
+  MetaType,
+  DocUpdate,
+  SuperThis,
+  WriteQueue,
+  defaultWriteQueueOpts,
+  WriteQueueParams,
+} from "@fireproof/core-types";
 import { Future, Logger } from "@adviser/cement";
 
 type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;
@@ -10,7 +18,6 @@ interface WriteQueueItem<T extends DocTypes> {
   resolve(result: MetaType): void;
   reject(error: Error): void;
 }
-
 
 class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> implements WriteQueue<T> {
   private readonly opts: WriteQueueParams;

@@ -39,7 +39,7 @@ import pRetry from "p-retry";
 import pMap from "p-map";
 import { Link } from "multiformats";
 // import { InterceptorGateway } from "./interceptor-gateway.js";
-import { hashString, ensureLogger, inplaceFilter, kc } from "@fireproof/core-runtime";
+import { hashString, ensureLogger, inplaceFilter, keyedCryptoFactory } from "@fireproof/core-runtime";
 import { InterceptorGateway } from "@fireproof/core-gateways-base";
 
 function guardVersion(url: URI): Result<URI> {
@@ -125,7 +125,7 @@ export abstract class BaseStoreImpl {
   }
 
   async keyedCrypto(): Promise<CryptoAction> {
-    return kc.keyedCryptoFactory(this._url, await this.loader.keyBag(), this.sthis);
+    return keyedCryptoFactory(this._url, await this.loader.keyBag(), this.sthis);
   }
 
   async start(dam: DataAndMetaStore): Promise<Result<URI>> {

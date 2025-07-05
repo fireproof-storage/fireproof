@@ -1,11 +1,20 @@
 import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 import { Ledger } from "@fireproof/core-types";
-import { FPCloudClaim, FPCloudUri, ToCloudAttachable, ToCloudBase, ToCloudName, ToCloudOptionalOpts, ToCloudOpts, ToCloudRequiredOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types/protocols/cloud";
+import {
+  FPCloudClaim,
+  FPCloudUri,
+  ToCloudAttachable,
+  ToCloudBase,
+  ToCloudName,
+  ToCloudOptionalOpts,
+  ToCloudOpts,
+  ToCloudRequiredOpts,
+  TokenAndClaims,
+  TokenStrategie,
+} from "@fireproof/core-types/protocols/cloud";
 import { ensureLogger, hashObject } from "@fireproof/core-runtime";
 import { decodeJwt } from "jose/jwt/decode";
 import { URIInterceptor } from "@fireproof/core-gateways-base";
-
-
 
 function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
   const buri = BuildURI.from(uri);
@@ -42,8 +51,6 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
   } satisfies ToCloudOpts;
   return defOpts;
 }
-
-
 
 // function toTokenAndClaims(token: string): TokenAndClaims {
 //   const claims = decodeJwt(token);

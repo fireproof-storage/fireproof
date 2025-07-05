@@ -60,9 +60,10 @@ import { sqlTenantUsers, sqlTenants } from "./tenants.js";
 import { sqlTokenByResultId } from "./token-by-result-id.js";
 import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.js";
 import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
-import { FAPIMsgImpl } from "@fireproof/core-protocols-dashboard"
+import { FAPIMsgImpl } from "@fireproof/core-protocols-dashboard";
 import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types/protocols/cloud";
 import { sts } from "@fireproof/core-runtime";
+import { DashSqlite } from "./create-handler.js";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -220,10 +221,10 @@ function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
 }
 
 export class FPApiSQL implements FPApiInterface {
-  readonly db: LibSQLDatabase;
+  readonly db: DashSqlite;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
-  constructor(sthis: SuperThis, db: LibSQLDatabase, token: Record<string, FPApiToken>) {
+  constructor(sthis: SuperThis, db: DashSqlite, token: Record<string, FPApiToken>) {
     this.db = db;
     this.tokenApi = token;
     this.sthis = sthis;
@@ -336,7 +337,7 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  private async addUserToTenant(db: LibSQLDatabase, req: Omit<AddUserToTenant, "tenantName">): Promise<Result<AddUserToTenant>> {
+  private async addUserToTenant(db: DashSqlite, req: Omit<AddUserToTenant, "tenantName">): Promise<Result<AddUserToTenant>> {
     const tenant = await db
       .select()
       .from(sqlTenants)
@@ -448,7 +449,7 @@ export class FPApiSQL implements FPApiInterface {
     return Result.Ok(undefined);
   }
 
-  private async addUserToLedger(db: LibSQLDatabase, req: AddUserToLedger): Promise<Result<AddUserToLedger>> {
+  private async addUserToLedger(db: DashSqlite, req: AddUserToLedger): Promise<Result<AddUserToLedger>> {
     const ledger = await db
       .select()
       .from(sqlLedgers)

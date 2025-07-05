@@ -1,4 +1,5 @@
 import { Database, DocWithId, fireproof } from "@fireproof/core";
+import { describe, beforeEach, afterEach, it, expect } from "vitest";
 
 interface TestDoc {
   text: string;

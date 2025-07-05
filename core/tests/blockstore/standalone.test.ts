@@ -1,8 +1,12 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
-import { ensureSuperThis, PARAM, CRDTImpl, CRDT, LedgerOpts, fireproof, bs, sleep } from "@fireproof/core";
 import { Link } from "multiformats";
 import { stripper } from "@adviser/cement/utils";
 import pLimit from "@fireproof/vendor/p-limit";
+import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
+import { CRDT, PARAM, LedgerOpts } from "@fireproof/core-types";
+import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
+import { Loader } from "@fireproof/core-blockstore";
+import { CRDTImpl, fireproof } from "@fireproof/core-base";
 
 describe("standalone", () => {
   const sthis = ensureSuperThis();
@@ -41,7 +45,7 @@ describe("standalone", () => {
         },
       });
       const fn = vi.fn();
-      const loader = db.ledger.crdt.blockstore.loader as bs.Loader;
+      const loader = db.ledger.crdt.blockstore.loader as Loader;
       loader.cidCache.onSet(fn);
       expect(fn).toHaveBeenCalledTimes(0);
       await db.ready();

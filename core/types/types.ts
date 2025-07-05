@@ -425,7 +425,6 @@ export interface CarTransactionOpts {
   readonly noLoader: boolean;
 }
 
-
 export interface BaseBlockstore {
   readonly crdtParent?: CRDT;
   readonly transactions: Set<CarTransaction>;
@@ -701,7 +700,6 @@ export interface Ledger extends HasCRDT {
   // compact(): Promise<void>;
 }
 
-
 export interface V1StorageKeyItem {
   readonly name: string;
   readonly key: string;
@@ -756,7 +754,6 @@ export function defaultWriteQueueOpts(opts: Partial<WriteQueueParams> = {}): Wri
     chunkSize: opts.chunkSize && opts.chunkSize > 0 ? opts.chunkSize : 32,
   };
 }
-
 
 export type Readonly2Writeable<T> = {
   -readonly [P in keyof T]: T[P];

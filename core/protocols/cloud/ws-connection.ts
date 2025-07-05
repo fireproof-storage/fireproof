@@ -12,7 +12,7 @@ import {
 import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, OnMsgFn, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
 import { SuperThis } from "@fireproof/core-types";
-import { ensureLogger } from "@fireproof/core-runtime"
+import { ensureLogger } from "@fireproof/core-runtime";
 
 export interface WSReqOpen {
   readonly reqOpen: ReqOpen;

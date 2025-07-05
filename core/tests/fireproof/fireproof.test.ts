@@ -2,25 +2,15 @@ import { storageURL } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
-import {
-  ConfigOpts,
-  DocResponse,
-  DocWithId,
-  Index,
-  IndexRows,
-  MapFn,
-  bs,
-  index,
-  ensureSuperThis,
-  fireproof,
-  Database,
-  isDatabase,
-  PARAM,
-  sleep,
-} from "@fireproof/core";
+import { Index, index, fireproof, isDatabase } from "@fireproof/core-base";
 import { URI } from "@adviser/cement";
+import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
+import { DocResponse, DocWithId, IndexRows, Database, PARAM, MapFn, ConfigOpts } from "@fireproof/core-types";
+import { describe, afterEach, beforeEach, it, expect, beforeAll, assert } from "vitest";
+import { AnyLink } from "@fireproof/core-types/blockstore";
+import { getDefaultURI, EncryptedBlockstore } from "@fireproof/core-blockstore";
 
-export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
+export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
 }
 
@@ -128,7 +118,7 @@ describe("database fullconfig", () => {
       protocol = uri.protocol;
       path = uri.pathname;
     }
-    const base = bs.getDefaultURI(sthis, protocol).build().appendRelative(path).URI();
+    const base = getDefaultURI(sthis, protocol).build().appendRelative(path).URI();
     const db = fireproof("my-funky-name", {
       storeUrls: {
         base: base,
@@ -276,7 +266,7 @@ describe("benchmarking with compaction", function () {
           }),
         );
       }
-      const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeTruthy();
 
@@ -379,7 +369,7 @@ describe("benchmarking a ledger", function () {
     await db.put({ _id: "compacted-test", foo: "bar" });
 
     // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     expect(loader.carLog.length).toBe(2);
@@ -394,7 +384,7 @@ describe("benchmarking a ledger", function () {
     const newDb2 = fireproof("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     expect(doc21.foo).toBe("fast");
-    const blocks2 = newDb2.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks2 = newDb2.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader2 = blocks2.loader;
     expect(loader2).toBeTruthy();
 
@@ -483,7 +473,7 @@ describe("Reopening a ledger", function () {
 
   it("should have a car in the car log", async () => {
     await db.ledger.crdt.ready();
-    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
@@ -493,7 +483,7 @@ describe("Reopening a ledger", function () {
   it("should have carlog after reopen", async () => {
     const db2 = fireproof("test-reopen");
     await db2.ledger.crdt.ready();
-    const blocks = db2.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db2.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
@@ -507,7 +497,7 @@ describe("Reopening a ledger", function () {
       const db = fireproof("test-reopen");
       // assert(db._crdt.xready());
       await db.ready();
-      const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader.carLog.length).toBe(i + 1 + 1 /* genesis */);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
@@ -527,7 +517,7 @@ describe("Reopening a ledger", function () {
       // assert(db._crdt.ready);
       await db.ready();
       // console.timeEnd("db open");
-      const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeDefined();
       expect(loader.carLog.length).toBe(i + 1);
@@ -660,7 +650,7 @@ describe("basic js verify", function () {
     expect(ok.id).toBe("test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
     expect(ok2.id).toBe("test2");
-    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     const cid = loader.carLog.asArray()[0][0];

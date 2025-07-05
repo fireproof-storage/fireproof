@@ -3,7 +3,7 @@
 // https://github.com/multiformats/js-multiformats/pull/305
 import { bytes as binary, CID, MultihashHasher, BlockView, ByteView, Version, Link, MultihashDigest } from "multiformats";
 import { Block as mfBlock } from "multiformats/block";
-import { AsyncBlockDecoder, AsyncBlockEncoder, BlockDecoder, BlockEncoder } from "@fireproof/core-types/runtime"
+import { AsyncBlockDecoder, AsyncBlockEncoder, BlockDecoder, BlockEncoder } from "@fireproof/core-types/runtime";
 
 // export type Block<T, C extends number, A extends number, V extends Version> = mfBlock<T, C, A, V>
 
@@ -23,7 +23,7 @@ export interface AsyncDecodeInput<T, Code extends number, Alg extends number> {
   readonly hasher: MultihashHasher<Alg>;
 }
 
-export async function decode<T, Code extends number, Alg extends number>({
+export async function asyncBlockDecode<T, Code extends number, Alg extends number>({
   bytes,
   codec,
   hasher,
@@ -72,7 +72,7 @@ export interface AsyncEncodeInput<T, Code extends number, Alg extends number> {
  * @template Code - multicodec code corresponding to codec used to encode the block
  * @template Alg - multicodec code corresponding to the hashing algorithm used in CID creation.
  */
-export async function encode<T, Code extends number, Alg extends number>({
+export async function asyncBlockEncode<T, Code extends number, Alg extends number>({
   value,
   codec,
   hasher,
@@ -101,7 +101,7 @@ interface CreateInput<T, Code extends number, Alg extends number, V extends Vers
   codec: BlockDecoder<Code, T>;
 }
 
-export async function create<T, Code extends number, Alg extends number, V extends Version>({
+export async function asyncBlockCreate<T, Code extends number, Alg extends number, V extends Version>({
   bytes,
   cid,
   hasher,
@@ -115,7 +115,7 @@ export async function create<T, Code extends number, Alg extends number, V exten
     throw new Error("CID hash does not match bytes");
   }
 
-  return createUnsafe({
+  return asyncBlockCreateUnsafe({
     bytes,
     cid,
     value,
@@ -143,7 +143,7 @@ type CreateUnsafeInput<T, Code extends number, Alg extends number, V extends Ver
  * @template Alg - multicodec code corresponding to the hashing algorithm used in CID creation.
  * @template V - CID version
  */
-export async function createUnsafe<T, Code extends number, Alg extends number, V extends Version>({
+export async function asyncBlockCreateUnsafe<T, Code extends number, Alg extends number, V extends Version>({
   bytes,
   cid,
   value: maybeValue,

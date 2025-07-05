@@ -1,5 +1,6 @@
 import { fireproof, DocResponse, DocWithId, index, Database, isDatabase } from "@fireproof/core";
 import { mockSuperThis } from "../helpers.js";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {

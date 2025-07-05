@@ -1,5 +1,6 @@
 import { fireproof } from "@fireproof/core";
 import { mockSuperThis } from "../../helpers.js";
+import { describe, beforeAll, it, expect } from "vitest";
 
 describe("fireproof config indexeddb", () => {
   const _my_app = "my-app";

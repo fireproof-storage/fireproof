@@ -1,5 +1,4 @@
-import React from "react";
-import { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { SuperThis } from "@fireproof/core";
 import { ensureSuperThis } from "@fireproof/core-runtime";

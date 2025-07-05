@@ -5,7 +5,14 @@ import { sqlTenants } from "./tenants.js";
 import { sqlLedgers } from "./ledgers.js";
 import { queryEmail, queryNick, toUndef } from "./sql-helper.js";
 import { SuperThis } from "@fireproof/core";
-import { AuthProvider, InvitedParams, InviteTicket, InviteTicketStatus, QueryUser, SqlInvitedParams } from "@fireproof/core-protocols-dashboard";
+import {
+  AuthProvider,
+  InvitedParams,
+  InviteTicket,
+  InviteTicketStatus,
+  QueryUser,
+  SqlInvitedParams,
+} from "@fireproof/core-protocols-dashboard";
 
 export const sqlInviteTickets = sqliteTable(
   "InviteTickets",

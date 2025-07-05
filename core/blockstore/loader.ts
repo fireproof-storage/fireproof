@@ -33,7 +33,7 @@ import { getKeyBag } from "@fireproof/core-keybag";
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
 
 import { CarTransactionImpl, defaultedBlockstoreRuntime } from "./transaction.js";
-import { CommitQueue, ensureLogger, TaskManager, } from "@fireproof/core-runtime"
+import { asyncBlockDecode, CommitQueue, ensureLogger, TaskManager } from "@fireproof/core-runtime";
 import {
   PARAM,
   type Attachable,
@@ -46,7 +46,6 @@ import {
   KeyBagIf,
 } from "@fireproof/core-types";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
-import { decode } from "@fireproof/core-runtime/async-multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
 import { isNotFoundError } from "@fireproof/core-types";
@@ -876,7 +875,7 @@ export class Loader implements Loadable {
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
-    const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
+    const bytes = await asyncBlockDecode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
     const rawReader = await CarReader.fromBytes(bytes.value.data);
     // const readerP = Promise.resolve(rawReader);
     // const kc = await activeStore.keyedCrypto()
@@ -945,4 +944,3 @@ export class Loader implements Loadable {
     // console.log("getMoreReaders<<<");
   }
 }
-

@@ -1,9 +1,21 @@
 import { SuperThis, UnReg } from "@fireproof/core-types";
-import { sts } from "@fireproof/core-runtime"
+import { sts } from "@fireproof/core-runtime";
 
 import { CORS } from "./hono-server.js";
 import { WSRoom } from "./ws-room.js";
-import { AuthType, buildErrorMsg, FPJWKCloudAuthType, isAuthTypeFPCloud, isAuthTypeFPCloudJWK, MsgBase, MsgIsError, MsgWithConn, MsgWithError, PreSignedMsg, QSId } from "@fireproof/core-types/protocols/cloud";
+import {
+  AuthType,
+  buildErrorMsg,
+  FPJWKCloudAuthType,
+  isAuthTypeFPCloud,
+  isAuthTypeFPCloudJWK,
+  MsgBase,
+  MsgIsError,
+  MsgWithConn,
+  MsgWithError,
+  PreSignedMsg,
+  QSId,
+} from "@fireproof/core-types/protocols/cloud";
 import { WSContextWithId, ExposeCtxItemWithImpl, HonoServerImpl } from "./types.js";
 
 // type MsgBase = MsgBase;

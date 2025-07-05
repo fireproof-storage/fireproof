@@ -16,7 +16,7 @@ import {
   MsgWithOptionalConn,
   ReqGwCtx,
 } from "./msg-types.js";
-import { V2SerializedMetaKey } from "../../blockstore/fp-envelope-serialize.js"
+import { V2SerializedMetaKey } from "../../blockstore/fp-envelope-serialize.js";
 
 /* Put Meta */
 export interface ReqPutMeta extends MsgWithTenantLedger<MsgWithOptionalConn> {

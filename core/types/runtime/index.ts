@@ -1,1 +1,1 @@
-export * from "./codec-interface.js"
+export * from "./codec-interface.js";

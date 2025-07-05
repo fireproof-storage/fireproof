@@ -6,7 +6,7 @@ import { Future, URI } from "@adviser/cement";
 import { describe, beforeAll, afterAll, it, expect, assert } from "vitest";
 import { mockJWK, MockJWK } from "./test-helper.js";
 
-const { MsgIsResChat, buildReqChat } = ps
+const { MsgIsResChat, buildReqChat } = ps;
 
 describe("test multiple connections", () => {
   const sthis = testSuperThis();
@@ -38,10 +38,7 @@ describe("test multiple connections", () => {
     // await hserv.close();
   });
 
-  function consumeStream(
-    stream: ReadableStream<ps.MsgWithError<ps.MsgWithConn>>,
-    cb: (msg: ps.MsgBase) => void,
-  ): void {
+  function consumeStream(stream: ReadableStream<ps.MsgWithError<ps.MsgWithConn>>, cb: (msg: ps.MsgBase) => void): void {
     const reader = stream.getReader();
     async function readNext() {
       const { done, value } = await reader.read();

@@ -13,6 +13,5 @@ export interface TaskManagerIf {
 
   readonly callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>;
 
-  handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta, store: ActiveStore): Promise<void>; 
-
+  handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta, store: ActiveStore): Promise<void>;
 }

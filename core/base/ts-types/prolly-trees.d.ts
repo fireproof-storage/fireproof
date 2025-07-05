@@ -1,4 +1,3 @@
-
 declare module "prolly-trees/base" {
   declare type AnyLink = Link<unknown, number, number, Version>;
   declare type KeyLiteral = string | number | boolean;

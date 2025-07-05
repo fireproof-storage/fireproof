@@ -8,8 +8,8 @@ export interface KeyBagIf {
 
   subtleKey(materialStrOrUint8: string | Uint8Array): Promise<CryptoKey>;
 
-  ensureKeyFromUrl(url: URI, keyFactory: () => string): Promise<Result<URI>>
-  flush(): Promise<void>; 
+  ensureKeyFromUrl(url: URI, keyFactory: () => string): Promise<Result<URI>>;
+  flush(): Promise<void>;
 
-  getNamedKey(name: string, failIfNotFound?:boolean, material?: string | Uint8Array): Promise<Result<KeysByFingerprint>> 
+  getNamedKey(name: string, failIfNotFound?: boolean, material?: string | Uint8Array): Promise<Result<KeysByFingerprint>>;
 }

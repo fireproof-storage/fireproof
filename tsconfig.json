@@ -6,6 +6,7 @@
     "moduleResolution": "nodenext",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
 
+    "jsx": "react",
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "outDir": "./dist",
@@ -13,7 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "alwaysStrict": true,
-    "skipLibCheck": true, 
+    "skipLibCheck": true,
     "types": ["node", "deno"]
   },
   "include": ["core/**/*", "cloud/**/*", "tests/**/*", "cli/**/*", "dashboard/**/*"],

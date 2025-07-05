@@ -1,22 +1,15 @@
 import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
-import {
-  Attachable,
-  Database,
-  ensureSuperThis,
-  fireproof,
-  GatewayUrlsParam,
-  PARAM,
-  rt,
-  Attached,
-  bs,
-  sleep,
-  TraceFn,
-} from "@fireproof/core";
+import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, Attached, TraceFn } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
-import { afterEach, beforeEach, expect } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
+import { DefSerdeGateway } from "@fireproof/core-gateways-base";
+import { MemoryGateway } from "@fireproof/core-gateways-memory";
+import { AttachedRemotesImpl } from "@fireproof/core-blockstore";
+import { AttachedStores } from "@fireproof/core-types/blockstore";
 
 const ROWS = 1;
 
@@ -91,9 +84,9 @@ describe("meta check", () => {
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
     await db.close();
     expect(
-      Array.from(
-        ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries(),
-      ).filter(([k]) => k.startsWith(`memory://${name}`)),
+      Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries()).filter(([k]) =>
+        k.startsWith(`memory://${name}`),
+      ),
     ).toEqual([]);
   });
 
@@ -132,7 +125,7 @@ describe("meta check", () => {
     ]);
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries())
+      Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries())
         .filter(([k]) => k.startsWith(`memory://${name}`))
         .map(([k]) =>
           stripper(
@@ -186,9 +179,7 @@ describe("meta check", () => {
         },
       },
     ]);
-    const car = Array.from(
-      ((gws.active.car.realGateway as rt.gw.DefSerdeGateway).gw as rt.gw.memory.MemoryGateway).memories.entries(),
-    )
+    const car = Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries())
       .filter(([k]) => k.startsWith(`memory://${name}`))
       .map(([k, v]) => [URI.from(k).getParam(PARAM.KEY), v])
       .find(([k]) => k === "baembeig2is4vdgz4gyiadfh5uutxxeiuqtacnesnytrnilpwcu7q5m5tmu") as [string, Uint8Array];
@@ -222,11 +213,11 @@ describe("activate store", () => {
   // }
 
   const sthis = ensureSuperThis();
-  let attach: bs.AttachedStores;
+  let attach: AttachedStores;
   let firstAttached: Attached;
   let secondAttached: Attached;
   beforeEach(async () => {
-    attach = new bs.AttachedRemotesImpl(mockLoader(sthis));
+    attach = new AttachedRemotesImpl(mockLoader(sthis));
     firstAttached = await attach.attach(
       {
         name: "first",

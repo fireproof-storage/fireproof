@@ -1,13 +1,15 @@
 import { BuildURI, CoerceURI, runtimeFn, URI } from "@adviser/cement";
-import { fireproof, PARAM, rt, SuperThis } from "@fireproof/core";
+import { fireproof, PARAM, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../../helpers.js";
+import { describe, beforeAll, it, expect } from "vitest";
+import { FILESTORE_VERSION, sysFileSystemFactory } from "@fireproof/core-gateways-file";
 
 function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI {
   if (!base) {
     const home = sthis.env.get("HOME") || "./";
     base =
       sthis.env.get("FP_STORAGE_URL") ||
-      `file://${sthis.pathOps.join(home, ".fireproof", rt.FILESTORE_VERSION.replace(/-.*$/, ""))}?${PARAM.URL_GEN}=default`;
+      `file://${sthis.pathOps.join(home, ".fireproof", FILESTORE_VERSION.replace(/-.*$/, ""))}?${PARAM.URL_GEN}=default`;
   }
   return URI.from(base.toString())
     .build()
@@ -105,7 +107,7 @@ describe("config file gateway", () => {
     // if (isMemFS.fs) {
     //   base.setParam("fs", isMemFS.fs);
     // }
-    const sysfs = await rt.gw.file.sysFileSystemFactory(base.URI());
+    const sysfs = await sysFileSystemFactory(base.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
@@ -170,12 +172,12 @@ describe("config file gateway", () => {
     // if (isMemFS.fs) {
     //   base.setParam("fs", isMemFS.fs);
     // }
-    const sysfs = await rt.gw.file.sysFileSystemFactory(base.URI());
+    const sysfs = await sysFileSystemFactory(base.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
 
-    expect(baseDir).toMatch(new RegExp(`/\\.fireproof/${rt.FILESTORE_VERSION.replace(/-file/, "")}/${my_app()}`));
+    expect(baseDir).toMatch(new RegExp(`/\\.fireproof/${FILESTORE_VERSION.replace(/-file/, "")}/${my_app()}`));
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
@@ -194,7 +196,7 @@ describe("config file gateway", () => {
         store: "car",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
-        version: rt.FILESTORE_VERSION,
+        version: FILESTORE_VERSION,
       },
     });
 
@@ -212,7 +214,7 @@ describe("config file gateway", () => {
         store: "file",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
-        version: rt.FILESTORE_VERSION,
+        version: FILESTORE_VERSION,
       },
     });
     const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
@@ -227,7 +229,7 @@ describe("config file gateway", () => {
         store: "meta",
         name: my_app(),
         storekey: `@${my_app()}-meta@`,
-        version: rt.FILESTORE_VERSION,
+        version: FILESTORE_VERSION,
       },
     });
 
@@ -245,7 +247,7 @@ describe("config file gateway", () => {
     let baseDir = dataDir(sthis, my_app()).pathname;
     baseDir = sthis.pathOps.join(baseDir, /* testCfg(sthis, "data").version, */ my_app());
 
-    const sysfs = await rt.gw.file.sysFileSystemFactory(testUrl.URI());
+    const sysfs = await sysFileSystemFactory(testUrl.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
@@ -266,7 +268,7 @@ describe("config file gateway", () => {
         suffix: ".car",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
-        version: rt.FILESTORE_VERSION,
+        version: FILESTORE_VERSION,
       },
     });
 
@@ -282,7 +284,7 @@ describe("config file gateway", () => {
         store: "file",
         name: my_app(),
         storekey: `@${my_app()}-data@`,
-        version: rt.FILESTORE_VERSION,
+        version: FILESTORE_VERSION,
       },
     });
 
@@ -297,7 +299,7 @@ describe("config file gateway", () => {
         store: "meta",
         name: my_app(),
         storekey: `@${my_app()}-meta@`,
-        version: rt.FILESTORE_VERSION,
+        version: FILESTORE_VERSION,
       },
     });
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "meta"))).isDirectory()).toBeTruthy();

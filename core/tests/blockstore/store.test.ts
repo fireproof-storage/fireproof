@@ -1,10 +1,15 @@
 import { CID } from "multiformats";
-import { rt, bs, NotFoundError, PARAM, ensureSuperThis } from "@fireproof/core";
 import { Result } from "@adviser/cement";
 import { mockLoader, noopUrl } from "../helpers.js";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { PARAM, NotFoundError, DbMeta } from "@fireproof/core-types";
+import { describe, afterEach, beforeEach, it, expect } from "vitest";
+import { createAttachedStores } from "@fireproof/core-blockstore";
+import { CarStore, Loadable, AnyBlock, MetaStore, FPEnvelopeMeta } from "@fireproof/core-types/blockstore";
+import { fpDeserialize } from "@fireproof/core-gateways-base";
 
 // function runtime(sthis: SuperThis) {
-//   return bs.toStoreRuntime(sthis);
+//   return toStoreRuntime(sthis);
 // }
 
 // async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFactoryItem> {
@@ -17,10 +22,10 @@ import { mockLoader, noopUrl } from "../helpers.js";
 // }
 
 describe("CarStore", function () {
-  let store: bs.CarStore;
+  let store: CarStore;
   const sthis = ensureSuperThis();
 
-  let loader: bs.Loadable;
+  let loader: Loadable;
 
   afterEach(async () => {
     await store.close();
@@ -30,7 +35,7 @@ describe("CarStore", function () {
   beforeEach(async () => {
     loader = mockLoader(sthis);
     await sthis.start();
-    const at = await bs.createAttachedStores(noopUrl("test"), loader);
+    const at = await createAttachedStores(noopUrl("test"), loader);
     store = at.stores.car;
     await store.start(at.stores);
   });
@@ -40,7 +45,7 @@ describe("CarStore", function () {
   });
 
   it("should save a car", async () => {
-    const car: bs.AnyBlock = {
+    const car: AnyBlock = {
       cid: "cidKey" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57]),
     };
@@ -51,9 +56,9 @@ describe("CarStore", function () {
 });
 
 describe("CarStore with a saved car", function () {
-  let store: bs.CarStore;
-  let car: bs.AnyBlock;
-  let loader: bs.Loadable;
+  let store: CarStore;
+  let car: AnyBlock;
+  let loader: Loadable;
 
   const sthis = ensureSuperThis();
 
@@ -66,7 +71,7 @@ describe("CarStore with a saved car", function () {
     loader = mockLoader(sthis);
     await sthis.start();
 
-    const at = await bs.createAttachedStores(noopUrl("test2"), loader);
+    const at = await createAttachedStores(noopUrl("test2"), loader);
     store = at.stores.car;
     await store.start(at.stores);
     car = {
@@ -96,9 +101,9 @@ describe("CarStore with a saved car", function () {
 });
 
 describe("MetaStore", function () {
-  let store: bs.MetaStore;
+  let store: MetaStore;
   const sthis = ensureSuperThis();
-  let loader: bs.Loadable;
+  let loader: Loadable;
 
   afterEach(async () => {
     await store.close();
@@ -108,7 +113,7 @@ describe("MetaStore", function () {
   beforeEach(async () => {
     loader = mockLoader(sthis);
     await sthis.start();
-    const at = await bs.createAttachedStores(noopUrl("test"), loader);
+    const at = await createAttachedStores(noopUrl("test"), loader);
     store = at.stores.meta;
     await store.start(at.stores);
   });
@@ -119,13 +124,13 @@ describe("MetaStore", function () {
 
   it("should save a header", async () => {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-    const h: bs.DbMeta = {
+    const h: DbMeta = {
       cars: [cid],
       // key: undefined,
     };
     await store.save(h);
     const file = await store.realGateway.getPlain({ loader }, store.url(), "main");
-    const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
+    const blockMeta = (await fpDeserialize(sthis, store.url(), file)) as Result<FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
     const decodedHeader = blockMeta.Ok().payload[0].dbMeta;
@@ -136,10 +141,10 @@ describe("MetaStore", function () {
 });
 
 describe("MetaStore with a saved header", function () {
-  let store: bs.MetaStore;
+  let store: MetaStore;
   let cid: CID;
   const sthis = ensureSuperThis();
-  let loader: bs.Loadable;
+  let loader: Loadable;
 
   afterEach(async () => {
     await store.close();
@@ -149,7 +154,7 @@ describe("MetaStore with a saved header", function () {
   beforeEach(async () => {
     loader = mockLoader(sthis);
     await sthis.start();
-    const at = await bs.createAttachedStores(noopUrl("test3-meta"), loader);
+    const at = await createAttachedStores(noopUrl("test3-meta"), loader);
     store = at.stores.meta;
     await store.start(at.stores);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
@@ -171,7 +176,7 @@ describe("MetaStore with a saved header", function () {
     expect(header.parents).toBeDefined();
     // const [blockMeta] = await store.handleByteHeads(bytes);
 
-    const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), bytes)) as Result<bs.FPEnvelopeMeta>;
+    const blockMeta = (await fpDeserialize(sthis, store.url(), bytes)) as Result<FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
     const decodedHeader = blockMeta.Ok().payload[0].dbMeta;

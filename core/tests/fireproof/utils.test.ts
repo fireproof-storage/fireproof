@@ -1,6 +1,9 @@
 import { runtimeFn, URI } from "@adviser/cement";
-import { rt, getStore, inplaceFilter, ensureSuperThis, ensureSuperLog } from "@fireproof/core";
+import { getFileName } from "@fireproof/core-gateways-base";
+import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter } from "@fireproof/core-runtime";
+import assert from "assert";
 import { UUID } from "uuidv7";
+import { describe, beforeAll, it, expect } from "vitest";
 
 describe("utils", () => {
   const sthis = ensureSuperThis();
@@ -40,7 +43,7 @@ describe("utils", () => {
   it("getfilename plain", () => {
     for (const store of storeOpts) {
       const url = URI.from(`file://./x/path?store=${store.type}&name=name&key=key&version=version&suffix=${store.suffix}`);
-      expect(rt.getFileName(url, logger)).toEqual(`${store.pathPart}/key${store.suffix}`);
+      expect(getFileName(url, logger)).toEqual(`${store.pathPart}/key${store.suffix}`);
     }
   });
 
@@ -49,7 +52,7 @@ describe("utils", () => {
       const url = URI.from(
         `file://./x/path?index=idx&store=${store.type}&name=name&key=key&version=version&suffix=${store.suffix}`,
       );
-      expect(rt.getFileName(url, logger)).toEqual(`idx-${store.pathPart}/key${store.suffix}`);
+      expect(getFileName(url, logger)).toEqual(`idx-${store.pathPart}/key${store.suffix}`);
     }
   });
 

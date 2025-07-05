@@ -4,10 +4,7 @@ import {
   CRDT,
   IndexRows,
   toStoreURIRuntime,
-  bs,
-  rt,
   defaultWriteQueueOpts,
-  ensureSuperThis,
   LedgerOpts,
   Database,
   CRDTImpl,
@@ -15,6 +12,10 @@ import {
 } from "@fireproof/core";
 import { tracer } from "../helpers.js";
 import { AppContext } from "@adviser/cement";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { describe, afterEach, beforeEach, it, expect } from "vitest";
+import { ensureStoreEnDeFile } from "@fireproof/core-blockstore";
+import { defaultKeyBagOpts } from "@fireproof/core-keybag";
 
 interface TestType {
   readonly title: string;
@@ -328,9 +329,9 @@ describe("basic Index upon cold start", function () {
     dbOpts = {
       name: "test-indexer-cold",
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: rt.kb.defaultKeyBagOpts(sthis),
+      keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-indexer-cold"),
-      storeEnDe: bs.ensureStoreEnDeFile({}),
+      storeEnDe: ensureStoreEnDeFile({}),
       ctx: new AppContext(),
       tracer,
     };

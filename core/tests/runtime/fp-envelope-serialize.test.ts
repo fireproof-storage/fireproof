@@ -2,7 +2,16 @@ import { createDbMetaEvent } from "@fireproof/core-blockstore";
 import { mockSuperThis, simpleCID } from "../helpers.js";
 import { BuildURI, Result } from "@adviser/cement";
 import { fpDeserialize, fpSerialize } from "@fireproof/core-gateways-base";
-import { DbMetaEvent, FPEnvelopeCar, FPEnvelopeFile, FPEnvelopeMeta, FPEnvelopeTypes, FPEnvelopeWAL, SerializedMeta, WALState } from "@fireproof/core-types/blockstore";
+import {
+  DbMetaEvent,
+  FPEnvelopeCar,
+  FPEnvelopeFile,
+  FPEnvelopeMeta,
+  FPEnvelopeTypes,
+  FPEnvelopeWAL,
+  SerializedMeta,
+  WALState,
+} from "@fireproof/core-types/blockstore";
 import { toJSON } from "multiformats/link";
 import { describe, expect, it } from "vitest";
 

@@ -12,12 +12,6 @@
       "browser": "./index.js",
       "require": "./index.cjs",
       "types": "./index.d.ts"
-    },
-    "./async-multiformats": {
-      "import": "./async-multiformats/block.js",
-      "browser": "./async-multiformats/block.js",
-      "require": "./async-multiformats/block.cjs",
-      "types": "./async-multiformats/block.d.ts"
     }
   },
   "scripts": {
@@ -52,7 +46,6 @@
   "dependencies": {
     "@adviser/cement": "from-package-json",
     "@fireproof/core-types": "workspace:0.0.0",
-    "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
     "multiformats": "^13.3.7"
   }
 }

@@ -359,8 +359,6 @@ export async function exceptionWrapper<T, E extends Error>(fn: () => Promise<Res
 //   // }
 // }
 
-
-
 export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) {
     return false;

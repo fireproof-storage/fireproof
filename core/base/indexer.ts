@@ -80,8 +80,8 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
   readonly name: string;
   mapFn?: MapFn<T>;
   mapFnString = "";
-  byKey: IndexTree<K, R> = {}
-  byId: IndexTree<K, R> = {}
+  byKey: IndexTree<K, R> = {};
+  byId: IndexTree<K, R> = {};
   indexHead?: ClockHead;
 
   initError?: Error;
@@ -266,15 +266,15 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
   }
 
   _resetIndex() {
-    this.byId = {}
-    this.byKey = {}
+    this.byId = {};
+    this.byKey = {};
     this.indexHead = undefined;
   }
 
   async _hydrateIndex() {
     if (this.byId.root && this.byKey.root) return;
     if (!this.byId.cid || !this.byKey.cid) return;
-    this.byId.root = await loadIndex<K, R, string|number>(this.blockstore, this.byId.cid, byIdOpts);
+    this.byId.root = await loadIndex<K, R, string | number>(this.blockstore, this.byId.cid, byIdOpts);
     this.byKey.root = await loadIndex<K, R, CompareKey>(this.blockstore, this.byKey.cid, byKeyOpts);
   }
 
@@ -326,7 +326,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
     }
     this.logger.Debug().Msg("pre this.blockstore.transaction");
     const { meta } = await this.blockstore.transaction<IndexTransactionMeta>(async (tblocks): Promise<IndexTransactionMeta> => {
-      this.byId = await bulkIndex<K, R, string|number>(
+      this.byId = await bulkIndex<K, R, string | number>(
         this.logger,
         tblocks,
         this.byId,

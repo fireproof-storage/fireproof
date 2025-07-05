@@ -1,6 +1,5 @@
 /// <reference types="../types/prolly-trees.d.ts" />
 import type { Block } from "multiformats";
-import { create } from "@fireproof/core-runtime/async-multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 
@@ -30,8 +29,9 @@ import {
 } from "@fireproof/core-types";
 import { BlockFetcher, AnyLink, AnyBlock } from "@fireproof/core-types/blockstore";
 import { Logger } from "@adviser/cement";
-import { anyBlock2FPBlock } from "@fireproof/core-blockstore"
+import { anyBlock2FPBlock } from "@fireproof/core-blockstore";
 import { StaticProllyOptions, BaseNode as ProllyNode, IndexRow } from "prolly-trees/base";
+import { asyncBlockCreate } from "@fireproof/core-runtime";
 
 type CompareRef = string | number;
 export type CompareKey = [string | number, CompareRef];
@@ -54,11 +54,11 @@ function compare(a: CompareKey, b: CompareKey) {
   return refCompare(aRef, bRef);
 }
 
-  // declare function bf<T>(factor: number): (entry: T, dist: number) => Promise<boolean>;
-    // chunker: (entry: T, distance: number) => Promise<boolean>;
+// declare function bf<T>(factor: number): (entry: T, dist: number) => Promise<boolean>;
+// chunker: (entry: T, distance: number) => Promise<boolean>;
 export const byKeyOpts: StaticProllyOptions<CompareKey> = { cache, chunker: bf(30), codec, hasher, compare };
 
-export const byIdOpts: StaticProllyOptions<string|number> = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
+export const byIdOpts: StaticProllyOptions<string | number> = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
 
 export interface IndexDoc<K extends IndexKeyType> {
   readonly key: IndexKey<K>;
@@ -101,7 +101,7 @@ function makeProllyGetBlock(blocks: BlockFetcher): (address: AnyLink) => Promise
     const block = await blocks.get(address);
     if (!block) throw new Error(`Missing block ${address.toString()}`);
     const { cid, bytes } = block;
-    return create({ cid, bytes, hasher, codec }) as Promise<AnyBlock>;
+    return asyncBlockCreate({ cid, bytes, hasher, codec }) as Promise<AnyBlock>;
   };
 }
 
@@ -211,7 +211,7 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
   });
 
   // We need to be explicit about the document types here
-  const typedRows = rows as FPIndexRow<K, T, R>[]
+  const typedRows = rows as FPIndexRow<K, T, R>[];
 
   // Simply filter out null/undefined docs and cast the result
   const docs = typedRows.filter((r) => !!r.doc) as unknown as DocWithId<T>[];

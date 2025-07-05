@@ -1,4 +1,3 @@
-import { encode } from "@fireproof/core-runtime/async-multiformats"
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import { decode as syncDecode } from "multiformats/block";
@@ -21,6 +20,7 @@ import {
   ReadyCarBlockItem,
 } from "@fireproof/core-types/blockstore";
 import { DocObject } from "@fireproof/core-types";
+import { asyncBlockEncode } from "@fireproof/core-runtime";
 
 class FPBlockImpl implements FPBlock {
   readonly cid: AnyLink;
@@ -28,7 +28,7 @@ class FPBlockImpl implements FPBlock {
   readonly item: BlockItem;
 
   static async fromBlockItem<T extends BlockItem>(item: T): Promise<FPBlock> {
-    const block = await encode({ value: item.value, hasher, codec: dagCodec });
+    const block = await asyncBlockEncode({ value: item.value, hasher, codec: dagCodec });
     return new FPBlockImpl(block.cid, block.bytes, item as T);
   }
 
@@ -106,7 +106,7 @@ class FPBlockImpl implements FPBlock {
 }
 
 export async function uint82FPBlock(value: Uint8Array): Promise<FPBlock> {
-  const block = await encode({ value, hasher, codec: dagCodec });
+  const block = await asyncBlockEncode({ value, hasher, codec: dagCodec });
   return FPBlockImpl.fromAnyBlock(block.cid, block.bytes);
 }
 
@@ -132,13 +132,13 @@ export function anyBlock2FPBlock(fp: AnyBlock): Promise<FPBlock> {
 }
 
 export async function doc2FPBlock(doc: Partial<DocObject>): Promise<FPBlock> {
-  const block = await encode({ value: doc, hasher, codec: dagCodec });
+  const block = await asyncBlockEncode({ value: doc, hasher, codec: dagCodec });
   return anyBlock2FPBlock(block);
 }
 export async function carHeader2FPBlock<T>(fp: CarHeader<T>): Promise<FPBlock> {
   // console.log("carHeader2FPBlock", fp);
   return anyBlock2FPBlock(
-    (await encode({
+    (await asyncBlockEncode({
       value: { fp },
       hasher,
       codec: dagCodec,

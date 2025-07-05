@@ -1,18 +1,11 @@
 import { URI } from "@adviser/cement";
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
-import {
-  bs,
-  DocResponse,
-  DocFileMeta,
-  DocWithId,
-  DocFiles,
-  toStoreURIRuntime,
-  keyConfigOpts,
-  ensureSuperThis,
-  Database,
-  fireproof,
-  LedgerShell,
-} from "@fireproof/core";
+import { DocResponse, DocFileMeta, DocWithId, DocFiles, Database } from "@fireproof/core-types";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { fireproof, LedgerShell, toStoreURIRuntime, keyConfigOpts } from "@fireproof/core-base";
+import { describe, afterEach, beforeEach, it, expect } from "vitest";
+import { defaultGatewayFactoryItem, EncryptedBlockstore, registerStoreProtocol } from "@fireproof/core-blockstore";
+import { Gateway } from "@fireproof/core-types/blockstore";
 
 describe("basic Ledger", () => {
   let db: Database;
@@ -220,7 +213,7 @@ describe("named Ledger with record", function () {
   it("should have a key", async () => {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
-    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     await loader.ready();
@@ -406,7 +399,7 @@ describe("basic Ledger parallel writes / public", () => {
     expect(rows.length).toBe(10);
     // expect(db.opts.public).toBeTruthy();
     // expect(db._crdt.opts.public).toBeTruthy();
-    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     await loader.ready();
@@ -640,13 +633,13 @@ describe("StoreURIRuntime", () => {
     safeEnv = sthis.env.get("FP_STORAGE_URL");
     sthis.env.set("FP_STORAGE_URL", "my://bla/storage");
     // console.log(">>>>>>>>>>", bs, bs.registerStoreProtocol)
-    unreg = bs.registerStoreProtocol({
+    unreg = registerStoreProtocol({
       protocol: "murks",
       isDefault: true,
       defaultURI: function (): URI {
         return URI.from("murks://fp");
       },
-      gateway: function (): Promise<bs.Gateway> {
+      gateway: function (): Promise<Gateway> {
         throw new Error("Function not implemented.");
       },
     });
@@ -770,7 +763,7 @@ describe("StoreURIRuntime", () => {
   });
 
   it("check file protocol defaultURI", () => {
-    const gw = bs.defaultGatewayFactoryItem();
+    const gw = defaultGatewayFactoryItem();
     expect(gw.defaultURI(sthis).toString()).toBe(
       "murks://fp",
       // `file://${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`,

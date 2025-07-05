@@ -1,4 +1,4 @@
-import { FileTransactionMeta, CarTransaction } from "@fireproof/core-types"
+import { FileTransactionMeta, CarTransaction } from "@fireproof/core-types";
 import {
   AnyBlock,
   AnyLink,
@@ -15,11 +15,11 @@ import {
 } from "@fireproof/core-types/blockstore";
 import * as CBW from "@ipld/car/buffer-writer";
 import { ByteView, CID } from "multiformats";
-import { encode } from "@fireproof/core-runtime/async-multiformats"
 import { CarTransactionImpl } from "./transaction.js";
 import { sha256 } from "multiformats/hashes/sha2";
 import { carHeader2FPBlock } from "./loader-helpers.js";
 import { AsyncBlockEncoder } from "@fireproof/core-types/runtime";
+import { asyncBlockEncode } from "@fireproof/core-runtime";
 
 async function encodeCarFile(
   roots: AnyLink[],
@@ -44,7 +44,7 @@ async function encodeCarFile(
     writer.write({ cid, bytes } as CBW.Block);
   }
   writer.close();
-  return await encode({ value: writer.bytes, hasher: sha256, codec });
+  return await asyncBlockEncode({ value: writer.bytes, hasher: sha256, codec });
 }
 
 export async function createCarFile(

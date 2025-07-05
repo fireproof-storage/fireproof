@@ -1,5 +1,5 @@
 import { Logger } from "@adviser/cement";
-import { ClockHead, DocTypes, DocUpdate } from "@fireproof/core-types"
+import { ClockHead, DocTypes, DocUpdate } from "@fireproof/core-types";
 
 type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) => Promise<void>;
 

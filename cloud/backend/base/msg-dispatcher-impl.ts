@@ -30,7 +30,7 @@ const {
   MsgIsBindGetMeta,
   MsgIsReqDelMeta,
   MsgIsReqPutMeta,
-} = ps
+} = ps;
 
 type ReqGetData = ps.ReqGetData;
 type ReqPutData = ps.ReqPutData;
@@ -54,10 +54,7 @@ type ReqPutMeta = ps.ReqPutMeta;
 // }
 
 export function ensureTendantLedger<T extends ps.MsgBase>(
-  fn: (
-    ctx: MsgDispatcherCtx,
-    msg: ps.MsgWithOptionalTenantLedger<MsgWithConn<T>>,
-  ) => Promisable<ps.MsgWithError<ps.MsgBase>>,
+  fn: (ctx: MsgDispatcherCtx, msg: ps.MsgWithOptionalTenantLedger<MsgWithConn<T>>) => Promisable<ps.MsgWithError<ps.MsgBase>>,
   // right: "read" | "write" = "write"
 ): (ctx: MsgDispatcherCtx, msg: MsgWithConn<T>) => Promisable<ps.MsgWithError<ps.MsgBase>> {
   return async (ctx, msg) => {

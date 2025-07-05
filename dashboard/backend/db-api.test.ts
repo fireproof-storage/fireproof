@@ -22,7 +22,7 @@ import {
 } from "@fireproof/core-protocols-dashboard";
 import { queryEmail, queryNick } from "./sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
-import { describe, beforeAll, expect, it } from "vitest"
+import { describe, beforeAll, expect, it } from "vitest";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';

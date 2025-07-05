@@ -1,5 +1,16 @@
 import { exception2Result, Result, URI } from "@adviser/cement";
-import type { CarClockLink, DbMeta, DbMetaBinary, DbMetaEvent, FPDecoder, FPEncoder, LinkOrCid, SerializedMeta, SerializedWAL, WALState } from "@fireproof/core-types/blockstore";
+import type {
+  CarClockLink,
+  DbMeta,
+  DbMetaBinary,
+  DbMetaEvent,
+  FPDecoder,
+  FPEncoder,
+  LinkOrCid,
+  SerializedMeta,
+  SerializedWAL,
+  WALState,
+} from "@fireproof/core-types/blockstore";
 import {
   FPEnvelope,
   FPEnvelopeCar,
@@ -17,7 +28,6 @@ import { fromJSON } from "multiformats/link";
 import { format, parse } from "@ipld/dag-json";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { coercePromiseIntoUint8 } from "@fireproof/core-runtime";
-
 
 export async function dbMetaEvent2Serialized(
   sthis: SuperThis,
@@ -55,8 +65,6 @@ function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
   };
   return serializedWAL;
 }
-
-
 
 const defaultEncoder: FPEncoder = {
   car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
@@ -146,8 +154,6 @@ async function decode2WalState(sthis: SuperThis, rserializedWAL: Result<Serializ
 // export type FILEDecodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
 // export type WALDecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedWAL) => Promise<Result<SerializedWAL>>;
 // export type METADecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Result<SerializedMeta[]>>;
-
-
 
 const defaultDecoder = {
   car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),

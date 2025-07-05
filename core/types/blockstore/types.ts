@@ -10,7 +10,8 @@ import {
   StoreType,
   SuperThis,
   TraceFn,
-   KeyBagRuntime, KeysItem
+  KeyBagRuntime,
+  KeysItem,
 } from "../types.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
@@ -901,4 +902,3 @@ export interface BlockFetcher {
   readonly crdtParent?: CRDT;
   get(link: AnyLink): Promise<FPBlock | Falsy>;
 }
-
