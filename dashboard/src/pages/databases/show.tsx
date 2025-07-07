@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core-react";
+import { useFireproof } from "use-fireproof";
 import { TableRow, DynamicTable } from "../../components/DynamicTable.jsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.js";
 import { SYNC_DB_NAME, truncateDbName } from "../../helpers.js";

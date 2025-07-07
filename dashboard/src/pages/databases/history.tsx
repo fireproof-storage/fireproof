@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useFireproof } from "@fireproof/core-react";
+import { useFireproof } from "use-fireproof";
 import { DynamicTable, TableRow } from "../../components/DynamicTable.jsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.js";
 

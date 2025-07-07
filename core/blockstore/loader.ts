@@ -44,7 +44,7 @@ import {
   type SuperThis,
   type BaseBlockstore,
   KeyBagIf,
-  isNotFoundError 
+  isNotFoundError,
 } from "@fireproof/core-types-base";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";

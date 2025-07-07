@@ -341,6 +341,7 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../../core/runtime
+    devDependencies:
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../../core/types/base
@@ -350,9 +351,6 @@ importers:
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../../../core/types/protocols/cloud
-      multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -416,6 +414,10 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.10
+        version: 24.0.10
 
   cloud/base:
     dependencies:
@@ -708,27 +710,6 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../types/protocols/cloud
 
-  core/react:
-    dependencies:
-      '@adviser/cement':
-        specifier: ^0.4.20
-        version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-base':
-        specifier: workspace:0.0.0
-        version: link:../base
-      '@fireproof/core-runtime':
-        specifier: workspace:0.0.0
-        version: link:../runtime
-      '@fireproof/core-types-base':
-        specifier: workspace:0.0.0
-        version: link:../types/base
-      '@fireproof/core-types-protocols-cloud':
-        specifier: workspace:0.0.0
-        version: link:../types/protocols/cloud
-      '@fireproof/vendor':
-        specifier: ^3.0.0
-        version: 3.0.0
-
   core/runtime:
     dependencies:
       '@adviser/cement':
@@ -885,9 +866,6 @@ importers:
       '@fireproof/core-protocols-dashboard':
         specifier: workspace:0.0.0
         version: link:../core/protocols/dashboard
-      '@fireproof/core-react':
-        specifier: workspace:0.0.0
-        version: link:../core/react
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -942,6 +920,9 @@ importers:
       use-editable:
         specifier: ^2.3.3
         version: 2.3.3(react@19.1.0)
+      use-fireproof:
+        specifier: workspace:0.0.0
+        version: link:../use-fireproof
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.5.0
@@ -1042,15 +1023,21 @@ importers:
       '@fireproof/core-gateways-cloud':
         specifier: workspace:0.0.0
         version: link:../core/gateways/cloud
+      '@fireproof/core-keybag':
+        specifier: workspace:0.0.0
+        version: link:../core/keybag
       '@fireproof/core-protocols-dashboard':
         specifier: workspace:0.0.0
         version: link:../core/protocols/dashboard
-      '@fireproof/core-react':
+      '@fireproof/core-runtime':
         specifier: workspace:0.0.0
-        version: link:../core/react
+        version: link:../core/runtime
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../core/types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../core/types/blockstore
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../core/types/protocols/cloud
@@ -1060,9 +1047,16 @@ importers:
       dompurify:
         specifier: ^3.2.6
         version: 3.2.6
+      jose:
+        specifier: ^6.0.11
+        version: 6.0.11
       react:
         specifier: ^19.1.0
         version: 19.1.0
+    devDependencies:
+      vite-tsconfig-paths:
+        specifier: ^5.1.4
+        version: 5.1.4(typescript@5.8.3)(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
 
 packages:
 

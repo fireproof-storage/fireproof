@@ -1,8 +1,8 @@
 import { render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ImgFile } from "use-fireproof";
+import { ImgFile } from "../index.js"; // Adjust the import path as necessary
 import { createElement } from "react";
-import type { DocFileMeta } from "use-fireproof";
+import type { DocFileMeta } from "../index.js"; // Adjust the import path as necessary
 import { AnyLink } from "@fireproof/core-types-blockstore";
 
 // Extend HTMLElement to include querySelector for TypeScript

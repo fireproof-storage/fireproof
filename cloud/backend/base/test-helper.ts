@@ -5,7 +5,6 @@ import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import * as ps from "@fireproof/core-types-protocols-cloud";
 import * as psc from "@fireproof/core-protocols-cloud";
 import { TokenForParam } from "@fireproof/core-types-protocols-cloud";
-// import { TokenForParam } from "@fireproof/core-types/protocols/cloud";
 
 type MsgerParamsWithEnDe = psc.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.MsgRawConnection<T>;

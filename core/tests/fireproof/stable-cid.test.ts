@@ -2,12 +2,7 @@ import { sha256 } from "multiformats/hashes/sha2";
 import { base58btc } from "multiformats/bases/base58";
 import { URI, toCryptoRuntime } from "@adviser/cement";
 import * as cborg from "cborg";
-import {
-  asyncBlockDecode,
-  asyncBlockEncode,
-  ensureSuperThis,
-  keyedCryptoFactory,
-} from "@fireproof/core-runtime";
+import { asyncBlockDecode, asyncBlockEncode, ensureSuperThis, keyedCryptoFactory } from "@fireproof/core-runtime";
 import { describe, beforeEach, it, expect } from "vitest";
 import { getKeyBag } from "@fireproof/core-keybag";
 import { CryptoAction, IvKeyIdData } from "@fireproof/core-types-blockstore";

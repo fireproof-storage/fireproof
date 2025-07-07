@@ -11,7 +11,15 @@ import {
   isCarBlockItemReady,
 } from "@fireproof/core-types-blockstore";
 import { Loader } from "./loader.js";
-import { BaseBlockstore, CarTransaction, CarTransactionOpts, CRDT, Falsy, falsyToUndef, SuperThis } from "@fireproof/core-types-base";
+import {
+  BaseBlockstore,
+  CarTransaction,
+  CarTransactionOpts,
+  CRDT,
+  Falsy,
+  falsyToUndef,
+  SuperThis,
+} from "@fireproof/core-types-base";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "@fireproof/core-runtime";

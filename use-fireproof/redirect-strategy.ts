@@ -1,10 +1,11 @@
 import { BuildURI, Logger } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
-import { WebCtx, WebToCloudCtx } from "@fireproof/core-react";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
 import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
 import { Api } from "@fireproof/core-protocols-dashboard";
+import { WebToCloudCtx } from "./react/types.js";
+import { WebCtx } from "./react/use-attach.js";
 
 function defaultOverlayHtml(redirectLink: string) {
   return `

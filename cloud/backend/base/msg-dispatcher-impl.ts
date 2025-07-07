@@ -2,7 +2,7 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { MsgDispatcher, MsgDispatcherCtx } from "./msg-dispatch.js";
 import { Promisable } from "@adviser/cement";
 import * as ps from "@fireproof/core-types-protocols-cloud";
-import { metaMerger } from "./meta-merge/meta-merger.js";
+import { metaMerger } from "./meta-merger/meta-merger.js";
 
 const {
   MsgIsReqGetData,

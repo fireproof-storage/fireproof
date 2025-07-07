@@ -7,6 +7,7 @@
   "main": "./index.cjs",
   "types": "./index.d.ts",
   "scripts": {
+    "test": "vitest --run",
     "build": "rm -rf ./dist/tsc ; tsc"
   },
   "keywords": [
@@ -37,13 +38,16 @@
   },
   "dependencies": {
     "@adviser/cement": "from-package-json",
-    "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/cloud-backend-base": "workspace:0.0.0",
-    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
+    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
-    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "vitest": "^3.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10"
   }
 }

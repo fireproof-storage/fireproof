@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist/tsc ; tsc",
     "test": "vitest --run"
@@ -42,11 +39,12 @@
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
-    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0"
+  },
+  "devDependencies": {
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
-    "multiformats": "^13.3.7",
     "vitest": "^3.2.4"
   }
 }

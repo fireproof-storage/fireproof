@@ -44,7 +44,7 @@ import {
   WSContextWithId,
   WSEventsConnId,
 } from "./types.js";
-import { metaMerger } from "./meta-merge/meta-merger.js";
+import { metaMerger } from "./meta-merger/meta-merger.js";
 
 // export interface Connected {
 //   readonly connId: QSId

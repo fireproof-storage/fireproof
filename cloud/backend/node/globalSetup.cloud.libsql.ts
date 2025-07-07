@@ -1,7 +1,7 @@
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import { $ } from "zx";
+import { cd, $ } from "zx";
 import type { TestProject } from "vitest/node";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
 import { mockJWK, portRandom } from "@fireproof/cloud-backend-base";
@@ -9,12 +9,17 @@ import { setTestEnv } from "@fireproof/cloud-base";
 import { setupBackendNode } from "./setup-backend-node.js";
 
 export async function setup(project: TestProject) {
+  const root = project.toJSON().serializedConfig.root;
+
+  $.verbose = true;
+  cd(root);
+
   const sthis = ensureSuperThis();
   const keys = await mockJWK(sthis);
 
   await fs.mkdir("dist", { recursive: true });
 
-  await $`npx drizzle-kit push --config ./cloud/backend/node/drizzle.cloud.libsql.config.ts`;
+  await $`pnpm exec drizzle-kit push --config ./drizzle.cloud.libsql.config.ts`;
 
   const port = portRandom(sthis);
   const env = {

@@ -16,7 +16,8 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest --run"
   },
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
@@ -25,12 +26,15 @@
     "@adviser/cement": "^0.4.20",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
+    "@fireproof/core-keybag": "workspace:0.0.0",
     "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
-    "@fireproof/core-react": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@types/deno": "^2.3.0",
-    "dompurify": "from-package-json"
+    "dompurify": "from-package-json",
+    "jose": "^6.0.11"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
@@ -41,5 +45,8 @@
     "json",
     "live",
     "sync"
-  ]
+  ],
+  "devDependencies": {
+    "vite-tsconfig-paths": "^5.1.4"
+  }
 }

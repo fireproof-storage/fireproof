@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { $, dotenv } from "zx";
+import { cd, $, dotenv } from "zx";
 import { setupBackendD1 } from "./setup-backend-d1.js";
 import type { TestProject } from "vitest/node";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
@@ -7,11 +7,17 @@ import { mockJWK } from "@fireproof/cloud-backend-base";
 import { setTestEnv } from "@fireproof/cloud-base";
 
 export async function setup(project: TestProject) {
+  const root = project.toJSON().serializedConfig.root;
+
+  $.verbose = true;
+  cd(root);
+
   if (typeof process.env.FP_ENV === "string") {
     dotenv.config(process.env.FP_ENV ?? ".env");
     // eslint-disable-next-line no-console
     console.log("Loaded env from", process.env.FP_ENV);
   }
+
   const sthis = ensureSuperThis();
   const keys = await mockJWK(sthis);
 
@@ -32,11 +38,11 @@ export async function setup(project: TestProject) {
 
     $.verbose = !!sthis.env.get("FP_DEBUG");
     // create db
-    await $`wrangler -c cloud/backend/cf-d1/wrangler.toml -e test d1  execute test-meta-merge --local --command "select 'meno'"`;
+    await $`wrangler -c ./wrangler.toml -e test d1 execute test-meta-merge --local --command "select 'meno'"`;
     // setup sql
-    await $`npx drizzle-kit push --config ./cloud/backend/cf-d1/drizzle.cloud.d1-local.config.ts --force`;
+    await $`npx drizzle-kit push --config ./drizzle.cloud.d1-local.config.ts --force`;
 
-    params = await setupBackendD1(sthis, "cloud/backend/cf-d1/wrangler.toml", "test");
+    params = await setupBackendD1(sthis, "./wrangler.toml", "test");
     FP_ENDPOINT = `http://localhost:${params.port}`;
   }
 

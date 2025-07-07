@@ -27,7 +27,7 @@ function dbCredentials() {
 }
 
 export default defineConfig({
-  schema: "./cloud/backend/meta-merger/schema.ts",
+  schema: "../base/meta-merger/schema.ts",
   out: "./dist",
   dialect: "sqlite",
   driver: "d1-http",

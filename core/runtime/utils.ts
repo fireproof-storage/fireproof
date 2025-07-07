@@ -16,7 +16,16 @@ import {
   param,
   AppContext,
 } from "@adviser/cement";
-import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "@fireproof/core-types-base";
+import {
+  PARAM,
+  PathOps,
+  StoreType,
+  SuperThis,
+  SuperThisOpts,
+  TextEndeCoder,
+  PromiseToUInt8,
+  ToUInt8,
+} from "@fireproof/core-types-base";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";

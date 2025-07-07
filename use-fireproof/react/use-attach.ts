@@ -13,7 +13,7 @@ import {
   TokenAndClaims,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
-import { isV1StorageKeyItem, isKeysItem } from "../keybag/key-bag.js";
+import { isKeysItem, isV1StorageKeyItem } from "@fireproof/core-keybag";
 
 export const WebCtx = "webCtx";
 
