@@ -92,7 +92,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "hono": "^4.8.3",
+    "hono": "^4.8.4",
     "playwright": "^1.53.2",
     "playwright-chromium": "^1.53.2",
     "prettier": "^3.6.2",
