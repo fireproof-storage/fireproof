@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@types/node': 24.0.10
+  '@types/node': ^24.0.10
   '@adviser/cement': ^0.4.20
   '@clerk/backend': ^2.3.1
   '@clerk/clerk-react': ^5.32.3
@@ -159,7 +159,7 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
       '@types/randombytes':
         specifier: ^2.0.3
@@ -480,7 +480,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
       react:
         specifier: ^19.1.0
@@ -540,7 +540,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
       react:
         specifier: ^19.1.0
@@ -604,7 +604,7 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
 
   core/gateways/file-deno:
@@ -616,7 +616,7 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
 
   core/gateways/file-node:
@@ -659,7 +659,7 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
 
   core/keybag:
@@ -782,7 +782,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@types/node':
-        specifier: 24.0.10
+        specifier: ^24.0.10
         version: 24.0.10
       react:
         specifier: ^19.1.0
@@ -2150,7 +2150,7 @@ packages:
     resolution: {integrity: sha512-EkCtvp67ICIVVzjsquUiVSd+V5HRGOGQfsqA4E4vMWhYnB7InUL0pa0TIWt1i+OfP16Gkds8CdIu6yGZwOM1Yw==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@types/node': 24.0.10
+      '@types/node': ^24.0.10
     peerDependenciesMeta:
       '@types/node':
         optional: true
@@ -2159,7 +2159,7 @@ packages:
     resolution: {integrity: sha512-Ma+ZpOJPewtIYl6HZHZckeX1STvDnHTCB2GVINNUlSEn2Am6LddWwfPkIGY0IUFVjUUrr/93XlBwTK6mfLjf0A==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@types/node': 24.0.10
+      '@types/node': ^24.0.10
     peerDependenciesMeta:
       '@types/node':
         optional: true
@@ -2172,7 +2172,7 @@ packages:
     resolution: {integrity: sha512-PfunHQcjwnju84L+ycmcMKB/pTPIngjUJvfnRhKY6FKPuYXlM4aQCb/nIdTFR6BEhMjFvngzvng/vBAJMZpLSA==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@types/node': 24.0.10
+      '@types/node': ^24.0.10
     peerDependenciesMeta:
       '@types/node':
         optional: true
@@ -5877,7 +5877,7 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
-      '@types/node': 24.0.10
+      '@types/node': ^24.0.10
       jiti: '>=1.21.0'
       less: ^4.0.0
       lightningcss: ^1.21.0
@@ -5917,7 +5917,7 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
-      '@types/node': 24.0.10
+      '@types/node': ^24.0.10
       jiti: '>=1.21.0'
       less: ^4.0.0
       lightningcss: ^1.21.0
@@ -5959,7 +5959,7 @@ packages:
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@types/debug': ^4.1.12
-      '@types/node': 24.0.10
+      '@types/node': ^24.0.10
       '@vitest/browser': 3.2.4
       '@vitest/ui': 3.2.4
       happy-dom: '*'
