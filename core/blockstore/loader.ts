@@ -27,7 +27,7 @@ import {
   isFPBlockItem,
   BlockItem,
   CommitQueueIf,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 import { getKeyBag } from "@fireproof/core-keybag";
 
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
@@ -44,12 +44,12 @@ import {
   type SuperThis,
   type BaseBlockstore,
   KeyBagIf,
-} from "@fireproof/core-types";
+  isNotFoundError 
+} from "@fireproof/core-types-base";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { AttachedRemotesImpl, createAttachedStores } from "./attachable-store.js";
-import { isNotFoundError } from "@fireproof/core-types";
-import { AsyncBlockEncoder } from "@fireproof/core-types/runtime";
+import { AsyncBlockEncoder } from "@fireproof/core-types-runtime";
 
 export function carLogIncludesGroup(list: FroozenCarLog, cids: CarGroup) {
   const cidSet = cids

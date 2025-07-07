@@ -1,4 +1,4 @@
-/// <reference types="../types/prolly-trees.d.ts" />
+/// <reference types="../types/base/prolly-trees.d.ts" />
 import type { Block } from "multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
@@ -26,8 +26,8 @@ import {
   CRDT,
   IndexTree,
   FPIndexRow,
-} from "@fireproof/core-types";
-import { BlockFetcher, AnyLink, AnyBlock } from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-base";
+import { BlockFetcher, AnyLink, AnyBlock } from "@fireproof/core-types-blockstore";
 import { Logger } from "@adviser/cement";
 import { anyBlock2FPBlock } from "@fireproof/core-blockstore";
 import { StaticProllyOptions, BaseNode as ProllyNode, IndexRow } from "prolly-trees/base";

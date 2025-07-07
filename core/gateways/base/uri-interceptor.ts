@@ -12,7 +12,7 @@ import {
   SerdeGatewayPutReturn,
   SerdeGatewayStartReturn,
   SerdeGatewaySubscribeReturn,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 
 export type URIMapper = (uri: URI) => Promisable<URI>;
 

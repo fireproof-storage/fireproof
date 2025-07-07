@@ -9,7 +9,7 @@ import {
   MsgerParamsWithEnDe,
 } from "@fireproof/core-protocols-cloud";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { SuperThis, UnReg } from "@fireproof/core-types";
+import { SuperThis, UnReg } from "@fireproof/core-types-base";
 import {
   MsgRawConnection,
   MsgBase,
@@ -24,7 +24,7 @@ import {
   MsgIsReqChat,
   buildResChat,
   MsgIsError,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { vi, it, expect, describe, beforeEach, afterEach, assert } from "vitest";
 const sthis = ensureSuperThis();
 

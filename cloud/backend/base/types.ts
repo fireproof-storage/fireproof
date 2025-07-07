@@ -3,7 +3,7 @@
 
 import { HttpHeader, Result, URI, Logger } from "@adviser/cement";
 import { D1Result } from "@cloudflare/workers-types";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import {
   EnDeCoder,
   Gestalt,
@@ -17,7 +17,7 @@ import {
   ResPutMeta,
   ReqDelMeta,
   ResDelMeta,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { ResultSet } from "@libsql/client";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { WSContext, WSContextInit } from "hono/ws";

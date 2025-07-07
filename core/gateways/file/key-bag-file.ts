@@ -1,5 +1,5 @@
 import { Logger, URI } from "@adviser/cement";
-import { isNotFoundError, KeyBagProvider, KeysItem, SuperThis, SysFileSystem, V1StorageKeyItem } from "@fireproof/core-types";
+import { isNotFoundError, KeyBagProvider, KeysItem, SuperThis, SysFileSystem, V1StorageKeyItem } from "@fireproof/core-types-base";
 import { sysFileSystemFactory } from "./sys-file-system-factory.js";
 
 interface KeyBagCtx {

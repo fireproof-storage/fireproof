@@ -1,5 +1,5 @@
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { Database } from "@fireproof/core-types";
+import { Database } from "@fireproof/core-types-base";
 import { fireproof } from "@fireproof/core-base";
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 interface DBItem {

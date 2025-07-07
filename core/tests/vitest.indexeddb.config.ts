@@ -6,11 +6,11 @@ import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [tsconfigPaths() as any],
   test: {
     name: "indexeddb",
-    exclude: ["examples/**", "tests/gateway/file"],
-    include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
+    exclude: ["dist/**", "node_modules/**", "examples/**", "gateway/file"],
+    include: ["**/*test.?(c|m)[jt]s?(x)"],
     browser: {
       enabled: true,
       headless: true,
@@ -32,6 +32,6 @@ export default defineConfig({
       // ],
     },
     globals: true,
-    setupFiles: "./tests/setup.indexeddb.ts",
+    setupFiles: "./setup.indexeddb.ts",
   },
 });

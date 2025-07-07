@@ -4,7 +4,7 @@ import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 
 import "highlight.js/styles/github.css";
-import { TenantLedger } from "@fireproof/core-types/protocols/cloud";
+import { TenantLedger } from "@fireproof/core-types-protocols-cloud";
 
 // Then register the languages you need
 hljs.registerLanguage("javascript", javascript);

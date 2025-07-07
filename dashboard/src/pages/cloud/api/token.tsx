@@ -6,7 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.jsx";
 import { SelectedTenantLedger } from "./selected-tenant-ledger.jsx";
-import { TenantLedger } from "@fireproof/core-types/protocols/cloud";
+import { TenantLedger } from "@fireproof/core-types-protocols-cloud";
 import { LedgerUser, UserTenant } from "@fireproof/core-protocols-dashboard";
 
 export function redirectBackUrl() {

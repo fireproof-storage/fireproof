@@ -10,8 +10,8 @@ import {
   type SerdeGatewayCtx,
   type SerdeGetResult,
   type UnsubscribeResult,
-} from "@fireproof/core-types/blockstore";
-import { PARAM, SuperThis } from "@fireproof/core-types";
+} from "@fireproof/core-types-blockstore";
+import { PARAM, SuperThis } from "@fireproof/core-types-base";
 
 const subscribeFn = new Map<string, Map<string, (raw: Uint8Array) => Promise<void>>>();
 

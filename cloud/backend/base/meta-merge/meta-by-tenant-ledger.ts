@@ -1,4 +1,4 @@
-import { CRDTEntry } from "@fireproof/core-types";
+import { CRDTEntry } from "@fireproof/core-types-base";
 import { sqlTenantLedger } from "./tenant-ledger.js";
 import { ByConnection } from "./meta-merger.js";
 import { foreignKey, primaryKey, sqliteTable, text, index } from "drizzle-orm/sqlite-core";

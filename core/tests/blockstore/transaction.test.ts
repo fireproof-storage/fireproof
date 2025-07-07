@@ -3,9 +3,9 @@ import { simpleBlockOpts } from "../helpers.js";
 import { to_uint8 } from "@adviser/cement";
 import { anyBlock2FPBlock, BaseBlockstoreImpl, CarTransactionImpl, EncryptedBlockstore } from "@fireproof/core-blockstore";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { BaseBlockstore, CarTransaction } from "@fireproof/core-types";
+import { BaseBlockstore, CarTransaction } from "@fireproof/core-types-base";
 import { describe, beforeEach, it, expect, assert } from "vitest";
-import { AnyAnyLink, AnyBlock, AnyLink } from "@fireproof/core-types/blockstore";
+import { AnyAnyLink, AnyBlock, AnyLink } from "@fireproof/core-types-blockstore";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: BaseBlockstore;

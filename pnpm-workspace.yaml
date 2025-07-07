@@ -3,6 +3,8 @@ packages:
   - "cloud/*"
   - "cloud/backend/*"
   - "cli"
+  - "core/types/*"
+  - "core/types/protocols/*"
   - "core/gateways/*"
   - "core/protocols/*"
   - "use-fireproof"

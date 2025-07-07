@@ -5,9 +5,9 @@ import { CID } from "multiformats/cid";
 import { Index, index, fireproof, isDatabase } from "@fireproof/core-base";
 import { URI } from "@adviser/cement";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
-import { DocResponse, DocWithId, IndexRows, Database, PARAM, MapFn, ConfigOpts } from "@fireproof/core-types";
+import { DocResponse, DocWithId, IndexRows, Database, PARAM, MapFn, ConfigOpts } from "@fireproof/core-types-base";
 import { describe, afterEach, beforeEach, it, expect, beforeAll, assert } from "vitest";
-import { AnyLink } from "@fireproof/core-types/blockstore";
+import { AnyLink } from "@fireproof/core-types-blockstore";
 import { getDefaultURI, EncryptedBlockstore } from "@fireproof/core-blockstore";
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {

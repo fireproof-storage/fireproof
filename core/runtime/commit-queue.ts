@@ -1,6 +1,6 @@
 import { Future } from "@adviser/cement";
-import { TraceFn } from "@fireproof/core-types";
-import { CommitQueueIf } from "@fireproof/core-types/blockstore";
+import { TraceFn } from "@fireproof/core-types-base";
+import { CommitQueueIf } from "@fireproof/core-types-blockstore";
 
 type QueueFunction<T = void> = () => Promise<T>;
 

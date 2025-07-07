@@ -1,6 +1,6 @@
 import { BuildURI, Result, URI } from "@adviser/cement";
 import { fireproof, SuperThis } from "@fireproof/core";
-import * as bs from "@fireproof/core-types/blockstore";
+import * as bs from "@fireproof/core-types-blockstore";
 import { describe, expect, it, vitest } from "vitest";
 import { PassThroughGateway, URIInterceptor } from "@fireproof/core-gateways-base";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";

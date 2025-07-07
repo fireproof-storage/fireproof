@@ -1,9 +1,9 @@
 import { FILESTORE_VERSION } from "./version.js";
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 import { getFileName, getPath } from "@fireproof/core-gateways-base";
-import { isNotFoundError, NotFoundError, PARAM, SuperThis, SysFileSystem } from "@fireproof/core-types";
+import { isNotFoundError, NotFoundError, PARAM, SuperThis, SysFileSystem } from "@fireproof/core-types-base";
 import { exceptionWrapper } from "@fireproof/core-runtime";
-import type { Gateway, GetResult } from "@fireproof/core-types/blockstore";
+import type { Gateway, GetResult } from "@fireproof/core-types-blockstore";
 
 const versionFiles = new KeyedResolvOnce<string>();
 

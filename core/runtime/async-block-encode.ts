@@ -3,7 +3,7 @@
 // https://github.com/multiformats/js-multiformats/pull/305
 import { bytes as binary, CID, MultihashHasher, BlockView, ByteView, Version, Link, MultihashDigest } from "multiformats";
 import { Block as mfBlock } from "multiformats/block";
-import { AsyncBlockDecoder, AsyncBlockEncoder, BlockDecoder, BlockEncoder } from "@fireproof/core-types/runtime";
+import { AsyncBlockDecoder, AsyncBlockEncoder, BlockDecoder, BlockEncoder } from "@fireproof/core-types-runtime";
 
 // export type Block<T, C extends number, A extends number, V extends Version> = mfBlock<T, C, A, V>
 

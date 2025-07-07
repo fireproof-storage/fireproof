@@ -1,5 +1,5 @@
 import { Logger, URI, Result } from "@adviser/cement";
-import { KeysByFingerprint } from "./blockstore/types.js";
+import { KeysByFingerprint } from "../blockstore/types.js";
 import { KeyBagRuntime } from "./types.js";
 
 export interface KeyBagIf {

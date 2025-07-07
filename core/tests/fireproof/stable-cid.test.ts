@@ -5,13 +5,12 @@ import * as cborg from "cborg";
 import {
   asyncBlockDecode,
   asyncBlockEncode,
-  CryptoAction,
   ensureSuperThis,
-  IvKeyIdData,
   keyedCryptoFactory,
 } from "@fireproof/core-runtime";
 import { describe, beforeEach, it, expect } from "vitest";
 import { getKeyBag } from "@fireproof/core-keybag";
+import { CryptoAction, IvKeyIdData } from "@fireproof/core-types-blockstore";
 
 const sthis = ensureSuperThis();
 describe.each([

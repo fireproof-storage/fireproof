@@ -17,8 +17,8 @@ import type {
   MapFn,
   QueryOpts,
   SuperThis,
-} from "@fireproof/core-types";
-import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-base";
+import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];

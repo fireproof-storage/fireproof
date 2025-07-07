@@ -1,6 +1,6 @@
 import * as raw from "multiformats/codecs/raw";
-import { DocFileMeta } from "@fireproof/core-types";
-import { AnyLink, AnyBlock } from "@fireproof/core-types/blockstore";
+import { DocFileMeta } from "@fireproof/core-types-base";
+import { AnyLink, AnyBlock } from "@fireproof/core-types-blockstore";
 import { CID } from "multiformats/cid";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { exception2Result, Result, top_uint8 } from "@adviser/cement";

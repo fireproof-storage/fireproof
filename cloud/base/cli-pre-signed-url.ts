@@ -4,7 +4,7 @@
 import { BuildURI } from "@adviser/cement";
 import { AwsClient } from "aws4fetch";
 import { command, option, oneOf, string } from "cmd-ts";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 // import * as t from 'io-ts';
 
 export function preSignedUrlCmd(sthis: SuperThis) {

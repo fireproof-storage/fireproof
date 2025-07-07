@@ -16,8 +16,8 @@ import type {
   SerdeGetResult,
   UnsubscribeResult,
   VoidResult,
-} from "@fireproof/core-types/blockstore";
-import type { SuperThis } from "@fireproof/core-types";
+} from "@fireproof/core-types-blockstore";
+import type { SuperThis } from "@fireproof/core-types-base";
 
 export class PassThroughGateway implements SerdeGatewayInterceptor {
   async buildUrl(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<SerdeGatewayBuildUrlReturn>> {

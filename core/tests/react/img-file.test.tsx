@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgFile } from "use-fireproof";
 import { createElement } from "react";
 import type { DocFileMeta } from "use-fireproof";
-import { AnyLink } from "@fireproof/core-types/blockstore";
+import { AnyLink } from "@fireproof/core-types-blockstore";
 
 // Extend HTMLElement to include querySelector for TypeScript
 

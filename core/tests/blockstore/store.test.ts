@@ -2,10 +2,10 @@ import { CID } from "multiformats";
 import { Result } from "@adviser/cement";
 import { mockLoader, noopUrl } from "../helpers.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { PARAM, NotFoundError, DbMeta } from "@fireproof/core-types";
+import { PARAM, NotFoundError, DbMeta } from "@fireproof/core-types-base";
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
 import { createAttachedStores } from "@fireproof/core-blockstore";
-import { CarStore, Loadable, AnyBlock, MetaStore, FPEnvelopeMeta } from "@fireproof/core-types/blockstore";
+import { CarStore, Loadable, AnyBlock, MetaStore, FPEnvelopeMeta } from "@fireproof/core-types-blockstore";
 import { fpDeserialize } from "@fireproof/core-gateways-base";
 
 // function runtime(sthis: SuperThis) {

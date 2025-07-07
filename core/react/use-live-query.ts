@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { DocFragment, DocTypes, DocWithId, IndexKeyType, FPIndexRow, MapFn, Database } from "@fireproof/core-types";
+import type { DocFragment, DocTypes, DocWithId, IndexKeyType, FPIndexRow, MapFn, Database } from "@fireproof/core-types-base";
 import type { LiveQueryResult } from "./types.js";
 
 /**

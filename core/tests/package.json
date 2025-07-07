@@ -3,12 +3,9 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist/tsc ; tsc",
-    "build:tsup": "tsup"
+    "test": "vitest --run"
   },
   "keywords": [
     "ledger",
@@ -41,20 +38,29 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "from-package-json",
+    "@adviser/cement": "^0.4.20",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-blockstore": "workspace:0.0.0",
     "@fireproof/core-gateways-base": "workspace:0.0.0",
-    "@fireproof/core-gateways-memory": "workspace:0.0.0",
     "@fireproof/core-gateways-file": "workspace:0.0.0",
     "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
-    "@fireproof/core-runtime": "workspace:0.0.0",
-    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-gateways-memory": "workspace:0.0.0",
     "@fireproof/core-keybag": "workspace:0.0.0",
-    "@fireproof/core-types": "workspace:0.0.0",
-    "use-fireproof": "workspace:0.0.0",
+    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-blockstore": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/vendor": "from-package-json",
-    "@types/node": "^24.0.10"
+    "@types/node": "^24.0.10",
+    "use-fireproof": "workspace:0.0.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.53.2",
+    "playwright-chromium": "^1.53.2",
+    "uuid": "^11.1.0",
+    "vitest": "^3.2.4"
   }
 }

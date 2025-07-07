@@ -3,17 +3,6 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./index.js",
-      "browser": "./index.js",
-      "require": "./index.cjs",
-      "types": "./index.d.ts"
-    }
-  },
   "scripts": {
     "build": "rm -rf ./dist/tsc ; tsc"
   },
@@ -45,7 +34,8 @@
   },
   "dependencies": {
     "@adviser/cement": "from-package-json",
-    "@fireproof/core-types": "workspace:0.0.0",
+    "@fireproof/core-types-blockstore": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
     "@fireproof/core-gateways-file": "workspace:0.0.0",

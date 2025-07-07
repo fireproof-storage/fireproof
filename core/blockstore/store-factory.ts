@@ -13,8 +13,8 @@ import {
   StoreRuntime,
   UrlAndInterceptor,
   WriteableDataAndMetaAndWalStore,
-} from "@fireproof/core-types/blockstore";
-import { PARAM, SuperThis } from "@fireproof/core-types";
+} from "@fireproof/core-types-blockstore";
+import { PARAM, SuperThis } from "@fireproof/core-types-base";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
 import { InterceptorGateway } from "@fireproof/core-gateways-base";
 import { decodeFile, encodeFile } from "@fireproof/core-runtime";

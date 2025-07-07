@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
 import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 import { decodeJwt } from "jose/jwt/decode";
-import { SuperThis, Database, KeyBagProvider } from "@fireproof/core-types";
+import { SuperThis, Database, KeyBagProvider } from "@fireproof/core-types-base";
 import { ensureSuperThis, hashString } from "@fireproof/core-runtime";
 import {
   FPCloudClaim,
@@ -12,7 +12,7 @@ import {
   ToCloudOptionalOpts,
   TokenAndClaims,
   TokenStrategie,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { isV1StorageKeyItem, isKeysItem } from "../keybag/key-bag.js";
 
 export const WebCtx = "webCtx";

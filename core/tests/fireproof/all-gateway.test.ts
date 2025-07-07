@@ -17,7 +17,7 @@ import {
   FPEnvelopeMeta,
   UnsubscribeResult,
   DbMetaEvent,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
 
 describe("noop Gateway", function () {

@@ -25,7 +25,7 @@ import {
   type DocWithId,
   IndexIf,
   IndexTree,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 // import { BaseBlockstore } from "./blockstore/index.js";
 
 import {

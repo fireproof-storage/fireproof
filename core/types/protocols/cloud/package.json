@@ -1,37 +1,8 @@
 {
-  "name": "@fireproof/core-types",
+  "name": "@fireproof/core-types-protocols-cloud",
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./index.js",
-      "browser": "./index.js",
-      "require": "./index.cjs",
-      "types": "./index.d.ts"
-    },
-    "./blockstore": {
-      "import": "./blockstore/index.js",
-      "browser": "./blockstore/index.js",
-      "require": "./blockstore/index.cjs",
-      "types": "./blockstore/index.js"
-    },
-    "./runtime": {
-      "import": "./runtime/index.js",
-      "browser": "./runtime/index.js",
-      "require": "./runtime/index.cjs",
-      "types": "./runtime/index.js"
-    },
-    "./protocols/cloud": {
-      "import": "./protocols/cloud/index.js",
-      "browser": "./protocols/cloud/index.js",
-      "require": "./protocols/cloud/index.cjs",
-      "types": "./protocols/cloud/index.js"
-    }
-  },
   "scripts": {
     "build": "rm -rf ./dist/tsc ; tsc"
   },
@@ -63,7 +34,6 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.20",
-    "multiformats": "^13.3.7",
-    "prolly-trees": "^1.0.4"
+    "multiformats": "^13.3.7"
   }
 }

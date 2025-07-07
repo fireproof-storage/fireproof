@@ -11,7 +11,7 @@ import {
   BuildURI,
   Future,
 } from "@adviser/cement";
-import { NotFoundError, type SuperThis } from "@fireproof/core-types";
+import { NotFoundError, type SuperThis } from "@fireproof/core-types-base";
 import {
   buildErrorMsg,
   buildReqOpen,
@@ -44,7 +44,7 @@ import {
   ReqPutMeta,
   ResDelMeta,
   ResPutMeta,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import {
   FPEnvelope,
   FPEnvelopeMeta,
@@ -54,7 +54,7 @@ import {
   SerdeGetResult,
   UnsubscribeResult,
   VoidResult,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 import { ensureLogger, hashObject } from "@fireproof/core-runtime";
 import {
   dbMetaEvent2Serialized,

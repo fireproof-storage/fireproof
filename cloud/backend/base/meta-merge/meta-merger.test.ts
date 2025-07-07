@@ -1,7 +1,7 @@
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import { Connection, MetaMerge, MetaMerger } from "./meta-merger.js";
-import { SuperThis } from "@fireproof/core-types";
-import { V2SerializedMetaKey } from "@fireproof/core-types/blockstore";
+import { SuperThis } from "@fireproof/core-types-base";
+import { V2SerializedMetaKey } from "@fireproof/core-types-blockstore";
 import { describe, beforeAll, beforeEach, afterEach, it, expect } from "vitest";
 import { testSuperThis } from "@fireproof/cloud-base";
 // import { SQLDatabase } from "./abstract-sql.js";

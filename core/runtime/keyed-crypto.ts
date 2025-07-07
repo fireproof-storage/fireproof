@@ -1,26 +1,18 @@
 import { CryptoRuntime, Logger, URI } from "@adviser/cement";
-import { SuperThis, PARAM, KeyBagIf } from "@fireproof/core-types";
-export {
-  BytesAndKeyWithIv,
-  CodecOpts,
-  IvAndKeyAndBytes,
-  IvKeyIdData,
-  CryptoAction,
-  KeysByFingerprint,
-} from "@fireproof/core-types/blockstore";
-import { ensureLogger, UInt8ArrayEqual } from "./utils.js";
-import type { AsyncBlockCodec, ByteView } from "@fireproof/core-types/runtime";
-import { base58btc } from "multiformats/bases/base58";
-import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as CBOR from "cborg";
+import { SuperThis, PARAM, KeyBagIf } from "@fireproof/core-types-base";
 import {
   BytesAndKeyWithIv,
   CodecOpts,
-  CryptoAction,
   IvAndKeyAndBytes,
   IvKeyIdData,
+  CryptoAction,
   KeysByFingerprint,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
+import { ensureLogger, UInt8ArrayEqual } from "./utils.js";
+import type { AsyncBlockCodec, ByteView } from "@fireproof/core-types-runtime";
+import { base58btc } from "multiformats/bases/base58";
+import { sha256 as hasher } from "multiformats/hashes/sha2";
+import * as CBOR from "cborg";
 
 interface GenerateIVFn {
   calc(ko: CryptoAction, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;

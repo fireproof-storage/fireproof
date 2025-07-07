@@ -2,12 +2,12 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockLoader, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { KeysItem, PARAM } from "@fireproof/core-types";
+import { KeysItem, PARAM } from "@fireproof/core-types-base";
 import { describe, beforeAll, it, expect, beforeEach } from "vitest";
 import { getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
-import { KeyWithFingerPrint, Loadable } from "@fireproof/core-types/blockstore";
+import { KeyWithFingerPrint, Loadable } from "@fireproof/core-types-blockstore";
 import { createAttachedStores } from "@fireproof/core-blockstore";
 
 describe("KeyBag indexeddb and file", () => {

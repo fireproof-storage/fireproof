@@ -1,5 +1,5 @@
 import { portRandom, HonoServer } from "@fireproof/cloud-backend-base";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { Hono } from "hono";
 import { NodeHonoFactory } from "./node-hono-server.js";

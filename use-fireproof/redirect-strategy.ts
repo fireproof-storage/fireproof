@@ -1,9 +1,9 @@
 import { BuildURI, Logger } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core-react";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
-import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types/protocols/cloud";
+import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
 import { Api } from "@fireproof/core-protocols-dashboard";
 
 function defaultOverlayHtml(redirectLink: string) {

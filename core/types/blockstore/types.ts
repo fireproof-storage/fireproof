@@ -12,7 +12,7 @@ import {
   TraceFn,
   KeyBagRuntime,
   KeysItem,
-} from "../types.js";
+} from "../base/types.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
@@ -20,7 +20,7 @@ import { AsyncBlockCodec } from "../runtime/codec-interface.js";
 
 import { TaskManagerIf, TaskManagerParams } from "./task-manager-if.js";
 import { CommitQueueIf } from "./commit-queue-if.js";
-import { KeyBagIf } from "../key-bag-if.js";
+import { KeyBagIf } from "../base/key-bag-if.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];

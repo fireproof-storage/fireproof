@@ -9,7 +9,7 @@ import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 import { DefSerdeGateway } from "@fireproof/core-gateways-base";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
 import { AttachedRemotesImpl } from "@fireproof/core-blockstore";
-import { AttachedStores } from "@fireproof/core-types/blockstore";
+import { AttachedStores } from "@fireproof/core-types-blockstore";
 
 const ROWS = 1;
 

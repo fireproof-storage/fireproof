@@ -21,10 +21,10 @@ import type {
   FileStore,
   CarStore,
   FPBlock,
-} from "./blockstore/types.js";
+} from "../blockstore/types.js";
 
 import type { IndexIf } from "./indexer.js";
-import { SerdeGatewayInterceptor } from "./blockstore/serde-gateway.js";
+import { SerdeGatewayInterceptor } from "../blockstore/serde-gateway.js";
 
 export class NotFoundError extends Error {
   readonly code = "ENOENT";

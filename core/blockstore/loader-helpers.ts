@@ -18,8 +18,8 @@ import {
   isFPBlockItem,
   LeafBlockItem,
   ReadyCarBlockItem,
-} from "@fireproof/core-types/blockstore";
-import { DocObject } from "@fireproof/core-types";
+} from "@fireproof/core-types-blockstore";
+import { DocObject } from "@fireproof/core-types-base";
 import { asyncBlockEncode } from "@fireproof/core-runtime";
 
 class FPBlockImpl implements FPBlock {

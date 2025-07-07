@@ -1,6 +1,6 @@
 import { Result, URI } from "@adviser/cement";
 import { AwsClient } from "aws4fetch";
-import * as ps from "@fireproof/core-types/protocols/cloud";
+import * as ps from "@fireproof/core-types-protocols-cloud";
 
 type SignedUrlParam = ps.SignedUrlParam;
 type MethodSignedUrlParam = ps.MethodSignedUrlParam;

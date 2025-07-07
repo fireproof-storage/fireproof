@@ -1,5 +1,5 @@
-import { SuperThis } from "@fireproof/core-types";
-import { MsgBase, ErrorMsg, buildErrorMsg } from "@fireproof/core-types/protocols/cloud";
+import { SuperThis } from "@fireproof/core-types-base";
+import { MsgBase, ErrorMsg, buildErrorMsg } from "@fireproof/core-types-protocols-cloud";
 import { ExchangedGestalt, OnErrorFn, UnReg } from "./msger.js";
 import { Logger } from "@adviser/cement";
 

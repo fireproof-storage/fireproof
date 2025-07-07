@@ -6,7 +6,7 @@ import { ensureSuperThis } from "@fireproof/core-runtime";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { defaultMsgParams } from "@fireproof/core-protocols-cloud";
-import { defaultGestalt } from "@fireproof/core-types/protocols/cloud";
+import { defaultGestalt } from "@fireproof/core-types-protocols-cloud";
 
 // async function main() {
 //   Deno.serve({

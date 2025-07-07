@@ -14,7 +14,7 @@ import {
 } from "@fireproof/cloud-backend-base";
 import { HttpHeader, ResolveOnce, URI } from "@adviser/cement";
 import { Context, Hono } from "hono";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 // import { SQLDatabase } from "./meta-merger/abstract-sql.js";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { jsonEnDe, defaultMsgParams } from "@fireproof/core-protocols-cloud";
@@ -29,7 +29,7 @@ import {
   isProtocolCapabilities,
   defaultGestalt,
   MsgWithConn,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 
 interface ServerType {
   close(fn: () => void): void;

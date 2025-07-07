@@ -6,11 +6,11 @@ import * as cborg from "cborg";
 import type { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
 import { mockLoader, MockSuperThis, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis, keyedCryptoFactory, storeType2DataMetaWal } from "@fireproof/core-runtime";
-import { KeysItem, PARAM, StoreType } from "@fireproof/core-types";
+import { KeysItem, PARAM, StoreType } from "@fireproof/core-types-base";
 import { describe, beforeEach, it, expect } from "vitest";
 import { getKeyBag, KeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
-import { CryptoAction, IvKeyIdData, KeyWithFingerPrint, Loadable } from "@fireproof/core-types/blockstore";
+import { CryptoAction, IvKeyIdData, KeyWithFingerPrint, Loadable } from "@fireproof/core-types-blockstore";
 import { createAttachedStores, getDefaultURI } from "@fireproof/core-blockstore";
 
 describe("KeyBag", () => {

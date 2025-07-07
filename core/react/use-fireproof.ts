@@ -7,7 +7,7 @@ import { createUseAllDocs } from "./use-all-docs.js";
 import { createUseChanges } from "./use-changes.js";
 import { createUseDocument } from "./use-document.js";
 import { createUseLiveQuery } from "./use-live-query.js";
-import { Database } from "@fireproof/core-types";
+import { Database } from "@fireproof/core-types-base";
 
 /**
  * @deprecated Use the `useFireproof` hook instead

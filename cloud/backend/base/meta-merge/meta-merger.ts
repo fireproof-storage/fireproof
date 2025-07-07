@@ -5,8 +5,8 @@ import { TenantSql } from "./tenant.js";
 // import { SQLDatabase } from "./abstract-sql.js";
 import { Logger } from "@adviser/cement";
 import { KeyByTenantLedgerSql } from "./key-by-tenant-ledger.js";
-import { QSId, TenantLedger } from "@fireproof/core-types/protocols/cloud";
-import { V2SerializedMetaKey } from "@fireproof/core-types/blockstore";
+import { QSId, TenantLedger } from "@fireproof/core-types-protocols-cloud";
+import { V2SerializedMetaKey } from "@fireproof/core-types-blockstore";
 import { DrizzleDatebase } from "../types.js";
 
 export interface Connection {

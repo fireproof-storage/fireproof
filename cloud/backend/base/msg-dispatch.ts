@@ -1,4 +1,4 @@
-import { SuperThis, UnReg } from "@fireproof/core-types";
+import { SuperThis, UnReg } from "@fireproof/core-types-base";
 import { sts } from "@fireproof/core-runtime";
 
 import { CORS } from "./hono-server.js";
@@ -15,7 +15,7 @@ import {
   MsgWithError,
   PreSignedMsg,
   QSId,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { WSContextWithId, ExposeCtxItemWithImpl, HonoServerImpl } from "./types.js";
 
 // type MsgBase = MsgBase;

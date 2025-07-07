@@ -61,7 +61,7 @@ import { sqlTokenByResultId } from "./token-by-result-id.js";
 import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.js";
 import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
 import { FAPIMsgImpl } from "@fireproof/core-protocols-dashboard";
-import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types/protocols/cloud";
+import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { sts } from "@fireproof/core-runtime";
 import { DashSqlite } from "./create-handler.js";
 

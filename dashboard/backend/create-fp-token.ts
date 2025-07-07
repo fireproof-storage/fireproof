@@ -1,7 +1,7 @@
 import { param, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
 import { sts } from "@fireproof/core-runtime";
-import { FPCloudClaim } from "@fireproof/core-types/protocols/cloud";
+import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { SignJWT } from "jose/jwt/sign";
 
 export interface FPTokenContext {

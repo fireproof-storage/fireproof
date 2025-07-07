@@ -10,7 +10,7 @@ import type {
   SerializedMeta,
   SerializedWAL,
   WALState,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 import {
   FPEnvelope,
   FPEnvelopeCar,
@@ -19,8 +19,8 @@ import {
   FPEnvelopeType,
   FPEnvelopeTypes,
   FPEnvelopeWAL,
-} from "@fireproof/core-types/blockstore";
-import { PARAM, PromiseToUInt8, SuperThis } from "@fireproof/core-types";
+} from "@fireproof/core-types-blockstore";
+import { PARAM, PromiseToUInt8, SuperThis } from "@fireproof/core-types-base";
 import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";

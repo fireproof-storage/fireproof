@@ -3,23 +3,25 @@ import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [tsconfigPaths() as any],
   test: {
     name: "memory",
     exclude: [
-      "tests/react/**",
+      "dist/**",
+      "node_modules/**",
+      "react/**",
       "**/smoke/**",
       "**/scripts/**",
       "**/examples/**",
-      "tests/gateway/indexeddb",
-      "tests/gateway/file",
-      "tests/blockstore/keyed-crypto-indexeddb-file.test.ts",
+      "gateway/indexeddb",
+      "gateway/file",
+      "blockstore/keyed-crypto-indexeddb-file.test.ts",
     ],
-    include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
+    include: ["**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },
     globals: true,
-    setupFiles: "./tests/setup.memory.ts",
+    setupFiles: "./setup.memory.ts",
   },
 });

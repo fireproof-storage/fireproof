@@ -9,7 +9,7 @@ import {
   toCryptoRuntime,
   URI,
 } from "@adviser/cement";
-import { KeyMaterial, KeysByFingerprint, KeyUpsertResult, KeyWithFingerPrint } from "@fireproof/core-types/blockstore";
+import { KeyMaterial, KeysByFingerprint, KeyUpsertResult, KeyWithFingerPrint } from "@fireproof/core-types-blockstore";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { base58btc } from "multiformats/bases/base58";
 import {
@@ -22,7 +22,7 @@ import {
   SuperThis,
   V1StorageKeyItem,
   V2StorageKeyItem,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { KeyBagProviderMemory } from "./key-bag-memory.js";
 

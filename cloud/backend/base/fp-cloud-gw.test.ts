@@ -4,7 +4,7 @@ import { describe, beforeAll, it, expect } from "vitest";
 import { testSuperThis } from "@fireproof/cloud-base";
 import { MockJWK, mockJWK } from "./test-helper.js";
 import { CloudGateway, SimpleTokenStrategy, toCloud } from "@fireproof/core-gateways-cloud";
-import { SerdeGatewayCtx } from "@fireproof/core-types/blockstore";
+import { SerdeGatewayCtx } from "@fireproof/core-types-blockstore";
 
 describe("fp-cloud", () => {
   const sthis = testSuperThis();

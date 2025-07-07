@@ -1,9 +1,8 @@
 import { runtimeFn, URI } from "@adviser/cement";
 import { getFileName } from "@fireproof/core-gateways-base";
 import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter } from "@fireproof/core-runtime";
-import assert from "assert";
 import { UUID } from "uuidv7";
-import { describe, beforeAll, it, expect } from "vitest";
+import { describe, beforeAll, it, expect, assert } from "vitest";
 
 describe("utils", () => {
   const sthis = ensureSuperThis();

@@ -1,4 +1,4 @@
-import * as ps from "@fireproof/core-types/protocols/cloud";
+import * as ps from "@fireproof/core-types-protocols-cloud";
 
 import { ExposeCtxItem, WSContextWithId } from "./types.js";
 import { ConnItem } from "./msg-dispatch.js";

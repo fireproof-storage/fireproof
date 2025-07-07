@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist/tsc ; tsc"
   },
@@ -36,7 +33,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@fireproof/core-types": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
     "@types/deno": "^2.3.0",
     "@types/node": "^24.0.10"
   }

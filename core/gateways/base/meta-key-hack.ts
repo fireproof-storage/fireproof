@@ -8,9 +8,9 @@ import {
   FPEnvelope,
   SerdeGateway,
   SerdeGatewayCtx,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 
-import { PARAM, SuperThis, NotFoundError } from "@fireproof/core-types";
+import { PARAM, SuperThis, NotFoundError } from "@fireproof/core-types-base";
 import { DefSerdeGateway } from "./def-serde-gateway.js";
 
 type V1SerializedMetaKey = SerializedMeta & {

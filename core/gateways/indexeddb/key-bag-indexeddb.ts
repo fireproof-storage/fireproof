@@ -1,6 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
-import { KeyBagProvider, KeysItem, V1StorageKeyItem, type SuperThis } from "@fireproof/core-types";
+import { KeyBagProvider, KeysItem, V1StorageKeyItem, type SuperThis } from "@fireproof/core-types-base";
 import { getPath } from "@fireproof/core-gateways-base";
 
 export class KeyBagProviderIndexedDB implements KeyBagProvider {

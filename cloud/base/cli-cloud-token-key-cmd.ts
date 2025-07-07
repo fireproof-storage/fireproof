@@ -1,4 +1,4 @@
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import * as rt from "@fireproof/core-runtime";
 import { command, flag, option, string } from "cmd-ts";
 import { exportJWK } from "jose/key/export";

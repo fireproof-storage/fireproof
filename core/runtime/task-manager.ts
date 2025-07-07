@@ -1,6 +1,6 @@
 import { Logger } from "@adviser/cement";
-import { ActiveStore, CarClockHead, CarClockLink, TaskManagerIf } from "@fireproof/core-types/blockstore";
-import { SuperThis, DbMeta } from "@fireproof/core-types";
+import { ActiveStore, CarClockHead, CarClockLink, TaskManagerIf } from "@fireproof/core-types-blockstore";
+import { SuperThis, DbMeta } from "@fireproof/core-types-base";
 import { ensureLogger } from "./utils.js";
 
 interface TaskItem {

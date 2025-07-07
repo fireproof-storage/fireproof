@@ -17,7 +17,7 @@ import {
   FPBlock,
   CarBlockItem,
   TransactionMeta,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 import { AnyLink } from "prolly-trees/base";
 
 /* eslint-disable @typescript-eslint/no-empty-function */

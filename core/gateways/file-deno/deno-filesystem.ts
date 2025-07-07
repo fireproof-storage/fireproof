@@ -1,5 +1,5 @@
 /// <reference types="deno" />
-import type { FPStats, SysFileSystem } from "@fireproof/core-types";
+import type { FPStats, SysFileSystem } from "@fireproof/core-types-base";
 import { to_uint8 } from "@adviser/cement";
 
 export class DenoFileSystem implements SysFileSystem {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import type { DocSet, DocTypes, DocWithId, Database } from "@fireproof/core-types";
+import type { DocSet, DocTypes, DocWithId, Database } from "@fireproof/core-types-base";
 import { deepClone } from "@fireproof/core-runtime";
 import type { DeleteDocFn, StoreDocFn, UseDocumentInitialDocOrFn, UseDocumentResult } from "./types.js";
 

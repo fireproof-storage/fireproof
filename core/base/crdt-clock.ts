@@ -13,7 +13,7 @@ import {
   type BaseBlockstore,
   type CarTransaction,
   PARAM,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { anyBlock2FPBlock } from "@fireproof/core-blockstore";

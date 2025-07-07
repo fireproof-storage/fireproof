@@ -7,7 +7,7 @@ import {
   WriteQueue,
   defaultWriteQueueOpts,
   WriteQueueParams,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 import { Future, Logger } from "@adviser/cement";
 
 type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;

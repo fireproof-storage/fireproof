@@ -2,9 +2,9 @@ import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 
 import { INDEXEDDB_VERSION } from "@fireproof/core-gateways-base";
-import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types";
+import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types-base";
 import { exceptionWrapper, getKey, getStore } from "@fireproof/core-runtime";
-import { Gateway, GetResult } from "@fireproof/core-types/blockstore";
+import { Gateway, GetResult } from "@fireproof/core-types-blockstore";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXEDDB_VERSION).URI();

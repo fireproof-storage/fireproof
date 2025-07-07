@@ -1,5 +1,5 @@
 import { runtimeFn, URI } from "@adviser/cement";
-import type { SysFileSystem } from "@fireproof/core-types";
+import type { SysFileSystem } from "@fireproof/core-types-base";
 
 export function sysFileSystemFactory(uri: URI): Promise<SysFileSystem> {
   const rt = runtimeFn();

@@ -13,11 +13,10 @@ import {
   MapFn,
   QueryOpts,
 } from "./types.js";
-import { AnyLink } from "./blockstore/types.js";
+import { AnyLink } from "../blockstore/types.js";
 
 import { BaseNode } from "prolly-trees/base";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
   root?: BaseNode<K, R>;

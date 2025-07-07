@@ -32,12 +32,12 @@ import {
   PARAM,
   Ledger,
   TraceEvent,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { CRDTClockImpl } from "./crdt-clock.js";
-import { TransactionMeta, CompactFetcher } from "@fireproof/core-types/blockstore";
+import { TransactionMeta, CompactFetcher } from "@fireproof/core-types-blockstore";
 
 export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
   readonly storeUrls: {

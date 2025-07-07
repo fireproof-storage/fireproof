@@ -1,5 +1,5 @@
 export * from "@fireproof/core-react";
-export * from "@fireproof/core-types";
+export * from "@fireproof/core-types-base";
 export * from "@fireproof/core-base";
 export * from "./iframe-strategy.js";
 export * from "./redirect-strategy.js";
@@ -14,7 +14,7 @@ import {
   TokenAndClaimsEvents,
   ToCloudAttachable,
   TokenAndClaims,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 
 export type UseFpToCloudParam = Omit<Omit<Omit<ToCloudOptionalOpts, "strategy">, "context">, "events"> &
   Partial<WebToCloudCtx> & {

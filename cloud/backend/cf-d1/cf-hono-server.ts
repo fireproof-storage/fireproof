@@ -23,7 +23,7 @@ import { SendOptions, WSContextInit, WSReadyState } from "hono/ws";
 import { Env } from "./env.js";
 import { FPRoomDurableObject } from "./server.js";
 import { ensureSuperThis, ensureLogger, sts } from "@fireproof/core-runtime";
-import { Readonly2Writeable, SuperThis } from "@fireproof/core-types";
+import { Readonly2Writeable, SuperThis } from "@fireproof/core-types-base";
 import {
   QSId,
   qsidEqual,
@@ -35,7 +35,7 @@ import {
   isProtocolCapabilities,
   defaultGestalt,
   buildErrorMsg,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { jsonEnDe, defaultMsgParams } from "@fireproof/core-protocols-cloud";
 
 function cfWebSocketPair() {

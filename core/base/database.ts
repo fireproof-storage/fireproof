@@ -25,7 +25,7 @@ import {
   Attachable,
   Attached,
   NotFoundError,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 import { ensureLogger, makeName } from "@fireproof/core-runtime";
 
 export function isDatabase(db: unknown): db is Database {

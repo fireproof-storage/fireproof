@@ -1,7 +1,7 @@
 import { BuildURI, Logger } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { WebCtx, WebToCloudCtx } from "@fireproof/core-react";
-import { TokenStrategie, ToCloudOpts, TokenAndClaims } from "@fireproof/core-types/protocols/cloud";
+import { TokenStrategie, ToCloudOpts, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
 export class IframeStrategy implements TokenStrategie {
   fpIframeOverlay() {

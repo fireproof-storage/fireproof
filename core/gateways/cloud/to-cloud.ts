@@ -1,5 +1,5 @@
 import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
-import { Ledger } from "@fireproof/core-types";
+import { Ledger } from "@fireproof/core-types-base";
 import {
   FPCloudClaim,
   FPCloudUri,
@@ -11,7 +11,7 @@ import {
   ToCloudRequiredOpts,
   TokenAndClaims,
   TokenStrategie,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { ensureLogger, hashObject } from "@fireproof/core-runtime";
 import { decodeJwt } from "jose/jwt/decode";
 import { URIInterceptor } from "@fireproof/core-gateways-base";

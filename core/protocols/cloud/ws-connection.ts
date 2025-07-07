@@ -8,10 +8,10 @@ import {
   MsgWithError,
   RequestOpts,
   MsgRawConnection,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { ActiveStream, ExchangedGestalt, MsgerParamsWithEnDe, OnMsgFn, UnReg } from "./msger.js";
 import { MsgRawConnectionBase } from "./msg-raw-connection-base.js";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { ensureLogger } from "@fireproof/core-runtime";
 
 export interface WSReqOpen {

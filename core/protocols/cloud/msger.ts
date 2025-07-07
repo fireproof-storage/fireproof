@@ -26,10 +26,10 @@ import {
   MsgIsConnected,
   MsgIsWithConn,
   MsgRawConnection,
-} from "@fireproof/core-types/protocols/cloud";
+} from "@fireproof/core-types-protocols-cloud";
 import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
-import type { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { ensureLogger, sleep } from "@fireproof/core-runtime";
 import pLimit from "@fireproof/vendor/p-limit";
 

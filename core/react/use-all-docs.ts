@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { AllDocsQueryOpts, DocTypes, DocWithId, Database } from "@fireproof/core-types";
+import type { AllDocsQueryOpts, DocTypes, DocWithId, Database } from "@fireproof/core-types-base";
 import type { AllDocsResult } from "./types.js";
 
 /**

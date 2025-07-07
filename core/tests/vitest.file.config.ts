@@ -3,12 +3,13 @@ import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  plugins: [tsconfigPaths() as any],
   test: {
     name: "file",
-    exclude: ["tests/react/**", "examples/**", "tests/gateway/indexeddb"],
-    include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
+    exclude: ["dist/**", "node_modules/**", "react/**", "examples/**", "gateway/indexeddb"],
+    include: ["**/*test.?(c|m)[jt]s?(x)"],
     globals: true,
-    setupFiles: "./tests/setup.file.ts",
+    setupFiles: "./setup.file.ts",
   },
 });

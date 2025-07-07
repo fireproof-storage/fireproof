@@ -1,11 +1,11 @@
 import { URI } from "@adviser/cement";
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
-import { DocResponse, DocFileMeta, DocWithId, DocFiles, Database } from "@fireproof/core-types";
+import { DocResponse, DocFileMeta, DocWithId, DocFiles, Database } from "@fireproof/core-types-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { fireproof, LedgerShell, toStoreURIRuntime, keyConfigOpts } from "@fireproof/core-base";
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
 import { defaultGatewayFactoryItem, EncryptedBlockstore, registerStoreProtocol } from "@fireproof/core-blockstore";
-import { Gateway } from "@fireproof/core-types/blockstore";
+import { Gateway } from "@fireproof/core-types-blockstore";
 
 describe("basic Ledger", () => {
   let db: Database;

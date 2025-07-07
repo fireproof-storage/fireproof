@@ -1,9 +1,9 @@
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { URI } from "@adviser/cement";
 import { calculatePreSignedUrl } from "./pre-signed-url.js";
 import { httpStyle, mockJWK, MockJWK, wsStyle } from "./test-helper.js";
 import { testSuperThis } from "@fireproof/cloud-base";
-import * as ps from "@fireproof/core-types/protocols/cloud";
+import * as ps from "@fireproof/core-types-protocols-cloud";
 import { applyStart, defaultMsgParams, Msger, VirtualConnected } from "@fireproof/core-protocols-cloud";
 import assert from "assert";
 import { describe, beforeAll, it, expect, afterAll, beforeEach, afterEach } from "vitest";

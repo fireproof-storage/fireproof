@@ -15,7 +15,7 @@ import { ensureSuperThis } from "@fireproof/core-runtime";
 import { describe, afterEach, beforeEach, it, expect, assert } from "vitest";
 import { ensureStoreEnDeFile, Loader, EncryptedBlockstore, parseCarFile } from "@fireproof/core-blockstore";
 import { defaultKeyBagOpts } from "@fireproof/core-keybag";
-import { AnyBlock, isCarBlockItemReady } from "@fireproof/core-types/blockstore";
+import { AnyBlock, isCarBlockItemReady } from "@fireproof/core-types-blockstore";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT;

@@ -14,7 +14,7 @@ import {
 } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
-import { BlockFetcher, TransactionMeta, AnyLink, StoreRuntime, CompactFetcher } from "@fireproof/core-types/blockstore";
+import { BlockFetcher, TransactionMeta, AnyLink, StoreRuntime, CompactFetcher } from "@fireproof/core-types-blockstore";
 import {
   type EncryptedBlockstore,
   CarTransactionImpl,
@@ -39,7 +39,7 @@ import {
   BaseBlockstore,
   PARAM,
   NotFoundError,
-} from "@fireproof/core-types";
+} from "@fireproof/core-types-base";
 import { Logger } from "@adviser/cement";
 import { Link, Version } from "multiformats";
 

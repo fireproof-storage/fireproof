@@ -42,7 +42,8 @@
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
-    "@fireproof/core-types": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
     "multiformats": "^13.3.7"
   }
 }

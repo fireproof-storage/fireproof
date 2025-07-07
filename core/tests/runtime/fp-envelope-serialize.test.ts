@@ -11,7 +11,7 @@ import {
   FPEnvelopeWAL,
   SerializedMeta,
   WALState,
-} from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-blockstore";
 import { toJSON } from "multiformats/link";
 import { describe, expect, it } from "vitest";
 

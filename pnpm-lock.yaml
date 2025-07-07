@@ -302,9 +302,9 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../core/types
+        version: link:../core/types/base
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -341,9 +341,15 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../../core/runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../../core/types
+        version: link:../../../core/types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../../core/types/blockstore
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../../core/types/protocols/cloud
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -371,9 +377,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../../core/runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../../core/types
+        version: link:../../../core/types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../../core/types/protocols/cloud
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -398,9 +407,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../../core/runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../../core/types
+        version: link:../../../core/types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../../core/types/protocols/cloud
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -416,9 +428,9 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../core/runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../core/types
+        version: link:../../core/types/base
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -453,9 +465,15 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../types/blockstore
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../types/protocols/cloud
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -492,9 +510,15 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../types/blockstore
+      '@fireproof/core-types-runtime':
+        specifier: workspace:0.0.0
+        version: link:../types/runtime
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -507,9 +531,9 @@ importers:
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../base
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -525,9 +549,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
 
   core/gateways/cloud:
     dependencies:
@@ -540,9 +567,15 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../types/protocols/cloud
 
   core/gateways/file:
     dependencies:
@@ -558,9 +591,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
     devDependencies:
       '@types/deno':
         specifier: ^2.3.0
@@ -571,9 +607,9 @@ importers:
 
   core/gateways/file-deno:
     dependencies:
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
       '@types/deno':
         specifier: ^2.3.0
         version: 2.3.0
@@ -583,9 +619,9 @@ importers:
 
   core/gateways/file-node:
     dependencies:
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
 
   core/gateways/indexeddb:
     dependencies:
@@ -595,9 +631,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
 
   core/gateways/memory:
     dependencies:
@@ -607,9 +646,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
     devDependencies:
       '@types/deno':
         specifier: ^2.3.0
@@ -632,9 +674,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../types/blockstore
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -644,18 +689,24 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../types/protocols/cloud
 
   core/protocols/dashboard:
     dependencies:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../../types
+        version: link:../../types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../types/protocols/cloud
 
   core/react:
     dependencies:
@@ -668,9 +719,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../types/protocols/cloud
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -680,9 +734,18 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../types/blockstore
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../types/protocols/cloud
+      '@fireproof/core-types-runtime':
+        specifier: workspace:0.0.0
+        version: link:../types/runtime
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -722,9 +785,18 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../types
+        version: link:../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../types/blockstore
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../types/protocols/cloud
+      '@fireproof/core-types-runtime':
+        specifier: workspace:0.0.0
+        version: link:../types/runtime
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -737,8 +809,21 @@ importers:
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof
+    devDependencies:
+      playwright:
+        specifier: ^1.53.2
+        version: 1.53.2
+      playwright-chromium:
+        specifier: ^1.53.2
+        version: 1.53.2
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
 
-  core/types:
+  core/types/base:
     dependencies:
       '@adviser/cement':
         specifier: ^0.4.20
@@ -749,6 +834,33 @@ importers:
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
+
+  core/types/blockstore:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.20
+        version: 0.4.20(typescript@5.8.3)
+      multiformats:
+        specifier: ^13.3.7
+        version: 13.3.7
+
+  core/types/protocols/cloud:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.20
+        version: 0.4.20(typescript@5.8.3)
+      multiformats:
+        specifier: ^13.3.7
+        version: 13.3.7
+
+  core/types/runtime:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.20
+        version: 0.4.20(typescript@5.8.3)
+      multiformats:
+        specifier: ^13.3.7
+        version: 13.3.7
 
   dashboard:
     dependencies:
@@ -779,9 +891,12 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../core/types
+        version: link:../core/types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../core/types/protocols/cloud
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -933,9 +1048,12 @@ importers:
       '@fireproof/core-react':
         specifier: workspace:0.0.0
         version: link:../core/react
-      '@fireproof/core-types':
+      '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../core/types
+        version: link:../core/types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../core/types/protocols/cloud
       '@types/deno':
         specifier: ^2.3.0
         version: 2.3.0
@@ -5736,6 +5854,10 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
+
   uuidv7@1.0.2:
     resolution: {integrity: sha512-8JQkH4ooXnm1JCIhqTMbtmdnYEn6oKukBxHn1Ic9878jMkL7daTI7anTExfY18VRCX7tcdn5quzvCb6EWrR8PA==}
     hasBin: true
@@ -7650,6 +7772,27 @@ snapshots:
       - utf-8-validate
       - vite
 
+  '@vitest/browser@3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(playwright@1.53.2)(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))(vitest@3.2.4)(webdriverio@9.11.0)':
+    dependencies:
+      '@testing-library/dom': 10.4.0
+      '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
+      '@vitest/mocker': 3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
+      '@vitest/utils': 3.2.4
+      magic-string: 0.30.17
+      sirv: 3.0.1
+      tinyrainbow: 2.0.0
+      vitest: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
+      ws: 8.18.3
+    optionalDependencies:
+      playwright: 1.53.2
+      webdriverio: 9.11.0
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
+
   '@vitest/coverage-v8@3.2.4(@vitest/browser@3.2.4)(vitest@3.2.4)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -7687,6 +7830,15 @@ snapshots:
     optionalDependencies:
       msw: 2.7.3(@types/node@24.0.10)(typescript@5.8.3)
       vite: 7.0.0(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
+
+  '@vitest/mocker@3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))':
+    dependencies:
+      '@vitest/spy': 3.2.4
+      estree-walker: 3.0.3
+      magic-string: 0.30.17
+    optionalDependencies:
+      msw: 2.7.3(@types/node@24.0.10)(typescript@5.8.3)
+      vite: 7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -11296,6 +11448,8 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
+  uuid@11.1.0: {}
+
   uuidv7@1.0.2: {}
 
   varint@6.0.0: {}
@@ -11379,7 +11533,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(vite@7.0.0(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
+      '@vitest/mocker': 3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -11397,12 +11551,12 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.0.0(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
+      vite: 7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
       vite-node: 3.2.4(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.0.10
-      '@vitest/browser': 3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(playwright@1.53.2)(vite@7.0.0(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))(vitest@3.2.4)(webdriverio@9.11.0)
+      '@vitest/browser': 3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(playwright@1.53.2)(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))(vitest@3.2.4)(webdriverio@9.11.0)
       '@vitest/ui': 3.2.4(vitest@3.2.4)
       happy-dom: 14.12.3
     transitivePeerDependencies:

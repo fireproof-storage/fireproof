@@ -18,8 +18,8 @@ import {
   Attached,
   LedgerOptsOptionalTracer,
   PARAM,
-} from "@fireproof/core-types";
-import { StoreURIRuntime, StoreUrlsOpts } from "@fireproof/core-types/blockstore";
+} from "@fireproof/core-types-base";
+import { StoreURIRuntime, StoreUrlsOpts } from "@fireproof/core-types-blockstore";
 import { decodeFile, encodeFile, ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject } from "@fireproof/core-runtime";
 
 import { DatabaseImpl } from "./database.js";

@@ -1,10 +1,11 @@
 import { BuildURI, CoerceURI, Result, URI } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core-types";
+import { SuperThis } from "@fireproof/core-types-base";
 import { sts } from "@fireproof/core-runtime";
 import type { GenerateKeyPairOptions } from "jose/key/generate/keypair";
-import * as ps from "@fireproof/core-types/protocols/cloud";
+import * as ps from "@fireproof/core-types-protocols-cloud";
 import * as psc from "@fireproof/core-protocols-cloud";
-import { TokenForParam } from "@fireproof/core-types/protocols/cloud";
+import { TokenForParam } from "@fireproof/core-types-protocols-cloud";
+// import { TokenForParam } from "@fireproof/core-types/protocols/cloud";
 
 type MsgerParamsWithEnDe = psc.MsgerParamsWithEnDe;
 type MsgRawConnection<T extends MsgBase> = ps.MsgRawConnection<T>;
