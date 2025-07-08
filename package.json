@@ -72,6 +72,7 @@
     "eslint": "^9.30.1",
     "eslint-plugin-import": "^2.32.0",
     "multiformats": "^13.3.7",
+    "playwright": "^1.53.2",
     "prettier": "^3.6.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
@@ -108,8 +109,8 @@
     }
   },
   "dependencies": {
-    "@fireproof/core-cli": "workspace:0.0.0",
     "@adviser/cement": "^0.4.20",
+    "@fireproof/core-cli": "workspace:0.0.0",
     "@fireproof/vendor": "^3.0.0"
   }
 }

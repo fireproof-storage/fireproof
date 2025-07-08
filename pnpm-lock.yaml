@@ -74,6 +74,9 @@ importers:
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
+      playwright:
+        specifier: ^1.53.2
+        version: 1.53.2
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
