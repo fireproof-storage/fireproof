@@ -1,5 +1,5 @@
 import { Logger, CoerceURI, URI, AppContext } from "@adviser/cement";
-import { Attachable, SuperThis } from "../../base/types.js";
+import { Attachable, SuperThis } from "@fireproof/core-types-base";
 import { FPCloudClaim } from "./msg-types.js";
 
 export interface ToCloudAttachable extends Attachable {

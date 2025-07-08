@@ -324,7 +324,7 @@ export class CFHonoFactory implements HonoServerFactory {
     switch (cfBackendMode) {
       case "D1":
       default:
-        db = () => d1Drizzle(c.env[c.env.CF_BACKEND_KEY ?? "FP_BACKEND_D1"]);
+        db = () => d1Drizzle(c.env[c.env.CF_BACKEND_KEY ?? "FP_BACKEND_D1"]) as unknown as DrizzleDatebase;
         break;
     }
 

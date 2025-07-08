@@ -1,4 +1,4 @@
-/// <reference types="../types/base/prolly-trees.d.ts" />
+/// <reference types="@fireproof/core-types-base/prolly-trees.d.ts" />
 import type { Block } from "multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";

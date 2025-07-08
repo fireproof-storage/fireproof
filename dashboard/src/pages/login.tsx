@@ -102,7 +102,9 @@ export function Login() {
 
       <div className="flex items-center justify-center h-full order-1 lg:order-2">
         <div
-          className={`relative max-w-[445px] p-10 sm:px-[48px] sm:py-[60px] mx-10 my-20 sm:m-14 sm:ml-6 grow-0 rounded-fp-l ${isDarkMode ? "bg-fp-bg-01" : ""}`}
+          className={`relative max-w-[445px] p-10 sm:px-[48px] sm:py-[60px] mx-10 my-20 sm:m-14 sm:ml-6 grow-0 rounded-fp-l ${
+            isDarkMode ? "bg-fp-bg-01" : ""
+          }`}
         >
           <svg
             className="max-w-36 sm:max-w-max my-5"
@@ -187,7 +189,9 @@ function Slide({ data, isDarkMode }: { data: { text: string; author: string; rol
 function SlideButtonIcon({ isDarkMode }: { isDarkMode: boolean }) {
   return (
     <svg
-      className={`${isDarkMode ? "text-fp-s hover:text-fp-p" : "text-fp-bg-00 hover:text-fp-dec-01"} active:scale-95 transition-transform`}
+      className={`${
+        isDarkMode ? "text-fp-s hover:text-fp-p" : "text-fp-bg-00 hover:text-fp-dec-01"
+      } active:scale-95 transition-transform`}
       width="48"
       height="48"
       viewBox="0 0 48 48"

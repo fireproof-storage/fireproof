@@ -186,8 +186,10 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should load a header", async () => {
-    const metaStream = store.stream();
-    for await (const cars of metaStream) {
+    const metaStream = store.stream().getReader();
+    while (true) {
+      const { done, value: cars } = await metaStream.read();
+      if (done) break;
       // expect(loaded).toBeTruthy();
       expect(cars).toBeTruthy();
       expect(cars.map((i) => i.cars.map((i) => i.toString())).flat(2)).toEqual([cid.toString()]);

@@ -4,6 +4,8 @@ import { keyCmd, preSignedUrlCmd } from "@fireproof/cloud-base";
 import { writeEnvCmd } from "@fireproof/cloud-backend-cf-d1";
 
 import { dotenv } from "zx";
+import { buildCmd } from "./build-cmd.js";
+import { setDependenciesCmd, setScriptsCmd } from "./set-scripts-cmd.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -16,6 +18,9 @@ import { dotenv } from "zx";
       key: keyCmd(sthis),
       writeEnv: writeEnvCmd(sthis),
       preSigned: preSignedUrlCmd(sthis),
+      build: buildCmd(sthis),
+      setScripts: setScriptsCmd(sthis),
+      setDependencies: setDependenciesCmd(sthis),
     },
   });
 

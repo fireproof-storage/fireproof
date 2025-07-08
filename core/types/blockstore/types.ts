@@ -1,3 +1,4 @@
+/// <reference lib="DOM" />
 import type { CID, Link, Version } from "multiformats";
 import {
   Attachable,
@@ -12,15 +13,15 @@ import {
   TraceFn,
   KeyBagRuntime,
   KeysItem,
-} from "../base/types.js";
+  KeyBagIf,
+} from "@fireproof/core-types-base";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { AsyncBlockCodec } from "../runtime/codec-interface.js";
+import { AsyncBlockCodec } from "@fireproof/core-types-runtime";
 
 import { TaskManagerIf, TaskManagerParams } from "./task-manager-if.js";
 import { CommitQueueIf } from "./commit-queue-if.js";
-import { KeyBagIf } from "../base/key-bag-if.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];

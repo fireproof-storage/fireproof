@@ -11,11 +11,16 @@ import {
   anyBlock2FPBlock,
   parseCarFile,
 } from "@fireproof/core-blockstore";
-import { ensureSuperThis } from "@fireproof/core-runtime";
-import { FPBlock, TransactionMeta, isCarBlockItemReady, CarGroup, isCarBlockItemStale } from "@fireproof/core-types-blockstore";
-import { AnyLink } from "prolly-trees/base";
+import { asyncBlockEncode, ensureSuperThis } from "@fireproof/core-runtime";
+import {
+  FPBlock,
+  TransactionMeta,
+  isCarBlockItemReady,
+  CarGroup,
+  isCarBlockItemStale,
+  AnyLink,
+} from "@fireproof/core-types-blockstore";
 import { describe, afterEach, beforeEach, it, expect, assert } from "vitest";
-import { asyncBlockEncode } from "../../runtime/async-block-encode.js";
 
 class MyMemoryBlockStore extends EncryptedBlockstore {
   readonly memblock = new Map<string, FPBlock>();

@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import type { NotFoundError, SuperThis } from "../base/types.js";
+import type { NotFoundError, SuperThis } from "@fireproof/core-types-base";
 import type { UnsubscribeResult, VoidResult } from "./serde-gateway.js";
 
 export interface GatewayOpts {

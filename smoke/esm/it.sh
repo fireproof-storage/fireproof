@@ -62,7 +62,7 @@ function gthis() {
 }
 
 function getVersion() {
-  let version = "refs/tags/v$(cat $projectBase/dist/fp-version)";
+  let version = "refs/tags/v$(cat $projectBase/dist/fp-version.txt)";
   if ("$GITHUB_REF" && "$GITHUB_REF".startsWith("refs/tags/v")) {
     version = "$GITHUB_REF";
   }

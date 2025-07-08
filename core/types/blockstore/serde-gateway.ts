@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { NotFoundError } from "../base/types.js";
+import { NotFoundError } from "@fireproof/core-types-base";
 import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
 import { type Loadable } from "./types.js";
 import { FPDecoder, type FPEncoder } from "./fp-envelope-serialize.js";

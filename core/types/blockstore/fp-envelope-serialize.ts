@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { SuperThis } from "../base/types.js";
+import { SuperThis } from "@fireproof/core-types-base";
 
 export interface SerializedMeta {
   readonly data: string; // base64pad encoded

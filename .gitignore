@@ -9,7 +9,7 @@ pail.car
 .nyc_output
 build
 coverage
-node_modules
+**/node_modules/**
 out
 logs
 
@@ -18,8 +18,9 @@ logs
 
 # Artifacts
 *.log
-*.tgz
+**/*.tgz
 *.zip
+*.tgz
 
 smoke/package.json
 smoke/pnpm-lock.yaml

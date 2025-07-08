@@ -13,7 +13,7 @@ import {
   MapFn,
   QueryOpts,
 } from "./types.js";
-import { AnyLink } from "../blockstore/types.js";
+import { AnyLink } from "@fireproof/core-types-blockstore";
 
 import { BaseNode } from "prolly-trees/base";
 

@@ -4,10 +4,12 @@
   "description": "Live ledger for the web.",
   "type": "module",
   "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
+  "main": "./index.js",
+  "bin": "./run.sh",
   "scripts": {
-    "build": "rm -rf ./dist/tsc ; tsc"
+    "build": "tsc",
+    "pack": "echo skip",
+    "publish": "echo skip"
   },
   "keywords": [
     "ledger",
@@ -36,11 +38,20 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "from-package-json",
-    "@fireproof/cloud-base": "workspace:0.0.0",
-    "@fireproof/core-types-base": "workspace:0.0.0",
-    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@adviser/cement": "^0.4.20",
     "@fireproof/cloud-backend-cf-d1": "workspace:0.0.0",
-    "multiformats": "^13.3.7"
+    "@fireproof/cloud-base": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "cmd-ts": "^0.13.0",
+    "find-up": "^7.0.0",
+    "fs-extra": "^11.3.0",
+    "multiformats": "^13.3.7",
+    "zx": "^8.6.1",
+    "@fireproof/core-cli": "workspace:0.0.0",
+    "@fireproof/vendor": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4"
   }
 }

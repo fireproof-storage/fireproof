@@ -45,7 +45,8 @@ declare module "prolly-trees/utils" {
   declare interface Entry {
     identity(): number;
   }
-  declare function bf(factor: number): (entry: Entry) => Promise<boolean>;
+  declare function bf<T>(factor: number): (entry: T, dist: number) => Promise<boolean>;
+  // declare function bf(factor: number): (entry: Entry) => Promise<boolean>;
   declare function simpleCompare(a: number | string, b: number | string): number;
 }
 

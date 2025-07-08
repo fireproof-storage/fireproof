@@ -1,4 +1,4 @@
-/// <reference types="./ts-types/prolly-trees.d.ts" />
+/// <reference types="@fireproof/core-types-base/prolly-trees.d.ts" />
 
 import {
   type ClockHead,

@@ -8,16 +8,14 @@
 
     "jsx": "react",
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
     "sourceMap": true,
-    "outDir": "./dist",
     "removeComments": true,
-    "noEmit": true,
+    "noEmit": false,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "alwaysStrict": true,
     "skipLibCheck": true,
     "types": ["node", "deno"]
-  },
-  "include": ["core/**/*", "cloud/**/*", "tests/**/*", "cli/**/*", "dashboard/**/*"],
-  "exclude": ["**/dist/**"]
+  }
 }

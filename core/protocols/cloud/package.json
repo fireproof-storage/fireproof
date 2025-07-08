@@ -4,7 +4,9 @@
   "description": "Live ledger for the web.",
   "type": "module",
   "scripts": {
-    "build": "rm -rf ./dist/tsc ; tsc"
+    "build": "tsc",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
   },
   "keywords": [
     "ledger",
@@ -33,8 +35,13 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@adviser/cement": "^0.4.20",
+    "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
-    "@fireproof/core-runtime": "workspace:0.0.0"
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "^3.0.0",
+    "@types/ws": "^8.18.1",
+    "ws": "^8.18.3",
+    "@fireproof/core-cli": "workspace:0.0.0"
   }
 }
