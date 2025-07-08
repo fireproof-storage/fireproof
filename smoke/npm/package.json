@@ -14,7 +14,6 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@fireproof/core-cli": "workspace:0.0.0",
     "@adviser/cement": "^0.4.20",
     "@fireproof/vendor": "^3.0.0"
   }

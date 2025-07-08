@@ -49,9 +49,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:cli
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -59,12 +56,18 @@ importers:
       '@eslint/js':
         specifier: ^9.30.1
         version: 9.30.1
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:cli
       '@types/deno':
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
         specifier: ^24.0.10
         version: 24.0.10
+      deno:
+        specifier: ^2.4.1
+        version: 2.4.1
       eslint:
         specifier: ^9.30.1
         version: 9.30.1(jiti@1.21.7)
@@ -107,9 +110,6 @@ importers:
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../cloud/base
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: 'link:'
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -131,22 +131,28 @@ importers:
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
+      semver:
+        specifier: ^7.7.2
+        version: 7.7.2
       zx:
         specifier: ^8.6.1
         version: 8.6.1
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: 'link:'
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
+      '@types/semver':
+        specifier: ^7.7.0
+        version: 7.7.0
 
   cloud/3rd-party:
     dependencies:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -160,6 +166,9 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
       '@types/react':
         specifier: ^19.1.8
         version: 19.1.8
@@ -181,9 +190,6 @@ importers:
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../../../core/base
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-gateways-cloud':
         specifier: workspace:0.0.0
         version: link:../../../core/gateways/cloud
@@ -212,6 +218,9 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../../core/types/base
@@ -245,9 +254,6 @@ importers:
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../../base
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../../../core/protocols/cloud
@@ -276,6 +282,9 @@ importers:
         specifier: ^13.3.7
         version: 13.3.7
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
@@ -303,9 +312,6 @@ importers:
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../../../core/base
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../../../core/protocols/cloud
@@ -340,6 +346,9 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../../cli
       '@types/node':
         specifier: ^24.0.10
         version: 24.0.10
@@ -358,9 +367,6 @@ importers:
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../../core/blockstore
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../core/runtime
@@ -383,6 +389,9 @@ importers:
         specifier: ^19.1.0
         version: 19.1.0
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.10)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -395,9 +404,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -414,6 +420,9 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
       '@types/react-dom':
         specifier: ^19.1.6
         version: 19.1.6(@types/react@19.1.8)
@@ -426,9 +435,6 @@ importers:
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../keybag
@@ -460,6 +466,9 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
       '@types/node':
         specifier: ^24.0.10
         version: 24.0.10
@@ -469,9 +478,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -535,9 +541,6 @@ importers:
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../base
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../types/base
@@ -556,9 +559,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -583,9 +583,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -616,9 +613,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -641,6 +635,9 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../../cli
       '@types/deno':
         specifier: ^2.3.0
         version: 2.3.0
@@ -653,9 +650,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -674,9 +668,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -689,9 +680,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -716,9 +704,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -735,6 +720,9 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../../cli
       '@types/deno':
         specifier: ^2.3.0
         version: 2.3.0
@@ -747,9 +735,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-gateways-file':
         specifier: workspace:0.0.0
         version: link:../gateways/file
@@ -777,9 +762,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -804,9 +786,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -825,9 +804,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../types/base
@@ -867,9 +843,6 @@ importers:
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -934,6 +907,9 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
       '@vitest/browser':
         specifier: ^3.2.4
         version: 3.2.4(msw@2.7.3(@types/node@24.0.10)(typescript@5.8.3))(playwright@1.53.2)(vite@7.0.2(@types/node@24.0.10)(jiti@1.21.7)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))(vitest@3.2.4)(webdriverio@9.11.0)
@@ -955,9 +931,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -979,9 +952,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1003,9 +973,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../../cli
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1027,9 +994,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.20
         version: 0.4.20(typescript@5.8.3)
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../../cli
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -1054,9 +1018,6 @@ importers:
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core/core
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../cli
       '@fireproof/core-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../core/protocols/cloud
@@ -1133,6 +1094,9 @@ importers:
       '@eslint/js':
         specifier: ^9.28.0
         version: 9.30.1
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../cli
       '@libsql/client':
         specifier: ^0.15.9
         version: 0.15.9
@@ -1220,9 +1184,6 @@ importers:
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../core/base
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../cli
       '@fireproof/core-gateways-cloud':
         specifier: workspace:0.0.0
         version: link:../core/gateways/cloud
@@ -1247,9 +1208,6 @@ importers:
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
-      '@types/deno':
-        specifier: ^2.3.0
-        version: 2.3.0
       dompurify:
         specifier: ^3.2.6
         version: 3.2.6
@@ -1260,9 +1218,15 @@ importers:
         specifier: ^19.1.0
         version: 19.1.0
     devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../cli
       '@testing-library/react':
         specifier: ^16.3.0
         version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@types/deno':
+        specifier: ^2.3.0
+        version: 2.3.0
       '@types/react':
         specifier: ^19.1.8
         version: 19.1.8
@@ -1490,6 +1454,36 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@deno/darwin-arm64@2.4.1':
+    resolution: {integrity: sha512-j0oNEukYA/BqUlmAeuqYP8o4QCPsXZDWCwZS0Y8Twp3N+lgTvnlS527sNekTF1BwJmO5EdwwxKhA5c9T7I+VSw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@deno/darwin-x64@2.4.1':
+    resolution: {integrity: sha512-tcdKKQg/QaasmS4E3VlWDvkxMHo8jYIjLyf5oxNybb15dlnFgdyGbvZoFT/Z81ROkHPyRE31VziUawMb5ALGvA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@deno/linux-arm64-glibc@2.4.1':
+    resolution: {integrity: sha512-BEfivyYj4GQbHuWFV/PPSLRuZkBEE1/HPfrkzIElYMxcfVMnh+UEKjGePd0HILwRSj60ZqWpkiY+rDEanU0jLQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@deno/linux-x64-glibc@2.4.1':
+    resolution: {integrity: sha512-61lbBZvDpZuCDB1rFA77oLX0DyV7fL3EGGYNSpWRinXIOqDNW4wHK7fUH/eBhQ+kODK++cTEwxmJQtNHEbbUBA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@deno/win32-arm64@2.4.1':
+    resolution: {integrity: sha512-zlge/xZPMapJkpSnS83haspJwUWMJSb/PpOyfFdWwg+yND4yCiwkvdafUm3QDLi5ywV0OtdItg2xcp9CW4Yqbg==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@deno/win32-x64@2.4.1':
+    resolution: {integrity: sha512-HuzFrFJTfaDYqdEj9U4R2di9FYavLntKDgiUOwrBxPSxzfcTAMh1A/cj3rzRlxvPzfiITXSkqd7vlKlKEi9KVg==}
+    cpu: [x64]
+    os: [win32]
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -2791,6 +2785,9 @@ packages:
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
 
+  '@types/semver@7.7.0':
+    resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
+
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
 
@@ -3495,6 +3492,10 @@ packages:
   degenerator@5.0.1:
     resolution: {integrity: sha512-TllpMR/t0M5sqCXfj85i4XaAzxmS5tVA16dqvdkMwGmzI+dXLXnw3J+3Vdv7VKw+ThlTMboK6i9rnZ6Nntj5CQ==}
     engines: {node: '>= 14'}
+
+  deno@2.4.1:
+    resolution: {integrity: sha512-JjI5DZnhuoZhAtk67pEKvBAMpW7FfIsCq2J7cy+47rgffmRo5figB3Z5JamvUxwL2p00A5GioOBRsCPVV6664g==}
+    hasBin: true
 
   dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
@@ -6242,6 +6243,24 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
+  '@deno/darwin-arm64@2.4.1':
+    optional: true
+
+  '@deno/darwin-x64@2.4.1':
+    optional: true
+
+  '@deno/linux-arm64-glibc@2.4.1':
+    optional: true
+
+  '@deno/linux-x64-glibc@2.4.1':
+    optional: true
+
+  '@deno/win32-arm64@2.4.1':
+    optional: true
+
+  '@deno/win32-x64@2.4.1':
+    optional: true
+
   '@drizzle-team/brocli@0.10.2': {}
 
   '@emnapi/runtime@1.4.3':
@@ -7246,6 +7265,8 @@ snapshots:
 
   '@types/retry@0.12.2': {}
 
+  '@types/semver@7.7.0': {}
+
   '@types/sinonjs__fake-timers@8.1.5':
     optional: true
 
@@ -8131,6 +8152,15 @@ snapshots:
       escodegen: 2.1.0
       esprima: 4.0.1
     optional: true
+
+  deno@2.4.1:
+    optionalDependencies:
+      '@deno/darwin-arm64': 2.4.1
+      '@deno/darwin-x64': 2.4.1
+      '@deno/linux-arm64-glibc': 2.4.1
+      '@deno/linux-x64-glibc': 2.4.1
+      '@deno/win32-arm64': 2.4.1
+      '@deno/win32-x64': 2.4.1
 
   dequal@2.0.3: {}
 

@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
+  "main": "./index.js",
   "scripts": {
     "build": "tsc",
     "pack": "core-cli build --doPack",
@@ -43,7 +44,6 @@
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "jose": "^6.0.11",
-    "@fireproof/core-cli": "workspace:0.0.0",
     "@fireproof/vendor": "^3.0.0"
   }
 }

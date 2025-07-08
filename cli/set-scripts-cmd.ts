@@ -63,18 +63,25 @@ export function setDependenciesCmd(sthis: SuperThis) {
       console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
       for (const packageJsonPath of packagesJsonFiles) {
         const packageJson = await fs.readJSON(packageJsonPath);
+        let ref: Record<string, string>;
         if (args.devDependency) {
-          packageJson.devDependencies = packageJson.devDependencies || {};
-          packageJson.devDependencies[args.depName] = args.depVersion;
+          ref = packageJson.devDependencies || {};
+          packageJson.devDependencies = ref;
           console.log(`Setting devDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
         } else if (args.peerDependency) {
-          packageJson.peerDependencies = packageJson.peerDependencies || {};
-          packageJson.peerDependencies[args.depName] = args.depVersion;
+          ref = packageJson.peerDependencies || {};
+          packageJson.peerDependencies = ref;
           console.log(`Setting peerDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
         } else {
-          packageJson.dependencies = packageJson.dependencies || {};
-          packageJson.dependencies[args.depName] = args.depVersion;
+          ref = packageJson.dependencies || {};
+          packageJson.dependencies = ref;
           console.log(`Setting dependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+        }
+        if (!args.depVersion) {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete ref[args.depName];
+        } else {
+          ref[args.depName] = args.depVersion;
         }
         await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
       }

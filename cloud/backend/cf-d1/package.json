@@ -40,7 +40,6 @@
     "@cloudflare/workers-types": "^4.20250703.0",
     "@fireproof/cloud-backend-base": "workspace:0.0.0",
     "@fireproof/cloud-base": "workspace:0.0.0",
-    "@fireproof/core-cli": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
@@ -55,6 +54,7 @@
     "drizzle-kit": "0.30.6",
     "vitest": "^3.2.4",
     "wrangler": "^4.23.0",
-    "zx": "^8.6.1"
+    "zx": "^8.6.1",
+    "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

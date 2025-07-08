@@ -5,6 +5,7 @@ import path from "node:path";
 import { findUp } from "find-up";
 import { cd, $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
+import { SemVer } from "semver";
 
 function getEnvVersion(version = "refs/tags/v0.0.0-smoke") {
   if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
@@ -247,9 +248,17 @@ export function buildCmd(sthis: SuperThis) {
         if (fs.existsSync(args.npmrc)) {
           console.log(`Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
           await fs.copyFile(args.npmrc, ".npmrc");
+          await $`cat .npmrc`;
+          await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
         }
+        const tags = args.pubTags;
+        const semVer = new SemVer(args.version);
+        if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
+          tags.push("dev");
+        }
+
         const registry = ["--registry", args.registry];
-        const tagsOpts = args.pubTags.map((tag) => `--tag ${tag}`).join(" ");
+        const tagsOpts = tags.map((tag) => `--tag ${tag}`).join(" ");
         await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`;
         // pnpm publish --access public --no-git-checks ${tagsOpts}
       }

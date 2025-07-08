@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "cli": "fp-cli",
+    "cli": "echo it is in its own package core-cli",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,5 +13,9 @@
   "type": "module",
   "dependencies": {
     "@fireproof/core": "0.0.0-smoke"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "deno": "^2.4.1"
   }
 }

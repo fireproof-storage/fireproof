@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
+  "main": "./index.js",
   "scripts": {
     "build": "tsc",
     "pack": "core-cli build --doPack",
@@ -53,7 +54,6 @@
     "@web3-storage/pail": "^0.6.2",
     "multiformats": "^13.3.7",
     "p-map": "^7.0.3",
-    "p-retry": "^6.2.1",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "p-retry": "^6.2.1"
   }
 }

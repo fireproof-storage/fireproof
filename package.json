@@ -21,8 +21,7 @@
     "build:docs": "if [ \"$FP_CI\" = 'fp_ci' ] ; then bash build-docs.sh; fi",
     "pub:fireproof-core": "mkdir -p ./dist/fireproof-core ; cp -pr tests ./dist/fireproof-core; cp -pr dist/tsc/src/* ./dist/fireproof-core;  tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
     "pub:use-fireproof": "mkdir -p ./dist/use-fireproof ; cp -pr dist/tsc/src/use-fireproof/* ./dist/use-fireproof; tsx ./version-copy-package.ts ./dist/use-fireproof/package-use-fireproof.json",
-    "presmoke": "if [ \"$FP_CI\" != 'fp_ci' ] ; then pnpm run build; fi; pnpm run presmoke:publish",
-    "presmoke:publish": "bash -x smoke/publish-local-registry.sh",
+    "presmoke": "sh smoke/publish-local-registry.sh",
     "smoke": "pnpm run '/^smoke:/'",
     "smoke-retry": "pnpm run '/^smoke:/'",
     "smoke:esm": "sh smoke/esm/it.sh",
@@ -69,6 +68,7 @@
     "@eslint/js": "^9.30.1",
     "@types/deno": "^2.3.0",
     "@types/node": "^24.0.10",
+    "deno": "^2.4.1",
     "eslint": "^9.30.1",
     "eslint-plugin-import": "^2.32.0",
     "multiformats": "^13.3.7",
@@ -78,7 +78,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1",
     "vitest": "^3.2.4",
-    "wrangler": "^4.23.0"
+    "wrangler": "^4.23.0",
+    "@fireproof/core-cli": "workspace:0.0.0"
   },
   "repository": {
     "type": "git",
@@ -111,7 +112,6 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.20",
-    "@fireproof/core-cli": "workspace:0.0.0",
     "@fireproof/vendor": "^3.0.0"
   }
 }

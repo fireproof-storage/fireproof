@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
+  "main": "./index.js",
   "scripts": {
     "pack": "core-cli build --doPack",
     "build": "tsc",
@@ -36,7 +37,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "peerDependencies": {
-    "@adviser/cement": "^8.6.1",
+    "@adviser/cement": "^0.4.20",
     "react": ">=18.0.0"
   },
   "dependencies": {
@@ -63,14 +64,14 @@
     "cborg": "^4.2.12",
     "charwise": "^3.0.1",
     "use-fireproof": "workspace:0.0.0",
-    "uuidv7": "^1.0.2",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "uuidv7": "^1.0.2"
   },
   "devDependencies": {
     "@vitest/browser": "^3.2.4",
     "playwright": "^1.53.2",
     "playwright-chromium": "^1.53.2",
     "vitest": "^3.2.4",
-    "zx": "^8.6.1"
+    "zx": "^8.6.1",
+    "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

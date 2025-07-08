@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
+  "main": "./index.js",
   "scripts": {
     "build": "tsc",
     "pack": "core-cli build --doPack",
@@ -46,8 +47,7 @@
     "@ipld/dag-cbor": "^9.2.4",
     "@web3-storage/pail": "^0.6.2",
     "charwise": "^3.0.1",
-    "prolly-trees": "^1.0.4",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "prolly-trees": "^1.0.4"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
