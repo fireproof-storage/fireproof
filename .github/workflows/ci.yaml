@@ -305,7 +305,7 @@ jobs:
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
           pnpm run drizzle:d1-remote
-          pnpm exec core-cli --wranglerToml ./wrangler.toml --env dev --out /dev/stdout --json | \
+          pnpm exec core-cli writeEnv --wranglerToml ./wrangler.toml --env dev --out /dev/stdout --json | \
             pnpm exec wrangler -c ./wrangler.toml secret --env dev bulk
           pnpm run wrangler:deploy
           pnpm run test --project cloud:D1 --testTimeout 10000
