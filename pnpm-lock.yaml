@@ -68,6 +68,9 @@ importers:
       deno:
         specifier: ^2.4.1
         version: 2.4.1
+      drizzle-kit:
+        specifier: 0.30.6
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       eslint:
         specifier: ^9.30.1
         version: 9.30.1(jiti@1.21.7)

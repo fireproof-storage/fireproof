@@ -14,21 +14,18 @@ function getEnvVersion(version = "refs/tags/v0.0.0-smoke") {
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
-async function getVersion(fpVersion: string) {
-  if (!process.env.GITHUB_REF) {
-    let top = await findUp("tsconfig.dist.json");
-    if (!top) {
-      top = process.cwd();
-    }
-    const fpVersionFile = path.join(path.dirname(top), fpVersion);
-    if (fs.existsSync(fpVersionFile)) {
-      return (await fs.readFile(fpVersionFile, "utf-8")).trim();
-    }
-    const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
-    const dateTick = (await $`date +%s`).stdout.trim();
-    return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`);
+async function getVersion(fpVersionFname: string) {
+  let top = await findUp("tsconfig.dist.json");
+  if (!top) {
+    top = process.cwd();
   }
-  return getEnvVersion(`refs/tags/dummy`);
+  const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
+  if (fs.existsSync(fpVersionFile)) {
+    return (await fs.readFile(fpVersionFile, "utf-8")).trim();
+  }
+  const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
+  const dateTick = (await $`date +%s`).stdout.trim();
+  return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`);
 }
 
 function patchDeps(dep: Record<string, string>, version: string) {
@@ -252,9 +249,13 @@ export function buildCmd(sthis: SuperThis) {
           await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
         }
         const tags = args.pubTags;
-        const semVer = new SemVer(args.version);
-        if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
-          tags.push("dev");
+        try {
+          const semVer = new SemVer(args.version);
+          if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
+            tags.push("dev");
+          }
+        } catch (e) {
+          console.warn(`Warn parsing version ${args.version}:`, e);
         }
 
         const registry = ["--registry", args.registry];
