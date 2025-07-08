@@ -291,6 +291,7 @@ jobs:
       - name: deploy cloud/backend/cf-d1 - 1
         id: attempt1
         continue-on-error: true
+        working-directory: cloud/backend/cf-d1
         env:
           CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
           CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
@@ -304,13 +305,14 @@ jobs:
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
           pnpm run drizzle:d1-remote
-          pnpm exec tsx ./cloud/backend/cf-d1/cli-write-env.ts --wranglerToml ./cloud/backend/cf-d1/wrangler.toml --env dev --out /dev/stdout --json | \
-            pnpm exec wrangler -c cloud/backend/cf-d1/wrangler.toml secret --env dev bulk
-          pnpm run wrangler:cf-d1
+          pnpm exec core-cli --wranglerToml ./wrangler.toml --env dev --out /dev/stdout --json | \
+            pnpm exec wrangler -c ./wrangler.toml secret --env dev bulk
+          pnpm run wrangler:deploy
           pnpm run test --project cloud:D1 --testTimeout 10000
 
       - name: deploy cloud/backend/cf-d1 - 2
         if: steps.attempt1.outcome == 'failure'
+        working-directory: cloud/backend/cf-d1
         env:
           CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
           CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
