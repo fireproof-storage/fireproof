@@ -29,13 +29,14 @@
     "@clerk/backend": "^1.25.8",
     "@clerk/clerk-js": "^5.58.1",
     "@clerk/clerk-react": "^5.25.5",
-    "use-fireproof": "workspace:0.0.0",
     "@fireproof/core": "workspace:0.0.0",
+    "@fireproof/core-cli": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "^3.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/react-query": "^5.80.2",
@@ -51,8 +52,7 @@
     "react-router-dom": "^7.6.2",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
-    "@fireproof/core-cli": "workspace:0.0.0",
-    "@fireproof/vendor": "^3.0.0"
+    "use-fireproof": "workspace:0.0.0"
   },
   "devDependencies": {
     "@clerk/clerk-react": "^5.31.9",
@@ -83,7 +83,7 @@
     "vite": "^7.0.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
-    "wrangler": "^4.22.1",
+    "wrangler": "^4.23.0",
     "zx": "^8.5.3"
   }
 }
