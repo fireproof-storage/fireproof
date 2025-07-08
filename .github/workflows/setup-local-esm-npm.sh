@@ -45,7 +45,7 @@ echo "Token: $user:$token"
 cat <<EOF > $projectRoot/dist/npmrc-smoke
 ; .npmrc
 enable-pre-post-scripts=true
-//localhost:4873/:_authToken=$token
-@fireproof:registry=http://localhost:4873/
 registry=http://localhost:4873/
+@fireproof:registry=http://localhost:4873/
+//localhost:4873/:_authToken=$token
 EOF
