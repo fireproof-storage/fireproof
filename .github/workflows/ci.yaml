@@ -1,10 +1,9 @@
 name: '@fireproof/core'
 on:
   push:
-    tags:
-      - '*'
-      - '!core-cf@*'
-      - '!v*'
+    tags-ignore:
+      - '*@*'
+      - 'v*'
     paths-ignore:
       - 'dashboard/**'
 
