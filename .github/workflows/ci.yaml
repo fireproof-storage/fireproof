@@ -101,11 +101,11 @@ jobs:
       - name: install
         run: pnpm install
 
-      - name: Sticky-disk-dist
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ./dist
+      #- name: Sticky-disk-dist
+      # uses: useblacksmith/stickydisk@v1
+      # with:
+      #   key: ${{ github.repository }}-${{ github.ref }}-dist
+      #   path: ./dist
 
       - name: build
         run: pnpm run build
@@ -128,11 +128,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Sticky-disk-cache
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-cache
-          path: ~/.cache
+      #- name: Sticky-disk-cache
+      #  uses: useblacksmith/stickydisk@v1
+      #  with:
+      #    key: ${{ github.repository }}-cache
+      #    path: ~/.cache
 
       - name: install
         run: pnpm install
@@ -188,17 +188,17 @@ jobs:
       - name: install
         run: pnpm install
 
-      - name: Sticky-disk-cache
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-cache
-          path: ~/.cache
+      #- name: Sticky-disk-cache
+      #  uses: useblacksmith/stickydisk@v1
+      #  with:
+      #    key: ${{ github.repository }}-cache
+      #    path: ~/.cache
 
-      - name: Sticky-disk-dist
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ./dist
+      #- name: Sticky-disk-dist
+      #  uses: useblacksmith/stickydisk@v1
+      #  with:
+      #    key: ${{ github.repository }}-${{ github.ref }}-dist
+      #    path: ./dist
 
       - name: playwright
         run: pnpm exec playwright install chromium
@@ -240,11 +240,11 @@ jobs:
       - name: install
         run: pnpm install
 
-      - name: Sticky-disk-dist
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ./dist
+      #- name: Sticky-disk-dist
+      #  uses: useblacksmith/stickydisk@v1
+      #  with:
+      #    key: ${{ github.repository }}-${{ github.ref }}-dist
+      #    path: ./dist
 
       - name: publish
         env:
@@ -282,11 +282,11 @@ jobs:
       - name: install
         run: pnpm install
 
-      - name: Sticky-disk-dist
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-${{ github.ref }}-dist
-          path: ./dist
+      #- name: Sticky-disk-dist
+      #  uses: useblacksmith/stickydisk@v1
+      #  with:
+      #    key: ${{ github.repository }}-${{ github.ref }}-dist
+      #    path: ./dist
 
       - name: deploy cloud/backend/cf-d1 - 1
         id: attempt1

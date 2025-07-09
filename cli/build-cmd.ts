@@ -245,8 +245,8 @@ export function buildCmd(sthis: SuperThis) {
         if (fs.existsSync(args.npmrc)) {
           console.log(`Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
           await fs.copyFile(args.npmrc, ".npmrc");
-          await $`cat .npmrc`;
-          await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
+          // await $`cat .npmrc`;
+          // await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
         }
         const tags = args.pubTags;
         try {
@@ -259,7 +259,7 @@ export function buildCmd(sthis: SuperThis) {
         }
 
         const registry = ["--registry", args.registry];
-        const tagsOpts = tags.map((tag) => `--tag ${tag}`).join(" ");
+        const tagsOpts = tags.map((tag) => ['--tag', tag]).flat()
         await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`;
         // pnpm publish --access public --no-git-checks ${tagsOpts}
       }

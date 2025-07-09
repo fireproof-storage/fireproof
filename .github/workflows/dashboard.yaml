@@ -95,7 +95,7 @@ jobs:
         run: |
           # pnpm run build
           pnpm run drizzle:d1-remote
-          pnpm exec fp-cli writeEnv --env ${{vars.CLOUDFLARE_ENV}}  --out /dev/stdout --json \
+          pnpm exec core-cli writeEnv --env ${{vars.CLOUDFLARE_ENV}}  --out /dev/stdout --json \
             --fromEnv CLERK_PUBLISHABLE_KEY \
             --fromEnv CLERK_PUB_JWT_KEY \
             --fromEnv CLOUD_SESSION_TOKEN_SECRET \
