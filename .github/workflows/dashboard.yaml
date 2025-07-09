@@ -4,11 +4,11 @@ on:
     tags-ignore:
       - 'dashboard@*'
     paths:
-      - 'dashboard/**'
+      - 'dashboard/**/*'
 jobs:
   compile_test:
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/dashboard-base.yaml
+      - uses: ./dashboard/actions/base

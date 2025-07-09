@@ -1,0 +1,17 @@
+name: 'setup-runtime'
+description: 'setup  runtime'
+# inputs:
+  # your inputs here
+runs:
+  using: "composite"
+  steps:
+    - uses: pnpm/action-setup@v4
+      name: Install pnpm
+      with:
+        run_install: false
+        version: 10
+
+    - uses: useblacksmith/setup-node@v5
+      with:
+        node-version: 22
+        cache: pnpm
