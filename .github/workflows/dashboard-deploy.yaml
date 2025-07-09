@@ -19,6 +19,8 @@ jobs:
     environment: ${{ startsWith(github.ref, 'refs/tags/dashboard@s') && 'staging' || startsWith(github.ref, 'refs/tags/dashboard@p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
+
       - name: deploy cf
         id: attempt1
         working-directory: dashboard
@@ -36,7 +38,8 @@ jobs:
           # need during build
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
         run: |
-          # pnpm run build
+          pnpm run install
+          pnpm run build
           pnpm run drizzle:d1-remote
           pnpm exec core-cli writeEnv --env ${{vars.CLOUDFLARE_ENV}} --out /dev/stdout --json \
             --fromEnv CLERK_PUBLISHABLE_KEY \

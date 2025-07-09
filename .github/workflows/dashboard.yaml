@@ -1,6 +1,8 @@
 name: '@fireproof/dashboard'
 on:
   push:
+    tags-ignore:
+      - '*'
     paths:
       - 'dashboard/**'
 jobs:
