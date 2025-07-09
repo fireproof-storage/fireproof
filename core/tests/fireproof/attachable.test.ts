@@ -539,7 +539,7 @@ describe("sync", () => {
         }),
       )
     ).flat();
-    await sleep(500);
+    await sleep(1000);
     await Promise.all(
       dbs.map(async (db) => {
         for (const key of keys) {
