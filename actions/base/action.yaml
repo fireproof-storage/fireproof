@@ -28,7 +28,7 @@ runs:
     - name: playwright
       shell: bash
       run: |
-        sudo pnpm exec playwright install-deps
+        sudo npx playwright install-deps
         pnpm exec playwright install chromium
 
     - name: test Attempt 1
