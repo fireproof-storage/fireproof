@@ -5,7 +5,7 @@ on:
       - 'dashboard/*'
 jobs:
   compile_test:
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     steps:
       - uses: actions/checkout@v4
 
