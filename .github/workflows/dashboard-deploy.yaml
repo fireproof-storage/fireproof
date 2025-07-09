@@ -4,25 +4,13 @@ on:
     tags:
       - 'dashboard@*'
 
-concurrency:
-  group: dashboard-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   ci:
-    uses: ./.github/workflows/dashboard-base.yaml
-
-  deploy-dashboard:
-    name: Deploy Dashboard
-    needs: ci
-    #runs-on: blacksmith-4vcpu-ubuntu-2204
     environment: ${{ startsWith(github.ref, 'refs/tags/dashboard@s') && 'staging' || startsWith(github.ref, 'refs/tags/dashboard@p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
-      - uses: actions/checkout@v4
-
-      - name: deploy cf
-        id: attempt1
+      - uses: ./.github/workflows/dashboard-base.yaml
+      - name: Deploy Dashboard
         working-directory: dashboard
         env:
           # need for drizzle
@@ -38,8 +26,6 @@ jobs:
           # need during build
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
         run: |
-          pnpm run install
-          pnpm run build
           pnpm run drizzle:d1-remote
           pnpm exec core-cli writeEnv --env ${{vars.CLOUDFLARE_ENV}} --out /dev/stdout --json \
             --fromEnv CLERK_PUBLISHABLE_KEY \

@@ -2,31 +2,13 @@ name: '@fireproof/dashboard-base'
 
 on:
   workflow_call:
-    # inputs:
-    #   environment:
-    #     required: true
-    #     type: string
-    # secrets:
-    #   token:
-    #     required: true
 
 jobs:
   base:
     name: CI - Dashboard Base
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-          version: 10
-
-      - uses: useblacksmith/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
+      - uses: ./.github/workflows/setup-runtime.yaml
 
       - name: install
         working-directory: dashboard
