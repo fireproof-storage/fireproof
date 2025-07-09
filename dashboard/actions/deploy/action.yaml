@@ -1,7 +1,31 @@
 name: "dashboard-base"
 description: "Dashboard-Base Compile & Test Action"
-# inputs:
-# your inputs here
+inputs:
+  CLOUDFLARE_API_TOKEN:
+    description: "Cloudflare API token for authentication"
+    required: true
+  CLOUDFLARE_ACCOUNT_ID:
+    description: "Cloudflare account ID"
+    required: true
+  CLOUDFLARE_D1_TOKEN:
+    description: "Cloudflare D1 token for database access"
+    required: true
+  CLOUDFLARE_DATABASE_ID:
+    description: "Cloudflare database ID"
+    required: true
+  CLOUD_SESSION_TOKEN_PUBLIC:
+    description: "Public session token for cloud authentication"
+    required: true
+  CLOUD_SESSION_TOKEN_SECRET:
+    description: "Secret session token for cloud authentication"
+    required: true
+  CLERK_PUBLISHABLE_KEY:
+    description: "Clerk publishable key"
+    required: true
+  CLERK_PUB_JWT_KEY:
+    description: "Clerk public JWT key"
+    required: true
+
 runs:
   using: "composite"
   steps:

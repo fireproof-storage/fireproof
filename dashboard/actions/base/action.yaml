@@ -1,7 +1,9 @@
-name: 'dashboard-base'
-description: 'Dashboard-Base Compile & Test Action'
-# inputs:
-  # your inputs here
+name: "dashboard-base"
+description: "Dashboard-Base Compile & Test Action"
+inputs:
+  CLERK_PUBLISHABLE_KEY:
+    description: "The Clerk publishable key used for dashboard builds"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -26,7 +28,7 @@ runs:
       shell: bash
       working-directory: dashboard
       env:
-        VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+        VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: pnpm run build
 
     - name: test

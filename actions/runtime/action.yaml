@@ -1,7 +1,7 @@
-name: 'setup-runtime'
-description: 'setup  runtime'
+name: "setup-runtime"
+description: "setup  runtime"
 # inputs:
-  # your inputs here
+# your inputs here
 runs:
   using: "composite"
   steps:
