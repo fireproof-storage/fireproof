@@ -17,10 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/base
+      - uses: ./actions/base
 
-      - name: install
-        run: pnpm install
 
       #- name: Sticky-disk-dist
       #  uses: useblacksmith/stickydisk@v1
