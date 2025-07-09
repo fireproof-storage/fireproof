@@ -2,13 +2,16 @@ name: '@fireproof/dashboard'
 on:
   push:
     tags-ignore:
-      - 'dashboard@*'
+      - '*'
     paths:
       - 'dashboard/**/*'
 jobs:
   compile_test:
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - uses: actions/checkout@v4
+        with:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
 
       - uses: ./dashboard/actions/base

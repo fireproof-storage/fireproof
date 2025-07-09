@@ -8,10 +8,18 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { SemVer } from "semver";
 
 function getEnvVersion(version = "refs/tags/v0.0.0-smoke") {
-  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
+  console.log(`Using GITHUB_REF: ${process.env.GITHUB_REF}`);
+  if (
+    process.env.GITHUB_REF &&
+    (process.env.GITHUB_REF.startsWith("refs/tags/v") || process.env.GITHUB_REF.startsWith("refs/tags/core@"))
+  ) {
     version = process.env.GITHUB_REF;
   }
-  return version.split("/").slice(-1)[0].replace(/^v/, "");
+  return version
+    .split("/")
+    .slice(-1)[0]
+    .replace(/^core@/, "")
+    .replace(/^v/, "");
 }
 
 async function getVersion(fpVersionFname: string) {
@@ -19,12 +27,15 @@ async function getVersion(fpVersionFname: string) {
   if (!top) {
     top = process.cwd();
   }
+  console.log("-1");
   const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
   if (fs.existsSync(fpVersionFile)) {
-    return (await fs.readFile(fpVersionFile, "utf-8")).trim();
+    console.log("-2", process.env.GITHUB_REF, fpVersionFile);
+    return getEnvVersion((await fs.readFile(fpVersionFile, "utf-8")).trim());
   }
   const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
   const dateTick = (await $`date +%s`).stdout.trim();
+  console.log("-3");
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`);
 }
 
@@ -180,6 +191,7 @@ export function buildCmd(sthis: SuperThis) {
       }
       if (args.prepareVersion) {
         await fs.mkdirp(args.dstDir);
+        console.log(`Preparing version: ${args.version}`);
         const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
         args.version = await getVersion(args.fpVersion);
         await fs.writeFile(fpVersionFile, args.version);
