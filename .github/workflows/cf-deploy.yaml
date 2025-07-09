@@ -1,14 +1,14 @@
-name: "@fireproof/core-cloud-cf-deploy"
+name: '@fireproof/core-cloud-cf-deploy'
 on:
   push:
     tags:
-      - "core-cf@*"
+      - 'core-cf@*'
     paths-ignore:
-      - "dashboard/**"
+      - 'dashboard/**'
 
 env:
-  FP_CI: "fp_ci"
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: "true"
+  FP_CI: 'fp_ci'
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
 
 jobs:
   ci:

@@ -1,18 +1,18 @@
-name: "@fireproof/dashboard"
+name: '@fireproof/dashboard'
 on:
   push:
     tags:
-      - "dashboard@**"
+      - 'dashboard@**'
     branches:
-      - "mabels/backend"
+      - 'mabels/backend'
     paths:
-      - "dashboard/**"
+      - 'dashboard/**'
 
   pull_request:
     branches:
-      - "mabels/backend"
+      - 'mabels/backend'
     paths:
-      - "dashboard/**"
+      - 'dashboard/**'
 
 concurrency:
   group: dashboard-${{ github.workflow }}-${{ github.ref }}
@@ -37,7 +37,7 @@ jobs:
         with:
           run_install: false
           version: 10
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - uses: actions/checkout@v4
 

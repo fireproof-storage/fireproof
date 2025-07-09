@@ -1,4 +1,4 @@
-name: "@fireproof/core - CI - base"
+name: '@fireproof/core - CI - base'
 
 on:
   workflow_call:
@@ -11,8 +11,8 @@ on:
     #     required: true
 
 env:
-  FP_CI: "fp_ci"
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: "true"
+  FP_CI: 'fp_ci'
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
 
 jobs:
   pre-build:
@@ -165,7 +165,7 @@ jobs:
   smoke:
     timeout-minutes: 4
     name: smoke
-    needs: ["test-node", "build"]
+    needs: ['test-node', 'build']
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4

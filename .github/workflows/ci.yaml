@@ -1,21 +1,20 @@
-name: "@fireproof/core"
+name: '@fireproof/core'
 on:
   push:
     tags:
-      - "*"
-      - "!core-cf@*"
-      - "!v*"
-      - "*"
+      - '*'
+      - '!core-cf@*'
+      - '!v*'
     paths-ignore:
-      - "dashboard/**"
+      - 'dashboard/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  FP_CI: "fp_ci"
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: "true"
+  FP_CI: 'fp_ci'
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
 
 jobs:
   ci:
