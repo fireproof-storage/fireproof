@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - 'core-cf@*'
-    paths-ignore:
-      - 'dashboard/**'
 
 env:
   FP_CI: 'fp_ci'
