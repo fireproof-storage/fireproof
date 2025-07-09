@@ -9,9 +9,6 @@ env:
   GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
 
 jobs:
-  ci:
-    uses: ./.github/workflows/ci-base.yaml
-
   cf-deploy:
     name: cf-deploy
     needs: ci
@@ -21,15 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 10
-
-      - uses: useblacksmith/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
+      - uses: actions/base
 
       - name: install
         run: pnpm install

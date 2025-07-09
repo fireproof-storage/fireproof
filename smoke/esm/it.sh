@@ -74,7 +74,7 @@ gthis()["FP_DEBUG"]="*"
 gthis()["FP_VERSION"]=getVersion()
 EOF
 
-pnpm install
+pnpm install --prefer-offline --package-import-method=hardlink
 pnpm run test
 pnpm exec deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
 
