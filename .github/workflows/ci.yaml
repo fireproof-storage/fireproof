@@ -3,6 +3,7 @@ on:
   push:
     tags-ignore:
       - 'core-cf@*'
+      - 'dashboard@*'
       - 'v*'
     paths-ignore:
       - 'dashboard/**'

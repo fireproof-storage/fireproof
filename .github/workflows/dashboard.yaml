@@ -3,16 +3,9 @@ on:
   push:
     tags:
       - 'dashboard@**'
-    branches:
-      - 'mabels/backend'
     paths:
       - 'dashboard/**'
 
-  pull_request:
-    branches:
-      - 'mabels/backend'
-    paths:
-      - 'dashboard/**'
 
 concurrency:
   group: dashboard-${{ github.workflow }}-${{ github.ref }}
