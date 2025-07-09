@@ -54,7 +54,6 @@
     "@vitest/browser": "^3.2.4",
     "playwright": "^1.53.2",
     "playwright-chromium": "^1.53.2",
-    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   }
 }

@@ -1,0 +1,70 @@
+name: "setup-runtime"
+description: "setup  runtime"
+# inputs:
+# your inputs here
+runs:
+  using: composite
+  steps:
+    - uses: ./actions/runtime
+
+    - name: install
+      shell: bash
+      run: pnpm install
+    - name: format-check
+      shell: bash
+      run: pnpm run format --check
+    - name: lint
+      shell: bash
+      run: pnpm run lint
+
+    - name: install
+      shell: bash
+      run: pnpm install
+
+    - name: build
+      shell: bash
+      run: pnpm run build
+
+    - name: playwright
+      shell: bash
+      run: pnpm exec playwright install chromium
+
+    - name: test Attempt 1
+      shell: bash
+      id: attempt1
+      continue-on-error: true
+      run: pnpm run test
+
+    - name: test Attempt 2
+      shell: bash
+      if: steps.attempt1.outcome == 'failure'
+      run: pnpm run test
+
+    - name: test:deno 1
+      shell: bash
+      id: denoattempt1
+      run: pnpm run test:deno
+      continue-on-error: true
+
+    - name: test:deno 2
+      shell: bash
+      id: denoattempt2
+      if: steps.denoattempt1.outcome == 'failure'
+      run: pnpm run test:deno
+
+    - name: start-esm + npm
+      shell: bash
+      run: |
+        bash .github/workflows/setup-local-esm-npm.sh
+        cp ./dist/npmrc-smoke .npmrc
+
+    - name: smoke Attempt 1
+      shell: bash
+      id: smoke_attempt1
+      continue-on-error: true
+      run: pnpm run smoke
+
+    - name: smoke Attempt 2
+      shell: bash
+      if: steps.smoke_attempt1.outcome == 'failure'
+      run: pnpm run smoke-retry

@@ -1,21 +1,12 @@
 name: '@fireproof/core'
 on:
   push:
-    tags-ignore:
-      - 'core-cf@*'
-      - 'dashboard@*'
-      - 'v*'
     paths-ignore:
-      - 'dashboard/**'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  FP_CI: 'fp_ci'
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
-
+      - 'dashboard/*'
 jobs:
-  ci:
-    uses: ./.github/workflows/ci-base.yaml
+  compile_test:
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./actions/base
