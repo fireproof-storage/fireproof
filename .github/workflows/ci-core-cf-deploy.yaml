@@ -19,13 +19,6 @@ jobs:
 
       - uses: ./actions/base
 
-
-      #- name: Sticky-disk-dist
-      #  uses: useblacksmith/stickydisk@v1
-      #  with:
-      #    key: ${{ github.repository }}-${{ github.ref }}-dist
-      #    path: ./dist
-
       - name: deploy cloud/backend/cf-d1 - 1
         id: attempt1
         continue-on-error: true
