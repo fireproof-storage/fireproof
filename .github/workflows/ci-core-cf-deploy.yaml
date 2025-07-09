@@ -6,7 +6,6 @@ on:
 
 env:
   FP_CI: 'fp_ci'
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
 
 jobs:
   cf-deploy:
