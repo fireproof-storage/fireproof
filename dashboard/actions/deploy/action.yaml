@@ -25,6 +25,9 @@ inputs:
   CLERK_PUB_JWT_KEY:
     description: "Clerk public JWT key"
     required: true
+  CLOUDFLARE_ENV:
+    description: "Cloudflare environment (e.g., production, staging)"
+    required: true
 
 runs:
   using: "composite"
@@ -39,6 +42,7 @@ runs:
         CLOUDFLARE_D1_TOKEN: ${{ inputs.CLOUDFLARE_D1_TOKEN }}
         CLOUDFLARE_DATABASE_ID: ${{ inputs.CLOUDFLARE_DATABASE_ID }}
         # need in CF to be Env
+        CLOUDFLARE_ENV: ${{ inputs.CLOUDFLARE_ENV }}
         CLOUD_SESSION_TOKEN_PUBLIC: ${{ inputs.CLOUD_SESSION_TOKEN_PUBLIC }}
         CLOUD_SESSION_TOKEN_SECRET: ${{ inputs.CLOUD_SESSION_TOKEN_SECRET }}
         CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}

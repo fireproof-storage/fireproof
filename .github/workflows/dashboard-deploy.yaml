@@ -27,5 +27,4 @@ jobs:
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
           CLERK_PUB_JWT_KEY: ${{ vars.CLERK_PUB_JWT_KEY }}
           # need during build
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
-
+          CLOUDFLARE_ENV: ${{vars.CLOUDFLARE_ENV }}
