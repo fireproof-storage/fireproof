@@ -5,7 +5,7 @@ projectRoot=$(pwd)
 
 if [ "$FP_CI" != 'fp_ci' ]
 then
-  bash .github/workflows/setup-local-esm-npm.sh
+  bash $projectRoot/smoke/setup-local-esm-npm.sh
 fi
 
 #unset npm_config_registry

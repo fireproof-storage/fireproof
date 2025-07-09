@@ -67,8 +67,8 @@ runs:
       env:
         FP_CI: fp_ci
       run: |
-        bash .github/workflows/setup-local-esm-npm.sh
-        cp ./dist/npmrc-smoke .npmrc
+        bash smoke/setup-local-esm-npm.sh
+        #cp ./dist/npmrc-smoke .npmrc
 
     - name: smoke Attempt 1
       shell: bash
