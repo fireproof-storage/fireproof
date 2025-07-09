@@ -11,7 +11,6 @@ env:
 jobs:
   cf-deploy:
     name: cf-deploy
-    needs: ci
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     environment: ${{ startsWith(github.ref, 'refs/tags/core-cf@s') && 'staging' || startsWith(github.ref, 'refs/tags/core-cf@p') && 'production' || 'dev' }}
     runs-on: ubuntu-latest
