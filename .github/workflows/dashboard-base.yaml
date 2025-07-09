@@ -1,0 +1,52 @@
+name: '@fireproof/dashboard-base'
+
+on:
+  workflow_call:
+    # inputs:
+    #   environment:
+    #     required: true
+    #     type: string
+    # secrets:
+    #   token:
+    #     required: true
+
+jobs:
+  base:
+    name: CI - Dashboard Base
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    steps:
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
+
+      - uses: actions/checkout@v4
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: install
+        working-directory: dashboard
+        run: pnpm install
+
+      - name: format-check
+        working-directory: dashboard
+        run: pnpm run format --check
+
+      - name: lint
+        working-directory: dashboard
+        run: pnpm run lint
+
+      - name: build
+        working-directory: dashboard
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+        run: pnpm run build
+
+      - name: test
+        working-directory: dashboard
+        run: |
+          pnpm run test
