@@ -35,10 +35,8 @@ jobs:
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
           pnpm run drizzle:d1-remote
-          pnpm exec core-cli writeEnv --wranglerToml ./wrangler.toml --env dev --out /dev/stdout --json > file.sec
-          pnpm exec wrangler -c ./wrangler.toml secret --env dev bulk < file.sec || true
-          cat /home/runner/.config/.wrangler/logs/wrangler-*
-          rm -f file.sec
+          pnpm exec core-cli writeEnv --wranglerToml ./wrangler.toml --env ${{ vars.CLOUDFLARE_ENV }} --out /dev/stdout --json | \
+            pnpm exec wrangler -c ./wrangler.toml secret --env ${{ vars.CLOUDFLARE_ENV }} bulk
           pnpm run wrangler:deploy
           pnpm run test --project cloud:D1 --testTimeout 10000
 
