@@ -27,7 +27,9 @@ runs:
 
     - name: playwright
       shell: bash
-      run: pnpm exec playwright install chromium
+      run: |
+        sudo pnpm exec playwright install-deps
+        pnpm exec playwright install chromium
 
     - name: test Attempt 1
       shell: bash
