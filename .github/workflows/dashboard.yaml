@@ -5,5 +5,4 @@ on:
       - 'dashboard/**'
 jobs:
   compile_test:
-    name: Compile and Test Dashboard
     uses: ./.github/workflows/dashboard-base.yaml

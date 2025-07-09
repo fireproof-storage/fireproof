@@ -9,14 +9,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  ci:
+    uses: ./.github/workflows/dashboard-base.yaml
+
   deploy-dashboard:
     name: Deploy Dashboard
+    needs: ci
     #runs-on: blacksmith-4vcpu-ubuntu-2204
     environment: ${{ startsWith(github.ref, 'refs/tags/dashboard@s') && 'staging' || startsWith(github.ref, 'refs/tags/dashboard@p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
-      - uses: ./.github/workflows/dashboard-base.yaml
-
       - name: deploy cf
         id: attempt1
         working-directory: dashboard

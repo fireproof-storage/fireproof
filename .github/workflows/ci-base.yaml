@@ -1,4 +1,4 @@
-name: '@fireproof/core - CI - base'
+name: "@fireproof/core - CI - base"
 
 on:
   workflow_call:
@@ -11,8 +11,8 @@ on:
     #     required: true
 
 env:
-  FP_CI: 'fp_ci'
-  GIT_DISCOVERY_ACROSS_FILESYSTEM: 'true'
+  FP_CI: "fp_ci"
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: "true"
 
 jobs:
   pre-build:
@@ -20,8 +20,6 @@ jobs:
     name: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
-      - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
@@ -165,7 +163,7 @@ jobs:
   smoke:
     timeout-minutes: 4
     name: smoke
-    needs: ['test-node', 'build']
+    needs: ["test-node", "build"]
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4
@@ -215,3 +213,18 @@ jobs:
       - name: smoke Attempt 2
         if: steps.attempt1.outcome == 'failure'
         run: pnpm run smoke-retry
+
+  # clean-sticky-cache:
+  #   name: clean-sticky-cache
+  #   runs-on: blacksmith-2vcpu-ubuntu-2204
+  #   needs: [build, test-node, smoke, publish, cf-deploy]
+  #   if: always()
+  #   steps:
+  #     - name: Sticky-disk-dist
+  #       uses: useblacksmith/stickydisk@v1
+  #       with:
+  #         key: ${{ github.repository }}-${{ github.ref }}-dist
+  #         path: ./dist
+  #     - name: wipe-sticky-cache
+  #       run: |
+  #         (cd dist && rm -rf $(ls -A) || true)
