@@ -1,0 +1,84 @@
+
+name: "@fireproof/core-cloud-cf-deploy"
+on:
+  push:
+    tags:
+      - "core-cf@*"
+    paths-ignore:
+      - "dashboard/**"
+
+env:
+  FP_CI: "fp_ci"
+  GIT_DISCOVERY_ACROSS_FILESYSTEM: "true"
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci-base.yaml
+
+  cf-deploy:
+    name: cf-deploy
+    needs: ci
+    environment: ${{ startsWith(github.ref, 'refs/tags/core-cf@s') && 'staging' || startsWith(github.ref, 'refs/tags/core-cf@p') && 'production' || 'dev' }}
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10
+
+      - uses: useblacksmith/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: install
+        run: pnpm install
+
+      #- name: Sticky-disk-dist
+      #  uses: useblacksmith/stickydisk@v1
+      #  with:
+      #    key: ${{ github.repository }}-${{ github.ref }}-dist
+      #    path: ./dist
+
+      - name: deploy cloud/backend/cf-d1 - 1
+        id: attempt1
+        continue-on-error: true
+        working-directory: cloud/backend/cf-d1
+        env:
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
+          STORAGE_URL: ${{ vars.STORAGE_URL }}
+        run: |
+          pnpm run drizzle:d1-remote
+          pnpm exec core-cli writeEnv --wranglerToml ./wrangler.toml --env dev --out /dev/stdout --json > file.sec
+          pnpm exec wrangler -c ./wrangler.toml secret --env dev bulk < file.sec || true
+          cat /home/runner/.config/.wrangler/logs/wrangler-*
+          rm -f file.sec
+          pnpm run wrangler:deploy
+          pnpm run test --project cloud:D1 --testTimeout 10000
+
+      - name: deploy cloud/backend/cf-d1 - 2
+        if: steps.attempt1.outcome == 'failure'
+        working-directory: cloud/backend/cf-d1
+        env:
+          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
+          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
+          STORAGE_URL: ${{ vars.STORAGE_URL }}
+        run: |
+          pnpm run test --project cloud:D1 --testTimeout 10000
