@@ -259,7 +259,7 @@ export function buildCmd(sthis: SuperThis) {
         }
 
         const registry = ["--registry", args.registry];
-        const tagsOpts = tags.map((tag) => ['--tag', tag]).flat()
+        const tagsOpts = tags.map((tag) => ["--tag", tag]).flat();
         await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`;
         // pnpm publish --access public --no-git-checks ${tagsOpts}
       }
