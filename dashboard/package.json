@@ -3,9 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
     "dev": "vite",
     "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.js",
@@ -16,7 +13,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest --run",
-    "format": "prettier .",
+    "format": "prettier --config ../.prettierrc .",
     "check": "pnpm format --write && tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
     "drizzle:d1-local": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",

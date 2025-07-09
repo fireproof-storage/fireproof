@@ -8,8 +8,6 @@ jobs:
     name: pre-build
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
-      - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:

@@ -9,7 +9,9 @@ jobs:
     environment: ${{ startsWith(github.ref, 'refs/tags/dashboard@s') && 'staging' || startsWith(github.ref, 'refs/tags/dashboard@p') && 'production' || 'dev' }}
     runs-on: blacksmith-4vcpu-ubuntu-2204-arm
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/dashboard-base.yaml
+
       - name: Deploy Dashboard
         working-directory: dashboard
         env:
