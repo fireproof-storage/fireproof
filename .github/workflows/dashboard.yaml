@@ -2,6 +2,7 @@ name: '@fireproof/dashboard'
 on:
   push:
     tags:
+      - '*'
       - 'dashboard@**'
     paths:
       - 'dashboard/**'
