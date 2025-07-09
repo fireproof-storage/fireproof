@@ -11,5 +11,7 @@ export async function setup(project: TestProject) {
   await fs.mkdir(path.join(root, "dist"), { recursive: true });
   await $`pnpm exec drizzle-kit push --config ./drizzle.libsql.config.ts`;
 
-  return () => {};
+  return () => {
+    /* */
+  };
 }

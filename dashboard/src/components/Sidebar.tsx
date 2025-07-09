@@ -1,5 +1,4 @@
-import React from "react";
-import { JSX, useContext } from "react";
+import React, { JSX, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
 import { FireproofHome } from "./FireproofHome.jsx";

@@ -1,5 +1,3 @@
-import { TableRow } from "./DynamicTable.jsx";
-
 export function headersForDocs(docs: object[]): string[] {
   const headers = new Map();
   for (const doc of docs) {

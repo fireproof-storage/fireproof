@@ -15,7 +15,10 @@ export interface BaseTokenParam {
 
 export type ReadWrite = "read" | "write";
 
-export function toReadWrite(i: string): ReadWrite {
+export function toReadWrite(i?: string): ReadWrite {
+  if (!i) {
+    return "read";
+  }
   switch (i.toLowerCase()) {
     case "write":
       return "write";
@@ -26,7 +29,10 @@ export function toReadWrite(i: string): ReadWrite {
 
 export type Role = "admin" | "owner" | "member";
 
-export function toRole(i: string): Role {
+export function toRole(i?: string): Role {
+  if (!i) {
+    return "member";
+  }
   switch (i.toLowerCase()) {
     case "admin":
       return "admin";

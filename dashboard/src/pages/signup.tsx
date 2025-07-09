@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import { SignUp } from "@clerk/clerk-react";
 import { URI } from "@adviser/cement";
-import { useContext, useState } from "react";
 import { AppContext } from "../app-context.jsx";
 import { base64url } from "jose";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
@@ -11,34 +11,35 @@ const slides = [
 ];
 
 export async function signupLoader({ request }: { request: Request }) {
-  const url = new URL(request.url);
-  const redirectUrl = url.searchParams.get("redirect_url");
+  const url = URI.from(request.url);
+  const redirectUrl = url.getParam("redirect_url");
   if (redirectUrl) {
-    const decodedUrl = base64url.decode(redirectUrl);
-    const decodedUrlString = new TextDecoder().decode(decodedUrl);
-    const nextUrl = new URL(decodedUrlString);
-    return nextUrl;
+    const sthis = ensureSuperThis();
+    const decodedUrl = base64url.decode(redirectUrl.toString());
+    const decodedUrlString = sthis.txt.decode(decodedUrl);
+    const nextUrl = URI.from(decodedUrlString);
+    return nextUrl.asURL();
   }
   return "/";
 }
 
 export function SignUpPage() {
   const [emailOptIn, setEmailOptIn] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
+  // const [activeSlide, setActiveSlide] = useState(0);
   const isDarkMode = useContext(AppContext).sideBar.isDarkMode;
 
-  function incSlide() {
-    setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
-  }
+  // function incSlide() {
+  //   setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
+  // }
 
-  function decSlide() {
-    setActiveSlide((cur) => (cur === 0 ? slides.length - 1 : --cur));
-  }
+  // function decSlide() {
+  //   setActiveSlide((cur) => (cur === 0 ? slides.length - 1 : --cur));
+  // }
 
   const fromApp = URI.from(window.location.href).getParam("fromApp");
   if (fromApp) {
     // treat any value as generic until we make a special one
-    let bg = isDarkMode ? "#212A4A" : "#CCE5F3";
+    const bg = isDarkMode ? "#212A4A" : "#CCE5F3";
     return (
       <div style={{ backgroundColor: bg }} className="h-screen flex items-center justify-center">
         <SignUp

@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useContext } from "react";
 import { URI } from "@adviser/cement";
 import { SignIn } from "@clerk/clerk-react";
 import { base64url } from "jose";
-import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
 const slides = [
@@ -13,6 +12,7 @@ const slides = [
 export async function loginLoader({ request }: { request: Request }) {
   const url = URI.from(request.url);
   const hashes = Object.fromEntries(Array.from(url.getParams));
+  // eslint-disable-next-line no-console
   console.log("login", hashes, url.toString());
   // if (hashes.redirect_url) {
   //   const ret = BuildURI.from(window.location.href).URI()
@@ -23,21 +23,21 @@ export async function loginLoader({ request }: { request: Request }) {
 }
 
 export function Login() {
-  const [emailPreference, setEmailPreference] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
+  // const [emailPreference, setEmailPreference] = useState(false);
+  // const [activeSlide, setActiveSlide] = useState(0);
   const isDarkMode = useContext(AppContext).sideBar.isDarkMode;
   // TO-DO remove this line when auth is ready
-  const toggleDarkMode = useContext(AppContext).sideBar.toggleDarkMode;
+  // const toggleDarkMode = useContext(AppContext).sideBar.toggleDarkMode;
 
   const app = useContext(AppContext);
 
-  function incSlide() {
-    setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
-  }
+  // function incSlide() {
+  //   setActiveSlide((cur) => (cur === slides.length - 1 ? 0 : ++cur));
+  // }
 
-  function decSlide() {
-    setActiveSlide((cur) => (cur === 0 ? slides.length - 1 : --cur));
-  }
+  // function decSlide() {
+  //   setActiveSlide((cur) => (cur === 0 ? slides.length - 1 : --cur));
+  // }
 
   if (app.cloud._clerkSession?.isSignedIn === true) {
     const buri = URI.from(window.location.href);
@@ -49,7 +49,7 @@ export function Login() {
     let decodedUrl = tos;
     try {
       // Only decode if it's base64 encoded
-      decodedUrl = new TextDecoder().decode(base64url.decode(tos));
+      decodedUrl = app.sthis.txt.decode(base64url.decode(tos));
     } catch {
       // If decoding fails, use original URL
       decodedUrl = tos;
@@ -67,7 +67,7 @@ export function Login() {
   const fromApp = URI.from(window.location.href).getParam("fromApp");
   if (fromApp) {
     // treat any value as generic until we make a special one
-    let bg = isDarkMode ? "#212A4A" : "#CCE5F3";
+    const bg = isDarkMode ? "#212A4A" : "#CCE5F3";
     return (
       <div style={{ backgroundColor: bg }} className="h-screen flex items-center justify-center">
         <SignIn
@@ -186,25 +186,25 @@ function Slide({ data, isDarkMode }: { data: { text: string; author: string; rol
   );
 }
 
-function SlideButtonIcon({ isDarkMode }: { isDarkMode: boolean }) {
-  return (
-    <svg
-      className={`${
-        isDarkMode ? "text-fp-s hover:text-fp-p" : "text-fp-bg-00 hover:text-fp-dec-01"
-      } active:scale-95 transition-transform`}
-      width="48"
-      height="48"
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="24" cy="24" r="23.5" stroke="currentColor" />
-      <path
-        d="M33.623 24.5H16.623M16.623 24.5L24.0004 17M16.623 24.5L24.0004 32"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+// function SlideButtonIcon({ isDarkMode }: { isDarkMode: boolean }) {
+//   return (
+//     <svg
+//       className={`${
+//         isDarkMode ? "text-fp-s hover:text-fp-p" : "text-fp-bg-00 hover:text-fp-dec-01"
+//       } active:scale-95 transition-transform`}
+//       width="48"
+//       height="48"
+//       viewBox="0 0 48 48"
+//       fill="none"
+//       xmlns="http://www.w3.org/2000/svg"
+//     >
+//       <circle cx="24" cy="24" r="23.5" stroke="currentColor" />
+//       <path
+//         d="M33.623 24.5H16.623M16.623 24.5L24.0004 17M16.623 24.5L24.0004 32"
+//         stroke="currentColor"
+//         strokeLinecap="round"
+//         strokeLinejoin="round"
+//       />
+//     </svg>
+//   );
+// }

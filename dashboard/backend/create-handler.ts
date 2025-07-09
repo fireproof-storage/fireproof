@@ -2,7 +2,6 @@
 import { LoggerImpl, Result, exception2Result } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import { SuperThis, SuperThisOpts } from "@fireproof/core";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
 import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
@@ -20,7 +19,7 @@ export const CORS = {
 };
 
 interface ClerkTemplate {
-  readonly app_metadata: {};
+  readonly app_metadata: unknown;
   readonly azp: string;
   readonly exp: number;
   readonly iat: number;
@@ -97,10 +96,10 @@ class ClerkApiToken implements FPApiToken {
 //   }
 // }
 
-export interface DashSqlite extends BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>> {}
+export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
 
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
-export function createHandler<T extends DashSqlite, ResultSet>(db: T, env: Record<string, string> | Env) {
+export function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),

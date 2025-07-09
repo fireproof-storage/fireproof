@@ -1,5 +1,4 @@
-import React from "react";
-import { JSX, useCallback, useEffect, useState } from "react";
+import React, { JSX, useCallback, useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
 
 import hljs from "highlight.js/lib/core";
@@ -51,6 +50,7 @@ export function EditableCodeHighlight({
         try {
           liveCode = JSON.stringify(JSON.parse(liveCode), null, 2);
           onChange({ code: liveCode, valid: true });
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           onChange({ code: liveCode, valid: false });
         }
@@ -66,6 +66,7 @@ export function EditableCodeHighlight({
     setCode(code);
   }, [code]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const EditorComponent = Editor as any;
 
   return (

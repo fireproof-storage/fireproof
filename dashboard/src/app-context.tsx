@@ -28,14 +28,26 @@ export const AppContext = createContext<AppContextType>({
   cloud: cloudContext,
   sideBar: {
     openMenu: null,
-    setOpenMenu: () => {},
+    setOpenMenu: () => {
+      /* no-op */
+    },
     isSidebarOpen: false,
-    setIsSidebarOpen: () => {},
+    setIsSidebarOpen: () => {
+      /* no-op */
+    },
     isDarkMode: false,
-    setIsDarkMode: () => {},
-    toggleMenu: () => {},
-    toggleDarkMode: () => {},
-    toggleSidebar: () => {},
+    setIsDarkMode: () => {
+      /* no-op */
+    },
+    toggleMenu: () => {
+      /* no-op */
+    },
+    toggleDarkMode: () => {
+      /* no-op */
+    },
+    toggleSidebar: () => {
+      /* no-op */
+    },
   },
 });
 

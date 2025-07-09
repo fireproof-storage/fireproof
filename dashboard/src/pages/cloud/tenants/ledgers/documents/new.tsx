@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 import { Button } from "../../../../../components/Button.jsx";
@@ -16,7 +15,7 @@ export function NewLedgerDocument() {
   async function saveDocument() {
     try {
       const data = JSON.parse(docToSave);
-      const resp = await database.put(data);
+      await database.put(data);
       navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents`);
     } catch (error) {
       console.error("Failed to save document:", error);

@@ -1,7 +1,6 @@
-import React from "react";
-import { NavLink, Outlet, useLoaderData, useNavigate } from "react-router-dom";
+import React, { useContext } from "react";
+import { NavLink, useLoaderData, useNavigate } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
-import { useContext } from "react";
 import { SYNC_DB_NAME, truncateDbName } from "../helpers.js";
 import { fireproof } from "@fireproof/core";
 import { WithSidebar } from "../layouts/with-sidebar.jsx";
@@ -13,12 +12,13 @@ export async function databaseLoader(/*{ request }*/) {
   return { databases };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getIndexedDBNamesWithQueries(): Promise<{ name: string; queries: any[] }[]> {
   try {
     const databases = await indexedDB.databases();
     const userDbs = databases
-      .filter((db) => db.name!.startsWith("fp.") && !db.name!.endsWith("_queries") && !reservedDbNames.includes(db.name!))
-      .map((db) => db.name!.substring(3));
+      .filter((db) => db.name?.startsWith("fp.") && !db.name?.endsWith("_queries") && !reservedDbNames.includes(db.name))
+      .map((db) => db.name?.substring(3));
 
     const dbsWithQueries = await Promise.all(
       userDbs.map(async (dbName) => {
@@ -27,7 +27,7 @@ async function getIndexedDBNamesWithQueries(): Promise<{ name: string; queries: 
         const allDocs = await queryDb.allDocs({ includeDocs: true });
         const queries = allDocs.rows.map((row) => row.value);
 
-        return { name: dbName, queries };
+        return { name: dbName as string, queries };
       }),
     );
 
@@ -56,6 +56,7 @@ function SidebarDatabases() {
     setIsSidebarOpen(false); // Close sidebar on mobile after navigation
   };
   const { databases } = useLoaderData<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     databases: { name: string; queries: any[] }[];
   }>();
   return (

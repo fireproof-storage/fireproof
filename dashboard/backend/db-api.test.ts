@@ -377,7 +377,9 @@ describe("db-api", () => {
     });
   });
 
-  it("invite non existing user to a ledger", async () => {});
+  it("invite non existing user to a ledger", async () => {
+    /* */
+  });
 
   it("try find an user by string(email)", async () => {
     const res = await fpApi.findUser({
@@ -684,7 +686,9 @@ describe("db-api", () => {
     ).toEqual([]);
   });
 
-  it("listInvites with a user with all tenants", async () => {});
+  it("listInvites with a user with all tenants", async () => {
+    /* */
+  });
 
   it("listInvites with one tenant per user", async () => {
     const invites = await Promise.all(
@@ -813,7 +817,7 @@ describe("db-api", () => {
       updatedAt: rUpdate.Ok().ledger.updatedAt,
     });
 
-    const rDelete = await fpApi.deleteLedger({
+    await fpApi.deleteLedger({
       type: "reqDeleteLedger",
       auth: data[0].reqs.auth,
       ledger: {

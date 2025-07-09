@@ -1,15 +1,14 @@
-import React from "react";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form, Link, useParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.js";
 import { Button } from "../../../components/Button.jsx";
 import { tenantName } from "../../../helpers.js";
 
-type TenantFormData = {
+interface TenantFormData {
   tenantName: string;
   tenantId: string;
-};
+}
 
 export function CloudTenantAdmin() {
   const { tenantId } = useParams();

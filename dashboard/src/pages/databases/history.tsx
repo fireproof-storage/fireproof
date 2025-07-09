@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 import { DynamicTable, TableRow } from "../../components/DynamicTable.jsx";

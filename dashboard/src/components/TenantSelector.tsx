@@ -1,5 +1,4 @@
-import React from "react";
-import { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
 import { tenantName } from "../helpers.js";

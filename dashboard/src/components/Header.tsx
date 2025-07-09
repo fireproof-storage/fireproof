@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { IconButton } from "./Button.jsx";
 import { User } from "./User.jsx";
 

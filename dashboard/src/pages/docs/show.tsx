@@ -12,6 +12,7 @@ export function DocsShow() {
 
   const { useDocument, database } = useFireproof(name);
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const [doc] = useDocument(() => ({ _id: _id! }));
   const [docToSave, setDocToSave] = useState<string>(JSON.stringify(doc, null, 2));
   const [needsSave, setNeedsSave] = useState(false);
@@ -37,10 +38,10 @@ export function DocsShow() {
     setDocToSave(() => code);
   }
 
-  const { _id: id, ...data } = doc;
+  // const { _id: id, ...data } = doc;
+  // const title = id ? `Edit document: ${_id}` : "Create new document";
 
   const idFirstMeta = { _id };
-  const title = id ? `Edit document: ${_id}` : "Create new document";
 
   return (
     <div className="p-6 bg-[--muted]">
@@ -54,7 +55,7 @@ export function DocsShow() {
         </nav>
       </div>
       <h3>Editable data fields</h3>
-      <EditableCodeHighlight onChange={editorChanged} code={JSON.stringify(data, null, 2)} />
+      <EditableCodeHighlight onChange={editorChanged} code={JSON.stringify(doc, null, 2)} />
       <div className="flex space-x-4 mt-4">
         <button
           onClick={() => {

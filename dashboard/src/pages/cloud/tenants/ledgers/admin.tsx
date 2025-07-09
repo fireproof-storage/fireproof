@@ -1,16 +1,15 @@
-import React from "react";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form, Link, useParams } from "react-router-dom";
 import { AppContext } from "../../../../app-context.js";
 import { Button } from "../../../../components/Button.jsx";
-import { ledgerName, tenantName } from "../../../../helpers.js";
+import { ledgerName } from "../../../../helpers.js";
 
-type LedgerFormData = {
+interface LedgerFormData {
   ledgerName: string;
   ledgerId: string;
   tenantId: string;
-};
+}
 
 export function LedgerAdmin() {
   const { ledgerId } = useParams();

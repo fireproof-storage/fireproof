@@ -30,7 +30,7 @@ export default defineConfig({
     hmr: false,
     proxy: {
       "/*": {
-        rewrite: (path) => "/index.html",
+        rewrite: () => "/index.html",
       },
     },
   },

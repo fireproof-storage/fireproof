@@ -83,7 +83,7 @@ export function queryEmail(email?: string): string | undefined {
   if (!splitEmail) {
     return undefined;
   }
-  const splitPlus = splitEmail[1].match(/(.*)\+[^\+]*$/);
+  const splitPlus = splitEmail[1].match(/(.*)\+[^+]*$/);
   if (!splitPlus) {
     return splitEmail[1].replace(/[^a-z0-9]/g, "") + "@" + splitEmail[2];
   }

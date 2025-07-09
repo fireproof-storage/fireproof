@@ -1,9 +1,7 @@
 import React from "react";
 // import { rawConnect } from "@fireproof/cloud";
-import { useContext } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
-import { AppContext } from "../../../../app-context.jsx";
 import { Button } from "../../../../components/Button.jsx";
 import { DynamicTable } from "../../../../components/DynamicTable.jsx";
 import { headersForDocs } from "../../../../components/dynamicTableHelpers.js";
@@ -16,7 +14,7 @@ interface Document {
 
 export function LedgerDocuments() {
   const { tenantId, ledgerId } = useParams();
-  const { cloud } = useContext(AppContext);
+  // const { cloud } = useContext(AppContext);
   const navigate = useNavigate();
 
   const { useLiveQuery, database } = useFireproof(ledgerId || "");

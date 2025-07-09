@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useContext } from "react";
 // import { Clerk } from "@clerk/clerk-js";
 // import { Clerk } from "@clerk/clerk-react";
-import { useContext } from "react";
 import { Navigate, NavLink, useLocation, useParams } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
 import { Plus } from "../components/Plus.jsx";
