@@ -28,7 +28,7 @@ export function LedgerDelete() {
     <h1>
       <Link
         to={`/fp/cloud`}
-        onClick={(e) => {
+        onClick={(e: Event) => {
           e.preventDefault();
           deleteLedgerAction(cloud, tenantId, ledgerId);
         }}

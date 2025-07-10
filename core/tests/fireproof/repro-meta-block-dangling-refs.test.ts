@@ -1,5 +1,6 @@
+import { fireproof, Database, DocWithId } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { describe, it, expect, vi } from "vitest";
-import { Database, DocWithId, ensureSuperThis, fireproof } from "@fireproof/core";
 
 interface TestRecord {
   id: string;

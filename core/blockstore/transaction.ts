@@ -21,7 +21,7 @@ import {
   SuperThis,
 } from "@fireproof/core-types-base";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
-import { Logger, toCryptoRuntime } from "@adviser/cement";
+import { Logger, toCryptoRuntime, exception2Result } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "@fireproof/core-runtime";
 
 export class CarTransactionImpl implements CarMakeable, CarTransaction {
