@@ -1,4 +1,6 @@
-import { Database, DocResponse, DocWithId, ensureSuperThis, fireproof } from "@fireproof/core";
+import { Database, DocResponse, DocWithId, fireproof } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core-runtime";
+import { describe, beforeEach, it, expect, afterEach, afterAll } from "vitest";
 
 interface Record {
   id: string;

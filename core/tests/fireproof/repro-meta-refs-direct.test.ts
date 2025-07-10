@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { Database, DocWithId, ensureSuperThis, fireproof } from "@fireproof/core";
+import { Database, DocWithId, fireproof } from "@fireproof/core";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 
 interface TestDoc {
   id: string;
@@ -142,7 +143,7 @@ describe("Direct Meta Block Reference Test", () => {
         return carLog;
       };
 
-      const initial = logCarLogState("Initial");
+      // const initial = logCarLogState("Initial");
       
       // Add documents one by one and observe carLog changes
       for (let i = 0; i < 5; i++) {
@@ -159,7 +160,7 @@ describe("Direct Meta Block Reference Test", () => {
       // Force a final compaction
       console.log("🔧 Forcing final compaction...");
       await blockstore.compact();
-      const final = logCarLogState("Final");
+      // const final = logCarLogState("Final");
       
       // Verify all documents are still accessible
       const allDocs = await db.allDocs();
