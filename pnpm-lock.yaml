@@ -983,8 +983,8 @@ importers:
         specifier: ^5.58.1
         version: 5.69.3(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@clerk/clerk-react':
-        specifier: ^5.25.5
-        version: 5.32.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^5.33.0
+        version: 5.33.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core/core
@@ -1332,8 +1332,8 @@ packages:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
 
-  '@clerk/clerk-react@5.32.3':
-    resolution: {integrity: sha512-u+D/2G6DFK+UoiVVGblkhBFygxZs4lzYyT0MxJdNIzhbWyFM2bcKPRoWrf0cl8Rj2VAXVlLsA0hN/a512bOzjg==}
+  '@clerk/clerk-react@5.33.0':
+    resolution: {integrity: sha512-3mDmsLFyup/O4blgS5erCHJnckEexIbWPhRnHEl+nGj9sftyo9h1t8GwFNjZGzLO2U8ALPH/6fe/cCnxk0qBRQ==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
@@ -6532,21 +6532,21 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  '@clerk/clerk-react@5.32.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@clerk/clerk-react@5.33.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@clerk/shared': 3.10.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@clerk/types': 4.62.1
+      '@clerk/shared': 3.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@clerk/types': 4.64.0
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       tslib: 2.8.1
 
   '@clerk/localizations@3.17.2':
     dependencies:
-      '@clerk/types': 4.62.1
+      '@clerk/types': 4.64.0
 
   '@clerk/shared@3.10.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@clerk/types': 4.62.1
+      '@clerk/types': 4.64.0
       dequal: 2.0.3
       glob-to-regexp: 0.4.1
       js-cookie: 3.0.5
