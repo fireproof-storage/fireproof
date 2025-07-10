@@ -1,15 +1,24 @@
 name: '@fireproof/core'
 on:
   push:
-    tags-ignore:
-      - '*@*'
-      - 'v*'
+    branches:
+      - main
+      - 'mabels/**'
+      - 'jchris/**'
+
     paths-ignore:
       - 'dashboard/*'
+
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
 jobs:
   compile_test:
     # runs-on: blacksmith-4vcpu-ubuntu-2404
     runs-on: ubuntu-latest
+    environment:
+      name: external-pr
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - uses: actions/checkout@v4
