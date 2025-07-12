@@ -13,14 +13,14 @@ packages:
 #  adviserCement: ^0.4.20
 #
 overrides:
-  "@types/node": "^24.0.10"
-  "@adviser/cement": "^0.4.20"
-  "wrangler": "^4.24.0"
-  "@cloudflare/workers-types": "^4.20250705.0"
-  "@clerk/backend": "^2.3.1"
-  "@libsql/client": "^0.15.9"
-  "@fireproof/vendor": "^3.0.0"
-  "ws": "^8.18.3"
+#  "@types/node": "^24.0.10"
+#  "@adviser/cement": "^0.4.20"
+#  "wrangler": "^4.24.0"
+#  "@cloudflare/workers-types": "^4.20250705.0"
+#  "@clerk/backend": "^2.3.1"
+#  "@libsql/client": "^0.15.9"
+#  "@fireproof/vendor": "^3.0.0"
+#  "ws": "^8.18.3"
 #  "@clerk/clerk-react": "^5.32.3"
 #  "@ipld/car": "^5.4.1"
 #  "@ipld/dag-cbor": "^9.2.4"
