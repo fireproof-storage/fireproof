@@ -1,9 +1,8 @@
-import type { TestProject } from "vitest/node";
+// ts says something like:
+// Excessive stack depth comparing types 'TestProject' and 'TestProject'.
+//import type { TestProject } from "vitest/node";
 
-export function setTestEnv(project: TestProject, env: Record<string, string>) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore-next-line
-
+export function setTestEnv(project: unknown, env: Record<string, string>) {
   const val = JSON.parse(process.env.FP_TEST_ENV || "{}");
 
   process.env.FP_TEST_ENV = JSON.stringify({ ...val, ...env });
