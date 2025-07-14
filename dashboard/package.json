@@ -76,9 +76,9 @@
     "rollup-plugin-visualizer": "^6.0.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
-    "vite": "^7.0.3",
+    "vite": "^7.0.4",
     "vitest": "^3.2.4",
-    "wrangler": "^4.23.0",
+    "wrangler": "^4.24.3",
     "zx": "^8.5.3",
     "@fireproof/core-cli": "workspace:0.0.0"
   }
