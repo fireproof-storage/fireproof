@@ -185,8 +185,8 @@ importers:
         specifier: ^0.44.2
         version: 0.44.2(@cloudflare/workers-types@4.20250712.0)(@libsql/client@0.15.9)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1)(kysely@0.28.2)
       hono:
-        specifier: ^4.8.4
-        version: 4.8.4
+        specifier: ^4.8.5
+        version: 4.8.5
       jose:
         specifier: ^6.0.11
         version: 6.0.11
@@ -249,8 +249,8 @@ importers:
         specifier: ^0.44.2
         version: 0.44.2(@cloudflare/workers-types@4.20250712.0)(@libsql/client@0.15.9)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1)(kysely@0.28.2)
       hono:
-        specifier: ^4.8.4
-        version: 4.8.4
+        specifier: ^4.8.5
+        version: 4.8.5
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -302,10 +302,10 @@ importers:
         version: 3.0.0
       '@hono/node-server':
         specifier: ^1.16.0
-        version: 1.16.0(hono@4.8.4)
+        version: 1.16.0(hono@4.8.5)
       '@hono/node-ws':
         specifier: ^1.2.0
-        version: 1.2.0(@hono/node-server@1.16.0(hono@4.8.4))(hono@4.8.4)
+        version: 1.2.0(@hono/node-server@1.16.0(hono@4.8.5))(hono@4.8.5)
       '@libsql/client':
         specifier: ^0.15.9
         version: 0.15.9
@@ -313,8 +313,8 @@ importers:
         specifier: ^0.44.2
         version: 0.44.2(@cloudflare/workers-types@4.20250712.0)(@libsql/client@0.15.9)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.9.1)(gel@2.0.1)(kysely@0.28.2)
       hono:
-        specifier: ^4.8.4
-        version: 4.8.4
+        specifier: ^4.8.5
+        version: 4.8.5
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.13)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.13)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
@@ -4239,8 +4239,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.8.4:
-    resolution: {integrity: sha512-KOIBp1+iUs0HrKztM4EHiB2UtzZDTBihDtOF5K6+WaJjCPeaW4Q92R8j63jOhvJI5+tZSMuKD9REVEXXY9illg==}
+  hono@4.8.5:
+    resolution: {integrity: sha512-Up2cQbtNz1s111qpnnECdTGqSIUIhZJMLikdKkshebQSEBcoUKq6XJayLGqSZWidiH0zfHRCJqFu062Mz5UuRA==}
     engines: {node: '>=16.9.0'}
 
   htmlfy@0.6.7:
@@ -6818,14 +6818,14 @@ snapshots:
 
   '@formkit/auto-animate@0.8.2': {}
 
-  '@hono/node-server@1.16.0(hono@4.8.4)':
+  '@hono/node-server@1.16.0(hono@4.8.5)':
     dependencies:
-      hono: 4.8.4
+      hono: 4.8.5
 
-  '@hono/node-ws@1.2.0(@hono/node-server@1.16.0(hono@4.8.4))(hono@4.8.4)':
+  '@hono/node-ws@1.2.0(@hono/node-server@1.16.0(hono@4.8.5))(hono@4.8.5)':
     dependencies:
-      '@hono/node-server': 1.16.0(hono@4.8.4)
-      hono: 4.8.4
+      '@hono/node-server': 1.16.0(hono@4.8.5)
+      hono: 4.8.5
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -9290,7 +9290,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.8.4: {}
+  hono@4.8.5: {}
 
   htmlfy@0.6.7:
     optional: true
