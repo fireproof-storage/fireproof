@@ -12,7 +12,7 @@ packages:
 #catalog:
 #  adviserCement: ^0.4.20
 #
-overrides:
+#overrides:
 #  "@types/node": "^24.0.10"
 #  "@adviser/cement": "^0.4.20"
 #  "wrangler": "^4.24.0"
