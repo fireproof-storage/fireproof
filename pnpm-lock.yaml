@@ -1016,8 +1016,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.17)
       '@tanstack/react-query':
-        specifier: ^5.80.2
-        version: 5.81.5(react@19.1.0)
+        specifier: ^5.83.0
+        version: 5.83.0(react@19.1.0)
       highlight.js:
         specifier: ^11.10.0
         version: 11.11.1
@@ -2728,11 +2728,11 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.2.0'
 
-  '@tanstack/query-core@5.81.5':
-    resolution: {integrity: sha512-ZJOgCy/z2qpZXWaj/oxvodDx07XcQa9BF92c0oINjHkoqUPsmm3uG08HpTaviviZ/N9eP1f9CM7mKSEkIo7O1Q==}
+  '@tanstack/query-core@5.83.0':
+    resolution: {integrity: sha512-0M8dA+amXUkyz5cVUm/B+zSk3xkQAcuXuz5/Q/LveT4ots2rBpPTZOzd7yJa2Utsf8D2Upl5KyjhHRY+9lB/XA==}
 
-  '@tanstack/react-query@5.81.5':
-    resolution: {integrity: sha512-lOf2KqRRiYWpQT86eeeftAGnjuTR35myTP8MXyvHa81VlomoAWNEd8x5vkcAfQefu0qtYCvyqLropFZqgI2EQw==}
+  '@tanstack/react-query@5.83.0':
+    resolution: {integrity: sha512-/XGYhZ3foc5H0VM2jLSD/NyBRIOK4q9kfeml4+0x2DlL6xVuAcVEW+hTlTapAmejObg0i3eNqhkr2dT+eciwoQ==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -7352,11 +7352,11 @@ snapshots:
     dependencies:
       tailwindcss: 3.4.17
 
-  '@tanstack/query-core@5.81.5': {}
+  '@tanstack/query-core@5.83.0': {}
 
-  '@tanstack/react-query@5.81.5(react@19.1.0)':
+  '@tanstack/react-query@5.83.0(react@19.1.0)':
     dependencies:
-      '@tanstack/query-core': 5.81.5
+      '@tanstack/query-core': 5.83.0
       react: 19.1.0
 
   '@testing-library/dom@10.4.0':
