@@ -54,7 +54,7 @@
     "@clerk/clerk-react": "^5.33.0",
     "@cloudflare/vite-plugin": "^1.9.4",
     "@cloudflare/workers-types": "^4.20250710.0",
-    "@eslint/js": "^9.28.0",
+    "@eslint/js": "^9.31.0",
     "@libsql/client": "^0.15.7",
     "@libsql/kysely-libsql": "^0.4.1",
     "@rollup/plugin-replace": "^6.0.1",
