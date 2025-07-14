@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@vitest/browser": "^3.2.4",
-    "playwright": "^1.53.2",
+    "playwright": "^1.54.1",
     "playwright-chromium": "^1.53.2",
     "vitest": "^3.2.4",
     "zx": "^8.6.1",
