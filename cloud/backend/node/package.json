@@ -44,7 +44,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
-    "@hono/node-server": "^1.15.0",
+    "@hono/node-server": "^1.16.0",
     "@hono/node-ws": "^1.2.0",
     "@libsql/client": "^0.15.9",
     "drizzle-orm": "^0.44.2",
