@@ -1,11 +1,14 @@
 name: '@fireproof/dashboard'
 on:
   push:
-    tags-ignore:
-      - '*@*'
-      - 'v*'
     paths:
       - 'dashboard/**/*'
+
+    branches:
+      - main
+      - 'mabels/**'
+      - 'jchris/**'
+
 jobs:
   compile_test:
     runs-on: ubuntu-latest
