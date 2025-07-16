@@ -33,6 +33,7 @@
     "dev:3rd-party": "npx vite -c vite.config.ts cloud/3rd-party --port 3001",
     "dev:todo-app": "npx vite -c vite.config.ts cloud/todo-app --port 3002",
     "dev:cf-d1": "wrangler dev -c cloud/backend/cf-d1/wrangler.toml --env dev",
+    "dev:dashboard": "cd dashboard && pnpm run dev",
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexeddb": "vitest --config vitest.indexeddb.config.ts --run",

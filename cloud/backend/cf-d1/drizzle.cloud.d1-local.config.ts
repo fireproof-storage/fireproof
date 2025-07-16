@@ -17,7 +17,7 @@ function getLocalD1DB(): string {
 }
 
 export default defineConfig({
-  schema: "../base/meta-merger/schema.ts",
+  schema: "./cloud/backend/base/meta-merger/schema.ts",
   out: "./dist",
   dialect: "sqlite",
   dbCredentials: {

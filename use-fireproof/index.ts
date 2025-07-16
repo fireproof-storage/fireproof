@@ -14,6 +14,7 @@ import {
   ToCloudAttachable,
   TokenAndClaims,
 } from "@fireproof/core-types-protocols-cloud";
+import { toCloud as coreToCloud } from "@fireproof/core-gateways-cloud";
 import { WebToCloudCtx } from "./react/types.js";
 import { defaultWebToCloudOpts, WebCtx } from "./react/use-attach.js";
 
@@ -53,5 +54,5 @@ export function toCloud(opts: UseFpToCloudParam = {}): ToCloudAttachable {
   }
 
   myOpts.context.set(WebCtx, webCtx);
-  return toCloud(myOpts);
+  return coreToCloud(myOpts);
 }

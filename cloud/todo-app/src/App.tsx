@@ -12,8 +12,8 @@ import { FilterType, Todo } from "./types.js";
 function App() {
   const { database, attach, useLiveQuery } = useFireproof("fireproof-todo-app", {
     attach: toCloud({
-      dashboardURI: "http://localhost:3000/fp/cloud/api/token",
-      tokenApiURI: "http://localhost:3000/api",
+      dashboardURI: "http://localhost:7370/fp/cloud/api/token",
+      tokenApiURI: "http://localhost:7370/api",
       urls: { base: "fpcloud://localhost:8787?protocol=ws" },
     }),
   });

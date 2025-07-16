@@ -39,3 +39,4 @@ smoke/react/pnpm-lock.yaml
 
 .dev.vars*
 .wrangler
+dashboard/.env.local
