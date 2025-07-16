@@ -56,22 +56,41 @@ class ClerkApiToken implements FPApiToken {
     }
 
     const rt = await exception2Result(async () => {
+      if (CLERK_PUB_JWT_KEY) {
+        const rCt = await exception2Result(
+          async () => (await verifyToken(token, { jwtKey: CLERK_PUB_JWT_KEY })) as unknown as ClerkTemplate,
+        );
+        if (rCt.isOk()) {
+          return rCt.Ok();
+        }
+      }
       if (CLERK_PUB_JWT_URL) {
-        const rJwtKey = await exception2Result(async () => await fetch(CLERK_PUB_JWT_URL));
-        if (rJwtKey.isOk() && !rJwtKey.Ok().ok) {
+        // Validate URL format and security
+        if (!CLERK_PUB_JWT_URL.startsWith("https://")) {
+          throw new Error("CLERK_PUB_JWT_URL(${CLERK_PUB_JWT_URL}) must use HTTPS");
+        }
+        const rJwtKey = await exception2Result(
+          async () =>
+            await fetch(CLERK_PUB_JWT_URL, {
+              method: "GET",
+              signal: AbortSignal.timeout(5000), // 5 second timeout
+            }),
+        );
+        if (rJwtKey.isOk() && rJwtKey.Ok().ok) {
           const rCt = await exception2Result(async () => {
             const jwsPubKey = await rJwtKey.Ok().json<JsonWebKey>();
             return (await verifyJwt(token, { key: jwsPubKey })) as unknown as ClerkTemplate;
           });
           if (rCt.isOk()) {
             return rCt.Ok();
+          } else {
+            throw new Error(`verifyJwt failed ${rCt.Err()} from ${CLERK_PUB_JWT_URL}`);
           }
         }
       }
-      if (!CLERK_PUB_JWT_KEY) {
-        throw new Error("You must set CLERK_PUB_JWT_KEY");
-      }
-      return (await verifyToken(token, { jwtKey: CLERK_PUB_JWT_KEY })) as unknown as ClerkTemplate;
+      throw new Error(
+        "You must set CLERK_PUB_JWT_URL(${CLERK_PUB_JWT_URL}) verify with CLERK_PUB_JWT_KEY(${CLERK_PUB_JWT_KEY}) failed",
+      );
     });
     if (rt.isErr()) {
       return Result.Err(rt.Err());
