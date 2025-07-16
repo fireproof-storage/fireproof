@@ -16,6 +16,7 @@ import {
 } from "@fireproof/core-types-protocols-cloud";
 import { WebToCloudCtx } from "./react/types.js";
 import { defaultWebToCloudOpts, WebCtx } from "./react/use-attach.js";
+import { toCloud as toCloudCore } from "@fireproof/core-gateways-cloud";
 
 export type UseFpToCloudParam = Omit<Omit<Omit<ToCloudOptionalOpts, "strategy">, "context">, "events"> &
   Partial<WebToCloudCtx> & {
@@ -51,7 +52,6 @@ export function toCloud(opts: UseFpToCloudParam = {}): ToCloudAttachable {
       }
     };
   }
-
   myOpts.context.set(WebCtx, webCtx);
-  return toCloud(myOpts);
+  return toCloudCore(myOpts);
 }

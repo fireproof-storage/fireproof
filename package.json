@@ -30,7 +30,7 @@
     "clean": "rm -rf node_modules dist",
     "env": "env",
     "dev": "pnpm run '/^dev:/'",
-    "dev:3rd-party": "npx vite -c vite.config.ts cloud/3rd-party --port 3001",
+    "dev:3rd-party": "cd cloud/3rd-party && pnpm run dev",
     "dev:todo-app": "npx vite -c vite.config.ts cloud/todo-app --port 3002",
     "dev:cf-d1": "wrangler dev -c cloud/backend/cf-d1/wrangler.toml --env dev",
     "test": "vitest --run",
