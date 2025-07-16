@@ -37,5 +37,6 @@ smoke/react/pnpm-lock.yaml
 **/.cache/**
 **/.vite/**
 
-.dev.vars*
+**/.dev.*
+**/.env.*
 .wrangler
