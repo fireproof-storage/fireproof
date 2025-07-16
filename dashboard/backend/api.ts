@@ -224,9 +224,9 @@ export class FPApiSQL implements FPApiInterface {
   readonly db: DashSqlite;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
-  constructor(sthis: SuperThis, db: DashSqlite, token: Record<string, FPApiToken>) {
+  constructor(sthis: SuperThis, db: DashSqlite, tokenApi: Record<string, FPApiToken>) {
     this.db = db;
-    this.tokenApi = token;
+    this.tokenApi = tokenApi;
     this.sthis = sthis;
   }
 

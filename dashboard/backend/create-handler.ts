@@ -49,6 +49,7 @@ class ClerkApiToken implements FPApiToken {
     const rt = await exception2Result(async () => {
       return (await verifyToken(token, { jwtKey })) as unknown as ClerkTemplate;
     });
+    console.log("ClerkApiToken:", rt.isErr() ? rt.Err() : rt.Ok(), jwtKey, token);
     if (rt.isErr()) {
       return Result.Err(rt.Err());
     }
