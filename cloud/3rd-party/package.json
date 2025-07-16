@@ -45,12 +45,12 @@
   "dependencies": {
     "@adviser/cement": "^0.4.20",
     "react-dom": "^19.1.0",
-    "use-fireproof": "workspace:0.0.0",
-    "@fireproof/vendor": "^3.0.0"
+    "use-fireproof": "workspace:0.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "@vitejs/plugin-react": "^4.6.0",
+    "vite": "^7.0.4"
   }
 }
