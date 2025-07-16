@@ -13,7 +13,7 @@ jobs:
 
       - uses: ./dashboard/actions/base
         with:
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+          CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
 
       - uses: ./dashboard/actions/deploy
         with:
