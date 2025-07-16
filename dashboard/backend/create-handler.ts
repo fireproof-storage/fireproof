@@ -1,6 +1,7 @@
 // import { auth } from "./better-auth.js";
-import { LoggerImpl, Result, exception2Result } from "@adviser/cement";
+import { LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
+import { verifyJwt } from "@clerk/backend/jwt";
 import { SuperThis, SuperThisOpts } from "@fireproof/core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
@@ -42,14 +43,36 @@ class ClerkApiToken implements FPApiToken {
     this.sthis = sthis;
   }
   async verify(token: string): Promise<Result<VerifiedAuth>> {
-    const jwtKey = this.sthis.env.get("CLERK_PUB_JWT_KEY");
-    if (!jwtKey) {
-      return Result.Err("Invalid CLERK_PUB_JWT_KEY");
-    }
-    const rt = await exception2Result(async () => {
-      return (await verifyToken(token, { jwtKey })) as unknown as ClerkTemplate;
+    const rEnvVal = this.sthis.env.gets({
+      CLERK_PUB_JWT_KEY: param.OPTIONAL,
+      CLERK_PUB_JWT_URL: param.OPTIONAL,
     });
-    console.log("ClerkApiToken:", rt.isErr() ? rt.Err() : rt.Ok(), jwtKey, token);
+    if (rEnvVal.isErr()) {
+      return Result.Err(rEnvVal.Err());
+    }
+    const { CLERK_PUB_JWT_KEY, CLERK_PUB_JWT_URL } = rEnvVal.Ok();
+    if (!CLERK_PUB_JWT_URL && !CLERK_PUB_JWT_KEY) {
+      return Result.Err("You must set CLERK_PUB_JWT_URL or CLERK_PUB_JWT_KEY");
+    }
+
+    const rt = await exception2Result(async () => {
+      if (CLERK_PUB_JWT_URL) {
+        const rJwtKey = await exception2Result(async () => await fetch(CLERK_PUB_JWT_URL));
+        if (rJwtKey.isOk() && !rJwtKey.Ok().ok) {
+          const rCt = await exception2Result(async () => {
+            const jwsPubKey = await rJwtKey.Ok().json<JsonWebKey>();
+            return (await verifyJwt(token, { key: jwsPubKey })) as unknown as ClerkTemplate;
+          });
+          if (rCt.isOk()) {
+            return rCt.Ok();
+          }
+        }
+      }
+      if (!CLERK_PUB_JWT_KEY) {
+        throw new Error("You must set CLERK_PUB_JWT_KEY");
+      }
+      return (await verifyToken(token, { jwtKey: CLERK_PUB_JWT_KEY })) as unknown as ClerkTemplate;
+    });
     if (rt.isErr()) {
       return Result.Err(rt.Err());
     }

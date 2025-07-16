@@ -22,6 +22,9 @@ inputs:
   CLERK_PUBLISHABLE_KEY:
     description: "Clerk publishable key"
     required: true
+  CLERK_PUB_JWT_URL:
+    description: "Clerk public JWT URL"
+    required: true
   CLERK_PUB_JWT_KEY:
     description: "Clerk public JWT key"
     required: true
@@ -47,12 +50,14 @@ runs:
         CLOUD_SESSION_TOKEN_SECRET: ${{ inputs.CLOUD_SESSION_TOKEN_SECRET }}
         CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
         CLERK_PUB_JWT_KEY: ${{ inputs.CLERK_PUB_JWT_KEY }}
+        CLERK_PUB_JWT_URL: ${{ inputs.CLERK_PUB_JWT_URL }}
         # need during build
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
         pnpm run drizzle:d1-remote
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
           --fromEnv CLERK_PUBLISHABLE_KEY \
+          --fromEnv CLERK_PUB_JWT_URL \
           --fromEnv CLERK_PUB_JWT_KEY \
           --fromEnv CLOUD_SESSION_TOKEN_SECRET \
           --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
