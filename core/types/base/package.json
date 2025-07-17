@@ -41,6 +41,6 @@
     "@web3-storage/pail": "^0.6.2",
     "multiformats": "^13.3.7",
     "prolly-trees": "^1.0.4",
-    "@fireproof/vendor": "^3.0.0"
+    "@fireproof/vendor": "workspace:0.0.0"
   }
 }

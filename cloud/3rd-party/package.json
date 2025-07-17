@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "vite dev",
-    "pack": "core-cli build --doPack",
+    "pack": "echo cloud need not to pack",
     "publish": "echo skip"
   },
   "keywords": [

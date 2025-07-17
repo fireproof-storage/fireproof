@@ -56,7 +56,7 @@
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-types-runtime": "workspace:0.0.0",
-    "@fireproof/vendor": "^3.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.4",
     "@ipld/dag-json": "^10.2.5",

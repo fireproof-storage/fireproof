@@ -8,6 +8,13 @@ const opts = tseslint.config(
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   {
+    languageOptions: {
+      globals: {
+        queueMicrotask: "readonly",
+      },
+    },
+  },
+  {
     ignores: [
       "babel.config.cjs",
       "jest.config.js",

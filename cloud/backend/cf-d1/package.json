@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest --run",
-    "pack": "core-cli build --doPack",
+    "pack": "echo cloud need not to pack",
     "publish": "echo skip",
     "drizzle:d1-local": "drizzle-kit push --config ./drizzle.cloud.d1-local.config.ts",
     "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.cloud.d1-remote.config.ts",
@@ -47,7 +47,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
-    "@fireproof/vendor": "^3.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
     "cmd-ts": "^0.13.0",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.5",
