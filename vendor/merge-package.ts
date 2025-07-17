@@ -21,8 +21,8 @@ async function prepare(packages: PackageOptions[], { buildBase }: CommandArgs) {
   await $`cp package.json ${buildBase}/package.json`;
 
   await Promise.all(
-    (packages as GitOptions[])
-      .filter((p) => p.type === "git")
+    packages
+      .filter((p): p is GitOptions => p.type === "git")
       .map(async ({ name, url, npm }) => {
         await fs.mkdir(`${buildBase}/patched/${name}`, { recursive: true });
         await $`git clone ${url} ${buildBase}/patched/${name}`;
@@ -68,7 +68,7 @@ interface PackageJson {
   exports: Exports;
 }
 
-function pluginExports(name: string, exports: Exports, srcDir: string, buildBase): Exports {
+function pluginExports(name: string, exports: Exports, srcDir: string, buildBase: string): Exports {
   const result: Exports = {};
   // const base = path.relative(buildBase, srcDir)
   const nested = {};
@@ -177,7 +177,7 @@ async function main() {
       // await $`pwd ; find "dist/src/@ipld/dag-json" -type f -print`
       for (const packageFile of packages.map((p) => `dist/src/${p.name}/package.json`)) {
         const mPackageJson = JSON.parse(await fs.readFile(packageFile, "utf8"));
-        fs.unlink(packageFile);
+        await fs.unlink(packageFile);
         mergePackageJson(packageJson, mPackageJson, path.dirname(packageFile), args);
       }
       // filter our own packages
@@ -191,7 +191,10 @@ async function main() {
         {} as Record<string, string>,
       );
       await fs.writeFile(args.buildPackageJson, JSON.stringify(packageJson, null, 2));
-      await $`cp ../.gitignore ${args.buildBase}/.npmignore`;
+      const projectRoot = path.resolve(dirname(args.srcPackageJson));
+      const gitignoreSrc = path.resolve(projectRoot, ".gitignore");
+      await $`cp ${gitignoreSrc} ${path.join(args.buildBase, ".npmignore")}`;
+      // await $`cp ../.gitignore ${args.buildBase}/.npmignore`;
       await $`cd ${args.buildBase} && pnpm pack`;
     },
   });
