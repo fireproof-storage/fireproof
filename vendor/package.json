@@ -1,0 +1,33 @@
+{
+  "name": "@fireproof/vendor",
+  "version": "0.0.0",
+  "description": "vendor patch repo to support esm",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo done",
+    "build:merge": "tsx merge-package.ts --prepare --verbose 'p-limit,https://github.com/mabels/p-limit.git,pnpm'",
+    "pack": "core-cli build --doPack --noTsconfig",
+    "publish": "core-cli build --noTsconfig"
+  },
+  "exports": {
+    "./p-limit": {
+      "types": "./p-limit/index.d.ts",
+      "default": "./p-limit/index.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jscodeshift": "^0.12.0",
+    "cmd-ts": "^0.13.0",
+    "jscodeshift": "^17.1.1",
+    "tsd": "^0.32.0",
+    "tsx": "^4.19.2",
+    "zx": "^8.2.4"
+  },
+  "dependencies": {
+    "yocto-queue": "^1.2.1"
+  }
+}

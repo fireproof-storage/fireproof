@@ -40,7 +40,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
-    "@fireproof/vendor": "^3.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
     "@types/ws": "^8.18.1",
     "ws": "^8.18.3"
   }

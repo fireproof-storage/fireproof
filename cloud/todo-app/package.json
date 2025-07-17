@@ -8,7 +8,7 @@
   "types": "./index.d.ts",
   "scripts": {
     "build": "tsc",
-    "pack": "core-cli build --doPack",
+    "pack": "echo cloud need not to pack",
     "publish": "echo skip"
   },
   "keywords": [
@@ -46,7 +46,7 @@
     "@types/react": "^19.1.8",
     "react-dom": "^19.1.0",
     "use-fireproof": "workspace:0.0.0",
-    "@fireproof/vendor": "^3.0.0"
+    "@fireproof/vendor": "workspace:0.0.0"
   },
   "devDependencies": {
     "@types/react-dom": "^19.1.6",

@@ -44,6 +44,6 @@
     "cborg": "^4.2.12",
     "jose": "^6.0.11",
     "multiformats": "^13.3.7",
-    "@fireproof/vendor": "^3.0.0"
+    "@fireproof/vendor": "workspace:0.0.0"
   }
 }
