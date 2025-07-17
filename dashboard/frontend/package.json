@@ -1,0 +1,50 @@
+{
+  "name": "@fireproof/dashboard-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "deploy:cf": "wrangler deploy -c wrangler.toml",
+    "build": "tsc; pnpm run build:vite",
+    "build:vite": "vite build",
+    "preview": "vite preview",
+    "test": "vitest --run",
+    "pack": "echo dashboard need not to pack",
+    "publish": "echo skip"
+  },
+  "dependencies": {
+    "@adviser/cement": "^0.4.20",
+    "@fireproof/core": "workspace:0.0.0",
+    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
+    "@tanstack/react-query": "^5.83.0",
+    "highlight.js": "^11.11.1",
+    "jose": "^6.0.11",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.60.0",
+    "react-router-dom": "^7.7.0",
+    "react-simple-code-editor": "^0.14.1",
+    "use-fireproof": "workspace:0.0.0"
+  },
+  "devDependencies": {
+    "@clerk/clerk-react": "^5.33.0",
+    "@cloudflare/vite-plugin": "^1.9.4",
+    "@cloudflare/workers-types": "^4.20250710.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "@vitejs/plugin-react": "^4.5.1",
+    "globals": "^16.2.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.4"
+  }
+}

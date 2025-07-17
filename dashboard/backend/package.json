@@ -1,0 +1,43 @@
+{
+  "name": "@fireproof/dashboard-backend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.js",
+    "backend:d1": "wrangler dev -c wrangler.toml --port 7370",
+    "deploy:cf": "wrangler deploy -c wrangler.toml",
+    "build": "tsc",
+    "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
+    "drizzle:d1-local": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
+    "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.d1-remote.config.ts",
+    "pack": "echo dashboard need not to pack",
+    "publish": "echo skip"
+  },
+  "dependencies": {
+    "@adviser/cement": "^0.4.20",
+    "@clerk/backend": "^2.4.1",
+    "@clerk/clerk-js": "^5.71.0",
+    "@fireproof/core": "workspace:0.0.0",
+    "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
+    "jose": "^6.0.11"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.9.4",
+    "@cloudflare/workers-types": "^4.20250710.0",
+    "@libsql/client": "^0.15.7",
+    "@libsql/kysely-libsql": "^0.4.1",
+    "autoprefixer": "^10.4.20",
+    "drizzle-kit": "0.30.6",
+    "drizzle-orm": "^0.44.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.24.3",
+    "zx": "^8.7.0"
+  }
+}

@@ -8,7 +8,8 @@ packages:
   - "core/gateways/*"
   - "core/protocols/*"
   - "use-fireproof"
-  - "dashboard"
+  - "dashboard/frontend"
+  - "dashboard/backend"
   - "vendor"
 #catalog:
 #  adviserCement: ^0.4.20

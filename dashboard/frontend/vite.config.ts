@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { visualizer } from "rollup-plugin-visualizer";
+// import { visualizer } from "rollup-plugin-visualizer";
 import * as path from "node:path";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
@@ -11,8 +11,10 @@ export default defineConfig({
     // multilines
     // tsconfigPaths(),
     react(),
-    cloudflare(),
-    visualizer(),
+    cloudflare({
+      configPath: "../backend/wrangler.toml",
+    }),
+    // visualizer(),
   ],
   build: {
     sourcemap: true,

@@ -4,7 +4,7 @@
 
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
 
     "jsx": "react",
     "allowSyntheticDefaultImports": true,
