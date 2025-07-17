@@ -16,16 +16,15 @@ const replace = {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function (fileInfo: FileInfo, api: API, options: Options) {
-  //const orig = fileInfo.source;
-  // const oname = path.join(__dirname, 'src/', fileInfo.path.replace('node_modules/', ''))
-  // fs.mkdirSync(path.dirname(oname), { recursive: true });
-  // fs.writeFileSync(oname,
   return api
     .jscodeshift(fileInfo.source)
     .find(ImportDeclaration)
     .map((path) => {
-      // const node = path.node;
-      const val = path.node.source.value?.toString() || "";
+      const sourceValue = path.node.source.value;
+      if (!sourceValue) {
+        return path;
+      }
+      const val = sourceValue.toString();
       if (nodeExternals.has(val)) {
         return path;
       } else if (replace[val]) {
