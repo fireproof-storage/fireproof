@@ -24,6 +24,7 @@ if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompa
 ```
 
 This created a race condition where:
+
 1. Multiple write operations are queued in the commit queue
 2. Auto-compaction threshold is reached
 3. Compaction starts immediately while commits are still processing
@@ -56,11 +57,13 @@ needsCompaction() {
 Two complementary tests validate the fix:
 
 ### Conservative Test (`repro-blocks.process.test.ts`)
+
 - **Purpose**: Verify basic functionality works correctly
 - **Approach**: 10 sequential iterations with fresh database instances
 - **Result**: ✅ Passes - confirms core fix works
 
 ### Stress Test (`repro-blocks.test.ts`)
+
 - **Purpose**: Detect race conditions under heavy load
 - **Approach**: 30 iterations on shared database instance with aggressive auto-compaction
 - **Result**: ❌ Still failing - indicates additional edge cases remain
