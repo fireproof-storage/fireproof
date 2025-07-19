@@ -184,6 +184,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly writeQueue?: Partial<WriteQueueParams>;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly autoCompact?: number;
+  readonly compact?: CompactFn | null;
   readonly storeUrls?: StoreUrlsOpts;
   readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
