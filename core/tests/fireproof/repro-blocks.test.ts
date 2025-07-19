@@ -49,7 +49,7 @@ describe("repro-blocks", () => {
   beforeEach(() => {
     db = fireproof(dbName, {
       autoCompact: numberOfDocs / 3,
-      // compact: null,
+      compact: null,
     });
   });
 
