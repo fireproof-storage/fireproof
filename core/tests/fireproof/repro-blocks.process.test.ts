@@ -47,7 +47,7 @@ async function writeSampleData(db: Database): Promise<void> {
 }
 
 async function runReproBlocksOnce(iter: number) {
-  const db = fireproof(`test-db-${iter}`);
+  const db = fireproof(`test-db-${iter}`, { compact: null });
 
   await writeSampleData(db);
 
