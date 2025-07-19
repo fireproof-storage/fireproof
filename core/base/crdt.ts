@@ -37,7 +37,7 @@ import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { CRDTClockImpl } from "./crdt-clock.js";
-import { TransactionMeta, CompactFetcher, BlockstoreOpts } from "@fireproof/core-types-blockstore";
+import { TransactionMeta, CompactFetcher, BlockstoreOpts, CompactFn } from "@fireproof/core-types-blockstore";
 
 export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
   readonly storeUrls: {
@@ -109,10 +109,13 @@ export class CRDTImpl implements CRDT {
 
     // Only add compact if it's not null - when null, blockstore uses defaultCompact
     if (this.opts.compact !== null) {
-      (blockstoreOpts as any).compact = this.opts.compact || (async (blocks: CompactFetcher) => {
-        await doCompact(blocks, this.clock.head, this.logger);
-        return { head: this.clock.head } as TransactionMeta;
-      });
+      const mutableOpts = blockstoreOpts as BlockstoreOpts & { compact?: CompactFn };
+      mutableOpts.compact =
+        this.opts.compact ||
+        (async (blocks: CompactFetcher) => {
+          await doCompact(blocks, this.clock.head, this.logger);
+          return { head: this.clock.head } as TransactionMeta;
+        });
     }
 
     this.blockstore = new EncryptedBlockstore(sthis, blockstoreOpts, this);
