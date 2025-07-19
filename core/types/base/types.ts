@@ -21,6 +21,7 @@ import type {
   FileStore,
   CarStore,
   FPBlock,
+  CompactFn,
 } from "@fireproof/core-types-blockstore";
 
 import type { IndexIf } from "./indexer.js";
@@ -640,6 +641,7 @@ export interface LedgerOpts extends Tracer {
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+  readonly compact?: CompactFn | null;
 
   readonly ctx: AppContext;
   readonly writeQueue: WriteQueueParams;
