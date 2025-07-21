@@ -188,8 +188,8 @@ importers:
         specifier: ^4.8.5
         version: 4.8.5
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -356,8 +356,8 @@ importers:
         specifier: ^0.13.0
         version: 0.13.0
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
       react:
         specifier: '>=18.0.0'
         version: 19.1.0
@@ -578,8 +578,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
 
   core/gateways/file:
     dependencies:
@@ -796,8 +796,8 @@ importers:
         specifier: ^4.2.12
         version: 4.2.12
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -956,8 +956,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../../vendor
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
       multiformats:
         specifier: ^13.3.7
         version: 13.3.7
@@ -1025,8 +1025,8 @@ importers:
         specifier: ^0.3.7
         version: 0.3.7
       jose:
-        specifier: ^6.0.10
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
       minimatch:
         specifier: ^10.0.1
         version: 10.0.3
@@ -1179,8 +1179,8 @@ importers:
         specifier: ^3.2.6
         version: 3.2.6
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.12
+        version: 6.0.12
       react:
         specifier: '>=18.0.0'
         version: 19.1.0
@@ -3524,8 +3524,8 @@ packages:
   cheerio-select@2.1.0:
     resolution: {integrity: sha512-9v9kG0LvzrlcungtnJtpGNxY+fzECQKhK4EGJX2vByejiMX84MFNQw4UxPJl3bFbTMw+Dfs37XaIkCwTZfLh4g==}
 
-  cheerio@1.1.1:
-    resolution: {integrity: sha512-bTXxVZeOfc3I97S4CSYVjcYvaTp92YOlwEUrVRtYrkuVn7S8/QKnnozVlztPcXlU039S2UxtsjAMyFRbX3V9gQ==}
+  cheerio@1.1.2:
+    resolution: {integrity: sha512-IkxPpb5rS/d1IiLbHMgfPuS0FgiWTtFIm/Nj+2woXDLTZ7fOT2eqzgYbdMlLweqlHbsZjxEChoVK+7iph7jyQg==}
     engines: {node: '>=20.18.1'}
 
   chokidar@3.6.0:
@@ -4759,8 +4759,8 @@ packages:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
     hasBin: true
 
-  jose@6.0.11:
-    resolution: {integrity: sha512-QxG7EaliDARm1O1S8BGakqncGT9s25bKL1WSf6/oa17Tkqwi8D2ZNglqCF+DsYF88/rV66Q/Q2mFAy697E1DUg==}
+  jose@6.0.12:
+    resolution: {integrity: sha512-T8xypXs8CpmiIi78k0E+Lk7T2zlK4zDyg+o1CZ4AkOHgDg98ogdP2BeZ61lTFKFyoEwJ9RgAgN+SdM3iPgNonQ==}
 
   js-base64@3.7.7:
     resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
@@ -8794,7 +8794,7 @@ snapshots:
       domutils: 3.2.2
     optional: true
 
-  cheerio@1.1.1:
+  cheerio@1.1.2:
     dependencies:
       cheerio-select: 2.1.0
       dom-serializer: 2.0.0
@@ -10293,7 +10293,7 @@ snapshots:
 
   jiti@1.21.7: {}
 
-  jose@6.0.11: {}
+  jose@6.0.12: {}
 
   js-base64@3.7.7: {}
 
@@ -12249,7 +12249,7 @@ snapshots:
       '@wdio/utils': 9.11.0
       archiver: 7.0.1
       aria-query: 5.3.2
-      cheerio: 1.1.1
+      cheerio: 1.1.2
       css-shorthand-properties: 1.1.2
       css-value: 0.0.1
       grapheme-splitter: 1.0.4

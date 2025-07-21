@@ -38,7 +38,7 @@
     "@tanstack/react-query": "^5.83.0",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
-    "jose": "^6.0.10",
+    "jose": "^6.0.12",
     "minimatch": "^10.0.1",
     "multiformats": "^13.3.6",
     "partysocket": "^1.0.2",
