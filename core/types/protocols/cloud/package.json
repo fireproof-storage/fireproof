@@ -39,7 +39,7 @@
     "@adviser/cement": "^0.4.20",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "jose": "^6.0.11",
+    "jose": "^6.0.12",
     "multiformats": "^13.3.7",
     "@fireproof/vendor": "workspace:0.0.0"
   }
