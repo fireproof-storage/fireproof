@@ -108,8 +108,8 @@ importers:
         specifier: ^7.7.2
         version: 7.7.2
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -210,8 +210,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.15)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.15)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
   cloud/backend/cf-d1:
     dependencies:
@@ -268,8 +268,8 @@ importers:
         specifier: ^4.25.0
         version: 4.25.0(@cloudflare/workers-types@4.20250712.0)
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
   cloud/backend/node:
     dependencies:
@@ -329,8 +329,8 @@ importers:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
   cloud/base:
     dependencies:
@@ -369,8 +369,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.15)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.15)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
   cloud/todo-app:
     dependencies:
@@ -896,8 +896,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.13)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@14.12.3)(jiti@1.21.7)(msw@2.7.3(@types/node@24.0.13)(typescript@5.8.3))(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
   core/types/base:
     dependencies:
@@ -1140,8 +1140,8 @@ importers:
         specifier: ^4.25.0
         version: 4.25.0(@cloudflare/workers-types@4.20250712.0)
       zx:
-        specifier: ^8.7.0
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
   use-fireproof:
     dependencies:
@@ -1235,8 +1235,8 @@ importers:
         specifier: ^4.19.2
         version: 4.20.3
       zx:
-        specifier: ^8.2.4
-        version: 8.7.0
+        specifier: ^8.7.1
+        version: 8.7.1
 
 packages:
 
@@ -6668,8 +6668,8 @@ packages:
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
-  zx@8.7.0:
-    resolution: {integrity: sha512-pArftqj5JV/er8p+czFZwF+k6SbCldl7kcfCR+rIiDIh3gUsLB0F3Xh05diP8PzToZ39D/GWeFoVFimjHQkbAg==}
+  zx@8.7.1:
+    resolution: {integrity: sha512-28u1w2LlIfvyvJvYe6pmCipesk8oL5AFMVp+P/U445LcaPgzrU5lNDtAPd6nJvWmoCNyXZz37R/xKOGokccjsw==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -12761,4 +12761,4 @@ snapshots:
 
   zod@3.22.3: {}
 
-  zx@8.7.0: {}
+  zx@8.7.1: {}
