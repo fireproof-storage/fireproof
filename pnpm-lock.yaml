@@ -983,8 +983,8 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@clerk/clerk-js':
-        specifier: ^5.71.0
-        version: 5.71.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^5.74.1
+        version: 5.74.1(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@clerk/clerk-react':
         specifier: ^5.33.0
         version: 5.33.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1466,8 +1466,8 @@ packages:
     resolution: {integrity: sha512-QLCpd3GVOKrTsDWVcn/F5TUKHXFG1Bgb9gjAYuQPjtzoyqcGwITYcYLZFb273KDGvaqaUgrEKhJprSEpbKwY1Q==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-js@5.71.0':
-    resolution: {integrity: sha512-HCXZbo3XgY64OrfDHVaTMNBQdiFuXOTGAmh/PrGxlukXEFUigh0bC9dzD9gCrVjGkqc2IgVCesGQgPmKSS17Ww==}
+  '@clerk/clerk-js@5.74.1':
+    resolution: {integrity: sha512-1JkTz54Fp5frYM1I9fkC81cIG4FpSpgVWrPBkn9K7pwExdx8YabsiR0ljdT6e6fi9LTzdn+yGWBdzLHcL7E3Fw==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
@@ -1480,8 +1480,8 @@ packages:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
 
-  '@clerk/localizations@3.18.0':
-    resolution: {integrity: sha512-vlkQTm/wLEoqyRoD1tUOD0iZ4WzcJDwESVV/rneFeeCLTqZnaVW4u7pxlZOKmgY6GT9ysd/QI0IzeCcKWxZ2Fg==}
+  '@clerk/localizations@3.20.1':
+    resolution: {integrity: sha512-nhkkvdgDeEaQSaW/lBf7/WfWzG7W1H7SBP+rO7+/Z1tiJs0YNg4M9TrOT3i3Py+w5KwhE+lLeX122WjnTWmrWg==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/shared@3.11.0':
@@ -6111,11 +6111,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  swr@2.3.3:
-    resolution: {integrity: sha512-dshNvs3ExOqtZ6kJBaAsabhPdHyeY4P2cKwRCniDVifBMoG/SVI7tfLWqPXriVspf2Rg4tPzXJTnwaihIeFw2A==}
-    peerDependencies:
-      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   swr@2.3.4:
     resolution: {integrity: sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg==}
     peerDependencies:
@@ -7009,11 +7004,11 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-js@5.71.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@clerk/clerk-js@5.74.1(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@clerk/localizations': 3.18.0
-      '@clerk/shared': 3.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@clerk/types': 4.64.0
+      '@clerk/localizations': 3.20.1
+      '@clerk/shared': 3.13.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@clerk/types': 4.68.0
       '@coinbase/wallet-sdk': 4.3.0
       '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.1(@types/react@19.1.8)(react@19.1.0)
@@ -7033,7 +7028,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       regenerator-runtime: 0.14.1
-      swr: 2.3.3(react@19.1.0)
+      swr: 2.3.4(react@19.1.0)
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
@@ -7046,7 +7041,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       tslib: 2.8.1
 
-  '@clerk/localizations@3.18.0':
+  '@clerk/localizations@3.20.1':
     dependencies:
       '@clerk/types': 4.68.0
 
@@ -7057,7 +7052,7 @@ snapshots:
       glob-to-regexp: 0.4.1
       js-cookie: 3.0.5
       std-env: 3.9.0
-      swr: 2.3.3(react@19.1.0)
+      swr: 2.3.4(react@19.1.0)
     optionalDependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -11996,12 +11991,6 @@ snapshots:
       supports-color: 7.2.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
-
-  swr@2.3.3(react@19.1.0):
-    dependencies:
-      dequal: 2.0.3
-      react: 19.1.0
-      use-sync-external-store: 1.5.0(react@19.1.0)
 
   swr@2.3.4(react@19.1.0):
     dependencies:
