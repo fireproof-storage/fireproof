@@ -43,7 +43,7 @@
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
-    "@libsql/client": "^0.15.9",
+    "@libsql/client": "^0.15.10",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.5",
