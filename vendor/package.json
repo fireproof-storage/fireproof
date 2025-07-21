@@ -21,7 +21,7 @@
   "license": "ISC",
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@types/jscodeshift": "^0.12.0",
+    "@types/jscodeshift": "^17.3.0",
     "cmd-ts": "^0.13.0",
     "jscodeshift": "^17.1.1",
     "tsd": "^0.32.0",
