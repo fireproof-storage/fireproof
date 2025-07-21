@@ -77,7 +77,7 @@
     "typescript": "^5.8.3",
     "vite": "^7.0.4",
     "vitest": "^3.2.4",
-    "wrangler": "^4.24.3",
+    "wrangler": "^4.25.0",
     "zx": "^8.7.0",
     "@fireproof/core-cli": "workspace:0.0.0"
   }
