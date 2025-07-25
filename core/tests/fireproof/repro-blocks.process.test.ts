@@ -46,8 +46,10 @@ async function writeSampleData(db: Database): Promise<void> {
   }
 }
 
-async function runReproBlocksOnce(iter: number) {
-  const db = fireproof(`test-db-${iter}`, { compactionMode: CompactionMode.FULL });
+async function runReproBlocksOnce(iter: number, compactionMode?: typeof CompactionMode.FULL) {
+  const db = fireproof(`test-db-${iter}`, {
+    compactionMode,
+  });
 
   await writeSampleData(db);
 
@@ -61,12 +63,16 @@ async function runReproBlocksOnce(iter: number) {
   await db.destroy();
 }
 
-describeFn("repro-blocks regression test", () => {
+// Test both compaction modes
+describeFn.each([
+  { name: "fireproof-default", compactionMode: undefined },
+  { name: "full-compaction", compactionMode: CompactionMode.FULL },
+])("repro-blocks regression test with $name compaction", ({ compactionMode }) => {
   it(
     "runs 10 consecutive times without compaction errors",
     async () => {
       for (let i = 1; i <= 10; i++) {
-        await runReproBlocksOnce(i);
+        await runReproBlocksOnce(i, compactionMode);
       }
     },
     5 * 60 * 1000, // allow up to 5 minutes – heavy disk workload
