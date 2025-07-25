@@ -41,12 +41,12 @@ async function writeSampleData(numberOfDocs: number, db: Database): Promise<numb
   return numberOfDocs - remove;
 }
 
-describe.skip("repro-blocks", () => {
+describe("repro-blocks", () => {
   const numberOfDocs = 101; // better a prime number
   const sthis = ensureSuperThis();
-  const dbName = `repro-blocks-${sthis.nextId().str}`;
   let db: Database;
   beforeEach(() => {
+    const dbName = `repro-blocks-${sthis.nextId().str}`;
     db = fireproof(dbName, {
       autoCompact: numberOfDocs / 3,
       compactionMode: CompactionMode.FULL,
