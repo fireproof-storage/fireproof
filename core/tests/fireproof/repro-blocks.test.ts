@@ -41,15 +41,20 @@ async function writeSampleData(numberOfDocs: number, db: Database): Promise<numb
   return numberOfDocs - remove;
 }
 
-describe("repro-blocks", () => {
+// Test both compaction modes
+describe.each([
+  { name: "fireproof-default", compactionMode: undefined },
+  { name: "full-compaction", compactionMode: CompactionMode.FULL },
+])("repro-blocks with $name compaction", ({ compactionMode }) => {
   const numberOfDocs = 101; // better a prime number
   const sthis = ensureSuperThis();
   let db: Database;
+
   beforeEach(() => {
     const dbName = `repro-blocks-${sthis.nextId().str}`;
     db = fireproof(dbName, {
       autoCompact: numberOfDocs / 3,
-      compactionMode: CompactionMode.FULL,
+      compactionMode,
     });
   });
 
