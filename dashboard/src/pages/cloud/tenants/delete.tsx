@@ -27,7 +27,7 @@ export function CloudTenantDelete() {
     <h1>
       <Link
         to={`/fp/cloud`}
-        onClick={(e: Event) => {
+        onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
           e.preventDefault();
           deleteCloudTenantAction(cloud, tenantId);
         }}

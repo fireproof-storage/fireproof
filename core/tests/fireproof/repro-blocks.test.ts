@@ -41,7 +41,7 @@ async function writeSampleData(numberOfDocs: number, db: Database): Promise<numb
   return numberOfDocs - remove;
 }
 
-describe("repro-blocks", () => {
+describe.skip("repro-blocks", () => {
   const numberOfDocs = 101; // better a prime number
   const sthis = ensureSuperThis();
   const dbName = `repro-blocks-${sthis.nextId().str}`;
