@@ -90,7 +90,7 @@ describe("Meta Block Dangling References", () => {
 
       if (currentCarLogLength > blockstore.ebOpts.autoCompact) {
         // Manually trigger needsCompaction to ensure the race condition scenario
-        blockstore.needsCompaction();
+        (blockstore as unknown as { needsCompaction(): void }).needsCompaction();
       }
 
       // Step 4: Wait for compaction to start, then add concurrent commits
@@ -241,9 +241,9 @@ describe("Meta Block Dangling References", () => {
 
       // Try to access each document to ensure no missing blocks
       for (const row of allDocs.rows) {
-        if (row.id) {
+        if (row.key) {
           // Check for valid ID
-          const doc = await db.get(row.id);
+          const doc = await db.get(row.key);
           expect(doc).toBeDefined();
         }
       }
