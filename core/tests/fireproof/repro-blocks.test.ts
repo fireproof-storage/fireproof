@@ -1,4 +1,4 @@
-import { Database, DocResponse, DocWithId, fireproof } from "@fireproof/core";
+import { Database, DocResponse, DocWithId, fireproof, CompactionMode } from "@fireproof/core";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { describe, beforeEach, it, expect, afterEach, afterAll } from "vitest";
 
@@ -49,7 +49,7 @@ describe.skip("repro-blocks", () => {
   beforeEach(() => {
     db = fireproof(dbName, {
       autoCompact: numberOfDocs / 3,
-      compact: null,
+      compactionMode: CompactionMode.FULL,
     });
   });
 

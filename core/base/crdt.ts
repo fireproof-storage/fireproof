@@ -28,6 +28,7 @@ import {
   type CRDT,
   type CRDTClock,
   type CarTransaction,
+  CompactionMode,
   type DocTypes,
   PARAM,
   Ledger,
@@ -107,16 +108,16 @@ export class CRDTImpl implements CRDT {
       // threshold: this.opts.threshold,
     } as BlockstoreOpts;
 
-    // Only add compact if it's not null - when null, blockstore uses defaultCompact
-    if (this.opts.compact !== null) {
+    // Set compaction strategy based on mode - default to "fireproof"
+    const compactionMode = this.opts.compactionMode || CompactionMode.FIREPROOF;
+    if (compactionMode === CompactionMode.FIREPROOF) {
       const mutableOpts = blockstoreOpts as BlockstoreOpts & { compact?: CompactFn };
-      mutableOpts.compact =
-        this.opts.compact ||
-        (async (blocks: CompactFetcher) => {
-          await doCompact(blocks, this.clock.head, this.logger);
-          return { head: this.clock.head } as TransactionMeta;
-        });
+      mutableOpts.compact = async (blocks: CompactFetcher) => {
+        await doCompact(blocks, this.clock.head, this.logger);
+        return { head: this.clock.head } as TransactionMeta;
+      };
     }
+    // For CompactionMode.FULL, we don't set compact - blockstore uses defaultCompact
 
     this.blockstore = new EncryptedBlockstore(sthis, blockstoreOpts, this);
     if (this.opts.storeUrls.idx) {

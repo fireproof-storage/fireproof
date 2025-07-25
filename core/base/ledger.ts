@@ -60,7 +60,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
         keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
         storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
         gatewayInterceptor: opts?.gatewayInterceptor,
-        compact: opts?.compact,
+        compactionMode: opts?.compactionMode,
         writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
         ctx: opts?.ctx ?? new AppContext(),
         storeEnDe: {
