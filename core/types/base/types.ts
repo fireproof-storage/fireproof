@@ -82,6 +82,13 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
 }
 
 export type StoreType = "car" | "file" | "wal" | "meta";
+
+export const CompactionMode = {
+  FIREPROOF: "fireproof",
+  FULL: "full",
+} as const;
+
+export type CompactionModeType = (typeof CompactionMode)[keyof typeof CompactionMode];
 export interface FPStats {
   isFile(): boolean;
   isDirectory(): boolean;

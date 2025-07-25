@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { Database, DocWithId, fireproof } from "@fireproof/core";
+import { Database, DocWithId, fireproof, CompactionMode } from "@fireproof/core";
 
 // Skip this entire suite when running inside a browser-like Vitest environment
 const isNode = typeof process !== "undefined" && !!process.versions?.node;
@@ -47,7 +47,7 @@ async function writeSampleData(db: Database): Promise<void> {
 }
 
 async function runReproBlocksOnce(iter: number) {
-  const db = fireproof(`test-db-${iter}`, { compact: null });
+  const db = fireproof(`test-db-${iter}`, { compactionMode: CompactionMode.FULL });
 
   await writeSampleData(db);
 

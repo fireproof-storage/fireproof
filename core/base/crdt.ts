@@ -27,6 +27,7 @@ import {
   type CRDT,
   type CRDTClock,
   type CarTransaction,
+  CompactionMode,
   type DocTypes,
   PARAM,
   Ledger,
