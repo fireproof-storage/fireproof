@@ -1,11 +1,5 @@
-import { describe, it } from "vitest";
 import { Database, DocWithId, fireproof, CompactionMode } from "@fireproof/core";
-
-// Skip this entire suite when running inside a browser-like Vitest environment
-const isNode = typeof process !== "undefined" && !!process.versions?.node;
-const describeFn = isNode ? describe.skip : describe.skip;
-
-/* eslint-disable no-console */
+import { describe, it, expect } from "vitest";
 
 interface Record {
   id: string;
@@ -47,7 +41,7 @@ async function writeSampleData(db: Database): Promise<void> {
 }
 
 async function runReproBlocksOnce(iter: number, compactionMode?: typeof CompactionMode.FULL) {
-  const db = fireproof(`test-db-${iter}`, {
+  const db = fireproof(`test-db-inline-${iter}-${Date.now()}`, {
     compactionMode,
   });
 
@@ -56,25 +50,33 @@ async function runReproBlocksOnce(iter: number, compactionMode?: typeof Compacti
   const all = await db.allDocs<Record>();
   const records = await findAll(db);
 
-  console.log(`repro-blocks run ${iter}: Found records:`, all.rows.length, records.length);
-  console.log(`repro-blocks run ${iter}: ok`); // useful in CI logs
+  console.log(`repro-blocks inline run ${iter}: Found records:`, all.rows.length, records.length);
+  expect(all.rows.length).toBe(81); // 90 puts - 9 deletes = 81
+  expect(records.length).toBe(81);
 
   // Clean up the database after the test
   await db.destroy();
 }
 
-// Test both compaction modes
-describeFn.each([
-  { name: "fireproof-default", compactionMode: undefined },
-  { name: "full-compaction", compactionMode: CompactionMode.FULL },
-])("repro-blocks regression test with $name compaction", ({ compactionMode }) => {
+// Test both compaction modes in a single test process
+describe("repro-blocks inline regression test", () => {
   it(
-    "runs 10 consecutive times without compaction errors",
+    "runs with fireproof-default compaction mode",
     async () => {
-      for (let i = 1; i <= 10; i++) {
-        await runReproBlocksOnce(i, compactionMode);
+      for (let i = 1; i <= 3; i++) {
+        await runReproBlocksOnce(i, undefined);
       }
     },
-    5 * 60 * 1000, // allow up to 5 minutes – heavy disk workload
+    2 * 60 * 1000, // 2 minutes
+  );
+
+  it(
+    "runs with full compaction mode", 
+    async () => {
+      for (let i = 1; i <= 3; i++) {
+        await runReproBlocksOnce(i, CompactionMode.FULL);
+      }
+    },
+    2 * 60 * 1000, // 2 minutes
   );
 });
