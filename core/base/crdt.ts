@@ -28,6 +28,7 @@ import {
   type CRDT,
   type CRDTClock,
   type CarTransaction,
+  CompactionMode,
   type DocTypes,
   PARAM,
   Ledger,
@@ -37,7 +38,7 @@ import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { CRDTClockImpl } from "./crdt-clock.js";
-import { TransactionMeta, CompactFetcher } from "@fireproof/core-types-blockstore";
+import { TransactionMeta, CompactFetcher, BlockstoreOpts, CompactFn } from "@fireproof/core-types-blockstore";
 
 export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
   readonly storeUrls: {
@@ -68,52 +69,57 @@ export class CRDTImpl implements CRDT {
     this.crdt = this;
     this.logger = ensureLogger(sthis, "CRDTImpl");
     this.opts = opts;
-    this.blockstore = new EncryptedBlockstore(
-      sthis,
-      {
-        tracer: (event: TraceEvent) => {
-          switch (event.event) {
-            case "idleFromCommitQueue":
-              opts.tracer({
-                event: "idleFromBlockstore",
-                blockstore: "data",
-                ledger: parent,
-              });
-              break;
-            case "busyFromCommitQueue":
-              opts.tracer({
-                event: "busyFromBlockstore",
-                blockstore: "data",
-                ledger: parent,
-                queueLen: event.queueLen,
-              });
-              break;
-            default:
-              return opts.tracer(event);
-          }
-        },
-        applyMeta: async (meta: TransactionMeta) => {
-          const crdtMeta = meta as CRDTMeta;
-          if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
-          // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
-          await this.clock.applyHead(crdtMeta.head, []);
-          // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
-        },
-        compact: async (blocks: CompactFetcher) => {
-          await doCompact(blocks, this.clock.head, this.logger);
-          return { head: this.clock.head } as TransactionMeta;
-        },
-        gatewayInterceptor: opts.gatewayInterceptor,
-        // autoCompact: this.opts.autoCompact || 100,
-        storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
-        storeUrls: this.opts.storeUrls.data,
-        keyBag: this.opts.keyBag,
-        // public: this.opts.public,
-        meta: this.opts.meta,
-        // threshold: this.opts.threshold,
+    const blockstoreOpts = {
+      tracer: (event: TraceEvent) => {
+        switch (event.event) {
+          case "idleFromCommitQueue":
+            opts.tracer({
+              event: "idleFromBlockstore",
+              blockstore: "data",
+              ledger: parent,
+            });
+            break;
+          case "busyFromCommitQueue":
+            opts.tracer({
+              event: "busyFromBlockstore",
+              blockstore: "data",
+              ledger: parent,
+              queueLen: event.queueLen,
+            });
+            break;
+          default:
+            return opts.tracer(event);
+        }
       },
-      this,
-    );
+      applyMeta: async (meta: TransactionMeta) => {
+        const crdtMeta = meta as CRDTMeta;
+        if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
+        // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
+        await this.clock.applyHead(crdtMeta.head, []);
+        // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
+      },
+      gatewayInterceptor: opts.gatewayInterceptor,
+      // autoCompact: this.opts.autoCompact || 100,
+      storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
+      storeUrls: this.opts.storeUrls.data,
+      keyBag: this.opts.keyBag,
+      // public: this.opts.public,
+      meta: this.opts.meta,
+      // threshold: this.opts.threshold,
+    } as BlockstoreOpts;
+
+    // Set compaction strategy based on mode - default to "fireproof"
+    const compactionMode = this.opts.compactionMode || CompactionMode.FIREPROOF;
+    if (compactionMode === CompactionMode.FIREPROOF) {
+      const mutableOpts = blockstoreOpts as BlockstoreOpts & { compact?: CompactFn };
+      mutableOpts.compact = async (blocks: CompactFetcher) => {
+        await doCompact(blocks, this.clock.head, this.logger);
+        return { head: this.clock.head } as TransactionMeta;
+      };
+    }
+    // For CompactionMode.FULL, we don't set compact - blockstore uses defaultCompact
+
+    this.blockstore = new EncryptedBlockstore(sthis, blockstoreOpts, this);
     if (this.opts.storeUrls.idx) {
       this.indexBlockstore = new EncryptedBlockstore(
         sthis,

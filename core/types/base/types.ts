@@ -82,6 +82,13 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
 }
 
 export type StoreType = "car" | "file" | "wal" | "meta";
+
+export const CompactionMode = {
+  FIREPROOF: "fireproof",
+  FULL: "full",
+} as const;
+
+export type CompactionModeType = (typeof CompactionMode)[keyof typeof CompactionMode];
 export interface FPStats {
   isFile(): boolean;
   isDirectory(): boolean;
@@ -183,6 +190,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly writeQueue?: Partial<WriteQueueParams>;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly autoCompact?: number;
+  readonly compactionMode?: CompactionModeType;
   readonly storeUrls?: StoreUrlsOpts;
   readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
@@ -640,6 +648,7 @@ export interface LedgerOpts extends Tracer {
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+  readonly compactionMode?: CompactionModeType;
 
   readonly ctx: AppContext;
   readonly writeQueue: WriteQueueParams;
