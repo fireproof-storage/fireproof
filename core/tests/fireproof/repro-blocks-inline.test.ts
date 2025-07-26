@@ -71,7 +71,7 @@ describe("repro-blocks inline regression test", () => {
   );
 
   it(
-    "runs with full compaction mode", 
+    "runs with full compaction mode",
     async () => {
       for (let i = 1; i <= 3; i++) {
         await runReproBlocksOnce(i, CompactionMode.FULL);
