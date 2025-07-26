@@ -44,9 +44,9 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
-    "@hono/node-server": "^1.16.0",
+    "@hono/node-server": "^1.17.1",
     "@hono/node-ws": "^1.2.0",
-    "@libsql/client": "^0.15.9",
+    "@libsql/client": "^0.15.10",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.5",
     "vitest": "^3.2.4",
@@ -54,8 +54,8 @@
   },
   "devDependencies": {
     "drizzle-kit": "0.30.6",
-    "@types/node": "^24.0.13",
-    "zx": "^8.7.0",
+    "@types/node": "^24.0.15",
+    "zx": "^8.7.1",
     "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

@@ -45,12 +45,12 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.13.0",
-    "jose": "^6.0.11",
+    "jose": "^6.0.12",
     "@fireproof/vendor": "workspace:0.0.0"
   },
   "devDependencies": {
     "vitest": "^3.2.4",
-    "zx": "^8.7.0",
+    "zx": "^8.7.1",
     "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

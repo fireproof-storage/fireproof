@@ -43,11 +43,11 @@
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
-    "@libsql/client": "^0.15.9",
+    "@libsql/client": "^0.15.10",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.5",
-    "jose": "^6.0.11",
+    "jose": "^6.0.12",
     "@fireproof/vendor": "workspace:0.0.0"
   },
   "devDependencies": {
@@ -56,7 +56,7 @@
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "vitest": "^3.2.4",
-    "zx": "^8.7.0",
+    "zx": "^8.7.1",
     "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

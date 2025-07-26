@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/deno": "^2.3.0",
-    "@types/node": "^24.0.13",
+    "@types/node": "^24.0.15",
     "@fireproof/core-cli": "workspace:0.0.0"
   },
   "dependencies": {

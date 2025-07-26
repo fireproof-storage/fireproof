@@ -68,8 +68,8 @@
     "@eslint/js": "^9.31.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/deno": "^2.3.0",
-    "@types/node": "^24.0.13",
-    "deno": "^2.4.1",
+    "@types/node": "^24.0.15",
+    "deno": "^2.4.2",
     "drizzle-kit": "0.30.6",
     "eslint": "^9.31.0",
     "eslint-plugin-import": "^2.32.0",
@@ -79,9 +79,9 @@
     "prettier": "^3.6.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.36.0",
+    "typescript-eslint": "^8.37.0",
     "vitest": "^3.2.4",
-    "wrangler": "^4.24.3"
+    "wrangler": "^4.25.0"
   },
   "repository": {
     "type": "git",
