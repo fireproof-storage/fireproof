@@ -23,7 +23,7 @@ async function findAll(db: Database): Promise<Record[]> {
     { descending: true },
   );
   return result.rows
-    .filter((row) => row.doc) // Filter out any rows without documents
+    .filter((row) => row.doc) // Filter out rows without documents
     .map((row) => row.doc as Record);
 }
 
