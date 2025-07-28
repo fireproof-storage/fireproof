@@ -46,7 +46,7 @@
     "@libsql/client": "^0.15.10",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.3",
-    "hono": "^4.8.5",
+    "hono": "^4.8.9",
     "jose": "^6.0.12",
     "@fireproof/vendor": "workspace:0.0.0"
   },
