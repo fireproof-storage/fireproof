@@ -48,7 +48,7 @@
     "@hono/node-ws": "^1.2.0",
     "@libsql/client": "^0.15.10",
     "drizzle-orm": "^0.44.3",
-    "hono": "^4.8.5",
+    "hono": "^4.8.9",
     "vitest": "^3.2.4",
     "@fireproof/vendor": "workspace:0.0.0"
   },
