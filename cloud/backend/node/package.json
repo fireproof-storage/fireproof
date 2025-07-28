@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "drizzle-kit": "0.30.6",
-    "@types/node": "^24.0.15",
+    "@types/node": "^24.1.0",
     "zx": "^8.7.1",
     "@fireproof/core-cli": "workspace:0.0.0"
   }
