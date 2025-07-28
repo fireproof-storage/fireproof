@@ -45,7 +45,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.61.1",
-    "react-router-dom": "^7.7.0",
+    "react-router-dom": "^7.7.1",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
     "use-fireproof": "workspace:0.0.0"
