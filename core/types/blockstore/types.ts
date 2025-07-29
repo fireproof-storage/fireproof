@@ -498,7 +498,6 @@ export interface WALStore extends BaseStore {
 export type CompactFetcher = BlockFetcher & {
   readonly loggedBlocks: CarTransaction;
 };
-export type XCompactFn = (blocks: CompactFetcher) => Promise<TransactionMeta>;
 
 export interface StoreRuntimeUrls {
   readonly meta: URI;
