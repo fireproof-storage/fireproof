@@ -6,9 +6,9 @@ import * as cborg from "cborg";
 import type { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
 import { mockLoader, MockSuperThis, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis, keyedCryptoFactory, storeType2DataMetaWal } from "@fireproof/core-runtime";
-import { KeysItem, PARAM, StoreType } from "@fireproof/core-types-base";
+import { V2KeysItem, PARAM, StoreType } from "@fireproof/core-types-base";
 import { describe, beforeEach, it, expect } from "vitest";
-import { getKeyBag, KeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
+import { coerceMaterial, getKeyBag, KeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { CryptoAction, IvKeyIdData, KeyWithFingerPrint, Loadable } from "@fireproof/core-types-blockstore";
 import { createAttachedStores, getDefaultURI } from "@fireproof/core-blockstore";
@@ -97,8 +97,8 @@ describe("KeyBag", () => {
 
     expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
 
-    let diskBag: KeysItem;
-    let diskBag2: KeysItem;
+    let diskBag: V2KeysItem;
+    let diskBag2: V2KeysItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
@@ -112,18 +112,18 @@ describe("KeyBag", () => {
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
       });
     }
-    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
+    expect((await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag.keys)[0].key), true)).Ok().fingerPrint).toEqual(
       (await res.Ok().get())?.fingerPrint,
     );
-    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
-      (await created.Ok().get())?.fingerPrint,
-    );
+    expect(
+      (await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag2.keys)[0].key), true)).Ok().fingerPrint,
+    ).toEqual((await created.Ok().get())?.fingerPrint);
     const algo = {
       name: "AES-GCM",
       iv: kb.rt.crypto.randomBytes(12),
@@ -153,7 +153,7 @@ describe("KeyBag", () => {
     for (let i = 0; i < 10; ++i) {
       expect(await kb.getNamedKey(name).then((i) => i.Ok().id)).toEqual(rMyKey.Ok().id);
     }
-    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(1);
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2KeysItem())).keys).length).toBe(1);
 
     const myKey = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
     expect(myKey.fingerPrint).toMatch(/^z/);
@@ -162,7 +162,7 @@ describe("KeyBag", () => {
     const myKey1 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
     expect(myKey.fingerPrint).toEqual(myKey1.fingerPrint);
 
-    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(1);
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2KeysItem())).keys).length).toBe(1);
 
     const rMyKey1 = await kb.getNamedKey(name);
     expect(rMyKey1.Ok()).toEqual(rMyKey.Ok());
@@ -171,12 +171,12 @@ describe("KeyBag", () => {
 
     const myKey2 = (await rMyKey1.Ok().get()) as KeyWithFingerPrint;
     expect(myKey.fingerPrint).toEqual(myKey2.fingerPrint);
-    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(2);
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2KeysItem())).keys).length).toBe(2);
 
     const res = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength), true);
     expect(res.isOk()).toBeTruthy();
     const myKey3 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
-    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(3);
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2KeysItem())).keys).length).toBe(3);
 
     expect(myKey.fingerPrint).not.toEqual(myKey3.fingerPrint);
   });
@@ -190,7 +190,7 @@ describe("KeyBag", () => {
     });
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const name = "default-key" + Math.random();
-    const fpr = (await toKeyWithFingerPrint(kb, key)).Ok().fingerPrint;
+    const fpr = (await toKeyWithFingerPrint(kb, coerceMaterial(kb, key), true)).Ok().fingerPrint;
     const rMyKey = await kb.getNamedKey(name, false, key);
     expect(rMyKey.isOk()).toBeTruthy();
     const myKey = rMyKey.Ok();
@@ -204,7 +204,7 @@ describe("KeyBag", () => {
     const keys = [{ key, fpr }];
     for (let i = 0; i < 10; ++i) {
       const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-      const fpr = (await toKeyWithFingerPrint(kb, key)).Ok().fingerPrint;
+      const fpr = (await toKeyWithFingerPrint(kb, coerceMaterial(kb, key), true)).Ok().fingerPrint;
       keys.push({ key, fpr });
       const rUpsert = await myKey.upsert(key, true);
       expect(rUpsert.Ok().modified).toBeTruthy();
@@ -213,11 +213,11 @@ describe("KeyBag", () => {
       }
       expect((await myKey.get())?.fingerPrint).toEqual(fpr);
     }
-    await kb.flush();
+    // await kb.flush();
     const provider = await kb.rt.getBagProvider();
-    let diskBag: KeysItem;
+    let diskBag: V2KeysItem;
     if (!("_prepare" in provider)) {
-      diskBag = (await provider.get(name)) as KeysItem;
+      diskBag = (await provider.get(name)) as V2KeysItem;
     } else {
       if (runtimeFn().isBrowser) {
         const p = provider as KeyBagProviderIndexedDB;
@@ -226,7 +226,7 @@ describe("KeyBag", () => {
         const p = provider as KeyBagProviderFile;
         const { sysFS } = await p._prepare(name);
         diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-          return JSON.parse(sthis.txt.decode(data)) as KeysItem;
+          return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
         });
       }
     }

@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 import type { Block } from "multiformats";
-import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext, URI } from "@adviser/cement";
+import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI, AppContext, URI, CTCryptoKey } from "@adviser/cement";
 
 import type {
   DbMeta,
@@ -734,14 +734,57 @@ export interface V2StorageKeyItem {
   readonly fingerPrint: string;
   readonly default: boolean;
 }
-export interface KeysItem {
+
+// Serialized Version
+export interface V2KeysItem {
   readonly name: string;
   readonly keys: Record<string, V2StorageKeyItem>;
 }
 
+export interface KeyMaterial {
+  readonly key: Uint8Array;
+  readonly keyStr: string;
+}
+
+export interface KeyWithFingerPrint {
+  readonly default: boolean;
+  readonly fingerPrint: string;
+  readonly key: CTCryptoKey;
+  extract(): Promise<KeyMaterial>;
+  asV2StorageKeyItem(): Promise<V2StorageKeyItem>;
+}
+
+export interface KeyUpsertResultModified {
+  readonly modified: true;
+  readonly kfp: KeyWithFingerPrint;
+}
+
+export function isKeyUpsertResultModified(r: KeyUpsertResult): r is KeyUpsertResultModified {
+  return r.modified;
+}
+
+export interface KeyUpsertResultNotModified {
+  readonly modified: false;
+}
+
+export type KeyUpsertResult = KeyUpsertResultModified | KeyUpsertResultNotModified;
+
+export interface KeysByFingerprint {
+  readonly id: string;
+  readonly name: string;
+  get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined>;
+  upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
+  asV2KeysItem(): Promise<V2KeysItem>;
+}
+
+export interface KeysItem {
+  readonly name: string;
+  readonly keys: Record<string, KeyWithFingerPrint>;
+}
+
 export interface KeyBagProvider {
-  get(id: string): Promise<V1StorageKeyItem | KeysItem | undefined>;
-  set(item: KeysItem): Promise<void>;
+  get(id: string): Promise<V1StorageKeyItem | V2KeysItem | undefined>;
+  set(item: V2KeysItem): Promise<void>;
   del(id: string): Promise<void>;
 }
 
