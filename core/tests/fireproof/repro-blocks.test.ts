@@ -1,4 +1,4 @@
-import { Database, DocResponse, DocWithId, fireproof, CompactionMode } from "@fireproof/core";
+import { Database, DocResponse, DocWithId, fireproof } from "@fireproof/core";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { describe, beforeEach, it, expect, afterEach, afterAll } from "vitest";
 
@@ -43,9 +43,9 @@ async function writeSampleData(numberOfDocs: number, db: Database): Promise<numb
 
 // Test both compaction modes
 describe.each([
-  { name: "fireproof-default", compactionMode: undefined },
-  { name: "full-compaction", compactionMode: CompactionMode.FULL },
-])("repro-blocks with $name compaction", ({ compactionMode }) => {
+  { name: "fireproof-default", compactStrategy: undefined },
+  { name: "full-compaction", compactStrategy: "full" },
+])("repro-blocks with $name compaction", ({ compactStrategy }) => {
   const numberOfDocs = 101; // better a prime number
   const sthis = ensureSuperThis();
   let db: Database;
@@ -54,7 +54,7 @@ describe.each([
     const dbName = `repro-blocks-${sthis.nextId().str}`;
     db = fireproof(dbName, {
       autoCompact: numberOfDocs / 3,
-      compactionMode,
+      compactStrategy,
     });
   });
 

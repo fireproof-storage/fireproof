@@ -27,7 +27,6 @@ import {
   type CRDT,
   type CRDTClock,
   type CarTransaction,
-  CompactionMode,
   type DocTypes,
   PARAM,
   Ledger,
@@ -37,7 +36,7 @@ import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger, getCompactStrategy } from "@fireproof/core-runtime";
 import { CRDTClockImpl } from "./crdt-clock.js";
-import { TransactionMeta, CompactFetcher, BlockstoreOpts, CompactFn } from "@fireproof/core-types-blockstore";
+import { TransactionMeta, BlockstoreOpts } from "@fireproof/core-types-blockstore";
 
 export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
   readonly storeUrls: {

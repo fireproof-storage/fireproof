@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { Database, DocWithId, fireproof, CompactionMode } from "@fireproof/core";
+import { Database, DocWithId, fireproof } from "@fireproof/core";
 
 // Skip this entire suite when running inside a browser-like Vitest environment
 const isNode = typeof process !== "undefined" && !!process.versions?.node;
@@ -46,9 +46,9 @@ async function writeSampleData(db: Database): Promise<void> {
   }
 }
 
-async function runReproBlocksOnce(iter: number, compactionMode?: typeof CompactionMode.FULL) {
+async function runReproBlocksOnce(iter: number, compactStrategy?: string) {
   const db = fireproof(`test-db-${iter}`, {
-    compactionMode,
+    compactStrategy,
   });
 
   await writeSampleData(db);
@@ -66,7 +66,7 @@ async function runReproBlocksOnce(iter: number, compactionMode?: typeof Compacti
 // Test both compaction modes
 describeFn.each([
   { name: "fireproof-default", compactionMode: undefined },
-  { name: "full-compaction", compactionMode: CompactionMode.FULL },
+  { name: "full-compaction", compactionMode: "full" },
 ])("repro-blocks regression test with $name compaction", ({ compactionMode }) => {
   it(
     "runs 10 consecutive times without compaction errors",

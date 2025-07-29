@@ -1,4 +1,4 @@
-import { Database, DocWithId, fireproof, CompactionMode } from "@fireproof/core";
+import { Database, DocWithId, fireproof } from "@fireproof/core";
 import { describe, it, expect } from "vitest";
 
 interface Record {
@@ -40,9 +40,9 @@ async function writeSampleData(db: Database): Promise<void> {
   }
 }
 
-async function runReproBlocksOnce(iter: number, compactionMode?: typeof CompactionMode.FULL) {
+async function runReproBlocksOnce(iter: number, compactStrategy?: string) {
   const db = fireproof(`test-db-inline-${iter}-${Date.now()}`, {
-    compactionMode,
+    compactStrategy,
   });
 
   await writeSampleData(db);
@@ -74,7 +74,7 @@ describe("repro-blocks inline regression test", () => {
     "runs with full compaction mode",
     async () => {
       for (let i = 1; i <= 3; i++) {
-        await runReproBlocksOnce(i, CompactionMode.FULL);
+        await runReproBlocksOnce(i, "full");
       }
     },
     2 * 60 * 1000, // 2 minutes
