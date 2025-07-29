@@ -1,9 +1,9 @@
 import {
   fireproof,
-  getCompactStrategyThrow,
-  registerCompactStrategy,
   CompactStrategy,
   CompactStrategyContext,
+  getCompactStrategyThrow,
+  registerCompactStrategy,
 } from "@fireproof/core";
 import { expect, describe, it, vi } from "vitest";
 

@@ -15,3 +15,5 @@ export * from "./utils.js";
 
 export * from "./commit-queue.js";
 export * from "./task-manager.js";
+
+export * from "./register-compact-strategy.js";
