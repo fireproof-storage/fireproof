@@ -3,7 +3,7 @@ import { parse } from "multiformats/link";
 import { Block } from "multiformats/block";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
-import { put, get, entries, root } from "@web3-storage/pail/crdt";
+import { put, get, entries } from "@web3-storage/pail/crdt";
 import {
   EventBlockView,
   EventLink,
@@ -14,7 +14,7 @@ import {
 } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
-import { BlockFetcher, TransactionMeta, AnyLink, StoreRuntime, CompactFetcher } from "@fireproof/core-types-blockstore";
+import { BlockFetcher, TransactionMeta, AnyLink, StoreRuntime } from "@fireproof/core-types-blockstore";
 import {
   type EncryptedBlockstore,
   CarTransactionImpl,
@@ -42,16 +42,6 @@ import {
 } from "@fireproof/core-types-base";
 import { Logger } from "@adviser/cement";
 import { Link, Version } from "multiformats";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function time(tag: string) {
-  // console.time(tag)
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function timeEnd(tag: string) {
-  // console.timeEnd(tag)
-}
 
 function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
   switch (typeof key) {
@@ -408,72 +398,6 @@ export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {
   for await (const line of vis(toPailFetcher(blocks), head)) {
     yield line;
   }
-}
-
-let isCompacting = false;
-export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logger: Logger) {
-  if (isCompacting) {
-    // console.log('already compacting')
-    return;
-  }
-  isCompacting = true;
-
-  time("compact head");
-  for (const cid of head) {
-    const bl = await blockLog.get(cid);
-    if (!bl) throw logger.Error().Ref("cid", cid).Msg("Missing head block").AsError();
-  }
-  timeEnd("compact head");
-
-  // for await (const blk of  blocks.entries()) {
-  //   const bl = await blockLog.get(blk.cid)
-  //   if (!bl) throw new Error('Missing tblock: ' + blk.cid.toString())
-  // }
-
-  // todo maybe remove
-  // for await (const blk of blocks.loader!.entries()) {
-  //   const bl = await blockLog.get(blk.cid)
-  //   if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
-  // }
-
-  time("compact all entries");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _entry of getAllEntries(blockLog, head, logger)) {
-    // result.push(entry)
-    // void 1;
-    // continue;
-  }
-  timeEnd("compact all entries");
-
-  // time("compact crdt entries")
-  // for await (const [, link] of entries(blockLog, head)) {
-  //   const bl = await blockLog.get(link)
-  //   if (!bl) throw new Error('Missing entry block: ' + link.toString())
-  // }
-  // timeEnd("compact crdt entries")
-
-  time("compact clock vis");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _line of vis(toPailFetcher(blockLog), head)) {
-    void 1;
-  }
-  timeEnd("compact clock vis");
-
-  time("compact root");
-  const result = await root(toPailFetcher(blockLog), head);
-  timeEnd("compact root");
-
-  time("compact root blocks");
-  for (const block of [...result.additions, ...result.removals]) {
-    blockLog.loggedBlocks.putSync(await anyBlock2FPBlock(block));
-  }
-  timeEnd("compact root blocks");
-
-  time("compact changes");
-  await clockChangesSince(blockLog, head, [], {}, logger);
-  timeEnd("compact changes");
-
-  isCompacting = false;
 }
 
 export async function getBlock(blocks: BlockFetcher, cidString: string) {

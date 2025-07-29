@@ -9,7 +9,6 @@ import type {
   StoreUrlsOpts,
   StoreEnDeFile,
   Loadable,
-  TransactionMeta,
   TransactionWrapper,
   BlockstoreRuntime,
   StoreURIRuntime,
@@ -21,6 +20,7 @@ import type {
   FileStore,
   CarStore,
   FPBlock,
+  BlockFetcher,
 } from "@fireproof/core-types-blockstore";
 
 import type { IndexIf } from "./indexer.js";
@@ -183,6 +183,8 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly writeQueue?: Partial<WriteQueueParams>;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly autoCompact?: number;
+  // could be registered with registerCompactStrategy(name: string, compactStrategy: CompactStrategy)
+  readonly compactStrategy?: string; // default "FULL" other "fireproof" , "no-op"
   readonly storeUrls?: StoreUrlsOpts;
   readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
@@ -635,11 +637,33 @@ export interface Tracer {
   readonly tracer: TraceFn;
 }
 
+export type TransactionMeta = unknown;
+export interface CompactStrategyContext extends BlockFetcher {
+  readonly transactions: Set<CarTransaction>;
+  readonly clock?: CRDTClock;
+  readonly lastTxMeta: TransactionMeta;
+  readonly loader: Loadable;
+  readonly logger: Logger;
+  readonly blockstore: BlockFetcher;
+  // loader: Loader | null = null
+  readonly loggedBlocks: CarTransaction;
+
+  get(cid: AnyLink): Promise<FPBlock | Falsy>;
+}
+
+export interface CompactStrategy {
+  readonly name: string;
+  compact(block: CompactStrategyContext): Promise<TransactionMeta>;
+}
+
 export interface LedgerOpts extends Tracer {
   readonly name: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+
+  // could be registered with registerCompactStrategy(name: string, compactStrategy: CompactStrategy)
+  readonly compactStrategy?: string; // default "FULL"
 
   readonly ctx: AppContext;
   readonly writeQueue: WriteQueueParams;
