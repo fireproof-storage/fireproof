@@ -34,10 +34,9 @@ import {
 } from "@fireproof/core-types-base";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
-import { ensureLogger } from "@fireproof/core-runtime";
+import { ensureLogger, getCompactStrategy } from "@fireproof/core-runtime";
 import { CRDTClockImpl } from "./crdt-clock.js";
 import { TransactionMeta, BlockstoreOpts } from "@fireproof/core-types-blockstore";
-import { getCompactStrategy } from "./register-compact-strategy.js";
 
 export type CRDTOpts = Omit<LedgerOpts, "storeUrls"> & {
   readonly storeUrls: {

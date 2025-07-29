@@ -24,8 +24,7 @@ import {
 } from "@fireproof/core-types-base";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { exception2Result, Logger, toCryptoRuntime } from "@adviser/cement";
-import { ensureLogger, ensureSuperThis } from "@fireproof/core-runtime";
-import { getCompactStrategyThrow } from "../base/register-compact-strategy.js";
+import { ensureLogger, ensureSuperThis, getCompactStrategyThrow } from "@fireproof/core-runtime";
 
 export class CarTransactionImpl implements CarMakeable, CarTransaction {
   readonly parent: BaseBlockstore;
@@ -89,11 +88,7 @@ export function defaultedBlockstoreRuntime(
     applyMeta: (meta: TransactionMeta, snap?: boolean): Promise<void> => {
       return Promise.resolve();
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     compactStrategy: getCompactStrategyThrow("no-op"),
-    // async (blocks: BlockFetcher) => {
-    //   return {} as unknown as TransactionMeta;
-    // },
     autoCompact: 100,
     public: false,
     // name: undefined,

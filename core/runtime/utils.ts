@@ -25,6 +25,7 @@ import {
   TextEndeCoder,
   PromiseToUInt8,
   ToUInt8,
+  HasLogger,
 } from "@fireproof/core-types-base";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
@@ -533,4 +534,20 @@ export function sleep(ms: number) {
  */
 export function deepClone<T>(value: T): T {
   return (structuredClone ?? ((v: T) => JSON.parse(JSON.stringify(v))))(value);
+}
+
+function coerceLogger(loggerOrHasLogger: Logger | HasLogger): Logger {
+  if (IsLogger(loggerOrHasLogger)) {
+    return loggerOrHasLogger;
+  } else {
+    return loggerOrHasLogger.logger;
+  }
+}
+
+export function timerStart(loggerOrHasLogger: Logger | HasLogger, tag: string) {
+  coerceLogger(loggerOrHasLogger).Debug().TimerStart(tag).Msg("Timing started");
+}
+
+export function timerEnd(loggerOrHasLogger: Logger | HasLogger, tag: string) {
+  coerceLogger(loggerOrHasLogger).Debug().TimerEnd(tag).Msg("Timing ended");
 }

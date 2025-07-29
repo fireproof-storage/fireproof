@@ -12,7 +12,4 @@ fi
 
 rm -f $projectRoot/dist/fp-version.txt
 
-pnpm run publish --registry http://localhost:4873
-
-# curl -L "http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version.txt)" > /dev/null &
-
+exec pnpm run publish --registry http://localhost:4873
