@@ -15,14 +15,17 @@ import {
   BaseBlockstore,
   CarTransaction,
   CarTransactionOpts,
+  CompactStrategyContext,
   CRDT,
+  CRDTClock,
   Falsy,
   falsyToUndef,
   SuperThis,
 } from "@fireproof/core-types-base";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
-import { Logger, toCryptoRuntime } from "@adviser/cement";
+import { exception2Result, Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "@fireproof/core-runtime";
+import { getCompactStrategyThrow } from "../base/register-compact-strategy.js";
 
 export class CarTransactionImpl implements CarMakeable, CarTransaction {
   readonly parent: BaseBlockstore;
@@ -87,9 +90,10 @@ export function defaultedBlockstoreRuntime(
       return Promise.resolve();
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    compact: async (blocks: BlockFetcher) => {
-      return {} as unknown as TransactionMeta;
-    },
+    compactStrategy: getCompactStrategyThrow("no-op"),
+    // async (blocks: BlockFetcher) => {
+    //   return {} as unknown as TransactionMeta;
+    // },
     autoCompact: 100,
     public: false,
     // name: undefined,
@@ -282,35 +286,36 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to compact").AsError();
     if (this.loader.carLog.length < 2) return;
-    const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks, this.logger));
-    if (!compactFn || this.compacting) return;
+
+    // const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks, this.logger));
+    if (this.compacting) return;
+
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
-    const meta = await compactFn(blockLog);
-    await this.loader.commit(blockLog.loggedBlocks, meta, {
-      compact: true,
-      noLoader: true,
-    });
-    this.compacting = false;
-  }
-
-  async defaultCompact(blocks: CompactionFetcher, logger: Logger): Promise<TransactionMeta> {
-    // console.log('eb compact')
-    if (!this.loader) {
-      throw logger.Error().Msg("no loader").AsError();
-    }
-    if (!this.lastTxMeta) {
-      throw logger.Error().Msg("no lastTxMeta").AsError();
-    }
-    for await (const blk of this.loader.entries(false)) {
-      blocks.loggedBlocks.putSync(blk);
-    }
-    for (const t of this.transactions) {
-      for await (const blk of t.entries()) {
-        blocks.loggedBlocks.putSync(blk);
+    try {
+      const resMeta = await exception2Result(async () => this.ebOpts.compactStrategy.compact(blockLog));
+      if (resMeta.isErr()) {
+        this.logger
+          .Error()
+          .Err(resMeta)
+          .Any({
+            carLogLen: this.loader.carLog.length,
+            carLogCids: this.loader.carLog
+              .asArray()
+              .flat()
+              .map((cid) => cid.toString()),
+          })
+          .Msg("compact inner fn threw");
+        return;
       }
+      await this.loader.commit(blockLog.loggedBlocks, resMeta.Ok(), {
+        compact: true,
+        noLoader: true,
+      });
+    } finally {
+      this.compacting = false;
+      this.logger.Debug().Uint64("carLogLen_after", this.loader.carLog.length).Msg("compact() – finished");
     }
-    return this.lastTxMeta as TransactionMeta;
   }
 
   async *entries(): AsyncIterableIterator<FPBlock> {
@@ -323,12 +328,21 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   }
 }
 
-export class CompactionFetcher implements BlockFetcher {
+export class CompactionFetcher implements CompactStrategyContext {
+  readonly transactions: Set<CarTransaction>;
+  readonly clock?: CRDTClock;
+  readonly lastTxMeta: TransactionMeta;
+  readonly loader: Loadable;
+  readonly logger: Logger;
   readonly blockstore: EncryptedBlockstore;
   // loader: Loader | null = null
   readonly loggedBlocks: CarTransaction;
 
   constructor(blocks: EncryptedBlockstore) {
+    this.transactions = blocks.transactions;
+    this.logger = blocks.logger;
+    this.loader = blocks.loader;
+    this.clock = blocks.crdtParent?.clock;
     this.blockstore = blocks;
     // this.loader = blocks.loader
     this.loggedBlocks = new CarTransactionImpl(blocks);

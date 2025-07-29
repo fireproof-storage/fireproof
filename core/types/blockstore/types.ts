@@ -14,6 +14,7 @@ import {
   KeyBagRuntime,
   KeysItem,
   KeyBagIf,
+  CompactStrategy,
 } from "@fireproof/core-types-base";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
@@ -497,7 +498,7 @@ export interface WALStore extends BaseStore {
 export type CompactFetcher = BlockFetcher & {
   readonly loggedBlocks: CarTransaction;
 };
-export type CompactFn = (blocks: CompactFetcher) => Promise<TransactionMeta>;
+export type XCompactFn = (blocks: CompactFetcher) => Promise<TransactionMeta>;
 
 export interface StoreRuntimeUrls {
   readonly meta: URI;
@@ -508,7 +509,7 @@ export interface StoreRuntimeUrls {
 export interface BlockstoreParams {
   readonly logger: Logger;
   readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  readonly compact: CompactFn;
+  readonly compactStrategy: CompactStrategy;
   readonly autoCompact: number;
   readonly crypto: CryptoRuntime;
   readonly public: boolean;
@@ -532,7 +533,7 @@ export type BlockstoreOpts = Partial<BlockstoreParams> & {
 export interface BlockstoreRuntime {
   readonly logger: Logger;
   readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  readonly compact: CompactFn;
+  readonly compactStrategy: CompactStrategy;
   readonly autoCompact: number;
   readonly crypto: CryptoRuntime;
   readonly storeRuntime: StoreRuntime;
