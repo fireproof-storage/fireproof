@@ -63,7 +63,7 @@ describe("MetaKeyHack", () => {
     const rGet = await memGw.get(rUrl.Ok(), sthis);
     const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as V2SerializedMetaKey;
     const keyMaterials = metas.keys;
-    const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asKeysItem();
+    const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asV2KeysItem();
     expect(keyMaterials.length).toBeGreaterThan(0);
     expect(dataStoreKeyMaterial).toEqual({
       keys: {

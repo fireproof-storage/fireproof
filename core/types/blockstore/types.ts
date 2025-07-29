@@ -12,7 +12,7 @@ import {
   SuperThis,
   TraceFn,
   KeyBagRuntime,
-  KeysItem,
+  V2KeysItem,
   KeyBagIf,
   CompactStrategy,
 } from "@fireproof/core-types-base";
@@ -171,17 +171,6 @@ export interface EncryptedBlock {
   readonly value: IvAndKeyAndBytes;
 }
 
-export interface KeyMaterial {
-  readonly key: Uint8Array;
-  readonly keyStr: string;
-}
-
-export interface KeyWithFingerPrint {
-  readonly fingerPrint: string;
-  readonly key: CTCryptoKey;
-  extract(): Promise<KeyMaterial>;
-}
-
 // export interface KeyWithFingerExtract extends KeyWithFingerPrint {
 // }
 
@@ -190,17 +179,39 @@ export interface CodecOpts {
   readonly noIVVerify: boolean;
 }
 
-export interface KeyUpsertResult {
-  readonly modified: boolean;
+export interface KeyMaterial {
+  readonly key: Uint8Array;
+  readonly keyStr: string;
+}
+
+export interface KeyWithFingerPrint {
+  readonly default: boolean;
+  readonly fingerPrint: string;
+  readonly key: CTCryptoKey;
+  extract(): Promise<KeyMaterial>;
+}
+
+export interface KeyUpsertResultModified {
+  readonly modified: true;
   readonly kfp: KeyWithFingerPrint;
 }
+
+export function isKeyUpsertResultModified(r: KeyUpsertResult): r is KeyUpsertResultModified {
+  return r.modified;
+}
+
+export interface KeyUpsertResultNotModified {
+  readonly modified: false;
+}
+
+export type KeyUpsertResult = KeyUpsertResultModified | KeyUpsertResultNotModified;
 
 export interface KeysByFingerprint {
   readonly id: string;
   readonly name: string;
-  get(fingerPrint?: Uint8Array | string): Promise<KeyWithFingerPrint | undefined>;
+  get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined>;
   upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
-  asKeysItem(): Promise<KeysItem>;
+  asV2KeysItem(): Promise<V2KeysItem>;
 }
 
 export interface CryptoAction {

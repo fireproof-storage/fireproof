@@ -163,7 +163,7 @@ async function wrapEncode<T extends V1SerializedMetaKey[] | V2SerializedMetaKey>
   /* security: we don't want to log the key */
   const keyMaterials = await rKex
     .Ok()
-    .asKeysItem()
+    .asV2KeysItem()
     .then((i) => Object.values(i.keys).map((i) => i.key));
 
   return Promise.resolve(Result.Ok(fn(payload, keyMaterials)));

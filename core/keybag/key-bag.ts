@@ -9,19 +9,26 @@ import {
   toCryptoRuntime,
   URI,
 } from "@adviser/cement";
-import { KeyMaterial, KeysByFingerprint, KeyUpsertResult, KeyWithFingerPrint } from "@fireproof/core-types-blockstore";
-import { ensureLogger } from "@fireproof/core-runtime";
+import {
+  isKeyUpsertResultModified,
+  KeyMaterial,
+  KeysByFingerprint,
+  KeyUpsertResult,
+  KeyWithFingerPrint,
+} from "@fireproof/core-types-blockstore";
+import { ensureLogger, hashObject } from "@fireproof/core-runtime";
 import { base58btc } from "multiformats/bases/base58";
 import {
   KeyBagIf,
   KeyBagOpts,
   KeyBagProvider,
   KeyBagRuntime,
-  KeysItem,
+  V2KeysItem,
   PARAM,
   SuperThis,
   V1StorageKeyItem,
   V2StorageKeyItem,
+  KeysItem,
 } from "@fireproof/core-types-base";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { KeyBagProviderMemory } from "./key-bag-memory.js";
@@ -30,162 +37,220 @@ class keyWithFingerPrint implements KeyWithFingerPrint {
   readonly default: boolean;
   readonly fingerPrint: string;
   readonly key: CTCryptoKey;
+  #material: KeyMaterial;
 
-  private kfp: KeyWithFingerPrint;
-
-  #material: string;
-
-  constructor(kfp: KeyWithFingerPrint, material: string | Uint8Array, def: boolean) {
-    this.kfp = kfp;
-    this.key = kfp.key;
-    this.fingerPrint = kfp.fingerPrint;
+  constructor(fpr: string, key: CTCryptoKey, material: KeyMaterial, def: boolean) {
+    this.fingerPrint = fpr;
     this.default = def;
-    if (material instanceof Uint8Array) {
-      this.#material = base58btc.encode(material);
-    } else if (typeof material === "string") {
-      this.#material = material;
-    } else {
-      throw new Error("material must be string or Uint8Array");
-    }
+    this.key = key;
+    this.#material = material;
   }
 
   extract(): Promise<KeyMaterial> {
-    return this.kfp.extract();
+    if (this.key.extractable) {
+      return Promise.resolve(this.#material);
+    }
+    throw new Error("Key is not extractable");
   }
 
   async asV2StorageKeyItem(): Promise<V2StorageKeyItem> {
     return {
       default: this.default,
       fingerPrint: this.fingerPrint,
-      key: this.#material,
+      key: this.#material.keyStr,
     };
   }
 }
+type keysItem = Omit<KeysItem, "keys"> & {
+  readonly keys: Record<string, keyWithFingerPrint>;
+  readonly id: string;
+};
 
-export async function toKeyWithFingerPrint(
-  keybag: KeyBag,
-  materialStrOrUint8: string | Uint8Array,
-): Promise<Result<KeyWithFingerPrint>> {
-  let material: Uint8Array;
-  if (typeof materialStrOrUint8 === "string") {
-    material = base58btc.decode(materialStrOrUint8);
+export function coerceMaterial(kb: KeyBagIf, material: string | Uint8Array): KeyMaterial {
+  let keyMaterial: Uint8Array;
+  if (typeof material === "string") {
+    keyMaterial = base58btc.decode(material);
+  } else if (material instanceof Uint8Array) {
+    keyMaterial = material;
   } else {
-    material = materialStrOrUint8;
+    throw kb.logger.Error().Msg("material must be string or Uint8Array").AsError();
   }
-  const key = await keybag.subtleKey(material);
-  const fpr = await keybag.rt.crypto.digestSHA256(material);
-  return Result.Ok({
-    key,
-    fingerPrint: base58btc.encode(new Uint8Array(fpr)),
-    extract: async () => {
-      if (key.extractable) {
-        return {
-          key: material,
-          keyStr: base58btc.encode(material),
-        };
-      }
-      throw new Error("Key is not extractable");
-    },
-  });
+  return {
+    key: keyMaterial,
+    keyStr: base58btc.encode(keyMaterial),
+  };
 }
 
-export class keysByFingerprint implements KeysByFingerprint {
-  readonly keys: Record<string, keyWithFingerPrint> = {};
-  readonly keybag: KeyBag;
-  readonly name: string;
-  readonly id: string;
+export async function toKeyWithFingerPrint(
+  keybag: KeyBagIf,
+  material: KeyMaterial,
+  def: boolean,
+): Promise<Result<keyWithFingerPrint>> {
+  const key = await keybag.subtleKey(material.key);
+  const fpr = base58btc.encode(new Uint8Array(await keybag.rt.crypto.digestSHA256(material.key)));
+  return Result.Ok(new keyWithFingerPrint(fpr, key, material, def));
+}
 
-  static async from(keyBag: KeyBag, named: KeysItem): Promise<KeysByFingerprint> {
-    const kbf = new keysByFingerprint(keyBag, named.name);
+export async function toV2StorageKeyItem(keybag: KeyBagIf, material: KeyMaterial, def: boolean): Promise<V2StorageKeyItem> {
+  const rKfp = await toKeyWithFingerPrint(keybag, material, def);
+  if (rKfp.isErr()) {
+    throw rKfp;
+  }
+  return {
+    default: def,
+    fingerPrint: rKfp.Ok().fingerPrint,
+    key: material.keyStr,
+  };
+}
+
+function coerceFingerPrint(kb: KeyBagIf, fingerPrint?: string | Uint8Array): string | undefined {
+  if (fingerPrint instanceof Uint8Array) {
+    fingerPrint = base58btc.encode(fingerPrint);
+  }
+  return fingerPrint;
+}
+
+interface KeysByFingerprintFromOpts {
+  readonly keybag: KeyBag;
+  readonly prov: KeyBagProvider;
+  readonly keysItem: keysItem;
+  readonly modified?: boolean;
+  readonly opts: {
+    readonly materialStrOrUint8?: string | Uint8Array;
+    readonly def?: boolean;
+  };
+}
+
+class keysByFingerprint implements KeysByFingerprint {
+  readonly keybag: KeyBag;
+  readonly keysItem: keysItem;
+  readonly prov: KeyBagProvider;
+
+  static async from(kbo: KeysByFingerprintFromOpts): Promise<Result<KeysByFingerprint>> {
+    const kbf = new keysByFingerprint(kbo.keybag, kbo.prov, kbo.keysItem);
+    let modified = !!kbo.modified;
     // reverse to keep the first key as default
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const [_, v2] of Object.entries(named.keys).reverse()) {
-      const result = await kbf.upsert(v2.key, v2.default);
+    for (const [_, ki] of Object.entries(kbo.keysItem.keys).reverse()) {
+      const result = await kbf.upsertNoStore((await ki.asV2StorageKeyItem()).key, ki.default);
       if (result.isErr()) {
         throw result;
       }
+      modified = modified || result.Ok().modified;
       // if (result.Ok().modified) {
       //   throw keyBag.logger.Error().Msg("KeyBag: keysByFingerprint: mismatch unexpected").AsError();
       // }
-      if (result.Ok().kfp.fingerPrint !== v2.fingerPrint) {
-        throw keyBag.logger
-          .Error()
-          .Any("fprs", {
-            fromStorage: v2.fingerPrint,
-            calculated: result.Ok().kfp.fingerPrint,
-          })
-          .Msg("KeyBag: keysByFingerprint: mismatch")
-          .AsError();
+      const kur = result.Ok();
+      if (isKeyUpsertResultModified(kur)) {
+        if (kur.kfp.fingerPrint !== ki.fingerPrint) {
+          throw kbo.keybag.logger
+            .Error()
+            .Any("fprs", {
+              fromStorage: ki.fingerPrint,
+              calculated: kur.kfp.fingerPrint,
+            })
+            .Msg("KeyBag: keysByFingerprint: mismatch")
+            .AsError();
+        }
       }
     }
-    return kbf;
-  }
-
-  constructor(keyBag: KeyBag, name: string) {
-    this.keybag = keyBag;
-    this.name = name;
-    this.id = keyBag.rt.sthis.nextId(4).str;
-  }
-
-  async get(fingerPrint?: Uint8Array | string): Promise<KeyWithFingerPrint | undefined> {
-    if (fingerPrint instanceof Uint8Array) {
-      fingerPrint = base58btc.encode(fingerPrint);
-    } else {
-      fingerPrint = fingerPrint || "*";
+    let rKur: Result<KeyUpsertResult> | undefined;
+    if (kbo.opts.materialStrOrUint8) {
+      // key created if needed
+      rKur = await kbf.upsertNoStore(kbo.opts.materialStrOrUint8, kbo.opts.def);
+      if (rKur.isErr()) {
+        throw rKur;
+      }
     }
-    const found = this.keys[fingerPrint];
+    if (rKur?.Ok().modified || modified) {
+      // persit
+      await kbo.prov.set(await kbf.asV2KeysItem());
+    }
+    return Result.Ok(kbf);
+  }
+
+  private constructor(keyBag: KeyBag, prov: KeyBagProvider, keysItem: keysItem) {
+    this.prov = prov;
+    this.keybag = keyBag;
+    this.keysItem = keysItem;
+  }
+
+  get id(): string {
+    return this.keysItem.id;
+  }
+
+  get name(): string {
+    return this.keysItem.name;
+  }
+
+  async get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined> {
+    fingerPrint = coerceFingerPrint(this.keybag, fingerPrint) || "*";
+    const found = this.keysItem.keys[fingerPrint];
     if (found) {
       return found;
     }
-    throw this.keybag.logger
-      .Error()
-      .Any({ fprs: Object.keys(this.keys), fpr: fingerPrint, name: this.name, id: this.id })
-      .Msg("keysByFingerprint:get: not found")
-      .AsError();
+    this.keybag.logger
+      .Warn()
+      .Any({ fprs: Object.keys(this.keysItem.keys), fpr: fingerPrint, name: this.name, id: this.id })
+      .Msg("keysByFingerprint:get: not found");
+    return undefined;
+  }
+  async upsert(materialStrOrUint8: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>> {
+    const rKur = await this.upsertNoStore(materialStrOrUint8, def);
+    if (rKur.isErr()) {
+      return Result.Err(rKur);
+    }
+    if (rKur.Ok().modified) {
+      await this.prov.set(await this.asV2KeysItem());
+    }
+    return rKur;
   }
 
-  async upsert(materialStrOrUint8: string | Uint8Array, def?: boolean, keyBagAction = true): Promise<Result<KeyUpsertResult>> {
+  async upsertNoStore(materialStrOrUint8: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>> {
+    if (!materialStrOrUint8) {
+      return Result.Ok({
+        modified: false,
+      });
+    }
+    const material = coerceMaterial(this.keybag, materialStrOrUint8);
     def = !!def;
-    const rKfp = await toKeyWithFingerPrint(this.keybag, materialStrOrUint8);
-    // console.log("upsert", this.id, this.name, rKfp.Ok().fingerPrint)
+    const rKfp = await toKeyWithFingerPrint(this.keybag, material, !!def);
     if (rKfp.isErr()) {
       return Result.Err(rKfp);
     }
+    const preHash = await hashObject(await this.asV2KeysItem());
     const kfp = rKfp.Ok();
-    let found = this.keys[kfp.fingerPrint];
+    let found = this.keysItem.keys[kfp.fingerPrint];
     if (found) {
       if (found.default === def) {
-        // console.log("upsert-def", this.name, found.fingerPrint);
         return Result.Ok({
           modified: false,
           kfp: found,
         });
       }
     } else {
-      found = new keyWithFingerPrint(kfp, materialStrOrUint8, def);
+      found = new keyWithFingerPrint(kfp.fingerPrint, kfp.key, material, def);
     }
     if (def) {
-      for (const i of Object.values(this.keys)) {
+      for (const i of Object.values(this.keysItem.keys)) {
         (i as { default: boolean }).default = false;
       }
     }
-    // console.log("upsert", this.name, found.fingerPrint, found, keyBagAction);
-    this.keys[kfp.fingerPrint] = found;
-    if (def) {
-      this.keys["*"] = found;
+    if (def || Object.keys(this.keysItem.keys).length === 0) {
+      (found as { default: boolean }).default = true;
+      this.keysItem.keys["*"] = found;
     }
-    if (keyBagAction) {
-      // console.log("_upsertNamedKey", this.name, found.fingerPrint);
-      this.keybag._upsertNamedKey(this);
-    }
+    this.keysItem.keys[kfp.fingerPrint] = found;
+
+    const postHash = await hashObject(this.asV2KeysItem());
     return Result.Ok({
-      modified: keyBagAction && true,
+      modified: preHash !== postHash,
       kfp: found,
     });
   }
 
-  async asKeysItem(): Promise<KeysItem> {
-    const my = { ...this.keys };
+  async asV2KeysItem(): Promise<V2KeysItem> {
+    const my = { ...this.keysItem.keys };
     delete my["*"];
     const kis = await Promise.all(Object.values(my).map((i) => i.asV2StorageKeyItem()));
     return {
@@ -207,6 +272,184 @@ export class keysByFingerprint implements KeysByFingerprint {
   //     keyStr: base58btc.encode(ext),
   //   };
   // }
+}
+
+interface keyBagFingerprintItemGetOpts {
+  readonly failIfNotFound: boolean;
+  readonly materialStrOrUint8?: string | Uint8Array;
+  readonly def?: boolean;
+}
+
+export interface V2KeysItemUpdated {
+  readonly modified: boolean;
+  readonly keysItem: V2KeysItem;
+}
+
+class KeyBagFingerprintItem {
+  readonly name: string;
+  readonly keybag: KeyBag;
+  readonly prov: KeyBagProvider;
+  readonly logger: Logger;
+  keysItem?: keysItem;
+
+  readonly #seq: ResolveSeq<Result<KeysByFingerprint>> = new ResolveSeq<Result<KeysByFingerprint>>();
+
+  constructor(keybag: KeyBag, prov: KeyBagProvider, name: string) {
+    this.keybag = keybag;
+    this.logger = ensureLogger(keybag.rt.sthis, `KeyBagFingerprintItem:${name}`);
+    this.name = name;
+    this.prov = prov;
+  }
+
+  // implicit migration from V1 to V2
+  private async toV2KeysItem(ki: Partial<V1StorageKeyItem | V2KeysItem>): Promise<V2KeysItemUpdated> {
+    if (!ki.name) {
+      throw this.logger.Error().Msg("toV2KeysItem: name is missing").AsError();
+    }
+    if ("key" in ki && ki.key && ki.name) {
+      const fpr = (await toKeyWithFingerPrint(this.keybag, coerceMaterial(this.keybag, ki.key), true)).Ok().fingerPrint;
+      return {
+        modified: true,
+        keysItem: {
+          name: ki.name,
+          keys: {
+            [fpr]: {
+              key: ki.key,
+              fingerPrint: fpr,
+              default: true,
+            },
+          },
+        },
+      };
+    }
+    // fix default
+    let defKI: V2StorageKeyItem | undefined;
+    let foundDefKI = false;
+    let result: V2KeysItem;
+    if ("keys" in ki && ki.keys) {
+      result = {
+        name: ki.name,
+        keys: ki.keys,
+      };
+    } else {
+      result = {
+        name: ki.name,
+        keys: {},
+      };
+    }
+    for (const i of Object.entries(result.keys)) {
+      if (i[0] !== i[1].fingerPrint) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete result.keys[i[0]];
+        result.keys[i[1].fingerPrint] = i[1];
+        this.logger.Warn().Str("name", ki.name).Msg("fingerPrint mismatch fixed");
+      }
+      if (defKI === undefined) {
+        defKI = i[1];
+      }
+      if (!foundDefKI && i[1].default) {
+        defKI = i[1];
+        foundDefKI = true;
+      } else {
+        (i[1] as { default: boolean }).default = false;
+      }
+    }
+    // if (defKI) {
+    //   result.keys["*"] = defKI;
+    // }
+    return {
+      modified: false,
+      keysItem: result,
+    };
+  }
+
+  private async toKeysItem(ki: V2KeysItem, id: string): Promise<keysItem> {
+    const keys = (
+      await Promise.all(
+        Array.from(Object.values(ki.keys)).map(
+          async (i) =>
+            [
+              i.fingerPrint,
+              await this.keybag.subtleKey(i.key),
+              { key: base58btc.decode(i.key), keyStr: i.key },
+              i.default,
+            ] satisfies [string, CTCryptoKey, KeyMaterial, boolean],
+        ),
+      ).then((i) => i.map((j) => new keyWithFingerPrint(...j)))
+    ).reduce(
+      (acc, i) => {
+        acc[i.fingerPrint] = i;
+        if (i.default) {
+          acc["*"] = i;
+        }
+        return acc;
+      },
+      {} as keysItem["keys"],
+    );
+    return {
+      id,
+      name: ki.name,
+      keys,
+    };
+  }
+
+  async getNamedKey(opts: keyBagFingerprintItemGetOpts): Promise<Result<KeysByFingerprint>> {
+    return this.#seq.add(async () => {
+      if (this.keysItem) {
+        // is loaded from provider
+        return keysByFingerprint.from({ ...this, keysItem: this.keysItem, opts });
+      }
+      const id = this.keybag.rt.sthis.nextId(4).str; //debug
+      // read from provider and make it a KeysItem (name, keys)
+
+      let provKeysItem = await this.prov.get(this.name);
+      if (!provKeysItem) {
+        provKeysItem = {
+          name: this.name,
+          keys: {},
+        };
+      }
+      const v2KeysItem = await this.toV2KeysItem(provKeysItem);
+      const keys = Object.values(v2KeysItem.keysItem.keys).length;
+      if (opts.failIfNotFound && keys === 0) {
+        return Result.Err(this.logger.Debug().Str("id", id).Str("name", this.name).Msg("failIfNotFound getNamedKey").AsError());
+      }
+      this.keysItem = await this.toKeysItem(v2KeysItem.keysItem, id);
+      if (keys > 0) {
+        this.logger
+          .Debug()
+          .Str("id", id)
+          .Str("name", this.name)
+          .Any("fprs", Object.keys(v2KeysItem))
+          .Msg("fingerPrint getNamedKey");
+        return keysByFingerprint.from({ ...this, keysItem: this.keysItem, opts, modified: v2KeysItem.modified });
+      }
+      if (!this.keysItem && opts.failIfNotFound) {
+        // do not cache
+        return this.logger.Debug().Str("id", id).Str("name", this.name).Msg("failIfNotFound getNamedKey").ResultError();
+      }
+      this.keysItem = { name: this.name, keys: {}, id };
+      const rKbfp = await keysByFingerprint.from({
+        ...this,
+        keysItem: this.keysItem,
+        opts: {
+          materialStrOrUint8: opts.materialStrOrUint8 ?? this.keybag.rt.crypto.randomBytes(this.keybag.rt.keyLength),
+          def: true,
+        },
+        modified: v2KeysItem.modified,
+      });
+      if (rKbfp.isErr()) {
+        return rKbfp;
+      }
+      this.logger
+        .Debug()
+        .Str("id", id)
+        .Str("name", this.name)
+        .Any("KeyItems", await rKbfp.Ok().asV2KeysItem())
+        .Msg("createKey getNamedKey-post");
+      return rKbfp;
+    });
+  }
 }
 
 export class KeyBag implements KeyBagIf {
@@ -266,73 +509,13 @@ export class KeyBag implements KeyBagIf {
     return Result.Ok(url);
   }
 
-  private async toKeysItem(ki: V1StorageKeyItem | KeysItem | undefined): Promise<KeysItem | undefined> {
-    if (!ki) return undefined;
-    if ("key" in ki) {
-      const fpr = (await toKeyWithFingerPrint(this, ki.key)).Ok().fingerPrint;
-      return {
-        name: ki.name,
-        keys: {
-          [fpr]: {
-            key: ki.key,
-            fingerPrint: fpr,
-            default: true,
-          },
-        },
-      };
-    }
-    // fix default
-    let defKI: V2StorageKeyItem | undefined;
-    let foundDefKI = false;
-    for (const i of Object.entries(ki.keys)) {
-      if (i[0] !== i[1].fingerPrint) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete ki.keys[i[0]];
-        ki.keys[i[1].fingerPrint] = i[1];
-        this.logger.Warn().Str("name", ki.name).Msg("fingerPrint mismatch fixed");
-      }
-      if (defKI === undefined) {
-        defKI = i[1];
-      }
-      if (!foundDefKI && i[1].default) {
-        defKI = i[1];
-        foundDefKI = true;
-      } else {
-        (i[1] as { default: boolean }).default = false;
-      }
-    }
-    if (defKI) {
-      ki.keys["*"] = defKI;
-    }
-    return {
-      name: ki.name,
-      keys: ki.keys,
-    };
-  }
+  // flush(): Promise<void> {
+  //   return this._seq.flush();
+  // }
 
-  flush(): Promise<void> {
-    return this._seq.flush();
-  }
-
-  readonly _seq: ResolveSeq<Result<KeysByFingerprint>> = new ResolveSeq<Result<KeysByFingerprint>>();
   // async setNamedKey(name: string, key: string, def?: boolean): Promise<Result<KeysByFingerprint>> {
   //   return this._seq.add(() => this._upsertNamedKey(name, key, !!def));
   // }
-
-  // avoid deadlock
-  async _upsertNamedKey(ksi: KeysByFingerprint): Promise<Result<KeysByFingerprint>> {
-    const bag = await this.rt.getBagProvider();
-    return this._seq.add(async () => {
-      const rKbf = await this._getNamedKey(ksi.name, true);
-      if (rKbf.isErr()) {
-        this.logger.Error().Err(rKbf).Str("name", ksi.name).Msg("_upsertNamedKey: getNamedKey failed");
-        // we updated the cache
-        this._namedKeyCache.unget(ksi.name);
-      }
-      await bag.set(await ksi.asKeysItem());
-      return Result.Ok(ksi);
-    });
-  }
 
   // async getNamedExtractableKey(name: string, failIfNotFound = false): Promise<Result<KeysByFingerprint>> {
   //   const ret = await this.getNamedKey(name, failIfNotFound);
@@ -352,66 +535,30 @@ export class KeyBag implements KeyBagIf {
   //   });
   // }
 
-  private _namedKeyCache = new KeyedResolvOnce<Result<KeysByFingerprint>>();
+  private _namedKeyItems = new KeyedResolvOnce<KeyBagFingerprintItem>();
 
-  private async _getNamedKey(
+  async getNamedKey(
     name: string,
-    failIfNotFound: boolean,
-    material?: string | Uint8Array,
+    failIfNotFound = false,
+    materialStrOrUint8?: string | Uint8Array,
   ): Promise<Result<KeysByFingerprint>> {
-    return await this._namedKeyCache.get(name).once(async () => {
-      const id = this.rt.sthis.nextId(4).str;
-      const bag = await this.rt.getBagProvider();
-      const named = await this.toKeysItem(await bag.get(name));
-      if (named) {
-        this.logger.Debug().Str("id", id).Str("name", name).Any("fprs", Object.keys(named.keys)).Msg("fingerPrint getNamedKey");
-        return Result.Ok(await keysByFingerprint.from(this, named));
-      }
-      if (!named && failIfNotFound) {
-        // do not cache
-        this._namedKeyCache.unget(name);
-        return this.logger.Debug().Str("id", id).Str("name", name).Msg("failIfNotFound getNamedKey").ResultError();
-      }
-
-      const kp = new keysByFingerprint(this, name);
-      let keyMaterial: Uint8Array;
-      if (!material) {
-        keyMaterial = this.rt.crypto.randomBytes(this.rt.keyLength);
-      } else {
-        if (typeof material === "string") {
-          keyMaterial = base58btc.decode(material);
-        } else if (material instanceof Uint8Array) {
-          keyMaterial = material;
-        } else {
-          return this.logger.Error().Msg("material must be string or Uint8Array").ResultError();
-        }
-      }
-      const res = await kp.upsert(keyMaterial, true);
-      if (res.isErr()) {
-        return Result.Err(res);
-      }
-      // this.logger.Debug().Str("id", id).Str("name", name).Msg("createKey getNamedKey-pre");
-      // const ret = await this._upsertNamedKey(name, base58btc.encode(this.rt.crypto.randomBytes(this.rt.keyLength)), true);
-      this.logger.Debug().Str("id", id).Str("name", name).Str("fpr", res.Ok().kfp.fingerPrint).Msg("createKey getNamedKey-post");
-      return Result.Ok(kp);
+    const kItem = await this._namedKeyItems.get(name).once(async () => {
+      // const id = this.rt.sthis.nextId(4).str; //debug
+      const prov = await this.rt.getBagProvider();
+      return new KeyBagFingerprintItem(this, prov, name);
     });
-  }
-
-  async getNamedKey(name: string, failIfNotFound = false, material?: string | Uint8Array): Promise<Result<KeysByFingerprint>> {
-    return this._seq.add(async () => {
-      return await this._getNamedKey(name, failIfNotFound, material);
-    });
+    return kItem.getNamedKey({ failIfNotFound, materialStrOrUint8 });
   }
 }
 
-export type KeyBagFile = Record<string, KeysItem>;
+export type KeyBagFile = Record<string, V2KeysItem>;
 
-export function isV1StorageKeyItem(item: V1StorageKeyItem | KeysItem): item is V1StorageKeyItem {
+export function isV1StorageKeyItem(item: V1StorageKeyItem | V2KeysItem): item is V1StorageKeyItem {
   return !!(item as V1StorageKeyItem).key;
 }
 
-export function isKeysItem(item: V1StorageKeyItem | KeysItem): item is KeysItem {
-  return !!(item as KeysItem).keys;
+export function isKeysItem(item: V1StorageKeyItem | V2KeysItem): item is V2KeysItem {
+  return !!(item as V2KeysItem).keys;
 }
 
 export type KeyBackProviderFactory = (url: URI, sthis: SuperThis) => Promise<KeyBagProvider>;

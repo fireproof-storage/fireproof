@@ -1,5 +1,5 @@
 import { URI } from "@adviser/cement";
-import { KeyBagProvider, KeysItem, V1StorageKeyItem, SuperThis } from "@fireproof/core-types-base";
+import { KeyBagProvider, V2KeysItem, V1StorageKeyItem, SuperThis } from "@fireproof/core-types-base";
 
 const memoryKeyBag = new Map<string, Uint8Array>();
 
@@ -35,7 +35,7 @@ export class KeyBagProviderMemory implements KeyBagProvider {
     return Promise.resolve();
   }
 
-  async get(id: string): Promise<KeysItem | V1StorageKeyItem | undefined> {
+  async get(id: string): Promise<V2KeysItem | V1StorageKeyItem | undefined> {
     const binKeyItem = memoryKeyBag.get(this.key(id));
     if (binKeyItem) {
       const ki = JSON.parse(this.sthis.txt.decode(binKeyItem));
@@ -44,7 +44,7 @@ export class KeyBagProviderMemory implements KeyBagProvider {
     return undefined;
   }
 
-  async set(item: KeysItem): Promise<void> {
+  async set(item: V2KeysItem): Promise<void> {
     const p = this.sthis.txt.encode(JSON.stringify(item, null, 2));
     memoryKeyBag.set(this.key(item.name), p);
   }

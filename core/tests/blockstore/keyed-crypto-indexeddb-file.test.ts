@@ -2,9 +2,9 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockLoader, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { KeysItem, PARAM } from "@fireproof/core-types-base";
+import { V2KeysItem, PARAM } from "@fireproof/core-types-base";
 import { describe, beforeAll, it, expect, beforeEach } from "vitest";
-import { getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
+import { coerceMaterial, getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { KeyWithFingerPrint, Loadable } from "@fireproof/core-types-blockstore";
@@ -60,8 +60,8 @@ describe("KeyBag indexeddb and file", () => {
 
     expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
 
-    let diskBag: KeysItem;
-    let diskBag2: KeysItem;
+    let diskBag: V2KeysItem;
+    let diskBag2: V2KeysItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
@@ -72,18 +72,18 @@ describe("KeyBag indexeddb and file", () => {
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
       });
     }
-    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
+    expect((await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag.keys)[0].key), true)).Ok().fingerPrint).toEqual(
       (await res.Ok().get())?.fingerPrint,
     );
-    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
-      (await created.Ok().get())?.fingerPrint,
-    );
+    expect(
+      (await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag2.keys)[0].key), true)).Ok().fingerPrint,
+    ).toEqual((await created.Ok().get())?.fingerPrint);
     const algo = {
       name: "AES-GCM",
       iv: kb.rt.crypto.randomBytes(12),
