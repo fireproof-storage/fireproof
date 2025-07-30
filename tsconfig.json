@@ -19,5 +19,5 @@
     "types": ["node", "deno"]
   },
   "include": ["core/**/*", "cloud/**/*", "tests/**/*", "cli/**/*", "dashboard/**/*"],
-  "exclude": ["**/dist/**"]
+  "exclude": ["**/dist/**", "cloud/3rd-party/**/*"]
 }
