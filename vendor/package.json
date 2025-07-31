@@ -18,7 +18,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "AFL-2.0",
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/jscodeshift": "^17.3.0",

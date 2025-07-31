@@ -11,7 +11,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "AFL-2.0",
   "type": "module",
   "dependencies": {
     "@adviser/cement": "^0.4.20"
