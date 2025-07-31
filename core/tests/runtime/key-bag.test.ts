@@ -1,7 +1,7 @@
 import { Result, URI } from "@adviser/cement";
 import { getKeyBag, KeyBagProviderMemory } from "@fireproof/core-keybag";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { V2KeysItem, V2StorageKeyItem } from "@fireproof/core-types-base";
+import { KeyBagIf, V2KeysItem, V2StorageKeyItem } from "@fireproof/core-types-base";
 import { isKeyUpsertResultModified, KeysByFingerprint } from "@fireproof/core-types-blockstore";
 import { base58btc } from "multiformats/bases/base58";
 import { assert, describe, expect, it } from "vitest";
@@ -36,6 +36,18 @@ async function keyExtracted(
   };
 }
 
+async function calculateFingerprint(rKbf: Result<KeysByFingerprint>, kb: KeyBagIf): Promise<string> {
+  const item = await rKbf.Ok().get();
+  const v2Item = await (
+    item as unknown as {
+      asV2StorageKeyItem: () => Promise<V2StorageKeyItem>;
+    }
+  ).asV2StorageKeyItem();
+  const keyBytes = base58btc.decode(v2Item.key);
+  const hash = await kb.rt.crypto.digestSHA256(keyBytes);
+  return base58btc.encode(new Uint8Array(hash));
+}
+
 describe("KeyBag", () => {
   it("v1 migration", async () => {
     const sthis = ensureSuperThis();
@@ -50,15 +62,7 @@ describe("KeyBag", () => {
     const rKbf = await kb.getNamedKey("@test-v1-keys-wal@");
     expect(rKbf.isOk()).toBeTruthy();
 
-    const fpr = base58btc.encode(
-      await rKbf
-        .Ok()
-        .get()
-        .then((i) => (i as unknown as { asV2StorageKeyItem: () => Promise<V2StorageKeyItem> }).asV2StorageKeyItem())
-        .then((i) => base58btc.decode(i.key))
-        .then((i) => kb.rt.crypto.digestSHA256(i))
-        .then((i) => new Uint8Array(i)),
-    );
+    const fpr = await calculateFingerprint(rKbf, kb);
 
     expect(await rKbf.Ok().asV2KeysItem()).toEqual({
       keys: {

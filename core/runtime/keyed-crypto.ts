@@ -200,7 +200,7 @@ class noCrypto implements CryptoAction {
         throw this.logger.Error().Msg("noCrypto.upsert not implemented").AsError();
       },
       asV2KeysItem: () => {
-        throw this.logger.Error().Msg("noCrypto.asKeysItem not implemented").AsError();
+        throw this.logger.Error().Msg("noCrypto.asV2KeysItem not implemented").AsError();
       },
     };
     this.url = url;

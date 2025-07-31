@@ -63,7 +63,6 @@
     "Mikeal Rogers",
     "Meno Abels"
   ],
-  "license": "Apache-2.0",
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@fireproof/core-cli": "workspace:0.0.0",

@@ -213,7 +213,6 @@ describe("KeyBag", () => {
       }
       expect((await myKey.get())?.fingerPrint).toEqual(fpr);
     }
-    // await kb.flush();
     const provider = await kb.rt.getBagProvider();
     let diskBag: V2KeysItem;
     if (!("_prepare" in provider)) {
