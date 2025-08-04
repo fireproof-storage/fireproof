@@ -12,7 +12,6 @@ describe("concurrent opens", () => {
     const dones = [];
     const loops = 100;
     for (let i = 0; i < loops; i++) {
-      // eslint-disable-next-line no-async-promise-executor
       setTimeout(
         async () => {
           const db = fireproof(`${dbBaseName}-${i}`);

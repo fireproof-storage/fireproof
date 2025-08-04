@@ -130,7 +130,7 @@ class keysByFingerprint implements KeysByFingerprint {
     const kbf = new keysByFingerprint(kbo.keybag, kbo.prov, kbo.keysItem);
     let modified = !!kbo.modified;
     // reverse to keep the first key as default
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     for (const [_, ki] of Object.entries(kbo.keysItem.keys).reverse()) {
       const result = await kbf.upsertNoStore((await ki.asV2StorageKeyItem()).key, ki.default);
       if (result.isErr()) {

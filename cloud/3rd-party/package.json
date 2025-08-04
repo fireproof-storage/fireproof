@@ -7,7 +7,7 @@
   "main": "./index.cjs",
   "types": "./index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "core-cli tsc",
     "dev": "vite dev",
     "pack": "echo cloud need not to pack",
     "publish": "echo skip"

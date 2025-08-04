@@ -50,7 +50,6 @@ export function EditableCodeHighlight({
         try {
           liveCode = JSON.stringify(JSON.parse(liveCode), null, 2);
           onChange({ code: liveCode, valid: true });
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {
           onChange({ code: liveCode, valid: false });
         }

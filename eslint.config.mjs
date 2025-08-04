@@ -36,6 +36,14 @@ const opts = tseslint.config(
       import: importPlugin,
     },
     rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrors: "none",
+        },
+      ],
       "no-console": ["warn"],
       "import/no-duplicates": ["error"],
     },

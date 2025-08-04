@@ -227,7 +227,7 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<TokenForParam> = 
     {
       extractable: true,
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     (_alg: string, _options: GenerateKeyPairOptions) => {
       return Promise.resolve({
         privateKey: privateJWK,

@@ -43,7 +43,6 @@ function cfWebSocketPair() {
   return [pair[0] as WebSocket, pair[1] as WebSocket] as const;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function getRoomDurableObject(env: Env, _id: string) {
   const cfBackendKey = env.CF_BACKEND_KEY ?? "FP_WS_ROOM";
   // console.log("getRoomDurableObject", cfBackendKey, id);
@@ -56,7 +55,6 @@ export function getRoomDurableObject(env: Env, _id: string) {
 
 function webSocket2WSContextInit(ws: WebSocket): WSContextInit<WebSocket> {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     send: (data: string | ArrayBuffer, _options: SendOptions): void => {
       ws.send(data);
     },
@@ -342,12 +340,10 @@ export class CFHonoFactory implements HonoServerFactory {
     return chs.start(item.ctx).then((chs) => fn({ ...item.ctx, impl: chs }));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async start(_app: Hono): Promise<void> {
     /* noop */
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async serve<T>(_app: Hono, _port?: number): Promise<T> {
     return {} as T;
   }
@@ -365,7 +361,6 @@ export class CFHonoServer extends HonoServerBase {
   }
 
   upgradeWebSocket(createEvents: (c: Context) => WSEventsConnId<WebSocket> | Promise<WSEventsConnId<WebSocket>>): ConnMiddleware {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return async (_conn, c, _next) => {
       const upgradeHeader = c.req.header("Upgrade");
       if (!upgradeHeader || upgradeHeader !== "websocket") {

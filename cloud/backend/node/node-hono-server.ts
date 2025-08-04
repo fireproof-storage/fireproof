@@ -84,7 +84,7 @@ class NodeWSRoom implements WSRoom {
 
   createEvents(outer: WSEventsConnId<unknown>): (c: Context) => WSEvents<unknown> {
     const id = this.sthis.nextId(12).str;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     return (_c: Context) => ({
       onOpen: (evt: Event, ws: WSContext) => {
         // console.log("onOpen", id);

@@ -171,7 +171,6 @@ abstract class BaseGateway {
     return Result.Ok(undefined);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected async getObject(uri: URI, downloadUrl: string, _conn: VConnItems): Promise<Result<Uint8Array>> {
     this.logger.Debug().Any("url", { downloadUrl, uri }).Msg("get-fetch-url");
     const rDownload = await exception2Result(async () => fetch(downloadUrl.toString(), { method: "GET" }));
@@ -188,7 +187,6 @@ abstract class BaseGateway {
     return Result.Ok(to_uint8(await download.arrayBuffer()));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected async delObject(uri: URI, deleteUrl: string, _conn: VConnItems): Promise<Result<void>> {
     this.logger.Debug().Any("url", { deleteUrl, uri }).Msg("get-fetch-url");
     const rDelete = await exception2Result(async () => fetch(deleteUrl.toString(), { method: "DELETE" }));

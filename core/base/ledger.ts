@@ -75,7 +75,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
           }),
       });
       db.onClosed(() => {
-        ledgers.unget(key);
+        ledgers.unget(key as string);
       });
       return db;
     }),

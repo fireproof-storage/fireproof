@@ -280,13 +280,11 @@ export class HonoServer {
     // console.log("register-2.1");
     app.get("/ws", (c, next) =>
       this.factory.inject(c, async (ctx) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         return ctx.impl.upgradeWebSocket((_c) => {
           let dp: MsgDispatcher;
           // const id = ctx.sthis.nextId().str;
           // console.log("upgradeWebSocket:inject:", id);
           return {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             onOpen: (_e, _ws) => {
               dp = buildMsgDispatcher(ctx.sthis);
               // console.log("onOpen:inject:", id);
@@ -325,7 +323,7 @@ export class HonoServer {
                 );
               }
             },
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
             onClose: (_evt, _ws) => {
               // impl.delConn(ws);
               // console.log("onClose:inject:", id);

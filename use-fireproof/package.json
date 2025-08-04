@@ -13,7 +13,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "core-cli tsc",
     "test": "vitest --run",
     "pack": "core-cli build --doPack",
     "publish": "core-cli build"
