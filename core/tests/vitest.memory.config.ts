@@ -13,6 +13,7 @@ export default defineConfig({
       "gateway/indexeddb",
       "gateway/file",
       "blockstore/keyed-crypto-indexeddb-file.test.ts",
+      "browser/**",
     ],
     include: ["**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
