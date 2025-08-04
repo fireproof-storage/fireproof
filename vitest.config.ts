@@ -6,6 +6,7 @@ export default defineConfig({
       "core/tests/vitest.file.config.ts",
       "core/tests/vitest.indexeddb.config.ts",
       "core/tests/vitest.memory.config.ts",
+      "core/tests/vitest.browser-integration.config.ts",
 
       "use-fireproof/vitest.config.ts",
       "cloud/backend/cf-d1/vitest.config.ts",

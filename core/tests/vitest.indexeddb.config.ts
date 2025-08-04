@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     name: "indexeddb",
-    exclude: ["dist/**", "node_modules/**", "examples/**", "gateway/file"],
+    exclude: ["dist/**", "node_modules/**", "examples/**", "gateway/file", "browser/**"],
     include: ["**/*test.?(c|m)[jt]s?(x)"],
     browser: {
       enabled: true,
