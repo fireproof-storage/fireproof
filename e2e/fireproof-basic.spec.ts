@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
+import "./types";
 
-test("Fireproof basic operations with reload", async ({ page }) => {
+test("Fireproof basic operations with reload and database versioning", async ({ page }) => {
   // Navigate to the test page
   await page.goto("/e2e/fixtures/fireproof-basic.html");
 
@@ -101,4 +102,50 @@ test("Fireproof basic operations with reload", async ({ page }) => {
   expect(allDocsAfterReload.rows[0].value._id).toBe("test-doc");
   expect(allDocsAfterReload.rows[0].value.value).toBe(testDoc.value);
   expect(allDocsAfterReload.rows[0].value.message).toBe(testDoc.message);
+
+  // Add a second document to test database versioning across reloads
+  const secondDoc = {
+    value: "second-test-value",
+    timestamp: Date.now(),
+    message: "This is a second test document to verify database versioning",
+  };
+
+  await page.evaluate(async (doc) => {
+    await window.fpPut("test-doc-2", doc);
+  }, secondDoc);
+
+  // Verify second document was added
+  const allDocsWithSecond = await page.evaluate(async () => {
+    return await window.fpAllDocs();
+  });
+
+  expect(allDocsWithSecond.rows).toHaveLength(2);
+
+  // Reload again to test that both documents persist and we're on the latest database version
+  await page.reload();
+
+  // Wait for page to load and auto-initialize after second reload
+  await expect(page.locator("#status")).toContainText("Database auto-initialized on page load");
+
+  // Verify both documents are still there after second reload
+  const allDocsAfterSecondReload = await page.evaluate(async () => {
+    return await window.fpAllDocs();
+  });
+
+  expect(allDocsAfterSecondReload.rows).toHaveLength(2);
+
+  // Sort by key to ensure consistent ordering for assertions
+  const sortedDocs = allDocsAfterSecondReload.rows.sort((a, b) => a.key.localeCompare(b.key));
+
+  // Verify first document
+  expect(sortedDocs[0].key).toBe("test-doc");
+  expect(sortedDocs[0].value._id).toBe("test-doc");
+  expect(sortedDocs[0].value.value).toBe(testDoc.value);
+  expect(sortedDocs[0].value.message).toBe(testDoc.message);
+
+  // Verify second document
+  expect(sortedDocs[1].key).toBe("test-doc-2");
+  expect(sortedDocs[1].value._id).toBe("test-doc-2");
+  expect(sortedDocs[1].value.value).toBe(secondDoc.value);
+  expect(sortedDocs[1].value.message).toBe(secondDoc.message);
 });
