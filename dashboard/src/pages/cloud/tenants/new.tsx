@@ -17,7 +17,7 @@ export function newCloudAction(ctx: AppContextType) {
         name: tenantName,
       },
     });
-    console.log("created", rTenant);
+    // console.log("created", rTenant);
     if (rTenant.isErr()) {
       return new Response(rTenant.Err().message, { status: 400 });
     }

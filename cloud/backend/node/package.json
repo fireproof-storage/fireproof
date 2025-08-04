@@ -36,7 +36,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.20",
+    "@adviser/cement": "^0.4.21",
     "@fireproof/cloud-backend-base": "workspace:0.0.0",
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
@@ -44,18 +44,18 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
     "@hono/node-server": "^1.17.1",
     "@hono/node-ws": "^1.2.0",
     "@libsql/client": "^0.15.10",
     "drizzle-orm": "^0.44.3",
     "hono": "^4.8.9",
-    "vitest": "^3.2.4",
-    "@fireproof/vendor": "workspace:0.0.0"
+    "vitest": "^3.2.4"
   },
   "devDependencies": {
-    "drizzle-kit": "0.30.6",
+    "@fireproof/core-cli": "workspace:0.0.0",
     "@types/node": "^24.1.0",
-    "zx": "^8.7.1",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "drizzle-kit": "0.30.6",
+    "zx": "^8.7.1"
   }
 }

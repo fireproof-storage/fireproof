@@ -22,7 +22,7 @@
     "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.20",
+    "@adviser/cement": "^0.4.21",
     "@clerk/backend": "^2.6.0",
     "@clerk/clerk-js": "^5.77.0",
     "@clerk/clerk-react": "^5.37.0",
@@ -55,6 +55,7 @@
     "@cloudflare/vite-plugin": "^1.10.1",
     "@cloudflare/workers-types": "^4.20250710.0",
     "@eslint/js": "^9.32.0",
+    "@fireproof/core-cli": "workspace:0.0.0",
     "@libsql/client": "^0.15.10",
     "@libsql/kysely-libsql": "^0.4.1",
     "@rollup/plugin-replace": "^6.0.1",
@@ -78,7 +79,6 @@
     "vite": "^7.0.6",
     "vitest": "^3.2.4",
     "wrangler": "^4.26.0",
-    "zx": "^8.7.1",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "zx": "^8.7.1"
   }
 }
