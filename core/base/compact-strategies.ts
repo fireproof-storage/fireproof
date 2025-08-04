@@ -28,7 +28,7 @@ registerCompactStrategy({
     // }
 
     timerStart(ctx, "compact all entries");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     for await (const _entry of getAllEntries(ctx, head, ctx.logger)) {
       // result.push(entry)
       // void 1;
@@ -44,7 +44,7 @@ registerCompactStrategy({
     // timerEnd("compact crdt entries")
 
     timerStart(ctx, "compact clock vis");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     for await (const _line of vis(toPailFetcher(ctx), head)) {
       void 1;
     }

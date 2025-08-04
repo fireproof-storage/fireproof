@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc",
+    "build": "core-cli tsc",
     "lint": "eslint .",
     "preview": "vite preview",
     "pack": "core-cli build --doPack",

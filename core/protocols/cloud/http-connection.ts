@@ -59,7 +59,6 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     this.msgP = msgP;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   send<S extends MsgBase, Q extends MsgBase>(_msg: Q): Promise<MsgWithError<S>> {
     throw new Error("Method not implemented.");
   }
@@ -135,7 +134,6 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async request<Q extends MsgBase, S extends MsgBase>(req: Q, _opts: RequestOpts): Promise<MsgWithError<S>> {
     const headers = HttpHeader.from();
     headers.Set("Content-Type", this.msgP.mime);

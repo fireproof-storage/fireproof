@@ -326,7 +326,7 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
     // console.log("ws-send", msg);
     if (MsgIsReqChat(msg)) {
       const res = buildResChat(msg, msg.conn, `got[${msg.message}]`);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       for (const [_, bind] of this.activeBinds.entries()) {
         // console.log("ws-to-bind", res);
         bind.controller?.enqueue(res);
@@ -349,7 +349,7 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
   }
   close(o: MsgBase): Promise<Result<void>> {
     super.close(o);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     for (const [_, bind] of this.activeBinds.entries()) {
       try {
         bind.controller?.close();

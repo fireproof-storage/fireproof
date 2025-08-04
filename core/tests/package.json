@@ -6,7 +6,7 @@
   "main": "./index.js",
   "scripts": {
     "pack": "core-cli build --doPack",
-    "build": "tsc",
+    "build": "core-cli tsc",
     "test": "vitest --run",
     "publish": "core-cli build"
   },

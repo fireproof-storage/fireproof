@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "pack": "core-cli build --doPack",
-    "build": "tsc",
+    "build": "core-cli tsc",
     "publish": "core-cli build"
   },
   "keywords": [],

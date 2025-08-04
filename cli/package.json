@@ -7,7 +7,7 @@
   "main": "./index.js",
   "bin": "./run.sh",
   "scripts": {
-    "build": "tsc",
+    "build": "core-cli tsc",
     "pack": "echo skip",
     "publish": "echo skip"
   },
