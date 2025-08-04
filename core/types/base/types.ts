@@ -120,10 +120,21 @@ export interface PathOps {
 export type ToUInt8 = Uint8Array | Result<Uint8Array>;
 export type PromiseToUInt8 = ToUInt8 | Promise<Uint8Array> | Promise<Result<Uint8Array>>;
 
+export interface Base64EndeCoder {
+  encode(input: string | ToUInt8): string;
+  decodeUint8(input: string): Uint8Array;
+  decode(input: string): string;
+}
 export interface TextEndeCoder {
   encode(input: string): Uint8Array;
   decode(input: ToUInt8): string;
+  readonly base64: Base64EndeCoder;
 }
+
+export interface TextEndeCodable {
+  txt: TextEndeCoder;
+}
+
 export interface SuperThisOpts {
   // readonly crypto?: CryptoRuntime;
   readonly logger: Logger;
