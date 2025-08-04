@@ -44,6 +44,7 @@
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-blockstore": "workspace:0.0.0",
+    "@fireproof/core-device-id": "workspace:0.0.0",
     "@fireproof/core-gateways-base": "workspace:0.0.0",
     "@fireproof/core-gateways-file": "workspace:0.0.0",
     "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
@@ -62,6 +63,7 @@
     "@types/node": "^24.3.1",
     "cborg": "^4.2.15",
     "charwise": "^3.0.1",
+    "jose": "^6.0.12",
     "use-fireproof": "workspace:0.0.0",
     "uuidv7": "^1.0.2"
   },

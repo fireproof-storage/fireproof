@@ -39,7 +39,7 @@ import pRetry from "p-retry";
 import pMap from "p-map";
 import { Link } from "multiformats";
 // import { InterceptorGateway } from "./interceptor-gateway.js";
-import { hashString, ensureLogger, inplaceFilter, keyedCryptoFactory } from "@fireproof/core-runtime";
+import { ensureLogger, hashStringSync, inplaceFilter, keyedCryptoFactory } from "@fireproof/core-runtime";
 import { InterceptorGateway } from "@fireproof/core-gateways-base";
 
 function guardVersion(url: URI): Result<URI> {
@@ -107,7 +107,7 @@ export abstract class BaseStoreImpl {
 
   readonly _id = new ResolveOnce<string>();
   id(): Promise<string> {
-    return this._id.once(() => hashString(this.url().toString()));
+    return this._id.once(() => hashStringSync(this.url().toString()));
   }
 
   readonly _onStarted: ((dam: DataAndMetaStore) => void)[] = [];

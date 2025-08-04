@@ -14,7 +14,7 @@ class AJoinable implements Attachable {
     this.db = db;
   }
 
-  async configHash() {
+  configHash() {
     return `joinable-${this.name}`;
   }
 

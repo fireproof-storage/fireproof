@@ -22,7 +22,7 @@ class AJoinable implements Attachable {
     this.db = db;
   }
 
-  async configHash() {
+  configHash() {
     return `joinable-${this.name}`;
   }
 
@@ -221,7 +221,7 @@ describe("activate store", () => {
     firstAttached = await attach.attach(
       {
         name: "first",
-        configHash: async () => "first",
+        configHash: () => "first",
         prepare: async () => ({
           car: { url: "memory://first?store=car" },
           meta: { url: "memory://first?store=meta" },
@@ -235,7 +235,7 @@ describe("activate store", () => {
     secondAttached = await attach.attach(
       {
         name: "second",
-        configHash: async () => "second",
+        configHash: () => "second",
         prepare: async () => ({
           car: { url: "memory://second?store=car" },
           meta: { url: "memory://second?store=meta" },

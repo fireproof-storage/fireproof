@@ -12,9 +12,10 @@ import {
   SuperThis,
   TraceFn,
   KeyBagRuntime,
-  V2KeysItem,
   KeyBagIf,
   CompactStrategy,
+  KeysByFingerprint,
+  KeyWithFingerPrint,
 } from "@fireproof/core-types-base";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI, AppContext } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
@@ -179,18 +180,6 @@ export interface CodecOpts {
   readonly noIVVerify: boolean;
 }
 
-export interface KeyMaterial {
-  readonly key: Uint8Array;
-  readonly keyStr: string;
-}
-
-export interface KeyWithFingerPrint {
-  readonly default: boolean;
-  readonly fingerPrint: string;
-  readonly key: CTCryptoKey;
-  extract(): Promise<KeyMaterial>;
-}
-
 export interface KeyUpsertResultModified {
   readonly modified: true;
   readonly kfp: KeyWithFingerPrint;
@@ -206,13 +195,13 @@ export interface KeyUpsertResultNotModified {
 
 export type KeyUpsertResult = KeyUpsertResultModified | KeyUpsertResultNotModified;
 
-export interface KeysByFingerprint {
-  readonly id: string;
-  readonly name: string;
-  get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined>;
-  upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
-  asV2KeysItem(): Promise<V2KeysItem>;
-}
+// export interface KeysByFingerprint {
+//   readonly id: string;
+//   readonly name: string;
+//   get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined>;
+//   upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
+//   asKeyedV2StorageKeyItem(): Promise<KeyedV2StorageKeyItem>;
+// }
 
 export interface CryptoAction {
   readonly ivLength: number; // in bytes only 12 and 16 are allowed
@@ -418,7 +407,7 @@ export interface BaseStore {
   readonly logger: Logger;
   // readonly url: URI
   url(): URI;
-  id(): Promise<string>;
+  id(): string;
   // readonly name: string;
   // onStarted(fn: () => void): void;
   // onClosed(fn: () => void): void;

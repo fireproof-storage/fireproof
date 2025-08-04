@@ -1,4 +1,4 @@
-import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext, Lazy } from "@adviser/cement";
 
 import { writeQueue } from "./write-queue.js";
 import {
@@ -20,7 +20,7 @@ import {
   PARAM,
 } from "@fireproof/core-types-base";
 import { StoreURIRuntime, StoreUrlsOpts } from "@fireproof/core-types-blockstore";
-import { decodeFile, encodeFile, ensureLogger, ensureSuperThis, ensureURIDefaults, hashObject } from "@fireproof/core-runtime";
+import { decodeFile, encodeFile, ensureLogger, ensureSuperThis, ensureURIDefaults, hashObjectSync } from "@fireproof/core-runtime";
 
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
@@ -106,7 +106,7 @@ export class LedgerShell implements Ledger {
     return this.ref.ctx;
   }
 
-  refId(): Promise<string> {
+  refId(): string {
     return this.ref.refId();
   }
 
@@ -169,10 +169,7 @@ class LedgerImpl implements Ledger {
     this.shells.add(shell);
   }
 
-  readonly _refid = new ResolveOnce<string>();
-  refId(): Promise<string> {
-    return this._refid.once(() => hashObject(this.opts.storeUrls));
-  }
+  readonly refId = Lazy<string>(() => hashObjectSync(this.opts.storeUrls));
 
   readonly _onClosedFns = new Map<string, () => void>();
   onClosed(fn: () => void): () => void {

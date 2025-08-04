@@ -55,7 +55,7 @@ import {
   UnsubscribeResult,
   VoidResult,
 } from "@fireproof/core-types-blockstore";
-import { ensureLogger, hashObject } from "@fireproof/core-runtime";
+import { ensureLogger, hashObjectSync } from "@fireproof/core-runtime";
 import {
   dbMetaEvent2Serialized,
   decode2DbMetaEvents,
@@ -288,7 +288,7 @@ class CurrentMeta {
     gwCtx: ReqGwCtx,
   ): Promise<Result<FPEnvelopeMeta>> {
     // console.log("cloud-get-1")
-    const key = await hashObject(ctx.conn.conn.Ok());
+    const key = hashObjectSync(ctx.conn.conn.Ok());
     // register bind updates
     const item = this.boundGetMeta.get(key);
     // console.log("cloud-get-2")

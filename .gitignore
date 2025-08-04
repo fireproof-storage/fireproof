@@ -21,6 +21,7 @@ logs
 **/*.tgz
 *.zip
 *.tgz
+.npmrc
 
 smoke/package.json
 smoke/pnpm-lock.yaml

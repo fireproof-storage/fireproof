@@ -23,7 +23,7 @@ import {
   FileAttachedStores,
   FileStore,
 } from "@fireproof/core-types-blockstore";
-import { ensureURIDefaults, hashObject } from "@fireproof/core-runtime";
+import { ensureURIDefaults, hashObjectSync } from "@fireproof/core-runtime";
 import {
   Attachable,
   AttachContext,
@@ -277,12 +277,12 @@ export async function createAttachedStores(
   }
 
   // console.log("createAttachedStores", JSON.stringify(gup), name);
-  const cfgId = await hashObject(gup);
+  const cfgId = hashObjectSync(gup);
 
   return await ar.attach(
     {
       name,
-      configHash: async () => cfgId,
+      configHash: () => cfgId,
       prepare: async () => gup,
     },
     (at) => Promise.resolve(at),
@@ -377,7 +377,7 @@ export class AttachedRemotesImpl implements AttachedStores {
   // needed for React Statemanagement
   readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
   async attach(attachable: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached> {
-    const keyed = await attachable.configHash();
+    const keyed = attachable.configHash(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
     // console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
     const ret = await this._keyedAttachable.get(keyed).once(async () => {
       const gwp = await attachable.prepare(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
