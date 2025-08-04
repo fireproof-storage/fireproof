@@ -14,5 +14,14 @@ export default defineConfig({
       "cli/vitest.config.ts",
       "dashboard/vitest.config.ts",
     ],
+    // Global browser configuration to disable screenshots
+    browser: {
+      providerOptions: {
+        use: {
+          screenshot: "off",
+          video: "off",
+        },
+      },
+    },
   },
 });

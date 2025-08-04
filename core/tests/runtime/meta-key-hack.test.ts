@@ -51,7 +51,7 @@ describe("MetaKeyHack", () => {
     await db.put({ val: "test" });
 
     const dataStore = loader.attachedStores.local().active.car;
-    const kb = new KeyBag(db.ledger.opts.keyBag);
+    const kb = await KeyBag.create(db.ledger.opts.keyBag);
     const rDataStoreKeyItem = await kb.getNamedKey(dataStore.url().getParam(PARAM.STORE_KEY) ?? "");
 
     await rDataStoreKeyItem.Ok().upsert("zBUFMmu5c3VdCa4r2DZTzhR", false);
@@ -63,7 +63,7 @@ describe("MetaKeyHack", () => {
     const rGet = await memGw.get(rUrl.Ok(), sthis);
     const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as V2SerializedMetaKey;
     const keyMaterials = metas.keys;
-    const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asV2KeysItem();
+    const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asV2StorageKeyItem();
     expect(keyMaterials.length).toBeGreaterThan(0);
     expect(dataStoreKeyMaterial).toEqual({
       keys: {

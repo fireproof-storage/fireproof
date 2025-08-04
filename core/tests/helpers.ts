@@ -1,10 +1,10 @@
 import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger, AppContext } from "@adviser/cement";
-import { SuperThis, SuperThisOpts, PARAM, Attachable, Attached, CarTransaction, Falsy, DbMeta } from "@fireproof/core";
+import { SuperThis, SuperThisOpts, PARAM, Attachable, Attached, CarTransaction, Falsy, DbMeta, KeyBagIf } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
 import { CommitQueue, encodeFile, ensureSuperThis, TaskManager } from "@fireproof/core-runtime";
-import { defaultKeyBagOpts, getKeyBag, KeyBag } from "@fireproof/core-keybag";
+import { defaultKeyBagOpts, getKeyBag } from "@fireproof/core-keybag";
 import { AttachedRemotesImpl, toStoreRuntime } from "@fireproof/core-blockstore";
 import {
   Loadable,
@@ -136,7 +136,7 @@ class MockLoader implements Loadable {
   close(): Promise<void> {
     throw new Error("Method not implemented.");
   }
-  keyBag(): Promise<KeyBag> {
+  keyBag(): Promise<KeyBagIf> {
     return getKeyBag(this.sthis, {});
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

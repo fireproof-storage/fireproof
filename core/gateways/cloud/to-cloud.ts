@@ -12,7 +12,7 @@ import {
   TokenAndClaims,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
-import { ensureLogger, hashObject } from "@fireproof/core-runtime";
+import { ensureLogger, hashObjectSync } from "@fireproof/core-runtime";
 import { decodeJwt } from "jose/jwt/decode";
 import { URIInterceptor } from "@fireproof/core-gateways-base";
 
@@ -152,8 +152,11 @@ class ToCloud implements ToCloudAttachable {
 
   private _tokenObserver!: TokenObserver;
 
-  async configHash() {
-    const hash = await hashObject(this.opts);
+  configHash(db?: Ledger) {
+    const hash = hashObjectSync({
+      dbRefId: db?.refId(),
+      ...this.opts,
+    });
     // console.log("to-cloud-configHash", this.opts, hash);
     // console.log("to-cloud-configHash", hash, this.opts);
     return hash;

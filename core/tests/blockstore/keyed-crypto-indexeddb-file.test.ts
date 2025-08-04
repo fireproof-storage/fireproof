@@ -2,12 +2,12 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockLoader, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { V2KeysItem, PARAM } from "@fireproof/core-types-base";
+import { PARAM, KeyWithFingerPrint, KeyedV2StorageKeyItem } from "@fireproof/core-types-base";
 import { describe, beforeAll, it, expect, beforeEach } from "vitest";
 import { coerceMaterial, getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
-import { KeyWithFingerPrint, Loadable } from "@fireproof/core-types-blockstore";
+import { Loadable } from "@fireproof/core-types-blockstore";
 import { createAttachedStores } from "@fireproof/core-blockstore";
 
 describe("KeyBag indexeddb and file", () => {
@@ -43,7 +43,7 @@ describe("KeyBag indexeddb and file", () => {
     const kb = await getKeyBag(sthis, {
       url: url.toString(),
       crypto: toCryptoRuntime({
-        randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
+        randomBytes: (size: number) => new Uint8Array(size).map((_, i) => i),
       }),
     });
     const name = "setkey" + Math.random();
@@ -60,8 +60,8 @@ describe("KeyBag indexeddb and file", () => {
 
     expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
 
-    let diskBag: V2KeysItem;
-    let diskBag2: V2KeysItem;
+    let diskBag: KeyedV2StorageKeyItem;
+    let diskBag2: KeyedV2StorageKeyItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
@@ -72,17 +72,17 @@ describe("KeyBag indexeddb and file", () => {
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as KeyedV2StorageKeyItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as V2KeysItem;
+        return JSON.parse(sthis.txt.decode(data)) as KeyedV2StorageKeyItem;
       });
     }
-    expect((await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag.keys)[0].key), true)).Ok().fingerPrint).toEqual(
-      (await res.Ok().get())?.fingerPrint,
-    );
     expect(
-      (await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag2.keys)[0].key), true)).Ok().fingerPrint,
+      (await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag.item.keys)[0].key), true)).Ok().fingerPrint,
+    ).toEqual((await res.Ok().get())?.fingerPrint);
+    expect(
+      (await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag2.item.keys)[0].key), true)).Ok().fingerPrint,
     ).toEqual((await created.Ok().get())?.fingerPrint);
     const algo = {
       name: "AES-GCM",
@@ -93,10 +93,10 @@ describe("KeyBag indexeddb and file", () => {
     const rkc = (await res.Ok().get()) as KeyWithFingerPrint;
     const ckc = (await created.Ok().get()) as KeyWithFingerPrint;
     expect(await kb.rt.crypto.encrypt(algo, rkc.key, data)).toEqual(await kb.rt.crypto.encrypt(algo, ckc.key, data));
-    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.keys)[0].key), data)).toEqual(
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.item.keys)[0].key), data)).toEqual(
       await kb.rt.crypto.encrypt(algo, ckc.key, data),
     );
-    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag2.keys)[0].key), data)).toEqual(
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag2.item.keys)[0].key), data)).toEqual(
       await kb.rt.crypto.encrypt(algo, ckc.key, data),
     );
   });

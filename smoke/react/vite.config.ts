@@ -16,6 +16,13 @@ export default defineConfig({
         },
       ],
       // name: "chrome", // browser name is required
+      // Disable screenshots
+      providerOptions: {
+        use: {
+          screenshot: "off",
+          video: "off",
+        },
+      },
     },
     deps: {
       optimizer: {

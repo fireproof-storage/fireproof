@@ -1,0 +1,51 @@
+{
+  "name": "@fireproof/core-device-id",
+  "version": "0.0.0",
+  "description": "Live ledger for the web.",
+  "type": "module",
+  "main": "./index.js",
+  "scripts": {
+    "build": "tsc",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
+  },
+  "keywords": [
+    "ledger",
+    "JSON",
+    "document",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "contributors": [
+    "J Chris Anderson",
+    "Alan Shaw",
+    "Travis Vachon",
+    "Mikeal Rogers",
+    "Meno Abels"
+  ],
+  "author": "J Chris Anderson",
+  "license": "AFL-2.0",
+  "homepage": "https://use-fireproof.com",
+  "gptdoc": "import { fireproof } from 'use-fireproof'; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); db.subscribe(myRedrawFn); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "dependencies": {
+    "@adviser/cement": "^0.4.23",
+    "@fireproof/core-keybag": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "jose": "^6.0.12",
+    "multiformats": "^13.3.7",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@fireproof/core-cli": "workspace:0.0.0",
+    "@types/node": "^24.1.0"
+  }
+}

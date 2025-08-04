@@ -32,6 +32,7 @@ import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
 import { toSortedArray } from "@adviser/cement/utils";
+import XXH from "xxhashjs";
 
 //export type { Logger };
 //export { Result };
@@ -151,6 +152,28 @@ const pathOps = new pathOpsImpl();
 const txtOps = ((txtEncoder, txtDecoder) => ({
   encode: (input: string) => txtEncoder.encode(input),
   decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
+  base64: {
+    encode: (input: ToUInt8 | string) => {
+      if (typeof input === "string") {
+        const data = txtEncoder.encode(input);
+        return btoa(String.fromCharCode(...data));
+      }
+      let charStr = "";
+      for (const i of coerceIntoUint8(input).Ok()) {
+        charStr += String.fromCharCode(i);
+      }
+      return btoa(charStr);
+    },
+    decodeUint8: (input: string) => {
+      const data = atob(input);
+      return new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
+    },
+    decode: (input: string) => {
+      const data = atob(input);
+      const uint8 = new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
+      return txtDecoder.decode(uint8);
+    },
+  },
   // eslint-disable-next-line no-restricted-globals
 }))(new TextEncoder(), new TextDecoder());
 
@@ -508,13 +531,33 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
   return env;
 }
 
-export async function hashString(str: string): Promise<string> {
+function hashXX(str: string): string {
+  const hasher = XXH.h64();
+  hasher.update(str);
+  const res = hasher.digest();
+  const hex = res.toString(16);
+  const asBytes = new Uint8Array(hex.length / 2 + 1);
+  for (let i = 0; i < hex.length; i += 2) {
+    asBytes[i / 2] = parseInt(str.slice(i, i + 2), 16);
+  }
+  return base58btc.encode(asBytes);
+}
+
+export async function hashStringAsync(str: string): Promise<string> {
   const bytes = json.encode(str);
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash).toString();
 }
 
-export async function hashObject<T extends NonNullable<S>, S>(o: T): Promise<string> {
+export function hashStringSync(str: string): string {
+  return hashXX(str);
+}
+
+export function hashObjectSync<T extends NonNullable<S>, S>(o: T): string {
+  return hashXX(JSON.stringify(toSortedArray(o)));
+}
+
+export async function hashObjectAsync<T extends NonNullable<S>, S>(o: T): Promise<string> {
   return (await hashObjectCID(o)).cid.toString();
 }
 

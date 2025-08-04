@@ -17,6 +17,13 @@ export default defineConfig({
           browser: "chromium",
         },
       ],
+      // Disable screenshots
+      providerOptions: {
+        use: {
+          screenshot: "off",
+          video: "off",
+        },
+      },
     },
     globals: true,
   },
