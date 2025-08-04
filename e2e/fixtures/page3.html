@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page 3</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .storage-display { background: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        button { margin: 10px; padding: 10px 20px; }
+        a { display: inline-block; margin: 10px; padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Test Page 3</h1>
+    <p>This is the third test page for localStorage navigation testing.</p>
+    
+    <div class="storage-display" id="storage-content">
+        <!-- localStorage content will be displayed here -->
+    </div>
+    
+    <button id="readData">Read localStorage Data</button>
+    <button id="reloadPage">Reload Page</button>
+    <button id="clearAll">Clear All Data</button>
+    
+    <br>
+    
+    <a href="page1.html" id="navToPage1">Navigate to Page 1</a>
+    <a href="page2.html" id="navToPage2">Navigate to Page 2</a>
+    
+    <script>
+        // Helper functions for localStorage testing
+        function setTestData(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+            displayStorageContent();
+        }
+        
+        function getTestData(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        }
+        
+        function displayStorageContent() {
+            const content = document.getElementById('storage-content');
+            const keys = Object.keys(localStorage);
+            if (keys.length === 0) {
+                content.innerHTML = '<em>localStorage is empty</em>';
+                return;
+            }
+            
+            let html = '<strong>localStorage contents:</strong><br>';
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                html += `<strong>${key}:</strong> ${value}<br>`;
+            });
+            content.innerHTML = html;
+        }
+        
+        // Set up event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('readData').addEventListener('click', function() {
+                displayStorageContent();
+            });
+            
+            document.getElementById('reloadPage').addEventListener('click', function() {
+                window.location.reload();
+            });
+            
+            document.getElementById('clearAll').addEventListener('click', function() {
+                localStorage.clear();
+                displayStorageContent();
+            });
+            
+            // Auto-display existing data on page load
+            displayStorageContent();
+        });
+        
+        // Expose functions globally for Playwright testing
+        window.setTestData = setTestData;
+        window.getTestData = getTestData;
+        window.displayStorageContent = displayStorageContent;
+    </script>
+</body>
+</html>
