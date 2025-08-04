@@ -36,13 +36,13 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.20",
-    "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "@fireproof/core-types-base": "workspace:0.0.0",
-    "@fireproof/core-runtime": "workspace:0.0.0",
-    "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
+    "@adviser/cement": "^0.4.21",
     "@fireproof/core-gateways-file": "workspace:0.0.0",
-    "multiformats": "^13.3.7",
-    "@fireproof/vendor": "workspace:0.0.0"
+    "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:0.0.0",
+    "@fireproof/core-types-blockstore": "workspace:0.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
+    "multiformats": "^13.3.7"
   }
 }

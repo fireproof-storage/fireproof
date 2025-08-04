@@ -1,14 +1,16 @@
 import { openDB, IDBPDatabase } from "idb";
-import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
+import { exception2Result, KeyedResolvOnce, ResolveOnce, Result, URI } from "@adviser/cement";
 
 import { INDEXEDDB_VERSION } from "@fireproof/core-gateways-base";
 import { NotFoundError, PARAM, SuperThis } from "@fireproof/core-types-base";
 import { exceptionWrapper, getKey, getStore } from "@fireproof/core-runtime";
 import { Gateway, GetResult } from "@fireproof/core-types-blockstore";
+import { ReadDummyIDBPDatabase } from "./dummy-idb.js";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXEDDB_VERSION).URI();
 }
+
 
 interface IDBConn {
   readonly db: IDBPDatabase<unknown>;
@@ -25,10 +27,10 @@ function sanitzeKey(key: string | string[]): string | string[] {
   return key;
 }
 
-async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
-  const dbName = getIndexedDBName(url, sthis);
-  const once = await onceIndexedDB.get(dbName.fullDb).once(async () => {
-    // console.log("IndexedDBDataStore:connectIdb-1", dbName.fullDb);
+const listDatabases = new ResolveOnce()
+
+function onceCreateDB(dbName: DbName, url: URI, sthis: SuperThis): () => Promise<IDBConn> {
+  return async () => {
     const db = await openDB(dbName.fullDb, 1, {
       upgrade(db) {
         ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
@@ -38,7 +40,8 @@ async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
         });
       },
     });
-    // console.log("IndexedDBDataStore:connectIdb-2", dbName.fullDb);
+    // console.log("created", dbName.fullDb, (new Error()).stack);
+    listDatabases.reset() // not cool but easy
     const found = await db.get("version", "version");
     const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
     if (!found) {
@@ -47,11 +50,36 @@ async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
       sthis.logger.Warn().Url(url).Str("version", version).Str("found", found.version).Msg("version mismatch");
     }
     return { db, dbName, version, url };
-  });
-  return {
-    ...once,
-    url: url.build().setParam(PARAM.VERSION, once.version).URI(),
-  };
+  }
+}
+
+
+async function connectIdb(style: "read" | "write"| "delete" | "close", url: URI, sthis: SuperThis): Promise<IDBConn> {
+    const dbName = getIndexedDBName(url, sthis);
+  if (style === "close") {
+    if (onceIndexedDB.has(dbName.fullDb)) {
+      const ic = await onceIndexedDB.get(dbName.fullDb).once((): Promise<IDBConn> => Promise.reject(new Error("not open")));
+      ic.db.close();
+      onceIndexedDB.unget(dbName.fullDb);
+    }
+    return undefined as unknown as IDBConn; // do you at sleep - paradox
+  }
+  if (style === "read" || style === "delete") {
+    // test existing without creating
+    if (!onceIndexedDB.has(dbName.fullDb)) {
+      const dbs = await listDatabases.once(() => indexedDB.databases())
+      if (!dbs.find((i) => i.name === dbName.fullDb)) {
+        const verUrl = ensureVersion(url)
+        return {
+          db: new ReadDummyIDBPDatabase(dbName.fullDb),
+          dbName,
+          version: verUrl.getParam(PARAM.VERSION, INDEXEDDB_VERSION),
+          url: verUrl,
+        };
+      }
+    }
+  } 
+  return onceIndexedDB.get(dbName.fullDb).once(onceCreateDB(dbName, url, sthis));
 }
 
 export interface DbName {
@@ -84,28 +112,27 @@ export function getIndexedDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexedDBGateway implements Gateway {
-  _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
+export class IndexedDBGateway implements Gateway {
   async start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
     return exception2Result(async () => {
       await sthis.start();
       sthis.logger.Debug().Url(baseURL).Msg("starting");
-      const ic = await connectIdb(baseURL, sthis);
-      this._db = ic.db;
+      const ic = await connectIdb("read", baseURL, sthis);
       sthis.logger.Debug().Url(ic.url).Msg("started");
-      return ic.url;
+      return baseURL.build().setParam(PARAM.VERSION, ic.version).URI();
     });
   }
-  async close(): Promise<Result<void>> {
+  async close(url: URI, sthis: SuperThis): Promise<Result<void>> {
+    await connectIdb("close", url, sthis);
     return Result.Ok(undefined);
   }
   async destroy(baseUrl: URI, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
       // return deleteDB(getIndexedDBName(this.url).fullDb);
       const type = getStore(baseUrl, sthis, joinDBName).name;
-      const idb = this._db;
-      const trans = idb.transaction(type, "readwrite");
+      const idb = await connectIdb("write", baseUrl, sthis);
+      const trans = idb.db.transaction(type, "readwrite");
       const object_store = trans.objectStore(type);
       // console.log("IndexedDBDataStore:destroy", type);
       const toDelete = [];
@@ -129,7 +156,8 @@ export class IndexedDBGateway implements Gateway {
       const key = getKey(url, sthis.logger);
       const store = getStore(url, sthis, joinDBName).name;
       sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("getting");
-      const tx = this._db.transaction([store], "readonly");
+      const idb = await connectIdb("read", url, sthis);
+      const tx = idb.db.transaction([store], "readonly");
       const bytes = await tx.objectStore(store).get(sanitzeKey(key));
       await tx.done;
       if (!bytes) {
@@ -143,7 +171,8 @@ export class IndexedDBGateway implements Gateway {
       const key = getKey(url, sthis.logger);
       const store = getStore(url, sthis, joinDBName).name;
       sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
-      const tx = this._db.transaction([store], "readwrite");
+      const idb = await connectIdb("write", url, sthis);
+      const tx = idb.db.transaction([store], "readwrite");
       await tx.objectStore(store).put(bytes, sanitzeKey(key));
       await tx.done;
     });
@@ -153,7 +182,8 @@ export class IndexedDBGateway implements Gateway {
       const key = getKey(url, sthis.logger);
       const store = getStore(url, sthis, joinDBName).name;
       sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("deleting");
-      const tx = this._db.transaction([store], "readwrite");
+      const idb = await connectIdb("delete", url, sthis);
+      const tx = idb.db.transaction([store], "readwrite");
       await tx.objectStore(store).delete(sanitzeKey(key));
       await tx.done;
       return Result.Ok(undefined);
@@ -161,7 +191,7 @@ export class IndexedDBGateway implements Gateway {
   }
 
   async getPlain(url: URI, key: string, sthis: SuperThis): Promise<Result<Uint8Array>> {
-    const ic = await connectIdb(url, sthis);
+    const ic = await connectIdb("read", url, sthis);
     const store = getStore(ic.url, sthis, joinDBName).name;
     sthis.logger.Debug().Str("key", key).Str("store", store).Msg("getting");
     let bytes = await ic.db.get(store, sanitzeKey(key));

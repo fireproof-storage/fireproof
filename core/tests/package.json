@@ -37,11 +37,10 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "peerDependencies": {
-    "@adviser/cement": "^0.4.20",
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.20",
+    "@adviser/cement": "^0.4.21",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-blockstore": "workspace:0.0.0",
@@ -67,11 +66,11 @@
     "uuidv7": "^1.0.2"
   },
   "devDependencies": {
+    "@fireproof/core-cli": "workspace:0.0.0",
     "@vitest/browser": "^3.2.4",
     "playwright": "^1.54.1",
     "playwright-chromium": "^1.54.1",
     "vitest": "^3.2.4",
-    "zx": "^8.7.1",
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "zx": "^8.7.1"
   }
 }

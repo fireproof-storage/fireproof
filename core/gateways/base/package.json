@@ -36,12 +36,12 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.20",
+    "@adviser/cement": "^0.4.21",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
+    "@fireproof/vendor": "workspace:0.0.0",
     "@ipld/dag-json": "^10.2.5",
-    "@web3-storage/pail": "^0.6.2",
-    "@fireproof/vendor": "workspace:0.0.0"
+    "@web3-storage/pail": "^0.6.2"
   }
 }
