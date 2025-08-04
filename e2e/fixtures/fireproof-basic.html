@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fireproof Basic Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        background-color: #f0f8ff;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .status-display {
+        background: #e8f5e8;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        border: 1px solid #c3e6c3;
+      }
+      .error-display {
+        background: #ffe8e8;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        border: 1px solid #e6c3c3;
+      }
+      button {
+        margin: 10px;
+        padding: 12px 24px;
+        background: #007cba;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #005c87;
+      }
+      .test-data {
+        background: #f5f5f5;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+      .actions {
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Fireproof Basic Operations Test</h1>
+      <p>Test page for basic Fireproof database operations and reload persistence.</p>
+
+      <div class="status-display" id="status">
+        <!-- Status messages will appear here -->
+      </div>
+
+      <div class="actions">
+        <button id="initDb">Initialize Database</button>
+        <button id="putDoc">Put Test Document</button>
+        <button id="getDoc">Get Test Document</button>
+        <button id="getAllDocs">Get All Documents</button>
+        <button id="clearStatus">Clear Status</button>
+        <button id="reloadPage">Reload Page</button>
+      </div>
+
+      <div class="test-data" id="testData">
+        <!-- Test data will be displayed here -->
+      </div>
+    </div>
+
+    <!-- Include Fireproof from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.global.js"></script>
+    <script>
+      // Use the global Fireproof object
+      console.log("Fireproof global:", typeof Fireproof);
+      const { fireproof } = Fireproof;
+
+      let db = null;
+      const dbName = "fireproof-e2e-test";
+
+      // Status and data display elements
+      const statusEl = document.getElementById("status");
+      const testDataEl = document.getElementById("testData");
+
+      // Utility functions
+      function showStatus(message, isError = false) {
+        statusEl.className = isError ? "error-display" : "status-display";
+        statusEl.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+      }
+
+      function showTestData(data) {
+        testDataEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+
+      // Fireproof operations
+      async function initializeDatabase() {
+        try {
+          db = fireproof(dbName);
+          showStatus(`Database '${dbName}' initialized successfully`);
+          return db;
+        } catch (error) {
+          showStatus(`Error initializing database: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      async function putDocument(id, data) {
+        try {
+          if (!db) await initializeDatabase();
+          const result = await db.put({ _id: id, ...data });
+          showStatus(`Document put successfully: ${result.id}`);
+          return result;
+        } catch (error) {
+          showStatus(`Error putting document: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      async function getDocument(id) {
+        try {
+          if (!db) await initializeDatabase();
+          const doc = await db.get(id);
+          showStatus(`Document retrieved successfully: ${id}`);
+          showTestData(doc);
+          return doc;
+        } catch (error) {
+          showStatus(`Error getting document: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      async function getAllDocuments() {
+        try {
+          if (!db) await initializeDatabase();
+          const result = await db.allDocs();
+          showStatus(`Retrieved ${result.rows.length} documents`);
+          showTestData(result);
+          return result;
+        } catch (error) {
+          showStatus(`Error getting all documents: ${error.message}`, true);
+          throw error;
+        }
+      }
+
+      // Event listeners
+      document.getElementById("initDb").addEventListener("click", initializeDatabase);
+
+      document.getElementById("putDoc").addEventListener("click", async () => {
+        const testDoc = {
+          value: "test-data-value",
+          timestamp: Date.now(),
+          message: "This is a test document for E2E testing",
+        };
+        await putDocument("test-doc", testDoc);
+      });
+
+      document.getElementById("getDoc").addEventListener("click", async () => {
+        await getDocument("test-doc");
+      });
+
+      document.getElementById("getAllDocs").addEventListener("click", getAllDocuments);
+
+      document.getElementById("clearStatus").addEventListener("click", () => {
+        statusEl.innerHTML = "";
+        testDataEl.innerHTML = "";
+      });
+
+      document.getElementById("reloadPage").addEventListener("click", () => {
+        window.location.reload();
+      });
+
+      // Expose functions globally for Playwright testing
+      window.fpInit = initializeDatabase;
+      window.fpPut = putDocument;
+      window.fpGet = getDocument;
+      window.fpAllDocs = getAllDocuments;
+
+      // Auto-initialize on page load
+      document.addEventListener("DOMContentLoaded", async () => {
+        showStatus("Page loaded. Click 'Initialize Database' to start.");
+        try {
+          await initializeDatabase();
+          showStatus("Database auto-initialized on page load");
+        } catch (error) {
+          showStatus("Failed to auto-initialize database", true);
+          console.error("Auto-initialization error:", error);
+        }
+      });
+    </script>
+  </body>
+</html>

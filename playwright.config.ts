@@ -30,7 +30,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "npx http-server ./e2e/fixtures -p 3333 -c-1",
+    command: "npx http-server . -p 3333 -c-1",
     port: 3333,
     reuseExistingServer: !process.env.CI,
   },
