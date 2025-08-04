@@ -529,6 +529,37 @@ importers:
         specifier: '>=18.0.0'
         version: 19.1.1
 
+  core/device-id:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.20
+        version: 0.4.23(typescript@5.9.2)
+      '@fireproof/core-keybag':
+        specifier: workspace:0.0.0
+        version: link:../keybag
+      '@fireproof/core-runtime':
+        specifier: workspace:0.0.0
+        version: link:../runtime
+      '@fireproof/core-types-base':
+        specifier: workspace:0.0.0
+        version: link:../types/base
+      jose:
+        specifier: ^6.0.12
+        version: 6.0.12
+      multiformats:
+        specifier: ^13.3.7
+        version: 13.4.0
+      zod:
+        specifier: ^4.0.14
+        version: 4.0.14
+    devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
+      '@types/node':
+        specifier: ^24.1.0
+        version: 24.2.1
+
   core/gateways/base:
     dependencies:
       '@adviser/cement':
@@ -822,6 +853,9 @@ importers:
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
+      '@fireproof/core-device-id':
+        specifier: workspace:0.0.0
+        version: link:../device-id
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -876,6 +910,9 @@ importers:
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
+      jose:
+        specifier: ^6.0.12
+        version: 6.0.12
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -925,6 +962,9 @@ importers:
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
+      zod:
+        specifier: ^4.0.14
+        version: 4.0.14
 
   core/types/blockstore:
     dependencies:
@@ -1068,6 +1108,9 @@ importers:
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../use-fireproof
+      zod:
+        specifier: ^4.0.14
+        version: 4.0.14
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.10.1
@@ -5637,6 +5680,9 @@ packages:
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
+  zod@4.0.14:
+    resolution: {integrity: sha512-nGFJTnJN6cM2v9kXL+SOBq3AtjQby3Mv5ySGFof5UGRHrRioSJ5iG680cYNjE/yWk671nROcpPj4hAS8nyLhSw==}
+
   zx@8.8.0:
     resolution: {integrity: sha512-v0VZXgSHusDvTtZROno3Ws8xkE1uNSSwH/yF8Fm+ZwBrYhr+bRNNpsnTJ32eR/t6umc7lAz5WqdP800ugW9zFA==}
     engines: {node: '>= 12.17.0'}
@@ -10091,5 +10137,7 @@ snapshots:
       youch-core: 0.3.3
 
   zod@3.22.3: {}
+
+  zod@4.0.14: {}
 
   zx@8.8.0: {}

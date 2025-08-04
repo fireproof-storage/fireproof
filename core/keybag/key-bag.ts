@@ -5,6 +5,7 @@ import {
   ResolveOnce,
   ResolveSeq,
   Result,
+  Option,
   runtimeFn,
   toCryptoRuntime,
   URI,
@@ -29,6 +30,8 @@ import {
   V1StorageKeyItem,
   V2StorageKeyItem,
   KeysItem,
+  type JWKPrivate,
+  type CertificatePayload,
 } from "@fireproof/core-types-base";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { KeyBagProviderMemory } from "./key-bag-memory.js";
@@ -534,6 +537,17 @@ export class KeyBag implements KeyBagIf {
   //     },
   //   });
   // }
+
+  async getDeviceId(): Promise<{ readonly deviceId: Option<JWKPrivate>; readonly cert: Option<CertificatePayload> }> {
+    return {
+      deviceId: Option.None(),
+      cert: Option.None(),
+    };
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async setDeviceId(deviceId: JWKPrivate): Promise<ReturnType<typeof this.getDeviceId>> {
+    throw new Error("Not implemented");
+  }
 
   private _namedKeyItems = new KeyedResolvOnce<KeyBagFingerprintItem>();
 

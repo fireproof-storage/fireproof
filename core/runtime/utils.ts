@@ -151,6 +151,28 @@ const pathOps = new pathOpsImpl();
 const txtOps = ((txtEncoder, txtDecoder) => ({
   encode: (input: string) => txtEncoder.encode(input),
   decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
+  base64: {
+    encode: (input: ToUInt8 | string) => {
+      if (typeof input === "string") {
+        const data = txtEncoder.encode(input);
+        return btoa(String.fromCharCode(...data));
+      }
+      let charStr = "";
+      for (const i of coerceIntoUint8(input).Ok()) {
+        charStr += String.fromCharCode(i);
+      }
+      return btoa(charStr);
+    },
+    decodeUint8: (input: string) => {
+      const data = atob(input);
+      return new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
+    },
+    decode: (input: string) => {
+      const data = atob(input);
+      const uint8 = new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
+      return txtDecoder.decode(uint8);
+    },
+  },
   // eslint-disable-next-line no-restricted-globals
 }))(new TextEncoder(), new TextDecoder());
 
