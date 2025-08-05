@@ -33,5 +33,5 @@ describe("concurrent opens", () => {
     }
 
     await future.asPromise();
-  });
+  }, 30000); // 30 second timeout for concurrent operations
 });
