@@ -11,7 +11,6 @@ function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXEDDB_VERSION).URI();
 }
 
-
 interface IDBConn {
   readonly db: IDBPDatabase<unknown>;
   readonly dbName: DbName;
@@ -27,7 +26,7 @@ function sanitzeKey(key: string | string[]): string | string[] {
   return key;
 }
 
-const listDatabases = new ResolveOnce()
+const listDatabases = new ResolveOnce();
 
 function onceCreateDB(dbName: DbName, url: URI, sthis: SuperThis): () => Promise<IDBConn> {
   return async () => {
@@ -41,7 +40,7 @@ function onceCreateDB(dbName: DbName, url: URI, sthis: SuperThis): () => Promise
       },
     });
     // console.log("created", dbName.fullDb, (new Error()).stack);
-    listDatabases.reset() // not cool but easy
+    listDatabases.reset(); // not cool but easy
     const found = await db.get("version", "version");
     const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
     if (!found) {
@@ -50,12 +49,11 @@ function onceCreateDB(dbName: DbName, url: URI, sthis: SuperThis): () => Promise
       sthis.logger.Warn().Url(url).Str("version", version).Str("found", found.version).Msg("version mismatch");
     }
     return { db, dbName, version, url };
-  }
+  };
 }
 
-
-async function connectIdb(style: "read" | "write"| "delete" | "close", url: URI, sthis: SuperThis): Promise<IDBConn> {
-    const dbName = getIndexedDBName(url, sthis);
+async function connectIdb(style: "read" | "write" | "delete" | "close", url: URI, sthis: SuperThis): Promise<IDBConn> {
+  const dbName = getIndexedDBName(url, sthis);
   if (style === "close") {
     if (onceIndexedDB.has(dbName.fullDb)) {
       const ic = await onceIndexedDB.get(dbName.fullDb).once((): Promise<IDBConn> => Promise.reject(new Error("not open")));
@@ -67,9 +65,9 @@ async function connectIdb(style: "read" | "write"| "delete" | "close", url: URI,
   if (style === "read" || style === "delete") {
     // test existing without creating
     if (!onceIndexedDB.has(dbName.fullDb)) {
-      const dbs = await listDatabases.once(() => indexedDB.databases())
+      const dbs = await listDatabases.once(() => indexedDB.databases());
       if (!dbs.find((i) => i.name === dbName.fullDb)) {
-        const verUrl = ensureVersion(url)
+        const verUrl = ensureVersion(url);
         return {
           db: new ReadDummyIDBPDatabase(dbName.fullDb),
           dbName,
@@ -78,7 +76,7 @@ async function connectIdb(style: "read" | "write"| "delete" | "close", url: URI,
         };
       }
     }
-  } 
+  }
   return onceIndexedDB.get(dbName.fullDb).once(onceCreateDB(dbName, url, sthis));
 }
 
@@ -111,7 +109,6 @@ export function getIndexedDBName(iurl: URI, sthis: SuperThis): DbName {
     dbName,
   };
 }
-
 
 export class IndexedDBGateway implements Gateway {
   async start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
