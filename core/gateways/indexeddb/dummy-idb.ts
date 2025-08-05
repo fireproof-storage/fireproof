@@ -55,7 +55,7 @@ type CreateIndexType<
     ) => IDBPIndex<DBTypes, TxStores, StoreName, IndexName, Mode>
   : undefined;
 
-export class ReadDumyIDBPObjectStore<
+export class ReadDummyIDBPObjectStore<
   DBTypes extends DBSchema | unknown = unknown,
   TxStores extends ArrayLike<StoreNames<DBTypes>> = ArrayLike<StoreNames<DBTypes>>,
   StoreName extends StoreNames<DBTypes> = StoreNames<DBTypes>,
