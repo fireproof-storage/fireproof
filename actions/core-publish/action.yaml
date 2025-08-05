@@ -24,4 +24,18 @@ runs:
         echo "//registry.npmjs.org/:_authToken=${{ inputs.NPM_TOKEN }}" > ~/.npmrc
         mkdir -p dist
         echo "//registry.npmjs.org/:_authToken=${{ inputs.NPM_TOKEN }}" > dist/npmrc-smoke
-        pnpm run publish --registry https://registry.npmjs.org/
+        
+        # Extract version from tag and determine npm tag
+        TAG_NAME=$(git describe --tags --abbrev=0)
+        VERSION=${TAG_NAME#*@v}  # Remove prefix up to @v
+        if [[ "$VERSION" == *"-"* ]]; then
+          # Version contains dash (pre-release) - publish to 'dev' tag
+          NPM_TAG="dev"
+          echo "Publishing pre-release version $VERSION to 'dev' tag"
+        else
+          # Version has no dash (stable release) - publish to 'latest' tag
+          NPM_TAG="latest"
+          echo "Publishing stable version $VERSION to 'latest' tag"
+        fi
+        
+        pnpm run publish --registry https://registry.npmjs.org/ --tag $NPM_TAG
