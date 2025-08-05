@@ -6,6 +6,7 @@ then
   then
     FP_TSC=tsgo
   fi
+  echo "Using typescript: $FP_TSC"
   #echo $PWD
   #which $FP_TSC
   shift
