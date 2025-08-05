@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
 import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 import { decodeJwt } from "jose/jwt/decode";
@@ -158,15 +158,58 @@ const initialCtx = {
 
 const prepareWebctxs = new KeyedResolvOnce();
 
+// Map to store attachment states per database name
+const attachmentStates = new Map<string, AttachHook>();
+const attachmentSetters = new Map<string, Set<React.Dispatch<React.SetStateAction<AttachHook>>>>();
+
 export function createAttach(database: Database, config: UseFPConfig): AttachHook {
-  const [attachState, setAttachState] = useState<AttachHook>({ state: "initial", ctx: initialCtx });
+  const dbName = database.name;
+
+  // Get or create attachment state for this database name
+  const existingState = attachmentStates.get(dbName);
+  const [attachState, setAttachState] = useState<AttachHook>(existingState || { state: "initial", ctx: initialCtx });
+
+  // Store the setter for this database name so other instances can update it
+  useEffect(() => {
+    if (!attachmentSetters.has(dbName)) {
+      attachmentSetters.set(dbName, new Set());
+    }
+    const setters = attachmentSetters.get(dbName);
+    if (setters) {
+      setters.add(setAttachState);
+    }
+
+    return () => {
+      if (setters) {
+        setters.delete(setAttachState);
+        if (setters.size === 0) {
+          attachmentSetters.delete(dbName);
+        }
+      }
+    };
+  }, [dbName]);
+
+  // Update Map when state changes
+  useEffect(() => {
+    attachmentStates.set(dbName, attachState);
+  }, [dbName, attachState]);
 
   useEffect(() => {
     database.ledger.refId().then((dbId) => {
       prepareWebctxs.get(dbId).once(() => {
         if (config.attach && attachState.state === "initial") {
           // const id = database.sthis.nextId().str;
-          setAttachState((prev) => ({ ...prev, state: "attaching" }));
+          const updateState = (updater: (prev: AttachHook) => AttachHook) => {
+            // Update all instances of this database name
+            const setters = attachmentSetters.get(dbName);
+            if (setters) {
+              setters.forEach((setter) => {
+                setter(updater);
+              });
+            }
+          };
+
+          updateState((prev) => ({ ...prev, state: "attaching" }));
 
           async function prepareWebctx(attachable: ToCloudAttachable) {
             const webCtx = attachable.opts.context.get<WebToCloudCtx>(WebCtx);
@@ -176,10 +219,10 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
             await webCtx.ready(database); // start keybag
             webCtx.onTokenChange((token) => {
               if (!token) {
-                setAttachState((prev) => ({ ...prev, state: "initial", ctx: initialCtx }));
+                updateState((prev) => ({ ...prev, state: "initial", ctx: initialCtx }));
                 return;
               }
-              setAttachState((prev) => ({
+              updateState((prev) => ({
                 ...prev,
                 ctx: {
                   ...prev.ctx,
@@ -188,7 +231,7 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
                     tokenAndClaims: token,
                     reset: () => {
                       webCtx.resetToken().then(() =>
-                        setAttachState((prev) => ({
+                        updateState((prev) => ({
                           ...prev,
                           state: "initial",
                           ctx: initialCtx,
@@ -206,11 +249,11 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
             });
             if (rAttached.isErr()) {
               database.logger.Error().Err(rAttached).Msg("attach error");
-              setAttachState((prev) => ({ ...prev, state: "error", error: rAttached.Err() }));
+              updateState((prev) => ({ ...prev, state: "error", error: rAttached.Err() }));
             }
             const attached = rAttached.Ok();
 
-            setAttachState((prev) => ({
+            updateState((prev) => ({
               ...prev,
               state: "attached",
               attached,
