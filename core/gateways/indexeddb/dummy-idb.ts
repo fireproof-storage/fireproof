@@ -192,7 +192,7 @@ export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
     return {
       done: Promise.resolve(),
       objectStore: function (this: IDBPTransaction, storeName: string) {
-        return new ReadDumyIDBPObjectStore(storeName, this);
+        return new ReadDummyIDBPObjectStore(storeName, this);
       },
     } as IDBPTransaction<unknown, Names, Mode>;
   }
