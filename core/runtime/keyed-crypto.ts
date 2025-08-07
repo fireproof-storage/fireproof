@@ -1,13 +1,6 @@
 import { CryptoRuntime, Logger, URI } from "@adviser/cement";
-import { SuperThis, PARAM, KeyBagIf } from "@fireproof/core-types-base";
-import {
-  BytesAndKeyWithIv,
-  CodecOpts,
-  IvAndKeyAndBytes,
-  IvKeyIdData,
-  CryptoAction,
-  KeysByFingerprint,
-} from "@fireproof/core-types-blockstore";
+import { SuperThis, PARAM, KeyBagIf, KeysByFingerprint } from "@fireproof/core-types-base";
+import { BytesAndKeyWithIv, CodecOpts, IvAndKeyAndBytes, IvKeyIdData, CryptoAction } from "@fireproof/core-types-blockstore";
 import { ensureLogger, UInt8ArrayEqual } from "./utils.js";
 import type { AsyncBlockCodec, ByteView } from "@fireproof/core-types-runtime";
 import { base58btc } from "multiformats/bases/base58";
@@ -199,7 +192,7 @@ class noCrypto implements CryptoAction {
       upsert: () => {
         throw this.logger.Error().Msg("noCrypto.upsert not implemented").AsError();
       },
-      asV2KeysItem: () => {
+      asV2StorageKeyItem: () => {
         throw this.logger.Error().Msg("noCrypto.asV2KeysItem not implemented").AsError();
       },
     };

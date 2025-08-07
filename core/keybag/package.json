@@ -41,8 +41,9 @@
     "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
-    "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
-    "multiformats": "^13.4.0"
+    "jose": "^6.0.12",
+    "multiformats": "^13.4.0",
+    "zod": "^4.0.14"
   }
 }

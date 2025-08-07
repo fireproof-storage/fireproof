@@ -1,6 +1,7 @@
 import { Base64EndeCoder, CertificatePayload, JWKPublic } from "@fireproof/core-types-base";
 import { jwtVerify, decodeProtectedHeader } from "jose";
 import { Certor } from "./certor.js";
+import { exception2Result, Result } from "@adviser/cement";
 
 interface HeaderCertInfo {
   readonly certificate: Certor;
@@ -20,8 +21,8 @@ interface VerifyWithCertificateSuccess {
   readonly certificate: HeaderCertInfo & {
     readonly validation: {
       readonly valid: true;
-      readonly subject: string;
-      readonly issuer: string;
+      readonly subject: Record<string, string>;
+      readonly issuer: Record<string, string>;
       readonly serialNumber: string;
       readonly notBefore: Date;
       readonly notAfter: Date;
@@ -38,7 +39,7 @@ interface VerifyWithCertificateSuccess {
 
 interface VerifyWithCertificateError {
   readonly valid: false;
-  readonly error: string;
+  readonly error: Error;
   readonly errorCode: string;
   readonly partialResults: {
     readonly certificateExtracted: boolean;
@@ -66,6 +67,23 @@ export class DeviceIdVerifyMsg {
     this.#options = options;
   }
 
+  createVerifyWithCertificateError(
+    error: Result<unknown>,
+    partialResults: Partial<VerifyWithCertificateError["partialResults"]> = {},
+  ): VerifyWithCertificateError {
+    return {
+      valid: false,
+      error: error.Err(),
+      errorCode: this.getErrorCode(error),
+      partialResults: {
+        certificateExtracted: partialResults.certificateExtracted ?? false,
+        jwtSignatureValid: partialResults.jwtSignatureValid ?? false,
+        certificateInfo: partialResults.certificateInfo,
+      },
+      verificationTimestamp: new Date().toISOString(),
+    };
+  }
+
   /**
    * Verify JWT and validate certificate
    */
@@ -75,75 +93,92 @@ export class DeviceIdVerifyMsg {
     let jwtPayload = null;
     let jwtHeader = null;
 
-    try {
-      // Step 1: Extract certificate from JWT header
-      certInfo = this.extractCertificateFromJWT(jwt);
-      if (!certInfo.certificate) {
-        throw new Error("No certificate found in JWT header");
-      }
+    // Step 1: Extract certificate from JWT header
+    const rCertInfo = this.extractCertificateFromJWT(jwt);
+    if (rCertInfo.isErr()) {
+      return this.createVerifyWithCertificateError(rCertInfo);
+    }
+    certInfo = rCertInfo.Ok();
 
-      // Step 2: Validate certificate thumbprint integrity
-      if (!(await this.validateCertificateThumbprint(certInfo))) {
-        throw new Error("Certificate thumbprint validation failed");
-      }
+    // Step 2: Validate certificate thumbprint integrity
+    const rThumbprint = await this.validateCertificateThumbprint(certInfo);
+    if (rThumbprint.isErr()) {
+      return this.createVerifyWithCertificateError(rThumbprint, {
+        certificateExtracted: true,
+        certificateInfo: certInfo,
+      });
+    }
+    if (!rThumbprint.Ok()) {
+      return this.createVerifyWithCertificateError(Result.Err("Certificate thumbprint validation failed"), {
+        certificateExtracted: true,
+        certificateInfo: certInfo,
+      });
+    }
 
+    const rVerify = await exception2Result(async () => {
       // Step 3: Extract and validate public key from certificate
       // console.log("Step 3: Extracting public key from certificate...");
       // publicKey = await extractPublicKeyFromCertificate(certInfo.certificate);
       // Step 4: Verify JWT signature with extracted public key
-      const jwtVerification = await jwtVerify(jwt, certInfo.certificate.asCert().certificate.subjectPublicKeyInfo, {
+      return jwtVerify(jwt, certInfo.certificate.asCert().certificate.subjectPublicKeyInfo, {
         clockTolerance: this.#options.clockTolerance,
         maxTokenAge: this.#options.maxAge,
       });
-      if (!jwtVerification) {
-        throw new Error("JWT verification failed");
-      }
-
-      jwtPayload = jwtVerification.payload;
-      jwtHeader = jwtVerification.protectedHeader;
-
-      // Step 5: Validate certificate properties
-      const certValidation = await this.validateCertificate(certInfo.certificate);
-
-      // Step 6: Validate certificate chain if provided
-      if (certInfo.certificateChain.length > 1) {
-        throw new Error("Certificate chain validation not implemented");
-      }
-
-      // Success - return comprehensive result
-      return {
-        valid: true,
-        payload: jwtPayload,
-        header: jwtHeader,
-        certificate: {
-          ...certInfo,
-          validation: certValidation,
-          publicKey: certInfo.certificate.asCert().certificate.subjectPublicKeyInfo,
-        },
-        verificationTimestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      // Log the error for debugging
-      return {
-        valid: false,
-        error: (error as Error).message,
-        errorCode: this.getErrorCode(error),
-        partialResults: {
-          certificateExtracted: !!certInfo,
-          // publicKeyExtracted: !!publicKey,
-          jwtSignatureValid: !!jwtPayload,
-          certificateInfo: certInfo,
-        },
-        verificationTimestamp: new Date().toISOString(),
-      };
+    });
+    if (rVerify.isErr()) {
+      return this.createVerifyWithCertificateError(rVerify, {
+        certificateExtracted: true,
+        certificateInfo: certInfo,
+      });
     }
+    const jwtVerification = rVerify.Ok();
+    if (!jwtVerification) {
+      return this.createVerifyWithCertificateError(Result.Err("JWT verification failed"), {
+        certificateExtracted: true,
+        certificateInfo: certInfo,
+      });
+    }
+
+    jwtPayload = jwtVerification.payload;
+    jwtHeader = jwtVerification.protectedHeader;
+
+    // Step 5: Validate certificate properties
+    const rCertValidation = await this.validateCertificate(certInfo.certificate);
+    if (rCertValidation.isErr()) {
+      return this.createVerifyWithCertificateError(rCertValidation, {
+        certificateExtracted: true,
+        certificateInfo: certInfo,
+        jwtSignatureValid: true,
+      });
+    }
+
+    // Step 6: Validate certificate chain if provided
+    if (certInfo.certificateChain.length > 1) {
+      return this.createVerifyWithCertificateError(Result.Err("Certificate chain validation not implemented"), {
+        certificateExtracted: true,
+        certificateInfo: certInfo,
+      });
+    }
+
+    // Success - return comprehensive result
+    return {
+      valid: true,
+      payload: jwtPayload,
+      header: jwtHeader,
+      certificate: {
+        ...certInfo,
+        validation: rCertValidation.Ok(),
+        publicKey: certInfo.certificate.asCert().certificate.subjectPublicKeyInfo,
+      },
+      verificationTimestamp: new Date().toISOString(),
+    };
   }
 
   /**
    * Extract certificate information from JWT header
    */
-  extractCertificateFromJWT(jwt: string): HeaderCertInfo {
-    try {
+  extractCertificateFromJWT(jwt: string): Result<HeaderCertInfo> {
+    return exception2Result(() => {
       // Decode JWT header without verification
       const header = decodeProtectedHeader(jwt);
 
@@ -166,43 +201,38 @@ export class DeviceIdVerifyMsg {
         certificateUrl: header.x5u,
         rawHeader: header,
       };
-    } catch (error) {
-      throw new Error(`Failed to extract certificate from JWT: ${(error as Error).message}`);
-    }
+    });
   }
 
   /**
    * Validate certificate thumbprint to ensure integrity
    */
-  async validateCertificateThumbprint(certInfo: ReturnType<typeof this.extractCertificateFromJWT>) {
+  async validateCertificateThumbprint(certInfo: HeaderCertInfo): Promise<Result<boolean>> {
     // Calculate SHA-1 thumbprint
     if (certInfo.thumbprint) {
       const calculatedThumbprint = await certInfo.certificate.asSHA1();
-
       // calculateCertThumbprint(certInfo.certificate, "sha1");
       if (certInfo.thumbprint !== calculatedThumbprint) {
-        throw new Error("Certificate SHA-1 thumbprint mismatch - certificate may have been tampered with");
+        return Result.Err(new Error("Certificate SHA-1 thumbprint mismatch - certificate may have been tampered with"));
       }
     }
 
     // Calculate SHA-256 thumbprint
     if (certInfo.thumbprintSha256) {
       const calculatedThumbprintSha256 = await certInfo.certificate.asSHA256();
-
       if (certInfo.thumbprintSha256 !== calculatedThumbprintSha256) {
-        throw new Error("Certificate SHA-256 thumbprint mismatch - certificate may have been tampered with");
+        return Result.Err(new Error("Certificate SHA-256 thumbprint mismatch - certificate may have been tampered with"));
       }
     }
-
-    return true;
+    return Result.Ok(true);
   }
 
   /**
    * Validate certificate properties
    */
-  async validateCertificate(certor: Certor) {
+  async validateCertificate(certor: Certor): Promise<Result<VerifyWithCertificateSuccess["certificate"]["validation"]>> {
     const now = new Date();
-    try {
+    return exception2Result(() => {
       const cert = certor.asCert();
       // Parse certificate details
       const subject = certor.parseCertificateSubject(cert.sub);
@@ -268,10 +298,8 @@ export class DeviceIdVerifyMsg {
         validityPeriod: {
           days: Math.floor((notAfter.getTime() - notBefore.getTime()) / (1000 * 60 * 60 * 24)),
         },
-      };
-    } catch (error) {
-      throw new Error(`Certificate validation failed: ${(error as Error).message}`);
-    }
+      } satisfies VerifyWithCertificateSuccess["certificate"]["validation"];
+    });
   }
 
   findTrustedCA(cert: CertificatePayload, trustedCAs: CertificatePayload[]) {

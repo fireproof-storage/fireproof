@@ -1,6 +1,6 @@
 import { Logger, CoerceURI, URI, AppContext } from "@adviser/cement";
 import { Attachable, SuperThis } from "@fireproof/core-types-base";
-import { FPCloudClaim } from "./msg-types.js";
+import { FPCloudClaim } from "./msg-types.zod.js";
 
 export interface ToCloudAttachable extends Attachable {
   token?: string;
