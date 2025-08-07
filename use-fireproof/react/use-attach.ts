@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
 import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
 import { decodeJwt } from "jose/jwt/decode";
-import { SuperThis, Database, KeyBagProvider } from "@fireproof/core-types-base";
-import { ensureSuperThis, hashString } from "@fireproof/core-runtime";
+import { SuperThis, Database, KeyBagIf } from "@fireproof/core-types-base";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import {
   FPCloudClaim,
   ToCloudAttachable,
@@ -13,7 +13,7 @@ import {
   TokenAndClaims,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
-import { isKeysItem, isV1StorageKeyItem } from "@fireproof/core-keybag";
+import { getKeyBag } from "@fireproof/core-keybag";
 
 export const WebCtx = "webCtx";
 
@@ -27,7 +27,7 @@ class WebCtxImpl implements WebToCloudCtx {
   // readonly uiURI: string;
   readonly tokenParam: string;
   // if not provided set in ready
-  keyBag?: KeyBagProvider;
+  keyBag?: KeyBagIf;
   readonly sthis: SuperThis;
 
   dbId!: string;
@@ -59,7 +59,7 @@ class WebCtxImpl implements WebToCloudCtx {
 
   async ready(db: Database): Promise<void> {
     this.dbId = await db.ledger.refId();
-    this.keyBag = this.keyBag ?? (await db.ledger.opts.keyBag.getBagProvider());
+    this.keyBag = this.keyBag ?? (await getKeyBag(this.sthis));
   }
 
   async onAction(token?: TokenAndClaims) {
@@ -89,18 +89,12 @@ class WebCtxImpl implements WebToCloudCtx {
       return this.opts.token();
     }
     const tc = await this._tokenAndClaims.once(async () => {
-      const ret = await this.keyBag?.get(`${this.dbId}/urlToken`);
-      if (!ret) {
-        return undefined;
+      const ret = await this.keyBag?.getJwt(`${this.dbId}/urlToken`);
+      if (!ret || ret.Err()) {
+        return;
       }
-      let token: string;
-      if (isV1StorageKeyItem(ret)) {
-        token = ret.key;
-      } else if (isKeysItem(ret)) {
-        token = ret.keys[this.tokenParam].key;
-      } else {
-        return undefined;
-      }
+      const key = ret.Ok();
+      const token = key.jwt;
       const claims = decodeJwt(token) as FPCloudClaim;
       return {
         token,
@@ -118,7 +112,7 @@ class WebCtxImpl implements WebToCloudCtx {
       return this.opts.resetToken();
     }
     this._tokenAndClaims.reset();
-    await this.keyBag?.del(`${this.dbId}/urlToken`);
+    await this.keyBag?.delete(`${this.dbId}/urlToken`);
     this.onAction();
   }
 
@@ -129,18 +123,8 @@ class WebCtxImpl implements WebToCloudCtx {
     const oldToken = await this.token();
     if (oldToken?.token !== token.token) {
       this._tokenAndClaims.reset();
-      // set
       this._tokenAndClaims.once(() => token);
-      await this.keyBag?.set({
-        name: `${this.dbId}/urlToken`,
-        keys: {
-          [this.tokenParam]: {
-            key: token.token,
-            fingerPrint: await hashString(token.token),
-            default: false,
-          },
-        },
-      });
+      await this.keyBag?.setJwt(`${this.dbId}/urlToken`, token.token);
       this.onAction(token);
     }
   }

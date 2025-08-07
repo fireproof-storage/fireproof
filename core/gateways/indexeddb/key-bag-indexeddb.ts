@@ -1,6 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
-import { KeyBagProvider, V2KeysItem, V1StorageKeyItem, type SuperThis } from "@fireproof/core-types-base";
+import { KeyBagProvider, type SuperThis } from "@fireproof/core-types-base";
 import { getPath } from "@fireproof/core-gateways-base";
 
 export class KeyBagProviderIndexedDB implements KeyBagProvider {
@@ -39,7 +39,7 @@ export class KeyBagProviderIndexedDB implements KeyBagProvider {
     await tx.done;
   }
 
-  async get(id: string): Promise<V2KeysItem | V1StorageKeyItem | undefined> {
+  async get(id: string): Promise<NonNullable<unknown> | undefined> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readonly");
     const keyItem = await tx.objectStore("bag").get(id);
@@ -50,10 +50,10 @@ export class KeyBagProviderIndexedDB implements KeyBagProvider {
     return keyItem;
   }
 
-  async set(item: V2KeysItem): Promise<void> {
+  async set(id: string, item: NonNullable<unknown>): Promise<void> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readwrite");
-    await tx.objectStore("bag").put(item, item.name);
+    await tx.objectStore("bag").put(item, id);
     await tx.done;
   }
 }

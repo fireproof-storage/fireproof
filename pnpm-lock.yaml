@@ -532,8 +532,8 @@ importers:
   core/device-id:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.20
-        version: 0.4.23(typescript@5.9.2)
+        specifier: ^0.4.23
+        version: 0.4.25(typescript@5.9.2)
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../keybag
@@ -558,7 +558,7 @@ importers:
         version: link:../../cli
       '@types/node':
         specifier: ^24.1.0
-        version: 24.2.1
+        version: 24.3.0
 
   core/gateways/base:
     dependencies:
@@ -753,15 +753,18 @@ importers:
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../types/base
-      '@fireproof/core-types-blockstore':
-        specifier: workspace:0.0.0
-        version: link:../types/blockstore
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../vendor
+      jose:
+        specifier: ^6.0.12
+        version: 6.0.12
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
+      zod:
+        specifier: ^4.0.14
+        version: 4.0.14
 
   core/protocols/cloud:
     dependencies:
@@ -956,6 +959,9 @@ importers:
       '@web3-storage/pail':
         specifier: ^0.6.2
         version: 0.6.2
+      jose:
+        specifier: ^6.0.12
+        version: 6.0.12
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
@@ -1011,6 +1017,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
+      zod:
+        specifier: ^4.0.14
+        version: 4.0.14
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -1266,6 +1275,9 @@ importers:
 
   vendor:
     dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.23
+        version: 0.4.25(typescript@5.9.2)
       yocto-queue:
         specifier: ^1.2.1
         version: 1.2.1

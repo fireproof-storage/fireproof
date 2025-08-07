@@ -240,7 +240,7 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<TokenForParam> = 
     token: keys.strings.privateKey,
   });
 
-  const id = claim.id ?? sthis.nextId().str;
+  const id = claim.jti ?? sthis.nextId().str;
   const claims: ps.TokenForParam = {
     userId: `hello-${id}`,
     email: `hello-${id}@test.de`,

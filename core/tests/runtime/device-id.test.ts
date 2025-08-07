@@ -1,19 +1,15 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, assert } from "vitest";
 import { decodeProtectedHeader, importJWK, jwtVerify } from "jose";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import {
-  CertificatePayload,
-  CertificatePayloadSchema,
   DeviceIdCA,
   DeviceIdCSR,
   DeviceIdKey,
   DeviceIdSignMsg,
   DeviceIdValidator,
   DeviceIdVerifyMsg,
-  Extensions,
-  JWKPrivate,
-  Subject,
 } from "@fireproof/core-device-id";
+import { CertificatePayload, CertificatePayloadSchema, Extensions, JWKPrivate, Subject } from "@fireproof/core-types-base";
 
 const sthis = ensureSuperThis();
 
@@ -24,6 +20,9 @@ describe("DeviceIdKey", () => {
 
     expect(jwk).toBeDefined();
     expect(jwk.kty).toBe("EC");
+    if (jwk.kty !== "EC") {
+      assert.fail("Invalid JWK");
+    }
     expect(jwk.d).toBeDefined(); // Private key component
 
     const imported = await DeviceIdKey.createFromJWK(jwk as JWKPrivate);
@@ -45,7 +44,7 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
   it("should create and validate a CSR successfully", async () => {
     // Create a key and CSR
     const key = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(key);
+    const csr = new DeviceIdCSR(sthis, key);
 
     const subject: Subject = {
       commonName: "test.example.com",
@@ -62,7 +61,11 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
     };
 
     // Create the CSR
-    const csrJWS = await csr.createCSR(subject, extensions);
+    const rCsrJWS = await csr.createCSR(subject, extensions);
+    if (rCsrJWS.isErr()) {
+      assert.fail(rCsrJWS.Err().message);
+    }
+    const csrJWS = rCsrJWS.Ok();
     expect(csrJWS).toBeDefined();
     expect(typeof csrJWS).toBe("string");
 
@@ -93,10 +96,14 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
 
   it("should fail validation for tampered CSR", async () => {
     const key = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(key);
+    const csr = new DeviceIdCSR(sthis, key);
 
     const subject = { commonName: "test.example.com" };
-    const csrJWS = await csr.createCSR(subject);
+    const rCsrJWS = await csr.createCSR(subject);
+    if (rCsrJWS.isErr()) {
+      assert.fail(rCsrJWS.Err().message);
+    }
+    const csrJWS = rCsrJWS.Ok();
 
     // Tamper with the CSR
     const tamperedCSR = csrJWS.slice(0, -10) + "tampered123";
@@ -152,7 +159,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     // Create device key and CSR
     const deviceKey = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(deviceKey);
+    const csr = new DeviceIdCSR(sthis, deviceKey);
 
     const subject = {
       commonName: "device.example.com",
@@ -169,13 +176,20 @@ describe("DeviceIdCA certificate generation and validation", () => {
     };
 
     // Create CSR
-    const csrJWS = await csr.createCSR(subject, extensions);
+    const rCsrJWS = await csr.createCSR(subject, extensions);
+    if (rCsrJWS.isErr()) {
+      assert.fail(rCsrJWS.Err().message);
+    }
+    const csrJWS = rCsrJWS.Ok();
 
     // Process CSR and generate certificate
-    const certificate = await ca.processCSR(csrJWS);
-
+    const rCertificate = await ca.processCSR(csrJWS);
+    if (rCertificate.isErr()) {
+      assert.fail(rCertificate.Err().message);
+    }
+    const certificate = rCertificate.Ok();
     // Verify certificate structure
-    expect(certificate.certificate).toBeDefined();
+    expect(certificate.certificateJWT).toBeDefined();
     expect(certificate.format).toBe("JWS");
     expect(certificate.serialNumber).toBeDefined();
     expect(certificate.issuer).toBe(caSubject.commonName);
@@ -188,7 +202,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
     const caPublicKey = await caKey.publicKey();
     const caKeyForVerification = await importJWK(caPublicKey, "ES256");
 
-    const { payload: certPayload, protectedHeader } = await jwtVerify(certificate.certificate, caKeyForVerification, {
+    const { payload: certPayload, protectedHeader } = await jwtVerify(certificate.certificateJWT, caKeyForVerification, {
       typ: "CERT+JWT",
     });
 
@@ -265,19 +279,23 @@ describe("DeviceIdSignMsg", () => {
     });
 
     // Create CSR and get certificate
-    const csr = new DeviceIdCSR(deviceKey);
+    const csr = new DeviceIdCSR(sthis, deviceKey);
     const subject = {
       commonName: "device.example.com",
       organization: "Device Corp",
     };
 
-    const csrJWS = await csr.createCSR(subject);
-    const certResult = await ca.processCSR(csrJWS);
+    const rCsrJWS = await csr.createCSR(subject);
+    if (rCsrJWS.isErr()) {
+      assert.fail(rCsrJWS.Err().message);
+    }
+    const csrJWS = rCsrJWS.Ok();
+    const rCertResult = await ca.processCSR(csrJWS);
 
     // Extract certificate payload from JWS
     const caPublicKey = await caKey.publicKey();
     const caKeyForVerification = await importJWK(caPublicKey, "ES256");
-    const { payload } = await jwtVerify(certResult.certificate, caKeyForVerification, { typ: "CERT+JWT" });
+    const { payload } = await jwtVerify(rCertResult.Ok().certificateJWT, caKeyForVerification, { typ: "CERT+JWT" });
     certificate = CertificatePayloadSchema.parse(payload);
   });
 
@@ -352,7 +370,9 @@ describe("DeviceIdSignMsg", () => {
     expect(jwt).toBeDefined();
     expect(typeof jwt).toBe("string");
 
-    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [await ca.caCertificate()], {
+    const caCert = await ca.caCertificate();
+
+    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [caCert.Ok()], {
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -376,7 +396,7 @@ describe("DeviceIdSignMsg", () => {
       actions: mockActions,
     });
 
-    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [await newCa.caCertificate()], {
+    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [(await newCa.caCertificate()).Ok()], {
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -401,7 +421,7 @@ describe("DeviceIdSignMsg", () => {
       actions: mockActions,
     });
 
-    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [await newCa.caCertificate()], {
+    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [(await newCa.caCertificate()).Ok()], {
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -425,7 +445,7 @@ describe("DeviceIdSignMsg", () => {
       actions: mockActions,
     });
 
-    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [await newCa.caCertificate()], {
+    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [(await newCa.caCertificate()).Ok()], {
       clockTolerance: 60,
       maxAge: 3600,
     });

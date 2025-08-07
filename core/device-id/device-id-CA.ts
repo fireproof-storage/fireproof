@@ -1,9 +1,18 @@
 import { hashObject } from "@fireproof/core-runtime";
-import { Base64EndeCoder, CertificatePayload, Extensions, FPDeviceIDPayload, JWKPublic, Subject } from "@fireproof/core-types-base";
+import {
+  Base64EndeCoder,
+  CertificatePayload,
+  Extensions,
+  FPDeviceIDPayload,
+  IssueCertificateResult,
+  JWKPublic,
+  Subject,
+} from "@fireproof/core-types-base";
 import { SignJWT } from "jose";
 import { DeviceIdKey } from "./device-id-key.js";
 import { DeviceIdValidator } from "./device-id-validator.js";
 import { Certor } from "./certor.js";
+import { Result } from "@adviser/cement";
 
 export interface CAActions {
   generateSerialNumber(pub: JWKPublic): Promise<string>;
@@ -24,25 +33,13 @@ export interface DeviceIdCAOptsDefaulted {
   readonly caChain?: string[]; // []
   readonly validityPeriod?: number; // 1 year
 }
+
 function defaultDeviceIdCAOpts(opts: DeviceIdCAOptsDefaulted): DeviceIdCAOpts {
   return {
     ...opts,
     validityPeriod: opts.validityPeriod || 365 * 24 * 60 * 60, // 1 year
     caChain: opts.caChain || [],
   };
-}
-
-export interface IssueCertificateResult {
-  readonly certificate: string; // JWT String
-  readonly format: "JWS";
-  readonly serialNumber: string;
-  readonly issuer: string;
-  readonly subject: string;
-  readonly validityPeriod: {
-    readonly notBefore: Date;
-    readonly notAfter: Date;
-  };
-  readonly publicKey: JWKPublic;
 }
 
 export class DeviceIdCA {
@@ -57,27 +54,30 @@ export class DeviceIdCA {
     this.#caSubject = opts.caSubject;
   }
 
-  async processCSR(csrJWS: string): Promise<IssueCertificateResult> {
+  async processCSR(csrJWS: string): Promise<Result<IssueCertificateResult>> {
     const validator = new DeviceIdValidator();
     const validation = await validator.validateCSR(csrJWS);
     if (!validation.valid) {
-      throw new Error(`CSR validation failed: ${validation.error}`);
+      return Result.Err(validation.error);
     }
     return this.issueCertificate(validation.payload);
   }
 
-  async caCertificate(): Promise<CertificatePayload> {
-    const { certificate } = await this.issueCertificate({
+  async caCertificate(): Promise<Result<CertificatePayload>> {
+    const rCert = await this.issueCertificate({
       csr: {
         subject: this.#caSubject,
         publicKey: await this.#caKey.publicKey(),
         extensions: {},
       },
     });
-    return Certor.fromJWT(this.#opts.base64, certificate).asCert();
+    if (rCert.isErr()) {
+      return Result.Err(rCert);
+    }
+    return Result.Ok(Certor.fromJWT(this.#opts.base64, rCert.Ok().certificateJWT).asCert());
   }
 
-  async issueCertificate(devId: FPDeviceIDPayload): Promise<IssueCertificateResult> {
+  async issueCertificate(devId: FPDeviceIDPayload): Promise<Result<IssueCertificateResult>> {
     const now = Math.floor(Date.now() / 1000);
     const serialNumber = await this.#opts.actions.generateSerialNumber(await this.#caKey.publicKey());
 
@@ -138,8 +138,9 @@ export class DeviceIdCA {
       })
       .sign(pKey);
 
-    return {
-      certificate: certificateJWC,
+    return Result.Ok({
+      certificateJWT: certificateJWC,
+      certificatePayload: certificatePayload,
       format: "JWS",
       serialNumber: serialNumber,
       issuer: this.#caSubject.commonName,
@@ -149,7 +150,7 @@ export class DeviceIdCA {
         notAfter: new Date((now + this.#opts.validityPeriod) * 1000),
       },
       publicKey: devId.csr.publicKey,
-    };
+    });
   }
 
   // Build certificate extensions

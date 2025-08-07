@@ -1,9 +1,9 @@
 // can create a CSR
 // can sign Msg
 
-import { SuperThis } from "@fireproof/core-types-base";
+import { IssueCertificateResult, SuperThis } from "@fireproof/core-types-base";
 import { getKeyBag } from "@fireproof/core-keybag";
-import { ResolveOnce } from "@adviser/cement";
+import { ResolveOnce, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { DeviceIdSignMsg } from "./device-id-signed-msg.js";
 import { DeviceIdCSR } from "./device-id-CSR.js";
@@ -23,34 +23,52 @@ class MsgSigner {
 
 const onceDeviceId = new ResolveOnce<MsgSigner>();
 
-export interface DeviceIdApi extends DeviceIdProtocol {
- // sign a message
-  // @param msg: string // JWT String
-  sign<T extends NonNullable<unknown>>(payload: T, algorithm?: string): Promise<string>;
+export interface DeviceIdTransport {
+  issueCertificate(csrJWT: string): Promise<Result<IssueCertificateResult>>;
 }
 
-export async function ensureDeviceId(sthis: SuperThis) {
-  return onceDeviceId.once(async () => {
-    const kBag = await getKeyBag(sthis);
-    let deviceIdResult = await kBag.getDeviceId();
-    if (deviceIdResult.deviceId.IsNone()) {
-      const key = await DeviceIdKey.create();
-      deviceIdResult = await kBag.setDeviceId(await key.exportPrivateJWK());
-    }
-    const key = await DeviceIdKey.createFromJWK(deviceIdResult.deviceId.unwrap());
+export class DeviceIdClient {
+  readonly #sthis: SuperThis;
+  readonly #transport: DeviceIdProtocol;
 
-    if (deviceIdResult.cert.IsNone()) {
-      const csr = new DeviceIdCSR(key);
-      const csrJWT = await csr.createCSR({ commonName: `fp-dev@${await key.fingerPrint()}` });
+  constructor(sthis: SuperThis, transport: DeviceIdProtocol) {
+    this.#sthis = sthis;
+    this.#transport = transport;
+  }
 
-      // todo create cert
-    }
+  ensureDeviceId() {
+    return onceDeviceId.once(async () => {
+      const kBag = await getKeyBag(this.#sthis);
+      let deviceIdResult = await kBag.getDeviceId();
+      if (deviceIdResult.deviceId.IsNone()) {
+        const key = await DeviceIdKey.create();
+        deviceIdResult = await kBag.setDeviceId(await key.exportPrivateJWK());
+      }
+      const key = await DeviceIdKey.createFromJWK(deviceIdResult.deviceId.unwrap());
 
-    // if cert is not there create one or cert is to be renewed
-    // create csr
-    // request signing -> get cert
-    // put into keybag
+      if (deviceIdResult.cert.IsNone()) {
+        const csr = new DeviceIdCSR(this.#sthis, key);
+        const rCsrJWT = await csr.createCSR({ commonName: `fp-dev@${await key.fingerPrint()}` });
+        if (rCsrJWT.isErr()) {
+          return Result.Err(rCsrJWT.Err());
+        }
+        const rCertResult = await this.#transport.issueCertificate(rCsrJWT.Ok());
+        if (rCertResult.isErr()) {
+          return Result.Err(rCertResult.Err());
+        }
+        deviceIdResult = await kBag.setDeviceId(deviceIdResult.deviceId.Unwrap(), rCertResult.Ok());
+      }
 
-    return new MsgSigner(new DeviceIdSignMsg(sthis.txt.base64, key, cert));
-  });
+      // if cert is not there create one or cert is to be renewed
+      // create csr
+      // request signing -> get cert
+      // put into keybag
+
+      return new MsgSigner(new DeviceIdSignMsg(sthis.txt.base64, key, cert));
+    });
+  }
+
+  // sign a message
+  // @param msg: string // JWT String
+  sendSigned<T extends NonNullable<unknown>>(payload: T, algorithm?: string): Promise<string> {}
 }

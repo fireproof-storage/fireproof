@@ -25,6 +25,7 @@ import type {
 
 import type { IndexIf } from "./indexer.js";
 import { SerdeGatewayInterceptor } from "@fireproof/core-types-blockstore";
+import { KeysItem, V2StorageKeyItem } from "./keybag-storage.zod.js";
 
 export class NotFoundError extends Error {
   readonly code = "ENOENT";
@@ -735,23 +736,6 @@ export interface Ledger extends HasCRDT {
   // compact(): Promise<void>;
 }
 
-export interface V1StorageKeyItem {
-  readonly name: string;
-  readonly key: string;
-}
-
-export interface V2StorageKeyItem {
-  readonly key: string; // material
-  readonly fingerPrint: string;
-  readonly default: boolean;
-}
-
-// Serialized Version
-export interface V2KeysItem {
-  readonly name: string;
-  readonly keys: Record<string, V2StorageKeyItem>;
-}
-
 export interface KeyMaterial {
   readonly key: Uint8Array;
   readonly keyStr: string;
@@ -762,7 +746,7 @@ export interface KeyWithFingerPrint {
   readonly fingerPrint: string;
   readonly key: CTCryptoKey;
   extract(): Promise<KeyMaterial>;
-  asV2StorageKeyItem(): Promise<V2StorageKeyItem>;
+  asKeysItem(): Promise<KeysItem>;
 }
 
 export interface KeyUpsertResultModified {
@@ -785,17 +769,12 @@ export interface KeysByFingerprint {
   readonly name: string;
   get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined>;
   upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
-  asV2KeysItem(): Promise<V2KeysItem>;
-}
-
-export interface KeysItem {
-  readonly name: string;
-  readonly keys: Record<string, KeyWithFingerPrint>;
+  asV2StorageKeyItem(): Promise<V2StorageKeyItem>;
 }
 
 export interface KeyBagProvider {
-  get(id: string): Promise<V1StorageKeyItem | V2KeysItem | undefined>;
-  set(item: V2KeysItem): Promise<void>;
+  get(id: string): Promise<NonNullable<unknown> | undefined>;
+  set(id: string, item: NonNullable<unknown>): Promise<void>;
   del(id: string): Promise<void>;
 }
 

@@ -13,10 +13,10 @@ import type {
   DocWithId,
   IndexKeyType,
   FPIndexRow,
-  KeyBagProvider,
   MapFn,
   QueryOpts,
   SuperThis,
+  KeyBagIf,
 } from "@fireproof/core-types-base";
 import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
@@ -125,7 +125,7 @@ export interface WebToCloudCtx {
   readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
   readonly tokenApiURI: string; // https://dev.connect.fireproof.direct/api
   // stores connection and token
-  keyBag?: KeyBagProvider;
+  keyBag?: KeyBagIf;
   // readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
   // url param name for token
   readonly tokenParam: string;

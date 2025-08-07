@@ -1,11 +1,11 @@
-import { JWKPrivateSchema, SuperThis } from "@fireproof/core-types-base";
-import { CAActions, DeviceIdCA, IssueCertificateResult } from "./device-id-CA.js";
-import { param } from "@adviser/cement";
+import { IssueCertificateResult, JWKPrivateSchema, SuperThis } from "@fireproof/core-types-base";
+import { CAActions, DeviceIdCA } from "./device-id-CA.js";
+import { param, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { base58btc } from "multiformats/bases/base58";
 import { DeviceIdVerifyMsg, VerifyWithCertificateResult } from "./device-id-verify-msg.js";
 
-async function ensureCA(sthis: SuperThis, actions: CAActions) {
+async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<DeviceIdCA>> {
   const rEnv = sthis.env.gets({
     DEVICE_ID_CA_KEY: param.REQUIRED,
     DEVICE_ID_CA_COMMON_NAME: param.OPTIONAL,
@@ -19,18 +19,20 @@ async function ensureCA(sthis: SuperThis, actions: CAActions) {
     throw new Error("Invalid CA key");
   }
 
-  return new DeviceIdCA({
-    base64: sthis.txt.base64,
-    caKey: await DeviceIdKey.createFromJWK(caKey),
-    caSubject: {
-      commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
-    },
-    actions,
-  });
+  return Result.Ok(
+    new DeviceIdCA({
+      base64: sthis.txt.base64,
+      caKey: await DeviceIdKey.createFromJWK(caKey),
+      caSubject: {
+        commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
+      },
+      actions,
+    }),
+  );
 }
 
 export interface DeviceIdProtocol {
-  issueCertificate(msg: string): Promise<IssueCertificateResult>;
+  issueCertificate(msg: string): Promise<Result<IssueCertificateResult>>;
   verifyMsg(message: string): Promise<VerifyWithCertificateResult>;
 }
 
@@ -41,13 +43,20 @@ export interface DeviceIdProtocolSrvOpts {
 export class DeviceIdProtocolSrv implements DeviceIdProtocol {
   readonly #ca: DeviceIdCA;
   readonly #verifyMsg: DeviceIdVerifyMsg;
-  static async create(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<DeviceIdProtocol> {
-    const ca = await ensureCA(sthis, opts.actions);
-    const verifyMsg = new DeviceIdVerifyMsg(sthis.txt.base64, [await ca.caCertificate()], {
+  static async create(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<Result<DeviceIdProtocol>> {
+    const rCa = await ensureCA(sthis, opts.actions);
+    if (rCa.isErr()) {
+      return Result.Err(rCa);
+    }
+    const rCaCert = await rCa.Ok().caCertificate();
+    if (rCaCert.isErr()) {
+      return Result.Err(rCaCert);
+    }
+    const verifyMsg = new DeviceIdVerifyMsg(sthis.txt.base64, [rCaCert.Ok()], {
       clockTolerance: 60,
       maxAge: 3600,
     });
-    return new DeviceIdProtocolSrv(ca, verifyMsg);
+    return Result.Ok(new DeviceIdProtocolSrv(rCa.Ok(), verifyMsg));
   }
 
   private constructor(ca: DeviceIdCA, verifyMsg: DeviceIdVerifyMsg) {
@@ -57,7 +66,7 @@ export class DeviceIdProtocolSrv implements DeviceIdProtocol {
 
   // issue a certificate
   // @param msg: string // CSR as JWT String
-  issueCertificate(msg: string): Promise<IssueCertificateResult> {
+  issueCertificate(msg: string): Promise<Result<IssueCertificateResult>> {
     return this.#ca.processCSR(msg);
   }
   // sign a message

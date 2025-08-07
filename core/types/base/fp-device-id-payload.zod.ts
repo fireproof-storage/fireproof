@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JWKPublicSchema } from "./jwk-public.zod.js";
+import { JWTPayloadSchema } from "./jwt-payload.zod.js";
 
 // Subject Schema
 export const SubjectSchema = z.object({
@@ -88,17 +89,6 @@ export const ExtensionsSchema = z.object({
 });
 
 export type Extensions = z.infer<typeof ExtensionsSchema>;
-
-// JWT Payload Schema (standard claims)
-const JWTPayloadSchema = z.object({
-  iss: z.string().optional(), // issuer
-  sub: z.string().optional(), // subject
-  aud: z.union([z.string(), z.array(z.string())]).optional(), // audience
-  exp: z.number().int().optional(), // expiration time
-  nbf: z.number().int().optional(), // not before
-  iat: z.number().int().optional(), // issued at
-  jti: z.string().optional(), // JWT ID
-});
 
 // Main FPDeviceIDPayload Schema
 export const FPDeviceIDPayloadSchema = JWTPayloadSchema.extend({
