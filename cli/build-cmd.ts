@@ -158,6 +158,20 @@ export function buildCmd(sthis: SuperThis) {
         defaultValue: () => "",
         description: "Path to the npmrc file to use for packing, defaults to './dist/npmrc-smoke'.",
       }),
+      licenseFile: option({
+        long: "licenseFile",
+        short: "l",
+        type: string,
+        defaultValue: () => "LICENSE.md",
+        description: "Path to the license file to use for packing, defaults to './LICENSE'.",
+      }),
+      readmeFile: option({
+        long: "readmeFile",
+        short: "m",
+        type: string,
+        defaultValue: () => "README.md",
+        description: "Path to the readme file to use for packing, defaults to './README.md'.",
+      }),
       registry: option({
         long: "registry",
         short: "r",
@@ -200,6 +214,15 @@ export function buildCmd(sthis: SuperThis) {
       // args.srcDir = path.resolve(args.srcDir);
 
       const tmpDest = await fs.mkdtemp("../fp-dist-");
+      const licenseFile = await findUp(args.licenseFile);
+      if (licenseFile) {
+        await fs.copyFile(licenseFile, path.join(tmpDest, path.basename(args.licenseFile)));
+      }
+      const readmeFile = await findUp(args.readmeFile);
+      if (readmeFile) {
+        await fs.copyFile(readmeFile, path.join(tmpDest, path.basename(args.readmeFile)));
+      }
+
       await fs.copy(args.srcDir, tmpDest, {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         filter: (src: string, dst: string) => {
