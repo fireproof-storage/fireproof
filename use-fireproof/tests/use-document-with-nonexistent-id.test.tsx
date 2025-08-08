@@ -1,7 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { fireproof, useFireproof } from "../index.js"; // Adjust the import path as necessary
-import type { Database, UseDocumentResult } from "../index.js"; // Adjust the import path as necessary
+import { fireproof, useFireproof, Database, UseDocumentResult } from "use-fireproof";
 
 const TEST_TIMEOUT = 45000;
 

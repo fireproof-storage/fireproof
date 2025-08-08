@@ -7,7 +7,7 @@ packages:
   - "core/types/protocols/*"
   - "core/gateways/*"
   - "core/protocols/*"
-  - "use-fireproof"
+  - "use-fireproof/*"
   - "dashboard"
   - "vendor"
 #catalog:
