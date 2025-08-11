@@ -158,8 +158,8 @@ importers:
         specifier: ^0.4.21
         version: 0.4.21(typescript@5.8.3)
       '@cloudflare/workers-types':
-        specifier: ^4.20250719.0
-        version: 4.20250726.0
+        specifier: ^4.20250810.0
+        version: 4.20250810.0
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -186,7 +186,7 @@ importers:
         version: 1.0.20
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.4(@cloudflare/workers-types@4.20250726.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
+        version: 0.44.4(@cloudflare/workers-types@4.20250810.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
       hono:
         specifier: ^4.9.0
         version: 4.9.0
@@ -222,8 +222,8 @@ importers:
         specifier: ^0.4.21
         version: 0.4.21(typescript@5.8.3)
       '@cloudflare/workers-types':
-        specifier: ^4.20250719.0
-        version: 4.20250726.0
+        specifier: ^4.20250810.0
+        version: 4.20250810.0
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -250,7 +250,7 @@ importers:
         version: 0.13.0
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.4(@cloudflare/workers-types@4.20250726.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
+        version: 0.44.4(@cloudflare/workers-types@4.20250810.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
       hono:
         specifier: ^4.9.0
         version: 4.9.0
@@ -314,7 +314,7 @@ importers:
         version: 0.15.10
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.4(@cloudflare/workers-types@4.20250726.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
+        version: 0.44.4(@cloudflare/workers-types@4.20250810.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
       hono:
         specifier: ^4.9.0
         version: 4.9.0
@@ -1077,8 +1077,8 @@ importers:
         specifier: ^1.10.1
         version: 1.10.2(rollup@4.46.1)(vite@7.0.6(@types/node@24.1.0)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0))(workerd@1.20250803.0)(wrangler@4.28.1(@cloudflare/workers-types@4.20250726.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20250710.0
-        version: 4.20250726.0
+        specifier: ^4.20250810.0
+        version: 4.20250810.0
       '@eslint/js':
         specifier: ^9.33.0
         version: 9.33.0
@@ -1114,7 +1114,7 @@ importers:
         version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.4(@cloudflare/workers-types@4.20250726.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
+        version: 0.44.4(@cloudflare/workers-types@4.20250810.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3)
       eslint:
         specifier: ^9.33.0
         version: 9.33.0(jiti@1.21.7)
@@ -7869,9 +7869,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.4(@cloudflare/workers-types@4.20250726.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3):
+  drizzle-orm@0.44.4(@cloudflare/workers-types@4.20250810.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.3):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250726.0
+      '@cloudflare/workers-types': 4.20250810.0
       '@libsql/client': 0.15.10
       gel: 2.1.1
       kysely: 0.28.3
@@ -10222,7 +10222,7 @@ snapshots:
       unenv: 2.0.0-rc.19
       workerd: 1.20250803.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250726.0
+      '@cloudflare/workers-types': 4.20250810.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
