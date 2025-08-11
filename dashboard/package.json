@@ -41,7 +41,7 @@
     "jose": "^6.0.12",
     "minimatch": "^10.0.1",
     "multiformats": "^13.3.6",
-    "partysocket": "^1.0.2",
+    "partysocket": "^1.1.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.61.1",
