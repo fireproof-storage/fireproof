@@ -57,7 +57,7 @@
     "@fireproof/core-cli": "workspace:0.0.0",
     "drizzle-kit": "0.30.6",
     "vitest": "^3.2.4",
-    "wrangler": "^4.26.0",
+    "wrangler": "^4.28.1",
     "zx": "^8.8.0"
   }
 }
