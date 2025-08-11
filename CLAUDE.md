@@ -9,6 +9,14 @@ pnpm check
 
 This command runs formatting, linting, tests, and build to ensure code quality.
 
+## Branch Naming Convention
+
+Use the format `{username}/{topic}` for branch names:
+```bash
+git checkout -b jchris/fix-bug-123
+git checkout -b alice/add-new-feature
+```
+
 ## Workspace Layout
 
 This is a pnpm monorepo with packages organized as follows:
