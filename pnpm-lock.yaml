@@ -48,8 +48,8 @@ importers:
         specifier: ^2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.39.0(eslint@9.32.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.32.0(jiti@1.21.7))
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
       playwright:
         specifier: ^1.54.2
         version: 1.54.2
@@ -105,8 +105,8 @@ importers:
         specifier: ^11.3.1
         version: 11.3.1
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
       semver:
         specifier: ^7.7.2
         version: 7.7.2
@@ -255,8 +255,8 @@ importers:
         specifier: ^4.9.0
         version: 4.9.0
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -500,8 +500,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
       p-map:
         specifier: ^7.0.3
         version: 7.0.3
@@ -730,8 +730,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
 
   core/protocols/cloud:
     dependencies:
@@ -802,8 +802,8 @@ importers:
         specifier: ^6.0.12
         version: 6.0.12
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:^
@@ -921,8 +921,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
@@ -945,8 +945,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -970,8 +970,8 @@ importers:
         specifier: ^6.0.12
         version: 6.0.12
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -986,8 +986,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       multiformats:
-        specifier: ^13.3.7
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
 
   dashboard:
     dependencies:
@@ -1046,8 +1046,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.3
       multiformats:
-        specifier: ^13.3.6
-        version: 13.3.7
+        specifier: ^13.4.0
+        version: 13.4.0
       partysocket:
         specifier: ^1.1.5
         version: 1.1.5
@@ -4595,8 +4595,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  multiformats@13.3.7:
-    resolution: {integrity: sha512-meL9DERHj+fFVWoOX9fXqfcYcSpUfSYJPcFvDPKrxitICbwAoWR+Ut4j5NO9zAT917HUHLQmqzQbAsGNHlDcxQ==}
+  multiformats@13.4.0:
+    resolution: {integrity: sha512-Mkb/QcclrJxKC+vrcIFl297h52QcKh2Az/9A5vbWytbQt4225UWWWmIuSsKksdww9NkIeYcA7DkfftyLuC/JSg==}
 
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
@@ -6752,18 +6752,18 @@ snapshots:
     dependencies:
       '@ipld/dag-cbor': 9.2.4
       cborg: 4.2.12
-      multiformats: 13.3.7
+      multiformats: 13.4.0
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.4':
     dependencies:
       cborg: 4.2.12
-      multiformats: 13.3.7
+      multiformats: 13.4.0
 
   '@ipld/dag-json@10.2.5':
     dependencies:
       cborg: 4.2.12
-      multiformats: 13.3.7
+      multiformats: 13.4.0
 
   '@isaacs/balanced-match@4.0.1': {}
 
@@ -7393,7 +7393,7 @@ snapshots:
       archy: 1.0.0
       carstream: 2.3.0
       cli-color: 2.0.4
-      multiformats: 13.3.7
+      multiformats: 13.4.0
       sade: 1.8.1
 
   '@zxcvbn-ts/core@3.0.4':
@@ -7645,7 +7645,7 @@ snapshots:
   carstream@2.3.0:
     dependencies:
       '@ipld/dag-cbor': 9.2.4
-      multiformats: 13.3.7
+      multiformats: 13.4.0
       uint8arraylist: 2.4.8
 
   cborg@4.2.12: {}
@@ -9059,7 +9059,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  multiformats@13.3.7: {}
+  multiformats@13.4.0: {}
 
   mz@2.7.0:
     dependencies:
@@ -9995,7 +9995,7 @@ snapshots:
 
   uint8arrays@5.1.0:
     dependencies:
-      multiformats: 13.3.7
+      multiformats: 13.4.0
 
   unbox-primitive@1.1.0:
     dependencies:

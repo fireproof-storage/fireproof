@@ -38,6 +38,6 @@
   "dependencies": {
     "@adviser/cement": "^0.4.21",
     "@fireproof/vendor": "workspace:0.0.0",
-    "multiformats": "^13.3.7"
+    "multiformats": "^13.4.0"
   }
 }
