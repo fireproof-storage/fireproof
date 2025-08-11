@@ -71,7 +71,7 @@
     "@typescript/native-preview": "7.0.0-dev.20250810.1",
     "deno": "^2.4.2",
     "drizzle-kit": "0.30.6",
-    "eslint": "^9.32.0",
+    "eslint": "^9.33.0",
     "eslint-plugin-import": "^2.32.0",
     "multiformats": "^13.3.7",
     "playwright": "^1.54.2",
