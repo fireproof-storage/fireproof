@@ -26,7 +26,7 @@
     "jscodeshift": "^17.1.1",
     "tsd": "^0.32.0",
     "tsx": "^4.19.2",
-    "zx": "^8.7.1"
+    "zx": "^8.8.0"
   },
   "dependencies": {
     "yocto-queue": "^1.2.1"

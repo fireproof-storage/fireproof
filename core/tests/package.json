@@ -71,6 +71,6 @@
     "playwright": "^1.54.1",
     "playwright-chromium": "^1.54.1",
     "vitest": "^3.2.4",
-    "zx": "^8.7.1"
+    "zx": "^8.8.0"
   }
 }
