@@ -30,8 +30,8 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20250810.1
         version: 7.0.0-dev.20250810.1
@@ -70,7 +70,7 @@ importers:
         version: 8.39.0(eslint@9.32.0(jiti@1.21.7))(typescript@5.8.3)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       wrangler:
         specifier: ^4.28.1
         version: 4.28.1(@cloudflare/workers-types@4.20250726.0)
@@ -211,7 +211,7 @@ importers:
         version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       zx:
         specifier: ^8.8.0
         version: 8.8.0
@@ -266,7 +266,7 @@ importers:
         version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       wrangler:
         specifier: ^4.28.1
         version: 4.28.1(@cloudflare/workers-types@4.20250726.0)
@@ -320,14 +320,14 @@ importers:
         version: 4.9.0
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
         version: link:../../../cli
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
       drizzle-kit:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
@@ -370,7 +370,7 @@ importers:
         version: link:../../cli
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       zx:
         specifier: ^8.8.0
         version: 8.8.0
@@ -446,8 +446,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../cli
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
 
   core/blockstore:
     dependencies:
@@ -524,8 +524,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -618,8 +618,8 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
 
   core/gateways/file-deno:
     dependencies:
@@ -636,8 +636,8 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
 
   core/gateways/file-node:
     dependencies:
@@ -703,8 +703,8 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
 
   core/keybag:
     dependencies:
@@ -869,8 +869,8 @@ importers:
         specifier: ^10.2.5
         version: 10.2.5
       '@types/node':
-        specifier: ^24.1.0
-        version: 24.1.0
+        specifier: ^24.2.1
+        version: 24.2.1
       cborg:
         specifier: ^4.2.12
         version: 4.2.12
@@ -901,7 +901,7 @@ importers:
         version: 1.54.2
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       zx:
         specifier: ^8.8.0
         version: 8.8.0
@@ -1150,7 +1150,7 @@ importers:
         version: 7.1.1(@types/node@24.1.0)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       wrangler:
         specifier: ^4.28.1
         version: 4.28.1(@cloudflare/workers-types@4.20250726.0)
@@ -1223,7 +1223,7 @@ importers:
         version: 1.54.2
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+        version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
 
   vendor:
     dependencies:
@@ -2928,6 +2928,9 @@ packages:
 
   '@types/node@24.1.0':
     resolution: {integrity: sha512-ut5FthK5moxFKH2T1CUOC6ctR67rQRvvHdFLCD2Ql6KXmMuCrjsSsRI9UsLCm9M18BMwClv4pn327UvB7eeO1w==}
+
+  '@types/node@24.2.1':
+    resolution: {integrity: sha512-DRh5K+ka5eJic8CjH7td8QpYEV6Zo10gfRkjHCO3weqZHWDtAaSTFtl4+VMqOJ4N5jcuhZ9/l+yy8rVgw7BQeQ==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -5456,6 +5459,9 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
+  undici-types@7.10.0:
+    resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
+
   undici-types@7.8.0:
     resolution: {integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==}
 
@@ -7148,13 +7154,17 @@ snapshots:
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 24.1.0
+      '@types/node': 24.2.1
 
   '@types/minimist@1.2.5': {}
 
   '@types/node@24.1.0':
     dependencies:
       undici-types: 7.8.0
+
+  '@types/node@24.2.1':
+    dependencies:
+      undici-types: 7.10.0
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -7177,7 +7187,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.1.0
+      '@types/node': 24.2.1
 
   '@typescript-eslint/eslint-plugin@8.39.0(@typescript-eslint/parser@8.39.0(eslint@9.32.0(jiti@1.21.7))(typescript@5.8.3))(eslint@9.32.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
@@ -7324,7 +7334,7 @@ snapshots:
       magic-string: 0.30.17
       sirv: 3.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+      vitest: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
       ws: 8.18.3
     optionalDependencies:
       playwright: 1.54.2
@@ -9994,6 +10004,8 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
+  undici-types@7.10.0: {}
+
   undici-types@7.8.0: {}
 
   undici@7.12.0: {}
@@ -10047,7 +10059,7 @@ snapshots:
 
   varint@6.0.0: {}
 
-  vite-node@3.2.4(@types/node@24.1.0)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0):
+  vite-node@3.2.4(@types/node@24.2.1)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
@@ -10077,13 +10089,13 @@ snapshots:
       rollup: 4.46.2
       tinyglobby: 0.2.14
     optionalDependencies:
-      '@types/node': 24.1.0
+      '@types/node': 24.2.1
       fsevents: 2.3.3
       jiti: 1.21.7
       tsx: 4.20.3
       yaml: 2.8.0
 
-  vitest@3.2.4(@types/node@24.1.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0):
+  vitest@3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
