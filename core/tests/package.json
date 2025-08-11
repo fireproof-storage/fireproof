@@ -59,7 +59,7 @@
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.4",
     "@ipld/dag-json": "^10.2.5",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.1.0",
     "cborg": "^4.2.12",
     "charwise": "^3.0.1",
     "use-fireproof": "workspace:0.0.0",
@@ -68,9 +68,9 @@
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
     "@vitest/browser": "^3.2.4",
-    "playwright": "^1.54.2",
-    "playwright-chromium": "^1.54.2",
+    "playwright": "^1.54.1",
+    "playwright-chromium": "^1.54.1",
     "vitest": "^3.2.4",
-    "zx": "^8.8.0"
+    "zx": "^8.7.1"
   }
 }
