@@ -1049,8 +1049,8 @@ importers:
         specifier: ^13.3.6
         version: 13.3.7
       partysocket:
-        specifier: ^1.0.2
-        version: 1.1.4
+        specifier: ^1.1.5
+        version: 1.1.5
       react:
         specifier: ^19.1.0
         version: 19.1.1
@@ -4730,8 +4730,8 @@ packages:
     resolution: {integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==}
     engines: {node: '>=8'}
 
-  partysocket@1.1.4:
-    resolution: {integrity: sha512-jXP7PFj2h5/v4UjDS8P7MZy6NJUQ7sspiFyxL4uc/+oKOL+KdtXzHnTV8INPGxBrLTXgalyG3kd12Qm7WrYc3A==}
+  partysocket@1.1.5:
+    resolution: {integrity: sha512-8uw9foq9bij4sKLCtTSHvyqMrMTQ5FJjrHc7BjoM2s95Vu7xYCN63ABpI7OZHC7ZMP5xaom/A+SsoFPXmTV6ZQ==}
 
   path-exists@3.0.0:
     resolution: {integrity: sha512-bpC7GYwiDYQ4wYLe+FA8lhRjhQCMcQGuSgGGqDkg/QerRWw9CmGRT0iSOVRSZJ29NMLZgIzqaljJ63oaL4NIJQ==}
@@ -9192,7 +9192,7 @@ snapshots:
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
 
-  partysocket@1.1.4:
+  partysocket@1.1.5:
     dependencies:
       event-target-polyfill: 0.0.4
 
