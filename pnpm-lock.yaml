@@ -995,7 +995,7 @@ importers:
         specifier: ^0.4.21
         version: 0.4.23(typescript@5.8.3)
       '@clerk/backend':
-        specifier: ^2.7.0
+        specifier: ^2.7.1
         version: 2.7.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@clerk/clerk-js':
         specifier: ^5.77.0
