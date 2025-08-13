@@ -8,8 +8,8 @@
   "bin": "./run.sh",
   "scripts": {
     "build": "core-cli tsc",
-    "pack": "echo skip",
-    "publish": "echo skip"
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
   },
   "keywords": [
     "ledger",
