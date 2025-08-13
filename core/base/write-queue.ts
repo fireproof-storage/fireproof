@@ -71,6 +71,11 @@ class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> impl
   bulk(tasks: DocUpdate<S>[]): Promise<MetaType> {
     return new Promise<MetaType>((resolve, reject) => {
       this.queue.push({ tasks, resolve, reject });
+      const queueSize = this.queue.length;
+      if (queueSize > 10) {
+        this.logger.Warn().Uint("writeQueueSize", queueSize).Uint("bulkTaskCount", tasks.length).Msg("High writeQueue size - potential high parallelism");
+      }
+      this.logger.Debug().Uint("writeQueueSize", queueSize).Uint("bulkTaskCount", tasks.length).Msg("writeQueue bulk operation");
       this.process();
     });
   }
