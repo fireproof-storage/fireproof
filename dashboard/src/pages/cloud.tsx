@@ -76,7 +76,7 @@ function SidebarCloud() {
             to={item.path}
             onClick={() => setIsSidebarOpen(false)}
             end={item.id !== "home"}
-            className={({ isActive }) => `
+            className={({ isActive }: { isActive: boolean }) => `
               flex items-center rounded-md px-2 py-2 text-sm transition-colors flex-1  text-fp-dec-03
               ${
                 (item.id === "home" ? isHomeActive(item.path) : isActive)
@@ -108,7 +108,7 @@ function SidebarCloud() {
               key={ledger.ledgerId}
               to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledger.ledgerId}`}
               onClick={() => setIsSidebarOpen(false)}
-              className={({ isActive }) =>
+              className={({ isActive }: { isActive: boolean }) =>
                 `mb-[4px] block rounded-fp-s pr-[8px] pl-main py-[8px] text-14 hover:bg-fp-bg-01 hover:text-fp-p ${
                   isActive ? "text-fp-p text-14-bold bg-fp-bg-01" : "text-fp-s"
                 }`
