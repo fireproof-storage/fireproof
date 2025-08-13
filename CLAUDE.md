@@ -10,6 +10,21 @@ pnpm check
 
 This command runs formatting, linting, tests, and build to ensure code quality.
 
+## Code Style Guidelines
+
+### TypeScript Best Practices
+
+- **Never use `any` type** - Always provide specific types or use union types
+- **Use `function` keyword** - Prefer `function functionName() {}` over arrow functions for top-level functions
+
+### Testing and Mock Policy
+
+- **Use Vitest mocking** - Use `vi.fn()` for creating mock functions and spies
+- **Custom mock classes** - Create mock implementations that implement interfaces (see `MockLoader`, `MockSuperThis` in `tests/helpers.ts`)
+- **Test helpers** - Use `mockSuperThis()` and other helpers from `tests/helpers.ts` for consistent test setup
+- **Mock call verification** - Access mock call data via `fn.mock.calls` for assertions
+- **Avoid real dependencies** - Use mocks to isolate units under test from external dependencies
+
 ## Branch Naming Convention
 
 Use the format `{username}/{topic}` for branch names:
