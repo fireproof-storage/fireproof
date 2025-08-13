@@ -80,12 +80,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.23
         version: 0.4.23(typescript@5.9.2)
-      '@fireproof/cloud-backend-cf-d1':
-        specifier: workspace:0.0.0
-        version: link:../cloud/backend/cf-d1
-      '@fireproof/cloud-base':
-        specifier: workspace:0.0.0
-        version: link:../cloud/base
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -95,6 +89,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../vendor
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
       cmd-ts:
         specifier: ^0.13.0
         version: 0.13.0
@@ -104,6 +101,9 @@ importers:
       fs-extra:
         specifier: ^11.3.1
         version: 11.3.1
+      jose:
+        specifier: ^6.0.12
+        version: 6.0.12
       multiformats:
         specifier: ^13.3.7
         version: 13.4.0
@@ -129,21 +129,18 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.23
         version: 0.4.23(typescript@5.9.2)
-      react:
-        specifier: '>=18.0.0'
-        version: 19.1.1
       react-dom:
-        specifier: ^19.1.0
+        specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof
     devDependencies:
       '@types/react':
-        specifier: ^19.1.8
+        specifier: ^19.1.10
         version: 19.1.10
       '@types/react-dom':
-        specifier: ^19.1.6
+        specifier: ^19.1.7
         version: 19.1.7(@types/react@19.1.10)
       '@vitejs/plugin-react':
         specifier: ^5.0.0

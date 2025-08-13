@@ -61,7 +61,7 @@ function patchVersion(packageJson: Record<string, unknown>) {
   packageJson.version = version;
 }
 
-type Exports = Record<string, Record<string, string>>;
+type Exports = Record<string, string | Record<string, string | Record<string, string>>>;
 interface PackageJson {
   name: string;
   dependencies: Record<string, string>;
@@ -71,7 +71,7 @@ interface PackageJson {
 function pluginExports(name: string, exports: Exports, srcDir: string, buildBase: string): Exports {
   const result: Exports = {};
   // const base = path.relative(buildBase, srcDir)
-  const nested = {};
+  const nested: Record<string, string | Record<string, string>> = {};
   result[`./${name}`] = nested;
   console.log(">>>>>=", name, srcDir);
   // !exports && console.log(">>>>>=", name, srcDir)
@@ -83,7 +83,7 @@ function pluginExports(name: string, exports: Exports, srcDir: string, buildBase
     } else {
       nested[key] = Object.entries(value).reduce(
         (acc, [k, v]) => {
-          acc[k] = `./${path.join(path.relative(buildBase, srcDir), v)}`;
+          acc[k] = `./${path.join(path.relative(buildBase, srcDir), v as string)}`;
           return acc;
         },
         {} as Record<string, string>,
@@ -191,7 +191,7 @@ async function main() {
         {} as Record<string, string>,
       );
       await fs.writeFile(args.buildPackageJson, JSON.stringify(packageJson, null, 2));
-      const projectRoot = path.resolve(dirname(args.srcPackageJson));
+      const projectRoot = path.resolve(path.dirname(args.srcPackageJson));
       const gitignoreSrc = path.resolve(projectRoot, ".gitignore");
       await $`cp ${gitignoreSrc} ${path.join(args.buildBase, ".npmignore")}`;
       // await $`cp ../.gitignore ${args.buildBase}/.npmignore`;

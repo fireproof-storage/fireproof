@@ -47,7 +47,7 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
     const bytes = await blocks.get(cid);
 
     // Decode data
-    const data = raw.decode(bytes);
+    const data = raw.decode(bytes) as Uint8Array<ArrayBuffer>;
 
     // Create File object with the original file metadata
     return new File([data], "file", {

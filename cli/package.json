@@ -7,9 +7,9 @@
   "main": "./index.js",
   "bin": "./run.sh",
   "scripts": {
-    "build": "core-cli tsc",
-    "pack": "core-cli build --doPack",
-    "publish": "core-cli build"
+    "build": "./run.sh tsc",
+    "pack": "FP_TSC=tsc tsx ./main.ts build --doPack",
+    "publish": "FP_TSC=tsc tsx ./main.ts build"
   },
   "keywords": [
     "ledger",
@@ -39,14 +39,14 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.23",
-    "@fireproof/cloud-backend-cf-d1": "workspace:0.0.0",
-    "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
+    "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.13.0",
     "find-up": "^7.0.0",
     "fs-extra": "^11.3.1",
+    "jose": "^6.0.12",
     "multiformats": "^13.3.7",
     "semver": "^7.7.2",
     "zx": "^8.8.0"
