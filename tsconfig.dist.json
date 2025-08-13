@@ -17,5 +17,6 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "types": ["node", "deno"]
-  }
+  },
+  "exclude": ["**/dist/**", "examples/**", "smoke/**"]
 }

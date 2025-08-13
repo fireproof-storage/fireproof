@@ -5,15 +5,13 @@
   "main": "index.js",
   "scripts": {
     "cli": "echo it is in its own package core-cli",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-cli": "core-cli help"
   },
   "keywords": [],
   "author": "",
   "license": "AFL-2.0",
   "type": "module",
-  "dependencies": {
-    "@fireproof/core": "0.0.0-smoke"
-  },
   "devDependencies": {
     "tsx": "^4.20.3",
     "deno": "^2.4.1"

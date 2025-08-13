@@ -2,7 +2,7 @@ import { ImportDeclaration, API, FileInfo, Options } from "jscodeshift";
 
 const nodeExternals = new Set(["path", "fs", "fs/promises"]);
 
-const replace = {
+const replace: Record<string, string> = {
   /*
   "cborg": "@fireproof/vendor/cborg",
   "cborg/utils": "@fireproof/vendor/cborg/utils",
