@@ -36,13 +36,8 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "@adviser/cement": "^0.4.21",
-    "@cloudflare/workers-types": "^4.20250810.0",
-=======
     "@adviser/cement": "^0.4.23",
-    "@cloudflare/workers-types": "^4.20250719.0",
->>>>>>> 216a3e2c (chore(deps): bump @adviser/cement from 0.4.21 to 0.4.23)
+    "@cloudflare/workers-types": "^4.20250810.0",
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
