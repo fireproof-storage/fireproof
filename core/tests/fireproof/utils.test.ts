@@ -1,6 +1,6 @@
 import { runtimeFn, URI } from "@adviser/cement";
 import { getFileName } from "@fireproof/core-gateways-base";
-import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter } from "@fireproof/core-runtime";
+import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter, syncHashString } from "@fireproof/core-runtime";
 import { UUID } from "uuidv7";
 import { describe, beforeAll, it, expect, assert } from "vitest";
 
@@ -133,5 +133,13 @@ describe("runtime", () => {
       isNodeIsh: isNode,
       isReactNative: false,
     });
+  });
+});
+
+describe("syncHash", () => {
+  it("syncHashString", () => {
+    expect(syncHashString("hello", 477)).toEqual("z3aJCYm");
+    expect(syncHashString("hello")).toEqual(syncHashString("hello"));
+    expect(syncHashString("hello")).not.toEqual(syncHashString("world"));
   });
 });

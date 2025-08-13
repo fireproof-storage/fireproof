@@ -192,6 +192,7 @@ class keysByFingerprint implements KeysByFingerprint {
     this.keybag.logger
       .Warn()
       .Any({ fprs: Object.keys(this.keysItem.keys), fpr: fingerPrint, name: this.name, id: this.id })
+      .Any({ stack: new Error().stack })
       .Msg("keysByFingerprint:get: not found");
     return undefined;
   }
@@ -218,6 +219,7 @@ class keysByFingerprint implements KeysByFingerprint {
     if (rKfp.isErr()) {
       return Result.Err(rKfp);
     }
+    // console.log("upsertNoStore-1", this.name, rKfp.Ok().fingerPrint);
     const preHash = await hashObject(await this.asV2KeysItem());
     const kfp = rKfp.Ok();
     let found = this.keysItem.keys[kfp.fingerPrint];
@@ -534,6 +536,11 @@ export class KeyBag implements KeyBagIf {
   //     },
   //   });
   // }
+
+  async del(name: string): Promise<void> {
+    const prov = await this.rt.getBagProvider();
+    return prov.del(name);
+  }
 
   private _namedKeyItems = new KeyedResolvOnce<KeyBagFingerprintItem>();
 

@@ -1,6 +1,6 @@
 import { Logger, CoerceURI, URI, AppContext } from "@adviser/cement";
 import { Attachable, SuperThis } from "@fireproof/core-types-base";
-import { FPCloudClaim } from "./msg-types.js";
+import { FPUserToken } from "./fp-user-token.zod.js";
 
 export interface ToCloudAttachable extends Attachable {
   token?: string;
@@ -9,7 +9,7 @@ export interface ToCloudAttachable extends Attachable {
 
 export interface TokenAndClaims {
   readonly token: string;
-  readonly claims: FPCloudClaim;
+  readonly claims: FPUserToken;
   //   readonly exp: number;
   //   readonly tenant?: string;
   //   readonly ledger?: string;
@@ -36,9 +36,10 @@ export interface TokenAndClaimsEvents {
   changed(token?: TokenAndClaims): Promise<void>;
 }
 
-export interface ToCloudRequiredOpts {
+export interface ToCloudRequiredOpts<W> {
   readonly urls: Partial<FPCloudRef>;
   readonly strategy: TokenStrategie;
+  readonly webCtx: W;
   // readonly events: TokenAndClaimsEvents;
   // readonly context: AppContext;
   // readonly context: AppContext;
@@ -55,9 +56,9 @@ export interface ToCloudBase {
   readonly ledger?: string; // default undefined
 }
 
-export type ToCloudOpts = ToCloudRequiredOpts & ToCloudBase;
+export type ToCloudOpts<T = unknown> = ToCloudRequiredOpts<T> & ToCloudBase;
 
-export type ToCloudOptionalOpts = Partial<ToCloudBase> & Partial<ToCloudRequiredOpts>;
+export type ToCloudOptionalOpts<T = unknown> = Partial<ToCloudBase> & Partial<ToCloudRequiredOpts<T>>;
 
 export interface FPCloudUri {
   readonly car: URI;

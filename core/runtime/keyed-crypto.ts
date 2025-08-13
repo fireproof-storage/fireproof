@@ -84,6 +84,7 @@ export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyI
       throw this.ko.logger.Error().Msg("default key not found").AsError();
     }
     const keyId = base58btc.decode(defKey?.fingerPrint);
+    console.log("write-keyId", defKey.fingerPrint);
     this.ko.logger.Debug().Str("fp", defKey.fingerPrint).Msg("encode");
     return CBOR.encode({
       iv: iv,

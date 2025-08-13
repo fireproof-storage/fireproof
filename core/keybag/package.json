@@ -36,7 +36,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.21",
+    "@adviser/cement": "^0.4.23",
     "@fireproof/core-gateways-file": "workspace:0.0.0",
     "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",

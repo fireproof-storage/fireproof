@@ -29,6 +29,7 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
+  // console.log("useFireproof", name, config);
   const strConfig = JSON.stringify(toSortedArray(config));
   const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, strConfig]);
   const attach = createAttach(database, config);

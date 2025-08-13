@@ -32,6 +32,7 @@ import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
 import { toSortedArray } from "@adviser/cement/utils";
+import * as murmerHash from "murmurhash";
 
 //export type { Logger };
 //export { Result };
@@ -550,4 +551,19 @@ export function timerStart(loggerOrHasLogger: Logger | HasLogger, tag: string) {
 
 export function timerEnd(loggerOrHasLogger: Logger | HasLogger, tag: string) {
   coerceLogger(loggerOrHasLogger).Debug().TimerEnd(tag).Msg("Timing ended");
+}
+
+const defaultSeed = ~~(Math.random() * 4294967291);
+
+export function syncHashString(str: string, seed = defaultSeed): string {
+  return syncHashUint8Array(json.encode(str), seed);
+}
+
+export function syncHashUint8Array(bytes: Uint8Array, seed = defaultSeed): string {
+  const hash = murmerHash.v3(bytes, seed);
+  return base58btc.encode(new Uint8Array([hash & 0xff, (hash >> 8) & 0xff, (hash >> 16) & 0xff, (hash >> 24) & 0xff]));
+}
+
+export function syncHashObject<T extends NonNullable<S>, S>(o: T, seed = defaultSeed): string {
+  return syncHashUint8Array(json.encode(toSortedArray(o)), seed);
 }

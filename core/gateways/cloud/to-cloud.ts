@@ -1,7 +1,7 @@
 import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
 import { Ledger } from "@fireproof/core-types-base";
 import {
-  FPCloudClaim,
+  FPUserToken,
   FPCloudUri,
   ToCloudAttachable,
   ToCloudBase,
@@ -52,17 +52,6 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
   return defOpts;
 }
 
-// function toTokenAndClaims(token: string): TokenAndClaims {
-//   const claims = decodeJwt(token);
-//   return {
-//     token,
-//     claims: {
-//       ...claims,
-//       exp: claims.exp || 0,
-//     } as FPCloudClaim,
-//   };
-// }
-
 function definedExp(exp?: number): number {
   if (typeof exp === "number") {
     return exp;
@@ -76,6 +65,7 @@ class TokenObserver {
   currentTokenAndClaim?: TokenAndClaims;
 
   constructor(opts: ToCloudOpts) {
+    console.log("tokenObserver", opts);
     this.opts = opts;
   }
 
@@ -142,7 +132,7 @@ class ToCloud implements ToCloudAttachable {
   currentToken?: string;
 
   constructor(opts: ToCloudOptionalOpts) {
-    // console.log("ToCloud", opts);
+    console.log("new ToCloud", opts.name);
     this.opts = defaultOpts(opts);
   }
 
@@ -172,11 +162,10 @@ class ToCloud implements ToCloudAttachable {
   }
 
   async prepare(ledger?: Ledger) {
-    // console.log("prepare-1");
     if (!ledger) {
       throw new Error("Ledger is required");
     }
-    const logger = ensureLogger(ledger.sthis, "ToCloud"); // .SetDebug("ToCloud");
+    const logger = ensureLogger(ledger.sthis, `ToCloud:${ledger.name}`); // .SetDebug("ToCloud");
     // console.log("ToCloud prepare", this.opts);
 
     this._tokenObserver = new TokenObserver(this.opts);
@@ -189,6 +178,8 @@ class ToCloud implements ToCloudAttachable {
       // console.log("getToken", token)
       const buri = BuildURI.from(uri).setParam("authJWK", token.token);
 
+      buri.setParam("name", ledger.name);
+
       const selected = token.claims.selected ?? {};
       if (selected.tenant) {
         buri.setParam("tenant", selected.tenant);
@@ -200,7 +191,7 @@ class ToCloud implements ToCloudAttachable {
       } else if (this.opts.ledger) {
         buri.setParam("ledger", this.opts.ledger);
       }
-
+      // console.log("prepare:buri", buri.URI());
       return buri.URI();
     });
     return {
@@ -221,7 +212,7 @@ class ToCloud implements ToCloudAttachable {
 // }
 
 export function toCloud(iopts: Partial<ToCloudBase> & ToCloudRequiredOpts): ToCloudAttachable {
-  // console.log("toCloud", iopts);
+  console.log("toCloud", iopts.name);
   return new ToCloud({
     ...iopts,
     urls: iopts.urls ?? {},
@@ -240,7 +231,7 @@ export class SimpleTokenStrategy implements TokenStrategie {
   constructor(jwk: string) {
     this.tc = {
       token: jwk,
-      claims: decodeJwt(jwk) as FPCloudClaim,
+      claims: decodeJwt(jwk) as FPUserToken,
     };
   }
 

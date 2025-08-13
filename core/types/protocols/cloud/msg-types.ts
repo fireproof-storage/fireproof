@@ -1,8 +1,8 @@
 import { Future, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { CalculatePreSignedUrl } from "./msg-types-data.js";
-import type { JWTPayload } from "jose";
-// import { PreSignedMsg } from "./pre-signed-url.js";
+import { FPUserToken, TenantLedger } from "./fp-user-token.zod.js";
+import { ReadWrite, Role } from "./enums.zod.js";
 
 export const VERSION = "FP-MSG-1.0";
 
@@ -12,8 +12,6 @@ export interface BaseTokenParam {
   readonly audience: string;
   readonly validFor: number;
 }
-
-export type ReadWrite = "read" | "write";
 
 export function toReadWrite(i?: string): ReadWrite {
   if (!i) {
@@ -26,8 +24,6 @@ export function toReadWrite(i?: string): ReadWrite {
       return "read";
   }
 }
-
-export type Role = "admin" | "owner" | "member";
 
 export function toRole(i?: string): Role {
   if (!i) {
@@ -43,30 +39,6 @@ export function toRole(i?: string): Role {
   }
 }
 
-interface TenantClaim {
-  readonly id: string;
-  readonly role: Role;
-}
-
-interface LedgerClaim {
-  readonly id: string;
-  readonly role: Role;
-  readonly right: ReadWrite;
-}
-
-// export type RoleClaim = TenantClaim | LedgerClaim;
-
-export interface FPCloudClaim extends JWTPayload {
-  readonly userId: string;
-  readonly email: string;
-  readonly nickname?: string;
-  readonly provider?: "github" | "google";
-  readonly created: Date;
-  readonly tenants: TenantClaim[];
-  readonly ledgers: LedgerClaim[];
-  readonly selected: TenantLedger;
-}
-
 // export interface FPWaitTokenResult {
 //   readonly type: "FPWaitTokenResult";
 //   readonly token: string;
@@ -76,7 +48,7 @@ export interface FPCloudClaim extends JWTPayload {
 //   return typeof r === "object" && !!r && (r as FPWaitTokenResult).type === "FPWaitTokenResult";
 // }
 
-export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
+export type TokenForParam = FPUserToken & Partial<BaseTokenParam>;
 
 export type MsgWithError<T extends MsgBase> = T | ErrorMsg;
 
@@ -168,11 +140,6 @@ export interface FPCloudAuthType extends AuthType {
 }
 
 export type AuthFactory = (tp?: Partial<TokenForParam>) => Promise<Result<AuthType>>;
-
-export interface TenantLedger {
-  readonly tenant: string;
-  readonly ledger: string;
-}
 
 export function keyTenantLedger(t: TenantLedger): string {
   return `${t.tenant}:${t.ledger}`;

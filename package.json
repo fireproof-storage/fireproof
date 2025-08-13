@@ -113,7 +113,7 @@
     }
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.21",
+    "@adviser/cement": "^0.4.23",
     "@fireproof/vendor": "workspace:0.0.0"
   }
 }

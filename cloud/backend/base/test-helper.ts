@@ -240,16 +240,17 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<TokenForParam> = 
     token: keys.strings.privateKey,
   });
 
-  const id = claim.id ?? sthis.nextId().str;
+  const id = claim.jti ?? sthis.nextId().str;
   const claims: ps.TokenForParam = {
     userId: `hello-${id}`,
     email: `hello-${id}@test.de`,
     created: claim.created ?? new Date(),
+    provider: "github",
     tenants: claim.tenants ?? [{ id: `test-tenant-${id}`, role: "admin" }],
-    ledgers: claim.ledgers ?? [{ id: `test-ledger-${id}`, role: "admin", right: "write" }],
+    ledgers: [],
     selected: claim.selected ?? {
       tenant: claim.tenants?.[0].id ?? `test-tenant-${id}`,
-      ledger: claim.ledgers?.[0].id ?? `test-ledger-${id}`,
+      ledger: "legacy-ledger",
     },
     ...claim,
   };

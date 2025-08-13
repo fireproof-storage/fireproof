@@ -84,15 +84,19 @@ export class MemoryGateway implements Gateway {
       //   }
       // }
     }
-    this.memories.set(cleanURI(url).toString(), bytes);
+    const memKey = cleanURI(url).toString();
+    // console.log("put", memKey);
+    this.memories.set(memKey, bytes);
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
   get(url: URI, sthis: SuperThis): Promise<GetResult> {
     // logger.Debug().Url(url).Msg("get");
-    const x = this.memories.get(cleanURI(url).toString());
+    const memKey = cleanURI(url).toString();
+    // console.log("get", memKey, url.toString());
+    const x = this.memories.get(memKey);
     if (!x) {
-      // const possible = Array.from(this.memorys.keys()).filter(i => i.startsWith(url.build().cleanParams().toString()))
+      // const possible = Array.from(this.memorys.keys()).filter(i => i.startsWith(url.build().getNamedKey-1().toString()))
       // this.sthis.logger.Warn().Any("possible", possible).Url(url).Msg("not found");
       return Promise.resolve(Result.Err(new NotFoundError(`not found: ${url.toString()}`)));
     }

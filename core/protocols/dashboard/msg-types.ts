@@ -1,4 +1,5 @@
-import { ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
+import { ProviderSchema, ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
+import { z } from "zod";
 
 export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
 
@@ -29,6 +30,15 @@ export interface Tenant {
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
+
+export function toProvider(i: ClerkVerifyAuth): Provider {
+  if (i.params.nick) {
+    return "github";
+  }
+  return "google";
+}
+
+export type Provider = z.infer<typeof ProviderSchema>;
 
 export type InviteTicketStatus = "pending" | "accepted" | "rejected" | "expired";
 
@@ -94,6 +104,39 @@ export interface ClerkClaim {
 
 export interface ClerkVerifyAuth extends VerifiedAuth {
   readonly params: ClerkClaim;
+}
+
+export interface WithAuth {
+  readonly auth: AuthType;
+}
+
+export interface ActiveUser<T extends AuthType = ClerkVerifyAuth> {
+  readonly verifiedAuth: T;
+  readonly user?: User;
+}
+
+export type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
+  user: User;
+  /*
+  {
+    createdAt: Date;
+    userId: string;
+    maxTenants: number;
+
+
+      readonly userId: string;
+  readonly maxTenants: number;
+  readonly status: UserStatus;
+  readonly statusReason?: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly byProviders: UserByProvider[];
+  };
+  */
+};
+
+export function isActiveUserWithUserId<T extends AuthType>(msg: ActiveUser<T>): msg is ActiveUserWithUserId<T> {
+  return !!(msg as ActiveUserWithUserId<T>).user;
 }
 
 export interface User {

@@ -36,7 +36,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.21",
+    "@adviser/cement": "^0.4.23",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
@@ -44,7 +44,8 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "cborg": "^4.2.12",
     "jose": "^6.0.12",
-    "multiformats": "^13.3.7"
+    "multiformats": "^13.3.7",
+    "murmurhash": "^2.0.1"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:^"

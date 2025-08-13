@@ -1,4 +1,5 @@
 // import { AppContext } from "@adviser/cement";
+import { CoerceURI, Option, URI } from "@adviser/cement";
 import type {
   AllDocsQueryOpts,
   Attached,
@@ -13,10 +14,10 @@ import type {
   DocWithId,
   IndexKeyType,
   FPIndexRow,
-  KeyBagProvider,
   MapFn,
   QueryOpts,
   SuperThis,
+  KeyBagIf,
 } from "@fireproof/core-types-base";
 import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
@@ -122,12 +123,13 @@ export interface WebCtxHook {
 
 export interface WebToCloudCtx {
   readonly sthis: SuperThis;
-  readonly dashboardURI: string; // https://dev.connect.fireproof.direct/fp/cloud/api/token
-  readonly tokenApiURI: string; // https://dev.connect.fireproof.direct/api
+  readonly refreshTokenPresetSec: number; // default 120 sec this is the time before the token expires
+  readonly urls: {
+    readonly loginUserURI: URI; // default "${base}/fp/cloud/api/token"
+    readonly dashApiURI: URI; // default "${base}/api"
+  };
   // stores connection and token
-  keyBag?: KeyBagProvider;
-  // readonly uiURI: string; // default "https://dev.connect.fireproof.direct/api"
-  // url param name for token
+  keyBag?: KeyBagIf;
   readonly tokenParam: string;
 
   ready(db: Database): Promise<void>;
@@ -135,7 +137,7 @@ export interface WebToCloudCtx {
   onTokenChange(on: (token?: TokenAndClaims) => void): void;
   resetToken(): Promise<void>;
   setToken(token: TokenAndClaims | string): Promise<void>;
-  token(): Promise<TokenAndClaims | undefined>;
+  token(): Promise<Option<TokenAndClaims>>;
 }
 
 export type UseFPConfig = ConfigOpts & { readonly attach?: ToCloudAttachable };

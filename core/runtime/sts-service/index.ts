@@ -4,7 +4,7 @@ import { generateKeyPair, GenerateKeyPairOptions } from "jose/key/generate/keypa
 import { base58btc } from "multiformats/bases/base58";
 import { ensureSuperThis } from "../utils.js";
 import { SuperThis } from "@fireproof/core-types-base";
-import { BaseTokenParam, FPCloudClaim, TokenForParam } from "@fireproof/core-types-protocols-cloud";
+import { BaseTokenParam, FPUserToken, TokenForParam } from "@fireproof/core-types-protocols-cloud";
 
 export const envKeyDefaults = {
   SECRET: "CLOUD_SESSION_TOKEN_SECRET",
@@ -97,9 +97,9 @@ export class SessionTokenService {
     return this.#param.audience ?? "fireproof";
   }
 
-  async validate(token: string): Promise<Result<JWTVerifyResult<FPCloudClaim>>> {
+  async validate(token: string): Promise<Result<JWTVerifyResult<FPUserToken>>> {
     return exception2Result(async () => {
-      const ret = await jwtVerify<FPCloudClaim>(token, this.#key);
+      const ret = await jwtVerify<FPUserToken>(token, this.#key);
       return ret;
     });
   }
@@ -115,14 +115,15 @@ export class SessionTokenService {
     const token = await new SignJWT({
       userId: p.userId,
       tenants: p.tenants,
-      ledgers: p.ledgers,
+      ledgers: [], //p.ledgers,
       email: "test@test",
+      provider: "github",
       created: new Date(),
       selected: {
         tenant: p.tenants[0].id,
-        ledger: p.ledgers[0].id,
+        ledger: "legacy-ledger", // p.ledgers[0].id,
       },
-    } satisfies FPCloudClaim)
+    } satisfies FPUserToken)
       .setProtectedHeader({ alg: this.alg }) // algorithm
       .setIssuedAt()
       .setIssuer(p.issuer ?? this.isssuer) // issuer

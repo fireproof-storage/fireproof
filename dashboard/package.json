@@ -22,7 +22,7 @@
     "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.21",
+    "@adviser/cement": "^0.4.23",
     "@clerk/backend": "^2.6.0",
     "@clerk/clerk-js": "^5.77.0",
     "@clerk/clerk-react": "^5.37.0",
@@ -48,7 +48,8 @@
     "react-router-dom": "^7.7.1",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
-    "use-fireproof": "workspace:0.0.0"
+    "use-fireproof": "workspace:0.0.0",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@clerk/clerk-react": "^5.37.0",

@@ -873,6 +873,7 @@ export class Loader implements Loadable {
       // if coming from remote store, save it locally not in cache
       await store.local().save(loadedCar);
     }
+    console.log("makeDecoderAndCarReader-2", activeStore.url().toString(), carCid.toString(), await activeStore.id());
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
     const bytes = await asyncBlockDecode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,

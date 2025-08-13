@@ -837,7 +837,6 @@ describe("db-api", () => {
   it("create session with claim", async () => {
     const auth: AuthType = data[0].reqs.auth;
     // fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "
-
     const resultId = sthis.nextId(12).str;
     const rledger = await fpApi.createLedger({
       type: "reqCreateLedger",

@@ -2,7 +2,7 @@ import { BuildURI, Logger } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
-import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
+import { FPUserToken, ToCloudOpts, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 import { Api } from "@fireproof/core-protocols-dashboard";
 import { WebToCloudCtx } from "./react/types.js";
 import { WebCtx } from "./react/use-attach.js";
@@ -64,7 +64,7 @@ interface RedirectStrategyOpts {
   readonly overlayHtml?: (redirectLink: string) => string;
 }
 
-export class RedirectStrategy implements TokenStrategie {
+export class RedirectStrategy extends CloudTokenStrategy {
   resultId?: string;
   overlayNode?: HTMLDivElement;
   waitState: "started" | "stopped" = "stopped";
@@ -188,7 +188,7 @@ export class RedirectStrategy implements TokenStrategie {
     const waitedTokenByResultId = rWaitForToken.unwrap();
     if (waitedTokenByResultId.status === "found" && waitedTokenByResultId.token) {
       const token = waitedTokenByResultId.token;
-      const claims = decodeJwt(token) as FPCloudClaim;
+      const claims = decodeJwt(token) as FPUserToken;
       this.overlayNode?.style.setProperty("display", "none");
       resolve({ token, claims });
       return;

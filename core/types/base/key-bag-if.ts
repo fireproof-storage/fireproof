@@ -12,4 +12,6 @@ export interface KeyBagIf {
   // flush(): Promise<void>;
 
   getNamedKey(name: string, failIfNotFound?: boolean, material?: string | Uint8Array): Promise<Result<KeysByFingerprint>>;
+
+  del(name: string): Promise<void>;
 }
