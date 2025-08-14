@@ -43,7 +43,7 @@ describe("KeyBag indexeddb and file", () => {
     const kb = await getKeyBag(sthis, {
       url: url.toString(),
       crypto: toCryptoRuntime({
-        randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
+        randomBytes: (size: number) => new Uint8Array(size).map((_, i) => i),
       }),
     });
     const name = "setkey" + Math.random();
@@ -78,6 +78,7 @@ describe("KeyBag indexeddb and file", () => {
         return JSON.parse(sthis.txt.decode(data)) as V2StorageKeyItem;
       });
     }
+    console.log("xxx diskBag", diskBag);
     expect((await toKeyWithFingerPrint(kb, coerceMaterial(kb, Object.values(diskBag.keys)[0].key), true)).Ok().fingerPrint).toEqual(
       (await res.Ok().get())?.fingerPrint,
     );

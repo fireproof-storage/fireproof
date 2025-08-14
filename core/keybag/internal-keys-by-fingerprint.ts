@@ -45,7 +45,10 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
     def?: boolean,
     modified?: boolean,
   ): Promise<Result<InternalKeysByFingerprint>> {
-    if (!(materialStrOrUint8 && modified)) {
+    if (!modified) {
+      return Result.Ok(this);
+    }
+    if (!materialStrOrUint8) {
       return Result.Ok(this);
     }
     const r = await this.upsert(materialStrOrUint8, def, modified);
@@ -100,7 +103,7 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
       console.log("xxx load-2");
       return this.logger.Debug().Msg("failIfNotFound getRawObj").ResultError();
     }
-    const provKeysResult = oProvKeysResult
+    // const provKeysResult = oProvKeysResult
     if (oProvKeysResult.IsSome() && !oProvKeysResult.unwrap().success) {
       const tsHelp = oProvKeysResult.unwrap();
       if (!tsHelp.success) {
@@ -112,43 +115,45 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
           .ResultError();
       }
     }
-    const provKeysResult = oProvKeysResult.unwrap();
-    const cki = await coerceKeyedItemWithVersionUpdate(this, provKeysResult.data);
-    if (!cki) {
-      console.log("xxx load-4");
-      return this.logger.Error().Any({ item: provKeysResult.data }).Msg("coerce error").ResultError();
-    }
-    const v2StorageResult = KeyedV2StorageKeyItemSchema.safeParse(cki);
-    if (!v2StorageResult.success) {
-      console.log("xxx load-5");
-      return this.logger
-        .Error()
-        .Any({ name: this.name, item: provKeysResult.data, error: z.formatError(v2StorageResult.error) })
-        .Msg("not V2KeysItems")
-        .ResultError();
-    }
-    // const keyedItem = { ...v2StorageResult.data, modified: cki.modified };
+    if (oProvKeysResult.IsSome()) {
+      const provKeysResult = oProvKeysResult.unwrap();
+      const cki = await coerceKeyedItemWithVersionUpdate(this, provKeysResult.data);
+      if (!cki) {
+        console.log("xxx load-4");
+        return this.logger.Error().Any({ item: provKeysResult.data }).Msg("coerce error").ResultError();
+      }
+      const v2StorageResult = KeyedV2StorageKeyItemSchema.safeParse(cki);
+      if (!v2StorageResult.success) {
+        console.log("xxx load-5");
+        return this.logger
+          .Error()
+          .Any({ name: this.name, item: provKeysResult.data, error: z.formatError(v2StorageResult.error) })
+          .Msg("not V2KeysItems")
+          .ResultError();
+      }
+      // const keyedItem = { ...v2StorageResult.data, modified: cki.modified };
 
-    // const v2KeysItem = await this.toV2KeysItem(provKeysItem);
-    // const keys = Object.values(keyedItem.item.keys).length;
-    // if (iopts.opts.failIfNotFound && keys === 0) {
-    //   return Result.Err(this.logger.Debug().Str("name", this.name).Msg("no keys getNamedKey").AsError());
-    // }
-    console.log("xxx load-6");
-    await this.toKeysItem(v2StorageResult.data.item)
-      .then((items) =>
-        items.map(async (item, idx) =>
-          this.upsert((await item.extract()).key, item.default, cki.modified && idx === items.length - 1),
-        ),
-      )
-      .then((items) => Promise.all(items));
+      // const v2KeysItem = await this.toV2KeysItem(provKeysItem);
+      // const keys = Object.values(keyedItem.item.keys).length;
+      // if (iopts.opts.failIfNotFound && keys === 0) {
+      //   return Result.Err(this.logger.Debug().Str("name", this.name).Msg("no keys getNamedKey").AsError());
+      // }
+      console.log("xxx load-6");
+      await this.toKeysItem(v2StorageResult.data.item)
+        .then((items) =>
+          items.map(async (item, idx) =>
+            this.upsert((await item.extract()).key, item.default, cki.modified && idx === items.length - 1),
+          ),
+        )
+        .then((items) => Promise.all(items));
 
-    console.log("xxx load-7");
+      console.log("xxx load-7");
+    }
     //   this.lookUp.get(i.fingerPrint).once(() => {
     //     th
     //   });
     // }
-    return this.ensureMaterial(opts.materialStrOrUint8 ?? this.keybag.rt.crypto.randomBytes(this.keybag.rt.keyLength));
+    return this.ensureMaterial(opts.materialStrOrUint8 ?? this.keybag.rt.crypto.randomBytes(this.keybag.rt.keyLength), true);
 
     // if (keys > 0) {
     //   this.logger

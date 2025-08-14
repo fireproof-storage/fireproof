@@ -64,7 +64,7 @@ export class DeviceIdClient {
       // request signing -> get cert
       // put into keybag
 
-      return new MsgSigner(new DeviceIdSignMsg(sthis.txt.base64, key, cert));
+      return new MsgSigner(new DeviceIdSignMsg(this.#sthis.txt.base64, key, cert));
     });
   }
 
