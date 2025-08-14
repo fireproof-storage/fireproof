@@ -24,6 +24,7 @@ export class InternalKeyBagFingerprintItem {
       return InternalKeysByFingerprint.from({ keybag: this.keybag, opts, name: this.name });
     }).then(r => {
       if (r.isErr()) {
+        this.keysByFingerprint.reset()
         return r;
       }
       return r.Ok().ensureMaterial(opts.materialStrOrUint8)
