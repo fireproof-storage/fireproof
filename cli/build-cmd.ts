@@ -48,34 +48,133 @@ function patchDeps(dep: Record<string, string>, version: string) {
   return dep;
 }
 
-async function patchPackageJson(packageJsonPath: string, version: string) {
-  const packageJson = await fs.readJSON(packageJsonPath);
-  packageJson.version = version;
-  delete packageJson.scripts["pack"];
-  delete packageJson.scripts["publish"];
-  packageJson.dependencies = patchDeps(packageJson.dependencies, version);
-  packageJson.devDependencies = patchDeps(packageJson.devDependencies, version);
-  await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
+interface PackageJson {
+  name: string;
+  private?: "true";
+  license: string;
+  version: string;
+  scripts: Record<string, string>;
+  exports: Record<string, string | Record<string, string>>;
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+}
+
+async function patchPackageJson(
+  packageJsonPath: string,
+  version: string,
+  changeScope?: string,
+): Promise<{
+  patchedPackageJson: PackageJson;
+  originalPackageJson: PackageJson;
+}> {
+  const originalPackageJson = await fs.readJSON(packageJsonPath);
+  const patchedPackageJson = await fs.readJSON(packageJsonPath);
+  // ugly double read but this is easier than deep copying
+  if (changeScope) {
+    changeScope = changeScope.replace(/^@/, "");
+    if (originalPackageJson.name.startsWith(`@`)) {
+      patchedPackageJson.name = patchedPackageJson.name.replace(/^@[^/]+\//, `@${changeScope}/`);
+    } else {
+      patchedPackageJson.name = `@${changeScope}/${patchedPackageJson.name}`;
+    }
+  }
+  // patchedPackageJson.name = changeScope ? : patchedPackageJson.name;
+  patchedPackageJson.version = version;
+  delete patchedPackageJson.scripts["pack"];
+  delete patchedPackageJson.scripts["publish"];
+  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version);
+  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version);
+  await fs.writeJSONSync(packageJsonPath, patchedPackageJson, { spaces: 2 });
+  return { patchedPackageJson, originalPackageJson };
 }
 
 async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
   const tsconfig = await fs.readJSONSync(srcTsConfig);
   tsconfig.extends = [await findUp("tsconfig.dist.json")];
   tsconfig.compilerOptions = {
+    ...tsconfig.compilerOptions,
     noEmit: false,
-    outDir: "./",
+    outDir: "../npm/",
   };
   tsconfig.include = tsconfig.include || [];
   tsconfig.include.push("**/*");
   tsconfig.exclude = tsconfig.exclude || [];
   tsconfig.exclude.push("node_modules", "dist", ".git", ".vscode");
 
+  console.log("tsconfig", tsconfig);
   await fs.writeJSONSync(dstTsConfig, tsconfig, { spaces: 2 });
   // {
   // "extends": "../../tsconfig.json",
   // "compilerOptions": {
   //   "outDir": "./dist"
   // }
+}
+function toDenoExports(exports: Record<string, string | Record<string, string>>) {
+  return Object.entries(exports ?? {}).reduce(
+    (acc, [k, v]) => {
+      if (typeof v === "string") {
+        acc[k] = v.replace(/\.(js|mjs|cjs)$/, ".ts").replace(/\.(jsx|mjsx|cjsx)$/, ".tsx");
+      } else {
+        const x = Object.entries(v).reduce((acc, [_, v]) => {
+          if (acc === "") {
+            if (v.match(/\.(js|mjs|cjs|)$/)) {
+              return v.replace(/\.(js|mjs|cjs)$/, ".ts");
+            }
+          }
+          return acc;
+        }, "");
+        if (x !== "") {
+          acc[k] = x;
+        }
+      }
+      return acc;
+    },
+    { ".": "./index.ts" } as Record<string, string>,
+  );
+}
+
+function toDenoDeps(deps: Record<string, string>, version: string) {
+  return Object.entries(deps).reduce(
+    (acc, [k, v]) => {
+      if (v.startsWith("workspace:")) {
+        acc[k] = `jsr:${k}@${version}`;
+        return acc;
+      }
+      if (k.startsWith("@adviser/cement")) {
+        acc[k] = `jsr:${k}@${v.replace("npm:", "")}`;
+        return acc;
+      }
+      acc[k] = `npm:${k}@${v.replace("npm:", "")}`;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+}
+
+async function buildJsrConf(pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson }, version: string) {
+  if (pj.originalPackageJson.private?.toLowerCase() === "true") {
+    return;
+  }
+  const jsrConf = {
+    name: pj.patchedPackageJson.name,
+    version: pj.patchedPackageJson.version,
+    license: pj.patchedPackageJson.license,
+    nodeModulesDir: "auto",
+    unstable: ["sloppy-imports"],
+    lint: {
+      rules: {
+        tags: ["recommended"],
+        exclude: ["no-sloppy-imports"],
+      },
+    },
+    exports: toDenoExports(pj.originalPackageJson.exports),
+    imports: toDenoDeps(pj.originalPackageJson.dependencies, version),
+    publish: {
+      include: ["**/*.ts", "**/*.tsx", "README.md", "LICENSE"],
+    },
+  };
+  await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
+  return jsrConf;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -179,6 +278,19 @@ export function buildCmd(sthis: SuperThis) {
         defaultValue: () => "",
         description: "The npm registry to use for publishing, defaults to 'https://registry.npmjs.org/'.",
       }),
+      publishJsr: flag({
+        long: "publishJsr",
+        short: "j",
+        defaultValue: () => false,
+        description: "Do not publish the jsr package.",
+      }),
+      changeScope: option({
+        long: "changeScope",
+        short: "s",
+        type: string,
+        defaultValue: () => "",
+        description: "Change the scope of the package.",
+      }),
       pubTags: multioption({
         long: "pubTags",
         short: "t",
@@ -239,22 +351,40 @@ export function buildCmd(sthis: SuperThis) {
           return true;
         },
       });
+      const jsrDstDir = path.join(args.dstDir, "jsr");
+      const npmDstDir = path.join(args.dstDir, "npm");
       if (!args.noCleanDst) {
         await fs.rm(args.dstDir, { recursive: true, force: true });
-        await fs.move(tmpDest, args.dstDir);
       }
+      //await fs.mkdirp(jsrDstDir);
+      await fs.mkdirp(npmDstDir);
+      await fs.move(tmpDest, jsrDstDir);
+
       if (!args.noTsconfig) {
-        await updateTsconfig(path.join(args.srcDir, "tsconfig.json"), path.join(args.dstDir, "tsconfig.json"));
+        await updateTsconfig(path.join(args.srcDir, "tsconfig.json"), path.join(jsrDstDir, "tsconfig.json"));
       }
       $.verbose = true;
-      cd(args.dstDir);
+      cd(jsrDstDir);
 
-      await patchPackageJson("package.json", args.version);
+      const packageJson = await patchPackageJson("package.json", args.version, args.changeScope);
       // await $`pnpm version ${args.version}`;
 
       if (!args.noBuild) {
         await $`pnpm run build`;
       }
+      for (const f of ["package.json", "README.md", "LICENSE.md"]) {
+        await fs.copyFile(f, path.join("../npm", f));
+      }
+
+      if (args.publishJsr) {
+        const jsrConf = await buildJsrConf(packageJson, args.version);
+        if (jsrConf) {
+          await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
+        }
+      }
+
+      //await fs.copy(jsrDstDir, npmDstDir);
+      cd("../npm");
       if (args.doPack) {
         if (!args.packDestDir) {
           args.packDestDir = path.join(path.dirname(top), "dist");
