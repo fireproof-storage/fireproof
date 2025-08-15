@@ -40,3 +40,7 @@ smoke/react/pnpm-lock.yaml
 **/.dev.*
 **/.env.*
 .wrangler
+
+# NPM configuration files with potential auth tokens
+**/.npmrc
+!/.npmrc
