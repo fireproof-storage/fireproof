@@ -5,10 +5,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "echo done",
+    "build": "core-cli tsc",
     "build:merge": "tsx merge-package.ts --prepare --verbose 'p-limit,https://github.com/mabels/p-limit.git,pnpm'",
-    "pack": "core-cli build --doPack --noTsconfig",
-    "publish": "core-cli build --noTsconfig"
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
   },
   "exports": {
     "./p-limit": {
