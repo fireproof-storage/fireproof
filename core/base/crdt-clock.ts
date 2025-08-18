@@ -115,7 +115,11 @@ export class CRDTClockImpl {
 
     const noLoader = !localUpdates;
 
-    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
+    const queueSize = this.applyHeadQueue.size();
+    if (queueSize > 5) {
+      this.logger.Warn().Uint("queueSize", queueSize).Bool("localUpdates", localUpdates).Msg("High applyHeadQueue size - potential high parallelism");
+    }
+    this.logger.Debug().Uint("queueSize", queueSize).Bool("localUpdates", localUpdates).Msg("int_applyHead");
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
     if (compareClockHeads(ogHead, newHead)) {
