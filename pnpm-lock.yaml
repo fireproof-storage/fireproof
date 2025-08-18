@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -40,7 +40,7 @@ importers:
         version: 2.4.3
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.33.0
         version: 9.33.0(jiti@1.21.7)
@@ -205,7 +205,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
@@ -260,7 +260,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.2.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
@@ -301,11 +301,11 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       '@hono/node-server':
-        specifier: ^1.18.1
-        version: 1.18.2(hono@4.9.1)
+        specifier: ^1.19.0
+        version: 1.19.0(hono@4.9.1)
       '@hono/node-ws':
         specifier: ^1.2.0
-        version: 1.2.0(@hono/node-server@1.18.2(hono@4.9.1))(hono@4.9.1)
+        version: 1.2.0(@hono/node-server@1.19.0(hono@4.9.1))(hono@4.9.1)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.10
@@ -327,7 +327,7 @@ importers:
         version: 24.2.1
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.0
         version: 8.8.0
@@ -1105,7 +1105,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.4(@cloudflare/workers-types@4.20250813.0)(@libsql/client@0.15.10)(gel@2.1.1)(kysely@0.28.5)
@@ -2281,8 +2281,8 @@ packages:
   '@formkit/auto-animate@0.8.2':
     resolution: {integrity: sha512-SwPWfeRa5veb1hOIBMdzI+73te5puUBHmqqaF1Bu7FjvxlYSz/kJcZKSa9Cg60zL0uRNeJL2SbRxV6Jp6Q1nFQ==}
 
-  '@hono/node-server@1.18.2':
-    resolution: {integrity: sha512-icgNvC0vRYivzyuSSaUv9ttcwtN8fDyd1k3AOIBDJgYd84tXRZSS6na8X54CY/oYoFTNhEmZraW/Rb9XYwX4KA==}
+  '@hono/node-server@1.19.0':
+    resolution: {integrity: sha512-1k8/8OHf5VIymJEcJyVksFpT+AQ5euY0VA5hUkCnlKpD4mr8FSbvXaHblxeTTEr90OaqWzAkQaqD80qHZQKxBA==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -6499,13 +6499,13 @@ snapshots:
 
   '@formkit/auto-animate@0.8.2': {}
 
-  '@hono/node-server@1.18.2(hono@4.9.1)':
+  '@hono/node-server@1.19.0(hono@4.9.1)':
     dependencies:
       hono: 4.9.1
 
-  '@hono/node-ws@1.2.0(@hono/node-server@1.18.2(hono@4.9.1))(hono@4.9.1)':
+  '@hono/node-ws@1.2.0(@hono/node-server@1.19.0(hono@4.9.1))(hono@4.9.1)':
     dependencies:
-      '@hono/node-server': 1.18.2(hono@4.9.1)
+      '@hono/node-server': 1.19.0(hono@4.9.1)
       hono: 4.9.1
       ws: 8.18.3
     transitivePeerDependencies:
@@ -7700,7 +7700,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
