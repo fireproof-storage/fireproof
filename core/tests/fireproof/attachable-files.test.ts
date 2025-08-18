@@ -1,9 +1,10 @@
 import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
 import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, Attached, TraceFn } from "@fireproof/core";
+import { DocFiles, DocFileMeta } from "@fireproof/core-types-base";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
-import { mockLoader } from "../helpers.js";
+import { mockLoader, buildBlobFiles, FileWithCid } from "../helpers.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 import { DefSerdeGateway } from "@fireproof/core-gateways-base";
@@ -12,6 +13,8 @@ import { AttachedRemotesImpl } from "@fireproof/core-blockstore";
 import { AttachedStores } from "@fireproof/core-types-blockstore";
 
 const ROWS = 1;
+
+let testFiles: FileWithCid[];
 
 class AJoinable implements Attachable {
   readonly name: string;
@@ -73,6 +76,10 @@ function attachableStoreUrls(name: string, db: Database) {
 
 describe("meta check", () => {
   const sthis = ensureSuperThis();
+  
+  beforeEach(async () => {
+    testFiles = await buildBlobFiles();
+  });
   it("empty Database", async () => {
     const name = `remote-db-${sthis.nextId().str}`;
     const db = fireproof(name, {
@@ -437,13 +444,35 @@ describe("join function", () => {
     // console.log(re);
     // console.log(inRows);
     expect(resultRows.length).toBe(ROWS * 2);
-    expect(resultRows).toEqual(outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key)));
+    
+    // Compare document structure without deep equality on _files
+    const expectedRows = outRows.concat(inRows).sort((a, b) => a.key.localeCompare(b.key));
+    expect(resultRows.length).toBe(expectedRows.length);
+    
+    for (let i = 0; i < resultRows.length; i++) {
+      expect(resultRows[i].key).toBe(expectedRows[i].key);
+      expect(resultRows[i].value._id).toBe(expectedRows[i].value._id);
+      expect(resultRows[i].value.value).toBe(expectedRows[i].value.value);
+      expect(resultRows[i].value.type).toBe(expectedRows[i].value.type);
+      expect(resultRows[i].value._files).toBeTruthy();
+      expect(Object.keys(resultRows[i].value._files).length).toBe(2);
+    }
 
     const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
     await joined.db.attach(aJoinable(`sync-${id}`, joined.db));
     await joined.db.close();
     const joinedRows = await readDb(`joined-db-${id}`, "memory://sync-joined");
-    expect(resultRows).toEqual(joinedRows);
+    
+    // Compare without deep equality on _files
+    expect(joinedRows.length).toBe(resultRows.length);
+    for (let i = 0; i < joinedRows.length; i++) {
+      expect(joinedRows[i].key).toBe(resultRows[i].key);
+      expect(joinedRows[i].value._id).toBe(resultRows[i].value._id);
+      expect(joinedRows[i].value.value).toBe(resultRows[i].value.value);
+      expect(joinedRows[i].value.type).toBe(resultRows[i].value.type);
+      expect(joinedRows[i].value._files).toBeTruthy();
+      expect(Object.keys(joinedRows[i].value._files).length).toBe(2);
+    }
   }, 100_000);
 });
 
@@ -507,6 +536,10 @@ describe("join function", () => {
 
 describe("sync", () => {
   const sthis = ensureSuperThis();
+  
+  beforeEach(async () => {
+    testFiles = await buildBlobFiles();
+  });
   it("online sync", async () => {
     const id = sthis.nextId().str;
     // const waitIdle = new WaitIdle();
@@ -543,8 +576,26 @@ describe("sync", () => {
     await Promise.all(
       dbs.map(async (db) => {
         for (const key of keys) {
-          const rows = await db.db.get(key);
-          expect(rows).toEqual({ _id: key, value: key });
+          const doc = await db.db.get(key);
+          expect(doc._id).toBe(key);
+          expect(doc.value).toBe(key);
+          expect(doc._files).toBeTruthy();
+          
+          // Verify file metadata
+          const files = doc._files as DocFiles;
+          const fileKeys = Object.keys(files);
+          expect(fileKeys.length).toBe(2);
+          expect(fileKeys).toContain("image1");
+          expect(fileKeys).toContain("image2");
+          
+          const fileMeta1 = files.image1 as DocFileMeta;
+          const fileMeta2 = files.image2 as DocFileMeta;
+          expect(fileMeta1.type).toBe("image/jpeg");
+          expect(fileMeta2.type).toBe("image/png");
+          expect(fileMeta1.size).toBeGreaterThan(0);
+          expect(fileMeta2.size).toBeGreaterThan(0);
+          expect(fileMeta1.cid).toBeTruthy();
+          expect(fileMeta2.cid).toBeTruthy();
         }
       }),
     );
@@ -670,7 +721,20 @@ async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style
       .map(async (_, i) => {
         const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
         // console.log(key);
-        await pdb.db.put({ _id: key, value: key });
+        
+        // Create document with _files containing binary attachments
+        const doc = {
+          _id: key,
+          value: key,
+          type: "file-document",
+          description: `File document for ${style}`,
+          _files: {
+            image1: testFiles[0].file,
+            image2: testFiles[1].file,
+          },
+        };
+        
+        await pdb.db.put(doc);
         return key;
       }),
   );
