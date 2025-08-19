@@ -5,6 +5,32 @@ it("getVersion emptyString", async () => {
   expect(await getVersion("", { xenv: {} })).toContain("0.0.0-smoke");
 });
 
+it("GITHUB_REF set and file", async () => {
+  expect(
+    await getVersion("wurst", {
+      xenv: { GITHUB_REF: "a/b/cdkdkdkdk" },
+      xfs: {
+        existsSync: () => true,
+        readFile: (_x: string, _y = "utf-8") => Promise.resolve("v0.0.48-smoke"),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    }),
+  ).toBe("0.0.48-smoke");
+});
+
+it("GITHUB_REF set and not exist file", async () => {
+  expect(
+    await getVersion("wurst", {
+      xenv: { GITHUB_REF: "a/b/c0.0.45-xx" },
+      xfs: {
+        existsSync: () => false,
+        readFile: (_x: string, _y = "utf-8") => Promise.resolve("v0.0.48-smoke"),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    }),
+  ).toBe("0.0.45-xx");
+});
+
 it("getVersion file with v", async () => {
   expect(
     await getVersion("wurst", {

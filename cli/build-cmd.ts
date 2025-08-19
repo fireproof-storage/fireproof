@@ -49,7 +49,7 @@ export async function getVersion(
   if (fpVersionFname && xfs) {
     const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
     if (xfs.existsSync(fpVersionFile)) {
-      return getEnvVersion((await xfs.readFile(fpVersionFile, "utf-8")).trim(), xenv);
+      return getEnvVersion((await xfs.readFile(fpVersionFile, "utf-8")).trim(), {});
     }
   }
   const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
