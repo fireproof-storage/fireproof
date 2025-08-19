@@ -51,7 +51,7 @@
     "cmd-ts": "^0.13.0",
     "drizzle-orm": "^0.44.3",
     "hono": "^4.9.0",
-    "multiformats": "^13.3.7"
+    "multiformats": "^13.4.0"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",

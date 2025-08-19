@@ -13,5 +13,10 @@ then
   #echo $(which $FP_TSC) $@
   exec $(which $FP_TSC) $@
 fi
-
-exec pnpm exec tsx $(dirname $0)/main.ts $@
+dirName=$(dirname $0)
+if [ -f $dirName/main.js ]
+then
+   exec node $dirName/main.js $@
+else
+   exec pnpm exec tsx $dirName/main.ts $@
+fi
