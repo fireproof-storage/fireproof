@@ -370,7 +370,7 @@ export function buildCmd(sthis: SuperThis) {
 
       fs.copy(".", "../npm", {
         filter: (src: string, _dst: string) => {
-          if (src.endsWith("ts") || src.endsWith("tsx")) {
+          if (src.endsWith(".ts") || src.endsWith(".tsx")) {
             return false;
           }
           return true;
