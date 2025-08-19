@@ -5,6 +5,26 @@ it("getVersion emptyString", async () => {
   expect(await getVersion("", { xenv: {} })).toContain("0.0.0-smoke");
 });
 
+it("ILLEGAL Version", async () => {
+  expect(
+    await getVersion(undefined, {
+      xenv: { GITHUB_REF: "a/b/cdkdkdkdk" },
+    }),
+  ).toContain("0.0.0-smoke-");
+});
+
+it("ILLEGAL Version with gitref", async () => {
+  expect(
+    await getVersion("wo", {
+      xenv: { GITHUB_REF: "a/b/cdkdkdkdk" },
+      xfs: {
+        existsSync: () => false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    }),
+  ).toContain("0.0.0-smoke-");
+});
+
 it("GITHUB_REF set and file", async () => {
   expect(
     await getVersion("wurst", {
