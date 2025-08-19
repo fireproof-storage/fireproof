@@ -465,9 +465,9 @@ export class KeyBag implements KeyBagIf {
   async subtleKey(materialStrOrUint8: string | Uint8Array): Promise<CryptoKey> {
     const extractable = this.rt.url.getParam(PARAM.EXTRACTKEY) === "_deprecated_internal_api";
     if (extractable) {
-      this._warnOnce.once(() =>
-        this.logger.Warn().Msg("extractKey is enabled via _deprecated_internal_api --- handle keys safely!!!"),
-      );
+      this._warnOnce.once(() => {
+        this.logger.Warn().Msg("extractKey is enabled via _deprecated_internal_api --- handle keys safely!!!");
+      });
     }
     let material: Uint8Array;
     if (typeof materialStrOrUint8 === "string") {

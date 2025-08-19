@@ -156,7 +156,7 @@ abstract class BaseGateway {
   protected async putObject(uri: URI, uploadUrl: string, body: Uint8Array, conn: VConnItems): Promise<Result<void>> {
     // console.log("putObject", uri.toString(), uploadUrl, body.length);
     this.logger.Debug().Any("url", { uploadUrl, uri }).Msg("put-fetch-url");
-    const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body }));
+    const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body: body as BodyInit }));
     if (rUpload.isErr()) {
       return this.logger.Error().Url(uploadUrl, "uploadUrl").Err(rUpload).Msg("Expection in put fetch").ResultError();
     }
@@ -268,9 +268,10 @@ function getGwCtx(conn: Partial<QSId>, uri: URI): Result<ReqGwCtx> {
 }
 
 class CurrentMeta {
-  readonly boundGetMeta = new KeyedResolvOnce<ReadableStream<MsgWithError<EventGetMeta>>>();
+  // readonly boundGetMeta = new KeyedResolvOnce<ReadableStream<MsgWithError<EventGetMeta>>>();
+  readonly boundGetMeta = new KeyedResolvOnce<void>();
 
-  readonly currentMeta = new KeyedResolvOnce<FPEnvelopeMeta>();
+  readonly currentMeta = new KeyedResolvOnce<Result<FPEnvelopeMeta>>();
 
   private valueReady = new Future<void>();
   private value: Result<FPEnvelopeMeta> | undefined;
