@@ -12,9 +12,9 @@ const reVersionAlphaStart = /^[a-z](\d+\.\d+\.\d+.*)$/;
 const reScopedVersion = /^[^@]+@(.*)$/;
 const reEndVersion = /.*\/([^/]+)$/;
 
-function getEnvVersion(version = "refs/tags/v0.0.0-smoke") {
-  if (process.env.GITHUB_REF) {
-    version = process.env.GITHUB_REF;
+function getEnvVersion(version = "refs/tags/v0.0.0-smoke", xenv = process.env) {
+  if (xenv.GITHUB_REF) {
+    version = xenv.GITHUB_REF;
   }
   if (reEndVersion.test(version)) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -23,20 +23,38 @@ function getEnvVersion(version = "refs/tags/v0.0.0-smoke") {
   return version.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1");
 }
 
-export async function getVersion(fpVersionFname?: string, xfs = fs) {
+interface Mock {
+  xfs: {
+    existsSync: (path: string) => boolean;
+    readFile: (path: string, encoding: string) => Promise<string>;
+  };
+  xenv: Record<string, string>;
+}
+
+export async function getVersion(
+  fpVersionFname?: string,
+  { xfs, xenv }: Partial<Mock> = {
+    xfs: {
+      existsSync: fs.existsSync,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      readFile: fs.readFile as any,
+    },
+    xenv: process.env as Record<string, string>,
+  },
+) {
   let top = await findUp("tsconfig.dist.json");
   if (!top) {
     top = process.cwd();
   }
-  if (fpVersionFname) {
+  if (fpVersionFname && xfs) {
     const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
     if (xfs.existsSync(fpVersionFile)) {
-      return getEnvVersion((await xfs.readFile(fpVersionFile, "utf-8")).trim());
+      return getEnvVersion((await xfs.readFile(fpVersionFile, "utf-8")).trim(), xenv);
     }
   }
   const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
   const dateTick = (await $`date +%s`).stdout.trim();
-  return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`);
+  return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
 function patchDeps(dep: Record<string, string>, version: string) {
