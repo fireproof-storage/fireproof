@@ -110,6 +110,9 @@ importers:
       semver:
         specifier: ^7.7.2
         version: 7.7.2
+      tsx:
+        specifier: ^4.20.4
+        version: 4.20.4
       zx:
         specifier: ^8.8.0
         version: 8.8.0

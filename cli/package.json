@@ -49,6 +49,7 @@
     "jose": "^6.0.12",
     "multiformats": "^13.3.7",
     "semver": "^7.7.2",
+    "tsx": "^4.20.4",
     "zx": "^8.8.0"
   },
   "devDependencies": {
