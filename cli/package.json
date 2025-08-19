@@ -8,6 +8,7 @@
   "bin": "./run.sh",
   "scripts": {
     "build": "./run.sh tsc",
+    "test": "vitest --run",
     "pack": "FP_TSC=tsc tsx ./main.ts build --doPack",
     "publish": "FP_TSC=tsc tsx ./main.ts build"
   },
@@ -55,6 +56,7 @@
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/semver": "^7.7.0",
-    "tsx": "^4.20.4"
+    "tsx": "^4.20.4",
+    "vitest": "^3.2.4"
   }
 }

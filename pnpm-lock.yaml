@@ -119,6 +119,9 @@ importers:
       tsx:
         specifier: ^4.20.4
         version: 4.20.4
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@24.3.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
 
   cloud/3rd-party:
     dependencies:
