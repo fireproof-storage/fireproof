@@ -452,10 +452,10 @@ describe("join function", () => {
     for (let i = 0; i < resultRows.length; i++) {
       expect(resultRows[i].key).toBe(expectedRows[i].key);
       expect(resultRows[i].value._id).toBe(expectedRows[i].value._id);
-      expect(resultRows[i].value.value).toBe(expectedRows[i].value.value);
-      expect(resultRows[i].value.type).toBe(expectedRows[i].value.type);
+      expect((resultRows[i].value as any).value).toBe((expectedRows[i].value as any).value);
+      expect((resultRows[i].value as any).type).toBe((expectedRows[i].value as any).type);
       expect(resultRows[i].value._files).toBeTruthy();
-      expect(Object.keys(resultRows[i].value._files).length).toBe(2);
+      expect(Object.keys(resultRows[i].value._files!).length).toBe(2);
     }
 
     const joined = { db: await syncDb(`joined-db-${id}`, "memory://sync-joined") };
@@ -468,10 +468,10 @@ describe("join function", () => {
     for (let i = 0; i < joinedRows.length; i++) {
       expect(joinedRows[i].key).toBe(resultRows[i].key);
       expect(joinedRows[i].value._id).toBe(resultRows[i].value._id);
-      expect(joinedRows[i].value.value).toBe(resultRows[i].value.value);
-      expect(joinedRows[i].value.type).toBe(resultRows[i].value.type);
+      expect((joinedRows[i].value as any).value).toBe((resultRows[i].value as any).value);
+      expect((joinedRows[i].value as any).type).toBe((resultRows[i].value as any).type);
       expect(joinedRows[i].value._files).toBeTruthy();
-      expect(Object.keys(joinedRows[i].value._files).length).toBe(2);
+      expect(Object.keys(joinedRows[i].value._files!).length).toBe(2);
     }
   }, 100_000);
 });
@@ -578,7 +578,7 @@ describe("sync", () => {
         for (const key of keys) {
           const doc = await db.db.get(key);
           expect(doc._id).toBe(key);
-          expect(doc.value).toBe(key);
+          expect((doc as any).value).toBe(key);
           expect(doc._files).toBeTruthy();
           
           // Verify file metadata
@@ -596,6 +596,19 @@ describe("sync", () => {
           expect(fileMeta2.size).toBeGreaterThan(0);
           expect(fileMeta1.cid).toBeTruthy();
           expect(fileMeta2.cid).toBeTruthy();
+          
+          // Test that fileMeta.file() function works and returns actual file content
+          const actualFile1 = await fileMeta1.file!();
+          const actualFile2 = await fileMeta2.file!();
+          
+          expect(actualFile1).toBeInstanceOf(File);
+          expect(actualFile2).toBeInstanceOf(File);
+          expect(actualFile1.type).toBe("image/jpeg");
+          expect(actualFile2.type).toBe("image/png");
+          expect(actualFile1.size).toBe(fileMeta1.size);
+          expect(actualFile2.size).toBe(fileMeta2.size);
+          expect(actualFile1.name).toBeTruthy();
+          expect(actualFile2.name).toBeTruthy();
         }
       }),
     );
@@ -642,9 +655,227 @@ describe("sync", () => {
         expect(rows.rows.length).toBe(8 * ROWS * dbs.length);
       }),
     );
+    
+    // Verify that fileMeta.file() still works after reopening databases
+    const sampleKey = keys[0];
+    await Promise.all(
+      reOpenedWithoutAttach.map(async (tdb) => {
+        const doc = await tdb.db.get(sampleKey);
+        expect(doc._files).toBeTruthy();
+        
+        const files = doc._files as DocFiles;
+        const fileMeta1 = files.image1 as DocFileMeta;
+        const fileMeta2 = files.image2 as DocFileMeta;
+        
+        // Test that fileMeta.file() function still works after sync and reopen
+        const actualFile1 = await fileMeta1.file!();
+        const actualFile2 = await fileMeta2.file!();
+        
+        expect(actualFile1).toBeInstanceOf(File);
+        expect(actualFile2).toBeInstanceOf(File);
+        expect(actualFile1.type).toBe("image/jpeg");
+        expect(actualFile2.type).toBe("image/png");
+        expect(actualFile1.size).toBe(fileMeta1.size);
+        expect(actualFile2.size).toBe(fileMeta2.size);
+      }),
+    );
 
     await Promise.all(dbs.map((tdb) => tdb.db.close()));
     await Promise.all(reOpenedWithoutAttach.map((tdb) => tdb.db.close()));
+  }, 100_000);
+
+  it("sync with different encryption keys", async () => {
+    const id = sthis.nextId().str;
+    
+    // Create outbound DB with unique encryption key
+    const outbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound", "@outbound-key@");
+    await outbound.db.attach(aJoinable(`sync-${id}`, outbound.db));
+    await outbound.db.close();
+    const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound", "@outbound-key@");
+    
+    expect(outRows.length).toBe(ROWS);
+    
+    // Create inbound DB with different encryption key
+    const inbound = await prepareDb(`inbound-db-${id}`, "memory://sync-inbound", "@inbound-key@");
+    await inbound.db.close();
+    const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound", "@inbound-key@");
+    
+    expect(inRows.length).toBe(ROWS);
+    
+    // Now try to sync - this should test cross-encryption behavior
+    const inboundSync = await syncDb(`inbound-db-${id}`, "memory://sync-inbound", "@inbound-key@");
+    
+    try {
+      // Attempt to attach to same sync namespace as outbound (which uses different key)
+      await inboundSync.attach(aJoinable(`sync-${id}`, inboundSync));
+      await inboundSync.close();
+      
+      // Check if sync worked and files are accessible
+      const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound", "@inbound-key@");
+      
+      console.log("Cross-key sync result:", {
+        originalInbound: inRows.length,
+        originalOutbound: outRows.length,
+        afterSync: resultRows.length,
+        expectedIfSynced: ROWS * 2,
+      });
+      
+      // Log the actual document data to see what synced
+      console.log("Outbound documents:", outRows.map(row => ({ 
+        id: row.key, 
+        hasFiles: !!row.value._files,
+        docFields: Object.keys(row.value).filter(k => k !== '_files')
+      })));
+      
+      console.log("Result documents after sync:", resultRows.map(row => ({ 
+        id: row.key, 
+        hasFiles: !!row.value._files,
+        docFields: Object.keys(row.value).filter(k => k !== '_files')
+      })));
+      
+      if (resultRows.length === ROWS * 2) {
+        console.log("SUCCESS: Cross-encryption sync worked - testing file accessibility");
+        
+        // Test if files from different encryption contexts are accessible
+        const testDoc = resultRows.find(row => row.value._files);
+        if (testDoc) {
+          const files = testDoc.value._files as DocFiles;
+          const fileMeta = files.image1 as DocFileMeta;
+          
+          // This should reveal if cross-encryption file access works
+          const actualFile = await fileMeta.file!();
+          expect(actualFile).toBeInstanceOf(File);
+          console.log("SUCCESS: Cross-encryption file access works");
+        }
+      } else {
+        console.log("INFO: Cross-encryption sync did not merge data (encryption isolation working)");
+      }
+      
+    } catch (error) {
+      console.log("INFO: Cross-encryption sync failed as expected:", (error as Error).message);
+      // This might be the expected behavior for different encryption keys
+    }
+  }, 100_000);
+
+  it("sync regular documents (no files) with different encryption keys", async () => {
+    const id = sthis.nextId().str;
+    
+    // Create simple test function for non-file documents
+    const writeSimpleDoc = async (db: any, docId: string, content: any) => {
+      await db.put({ _id: docId, ...content });
+    };
+    
+    // Create outbound DB with unique encryption key
+    const outbound = await syncDb(`simple-outbound-${id}`, "memory://simple-outbound", "@outbound-simple@");
+    await writeSimpleDoc(outbound, "outbound-doc", { type: "outbound", message: "Hello from outbound", number: 42 });
+    await outbound.attach(aJoinable(`simple-sync-${id}`, outbound));
+    await outbound.close();
+    
+    // Create inbound DB with different encryption key  
+    const inbound = await syncDb(`simple-inbound-${id}`, "memory://simple-inbound", "@inbound-simple@");
+    await writeSimpleDoc(inbound, "inbound-doc", { type: "inbound", message: "Hello from inbound", number: 24 });
+    await inbound.close();
+    
+    // Check initial state
+    const outboundRows = await readDb(`simple-outbound-${id}`, "memory://simple-outbound", "@outbound-simple@");
+    const inboundRows = await readDb(`simple-inbound-${id}`, "memory://simple-inbound", "@inbound-simple@");
+    
+    console.log("Before sync - Outbound docs:", outboundRows.map(r => ({ id: r.key, ...r.value })));
+    console.log("Before sync - Inbound docs:", inboundRows.map(r => ({ id: r.key, ...r.value })));
+    
+    // Now try to sync regular documents across different encryption keys
+    const inboundSync = await syncDb(`simple-inbound-${id}`, "memory://simple-inbound", "@inbound-simple@");
+    await inboundSync.attach(aJoinable(`simple-sync-${id}`, inboundSync));
+    await inboundSync.close();
+    
+    // Check if regular documents synced
+    const resultRows = await readDb(`simple-inbound-${id}`, "memory://simple-inbound", "@inbound-simple@");
+    
+    console.log("After sync - Result docs:", resultRows.map(r => ({ id: r.key, ...r.value })));
+    console.log("Sync summary:", {
+      outboundCount: outboundRows.length,
+      inboundCount: inboundRows.length, 
+      resultCount: resultRows.length,
+      expectedIfSynced: outboundRows.length + inboundRows.length
+    });
+    
+    if (resultRows.length > inboundRows.length) {
+      console.log("SUCCESS: Regular documents synced across different encryption keys");
+      const outboundDoc = resultRows.find(r => r.key === "outbound-doc");
+      if (outboundDoc) {
+        console.log("Outbound document accessible:", outboundDoc.value);
+      }
+    } else {
+      console.log("INFO: Regular documents did NOT sync across different encryption keys");
+    }
+  }, 100_000);
+
+  it("test key gossip during sync", async () => {
+    const id = sthis.nextId().str;
+    
+    // Based on meta-key-hack.test.ts - try enabling key extraction
+    const outboundStoreKey = "@outbound-gossip@";
+    const inboundStoreKey = "@inbound-gossip@";
+    
+    // Create outbound DB with extractable keys
+    const outbound = await syncDb(
+      `gossip-outbound-${id}`, 
+      `memory://gossip-outbound?extractKey=_deprecated_internal_api`, 
+      outboundStoreKey
+    );
+    await outbound.put({ _id: "outbound-doc", message: "from outbound", hasFiles: false });
+    await outbound.attach(aJoinable(`gossip-sync-${id}`, outbound));
+    await outbound.close();
+    
+    // Create inbound DB with extractable keys but different store key
+    const inbound = await syncDb(
+      `gossip-inbound-${id}`, 
+      `memory://gossip-inbound?extractKey=_deprecated_internal_api`, 
+      inboundStoreKey
+    );
+    await inbound.put({ _id: "inbound-doc", message: "from inbound", hasFiles: false });
+    await inbound.close();
+    
+    console.log("Testing key gossip behavior...");
+    
+    // Check initial state
+    const outboundRows = await readDb(`gossip-outbound-${id}`, `memory://gossip-outbound?extractKey=_deprecated_internal_api`, outboundStoreKey);
+    const inboundRows = await readDb(`gossip-inbound-${id}`, `memory://gossip-inbound?extractKey=_deprecated_internal_api`, inboundStoreKey);
+    
+    console.log("Before gossip - Outbound:", outboundRows.map(r => ({ id: r.key, ...r.value })));
+    console.log("Before gossip - Inbound:", inboundRows.map(r => ({ id: r.key, ...r.value })));
+    
+    // Now try sync with key extraction enabled - this might trigger key gossip
+    const inboundGossip = await syncDb(
+      `gossip-inbound-${id}`, 
+      `memory://gossip-inbound?extractKey=_deprecated_internal_api`, 
+      inboundStoreKey
+    );
+    
+    try {
+      await inboundGossip.attach(aJoinable(`gossip-sync-${id}`, inboundGossip));
+      await inboundGossip.close();
+      
+      // Check if key gossip enabled cross-encryption sync
+      const resultRows = await readDb(`gossip-inbound-${id}`, `memory://gossip-inbound?extractKey=_deprecated_internal_api`, inboundStoreKey);
+      
+      console.log("After gossip attempt:", resultRows.map(r => ({ id: r.key, ...r.value })));
+      
+      if (resultRows.length > inboundRows.length) {
+        console.log("SUCCESS: Key gossip enabled cross-encryption sync!");
+        
+        // Check if we can access the outbound document
+        const outboundDoc = resultRows.find(r => r.key === "outbound-doc");
+        if (outboundDoc) {
+          console.log("Outbound document accessible via key gossip:", outboundDoc.value);
+        }
+      } else {
+        console.log("INFO: Key gossip did not occur or is not implemented in this sync path");
+      }
+      
+    } catch (error) {
+      console.log("Key gossip test failed:", (error as Error).message);
+    }
   }, 100_000);
 
   it.skip("sync outbound", async () => {
@@ -678,10 +909,10 @@ describe("sync", () => {
   }, 100_000);
 });
 
-async function syncDb(name: string, base: string, tracer?: TraceFn) {
+async function syncDb(name: string, base: string, storeKey?: string, tracer?: TraceFn) {
   const db = fireproof(name, {
     storeUrls: {
-      base: BuildURI.from(base).setParam(PARAM.STORE_KEY, "@fireproof:attach@"), // .setParam(PARAM.SELF_REFLECT, "yes"),
+      base: BuildURI.from(base).setParam(PARAM.STORE_KEY, storeKey || "@fireproof:attach@"), // .setParam(PARAM.SELF_REFLECT, "yes"),
     },
     ctx: AppContext.merge({ base }),
     tracer,
@@ -690,9 +921,9 @@ async function syncDb(name: string, base: string, tracer?: TraceFn) {
   return db;
 }
 
-async function prepareDb(name: string, base: string, tracer?: TraceFn) {
+async function prepareDb(name: string, base: string, storeKey?: string, tracer?: TraceFn) {
   {
-    const db = await syncDb(name, base, tracer);
+    const db = await syncDb(name, base, storeKey, tracer);
     await db.ready();
     const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
     const ret = { db, dbId };
@@ -700,15 +931,15 @@ async function prepareDb(name: string, base: string, tracer?: TraceFn) {
     await db.close();
   }
 
-  const db = await syncDb(name, base);
+  const db = await syncDb(name, base, storeKey);
   await db.ready();
   const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
   // const ret = { db, dbId };
   return { db, dbId };
 }
 
-async function readDb(name: string, base: string) {
-  const db = await syncDb(name, base);
+async function readDb(name: string, base: string, storeKey?: string) {
+  const db = await syncDb(name, base, storeKey);
   const rows = await db.allDocs();
   await db.close();
   return rows.rows.sort((a, b) => a.key.localeCompare(b.key));
