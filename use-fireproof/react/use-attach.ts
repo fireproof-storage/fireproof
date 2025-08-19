@@ -82,7 +82,7 @@ class WebCtxImpl implements WebToCloudCtx {
     };
   }
 
-  readonly _tokenAndClaims = new ResolveOnce<TokenAndClaims>();
+  readonly _tokenAndClaims = new ResolveOnce<TokenAndClaims | undefined>();
 
   async token() {
     if (this.opts.token) {
@@ -91,7 +91,7 @@ class WebCtxImpl implements WebToCloudCtx {
     const tc = await this._tokenAndClaims.once(async () => {
       const ret = await this.keyBag?.get(`${this.dbId}/urlToken`);
       if (!ret) {
-        return;
+        return undefined;
       }
       let token: string;
       if (isV1StorageKeyItem(ret)) {

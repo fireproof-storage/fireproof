@@ -71,7 +71,6 @@
     "playwright": "^1.54.2",
     "playwright-chromium": "^1.54.2",
     "prettier": "^3.6.2",
-    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.39.0",
     "vitest": "^3.2.4",
@@ -105,9 +104,5 @@
     "patchedDependencies": {
       "drizzle-kit": "patches/drizzle-kit.patch"
     }
-  },
-  "dependencies": {
-    "@adviser/cement": "^0.4.25",
-    "@fireproof/vendor": "workspace:0.0.0"
   }
 }

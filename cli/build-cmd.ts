@@ -336,8 +336,7 @@ export function buildCmd(sthis: SuperThis) {
       }
 
       await fs.copy(args.srcDir, tmpDest, {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        filter: (src: string, dst: string) => {
+        filter: (src: string, _dst: string) => {
           if (src.startsWith(args.dstDir)) {
             return false; // Skip copying if the source is within the destination directory
           }
@@ -369,6 +368,14 @@ export function buildCmd(sthis: SuperThis) {
       const packageJson = await patchPackageJson("package.json", args.version, args.changeScope);
       // await $`pnpm version ${args.version}`;
 
+      fs.copy(".", "../npm", {
+        filter: (src: string, _dst: string) => {
+          if (src.endsWith("ts") || src.endsWith("tsx")) {
+            return false;
+          }
+          return true;
+        },
+      });
       if (!args.noBuild) {
         await $`pnpm run build`;
       }

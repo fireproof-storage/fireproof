@@ -12,13 +12,6 @@ patchedDependencies:
 importers:
 
   .:
-    dependencies:
-      '@adviser/cement':
-        specifier: ^0.4.25
-        version: 0.4.25(typescript@5.9.2)
-      '@fireproof/vendor':
-        specifier: workspace:0.0.0
-        version: link:vendor
     devDependencies:
       '@eslint/js':
         specifier: ^9.33.0
@@ -59,9 +52,6 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      tsx:
-        specifier: ^4.20.3
-        version: 4.20.4
       typescript:
         specifier: ^5.8.3
         version: 5.9.2
