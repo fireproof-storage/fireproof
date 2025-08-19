@@ -7,28 +7,32 @@ import { cd, $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
 import { SemVer } from "semver";
 
+const reVersionAlphaStart = /^[a-z](\d+\.\d+\.\d+.*)$/;
+// const reVersionOptionalAlphaStart = /^[a-z]?(\d+\.\d+\.\d+.*)$/;
+const reScopedVersion = /^[^@]+@(.*)$/;
+const reEndVersion = /.*\/([^/]+)$/;
+
 function getEnvVersion(version = "refs/tags/v0.0.0-smoke") {
-  if (
-    process.env.GITHUB_REF &&
-    (process.env.GITHUB_REF.startsWith("refs/tags/v") || process.env.GITHUB_REF.startsWith("refs/tags/core@"))
-  ) {
+  if (process.env.GITHUB_REF) {
     version = process.env.GITHUB_REF;
   }
-  return version
-    .split("/")
-    .slice(-1)[0]
-    .replace(/^core@/, "")
-    .replace(/^v/, "");
+  if (reEndVersion.test(version)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    version = version.match(reEndVersion)![1];
+  }
+  return version.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1");
 }
 
-async function getVersion(fpVersionFname: string) {
+export async function getVersion(fpVersionFname?: string, xfs = fs) {
   let top = await findUp("tsconfig.dist.json");
   if (!top) {
     top = process.cwd();
   }
-  const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
-  if (fs.existsSync(fpVersionFile)) {
-    return getEnvVersion((await fs.readFile(fpVersionFile, "utf-8")).trim());
+  if (fpVersionFname) {
+    const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
+    if (xfs.existsSync(fpVersionFile)) {
+      return getEnvVersion((await xfs.readFile(fpVersionFile, "utf-8")).trim());
+    }
   }
   const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
   const dateTick = (await $`date +%s`).stdout.trim();
