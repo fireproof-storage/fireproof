@@ -16,7 +16,7 @@ export async function setupBackendD1(
 
   $.verbose = !!sthis.env.get("FP_DEBUG");
   // process.env["FP_STORAGE_URL"] = `fpcloud://localhost:${port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`;
-  await $`npx tsx ../../../cli/main.ts writeEnv --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
+  await $`core-cli writeEnv --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
 
   const runningWrangler = $`
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &
