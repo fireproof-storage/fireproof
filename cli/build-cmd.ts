@@ -13,14 +13,21 @@ const reScopedVersion = /^[^@]+@(.*)$/;
 const reEndVersion = /.*\/([^/]+)$/;
 
 function getEnvVersion(version = "refs/tags/v0.0.0-smoke", xenv = process.env) {
+  let wversion = version;
   if (xenv.GITHUB_REF) {
-    version = xenv.GITHUB_REF;
+    wversion = xenv.GITHUB_REF;
   }
-  if (reEndVersion.test(version)) {
+  if (reEndVersion.test(wversion)) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    version = version.match(reEndVersion)![1];
+    wversion = wversion.match(reEndVersion)![1];
   }
-  return version.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1");
+  const calculatedVersion = wversion.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1");
+  try {
+    new SemVer(calculatedVersion);
+    return calculatedVersion;
+  } catch (e) {
+    return getEnvVersion(version, {});
+  }
 }
 
 interface Mock {
