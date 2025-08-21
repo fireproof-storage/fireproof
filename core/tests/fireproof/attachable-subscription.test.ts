@@ -152,9 +152,9 @@ describe("Remote Sync Subscription Tests", () => {
   const sthis = ensureSuperThis();
 
   // Subscription tracking variables
-  let subscriptionCallbacks: Array<() => void> = [];
-  let subscriptionCounts = new Map<string, number>();
-  let receivedDocs = new Map<string, DocWithId<any>[]>();
+  let subscriptionCallbacks: (() => void)[] = [];
+  const subscriptionCounts = new Map<string, number>();
+  const receivedDocs = new Map<string, DocWithId<unknown>[]>();
 
   // Helper to setup subscription tracking on a database
   function setupSubscription(db: Database, dbName: string): Promise<void> {
@@ -169,7 +169,7 @@ describe("Remote Sync Subscription Tests", () => {
         subscriptionCounts.set(dbName, currentCount + 1);
         receivedDocs.set(dbName, [...currentDocs, ...docs]);
 
-        console.log(`📨 Subscription fired for ${dbName}: ${docs.length} docs received (total: ${currentCount + 1} notifications)`);
+        // Subscription fired successfully - tracked in subscriptionCounts
         resolve();
       }, true);
 
@@ -277,7 +277,7 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Verify the subscription was triggered
       expect(subscriptionCounts.get("main-db")).toBeGreaterThan(0);
-      console.log(`✅ Main DB subscription fired ${subscriptionCounts.get("main-db")} times`);
+      expect(subscriptionCounts.get("main-db")).toBe(1); // Should fire exactly once
 
       // Verify the data was synced correctly
       expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
@@ -287,7 +287,9 @@ describe("Remote Sync Subscription Tests", () => {
       // Verify subscription received the synced documents
       const docs = receivedDocs.get("main-db") || [];
       expect(docs.length).toBeGreaterThan(0);
-      console.log(`📄 Received ${docs.length} documents via subscription`);
+      // With our fix, subscriptions now properly fire for remote data sync
+      // The exact number may vary based on sync timing, but we should get all synced documents
+      expect(docs.length).toBeGreaterThanOrEqual(ROWS * joinableDBs.length);
     });
   });
 
@@ -367,7 +369,6 @@ describe("Remote Sync Subscription Tests", () => {
       // Attach to the same sync namespace - this simulates toCloud() reconnection
       // 🐛 BUG: This should trigger subscription but doesn't
       await inbound.attach(aJoinable(`sync-${id}`, inbound));
-      await inbound.close();
 
       // Wait for subscription to fire (or timeout)
       // 🐛 BUG: This will timeout because subscription never fires for reconnection sync
@@ -378,16 +379,19 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Verify the subscription was triggered by remote sync
       expect(subscriptionCounts.get("inbound-db")).toBeGreaterThan(0);
-      console.log(`✅ Inbound DB subscription fired ${subscriptionCounts.get("inbound-db")} times during offline sync`);
-
-      // Verify the data was synced correctly
-      const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
-      expect(resultRows.length).toBe(ROWS * 2); // inbound + outbound data
+      expect(subscriptionCounts.get("inbound-db")).toBe(1); // Should fire exactly once
 
       // Verify subscription received the synced documents
       const docs = receivedDocs.get("inbound-db") || [];
       expect(docs.length).toBeGreaterThan(0);
-      console.log(`📄 Received ${docs.length} documents via subscription during offline sync`);
+      expect(docs.length).toBe(2); // Should receive both inbound and outbound documents
+
+      // Close database after all assertions complete
+      await inbound.close();
+
+      // Verify the data was synced correctly
+      const resultRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
+      expect(resultRows.length).toBe(ROWS * 2); // inbound + outbound data
     }, 100_000);
 
     it("should trigger subscriptions during online multi-database sync", async () => {
@@ -447,7 +451,7 @@ describe("Remote Sync Subscription Tests", () => {
       // This is the key difference: NEW writes vs EXISTING data sync
       const keys = (
         await Promise.all(
-          dbs.map(async (db, index) => {
+          dbs.map(async (db, _index) => {
             await sleep(100 * Math.random());
             return writeRow(db, "add-online");
           }),
@@ -466,7 +470,7 @@ describe("Remote Sync Subscription Tests", () => {
               new Promise((_, reject) => setTimeout(() => reject(new Error(`Subscription timeout for db ${i}`)), 5000)),
             ]);
           } catch (error) {
-            console.warn(`⚠️  Subscription for online-db-${i} did not fire:`, error);
+            // Subscription timeout - this is expected if subscriptions don't work for this database
           }
         }),
       );
@@ -476,11 +480,13 @@ describe("Remote Sync Subscription Tests", () => {
       dbs.forEach((_, i) => {
         const count = subscriptionCounts.get(`online-db-${i}`) || 0;
         totalSubscriptionFires += count;
-        console.log(`📊 online-db-${i} subscription fired ${count} times`);
+        expect(count).toBeGreaterThan(0); // Each database should have at least one subscription fire
       });
 
       expect(totalSubscriptionFires).toBeGreaterThan(0);
-      console.log(`✅ Total subscription fires across all databases: ${totalSubscriptionFires}`);
+      // With our fix, subscriptions fire more frequently as they should for sync operations
+      // Each database should fire at least once, but may fire multiple times as sync progresses
+      expect(totalSubscriptionFires).toBeGreaterThanOrEqual(dbs.length);
 
       // Verify data was synced correctly across all databases
       await Promise.all(
@@ -488,7 +494,7 @@ describe("Remote Sync Subscription Tests", () => {
           for (const key of keys) {
             const doc = await db.db.get(key);
             expect(doc._id).toBe(key);
-            expect((doc as any).value).toBe(key);
+            expect((doc as { _id: string; value: string }).value).toBe(key);
           }
         }),
       );
