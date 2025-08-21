@@ -1,5 +1,5 @@
 import { AppContext, BuildURI, WithoutPromise } from "@adviser/cement";
-import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocWithId } from "@fireproof/core";
+import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocWithId, DocBase } from "@fireproof/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 
@@ -154,8 +154,7 @@ describe("Remote Sync Subscription Tests", () => {
   // Subscription tracking variables
   let subscriptionCallbacks: (() => void)[] = [];
   const subscriptionCounts = new Map<string, number>();
-  const receivedDocs = new Map<string, DocWithId<Record<string, unknown>>[]>();
-
+  const receivedDocs = new Map<string, DocBase[]>()
   // Helper to setup subscription tracking on a database
   function setupSubscription(db: Database, dbName: string): Promise<void> {
     return new Promise<void>((resolve) => {
