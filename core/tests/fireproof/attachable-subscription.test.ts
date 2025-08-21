@@ -446,7 +446,7 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Now write NEW data to databases - this WILL trigger subscriptions ✅
       // This is the key difference: NEW writes vs EXISTING data sync
-      const keys = [];
+      const keys: string[] = [];
       for (const [_index, db] of dbs.entries()) {
         await sleep(100 * Math.random());
         const dbKeys = await writeRow(db, "add-online");
@@ -491,7 +491,10 @@ describe("Remote Sync Subscription Tests", () => {
         dbs.map(async (db) => {
           const allDocs = await db.db.allDocs();
           // console.log(allDocs.rows);
-          expect(allDocs.rows.length).toBe(keys.length * 2);
+          if (allDocs.rows.length != keys.length * ROWS) {
+            expect(allDocs.rows.map((i) => i.key)).toEqual(keys);
+          }
+          expect(allDocs.rows.length).toBe(keys.length * ROWS);
           // for (const key of keys) {
           //   try {
           //     const doc = await db.db.get<{ value: string }>(key);

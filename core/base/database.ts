@@ -13,7 +13,6 @@ import {
   BulkResponse,
   ChangesResponse,
   DocTypes,
-  IndexRows,
   DocFragment,
   ChangesResponseRow,
   CRDTMeta,
@@ -25,6 +24,7 @@ import {
   Attachable,
   Attached,
   NotFoundError,
+  QueryResult,
 } from "@fireproof/core-types-base";
 import { ensureLogger, makeName } from "@fireproof/core-runtime";
 
@@ -176,21 +176,37 @@ export class DatabaseImpl implements Database {
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
-    field: string | MapFn<T>,
-    opts: QueryOpts<K> = {},
-  ): Promise<IndexRows<T, K, R>> {
+
+  async query<
+    T extends DocTypes,
+    K extends IndexKeyType = string,
+    R extends DocFragment = T,
+    O extends Partial<QueryOpts<K>> = Partial<QueryOpts<K>>,
+  >(field: string | MapFn<T>, iopts?: O): Promise<QueryResult<T, K, R, O>> {
+    let opts: O;
+    if (!iopts) {
+      opts = {} as O;
+    } else {
+      opts = iopts;
+    }
+
     await this.ready();
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     // const _crdt = this.ledger.crdt as unknown as CRDT<T>;
     const idx = typeof field === "string" ? index<T, K, R>(this, field) : index<T, K, R>(this, makeName(field.toString()), field);
     const result = await idx.query(opts);
 
+    const docInc = typeof opts.includeDocs === "boolean" ? opts.includeDocs : true;
+    if (docInc) {
+      return {
+        rows: result.rows,
+        docs: result.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
+      } as QueryResult<T, K, R, O>;
+    }
     // Add docs property to match useLiveQuery behavior
     return {
       rows: result.rows,
-      docs: result.rows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
-    };
+    } as QueryResult<T, K, R, O>;
   }
 
   async compact() {

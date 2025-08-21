@@ -20,7 +20,7 @@ export function createUseLiveQuery(database: Database) {
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
     const refreshRows = useCallback(async () => {
-      const res = await database.query<T, K, R>(mapFn, query);
+      const res = await database.query<T, K, R>(mapFn, { ...query, includeDocs: true });
       setResult(res);
     }, [database, mapFnString, queryString]);
 

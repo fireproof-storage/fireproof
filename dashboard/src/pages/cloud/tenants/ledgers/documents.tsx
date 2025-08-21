@@ -23,8 +23,8 @@ export function LedgerDocuments() {
   //   rawConnect(database as any, `${tenantId}-${ledgerId}`, DEFAULT_ENDPOINT);
   // }
 
-  const allDocs = useLiveQuery("_id");
-  const docs = allDocs.docs.filter((doc): doc is Document => doc !== null);
+  const allDocs = useLiveQuery<Document>("_id");
+  const docs = allDocs.docs.filter((doc) => !!doc);
   const headers = headersForDocs(docs);
 
   async function handleDeleteDocument(docId: string) {

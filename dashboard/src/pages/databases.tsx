@@ -24,7 +24,7 @@ async function getIndexedDBNamesWithQueries(): Promise<{ name: string; queries: 
       userDbs.map(async (dbName) => {
         const queryDbName = `fp_${dbName}_queries`;
         const queryDb = fireproof(queryDbName);
-        const allDocs = await queryDb.allDocs({ includeDocs: true });
+        const allDocs = await queryDb.allDocs();
         const queries = allDocs.rows.map((row) => row.value);
 
         return { name: dbName as string, queries };
