@@ -291,10 +291,19 @@ export interface FPIndexRow<K extends IndexKeyType, T extends DocObject, R exten
   readonly doc?: DocWithId<T>;
 }
 
-export interface IndexRows<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T> {
+export interface IndexRowsWithoutDocs<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T> {
   readonly rows: FPIndexRow<K, T, R>[];
+}
+
+export interface IndexRowsWithDocs<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T>
+  extends IndexRowsWithoutDocs<T, K, R> {
   readonly docs: DocWithId<T>[];
 }
+
+export type IndexRows<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T> =
+  | IndexRowsWithoutDocs<T, K, R>
+  | IndexRowsWithDocs<T, K, R>;
+
 export interface CRDTMeta {
   readonly head: ClockHead;
 }
@@ -323,16 +332,16 @@ export interface IdxMetaMap {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface QueryOpts<K extends IndexKeyType> {
-  readonly descending?: boolean;
-  readonly limit?: number;
-  includeDocs?: boolean;
-  readonly range?: [IndexKeyType, IndexKeyType];
-  readonly key?: DocFragment;
-  readonly keys?: DocFragment[];
-  prefix?: IndexKeyType;
+  readonly descending: boolean;
+  readonly limit: number;
+  readonly includeDocs: boolean;
+  readonly range: [IndexKeyType, IndexKeyType];
+  readonly key: DocFragment;
+  readonly keys: DocFragment[];
+  readonly prefix: IndexKeyType;
 }
 
-export interface AllDocsQueryOpts extends QueryOpts<string> {
+export interface AllDocsQueryOpts extends Omit<QueryOpts<string>, "includeDocs"> {
   readonly key: string;
   readonly keys: string[];
   readonly prefix: string;
@@ -617,22 +626,48 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   del(id: string): Promise<DocResponse>;
   remove(id: string): Promise<DocResponse>;
   changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
+
   allDocs<T extends DocTypes>(opts?: Partial<AllDocsQueryOpts>): Promise<AllDocsResponse<T>>;
-  allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }>;
+
+  allDocuments<T extends DocTypes>(opts?: Partial<AllDocsQueryOpts>): Promise<AllDocsResponse<T>>;
+
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
 
-  query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
+  // query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(field: string | MapFn<T>, opts: Partial<QueryOptsWithoutDocs<K>>): Promise<IndexRowsWithoutDocs<T, K, R>>;
+  // query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(field: string | MapFn<T>, opts: Partial<QueryOptsWithDocs<K>>): Promise<IndexRowsWithDocs<T, K, R>>;
+  // query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(field: string | MapFn<T>, opts?: Partial<QueryOptsWithUndefDocs<K>>): Promise<IndexRowsWithDocs<T, K, R>>;
+
+  query<
+    T extends DocTypes,
+    K extends IndexKeyType = string,
+    R extends DocFragment = T,
+    O extends Partial<QueryOpts<K>> = Partial<QueryOpts<K>>,
+  >(
     field: string | MapFn<T>,
-    opts?: QueryOpts<K>,
-  ): Promise<IndexRows<T, K, R>>;
+    opts?: O,
+  ): Promise<QueryResult<T, K, R, O>>;
+
+  // query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(field: string | MapFn<T>, opts?: undefined): Promise<IndexRowsWithDocs<T, K, R>>;
+  // query<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(field: string | MapFn<T>, opts?: Partial<QueryOpts<K>>): Promise<IndexRows<T, K, R>>;
   compact(): Promise<void>;
 }
+
+export type QueryResult<
+  T extends DocTypes,
+  K extends IndexKeyType = string,
+  R extends DocFragment = T,
+  O extends Partial<QueryOpts<K>> = Partial<QueryOpts<K>>,
+> = O extends { includeDocs: false } ? IndexRowsWithoutDocs<T, K, R> : IndexRowsWithDocs<T, K, R>;
+
+// export type QueryOptsWithoutDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs"> &  { readonly includeDocs: false }
+
+// export type QueryOptsWithDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs"> & { readonly includeDocs: true }
+// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+// export type QueryOptsWithUndefDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs"> // & */ { [key: string]: unknown }
+
+// export type QueryOptsWithUndefIncludeDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs">
+
+// export type QueryOpts<K extends IndexKeyType = string>  = QueryOptsWithoutDocs<K> | QueryOptsWithDocs<K> // | QueryOptsWithUndefIncludeDocs<K>
 
 export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocTypes> {
   push(task: T): Promise<MetaType>;

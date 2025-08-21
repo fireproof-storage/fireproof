@@ -161,7 +161,7 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
 export async function applyQuery<T extends DocObject, K extends IndexKeyType, R extends DocFragment>(
   crdt: CRDT,
   resp: { result: IndexRow<K, R>[] },
-  query: QueryOpts<K>,
+  query: Partial<QueryOpts<K>>,
 ): Promise<IndexRows<T, K, R>> {
   if (query.descending) {
     resp.result = resp.result.reverse();
@@ -169,7 +169,7 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
   if (query.limit) {
     resp.result = resp.result.slice(0, query.limit);
   }
-  if (query.includeDocs) {
+  if (typeof query.includeDocs === "boolean" ? query.includeDocs : true) {
     resp.result = await Promise.all(
       resp.result.map(async (row) => {
         const val = await crdt.get(row.id);

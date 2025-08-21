@@ -17,17 +17,15 @@ import type {
   MapFn,
   QueryOpts,
   SuperThis,
+  IndexRowsWithDocs,
 } from "@fireproof/core-types-base";
 import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
-export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
-  readonly docs: DocWithId<T>[];
-  readonly rows: FPIndexRow<K, T, R>[];
-}
+export type LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = IndexRowsWithDocs<T, K, R>;
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   mapFn: string | MapFn<T>,
-  query?: QueryOpts<K>,
+  query?: Partial<QueryOpts<K>>,
   initialRows?: FPIndexRow<K, T, R>[],
 ) => LiveQueryResult<T, K, R>;
 

@@ -195,19 +195,16 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
     }
   }
 
-  async query(opts: QueryOpts<K> = {}): Promise<IndexRows<T, K, R>> {
-    this.logger.Debug().Msg("enter query");
+  async query(opts: Partial<QueryOpts<K>> = {}): Promise<IndexRows<T, K, R>> {
     await this.ready();
     // this._resetIndex();
-    this.logger.Debug().Msg("post ready query");
     await this._updateIndex();
-    this.logger.Debug().Msg("post _updateIndex query");
     await this._hydrateIndex();
-    this.logger.Debug().Msg("post _hydrateIndex query");
     if (!this.byKey.root) {
       return await applyQuery<T, K, R>(this.crdt, { result: [] }, opts);
     }
-    if (opts.includeDocs === undefined) opts.includeDocs = true;
+
+    // if (opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       const eRange = encodeRange(opts.range);
       return await applyQuery<T, K, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
@@ -236,19 +233,30 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       if (opts) {
         flattenedRows = flattenedRows.slice(0, opts.limit);
       }
+      const docInc = typeof opts.includeDocs === "boolean" ? opts.includeDocs : true;
+      let docsObj = {};
+      if (docInc) {
+        docsObj = { docs: flattenedRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r) };
+      }
 
       return {
         rows: flattenedRows,
-        docs: flattenedRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
+        ...docsObj,
+        // docs: flattenedRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
       };
     }
     if (opts.prefix) {
-      if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
+      let prefix: (string | number | boolean)[] = [];
+      if (!Array.isArray(opts.prefix)) prefix = [opts.prefix];
+      else prefix = opts.prefix;
       // prefix should be always an array
-      const start = [...opts.prefix, NaN];
-      const end = [...opts.prefix, Infinity];
+      const start = [...prefix, NaN];
+      const end = [...prefix, Infinity];
       const encodedR = encodeRange([start, end]);
-      return await applyQuery<T, K, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
+      return await applyQuery<T, K, R>(this.crdt, await this.byKey.root.range(...encodedR), {
+        ...opts,
+        prefix,
+      });
     }
     const all = await this.byKey.root.getAllEntries(); // funky return type
     return await applyQuery<T, K, R>(
