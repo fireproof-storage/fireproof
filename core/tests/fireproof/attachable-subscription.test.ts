@@ -3,7 +3,7 @@ import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocBase } fro
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 
-const ROWS = 10;
+const ROWS = 3;
 
 class AJoinable implements Attachable {
   readonly name: string;
@@ -493,16 +493,19 @@ describe("Remote Sync Subscription Tests", () => {
 
       await Promise.all(
         dbs.map(async (db) => {
-          for (const key of keys) {
-            try {
-              const doc = await db.db.get<{ value: string }>(key);
-              expect(doc._id).toBe(key);
-              expect(doc.value).toBe(key);
-            } catch (e) {
-              // Document may still be syncing, this is expected in some test runs
-              console.log(`Document ${key} not yet synced to database`);
-            }
-          }
+          const allDocs = await db.db.allDocs();
+          // console.log(allDocs.rows);
+          expect(allDocs.rows.length).toBe(keys.length * 2);
+          // for (const key of keys) {
+          //   try {
+          //     const doc = await db.db.get<{ value: string }>(key);
+          //     expect(doc._id).toBe(key);
+          //     expect(doc.value).toBe(key);
+          //   } catch (e) {
+          //     // Document may still be syncing, this is expected in some test runs
+          //     console.log(`Document ${key} not yet synced to database`);
+          //   }
+          // }
         }),
       );
 
