@@ -75,8 +75,10 @@ gthis()["FP_VERSION"]=getVersion()
 EOF
 
 pnpm install --prefer-offline --package-import-method=hardlink
+pnpm exec playwright install chromium
 pnpm run test
 pnpm exec deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
+
 
 if [ -z "$NO_CLEANUP" ]
 then
