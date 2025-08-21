@@ -113,6 +113,41 @@ async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style
   );
 }
 
+/**
+ * REMOTE SYNC SUBSCRIPTION BUG REPRODUCTION TESTS
+ * 
+ * PROBLEM:
+ * React components using useLiveQuery don't update when remote changes sync via toCloud().
+ * Local writes work fine, but remote sync data doesn't trigger React re-renders.
+ * 
+ * ROOT CAUSE:
+ * This is NOT a React/use-fireproof bug - it's a core Fireproof subscription system bug.
+ * The db.subscribe() method only fires for NEW writes, not for EXISTING data that syncs in.
+ * 
+ * TEST RESULTS:
+ * ❌ 6 failures: Subscriptions don't fire when existing data syncs via attach()
+ * ✅ 3 passes: Subscriptions DO fire when new data is written after connection
+ * 
+ * THE BUG:
+ * Fireproof treats these differently, but users expect both to trigger subscriptions:
+ * - ✅ db.put() → subscription fires → React updates (WORKS)
+ * - ❌ remote data sync → subscription doesn't fire → React doesn't update (BROKEN)
+ * 
+ * REAL-WORLD IMPACT:
+ * - User opens React app on phone, writes data, closes app (data syncs to cloud)
+ * - User opens same React app on laptop
+ * - App pulls phone data but UI doesn't update (user sees stale data)
+ * - User must refresh page to see synced data
+ * 
+ * EXPECTED BEHAVIOR:
+ * When remote data syncs into local database, subscriptions should fire just like local writes.
+ * This would make React components update automatically when remote data arrives.
+ * 
+ * FIX NEEDED:
+ * Core subscription system needs to treat remote data ingestion the same as local writes.
+ * Likely fix location: CRDT/ledger layer where remote data is applied to local database.
+ */
+
 describe("Remote Sync Subscription Tests", () => {
   const sthis = ensureSuperThis();
 
@@ -190,6 +225,35 @@ describe("Remote Sync Subscription Tests", () => {
     });
 
     it("should trigger subscriptions on inbound syncing", async () => {
+      /*
+       * WHAT THIS TEST DOES:
+       * 1. Creates main database with initial data (1 doc)
+       * 2. Creates remote databases with their own data (1 doc each)  
+       * 3. Sets up subscription on main database
+       * 4. Attaches remote databases to main database
+       * 5. Expects subscription to fire when remote data syncs into main database
+       * 
+       * WHAT SHOULD HAPPEN:
+       * - Main DB starts with 1 document
+       * - Remote DBs have 1 document each
+       * - When attach() completes, main DB should have 2 documents (1 original + 1 from remote)
+       * - The subscription should fire because the database contents changed (new document arrived)
+       * - This is equivalent to someone else writing data that syncs into your local database
+       * 
+       * WHAT ACTUALLY HAPPENS (BUG):
+       * - ✅ Data syncs correctly (confirmed by debug tests)
+       * - ❌ Subscription never fires even though database contents changed
+       * - This means users don't get notified when remote data arrives via toCloud/attach
+       * 
+       * WHY THIS IS A BUG:
+       * - From user perspective: remote data arriving should trigger same notifications as local writes
+       * - React components using useLiveQuery don't update when remote changes sync
+       * - Breaks the reactive programming model for distributed databases
+       * 
+       * EXPECTED BEHAVIOR:
+       * When db.attach() pulls in remote data, it should trigger subscriptions just like db.put() does
+       */
+      
       // Setup subscription on main database before attaching remote databases
       const subscriptionPromise = setupSubscription(db, "main-db");
 
@@ -205,6 +269,7 @@ describe("Remote Sync Subscription Tests", () => {
       await sleep(100);
 
       // Wait for subscription to fire (or timeout)
+      // 🐛 BUG: This will timeout because subscription never fires for remote data sync
       await Promise.race([
         subscriptionPromise,
         new Promise((_, reject) => setTimeout(() => reject(new Error("Subscription timeout")), 5000))
@@ -236,32 +301,76 @@ describe("Remote Sync Subscription Tests", () => {
     });
 
     it("should trigger subscriptions during offline sync reconnection", async () => {
+      /*
+       * WHAT THIS TEST SIMULATES:
+       * This is the classic "offline sync" scenario that users encounter with toCloud():
+       * 1. User A writes data and syncs it to cloud storage (outbound database)
+       * 2. User B is offline, then comes back online and connects to same storage
+       * 3. User B's database should receive User A's data and notify subscribers
+       * 
+       * REAL-WORLD SCENARIO:
+       * - User opens React app on phone, writes some data, closes app (data syncs to cloud)
+       * - Same user opens React app on laptop later
+       * - Laptop app should pull phone data and update UI via useLiveQuery
+       * 
+       * WHAT THIS TEST DOES:
+       * 1. Creates "outbound" database with data and syncs it to shared namespace
+       * 2. Creates separate "inbound" database (simulates different device/session)
+       * 3. Sets up subscription on inbound database  
+       * 4. Connects inbound database to same sync namespace (simulates going online)
+       * 5. Expects subscription to fire when outbound data syncs into inbound database
+       * 
+       * WHAT SHOULD HAPPEN:
+       * - Inbound database starts with 1 document (its own data)
+       * - When attach() connects to sync namespace, it pulls outbound database's data
+       * - Inbound database should now have 2 documents (1 original + 1 from outbound)
+       * - The subscription should fire because database contents changed
+       * - React app would re-render with the new synced data
+       * 
+       * WHAT ACTUALLY HAPPENS (BUG):
+       * - ✅ Data syncs perfectly (confirmed by debug tests)
+       * - ✅ Database ends up with correct 2 documents
+       * - ❌ Subscription never fires even though database contents changed
+       * - ❌ React components using useLiveQuery don't update
+       * 
+       * WHY THIS IS CRITICAL:
+       * - This is THE most common sync scenario for distributed apps
+       * - Users expect React UI to update when remote data syncs in
+       * - Without this, users have to refresh page or manually re-query
+       * - Breaks the "live" experience that Fireproof promises
+       * 
+       * EXPECTED BEHAVIOR:
+       * Remote sync bringing in existing data should trigger subscriptions just like local writes do
+       */
+      
       const id = sthis.nextId().str;
 
-      // Create outbound database and sync data
+      // Create outbound database and sync data (simulates User A's session)
       const poutbound = await prepareDb(`outbound-db-${id}`, "memory://sync-outbound");
       await poutbound.db.attach(aJoinable(`sync-${id}`, poutbound.db));
       await poutbound.db.close();
       const outRows = await readDb(`outbound-db-${id}`, "memory://sync-outbound");
       expect(outRows.length).toBe(ROWS);
 
-      // Create inbound database  
+      // Create inbound database (simulates User B's session on different device)
       const pinbound = await prepareDb(`inbound-db-${id}`, `memory://sync-inbound`);
       await pinbound.db.close();
       const inRows = await readDb(`inbound-db-${id}`, "memory://sync-inbound");
       expect(inRows.length).toBe(ROWS);
 
-      // Now test the subscription during sync
+      // Now test the subscription during sync (User B goes online)
       const inbound = await syncDb(`inbound-db-${id}`, `memory://sync-inbound`);
       
-      // Setup subscription BEFORE attaching - this is key for testing the issue
+      // Setup subscription BEFORE attaching - this simulates useLiveQuery being active
       const subscriptionPromise = setupSubscription(inbound, "inbound-db");
       
-      // Attach to the same sync namespace - this should trigger subscription
+      // Attach to the same sync namespace - this simulates toCloud() reconnection
+      // 🐛 BUG: This should trigger subscription but doesn't
       await inbound.attach(aJoinable(`sync-${id}`, inbound));
       await inbound.close();
 
-      // Wait for subscription to fire (or timeout)
+      // Wait for subscription to fire (or timeout)  
+      // 🐛 BUG: This will timeout because subscription never fires for reconnection sync
       await Promise.race([
         subscriptionPromise,
         new Promise((_, reject) => setTimeout(() => reject(new Error("Subscription timeout")), 5000))
@@ -282,6 +391,36 @@ describe("Remote Sync Subscription Tests", () => {
     }, 100_000);
 
     it("should trigger subscriptions during online multi-database sync", async () => {
+      /*
+       * WHAT THIS TEST DOES (WORKING SCENARIO):
+       * This test demonstrates the ONE scenario where subscriptions DO work correctly.
+       * It shows the difference between syncing EXISTING data (broken) vs NEW data (working).
+       * 
+       * SEQUENCE:
+       * 1. Creates 3 databases and connects them via attach() (they start empty)
+       * 2. Sets up subscriptions on all databases  
+       * 3. AFTER connection, writes NEW data to each database
+       * 4. Expects subscriptions to fire when NEW data syncs between databases
+       * 
+       * WHY THIS WORKS:
+       * - Databases start empty, so attach() has no existing data to sync
+       * - Only NEW writes happen AFTER subscriptions are set up
+       * - New writes trigger subscriptions locally AND when they sync to remote databases
+       * - This is "real-time sync" - data written after connection established
+       * 
+       * CONTRAST WITH FAILING TESTS:
+       * - Failing tests: Databases have EXISTING data BEFORE attach()
+       * - Failing tests: Subscription should fire when EXISTING data syncs in
+       * - Working test: Only NEW data written AFTER attach() syncs
+       * 
+       * THE PROBLEM:
+       * Fireproof subscription system distinguishes between:
+       * ✅ "New writes that sync" (this test - WORKS)  
+       * ❌ "Existing data that syncs" (other tests - BROKEN)
+       * 
+       * But from user perspective, both should trigger subscriptions because both change database contents!
+       */
+      
       const id = sthis.nextId().str;
       
       // Create multiple databases that will sync together
@@ -294,17 +433,18 @@ describe("Remote Sync Subscription Tests", () => {
             // Setup subscription on each database
             const subscriptionPromise = setupSubscription(tdb.db, `online-db-${i}`);
             
-            // Attach to shared sync namespace
+            // Attach to shared sync namespace (no existing data to sync yet)
             await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
             
             return { ...tdb, subscriptionPromise };
           }),
       );
 
-      // Wait for initial sync to complete
+      // Wait for initial sync to complete (nothing to sync yet)
       await sleep(1000);
 
-      // Now write data to one database - this should trigger subscriptions on others
+      // Now write NEW data to databases - this WILL trigger subscriptions ✅
+      // This is the key difference: NEW writes vs EXISTING data sync
       const keys = (
         await Promise.all(
           dbs.map(async (db, index) => {
