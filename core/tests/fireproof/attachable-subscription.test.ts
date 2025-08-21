@@ -154,7 +154,7 @@ describe("Remote Sync Subscription Tests", () => {
   // Subscription tracking variables
   let subscriptionCallbacks: (() => void)[] = [];
   const subscriptionCounts = new Map<string, number>();
-  const receivedDocs = new Map<string, DocWithId<unknown>[]>();
+  const receivedDocs = new Map<string, DocWithId<Record<string, unknown>>[]>();
 
   // Helper to setup subscription tracking on a database
   function setupSubscription(db: Database, dbName: string): Promise<void> {
