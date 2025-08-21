@@ -114,8 +114,6 @@ export class CRDTClockImpl {
     // }
 
     const noLoader = !localUpdates;
-
-    // 🐛 FIX: Track if we need to manually trigger subscriptions for remote sync
     const needsManualNotification = !localUpdates && this.watchers.size > 0;
 
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
@@ -160,11 +158,7 @@ export class CRDTClockImpl {
     }
     this.setHead(advancedHead);
 
-    // 🐛 FIX: Manually trigger subscriptions for remote sync data
-    // This ensures that db.subscribe() callbacks fire when remote data syncs in,
-    // fixing the issue where React useLiveQuery doesn't update on remote changes
     if (needsManualNotification) {
-      // Get the changes that were applied from remote sync
       const changes = await clockChangesSince<DocTypes>(this.blockstore, advancedHead, prevHead, {}, this.logger);
       if (changes.result.length > 0) {
         this.notifyWatchers(changes.result);
