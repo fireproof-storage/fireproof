@@ -491,9 +491,9 @@ describe("Remote Sync Subscription Tests", () => {
       await Promise.all(
         dbs.map(async (db) => {
           for (const key of keys) {
-            const doc = await db.db.get(key);
+            const doc = await db.db.get<{ value: string }>(key);
             expect(doc._id).toBe(key);
-            expect((doc as { _id: string; value: string }).value).toBe(key);
+            expect(doc.value).toBe(key);
           }
         }),
       );
