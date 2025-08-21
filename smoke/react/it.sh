@@ -20,6 +20,7 @@ cp package-template.json package.json
 unset npm_config_registry
 # pnpm install
 pnpm install use-fireproof@$(cat $projectRoot/dist/fp-version.txt) --prefer-offline --package-import-method=hardlink
+pnpm exec playwright install chromium
 pnpm why react
 cat package.json
 # pnpm install -f "file://$smokeDir/../../dist/fireproof-core/fireproof-core-*.tgz"
