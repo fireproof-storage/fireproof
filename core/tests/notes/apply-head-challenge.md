@@ -46,14 +46,14 @@ We've added manual subscription triggering in `crdt-clock.ts`:
 
 ```typescript
 // In int_applyHead()
-const needsManualNotification = !localUpdates && (this.watchers.size > 0 || this.emptyWatchers.size > 0);
+const needsManualNotification = !localUpdates && (this.watchers.size > 0 || this.noPayloadWatchers.size > 0);
 
 if (needsManualNotification) {
   const changes = await clockChangesSince<DocTypes>(this.blockstore, advancedHead, prevHead, {}, this.logger);
   if (changes.result.length > 0) {
     this.notifyWatchers(changes.result);
   } else {
-    this.emptyWatchers.forEach((fn) => fn());
+    this.noPayloadWatchers.forEach((fn) => fn());
   }
 }
 ```
@@ -76,7 +76,7 @@ We need to add logging to trace the execution flow:
 console.log("🔵 BULK: Calling applyHead for LOCAL write", {
   localUpdates: true,
   newHead: newHead.map((h) => h.toString()),
-  subscribers: this.clock.watchers.size + this.clock.emptyWatchers.size,
+  subscribers: this.clock.watchers.size + this.clock.noPayloadWatchers.size,
 });
 await this.clock.applyHead(newHead, prevHead, updates);
 ```
@@ -87,7 +87,7 @@ await this.clock.applyHead(newHead, prevHead, updates);
 console.log("🔴 APPLY_META: Calling applyHead for REMOTE sync", {
   localUpdates: false,
   newHead: newHead.map((h) => h.toString()),
-  subscribers: this.clock.watchers.size + this.clock.emptyWatchers.size,
+  subscribers: this.clock.watchers.size + this.clock.noPayloadWatchers.size,
 });
 await this.clock.applyHead(newHead, prevHead, false);
 ```
@@ -100,8 +100,8 @@ await this.clock.applyHead(newHead, prevHead, false);
 console.log("⚡ INT_APPLY_HEAD: Entry point", {
   localUpdates,
   watchersCount: this.watchers.size,
-  emptyWatchersCount: this.emptyWatchers.size,
-  needsManualNotification: !localUpdates && (this.watchers.size > 0 || this.emptyWatchers.size > 0),
+  noPayloadWatchersCount: this.noPayloadWatchers.size,
+  needsManualNotification: !localUpdates && (this.watchers.size > 0 || this.noPayloadWatchers.size > 0),
 });
 ```
 
@@ -113,7 +113,7 @@ console.log("⚡ INT_APPLY_HEAD: Entry point", {
 console.log("🔔 NOTIFY_WATCHERS: Triggering subscriptions", {
   updatesCount: updates.length,
   watchersCount: this.watchers.size,
-  emptyWatchersCount: this.emptyWatchers.size,
+  noPayloadWatchersCount: this.noPayloadWatchers.size,
   filteredUpdates: updates.map((u) => ({ id: u.id, value: u.value })),
 });
 ```
@@ -127,8 +127,8 @@ if (needsManualNotification) {
     console.log("🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
     this.notifyWatchers(changes.result);
   } else {
-    console.log("🛠️ MANUAL_NOTIFICATION: Calling emptyWatchers directly");
-    this.emptyWatchers.forEach((fn) => fn());
+    console.log("🛠️ MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
+    this.noPayloadWatchers.forEach((fn) => fn());
   }
 }
 ```
@@ -139,27 +139,27 @@ if (needsManualNotification) {
 
 ```
 🔵 BULK: Calling applyHead for LOCAL write { localUpdates: true, newHead: [...], subscribers: 1 }
-⚡ INT_APPLY_HEAD: Entry point { localUpdates: true, watchersCount: 1, emptyWatchersCount: 0, needsManualNotification: false }
-🔔 NOTIFY_WATCHERS: Triggering subscriptions { updatesCount: 1, watchersCount: 1, emptyWatchersCount: 0, ... }
+⚡ INT_APPLY_HEAD: Entry point { localUpdates: true, watchersCount: 1, noPayloadWatchersCount: 0, needsManualNotification: false }
+🔔 NOTIFY_WATCHERS: Triggering subscriptions { updatesCount: 1, watchersCount: 1, noPayloadWatchersCount: 0, ... }
 ```
 
 ### For Remote Sync (Broken Case - What We Should See)
 
 ```
 🔴 APPLY_META: Calling applyHead for REMOTE sync { localUpdates: false, newHead: [...], subscribers: 1 }
-⚡ INT_APPLY_HEAD: Entry point { localUpdates: false, watchersCount: 1, emptyWatchersCount: 0, needsManualNotification: true }
+⚡ INT_APPLY_HEAD: Entry point { localUpdates: false, watchersCount: 1, noPayloadWatchersCount: 0, needsManualNotification: true }
 🛠️ MANUAL_NOTIFICATION: Checking for changes { changes: 1 }
 🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes
-🔔 NOTIFY_WATCHERS: Triggering subscriptions { updatesCount: 1, watchersCount: 1, emptyWatchersCount: 0, ... }
+🔔 NOTIFY_WATCHERS: Triggering subscriptions { updatesCount: 1, watchersCount: 1, noPayloadWatchersCount: 0, ... }
 ```
 
 ### For Remote Sync (If Broken - What We Might Actually See)
 
 ```
 🔴 APPLY_META: Calling applyHead for REMOTE sync { localUpdates: false, newHead: [...], subscribers: 1 }
-⚡ INT_APPLY_HEAD: Entry point { localUpdates: false, watchersCount: 1, emptyWatchersCount: 0, needsManualNotification: true }
+⚡ INT_APPLY_HEAD: Entry point { localUpdates: false, watchersCount: 1, noPayloadWatchersCount: 0, needsManualNotification: true }
 🛠️ MANUAL_NOTIFICATION: Checking for changes { changes: 0 }
-🛠️ MANUAL_NOTIFICATION: Calling emptyWatchers directly
+🛠️ MANUAL_NOTIFICATION: Calling noPayloadWatchers directly
 // No NOTIFY_WATCHERS log = bug found!
 ```
 
@@ -167,7 +167,7 @@ if (needsManualNotification) {
 
 ```
 🔴 APPLY_META: Calling applyHead for REMOTE sync { localUpdates: false, newHead: [...], subscribers: 0 }
-⚡ INT_APPLY_HEAD: Entry point { localUpdates: false, watchersCount: 0, emptyWatchersCount: 0, needsManualNotification: false }
+⚡ INT_APPLY_HEAD: Entry point { localUpdates: false, watchersCount: 0, noPayloadWatchersCount: 0, needsManualNotification: false }
 // No manual notification = subscriptions not set up yet when applyMeta is called!
 ```
 
