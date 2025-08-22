@@ -32,11 +32,13 @@ interface InternalKeysByFingerprintFromOpts {
   };
 }
 
+type InternalKeyUpsertResult = Omit<KeyUpsertResult, "kfp"> & { kfp: InternalKeyWithFingerPrint}
+
 export class InternalKeysByFingerprint implements KeysByFingerprint {
   readonly keybag: KeyBag;
   readonly name: string;
   readonly id: string;
-  readonly lookUp = new KeyedResolvOnce<InternalKeyWithFingerPrint>();
+  readonly lookUp = new KeyedResolvOnce<Result<InternalKeyUpsertResult>>();
   // readonly keysItem: InternalKeysItem;
   readonly logger: Logger;
 
@@ -97,17 +99,14 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
 
   // is assuming it will not called concurrent or multiple per name
   async load(opts: InternalKeysByFingerprintFromOpts["opts"]): Promise<Result<InternalKeysByFingerprint>> {
-    console.log("xxx load-1");
     const oProvKeysResult = await this.keybag.getRawObj(this.name);
     if (oProvKeysResult.IsNone() && opts.failIfNotFound) {
-      console.log("xxx load-2");
       return this.logger.Debug().Msg("failIfNotFound getRawObj").ResultError();
     }
     // const provKeysResult = oProvKeysResult
     if (oProvKeysResult.IsSome() && !oProvKeysResult.unwrap().success) {
       const tsHelp = oProvKeysResult.unwrap();
       if (!tsHelp.success) {
-        console.log("xxx load-3");
         return this.logger
           .Error()
           .Any({ error: z.formatError(tsHelp.error) })
@@ -119,12 +118,10 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
       const provKeysResult = oProvKeysResult.unwrap();
       const cki = await coerceKeyedItemWithVersionUpdate(this, provKeysResult.data);
       if (!cki) {
-        console.log("xxx load-4");
         return this.logger.Error().Any({ item: provKeysResult.data }).Msg("coerce error").ResultError();
       }
       const v2StorageResult = KeyedV2StorageKeyItemSchema.safeParse(cki);
       if (!v2StorageResult.success) {
-        console.log("xxx load-5");
         return this.logger
           .Error()
           .Any({ name: this.name, item: provKeysResult.data, error: z.formatError(v2StorageResult.error) })
@@ -138,7 +135,6 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
       // if (iopts.opts.failIfNotFound && keys === 0) {
       //   return Result.Err(this.logger.Debug().Str("name", this.name).Msg("no keys getNamedKey").AsError());
       // }
-      console.log("xxx load-6");
       await this.toKeysItem(v2StorageResult.data.item)
         .then((items) =>
           items.map(async (item, idx) =>
@@ -146,8 +142,6 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
           ),
         )
         .then((items) => Promise.all(items));
-
-      console.log("xxx load-7");
     }
     //   this.lookUp.get(i.fingerPrint).once(() => {
     //     th
@@ -255,7 +249,7 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
     if (!ret) {
       this.keybag.logger
         .Warn()
-        .Any({ fprs: this.lookUp.values().map((i) => i.value.Ok().fingerPrint), fpr: fingerPrint })
+        .Any({ fprs: this.lookUp.values().map((i) => i.value.Ok().Ok().kfp.fingerPrint), fpr: fingerPrint })
         .Msg("keysByFingerprint:get: not found");
     }
     return undefined;
@@ -276,11 +270,11 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
   }
 
   async upsertNoStore(materialStrOrUint8: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>> {
-    if (!materialStrOrUint8) {
-      return Result.Ok({
-        modified: false,
-      });
-    }
+    // if (!materialStrOrUint8) {
+    //   return Result.Ok({
+    //     modified: false,
+    //   });
+    // }
     const material = coerceMaterial(this.keybag, materialStrOrUint8);
     def = !!def;
     const rKfp = await toKeyWithFingerPrint(this.keybag, material, !!def);
@@ -291,45 +285,53 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
     // critical section
     const kfp = rKfp.Ok();
     this.lookUp.unget(kfp.fingerPrint);
-    return await this.lookUp.get(kfp.fingerPrint).once(async () => {
+    return this.lookUp.get(kfp.fingerPrint).once(async () => {
       const preHash = await hashObject(await this.asV2StorageKeyItem());
-      let found = this.lookUp.get(kfp.fingerPrint).value;
-      if (found) {
+      let val = this.lookUp.get(kfp.fingerPrint).value?.Ok();
+      if (val) {
         // do not update default if not needed
-        if (found.default === def) {
+        if (val.kfp.default === def) {
           return Result.Ok({
             modified: false,
-            kfp: found,
+            kfp: val.kfp,
           });
         }
       } else {
-        found = new InternalKeyWithFingerPrint({
-          default: def,
-          fingerPrint: kfp.fingerPrint,
-          key: kfp.key,
-          material,
-        });
+        val = {
+          modified: true,
+          kfp: new InternalKeyWithFingerPrint({
+            default: def,
+            fingerPrint: kfp.fingerPrint,
+            key: kfp.key,
+            material,
+          }),
+        };
       }
       const keyItems = this.lookUp.values().map((i) => i.value.Ok());
       if (def) {
-        for (const i of keyItems) {
+        for (const rI of keyItems) {
+          const i = rI.Ok().kfp
           if (i.default && i.fingerPrint !== kfp.fingerPrint) {
             // only update if it's not ourself --> avoid deadlock
             this.lookUp.unget(i.fingerPrint);
-            this.lookUp.get(i.fingerPrint).once(() => i.setDefault(false));
+            this.lookUp.get(i.fingerPrint).once(() => Result.Ok({
+              modified: true,
+              kfp: i.setDefault(false),
+            }));
           }
         }
       }
-      if (def || keyItems.length === 0) {
-        found.setDefault(true);
-        this.lookUp.unget("*");
-        this.lookUp.get("*").once(() => found);
-      }
       const postHash = await hashObject(this.asV2StorageKeyItem());
-      return Result.Ok({
+      const ret = Result.Ok({
         modified: preHash !== postHash,
-        kfp: found,
-      });
+        kfp: val.kfp,
+      })
+      if (def || keyItems.length === 0) {
+        val.kfp.setDefault(true);
+        this.lookUp.unget("*");
+        this.lookUp.get("*").once(() => ret);
+      }
+      return ret
     });
   }
 
@@ -338,7 +340,7 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
       this.lookUp
         .values()
         .filter((i) => i.key !== "*")
-        .map((i) => i.value.Ok().asKeysItem()),
+        .map((i) => i.value.Ok().Ok().kfp.asKeysItem()),
     );
     return {
       name: this.name,

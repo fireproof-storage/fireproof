@@ -21,7 +21,7 @@ class MsgSigner {
   }
 }
 
-const onceDeviceId = new ResolveOnce<MsgSigner>();
+const onceDeviceId = new ResolveOnce<Result<MsgSigner>>();
 
 export interface DeviceIdTransport {
   issueCertificate(csrJWT: string): Promise<Result<IssueCertificateResult>>;
@@ -64,7 +64,7 @@ export class DeviceIdClient {
       // request signing -> get cert
       // put into keybag
 
-      return new MsgSigner(new DeviceIdSignMsg(this.#sthis.txt.base64, key, cert));
+      return Result.Ok(new MsgSigner(new DeviceIdSignMsg(this.#sthis.txt.base64, key, cert)));
     });
   }
 

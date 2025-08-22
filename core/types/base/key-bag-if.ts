@@ -27,7 +27,7 @@ export interface KeyBagIf {
 
   getNamedKey(name: string, failIfNotFound?: boolean, material?: string | Uint8Array): Promise<Result<KeysByFingerprint>>;
 
-  setJwt(name: string, jwtStr: string): Promise<Result<boolean>>;
+  setJwt(name: string, jwtStr: string, key?: CryptoKey | KeyObject | JWK | Uint8Array, opts?: JWTVerifyOptions): Promise<Result<JWTResult>>;
   getJwt(name: string, key?: CryptoKey | KeyObject | JWK | Uint8Array, opts?: JWTVerifyOptions): Promise<Result<JWTResult>>;
 
   delete(name: string): Promise<boolean>;

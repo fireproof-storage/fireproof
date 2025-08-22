@@ -68,8 +68,9 @@ export class InternalKeyWithFingerPrint implements KeyWithFingerPrint {
     this.#material = opt.material;
   }
 
-  setDefault(def: boolean) {
+  setDefault(def: boolean)  {
     (this as { default: boolean }).default = def;
+    return this
   }
 
   extract(): Promise<KeyMaterial> {

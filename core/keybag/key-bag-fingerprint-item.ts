@@ -1,4 +1,4 @@
-import { ResolveOnce, Result } from "@adviser/cement";
+import { ResolveOnce, ResolveSeq, Result } from "@adviser/cement";
 import { KeysByFingerprint } from "@fireproof/core-types-base";
 import { InternalKeysByFingerprint } from "./internal-keys-by-fingerprint.js";
 import { KeyBag } from "./key-bag.js";
@@ -12,7 +12,9 @@ interface keyBagFingerprintItemGetOpts {
 export class InternalKeyBagFingerprintItem {
   readonly name: string;
   readonly keybag: KeyBag;
-  readonly keysByFingerprint = new ResolveOnce<InternalKeysByFingerprint>();
+   readonly keysByFingerprint = new ResolveOnce<Result<InternalKeysByFingerprint>>();
+
+  readonly seq = new ResolveSeq<Result<KeysByFingerprint>>();
 
   constructor(keybag: KeyBag, name: string) {
     this.keybag = keybag;
@@ -20,15 +22,16 @@ export class InternalKeyBagFingerprintItem {
   }
 
   async getNamedKey(opts: keyBagFingerprintItemGetOpts): Promise<Result<KeysByFingerprint>> {
-    return this.keysByFingerprint.once(async () => {
-      return InternalKeysByFingerprint.from({ keybag: this.keybag, opts, name: this.name });
-    }).then(r => {
-      if (r.isErr()) {
-        this.keysByFingerprint.reset()
-        return r;
-      }
-      return r.Ok().ensureMaterial(opts.materialStrOrUint8)
-    })
+    return this.seq.add(() => {
+      return this.keysByFingerprint.once(() => {
+          return InternalKeysByFingerprint.from({ keybag: this.keybag, opts, name: this.name });
+        }).then((r) => {
+          if (r.isErr()) {
+            this.keysByFingerprint.reset();
+            return r;
+          }
+          return r
+        });
+    });
   }
 }
-

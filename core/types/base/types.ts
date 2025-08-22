@@ -769,6 +769,7 @@ export function isKeyUpsertResultModified(r: KeyUpsertResult): r is KeyUpsertRes
 
 export interface KeyUpsertResultNotModified {
   readonly modified: false;
+  readonly kfp: KeyWithFingerPrint
 }
 
 export type KeyUpsertResult = KeyUpsertResultModified | KeyUpsertResultNotModified;

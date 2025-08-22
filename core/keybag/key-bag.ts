@@ -17,6 +17,7 @@ import {
   KeyedJwtKeyBagItemSchema,
   KeyedDeviceIdKeyBagItem,
   KeyedDeviceIdKeyBagItemSchema,
+  JWTPayloadSchema,
 } from "@fireproof/core-types-base";
 import { base58btc } from "multiformats/bases/base58";
 import { InternalKeyBagFingerprintItem } from "./key-bag-fingerprint-item.js";
@@ -142,8 +143,28 @@ export class KeyBag implements KeyBagIf {
     });
   }
 
-  setJwt(name: string, jwtStr: string): Promise<Result<boolean>> {
+  async extractClaim(jwtStr: string, key?: CryptoKey | KeyObject | JWK | Uint8Array, opts?: JWTVerifyOptions): Promise<JWTPayload | undefined> {
+    let claims: JWTPayload | undefined
+     try {
+        let unParsed: unknown
+        if (key) {
+          unParsed = await jwtVerify(jwtStr, key, opts);
+        } else {
+          unParsed = decodeJwt(jwtStr);
+        }
+        const r = JWTPayloadSchema.safeParse(unParsed)
+        if (r.success) {
+          claims = r.data
+        }
+      } catch (e) {
+        /* */
+      }
+      return claims
+  }
+
+  async setJwt(name: string, jwtStr: string, key?: CryptoKey | KeyObject | JWK | Uint8Array, opts?: JWTVerifyOptions): Promise<Result<JWTResult>> {
     // const val = this.#namedKeyItems.get(name).value
+    const claims = await this.extractClaim(jwtStr, key, opts)
     return this.#namedKeyItems.get(name).once(() => {
       return exception2Result(() =>
         this.provider().then((prov) =>
@@ -154,12 +175,16 @@ export class KeyBag implements KeyBagIf {
               item: {
                 jwtStr,
               },
-            } satisfies KeyedJwtKeyBagItem)
-            .then((_) => true),
+            } satisfies KeyedJwtKeyBagItem).then(() => ({
+              key: name,
+              jwt: jwtStr,
+              claims
+            } satisfies JWTResult))
         ),
       );
     });
   }
+
   async getJwt(name: string, key?: CryptoKey | KeyObject | JWK | Uint8Array, opts?: JWTVerifyOptions): Promise<Result<JWTResult>> {
     if (this.#namedKeyItems.has(name)) {
       const ret = await this.#namedKeyItems.get(name).once(() => {
@@ -169,20 +194,11 @@ export class KeyBag implements KeyBagIf {
       if (!p.success) {
         return Result.Err(p.error);
       }
-      let claims = undefined;
-      try {
-        if (key) {
-          claims = await jwtVerify(p.data.item.jwtStr, key, opts);
-        } else {
-          claims = decodeJwt(p.data.item.jwtStr);
-        }
-      } catch (e) {
-        /* */
-      }
+      const claims = await this.extractClaim(p.data.item.jwtStr, key, opts)
       return Result.Ok({
         key: name,
         jwt: p.data.item.jwtStr,
-        claims: claims as JWTPayload,
+        claims: claims
       });
     }
     return this.logger.Error().Str("name", name).Msg("not found").ResultError();
@@ -199,7 +215,6 @@ export class KeyBag implements KeyBagIf {
 
   readonly provider = Lazy(() => this.rt.getBagProvider());
 
-  // getNamedKey(name: string, failIfNotFound?: boolean, material?: string | Uint8Array): Promise<Result<KeysByFingerprint>>;
   async getNamedKey(
     name: string,
     failIfNotFound = false,

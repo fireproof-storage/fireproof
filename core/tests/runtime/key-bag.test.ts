@@ -403,29 +403,29 @@ describe("KeyBag", () => {
       kb = await getKeyBag(sthis, {
         url: "memory://./dist/murks/?extractKey=_deprecated_internal_api",
       });
+    });
 
-      it("set and get jwt", async () => {
-        const rNotForundGet = await kb.getJwt("test");
-        expect(rNotForundGet.isOk()).toBeFalsy();
+    it("set and get jwt", async () => {
+      const rNotForundGet = await kb.getJwt("test");
+      expect(rNotForundGet.isOk()).toBeFalsy();
 
-        const jwt = new UnsecuredJWT({ hello: "world" })
-          .setIssuedAt()
-          .setIssuer("fpcloud")
-          .setAudience("fpcloud-app")
-          .setExpirationTime("24h")
-          .setSubject("Test")
-          .encode();
+      const jwt = new UnsecuredJWT({ hello: "world" })
+        .setIssuedAt()
+        .setIssuer("fpcloud")
+        .setAudience("fpcloud-app")
+        .setExpirationTime("24h")
+        .setSubject("Test")
+        .encode();
 
-        const rSet = await kb.setJwt("test", jwt);
-        expect(rSet.isOk()).toBeTruthy();
+      const rSet = await kb.setJwt("test", jwt);
+      expect(rSet.isOk()).toBeTruthy();
 
-        const rGet = await kb.getJwt("test");
-        expect(rGet.isOk()).toBeTruthy();
-        expect(rGet.Ok()).toEqual({
-          key: "test",
-          jwt,
-        } satisfies JWTResult);
-      });
+      const rGet = await kb.getJwt("test");
+      expect(rGet.isOk()).toBeTruthy();
+      expect(rGet.Ok()).toEqual({
+        key: "test",
+        jwt,
+      } satisfies JWTResult);
     });
   });
 });
