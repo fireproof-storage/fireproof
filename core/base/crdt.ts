@@ -113,16 +113,10 @@ export class CRDTImpl implements CRDT {
             crdtMeta.head.map((h) => h.toString()),
           )
           .Int("subscribers", this.clock.watchers.size + this.clock.noPayloadWatchers.size)
+          .Int("headLength", crdtMeta.head.length)
+          .Int("currentHeadLength", this.clock.head.length)
+          .Str("dbName", this.opts.name || "unnamed")
           .Msg("🔴 APPLY_META: Calling applyHead for REMOTE sync");
-        console.log("🔴 APPLY_META: Calling applyHead for REMOTE sync", {
-          localUpdates: false,
-          newHead: crdtMeta.head.map((h) => h.toString()),
-          subscribers: this.clock.watchers.size + this.clock.noPayloadWatchers.size,
-          headLength: crdtMeta.head.length,
-          currentHeadLength: this.clock.head.length,
-          dbName: this.opts.name || "unnamed",
-          timestamp: Date.now(),
-        });
         await this.clock.applyHead(crdtMeta.head, []);
         // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
       },
@@ -208,17 +202,11 @@ export class CRDTImpl implements CRDT {
         done.meta.head.map((h) => h.toString()),
       )
       .Int("subscribers", this.clock.watchers.size + this.clock.noPayloadWatchers.size)
+      .Int("headLength", done.meta.head.length)
+      .Int("prevHeadLength", prevHead.length)
+      .Int("currentHeadLength", this.clock.head.length)
+      .Str("dbName", this.opts.name || "unnamed")
       .Msg("🔵 BULK: Calling applyHead for LOCAL write");
-    console.log("🔵 BULK: Calling applyHead for LOCAL write", {
-      localUpdates: true,
-      newHead: done.meta.head.map((h) => h.toString()),
-      subscribers: this.clock.watchers.size + this.clock.noPayloadWatchers.size,
-      headLength: done.meta.head.length,
-      prevHeadLength: prevHead.length,
-      currentHeadLength: this.clock.head.length,
-      dbName: this.opts.name || "unnamed",
-      timestamp: Date.now(),
-    });
     await this.clock.applyHead(done.meta.head, prevHead, updates);
     return done.meta;
   }
