@@ -91,6 +91,7 @@ export class CRDTClockImpl {
       watchersCount: this.watchers.size,
       noPayloadWatchersCount: this.noPayloadWatchers.size,
       filteredUpdates: updates.map((u) => ({ id: u.id, value: u.value })),
+      timestamp: Date.now(),
     });
     // Always notify both types of watchers - subscription systems need notifications
     // regardless of whether there are document updates
@@ -137,16 +138,22 @@ export class CRDTClockImpl {
       .Int("noPayloadWatchersCount", this.noPayloadWatchers.size)
       .Bool("needsManualNotification", needsManualNotification)
       .Msg("⚡ INT_APPLY_HEAD: Entry point");
+    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
+    const ogHead = sortClockHead(this.head);
+    newHead = sortClockHead(newHead);
+    const headChanged = !compareClockHeads(ogHead, newHead);
+
     console.log("⚡ INT_APPLY_HEAD: Entry point", {
       localUpdates,
       watchersCount: this.watchers.size,
       noPayloadWatchersCount: this.noPayloadWatchers.size,
       needsManualNotification,
+      headLength: newHead.length,
+      prevHeadLength: prevHead.length,
+      currentHeadLength: this.head.length,
+      headChanged,
+      timestamp: Date.now(),
     });
-
-    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
-    const ogHead = sortClockHead(this.head);
-    newHead = sortClockHead(newHead);
     if (compareClockHeads(ogHead, newHead)) {
       return;
     }
@@ -189,7 +196,19 @@ export class CRDTClockImpl {
     if (needsManualNotification) {
       const changes = await clockChangesSince<DocTypes>(this.blockstore, advancedHead, prevHead, {}, this.logger);
       this.logger.Debug().Int("changesCount", changes.result.length).Msg("🛠️ MANUAL_NOTIFICATION: Checking for changes");
-      console.log("🛠️ MANUAL_NOTIFICATION: Checking for changes", { changes: changes.result.length });
+      const triggerReason =
+        this.watchers.size > 0 && this.noPayloadWatchers.size > 0
+          ? "both"
+          : this.watchers.size > 0
+            ? "watchers"
+            : "noPayloadWatchers";
+      console.log("🛠️ MANUAL_NOTIFICATION: Checking for changes", {
+        changes: changes.result.length,
+        triggerReason,
+        watchersCount: this.watchers.size,
+        noPayloadWatchersCount: this.noPayloadWatchers.size,
+        timestamp: Date.now(),
+      });
       if (changes.result.length > 0) {
         this.logger.Debug().Msg("🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
         console.log("🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
