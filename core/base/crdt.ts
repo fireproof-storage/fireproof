@@ -106,6 +106,12 @@ export class CRDTImpl implements CRDT {
         const crdtMeta = meta as CRDTMeta;
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
         // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
+        this.logger.Debug().Any('newHead', crdtMeta.head.map(h => h.toString())).Int('subscribers', this.clock.watchers.size + this.clock.emptyWatchers.size).Msg('🔴 APPLY_META: Calling applyHead for REMOTE sync');
+        console.log('🔴 APPLY_META: Calling applyHead for REMOTE sync', { 
+          localUpdates: false, 
+          newHead: crdtMeta.head.map(h => h.toString()), 
+          subscribers: this.clock.watchers.size + this.clock.emptyWatchers.size 
+        });
         await this.clock.applyHead(crdtMeta.head, []);
         // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
       },
@@ -183,6 +189,12 @@ export class CRDTImpl implements CRDT {
         return dupdate;
       });
       return { head };
+    });
+    this.logger.Debug().Any('newHead', done.meta.head.map(h => h.toString())).Int('subscribers', this.clock.watchers.size + this.clock.emptyWatchers.size).Msg('🔵 BULK: Calling applyHead for LOCAL write');
+    console.log('🔵 BULK: Calling applyHead for LOCAL write', { 
+      localUpdates: true, 
+      newHead: done.meta.head.map(h => h.toString()), 
+      subscribers: this.clock.watchers.size + this.clock.emptyWatchers.size 
     });
     await this.clock.applyHead(done.meta.head, prevHead, updates);
     return done.meta;
