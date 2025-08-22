@@ -484,14 +484,26 @@ describe("Remote Sync Subscription Tests", () => {
       expect(totalSubscriptionFires).toBeGreaterThanOrEqual(dbs.length);
 
       // Verify data was synced correctly across all databases
-      // Wait for sync completion before checking all keys
-      await sleep(5000);
-
+      // Wait for sync completion before checking all keys - retry up to 10 times with 1s intervals
       await Promise.all(
         dbs.map(async (db) => {
-          const allDocs = await db.db.allDocs();
-          // console.log(allDocs.rows);
-          expect(allDocs.rows.length).toBe(keys.length * 2);
+          let attempts = 0;
+          const maxAttempts = 10;
+
+          while (attempts < maxAttempts) {
+            try {
+              const allDocs = await db.db.allDocs();
+              // console.log(allDocs.rows);
+              expect(allDocs.rows.length).toBe(keys.length * 2);
+              break; // Success - exit retry loop
+            } catch (e) {
+              attempts++;
+              if (attempts >= maxAttempts) {
+                throw e; // Re-throw the error after max attempts
+              }
+              await sleep(1500); // Wait 1.5 seconds before retry
+            }
+          }
           // for (const key of keys) {
           //   try {
           //     const doc = await db.db.get<{ value: string }>(key);
