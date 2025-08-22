@@ -48,7 +48,7 @@ export class CRDTClockImpl {
     this.blockstore = blockstore;
     this.logger = ensureLogger(blockstore.sthis, `CRDTClock`)
       .With()
-      .Str("dbName", blockstore.crdtParent?.ledgerParent?.name)
+      .Str("dbName", blockstore.crdtParent?.ledgerParent?.name || "unnamed")
       .Logger();
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this), this.logger);
   }
@@ -88,7 +88,7 @@ export class CRDTClockImpl {
       .Int("updatesCount", updates.length)
       .Int("watchersCount", this.watchers.size)
       .Int("noPayloadWatchersCount", this.noPayloadWatchers.size)
-      .Msg("🔔 NOTIFY_WATCHERS: Triggering subscriptions");
+      .Msg("NOTIFY_WATCHERS: Triggering subscriptions");
     // Always notify both types of watchers - subscription systems need notifications
     // regardless of whether there are document updates
     this.noPayloadWatchers.forEach((fn) => fn());
@@ -136,7 +136,7 @@ export class CRDTClockImpl {
       .Int("headLength", newHead.length)
       .Int("prevHeadLength", prevHead.length)
       .Int("currentHeadLength", this.head.length)
-      .Msg("⚡ INT_APPLY_HEAD: Entry point");
+      .Msg("INT_APPLY_HEAD: Entry point");
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
@@ -193,13 +193,13 @@ export class CRDTClockImpl {
         .Str("triggerReason", triggerReason)
         .Int("watchersCount", this.watchers.size)
         .Int("noPayloadWatchersCount", this.noPayloadWatchers.size)
-        .Msg("🛠️ MANUAL_NOTIFICATION: Checking for changes");
+        .Msg("MANUAL_NOTIFICATION: Checking for changes");
       if (changes.result.length > 0) {
-        this.logger.Debug().Msg("🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
+        this.logger.Debug().Msg("MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
         this.notifyWatchers(changes.result);
         this.noPayloadWatchers.forEach((fn) => fn());
       } else {
-        this.logger.Debug().Msg("🛠️ MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
+        this.logger.Debug().Msg("MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
         this.noPayloadWatchers.forEach((fn) => fn());
       }
     }
