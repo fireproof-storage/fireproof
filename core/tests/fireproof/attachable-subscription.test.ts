@@ -501,7 +501,7 @@ describe("Remote Sync Subscription Tests", () => {
               if (attempts >= maxAttempts) {
                 throw e; // Re-throw the error after max attempts
               }
-              await sleep(1500); // Wait 1.5 seconds before retry
+              await sleep(3000); // Wait 1.5 seconds before retry
             }
           }
           // for (const key of keys) {
