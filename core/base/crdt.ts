@@ -108,15 +108,15 @@ export class CRDTImpl implements CRDT {
         // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
         this.logger
           .Debug()
-          .Any(
+          .Str(
             "newHead",
-            crdtMeta.head.map((h) => h.toString()),
+            crdtMeta.head.map((h) => h.toString()).join(','),
           )
           .Int("subscribers", this.clock.watchers.size + this.clock.noPayloadWatchers.size)
           .Int("headLength", crdtMeta.head.length)
           .Int("currentHeadLength", this.clock.head.length)
           .Str("dbName", this.opts.name || "unnamed")
-          .Msg("🔴 APPLY_META: Calling applyHead for REMOTE sync");
+          .Msg("APPLY_META: Calling applyHead for REMOTE sync");
         await this.clock.applyHead(crdtMeta.head, []);
         // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
       },
@@ -197,16 +197,16 @@ export class CRDTImpl implements CRDT {
     });
     this.logger
       .Debug()
-      .Any(
+      .Str(
         "newHead",
-        done.meta.head.map((h) => h.toString()),
+        done.meta.head.map((h) => h.toString()).join(','),
       )
       .Int("subscribers", this.clock.watchers.size + this.clock.noPayloadWatchers.size)
       .Int("headLength", done.meta.head.length)
       .Int("prevHeadLength", prevHead.length)
       .Int("currentHeadLength", this.clock.head.length)
       .Str("dbName", this.opts.name || "unnamed")
-      .Msg("🔵 BULK: Calling applyHead for LOCAL write");
+      .Msg("BULK: Calling applyHead for LOCAL write");
     await this.clock.applyHead(done.meta.head, prevHead, updates);
     return done.meta;
   }
