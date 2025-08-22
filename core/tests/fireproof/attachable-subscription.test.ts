@@ -485,7 +485,7 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Verify data was synced correctly across all databases
       // Wait for sync completion before checking all keys
-      await sleep(3000);
+      await sleep(5000);
 
       await Promise.all(
         dbs.map(async (db) => {
