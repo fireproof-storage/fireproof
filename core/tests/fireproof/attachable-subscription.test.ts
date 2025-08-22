@@ -97,20 +97,18 @@ async function readDb(name: string, base: string) {
 }
 
 async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
-  return await Promise.all(
-    Array(ROWS)
-      .fill(0)
-      .map(async (_, i) => {
-        const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
-        await pdb.db.put({
-          _id: key,
-          value: key,
-          type: "test-document",
-          description: `Test document for ${style}`,
-        });
-        return key;
-      }),
-  );
+  const keys: string[] = [];
+  for (let i = 0; i < ROWS; i++) {
+    const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
+    await pdb.db.put({
+      _id: key,
+      value: key,
+      type: "test-document",
+      description: `Test document for ${style}`,
+    });
+    keys.push(key);
+  }
+  return keys;
 }
 
 /**
