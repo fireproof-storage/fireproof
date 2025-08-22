@@ -108,10 +108,7 @@ export class CRDTImpl implements CRDT {
         // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
         this.logger
           .Debug()
-          .Str(
-            "newHead",
-            crdtMeta.head.map((h) => h.toString()).join(','),
-          )
+          .Str("newHead", crdtMeta.head.map((h) => h.toString()).join(","))
           .Int("subscribers", this.clock.watchers.size + this.clock.noPayloadWatchers.size)
           .Int("headLength", crdtMeta.head.length)
           .Int("currentHeadLength", this.clock.head.length)
@@ -197,10 +194,7 @@ export class CRDTImpl implements CRDT {
     });
     this.logger
       .Debug()
-      .Str(
-        "newHead",
-        done.meta.head.map((h) => h.toString()).join(','),
-      )
+      .Str("newHead", done.meta.head.map((h) => h.toString()).join(","))
       .Int("subscribers", this.clock.watchers.size + this.clock.noPayloadWatchers.size)
       .Int("headLength", done.meta.head.length)
       .Int("prevHeadLength", prevHead.length)
