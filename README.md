@@ -202,7 +202,7 @@ pnpm run test -t 'test name pattern' path/to/test/file
 For example, to run a specific test for the CRDT module, in just one project:
 
 ```bash
-FP_DEBUG=Loader pnpm run test --project file -t 'codec implict iv' crdt
+FP_DEBUG='Loader,CRDTClock' pnpm run test --project file -t 'codec implict iv' crdt
 ```
 
 For testing React components, you can use:
