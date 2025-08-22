@@ -80,6 +80,8 @@ export class CRDTClockImpl {
     if (!updates.length) {
       return;
     }
+    // Always notify both types of watchers - subscription systems need notifications
+    // regardless of whether there are document updates
     this.emptyWatchers.forEach((fn) => fn());
     this.watchers.forEach((fn) => fn(updates || []));
   }
@@ -114,7 +116,7 @@ export class CRDTClockImpl {
     // }
 
     const noLoader = !localUpdates;
-    const needsManualNotification = !localUpdates && this.watchers.size > 0;
+    const needsManualNotification = !localUpdates && (this.watchers.size > 0 || this.emptyWatchers.size > 0);
 
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
@@ -162,6 +164,7 @@ export class CRDTClockImpl {
       const changes = await clockChangesSince<DocTypes>(this.blockstore, advancedHead, prevHead, {}, this.logger);
       if (changes.result.length > 0) {
         this.notifyWatchers(changes.result);
+        this.emptyWatchers.forEach((fn) => fn());
       }
     }
   }
