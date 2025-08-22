@@ -488,7 +488,7 @@ describe("Remote Sync Subscription Tests", () => {
       await Promise.all(
         dbs.map(async (db) => {
           let attempts = 0;
-          const maxAttempts = 20;
+          const maxAttempts = 10;
 
           while (attempts < maxAttempts) {
             try {
@@ -501,7 +501,7 @@ describe("Remote Sync Subscription Tests", () => {
               if (attempts >= maxAttempts) {
                 throw e; // Re-throw the error after max attempts
               }
-              await sleep(3000); // Wait 1.5 seconds before retry
+              await sleep(5000); // Wait 1.5 seconds before retry
             }
           }
           // for (const key of keys) {
