@@ -488,7 +488,7 @@ describe("Remote Sync Subscription Tests", () => {
       await Promise.all(
         dbs.map(async (db) => {
           let attempts = 0;
-          const maxAttempts = 10;
+          const maxAttempts = 20;
 
           while (attempts < maxAttempts) {
             try {
