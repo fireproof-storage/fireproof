@@ -137,7 +137,6 @@ export class CRDTClockImpl {
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
-    const headChanged = !compareClockHeads(ogHead, newHead);
     if (compareClockHeads(ogHead, newHead)) {
       return;
     }
