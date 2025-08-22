@@ -80,6 +80,13 @@ export class CRDTClockImpl {
     if (!updates.length) {
       return;
     }
+    this.logger.Debug().Int('updatesCount', updates.length).Int('watchersCount', this.watchers.size).Int('emptyWatchersCount', this.emptyWatchers.size).Msg('🔔 NOTIFY_WATCHERS: Triggering subscriptions');
+    console.log('🔔 NOTIFY_WATCHERS: Triggering subscriptions', { 
+      updatesCount: updates.length, 
+      watchersCount: this.watchers.size, 
+      emptyWatchersCount: this.emptyWatchers.size,
+      filteredUpdates: updates.map(u => ({ id: u.id, value: u.value }))
+    });
     // Always notify both types of watchers - subscription systems need notifications
     // regardless of whether there are document updates
     this.emptyWatchers.forEach((fn) => fn());
@@ -117,6 +124,14 @@ export class CRDTClockImpl {
 
     const noLoader = !localUpdates;
     const needsManualNotification = !localUpdates && (this.watchers.size > 0 || this.emptyWatchers.size > 0);
+    
+    this.logger.Debug().Bool('localUpdates', localUpdates).Int('watchersCount', this.watchers.size).Int('emptyWatchersCount', this.emptyWatchers.size).Bool('needsManualNotification', needsManualNotification).Msg('⚡ INT_APPLY_HEAD: Entry point');
+    console.log('⚡ INT_APPLY_HEAD: Entry point', { 
+      localUpdates, 
+      watchersCount: this.watchers.size, 
+      emptyWatchersCount: this.emptyWatchers.size,
+      needsManualNotification
+    });
 
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
@@ -162,8 +177,16 @@ export class CRDTClockImpl {
 
     if (needsManualNotification) {
       const changes = await clockChangesSince<DocTypes>(this.blockstore, advancedHead, prevHead, {}, this.logger);
+      this.logger.Debug().Int('changesCount', changes.result.length).Msg('🛠️ MANUAL_NOTIFICATION: Checking for changes');
+      console.log('🛠️ MANUAL_NOTIFICATION: Checking for changes', { changes: changes.result.length });
       if (changes.result.length > 0) {
+        this.logger.Debug().Msg('🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes');
+        console.log('🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes');
         this.notifyWatchers(changes.result);
+        this.emptyWatchers.forEach((fn) => fn());
+      } else {
+        this.logger.Debug().Msg('🛠️ MANUAL_NOTIFICATION: Calling emptyWatchers directly');
+        console.log('🛠️ MANUAL_NOTIFICATION: Calling emptyWatchers directly');
         this.emptyWatchers.forEach((fn) => fn());
       }
     }
