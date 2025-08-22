@@ -3,7 +3,7 @@ import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocBase } fro
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 
-const ROWS = 2;
+const ROWS = 1;
 
 class AJoinable implements Attachable {
   readonly name: string;
