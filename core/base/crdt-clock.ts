@@ -86,13 +86,6 @@ export class CRDTClockImpl {
       .Int("watchersCount", this.watchers.size)
       .Int("noPayloadWatchersCount", this.noPayloadWatchers.size)
       .Msg("🔔 NOTIFY_WATCHERS: Triggering subscriptions");
-    console.log("🔔 NOTIFY_WATCHERS: Triggering subscriptions", {
-      updatesCount: updates.length,
-      watchersCount: this.watchers.size,
-      noPayloadWatchersCount: this.noPayloadWatchers.size,
-      filteredUpdates: updates.map((u) => ({ id: u.id, value: u.value })),
-      timestamp: Date.now(),
-    });
     // Always notify both types of watchers - subscription systems need notifications
     // regardless of whether there are document updates
     this.noPayloadWatchers.forEach((fn) => fn());
@@ -137,23 +130,14 @@ export class CRDTClockImpl {
       .Int("watchersCount", this.watchers.size)
       .Int("noPayloadWatchersCount", this.noPayloadWatchers.size)
       .Bool("needsManualNotification", needsManualNotification)
+      .Int("headLength", newHead.length)
+      .Int("prevHeadLength", prevHead.length)
+      .Int("currentHeadLength", this.head.length)
       .Msg("⚡ INT_APPLY_HEAD: Entry point");
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
     const headChanged = !compareClockHeads(ogHead, newHead);
-
-    console.log("⚡ INT_APPLY_HEAD: Entry point", {
-      localUpdates,
-      watchersCount: this.watchers.size,
-      noPayloadWatchersCount: this.noPayloadWatchers.size,
-      needsManualNotification,
-      headLength: newHead.length,
-      prevHeadLength: prevHead.length,
-      currentHeadLength: this.head.length,
-      headChanged,
-      timestamp: Date.now(),
-    });
     if (compareClockHeads(ogHead, newHead)) {
       return;
     }
@@ -195,28 +179,25 @@ export class CRDTClockImpl {
 
     if (needsManualNotification) {
       const changes = await clockChangesSince<DocTypes>(this.blockstore, advancedHead, prevHead, {}, this.logger);
-      this.logger.Debug().Int("changesCount", changes.result.length).Msg("🛠️ MANUAL_NOTIFICATION: Checking for changes");
       const triggerReason =
         this.watchers.size > 0 && this.noPayloadWatchers.size > 0
           ? "both"
           : this.watchers.size > 0
             ? "watchers"
             : "noPayloadWatchers";
-      console.log("🛠️ MANUAL_NOTIFICATION: Checking for changes", {
-        changes: changes.result.length,
-        triggerReason,
-        watchersCount: this.watchers.size,
-        noPayloadWatchersCount: this.noPayloadWatchers.size,
-        timestamp: Date.now(),
-      });
+      this.logger
+        .Debug()
+        .Int("changesCount", changes.result.length)
+        .Str("triggerReason", triggerReason)
+        .Int("watchersCount", this.watchers.size)
+        .Int("noPayloadWatchersCount", this.noPayloadWatchers.size)
+        .Msg("🛠️ MANUAL_NOTIFICATION: Checking for changes");
       if (changes.result.length > 0) {
         this.logger.Debug().Msg("🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
-        console.log("🛠️ MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
         this.notifyWatchers(changes.result);
         this.noPayloadWatchers.forEach((fn) => fn());
       } else {
         this.logger.Debug().Msg("🛠️ MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
-        console.log("🛠️ MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
         this.noPayloadWatchers.forEach((fn) => fn());
       }
     }
