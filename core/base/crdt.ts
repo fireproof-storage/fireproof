@@ -118,6 +118,10 @@ export class CRDTImpl implements CRDT {
           localUpdates: false,
           newHead: crdtMeta.head.map((h) => h.toString()),
           subscribers: this.clock.watchers.size + this.clock.noPayloadWatchers.size,
+          headLength: crdtMeta.head.length,
+          currentHeadLength: this.clock.head.length,
+          dbName: this.opts.name || "unnamed",
+          timestamp: Date.now(),
         });
         await this.clock.applyHead(crdtMeta.head, []);
         // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
@@ -209,6 +213,11 @@ export class CRDTImpl implements CRDT {
       localUpdates: true,
       newHead: done.meta.head.map((h) => h.toString()),
       subscribers: this.clock.watchers.size + this.clock.noPayloadWatchers.size,
+      headLength: done.meta.head.length,
+      prevHeadLength: prevHead.length,
+      currentHeadLength: this.clock.head.length,
+      dbName: this.opts.name || "unnamed",
+      timestamp: Date.now(),
     });
     await this.clock.applyHead(done.meta.head, prevHead, updates);
     return done.meta;
