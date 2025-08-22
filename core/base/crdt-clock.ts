@@ -46,7 +46,10 @@ export class CRDTClockImpl {
   constructor(blockstore: BaseBlockstore) {
     this.sthis = blockstore.sthis;
     this.blockstore = blockstore;
-    this.logger = ensureLogger(blockstore.sthis, `CRDTClock`).With().Str("dbName", blockstore.crdtParent?.ledgerParent?.name).Logger();
+    this.logger = ensureLogger(blockstore.sthis, `CRDTClock`)
+      .With()
+      .Str("dbName", blockstore.crdtParent?.ledgerParent?.name)
+      .Logger();
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this), this.logger);
   }
 
