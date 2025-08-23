@@ -71,7 +71,7 @@ function getPrefixedVersion(version: string, versionPrefix: string): string {
   return `${versionPrefix}${version}`;
 }
 
-function patchDeps(dep: Record<string, string>, version: string, versionPrefix: string = "") {
+function patchDeps(dep: Record<string, string>, version: string, versionPrefix = "") {
   if (typeof dep !== "object" || !dep) {
     return;
   }
