@@ -22,7 +22,10 @@ function getEnvVersion(version = "refs/tags/v0.0.0-smoke", xenv = process.env) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     wversion = wversion.match(reEndVersion)![1];
   }
-  const calculatedVersion = wversion.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1").replace(reVersionRangePrefix, "$1");
+  const calculatedVersion = wversion
+    .replace(reScopedVersion, "$1")
+    .replace(reVersionAlphaStart, "$1")
+    .replace(reVersionRangePrefix, "$1");
   try {
     new SemVer(calculatedVersion);
     return calculatedVersion;
