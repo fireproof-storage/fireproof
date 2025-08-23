@@ -68,22 +68,39 @@ export async function getVersion(
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
-function getPrefixedVersion(version: string, versionPrefix: string): string {
-  if (!versionPrefix) {
-    return version;
+class Version {
+  #version: string;
+  #versionPrefix: string;
+
+  constructor(version: string, versionPrefix = "") {
+    this.#version = version;
+    this.#versionPrefix = versionPrefix;
   }
-  return `${versionPrefix}${version}`;
+
+  get version(): string {
+    return this.#version;
+  }
+
+  get versionPrefix(): string {
+    return this.#versionPrefix;
+  }
+
+  get prefixedVersion(): string {
+    if (!this.#versionPrefix) {
+      return this.#version;
+    }
+    return `${this.#versionPrefix}${this.#version}`;
+  }
 }
 
-function patchDeps(dep: Record<string, string>, version: string, versionPrefix = "") {
+function patchDeps(dep: Record<string, string>, version: string) {
   if (typeof dep !== "object" || !dep) {
     return;
   }
-  const prefixedVersion = versionPrefix ? `${versionPrefix}${version}` : version;
   for (const i of Object.keys(dep)) {
     const val = dep[i];
     if (val.startsWith("workspace:")) {
-      dep[i] = prefixedVersion;
+      dep[i] = version;
     }
   }
   return dep;
@@ -104,7 +121,6 @@ async function patchPackageJson(
   packageJsonPath: string,
   version: string,
   changeScope?: string,
-  versionPrefix?: string,
 ): Promise<{
   patchedPackageJson: PackageJson;
   originalPackageJson: PackageJson;
@@ -124,8 +140,8 @@ async function patchPackageJson(
   patchedPackageJson.version = version;
   delete patchedPackageJson.scripts["pack"];
   delete patchedPackageJson.scripts["publish"];
-  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version, versionPrefix);
-  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version, versionPrefix);
+  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version);
+  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version);
   await fs.writeJSONSync(packageJsonPath, patchedPackageJson, { spaces: 2 });
   return { patchedPackageJson, originalPackageJson };
 }
@@ -361,13 +377,13 @@ export function buildCmd(sthis: SuperThis) {
         args.version = await getVersion(args.fpVersion);
       }
 
+      const version = new Version(args.version, args.versionPrefix);
+
       if (args.prepareVersion) {
         await fs.mkdirp(args.dstDir);
         const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
-        args.version = await getVersion(args.fpVersion);
-        const prefixedVersion = getPrefixedVersion(args.version, args.versionPrefix);
-        await fs.writeFile(fpVersionFile, args.version);
-        console.log(`Using version: ${prefixedVersion}`);
+        await fs.writeFile(fpVersionFile, version.version);
+        console.log(`Using version: ${version.prefixedVersion}`);
         return;
       }
       if (args.srcDir === args.dstDir) {
@@ -416,7 +432,7 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      const packageJson = await patchPackageJson("package.json", args.version, args.changeScope, args.versionPrefix);
+      const packageJson = await patchPackageJson("package.json", version.prefixedVersion, args.changeScope);
       // await $`pnpm version ${args.version}`;
 
       fs.copy(".", "../npm", {
@@ -435,7 +451,7 @@ export function buildCmd(sthis: SuperThis) {
       }
 
       if (args.publishJsr) {
-        const jsrConf = await buildJsrConf(packageJson, args.version);
+        const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
         if (jsrConf) {
           await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
         }
