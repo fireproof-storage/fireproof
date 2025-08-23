@@ -1,8 +1,32 @@
-import { getVersion } from "./build-cmd.js";
+import { fs } from "zx";
+import { Version, buildJsrConf, getVersion, patchPackageJson } from "./build-cmd.js";
 import { expect, it } from "vitest";
 
 it("getVersion emptyString", async () => {
   expect(await getVersion("", { xenv: {} })).toContain("0.0.0-smoke");
+});
+
+it("should only use prefix version in dependencies", async () => {
+  const version = new Version("0.0.0-smoke", "^");
+  const { patchedPackageJson } = await patchPackageJson("package.json", version);
+  expect(patchedPackageJson.version).toBe("0.0.0-smoke");
+  expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "^0.0.0-smoke");
+});
+
+it("should only use prefix version in dependencies", async () => {
+  const version = new Version("0.0.0-smoke", "^");
+  const { patchedPackageJson } = await patchPackageJson("package.json", version);
+  expect(patchedPackageJson.version).toBe("0.0.0-smoke");
+  expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "^0.0.0-smoke");
+});
+
+it("should only use prefix version in dependencies", async () => {
+  const version = new Version("0.0.0-smoke", "^");
+  const { patchedPackageJson } = await patchPackageJson("package.json", version);
+  const originalPackageJson = await fs.readJSON("package.json");
+  const jsrConf = await buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
+  expect(jsrConf.version).toBe("0.0.0-smoke");
+  expect(jsrConf.imports).toHaveProperty("@fireproof/vendor", "jsr:@fireproof/vendor@^0.0.0-smoke");
 });
 
 it("ILLEGAL Version", async () => {
