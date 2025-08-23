@@ -64,6 +64,27 @@ export async function getVersion(
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
+class Version {
+  #version: string;
+  #versionPrefix: string;
+
+  constructor(version: string, versionPrefix: string) {
+    this.#version = version;
+    this.#versionPrefix = versionPrefix;
+  }
+
+  get version(): string {
+    return this.#version;
+  }
+
+  get prefixedVersion(): string {
+    if (!this.#versionPrefix) {
+      return this.#version;
+    }
+    return `${this.#versionPrefix}${this.#version}`;
+  }
+}
+
 function patchDeps(dep: Record<string, string>, version: string) {
   if (typeof dep !== "object" || !dep) {
     return;
@@ -162,11 +183,11 @@ function toDenoExports(exports: Record<string, string | Record<string, string>>)
   );
 }
 
-function toDenoDeps(deps: Record<string, string>, version: string) {
+function toDenoDeps(deps: Record<string, string>, version: Version) {
   return Object.entries(deps).reduce(
     (acc, [k, v]) => {
       if (v.startsWith("workspace:")) {
-        acc[k] = `jsr:${k}@${version}`;
+        acc[k] = `jsr:${k}@${version.version}`;
         return acc;
       }
       if (k.startsWith("@adviser/cement")) {
@@ -180,7 +201,7 @@ function toDenoDeps(deps: Record<string, string>, version: string) {
   );
 }
 
-async function buildJsrConf(pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson }, version: string) {
+async function buildJsrConf(pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson }, version: Version) {
   if (pj.originalPackageJson.private?.toLowerCase() === "true") {
     return;
   }
@@ -320,6 +341,13 @@ export function buildCmd(sthis: SuperThis) {
         defaultValue: () => "",
         description: "Change the scope of the package.",
       }),
+      versionPrefix: option({
+        long: "versionPrefix",
+        short: "p",
+        type: string,
+        defaultValue: () => "",
+        description: "Prefix to use for the version.",
+      }),
       pubTags: multioption({
         long: "pubTags",
         short: "t",
@@ -337,15 +365,21 @@ export function buildCmd(sthis: SuperThis) {
       if (args.fpVersion) {
         args.fpVersion = path.join(args.dstDir, args.fpVersion);
       }
+      let version: Version;
       if (!args.version) {
-        args.version = await getVersion(args.fpVersion);
+        const rawVersion = await getVersion(args.fpVersion);
+        version = new Version(rawVersion, args.versionPrefix);
+      } else {
+        version = new Version(args.version, args.versionPrefix);
       }
+
       if (args.prepareVersion) {
         await fs.mkdirp(args.dstDir);
         const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
-        args.version = await getVersion(args.fpVersion);
-        await fs.writeFile(fpVersionFile, args.version);
-        console.log(`Using version: ${args.version}`);
+        const rawVersion = await getVersion(args.fpVersion);
+        version = new Version(rawVersion, args.versionPrefix);
+        await fs.writeFile(fpVersionFile, version.prefixedVersion);
+        console.log(`Using version: ${version.prefixedVersion}`);
         return;
       }
       if (args.srcDir === args.dstDir) {
@@ -394,7 +428,7 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      const packageJson = await patchPackageJson("package.json", args.version, args.changeScope);
+      const packageJson = await patchPackageJson("package.json", version.prefixedVersion, args.changeScope);
       // await $`pnpm version ${args.version}`;
 
       fs.copy(".", "../npm", {
@@ -413,7 +447,7 @@ export function buildCmd(sthis: SuperThis) {
       }
 
       if (args.publishJsr) {
-        const jsrConf = await buildJsrConf(packageJson, args.version);
+        const jsrConf = await buildJsrConf(packageJson, version);
         if (jsrConf) {
           await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
         }
@@ -446,12 +480,12 @@ export function buildCmd(sthis: SuperThis) {
         }
         const tags = args.pubTags;
         try {
-          const semVer = new SemVer(args.version);
+          const semVer = new SemVer(version.version);
           if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
             tags.push("dev");
           }
         } catch (e) {
-          console.warn(`Warn parsing version ${args.version}:`, e);
+          console.warn(`Warn parsing version ${version}:`, e);
         }
 
         const registry = ["--registry", args.registry];
