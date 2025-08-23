@@ -320,6 +320,13 @@ export function buildCmd(sthis: SuperThis) {
         defaultValue: () => "",
         description: "Change the scope of the package.",
       }),
+      versionPrefix: option({
+        long: "versionPrefix",
+        short: "x",
+        type: string,
+        defaultValue: () => "",
+        description: "Prefix to use for the version.",
+      }),
       pubTags: multioption({
         long: "pubTags",
         short: "t",
