@@ -64,7 +64,7 @@ export async function getVersion(
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
-class Version {
+export class Version {
   #version: string;
   #versionPrefix: string;
 
@@ -113,9 +113,9 @@ interface PackageJson {
   devDependencies: Record<string, string>;
 }
 
-async function patchPackageJson(
+export async function patchPackageJson(
   packageJsonPath: string,
-  version: string,
+  version: Version,
   changeScope?: string,
 ): Promise<{
   patchedPackageJson: PackageJson;
@@ -133,12 +133,12 @@ async function patchPackageJson(
     }
   }
   // patchedPackageJson.name = changeScope ? : patchedPackageJson.name;
-  patchedPackageJson.version = version;
+  patchedPackageJson.version = version.version;
   delete patchedPackageJson.scripts["pack"];
   delete patchedPackageJson.scripts["publish"];
-  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version);
-  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version);
-  await fs.writeJSONSync(packageJsonPath, patchedPackageJson, { spaces: 2 });
+  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version.prefixedVersion);
+  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version.prefixedVersion);
+
   return { patchedPackageJson, originalPackageJson };
 }
 
@@ -204,12 +204,33 @@ function toDenoDeps(deps: Record<string, string>, version: string) {
     {} as Record<string, string>,
   );
 }
+interface JsrConfig {
+  name: string;
+  version: string;
+  license: string;
+  nodeModulesDir: string;
+  unstable: string[];
+  lint: {
+    rules: {
+      tags: string[];
+      exclude: string[];
+    };
+  };
+  exports: Record<string, string>;
+  imports: Record<string, string>;
+  publish: {
+    include: string[];
+  };
+}
 
-async function buildJsrConf(pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson }, version: string) {
+export async function buildJsrConf(
+  pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson },
+  version: string,
+): Promise<Partial<JsrConfig>> {
   if (pj.originalPackageJson.private?.toLowerCase() === "true") {
-    return;
+    return {};
   }
-  const jsrConf = {
+  const jsrConf: JsrConfig = {
     name: pj.patchedPackageJson.name,
     version: pj.patchedPackageJson.version,
     license: pj.patchedPackageJson.license,
@@ -430,7 +451,8 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      const packageJson = await patchPackageJson("package.json", version.prefixedVersion, args.changeScope);
+      const packageJson = await patchPackageJson("package.json", version, args.changeScope);
+      await fs.writeJSON("package.json", packageJson.patchedPackageJson, { spaces: 2 });
       // await $`pnpm version ${args.version}`;
 
       fs.copy(".", "../npm", {
