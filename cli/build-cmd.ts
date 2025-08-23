@@ -102,9 +102,9 @@ function patchDeps(dep: Record<string, string>, version: string) {
   return dep;
 }
 
-interface PackageJson {
+export interface PackageJson {
   name: string;
-  private?: "true";
+  private?: "true" | string | boolean;
   license: string;
   version: string;
   scripts: Record<string, string>;
@@ -117,12 +117,15 @@ export async function patchPackageJson(
   packageJsonPath: string,
   version: Version,
   changeScope?: string,
+  mock: {
+    readJSON: typeof fs.readJson;
+  } = { readJSON: fs.readJson },
 ): Promise<{
   patchedPackageJson: PackageJson;
   originalPackageJson: PackageJson;
 }> {
-  const originalPackageJson = await fs.readJSON(packageJsonPath);
-  const patchedPackageJson = await fs.readJSON(packageJsonPath);
+  const originalPackageJson = await mock.readJSON(packageJsonPath);
+  const patchedPackageJson = await mock.readJSON(packageJsonPath);
   // ugly double read but this is easier than deep copying
   if (changeScope) {
     changeScope = changeScope.replace(/^@/, "");
@@ -223,11 +226,18 @@ interface JsrConfig {
   };
 }
 
+function isPrivate(p: PackageJson) {
+  return (
+    p.private &&
+    ((typeof p.private === "boolean" && p.private) || (typeof p.private === "string" && p.private.toLocaleLowerCase() === "true"))
+  );
+}
+
 export async function buildJsrConf(
   pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson },
   version: string,
 ): Promise<Partial<JsrConfig>> {
-  if (pj.originalPackageJson.private?.toLowerCase() === "true") {
+  if (isPrivate(pj.originalPackageJson)) {
     return {};
   }
   const jsrConf: JsrConfig = {
@@ -248,7 +258,6 @@ export async function buildJsrConf(
       include: ["**/*.ts", "**/*.tsx", "README.md", "LICENSE"],
     },
   };
-  await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
   return jsrConf;
 }
 
@@ -472,7 +481,8 @@ export function buildCmd(sthis: SuperThis) {
 
       if (args.publishJsr) {
         const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
-        if (jsrConf) {
+        await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
+        if (!isPrivate(packageJson.originalPackageJson)) {
           await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
         }
       }

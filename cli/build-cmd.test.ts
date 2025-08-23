@@ -1,6 +1,33 @@
-import { fs } from "zx";
-import { Version, buildJsrConf, getVersion, patchPackageJson } from "./build-cmd.js";
+import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson } from "./build-cmd.js";
 import { expect, it } from "vitest";
+
+const mock = {
+  readJSON: async (): Promise<unknown> => {
+    return {
+      name: "@fireproof/core-cli",
+      version: "0.0.0",
+      description: "Live ledger for the web.",
+      type: "module",
+      keywords: ["ledger", "JSON", "document", "IPLD", "CID", "IPFS"],
+      contributors: ["J Chris Anderson", "Alan Shaw", "Travis Vachon", "Mikeal Rogers", "Meno Abels"],
+      author: "J Chris Anderson",
+      license: "AFL-2.0",
+      scripts: {
+        build: "core-cli tsc",
+        pack: "core-cli build --doPack",
+        publish: "core-cli build",
+      },
+      dependencies: {
+        "@fireproof/vendor": "workspace:0.0.0",
+        "cmd-ts": "^0.13.0",
+      },
+      devDependencies: {
+        "@fireproof/core-cli": "workspace:0.0.0",
+        vitest: "^3.2.4",
+      },
+    };
+  },
+};
 
 it("getVersion emptyString", async () => {
   expect(await getVersion("", { xenv: {} })).toContain("0.0.0-smoke");
@@ -8,22 +35,22 @@ it("getVersion emptyString", async () => {
 
 it("should only use prefix version in dependencies", async () => {
   const version = new Version("0.0.0-smoke", "^");
-  const { patchedPackageJson } = await patchPackageJson("package.json", version);
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
   expect(patchedPackageJson.version).toBe("0.0.0-smoke");
   expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "^0.0.0-smoke");
 });
 
 it("should only use prefix version in dependencies", async () => {
   const version = new Version("0.0.0-smoke", "^");
-  const { patchedPackageJson } = await patchPackageJson("package.json", version);
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
   expect(patchedPackageJson.version).toBe("0.0.0-smoke");
   expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "^0.0.0-smoke");
 });
 
 it("should only use prefix version in dependencies", async () => {
   const version = new Version("0.0.0-smoke", "^");
-  const { patchedPackageJson } = await patchPackageJson("package.json", version);
-  const originalPackageJson = await fs.readJSON("package.json");
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
+  const originalPackageJson = (await mock.readJSON()) as unknown as PackageJson;
   const jsrConf = await buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
   expect(jsrConf.version).toBe("0.0.0-smoke");
   expect(jsrConf.imports).toHaveProperty("@fireproof/vendor", "jsr:@fireproof/vendor@^0.0.0-smoke");
