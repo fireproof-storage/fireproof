@@ -331,7 +331,7 @@ export function buildCmd(sthis: SuperThis) {
       }),
       versionPrefix: option({
         long: "versionPrefix",
-        short: "p",
+        short: "x",
         type: string,
         defaultValue: () => "",
         description: "Prefix to use for the version.",
