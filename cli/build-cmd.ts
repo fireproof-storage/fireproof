@@ -10,6 +10,7 @@ import { SemVer } from "semver";
 const reVersionAlphaStart = /^[a-z](\d+\.\d+\.\d+.*)$/;
 // const reVersionOptionalAlphaStart = /^[a-z]?(\d+\.\d+\.\d+.*)$/;
 const reScopedVersion = /^[^@]+@(.*)$/;
+const reVersionRangePrefix = /^[~^](\d+\.\d+\.\d+.*)$/;
 const reEndVersion = /.*\/([^/]+)$/;
 
 function getEnvVersion(version = "refs/tags/v0.0.0-smoke", xenv = process.env) {
@@ -21,7 +22,7 @@ function getEnvVersion(version = "refs/tags/v0.0.0-smoke", xenv = process.env) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     wversion = wversion.match(reEndVersion)![1];
   }
-  const calculatedVersion = wversion.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1");
+  const calculatedVersion = wversion.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1").replace(reVersionRangePrefix, "$1");
   try {
     new SemVer(calculatedVersion);
     return calculatedVersion;
@@ -362,7 +363,7 @@ export function buildCmd(sthis: SuperThis) {
         const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
         args.version = await getVersion(args.fpVersion);
         const prefixedVersion = getPrefixedVersion(args.version, args.versionPrefix);
-        await fs.writeFile(fpVersionFile, prefixedVersion);
+        await fs.writeFile(fpVersionFile, args.version);
         console.log(`Using version: ${prefixedVersion}`);
         return;
       }
