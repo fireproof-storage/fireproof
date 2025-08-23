@@ -494,8 +494,8 @@ describe("Remote Sync Subscription Tests", () => {
           if (allDocs.rows.length != keys.length * ROWS) {
             expect({
               all: allDocs.rows.map((i) => i.key).sort(),
-              keys: keys.sort()
-            }).toEqual({})
+              keys: keys.sort(),
+            }).toEqual({});
           }
           expect(allDocs.rows.length).toBe(keys.length * ROWS);
           // for (const key of keys) {
