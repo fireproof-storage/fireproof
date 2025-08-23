@@ -64,7 +64,14 @@ export async function getVersion(
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
-function patchDeps(dep: Record<string, string>, version: string) {
+function getPrefixedVersion(version: string, versionPrefix: string): string {
+  if (!versionPrefix) {
+    return version;
+  }
+  return `${versionPrefix}${version}`;
+}
+
+function patchDeps(dep: Record<string, string>, version: string, versionPrefix = "") {
   if (typeof dep !== "object" || !dep) {
     return;
   }
