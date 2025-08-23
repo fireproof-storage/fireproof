@@ -68,14 +68,32 @@ export async function getVersion(
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
-function getPrefixedVersion(version: string, versionPrefix: string): string {
-  if (!versionPrefix) {
-    return version;
+class Version {
+  #version: string;
+  #versionPrefix: string;
+
+  constructor(version: string, versionPrefix = "") {
+    this.#version = version;
+    this.#versionPrefix = versionPrefix;
   }
-  return `${versionPrefix}${version}`;
+
+  get version(): string {
+    return this.#version;
+  }
+
+  get versionPrefix(): string {
+    return this.#versionPrefix;
+  }
+
+  get prefixedVersion(): string {
+    if (!this.#versionPrefix) {
+      return this.#version;
+    }
+    return `${this.#versionPrefix}${this.#version}`;
+  }
 }
 
-function patchDeps(dep: Record<string, string>, version: string, versionPrefix = "") {
+function patchDeps(dep: Record<string, string>, version: string) {
   if (typeof dep !== "object" || !dep) {
     return;
   }
@@ -358,13 +376,14 @@ export function buildCmd(sthis: SuperThis) {
       if (!args.version) {
         args.version = await getVersion(args.fpVersion);
       }
+
+      const version = new Version(args.version, args.versionPrefix);
+
       if (args.prepareVersion) {
         await fs.mkdirp(args.dstDir);
         const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
-        args.version = await getVersion(args.fpVersion);
-        const prefixedVersion = getPrefixedVersion(args.version, args.versionPrefix);
-        await fs.writeFile(fpVersionFile, args.version);
-        console.log(`Using version: ${prefixedVersion}`);
+        await fs.writeFile(fpVersionFile, version.version);
+        console.log(`Using version: ${version.prefixedVersion}`);
         return;
       }
       if (args.srcDir === args.dstDir) {
@@ -413,7 +432,7 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      const packageJson = await patchPackageJson("package.json", args.version, args.changeScope);
+      const packageJson = await patchPackageJson("package.json", version.prefixedVersion, args.changeScope);
       // await $`pnpm version ${args.version}`;
 
       fs.copy(".", "../npm", {
@@ -432,7 +451,7 @@ export function buildCmd(sthis: SuperThis) {
       }
 
       if (args.publishJsr) {
-        const jsrConf = await buildJsrConf(packageJson, args.version);
+        const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
         if (jsrConf) {
           await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
         }
