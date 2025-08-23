@@ -68,7 +68,7 @@ class Version {
   #version: string;
   #versionPrefix: string;
 
-  constructor(version: string, versionPrefix = "") {
+  constructor(version: string, versionPrefix: string) {
     this.#version = version;
     this.#versionPrefix = versionPrefix;
   }
