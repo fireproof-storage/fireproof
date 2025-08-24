@@ -74,19 +74,19 @@ async function syncDb(name: string, base: string) {
 }
 
 async function prepareDb(name: string, base: string) {
+  let keys: string[];
   {
     const db = await syncDb(name, base);
     await db.ready();
     const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
-    const ret = { db, dbId };
-    await writeRow(ret, `initial`);
+    keys = await writeRow({ db, dbId }, `initial`);
     await db.close();
   }
 
   const db = await syncDb(name, base);
   await db.ready();
   const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
-  return { db, dbId };
+  return { db, dbId, keys };
 }
 
 async function readDb(name: string, base: string) {
@@ -96,7 +96,13 @@ async function readDb(name: string, base: string) {
   return rows.rows.sort((a, b) => a.key.localeCompare(b.key));
 }
 
-async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style: string) {
+async function writeRow(
+  pdb: WithoutPromise<{
+    db: Database;
+    dbId: string;
+  }>,
+  style: string,
+) {
   const keys: string[] = [];
   for (let i = 0; i < ROWS; i++) {
     const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
@@ -446,7 +452,10 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Now write NEW data to databases - this WILL trigger subscriptions ✅
       // This is the key difference: NEW writes vs EXISTING data sync
-      const keys: string[] = [];
+      const keys: string[] = dbs.reduce((acc, ic) => {
+        acc.push(...ic.keys);
+        return acc;
+      }, [] as string[]);
       for (const [_index, db] of dbs.entries()) {
         await sleep(100 * Math.random());
         const dbKeys = await writeRow(db, "add-online");
@@ -491,13 +500,13 @@ describe("Remote Sync Subscription Tests", () => {
         dbs.map(async (db) => {
           const allDocs = await db.db.allDocs();
           // console.log(allDocs.rows);
-          if (allDocs.rows.length != keys.length * ROWS) {
+          if (allDocs.rows.length != keys.length) {
             expect({
               all: allDocs.rows.map((i) => i.key).sort(),
               keys: keys.sort(),
             }).toEqual({});
           }
-          expect(allDocs.rows.length).toBe(keys.length * ROWS);
+          expect(allDocs.rows.map((i) => i.key).sort()).toEqual(keys.sort());
           // for (const key of keys) {
           //   try {
           //     const doc = await db.db.get<{ value: string }>(key);
