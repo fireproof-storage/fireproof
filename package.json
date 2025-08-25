@@ -68,7 +68,7 @@
     "eslint": "^9.34.0",
     "eslint-plugin-import": "^2.32.0",
     "multiformats": "^13.4.0",
-    "playwright": "^1.54.2",
+    "playwright": "^1.55.0",
     "playwright-chromium": "^1.55.0",
     "prettier": "^3.6.2",
     "tsx": "^4.20.4",
