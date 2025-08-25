@@ -45,7 +45,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.14.1",
-    "jose": "^6.0.12"
+    "jose": "^6.0.13"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
