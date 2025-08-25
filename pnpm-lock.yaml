@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.33.0
         version: 9.33.0(jiti@1.21.7)
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       tsx:
         specifier: ^4.20.4
         version: 4.20.4
@@ -329,7 +329,7 @@ importers:
         version: 24.3.0
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.0
         version: 8.8.0
@@ -997,8 +997,8 @@ importers:
         specifier: ^2.7.1
         version: 2.9.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@clerk/clerk-js':
-        specifier: ^5.77.0
-        version: 5.86.0(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        specifier: ^5.88.0
+        version: 5.88.0(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@clerk/clerk-react':
         specifier: ^5.40.0
         version: 5.42.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1107,7 +1107,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.4(@cloudflare/workers-types@4.20250819.0)(@libsql/client@0.15.12)(gel@2.1.1)(kysely@0.28.5)
@@ -1461,8 +1461,8 @@ packages:
     resolution: {integrity: sha512-YMBdO+ZnrWoG84U+HJa6ntEGhglhlQ99yXTUT9dEucw0nGsHAzuhNvEM3qHaEnTvwvFD33XNZZ2JJou6OdAy9w==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-js@5.86.0':
-    resolution: {integrity: sha512-OU4+19hrKm5TtjybhLNadDuOuoa01njof8Gd3+oF5Lzq/9srXrh4xk3paMiSDFi4J65ypHnI75rvYv/Cc6OwEQ==}
+  '@clerk/clerk-js@5.88.0':
+    resolution: {integrity: sha512-KxRunLyJl8s369eqISqLZgYp7OlB4OGmiZz9B0vcOWkILhUzmEavbwM9AJEEB4zBS2hVLPPRuEt/mM0OZRH6WA==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
@@ -1475,8 +1475,8 @@ packages:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
 
-  '@clerk/localizations@3.21.3':
-    resolution: {integrity: sha512-Up/abABWLcrG/4+kGLwV3Awde19O8ft9t5zmznSIuPdoXkK+G9MzY18K+Ge9ty3Z40hZZIzj8GYZZfaw3UOoOg==}
+  '@clerk/localizations@3.23.0':
+    resolution: {integrity: sha512-71ozafacj24yDO67CEz+3iDewgMWa/8SIN16XhN8xi4GazHpokzQpssNAFum144OVT5JaxjE6tU1Lad56RNQ7Q==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/shared@3.21.1':
@@ -1491,8 +1491,24 @@ packages:
       react-dom:
         optional: true
 
+  '@clerk/shared@3.22.0':
+    resolution: {integrity: sha512-qBtWjnqST0a+sYRArkFwyCwlAM5NxyZvbicz6uvQnq0ZuFQwoGzYiZ0V47kJ+rc6c2jz3qAd8GR1h0hUtfI5cg==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   '@clerk/types@4.79.0':
     resolution: {integrity: sha512-AqonG6n1PZC3z+VJ+jLynNVS5XDlktJSTpsI4YMgSurZfq+1E8uUNC+GdUq9sPJxgjv/hGUPVLdi49imGHYaVg==}
+    engines: {node: '>=18.17.0'}
+
+  '@clerk/types@4.81.0':
+    resolution: {integrity: sha512-uSVAKUmYiFy2POXP3jNh7iCqdbEpzQe+IjY6MWiI5eYjMXR1l+TwYbU0r3IqnTzAzwm8TlklkpTaeR5ZXKW1Gw==}
     engines: {node: '>=18.17.0'}
 
   '@cloudflare/kv-asset-handler@0.4.0':
@@ -2262,11 +2278,11 @@ packages:
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
 
-  '@floating-ui/dom@1.7.3':
-    resolution: {integrity: sha512-uZA413QEpNuhtb3/iIKoYMSK07keHPYeXF02Zhd6e213j+d1NamLix/mCLxBUDW/Gx52sPH2m+chlUsyaBs/Ag==}
+  '@floating-ui/dom@1.7.4':
+    resolution: {integrity: sha512-OOchDgh4F2CchOX94cRVqhvy7b3AFb+/rQXyswmzmGakRfkMgoWVjfnLWkRirfLEfuD4ysVW16eXzwt3jHIzKA==}
 
-  '@floating-ui/react-dom@2.1.5':
-    resolution: {integrity: sha512-HDO/1/1oH9fjj4eLgegrlH3dklZpHtUYYFiVwMUwfGvk9jWDRWqkklA2/NFScknrcNSspbV868WjXORvreDX+Q==}
+  '@floating-ui/react-dom@2.1.6':
+    resolution: {integrity: sha512-4JX6rEatQEvlmgU80wZyq9RT96HZJa88q8hp0pBd+LrczeDI4o6uA2M+uvxngVHo4Ihr8uibXxH6+70zhAFrVw==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
@@ -5923,16 +5939,16 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-js@5.86.0(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@clerk/clerk-js@5.88.0(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@clerk/localizations': 3.21.3
-      '@clerk/shared': 3.21.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@clerk/types': 4.79.0
+      '@clerk/localizations': 3.23.0
+      '@clerk/shared': 3.22.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@clerk/types': 4.81.0
       '@coinbase/wallet-sdk': 4.3.0
       '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.1(@types/react@19.1.10)(react@19.1.1)
       '@floating-ui/react': 0.27.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@floating-ui/react-dom': 2.1.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@floating-ui/react-dom': 2.1.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@formkit/auto-animate': 0.8.2
       '@stripe/stripe-js': 5.6.0
       '@swc/helpers': 0.5.17
@@ -5961,9 +5977,9 @@ snapshots:
       react-dom: 19.1.1(react@19.1.1)
       tslib: 2.8.1
 
-  '@clerk/localizations@3.21.3':
+  '@clerk/localizations@3.23.0':
     dependencies:
-      '@clerk/types': 4.79.0
+      '@clerk/types': 4.81.0
 
   '@clerk/shared@3.21.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
@@ -5977,7 +5993,23 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
+  '@clerk/shared@3.22.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+    dependencies:
+      '@clerk/types': 4.81.0
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.5
+      std-env: 3.9.0
+      swr: 2.3.4(react@19.1.1)
+    optionalDependencies:
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+
   '@clerk/types@4.79.0':
+    dependencies:
+      csstype: 3.1.3
+
+  '@clerk/types@4.81.0':
     dependencies:
       csstype: 3.1.3
 
@@ -6479,20 +6511,20 @@ snapshots:
     dependencies:
       '@floating-ui/utils': 0.2.10
 
-  '@floating-ui/dom@1.7.3':
+  '@floating-ui/dom@1.7.4':
     dependencies:
       '@floating-ui/core': 1.7.3
       '@floating-ui/utils': 0.2.10
 
-  '@floating-ui/react-dom@2.1.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@floating-ui/react-dom@2.1.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@floating-ui/dom': 1.7.3
+      '@floating-ui/dom': 1.7.4
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
   '@floating-ui/react@0.27.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@floating-ui/react-dom': 2.1.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@floating-ui/utils': 0.2.10
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
@@ -7703,7 +7735,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
