@@ -54,6 +54,6 @@
     "@web3-storage/pail": "^0.6.2",
     "multiformats": "^13.4.0",
     "p-map": "^7.0.3",
-    "p-retry": "^6.2.1"
+    "p-retry": "^7.0.0"
   }
 }

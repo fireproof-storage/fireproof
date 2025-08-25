@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.26",
-    "@clerk/backend": "^2.7.1",
+    "@clerk/backend": "^2.9.4",
     "@clerk/clerk-js": "^5.77.0",
     "@clerk/clerk-react": "^5.40.0",
     "@fireproof/core": "workspace:0.0.0",
@@ -44,7 +44,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.62.0",
-    "react-router-dom": "^7.7.1",
+    "react-router-dom": "^7.8.2",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
     "use-fireproof": "workspace:0.0.0"
@@ -52,20 +52,20 @@
   "devDependencies": {
     "@clerk/clerk-react": "^5.40.0",
     "@cloudflare/vite-plugin": "^1.10.1",
-    "@cloudflare/workers-types": "^4.20250810.0",
+    "@cloudflare/workers-types": "^4.20250823.0",
     "@eslint/js": "^9.33.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@libsql/client": "^0.15.10",
     "@libsql/kysely-libsql": "^0.4.1",
     "@rollup/plugin-replace": "^6.0.1",
     "@testing-library/react": "^16.3.0",
-    "@types/react": "^19.0.1",
+    "@types/react": "^19.1.11",
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "0.30.6",
     "drizzle-orm": "^0.44.3",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "5.2.0",
     "eslint-plugin-react-refresh": "^0.4.16",
@@ -73,11 +73,11 @@
     "postcss": "^8.4.49",
     "prettier": "^3.4.2",
     "rollup-plugin-visualizer": "^6.0.1",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.1.12",
     "typescript": "^5.8.3",
     "vite": "^7.1.2",
     "vitest": "^3.2.4",
     "wrangler": "^4.29.0",
-    "zx": "^8.8.0"
+    "zx": "^8.8.1"
   }
 }

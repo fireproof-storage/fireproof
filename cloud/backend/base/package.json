@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.26",
-    "@cloudflare/workers-types": "^4.20250810.0",
+    "@cloudflare/workers-types": "^4.20250823.0",
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
@@ -47,7 +47,7 @@
     "@libsql/client": "^0.15.10",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.3",
-    "hono": "^4.9.0",
+    "hono": "^4.9.4",
     "jose": "^6.0.12"
   },
   "devDependencies": {
@@ -57,6 +57,6 @@
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "drizzle-kit": "0.30.6",
     "vitest": "^3.2.4",
-    "zx": "^8.8.0"
+    "zx": "^8.8.1"
   }
 }
