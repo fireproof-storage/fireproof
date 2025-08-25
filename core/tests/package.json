@@ -60,7 +60,7 @@
     "@ipld/dag-cbor": "^9.2.4",
     "@ipld/dag-json": "^10.2.5",
     "@types/node": "^24.3.0",
-    "cborg": "^4.2.12",
+    "cborg": "^4.2.14",
     "charwise": "^3.0.1",
     "use-fireproof": "workspace:0.0.0",
     "uuidv7": "^1.0.2"
@@ -68,9 +68,14 @@
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
     "@vitest/browser": "^3.2.4",
+<<<<<<< HEAD
     "playwright": "^1.55.0",
     "playwright-chromium": "^1.54.1",
+=======
+    "playwright": "^1.54.1",
+    "playwright-chromium": "^1.55.0",
+>>>>>>> 585ab26b210f760b16dfb9660884bd7d93312699
     "vitest": "^3.2.4",
-    "zx": "^8.7.1"
+    "zx": "^8.8.1"
   }
 }
