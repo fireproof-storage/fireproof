@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -26,14 +26,14 @@ importers:
         specifier: ^24.3.0
         version: 24.3.0
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20250804.1
-        version: 7.0.0-dev.20250804.1
+        specifier: 7.0.0-dev.20250824.1
+        version: 7.0.0-dev.20250824.1
       deno:
         specifier: ^2.4.3
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.33.0
         version: 9.33.0(jiti@1.21.7)
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       tsx:
         specifier: ^4.20.4
         version: 4.20.4
@@ -329,7 +329,7 @@ importers:
         version: 24.3.0
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.0
         version: 8.8.0
@@ -1107,7 +1107,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.4(@cloudflare/workers-types@4.20250819.0)(@libsql/client@0.15.12)(gel@2.1.1)(kysely@0.28.5)
@@ -2952,50 +2952,50 @@ packages:
     resolution: {integrity: sha512-8CZ47QwalyRjsypfwnbI3hKy5gJDPmrkLjkgMxhi0+DZZ2QNx2naS6/hWoVYUHU7LU2zleF68V9miaVZvhFfTA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-Bn7ptzfXtXUmriod5fadXo5+j8VfeJmePm54IcbtqwxhyDkcvyHPhOhp2l7IMtpVOwuXTua/hid6HCHe0LXTaQ==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-B0owFv9kBjhNWbYyZwXtBHSPocXID6CJzrVQRATfaGm9cGl1luB9kNiPZjsXnCZU5qjIwRGu37wrxXzRP6OFIQ==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-WN4sCqnEfrvr7n+YfZR/Wme5FZ88ASY5p2Zcvbm1bMO1FCn2h7iPnInoMfynsoYmfcWQhZqEaSkmK6HGeJKuWQ==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-vNDL0AAEv7ht4+YMWOsWV8c/rN5uwwzhWPDM5LnV9+MrrjL9kos6zMtegQAcKzKWUQlZADHwECP4sNXiyeflJQ==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-N5NHuiT9gBDl3+sW0OGJPeSZYAwYZGfMf2ES4ZDj1Pd4TDR2b6S47FckQVrGWzVDImoqZZsJan5gs3cofTE8nA==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-QqEeiLsOO+3KzUSAjZSwWvX9T2IuHv+L1pb3GrM6Kr+ZnpxRfRoy448ds7dTJwU423ZegaCktIHZZkxmJkgUVQ==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-emtoOuf+K8TK9JnQn8RsNs/mNiPQ/u5xR+N1S7IQFgiEBrngPzCKSwDrtPbY9xGh9mVg7aGa58+Y/hAtXudFwQ==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-SitIkTIJ4yTGxR/hhzhfK62i776YE2eAsJeVj+ege1S91TOd04h7V1stHRAQgSjLXZYPDHJnfXHq8NEZTYL6sA==}
     engines: {node: '>=20.6.0'}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-yT9JKfbuSh3hNybNqUHIsuoOvVsLka7JfRfNh2Hes1eJGVH04I4E5tKAlzI9Iy7OEWCovHZFblQRjp/3CJYxyA==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-s79rwaYI6xf/bljggcbhmuJ+PtGdxcv07JFhw0KMEWTfDvSlR+hUJyGR7S/djvX6a3/TXIDezrhikT5aQcqHOQ==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-da5LkGm/l1zzpaTc2FwQh1F3H1pYSAUpqHzskcPL//SDTfrQnkbN9dPn+CI8cHDRv8lCAQFXII+xFFLWPMNXyQ==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-gl3wVMxFjNAzGdoSzLMsioMGcZGeHNivqbHyehzwuEBUX6iGTIOSbtp8lDQcfZrXY3SOSVPq9DJX6epYWtw5BA==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-zC+Wzi8Lr+RGF69PHHnesyoImBTwkzdPD9aoHTrynrP8Fcv+oRAUQmQcI0JFB0cEzFxMQ1sUMdBrAikdveaz1g==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-NBT0fKR7K09NnAHznN0Mp8YRHiSx/hmy9R2G/LAMz+HoQRImPK+CZktWPdeefT4W6QN91xXprTLmq5z+hWR73A==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20250804.1':
-    resolution: {integrity: sha512-EVYSeheDmdLrvwWRW4RXl47rUMEst6JkO7hgvwYEF8TBQ4zrBWcMlCulhgI5MsvCrNf7hkVn6628bCkp/5Ik2A==}
+  '@typescript/native-preview@7.0.0-dev.20250824.1':
+    resolution: {integrity: sha512-UtCoYEH0vehSgt05eP7GJO530AkdisBOIuxQ6vuDP4FXg5EMiszkimU2Ry7heHOwvSVu1Np1nYlvDE7oxLYRig==}
     engines: {node: '>=20.6.0'}
     hasBin: true
 
@@ -7133,36 +7133,36 @@ snapshots:
       '@typescript-eslint/types': 8.40.0
       eslint-visitor-keys: 4.2.1
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250804.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250824.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20250804.1':
+  '@typescript/native-preview@7.0.0-dev.20250824.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250804.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250804.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250804.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250804.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250804.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250804.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250804.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250824.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250824.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250824.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250824.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250824.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250824.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250824.1
 
   '@vitejs/plugin-react@5.0.1(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))':
     dependencies:
@@ -7703,7 +7703,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
