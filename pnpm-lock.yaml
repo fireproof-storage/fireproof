@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: qurcebuunk6oqtltwdee4xtzuy
+    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
     path: patches/drizzle-kit.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       eslint:
         specifier: ^9.34.0
         version: 9.34.0(jiti@1.21.7)
@@ -45,7 +45,7 @@ importers:
         version: 13.4.0
       playwright:
         specifier: ^1.54.2
-        version: 1.54.2
+        version: 1.55.0
       playwright-chromium:
         specifier: ^1.55.0
         version: 1.55.0
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       tsx:
         specifier: ^4.20.4
         version: 4.20.4
@@ -329,7 +329,7 @@ importers:
         version: 24.3.0
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -891,10 +891,10 @@ importers:
         version: link:../../cli
       '@vitest/browser':
         specifier: ^3.2.4
-        version: 3.2.4(playwright@1.54.2)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)
+        version: 3.2.4(playwright@1.55.0)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)
       playwright:
-        specifier: ^1.54.1
-        version: 1.54.2
+        specifier: ^1.55.0
+        version: 1.55.0
       playwright-chromium:
         specifier: ^1.55.0
         version: 1.55.0
@@ -1107,7 +1107,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.4(@cloudflare/workers-types@4.20250823.0)(@libsql/client@0.15.12)(gel@2.1.1)(kysely@0.28.5)
@@ -1210,10 +1210,10 @@ importers:
         version: 19.1.11
       '@vitest/browser':
         specifier: ^3.2.4
-        version: 3.2.4(playwright@1.54.2)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)
+        version: 3.2.4(playwright@1.55.0)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)
       playwright:
-        specifier: ^1.54.2
-        version: 1.54.2
+        specifier: ^1.55.0
+        version: 1.55.0
       playwright-chromium:
         specifier: ^1.55.0
         version: 1.55.0
@@ -3097,6 +3097,10 @@ packages:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
 
+  ansi-regex@6.2.0:
+    resolution: {integrity: sha512-TKY5pyBkHyADOPYlRT9Lx6F544mPl0vS5Ew7BJ45hA08Q+t3GjbueLliBWN3sMICk6+y7HdyxSzC4bWS8baBdg==}
+    engines: {node: '>=12'}
+
   ansi-styles@4.3.0:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
@@ -4654,18 +4658,13 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright-core@1.54.2:
-    resolution: {integrity: sha512-n5r4HFbMmWsB4twG7tJLDN9gmBUeSPcsBZiWSE4DnYz9mJMAFqr2ID7+eGC9kpEnxExJ1epttwR59LEWCk8mtA==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.55.0:
     resolution: {integrity: sha512-GvZs4vU3U5ro2nZpeiwyb0zuFaqb9sUiAJuyrWpcGouD8y9/HLgGbNRjIph7zU9D3hnPaisMl9zG9CgFi/biIg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.54.2:
-    resolution: {integrity: sha512-Hu/BMoA1NAdRUuulyvQC0pEqZ4vQbGfn8f7wPXcnqQmM+zct9UliKxsIkLNmz/ku7LElUNqmaiv1TG/aL5ACsw==}
+  playwright@1.55.0:
+    resolution: {integrity: sha512-sdCWStblvV1YU909Xqx0DhOjPZE4/5lJsIS84IfN9dAZfcl/CIZ5O8l3o0j7hPMjDvqoTF8ZUcc+i/GL5erstA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -5040,6 +5039,10 @@ packages:
   strip-ansi@6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
+
+  strip-ansi@7.1.0:
+    resolution: {integrity: sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==}
+    engines: {node: '>=12'}
 
   strip-bom@3.0.0:
     resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
@@ -7026,7 +7029,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@3.2.4(playwright@1.54.2)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)':
+  '@vitest/browser@3.2.4(playwright@1.55.0)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)':
     dependencies:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
@@ -7038,7 +7041,7 @@ snapshots:
       vitest: 3.2.4(@types/node@24.3.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1)
       ws: 8.18.3
     optionalDependencies:
-      playwright: 1.54.2
+      playwright: 1.55.0
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -7127,6 +7130,8 @@ snapshots:
       type-fest: 0.21.3
 
   ansi-regex@5.0.1: {}
+
+  ansi-regex@6.2.0: {}
 
   ansi-styles@4.3.0:
     dependencies:
@@ -7522,7 +7527,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
+  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -8855,13 +8860,11 @@ snapshots:
     dependencies:
       playwright-core: 1.55.0
 
-  playwright-core@1.54.2: {}
-
   playwright-core@1.55.0: {}
 
-  playwright@1.54.2:
+  playwright@1.55.0:
     dependencies:
-      playwright-core: 1.54.2
+      playwright-core: 1.55.0
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -9313,6 +9316,10 @@ snapshots:
     dependencies:
       ansi-regex: 5.0.1
 
+  strip-ansi@7.1.0:
+    dependencies:
+      ansi-regex: 6.2.0
+
   strip-bom@3.0.0: {}
 
   strip-indent@3.0.0:
@@ -9603,7 +9610,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.3.0
-      '@vitest/browser': 3.2.4(playwright@1.54.2)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)
+      '@vitest/browser': 3.2.4(playwright@1.55.0)(vite@7.1.3(@types/node@24.3.0)(jiti@1.21.7)(tsx@4.20.4)(yaml@2.8.1))(vitest@3.2.4)
     transitivePeerDependencies:
       - jiti
       - less
