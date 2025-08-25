@@ -50,7 +50,7 @@
     "jose": "^6.0.12",
     "multiformats": "^13.4.0",
     "semver": "^7.7.2",
-    "zx": "^8.8.0"
+    "zx": "^8.8.1"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",

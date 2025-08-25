@@ -56,6 +56,6 @@
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/node": "^24.3.0",
     "drizzle-kit": "0.30.6",
-    "zx": "^8.8.0"
+    "zx": "^8.8.1"
   }
 }
