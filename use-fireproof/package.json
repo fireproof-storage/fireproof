@@ -33,7 +33,7 @@
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
     "dompurify": "^3.2.6",
-    "jose": "^6.0.12"
+    "jose": "^6.0.13"
   },
   "peerDependencies": {
     "@adviser/cement": "^0.4.20",
