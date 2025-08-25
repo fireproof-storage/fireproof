@@ -52,7 +52,7 @@
   "devDependencies": {
     "@clerk/clerk-react": "^5.40.0",
     "@cloudflare/vite-plugin": "^1.10.1",
-    "@cloudflare/workers-types": "^4.20250810.0",
+    "@cloudflare/workers-types": "^4.20250823.0",
     "@eslint/js": "^9.33.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@libsql/client": "^0.15.10",
