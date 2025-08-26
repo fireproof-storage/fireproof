@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildJWKSUrl, JWKSValidationError } from "../src/validator";
+import { buildJWKSUrl, JWKSValidationError } from "../src/validator.js";
 
 describe("Basic JWKS functionality", () => {
   it("should build Clerk URLs correctly", () => {
