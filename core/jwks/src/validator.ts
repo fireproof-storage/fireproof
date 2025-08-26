@@ -71,6 +71,7 @@ export class JWKSFetchError extends Error {
 // Simple URL builder that works with Clerk
 export function buildJWKSUrl(config: string): string {
   if (config.startsWith("http://") || config.startsWith("https://")) {
+    // Validate URL to prevent
     return config;
   }
 
