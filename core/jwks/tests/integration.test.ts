@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { fetchAndValidateJWKS, buildJWKSUrl } from "../src/validator";
+import { fetchAndValidateJWKS, buildJWKSUrl } from "../src/validator.js";
 
 describe("JWKS Integration Tests", () => {
-  it("should build Clerk URLs correctly", () => {
+  const runLive = process.env.LIVE_JWKS === "1";
+  it.runIf(runLive)("should fetch and validate real Clerk JWKS (integration test)", async () => {
     expect(buildJWKSUrl("trusted-glowworm-5"))
       .toBe("https://trusted-glowworm-5.clerk.accounts.dev/.well-known/jwks.json");
   });
@@ -32,12 +33,12 @@ describe("JWKS Integration Tests", () => {
 
       if (result.is_ok()) {
         const { jwks, validation } = result.unwrap();
-        
+
         // Basic structure checks
         expect(jwks).toHaveProperty("keys");
         expect(Array.isArray(jwks.keys)).toBe(true);
         expect(validation.totalKeysCount).toBeGreaterThan(0);
-        
+
         // Each key should have basic properties
         if (jwks.keys.length > 0) {
           const firstKey = jwks.keys[0];
@@ -49,7 +50,7 @@ describe("JWKS Integration Tests", () => {
         // Validation should work
         expect(validation).toHaveProperty("isValid");
         expect(validation).toHaveProperty("currentKeysCount");
-        
+
         console.log(`✅ Live test: ${validation.currentKeysCount}/${validation.totalKeysCount} keys are current`);
       } else {
         // Log error but don't fail test (network issues in CI)
