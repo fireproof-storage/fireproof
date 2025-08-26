@@ -1,0 +1,36 @@
+{
+  "name": "@fireproof/core-jwks",
+  "version": "0.0.0",
+  "description": "JWKS validation and fetching for Fireproof",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": [
+    "jwks",
+    "jwt",
+    "validation",
+    "clerk",
+    "fireproof"
+  ],
+  "author": "Fireproof Team",
+  "license": "AFL-2.0",
+  "dependencies": {
+    "@adviser/cement": "^0.4.25",
+    "jose": "^6.0.12"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    }
+  }
+}
