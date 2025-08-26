@@ -21,7 +21,7 @@ const result = await fetchAndValidateJWKS("trusted-glowworm-5", {
   allowedKeyTypes: ["RSA"],
   allowedUse: ["sig"],
   requireKeyId: true,
-  maxKeys: 5
+  maxKeys: 5,
 });
 
 if (result.is_ok()) {
@@ -48,18 +48,37 @@ if (result.is_ok()) {
 
 ### Legacy Compatibility
 
-- `fetchJwks(url)` - Legacy function (deprecated, use fetchJWKS instead)
+- `fetchJwks(url)` - Legacy function (deprecated). **Note: this API throws `JWKSFetchError` on failure**, whereas `fetchJWKS`/`fetchAndValidateJWKS` return a `Result`. Adjust your error handling accordingly.
+
+```typescript
+// Legacy (throws)
+try {
+  const jwks = await fetchJwks("https://example.com/.well-known/jwks.json");
+} catch (error) {
+  console.error(error.message);
+}
+
+// New (Result)
+const res = await fetchJWKS("https://example.com/.well-known/jwks.json");
+if (res.is_err()) {
+  console.error(res.unwrap_err().message);
+} else {
+  console.log(res.unwrap());
+}
+```
 
 ## Configuration
 
 Supports multiple input formats:
-- Direct URLs: `"https://example.com/.well-known/jwks.json"`
-- Clerk shortcuts: `"trusted-glowworm-5"` 
-- Clerk domains: `"trusted-glowworm-5.clerk.accounts.dev"`
+
+- Direct URLs, e.g., `"https://example.com/.well-known/jwks.json"`.
+- Clerk tenant shortcuts, e.g., `"trusted-glowworm-5"`.
+- Clerk domain hostnames, e.g., `"trusted-glowworm-5.clerk.accounts.dev"`.
 
 ## Error Handling
 
 The package uses Result types from `@adviser/cement` for comprehensive error handling:
+
 - `JWKSFetchError` - Network and fetch-related errors
 - `JWKSValidationError` - Key validation errors
 
@@ -80,7 +99,7 @@ npx vitest run tests/integration.test.ts
 
 ## Structure
 
-```
+```text
 src/
 ├── validator.ts    # Core JWKS validation logic
 ├── fetcher.ts      # Legacy compatibility layer
