@@ -22,7 +22,7 @@
     "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.25",
+    "@adviser/cement": "^0.4.26",
     "@clerk/backend": "^2.7.1",
     "@clerk/clerk-js": "^5.77.0",
     "@clerk/clerk-react": "^5.40.0",

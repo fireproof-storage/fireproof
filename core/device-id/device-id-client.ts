@@ -50,25 +50,28 @@ export class DeviceIdClient {
         const csr = new DeviceIdCSR(this.#sthis, key);
         const rCsrJWT = await csr.createCSR({ commonName: `fp-dev@${await key.fingerPrint()}` });
         if (rCsrJWT.isErr()) {
-          return Result.Err(rCsrJWT.Err());
+          return Result.Err<MsgSigner>(rCsrJWT.Err());
         }
         const rCertResult = await this.#transport.issueCertificate(rCsrJWT.Ok());
         if (rCertResult.isErr()) {
-          return Result.Err(rCertResult.Err());
+          return Result.Err<MsgSigner>(rCertResult.Err());
         }
         deviceIdResult = await kBag.setDeviceId(deviceIdResult.deviceId.Unwrap(), rCertResult.Ok());
       }
+      return Result.Err<MsgSigner>("No certificate found");
 
       // if cert is not there create one or cert is to be renewed
       // create csr
       // request signing -> get cert
       // put into keybag
 
-      return Result.Ok(new MsgSigner(new DeviceIdSignMsg(this.#sthis.txt.base64, key, cert)));
+      // return Result.Ok(new MsgSigner(new DeviceIdSignMsg(this.#sthis.txt.base64, key, cert)));
     });
   }
 
   // sign a message
   // @param msg: string // JWT String
-  sendSigned<T extends NonNullable<unknown>>(payload: T, algorithm?: string): Promise<string> {}
+  sendSigned<T extends NonNullable<unknown>>(_payload: T, _algorithm?: string): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
 }
