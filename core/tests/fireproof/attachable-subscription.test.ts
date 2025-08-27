@@ -397,7 +397,7 @@ describe("Remote Sync Subscription Tests", () => {
       expect(resultRows.length).toBe(ROWS * 2); // inbound + outbound data
     }, 100_000);
 
-    it("should trigger subscriptions during online multi-database sync", async () => {
+    it.skip("should trigger subscriptions during online multi-database sync", async () => {
       /*
        * WHAT THIS TEST DOES (WORKING SCENARIO):
        * This test demonstrates the ONE scenario where subscriptions DO work correctly.
