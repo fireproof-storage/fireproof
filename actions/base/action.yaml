@@ -9,7 +9,10 @@ runs:
 
     - name: install
       shell: bash
-      run: pnpm install
+      run: |
+        env
+        pnpm install
+
     - name: format-check
       shell: bash
       run: pnpm run format --check
