@@ -15,7 +15,6 @@ on:
 
 jobs:
   compile_test:
-    # runs-on: blacksmith-4vcpu-ubuntu-2404
     runs-on: ubuntu-latest
     environment:
       name: external-pr
