@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@types/react-dom": "^19.1.6"
+    "@types/react-dom": "^19.1.6",
+    "vite": "^7.1.3"
   }
 }
