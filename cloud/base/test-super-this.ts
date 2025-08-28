@@ -1,7 +1,7 @@
 import { ensureSuperThis } from "@fireproof/core-runtime";
 // import { inject } from "vitest";
 
-export function testSuperThis() {
+export function testSuperThis(options?: { fetch?: typeof fetch }) {
   return ensureSuperThis({
     env: {
       presetEnv: new Map<string, string>(
@@ -9,5 +9,6 @@ export function testSuperThis() {
         Object.entries({ ...(globalThis as any).FP_ENV, ...JSON.parse(process.env.FP_TEST_ENV || "{}") }),
       ),
     },
+    fetch: options?.fetch,
   });
 }

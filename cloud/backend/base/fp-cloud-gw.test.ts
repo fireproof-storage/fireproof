@@ -1,13 +1,23 @@
 import { fireproof } from "@fireproof/core-base";
 import { BuildURI, URI } from "@adviser/cement";
-import { describe, beforeAll, it, expect } from "vitest";
+import { describe, beforeAll, it, expect, vi } from "vitest";
 import { testSuperThis } from "@fireproof/cloud-base";
 import { MockJWK, mockJWK } from "./test-helper.js";
 import { CloudGateway, SimpleTokenStrategy, toCloud } from "@fireproof/core-gateways-cloud";
 import { SerdeGatewayCtx } from "@fireproof/core-types-blockstore";
 
 describe("fp-cloud", () => {
-  const sthis = testSuperThis();
+  const mockFetch = vi.fn((_url: RequestInfo | URL, _opts?: RequestInit) => {
+    const response = {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: new Headers(),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    } as Response;
+    return Promise.resolve(response);
+  });
+  const sthis = testSuperThis({ fetch: mockFetch });
   let fpgw: CloudGateway;
   let auth: MockJWK;
 
@@ -54,6 +64,7 @@ describe("fp-cloud", () => {
       storeUrls: {
         base: "memory://connect/once",
       },
+      fetch: mockFetch,
     });
 
     // console.log(">>>>>", auth.authType.params.jwk);

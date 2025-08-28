@@ -156,7 +156,7 @@ abstract class BaseGateway {
   protected async putObject(uri: URI, uploadUrl: string, body: Uint8Array, conn: VConnItems): Promise<Result<void>> {
     // console.log("putObject", uri.toString(), uploadUrl, body.length);
     this.logger.Debug().Any("url", { uploadUrl, uri }).Msg("put-fetch-url");
-    const rUpload = await exception2Result(async () => fetch(uploadUrl, { method: "PUT", body: body as BodyInit }));
+    const rUpload = await exception2Result(async () => this.sthis.fetch(uploadUrl, { method: "PUT", body: body as BodyInit }));
     if (rUpload.isErr()) {
       return this.logger.Error().Url(uploadUrl, "uploadUrl").Err(rUpload).Msg("Expection in put fetch").ResultError();
     }
@@ -173,7 +173,7 @@ abstract class BaseGateway {
 
   protected async getObject(uri: URI, downloadUrl: string, _conn: VConnItems): Promise<Result<Uint8Array>> {
     this.logger.Debug().Any("url", { downloadUrl, uri }).Msg("get-fetch-url");
-    const rDownload = await exception2Result(async () => fetch(downloadUrl.toString(), { method: "GET" }));
+    const rDownload = await exception2Result(async () => this.sthis.fetch(downloadUrl.toString(), { method: "GET" }));
     if (rDownload.isErr()) {
       return this.logger.Error().Url(downloadUrl, "downloadUrl").Err(rDownload).Msg("Error in get downloadUrl").ResultError();
     }
@@ -189,7 +189,7 @@ abstract class BaseGateway {
 
   protected async delObject(uri: URI, deleteUrl: string, _conn: VConnItems): Promise<Result<void>> {
     this.logger.Debug().Any("url", { deleteUrl, uri }).Msg("get-fetch-url");
-    const rDelete = await exception2Result(async () => fetch(deleteUrl.toString(), { method: "DELETE" }));
+    const rDelete = await exception2Result(async () => this.sthis.fetch(deleteUrl.toString(), { method: "DELETE" }));
     if (rDelete.isErr()) {
       return this.logger.Error().Url(deleteUrl, "deleteUrl").Err(rDelete).Msg("Error in get deleteURL").ResultError();
     }
