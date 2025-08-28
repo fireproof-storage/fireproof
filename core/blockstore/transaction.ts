@@ -145,8 +145,8 @@ export class BaseBlockstoreImpl implements BlockFetcher {
   }
 
   readonly logger: Logger;
-  constructor(ebOpts: BlockstoreOpts, crdt?: CRDT) {
-    this.sthis = ensureSuperThis(ebOpts);
+  constructor(ebOpts: BlockstoreOpts, crdt?: CRDT, sthis?: SuperThis) {
+    this.sthis = sthis || ensureSuperThis(ebOpts);
     this.crdtParent = crdt;
     this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.logger = this.ebOpts.logger;
@@ -233,7 +233,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   readonly logger: Logger;
 
   constructor(sthis: SuperThis, ebOpts: BlockstoreOpts, crdt?: CRDT) {
-    super(ebOpts, crdt);
+    super(ebOpts, crdt, sthis);
     this.logger = ensureLogger(this.sthis, "EncryptedBlockstore", {
       this: 1,
     });

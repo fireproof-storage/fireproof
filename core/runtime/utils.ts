@@ -50,6 +50,7 @@ interface superThisOpts {
   readonly crypto: CryptoRuntime;
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
+  readonly fetch: typeof fetch;
 }
 
 class SuperThisImpl implements SuperThis {
@@ -59,6 +60,7 @@ class SuperThisImpl implements SuperThis {
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
+  readonly fetch: typeof fetch;
 
   constructor(opts: superThisOpts) {
     this.logger = opts.logger;
@@ -67,6 +69,7 @@ class SuperThisImpl implements SuperThis {
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
     this.ctx = AppContext.merge(opts.ctx);
+    this.fetch = opts.fetch;
     // console.log("superThis", this);
   }
 
@@ -104,6 +107,7 @@ class SuperThisImpl implements SuperThis {
       pathOps: override.pathOps || this.pathOps,
       txt: override.txt || this.txt,
       ctx: AppContext.merge(this.ctx, override.ctx),
+      fetch: override.fetch || this.fetch,
     });
   }
 }
@@ -175,6 +179,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     ctx: AppContext.merge(osthis?.ctx),
     pathOps,
     txt: osthis?.txt || txtOps,
+    fetch: osthis?.fetch || globalThis.fetch,
   });
   _onSuperThis.forEach((fn) => fn(ret));
   return ret;

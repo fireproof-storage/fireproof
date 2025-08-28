@@ -132,6 +132,7 @@ export interface SuperThisOpts {
   readonly env: Partial<EnvFactoryOpts>;
   readonly txt: TextEndeCoder;
   readonly ctx: AppContext;
+  readonly fetch?: typeof fetch;
 }
 
 export interface SuperThis {
@@ -141,6 +142,7 @@ export interface SuperThis {
   readonly pathOps: PathOps;
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
+  readonly fetch: typeof fetch;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
   start(): Promise<void>;
@@ -662,7 +664,7 @@ export type QueryResult<
 // export type QueryOptsWithoutDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs"> &  { readonly includeDocs: false }
 
 // export type QueryOptsWithDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs"> & { readonly includeDocs: true }
-// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+
 // export type QueryOptsWithUndefDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs"> // & */ { [key: string]: unknown }
 
 // export type QueryOptsWithUndefIncludeDocs<K extends IndexKeyType = string> = Omit<QueryOptsBase<K>, "includeDocs">
