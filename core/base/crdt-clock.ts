@@ -154,6 +154,20 @@ export class CRDTClockImpl {
     if (!this.blockstore) {
       throw this.logger.Error().Msg("missing blockstore").AsError();
     }
+    this.logger
+      .Debug()
+      .Str("dbName", this.blockstore?.crdtParent?.ledgerParent?.name || "unnamed")
+      .Str(
+        "carLog",
+        this.blockstore?.loader?.carLog
+          ?.asArray()
+          .map((cg) => cg.map((c) => c.toString()).join(","))
+          .join(";") || "no-carlog",
+      )
+      .Str("validatingHead", newHead.map((h) => h.toString()).join(","))
+      .Msg("PRE_VALIDATION: CarLog before block validation");
+    // Add sleep to test race condition theory
+    // await sleep(1000);
     await validateBlocks(this.logger, newHead, this.blockstore);
     if (!this.transaction) {
       this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
