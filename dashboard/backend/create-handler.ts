@@ -63,32 +63,24 @@ class ClerkApiToken implements FPApiToken {
         }
       }
 
-      // Dynamic JWKS discovery - extract issuer from JWT
-      let jwksUrl: string;
+      // Extract issuer from JWT and use it if present, otherwise fall back to config
+      const [, payloadB64] = token.split('.');
+      if (!payloadB64) {
+        throw new Error("Invalid JWT format - missing payload");
+      }
       
-      if (CLERK_PUB_JWT_URL) {
-        // Use explicitly provided JWKS URL
+      const payload = JSON.parse(atob(payloadB64));
+      const issuer = payload.iss;
+      
+      let jwksUrl: string;
+      if (issuer && issuer.startsWith("https://")) {
+        // Use issuer from JWT (preferred)
+        jwksUrl = `${issuer}/.well-known/jwks.json`;
+      } else if (CLERK_PUB_JWT_URL) {
+        // Fall back to configured URL
         jwksUrl = CLERK_PUB_JWT_URL;
       } else {
-        // Auto-discover JWKS URL from JWT issuer
-        const [, payloadB64] = token.split('.');
-        if (!payloadB64) {
-          throw new Error("Invalid JWT format - missing payload");
-        }
-        
-        const payload = JSON.parse(atob(payloadB64));
-        const issuer = payload.iss;
-        
-        if (!issuer) {
-          throw new Error("JWT missing issuer (iss) field - cannot auto-discover JWKS URL");
-        }
-        
-        if (!issuer.startsWith("https://")) {
-          throw new Error(`JWT issuer must use HTTPS: ${issuer}`);
-        }
-        
-        jwksUrl = `${issuer}/.well-known/jwks.json`;
-        console.log('🔍 Auto-discovered JWKS URL:', jwksUrl);
+        throw new Error("No valid JWKS URL: JWT missing issuer and CLERK_PUB_JWT_URL not set");
       }
 
       // Validate URL format and security
