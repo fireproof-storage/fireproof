@@ -7,7 +7,7 @@ export const FPEnvelopeTypes = {
   FILE: "file",
   META: "meta",
   WAL: "wal",
-  SUBSCRIPTIONS: "subscriptions" // not serialized to disk
+  SUBSCRIPTIONS: "subscriptions", // not serialized to disk
 } as const;
 
 // const Colors = {
@@ -35,12 +35,12 @@ export interface FPEnvelope<T> {
 
 export interface Subscription {
   readonly id: string;
-  readonly fn: (meta: FPEnvelopeMeta) => Promise<void>
+  readonly fn: (meta: FPEnvelopeMeta) => Promise<void>;
 }
 
 export interface Subscriptions {
   actualMeta?: FPEnvelopeMeta;
-  subs: Subscription[]
+  subs: Subscription[];
 }
 
 export interface FPEnvelopeSubscriptions extends FPEnvelope<Subscriptions> {
@@ -56,23 +56,23 @@ export interface FPEnvelopeCar extends FPEnvelope<Uint8Array> {
 }
 
 export function isFPEnvelopeCar(x: FPEnvelope<unknown>): x is FPEnvelopeCar {
-  return x.type === FPEnvelopeTypes.CAR
-} 
+  return x.type === FPEnvelopeTypes.CAR;
+}
 
 export interface FPEnvelopeFile extends FPEnvelope<Uint8Array> {
   readonly type: typeof FPEnvelopeTypes.FILE;
 }
 
 export function isFPEnvelopeFile(x: FPEnvelope<unknown>): x is FPEnvelopeFile {
-  return x.type === FPEnvelopeTypes.FILE
-} 
+  return x.type === FPEnvelopeTypes.FILE;
+}
 
 export function isFPEnvelopeBlob(x: FPEnvelope<unknown>): x is FPEnvelopeFile | FPEnvelopeCar {
   return isFPEnvelopeCar(x) || isFPEnvelopeFile(x);
 }
 
 export function isFPEnvelopeMeta(x: FPEnvelope<unknown>): x is FPEnvelopeMeta {
-  return x.type === FPEnvelopeTypes.META
+  return x.type === FPEnvelopeTypes.META;
 }
 
 export interface FPEnvelopeMeta extends FPEnvelope<DbMetaEvent[]> {

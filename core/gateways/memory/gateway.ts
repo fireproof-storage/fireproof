@@ -36,7 +36,6 @@ function cleanURI(uri: URI): URI {
     .URI();
 }
 
-
 export class MemoryGateway implements SerdeGateway {
   readonly id: string;
   readonly memories: Map<string, FPEnvelope<unknown>>;
@@ -76,20 +75,22 @@ export class MemoryGateway implements SerdeGateway {
 
   async subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     const key = this.buildSubscriptionKey(url);
-    let subs = this.memories.get(key) as FPEnvelopeSubscriptions | undefined
+    let subs = this.memories.get(key) as FPEnvelopeSubscriptions | undefined;
     if (!(subs && isFPEnvelopeSubscription(subs))) {
-      subs = { payload: { subs: [] }, type: FPEnvelopeTypes.SUBSCRIPTIONS }
-      this.memories.set(key, subs)
+      subs = { payload: { subs: [] }, type: FPEnvelopeTypes.SUBSCRIPTIONS };
+      this.memories.set(key, subs);
     }
     const id = ctx.loader.sthis.nextId().str;
-    subs.payload.subs.push({ id, fn: callback })
+    subs.payload.subs.push({ id, fn: callback });
     if (subs.payload.actualMeta) {
-      await callback(subs.payload.actualMeta) 
+      await callback(subs.payload.actualMeta);
     }
-    return Promise.resolve(Result.Ok(() => {
-      const f = subs.payload.subs.findIndex(s => s.id === id)
-      subs.payload.subs.splice(f, 1)
-    }));
+    return Promise.resolve(
+      Result.Ok(() => {
+        const f = subs.payload.subs.findIndex((s) => s.id === id);
+        subs.payload.subs.splice(f, 1);
+      }),
+    );
   }
 
   async put<T>(ctx: SerdeGatewayCtx, iurl: URI, body: FPEnvelope<T>): Promise<VoidResult> {
@@ -108,18 +109,18 @@ export class MemoryGateway implements SerdeGateway {
         if (!(x && isFPEnvelopeMeta(x))) {
           break;
         }
-        body.payload.unshift(...x.payload)
-        const subKey = this.buildSubscriptionKey(url)
-        let subs = this.memories.get(subKey)
+        body.payload.unshift(...x.payload);
+        const subKey = this.buildSubscriptionKey(url);
+        let subs = this.memories.get(subKey);
         if (!subs) {
-          subs = { payload: { subs: [] }, type: FPEnvelopeTypes.SUBSCRIPTIONS }
-          this.memories.set(subKey, subs)
+          subs = { payload: { subs: [] }, type: FPEnvelopeTypes.SUBSCRIPTIONS };
+          this.memories.set(subKey, subs);
         }
         if (isFPEnvelopeSubscription(subs)) {
-          subs.payload.actualMeta = body
+          subs.payload.actualMeta = body;
           for (const s of subs.payload.subs) {
-            await s.fn(body)
-          } 
+            await s.fn(body);
+          }
         }
         break;
       }
@@ -155,22 +156,13 @@ export class MemoryGateway implements SerdeGateway {
     }
     switch (true) {
       case url.getParam(PARAM.STORE) === "meta":
-        ensureLogger(sthis, "MemoryGatewayMeta")
-          .Debug()
-          .Any(out)
-          .Msg("get-meta");
+        ensureLogger(sthis, "MemoryGatewayMeta").Debug().Any(out).Msg("get-meta");
         break;
       case url.getParam(PARAM.STORE) === "car":
-        ensureLogger(sthis, "MemoryGatewayCar")
-          .Debug()
-          .Any(out)
-          .Msg("get-car");
+        ensureLogger(sthis, "MemoryGatewayCar").Debug().Any(out).Msg("get-car");
         break;
       case url.getParam(PARAM.STORE) === "wal":
-        ensureLogger(sthis, "MemoryGatewayWal")
-          .Debug()
-          .Any(out)
-          .Msg("get-wal");
+        ensureLogger(sthis, "MemoryGatewayWal").Debug().Any(out).Msg("get-wal");
     }
     return Promise.resolve(r);
   }

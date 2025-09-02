@@ -65,7 +65,7 @@ export class CRDTClockImpl {
       updates,
     })) {
       await this.processUpdates(updatesAcc, all, prevHead);
-      return
+      return;
     }
   }
 

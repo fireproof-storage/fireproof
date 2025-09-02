@@ -180,5 +180,5 @@ export function mockLoader(sthis: SuperThis): Loadable {
 export function mockSerdeGWCtx(sthis: SuperThis): SerdeGatewayCtx {
   return {
     loader: mockLoader(sthis),
-  }
+  };
 }

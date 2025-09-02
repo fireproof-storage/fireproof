@@ -80,9 +80,9 @@ export class DatabaseImpl implements Database {
       return { ...(doc as unknown as DocWithId<T>), _id: id };
     } catch (e) {
       if (isNotFoundError(e)) {
-        throw e
+        throw e;
       }
-      throw this.logger.Error().Err(e).Msg("unexpect error").AsError()
+      throw this.logger.Error().Err(e).Msg("unexpect error").AsError();
     }
   }
 
