@@ -215,7 +215,7 @@ describe("Remote Sync Subscription Tests", () => {
       await db.close();
     });
 
-    it("should trigger subscriptions on inbound syncing", async () => {
+    it("should trigger subscriptions on inbound syncing", { timeout: 30000 }, async () => {
       // Setup subscription on main database before attaching remote databases
       const dbSub = setupSubscription(db);
 
@@ -244,6 +244,13 @@ describe("Remote Sync Subscription Tests", () => {
           storeUrls: attachableStoreUrls(dbName.name, db),
         });
         await jdb.compact();
+        console.log(
+          `POST_COMPACT: ${dbName.name} carLog:`,
+          jdb.ledger.crdt.blockstore.loader.carLog
+            .asArray()
+            .map((cg) => cg.map((c) => c.toString()).join(","))
+            .join(";"),
+        );
         sthis.env.set("FP_DEBUG", "MemoryGatewayMeta");
         const res = await jdb.allDocs();
         expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);

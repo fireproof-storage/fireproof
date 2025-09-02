@@ -39,6 +39,7 @@ import {
   type Attachable,
   type Attached,
   type CarTransaction,
+  type CRDTMeta,
   type DbMeta,
   type Falsy,
   type SuperThis,
@@ -519,6 +520,13 @@ export class Loader implements Loadable {
       }
       // console.log("mergeDbMetaIntoClock", activeStore.active.car.url().pathname);
       const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta, activeStore);
+      this.logger
+        .Debug()
+        .Str("loaderId", this.id)
+        .Str("carCids", meta.cars.map((c) => c.toString()).join(","))
+        .Str("extractedHead", (carHeader.meta as CRDTMeta)?.head?.map((h) => h.toString()).join(",") || "no-head")
+        .Url(activeStore.active.car.url())
+        .Msg("MERGE_META: Extracted CAR header meta");
       // fetch other cars down the compact log?
       // todo we should use a CID set for the compacted cids (how to expire?)
       // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
@@ -825,10 +833,18 @@ export class Loader implements Loadable {
     const activeStore = store.active as CarStore;
     try {
       //loadedCar now is an array of AnyBlocks
-      this.logger.Debug().Any("cid", carCidStr).Msg("loading car");
+      this.logger.Debug()
+        .Str("cid", carCidStr)
+        .Str("loaderId", this.id)
+        .Url(activeStore.url())
+        .Msg("NETWORK_REQUEST: About to load CAR from store");
       loadedCar = await activeStore.load(carCid);
       // console.log("loadedCar", carCid);
-      this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
+      this.logger.Debug()
+        .Str("cid", carCidStr) 
+        .Bool("loadedCar", !!loadedCar)
+        .Url(activeStore.url())
+        .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
     } catch (e) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
