@@ -64,14 +64,14 @@ class ClerkApiToken implements FPApiToken {
       }
 
       // Extract issuer from JWT and use it if present, otherwise fall back to config
-      const [, payloadB64] = token.split('.');
+      const [, payloadB64] = token.split(".");
       if (!payloadB64) {
         throw new Error("Invalid JWT format - missing payload");
       }
-      
+
       const payload = JSON.parse(atob(payloadB64));
       const issuer = payload.iss;
-      
+
       let jwksUrl: string;
       if (issuer && issuer.startsWith("https://")) {
         // Use issuer from JWT (preferred)
@@ -95,7 +95,7 @@ class ClerkApiToken implements FPApiToken {
             signal: AbortSignal.timeout(5000), // 5 second timeout
           }),
       );
-      
+
       if (rJwtKey.isOk() && rJwtKey.Ok().ok) {
         const rCt = await exception2Result(async () => {
           // Parse JWKS response
@@ -116,7 +116,7 @@ class ClerkApiToken implements FPApiToken {
           throw new Error(`verifyJwt failed ${rCt.Err()} from ${jwksUrl}`);
         }
       }
-      
+
       throw new Error(`Failed to fetch JWKS from ${jwksUrl}`);
     });
     if (rt.isErr()) {
