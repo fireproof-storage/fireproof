@@ -78,7 +78,16 @@ class ClerkApiToken implements FPApiToken {
         );
         if (rJwtKey.isOk() && rJwtKey.Ok().ok) {
           const rCt = await exception2Result(async () => {
-            const jwsPubKey = await rJwtKey.Ok().json<JsonWebKey>();
+            // Parse JWKS response
+            const jwksResponse = await rJwtKey.Ok().json<{ keys: JsonWebKey[] }>();
+
+            if (!jwksResponse.keys || jwksResponse.keys.length === 0) {
+              throw new Error(`No keys found in JWKS from ${CLERK_PUB_JWT_URL}`);
+            }
+
+            // Use the first key (standard practice for JWKS endpoints)
+            const jwsPubKey = jwksResponse.keys[0];
+
             return (await verifyJwt(token, { key: jwsPubKey })) as unknown as ClerkTemplate;
           });
           if (rCt.isOk()) {
