@@ -60,9 +60,9 @@ export function toPailFetcher(tblocks: BlockFetcher): PailBlockFetcher {
     ) => {
       const rBlock = await exception2Result(() => tblocks.get(link));
       if (rBlock.isErr()) {
-        return undefined
+        return undefined;
       }
-      const block = rBlock.Ok()
+      const block = rBlock.Ok();
       return block
         ? ({
             cid: block.cid,

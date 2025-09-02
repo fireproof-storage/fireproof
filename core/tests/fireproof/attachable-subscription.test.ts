@@ -157,28 +157,30 @@ describe("Remote Sync Subscription Tests", () => {
   const sthis = ensureSuperThis();
 
   function setupSubscription(db: Database) {
-    const docs: DocWithId<string>[] = []
-    return { 
+    const docs: DocWithId<string>[] = [];
+    return {
       docs,
-      unsub: db.subscribe<string>((sdocs) => { docs.push(...sdocs) }, true)
-    }
+      unsub: db.subscribe<string>((sdocs) => {
+        docs.push(...sdocs);
+      }, true),
+    };
   }
 
   describe("join function", () => {
     let db: Database;
-    let dbContent: DocWithId<string>[]
+    let dbContent: DocWithId<string>[];
     let joinableDBs: {
-      name: string,
-      content: DocWithId<string>[]
+      name: string;
+      content: DocWithId<string>[];
     }[] = [];
 
     async function writeRows(db: Database): Promise<DocWithId<string>[]> {
-      const ret: DocWithId<string>[] = []
+      const ret: DocWithId<string>[] = [];
       for (let j = 0; j < ROWS; j++) {
         await db.put({ _id: `${db.name}-${j}`, value: `${db.name}-${j}` });
-        ret.push(await db.get(`${db.name}-${j}`))
+        ret.push(await db.get(`${db.name}-${j}`));
       }
-      return ret
+      return ret;
     }
 
     beforeEach(async () => {
@@ -189,7 +191,7 @@ describe("Remote Sync Subscription Tests", () => {
           base: `memory://db-${set}`,
         },
       });
-      dbContent = await writeRows(db)
+      dbContent = await writeRows(db);
 
       joinableDBs = await Promise.all(
         new Array(DBS).fill(1).map(async (_, i) => {
@@ -197,11 +199,12 @@ describe("Remote Sync Subscription Tests", () => {
           const jdb = fireproof(name, {
             storeUrls: attachableStoreUrls(name, db),
           });
-          const content = await writeRows(jdb)
+          const content = await writeRows(jdb);
           expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
           await jdb.close();
           return {
-            name, content
+            name,
+            content,
           };
         }),
       );
@@ -218,7 +221,7 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Perform the attach operations that should trigger subscriptions
       await Promise.all(
-        joinableDBs.map(async ({name}) => {
+        joinableDBs.map(async ({ name }) => {
           const attached = await db.attach(aJoinable(name, db));
           expect(attached).toBeDefined();
         }),
@@ -228,20 +231,20 @@ describe("Remote Sync Subscription Tests", () => {
       await sleep(1000);
 
       // Verify the data was synced correctly
-      const refData = [...dbContent.map(i => i._id), ...joinableDBs.map(i => i.content.map(i => i._id)).flat()].sort()
+      const refData = [...dbContent.map((i) => i._id), ...joinableDBs.map((i) => i.content.map((i) => i._id)).flat()].sort();
       expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
       const res = await db.allDocs<string>();
-      expect(res.rows.map(i => i.key).sort()).toEqual(refData)
+      expect(res.rows.map((i) => i.key).sort()).toEqual(refData);
       expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
 
-      expect(Array.from(new Set(dbSub.docs.map(i => i._id))).sort()).toEqual(refData)
+      expect(Array.from(new Set(dbSub.docs.map((i) => i._id))).sort()).toEqual(refData);
 
       for (const dbName of joinableDBs) {
         const jdb = fireproof(dbName.name, {
-            storeUrls: attachableStoreUrls(dbName.name, db),
-          });
-        await jdb.compact()
-        sthis.env.set("FP_DEBUG", "MemoryGatewayMeta")
+          storeUrls: attachableStoreUrls(dbName.name, db),
+        });
+        await jdb.compact();
+        sthis.env.set("FP_DEBUG", "MemoryGatewayMeta");
         const res = await jdb.allDocs();
         expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
         await jdb.close();

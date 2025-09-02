@@ -106,7 +106,11 @@ export class URITrackGateway implements bs.SerdeGateway {
     return this.memgw.delete(ctx, url);
   }
 
-  subscribe(ctx: bs.SerdeGatewayCtx, url: URI, _callback: (meta: bs.FPEnvelopeMeta) => Promise<void>): Promise<bs.UnsubscribeResult> {
+  subscribe(
+    ctx: bs.SerdeGatewayCtx,
+    url: URI,
+    _callback: (meta: bs.FPEnvelopeMeta) => Promise<void>,
+  ): Promise<bs.UnsubscribeResult> {
     this.uriAdd(url);
     return Promise.resolve(
       Result.Ok(() => {
