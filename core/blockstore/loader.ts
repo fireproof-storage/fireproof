@@ -133,6 +133,14 @@ class CommitAction implements CommitParams {
   }
 
   async writeMeta(cids: AnyLink[]): Promise<void> {
+    // LOG: Verify these are CAR CIDs, not raw block CIDs - test invariant
+    this.logger.Debug()
+      .Str("cidsToWrite", cids.map(c => c.toString()).join(","))
+      .Str("cidsPrefix", cids.map(c => c.toString().substring(0,3)).join(","))
+      .Bool("allCarCids", cids.every(c => c.toString().startsWith("bae")))
+      .Bool("anyRawCids", cids.some(c => c.toString().startsWith("baf")))
+      .Msg("DBMETA_CREATION: CIDs being written to DbMeta");
+      
     const meta = { cars: cids };
     await this.attached.local().active.meta.save(meta);
     // detached remote stores
@@ -512,6 +520,13 @@ export class Loader implements Loadable {
       if (this.seenMeta.has(metaKey)) return [];
       this.seenMeta.add(metaKey);
 
+      // LOG: CarLog state before merge
+      this.logger.Debug()
+        .Str("beforeMerge_carLog", this.carLog.asArray().map(cg => cg.map(c => c.toString()).join(",")).join(";"))
+        .Str("incoming_dbMeta_cars", meta.cars.map(c => c.toString()).join(","))
+        .Str("loaderId", this.id)
+        .Msg("MERGE_BEFORE: CarLog state before merge");
+
       // if (meta.key) {
       //   await this.setKey(meta.key);
       // }
@@ -535,8 +550,28 @@ export class Loader implements Loadable {
       if (warns.length > 0) {
         this.logger.Warn().Any("warns", warns).Msg("error getting more readers");
       }
+      // LOG: CarLog update calculation
+      this.logger.Debug()
+        .Str("uniqueCids_input", [meta.cars, ...this.carLog.asArray(), ...carHeader.cars].flat().map(c => c.toString()).join(","))
+        .Str("seenCompacted", Array.from(this.seenCompacted.values()).join(","))
+        .Int("seenCompactedSize", this.seenCompacted.size)
+        .Str("loaderId", this.id)
+        .Msg("CARLOG_UPDATE: Before uniqueCids calculation");
+        
       const cgs = uniqueCids([meta.cars, ...this.carLog.asArray(), ...carHeader.cars], this.seenCompacted);
+      
+      this.logger.Debug()
+        .Str("uniqueCids_output", cgs.flat().map(c => c.toString()).join(","))
+        .Str("loaderId", this.id)
+        .Msg("CARLOG_UPDATE: After uniqueCids calculation");
+        
       this.carLog.update(cgs);
+      
+      // LOG: CarLog state after update
+      this.logger.Debug()
+        .Str("afterUpdate_carLog", this.carLog.asArray().map(cg => cg.map(c => c.toString()).join(",")).join(";"))
+        .Str("loaderId", this.id)
+        .Msg("MERGE_AFTER: CarLog state after update");
       // console.log(
       //   ">>>>> pre applyMeta",
       //   this.carLog

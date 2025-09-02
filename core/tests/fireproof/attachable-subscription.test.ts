@@ -227,8 +227,40 @@ describe("Remote Sync Subscription Tests", () => {
         }),
       );
 
+      // ASSERTION: Check remote carLogs immediately after attachment
+      for (const dbName of joinableDBs) {
+        const tempJdb = fireproof(dbName.name, {
+          storeUrls: attachableStoreUrls(dbName.name, db),
+        });
+        const carLogAfterAttach = tempJdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+        console.log(`AFTER_ATTACH: ${dbName.name} carLog length:`, carLogAfterAttach.length);
+        expect(carLogAfterAttach.length).toBeGreaterThan(0);
+        await tempJdb.close();
+      }
+
       // Wait for sync to complete
       await sleep(1000);
+
+      // ASSERTION: Check remote carLogs after sleep
+      for (const dbName of joinableDBs) {
+        const tempJdb = fireproof(dbName.name, {
+          storeUrls: attachableStoreUrls(dbName.name, db),
+        });
+        const carLogAfterSleep = tempJdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+        console.log(`AFTER_SLEEP: ${dbName.name} carLog length:`, carLogAfterSleep.length);
+        expect(carLogAfterSleep.length).toBeGreaterThan(0);
+        await tempJdb.close();
+      }
+
+      // ASSERTION: Verify all CAR files in main DB carLog are reachable from storage
+      const mainCarLog = db.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+      for (const cid of mainCarLog) {
+        const carResult = await db.ledger.crdt.blockstore.loader.loadCar(
+          cid, 
+          db.ledger.crdt.blockstore.loader.attachedStores.local()
+        );
+        expect(carResult.item.status).not.toBe("stale");
+      }
 
       // Verify the data was synced correctly
       const refData = [...dbContent.map((i) => i._id), ...joinableDBs.map((i) => i.content.map((i) => i._id)).flat()].sort();
@@ -243,7 +275,28 @@ describe("Remote Sync Subscription Tests", () => {
         const jdb = fireproof(dbName.name, {
           storeUrls: attachableStoreUrls(dbName.name, db),
         });
-        await jdb.compact();
+        // await jdb.compact();
+        
+        // ASSERTION: Verify all CAR files in remote DB carLog are reachable from storage  
+        const remoteCarLog = jdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+        for (const cid of remoteCarLog) {
+          const carResult = await jdb.ledger.crdt.blockstore.loader.loadCar(
+            cid,
+            jdb.ledger.crdt.blockstore.loader.attachedStores.local()
+          );
+          expect(carResult.item.status).not.toBe("stale");
+        }
+
+        // ASSERTION: Verify carLog is not empty (sanity check)
+        expect(remoteCarLog.length).toBeGreaterThan(0);
+
+        // ASSERTION: Cross-reference - verify remote DB has access to same CAR files as main DB
+        const mainCarLogStrings = new Set(mainCarLog.map(c => c.toString()));
+        const remoteCarLogStrings = new Set(remoteCarLog.map(c => c.toString()));
+        mainCarLogStrings.forEach(cid => {
+          expect(remoteCarLogStrings.has(cid)).toBe(true);
+        });
+
         console.log(
           `POST_COMPACT: ${dbName.name} carLog:`,
           jdb.ledger.crdt.blockstore.loader.carLog
