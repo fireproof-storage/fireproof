@@ -219,7 +219,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
           // console.log(
           //   "subscribe",
           //   this.myId,
-          //   id.str,
           //   this.url().pathname,
           //   dbMetas.map((i) => i.cars.map((i) => i.toString())).flat(2),
           // );

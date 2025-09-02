@@ -40,7 +40,7 @@ import {
   PARAM,
   NotFoundError,
 } from "@fireproof/core-types-base";
-import { Logger } from "@adviser/cement";
+import { exception2Result, Logger } from "@adviser/cement";
 import { Link, Version } from "multiformats";
 
 function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
@@ -58,7 +58,11 @@ export function toPailFetcher(tblocks: BlockFetcher): PailBlockFetcher {
     get: async <T = unknown, C extends number = number, A extends number = number, V extends Version = 1>(
       link: Link<T, C, A, V>,
     ) => {
-      const block = await tblocks.get(link);
+      const rBlock = await exception2Result(() => tblocks.get(link));
+      if (rBlock.isErr()) {
+        return undefined
+      }
+      const block = rBlock.Ok()
       return block
         ? ({
             cid: block.cid,

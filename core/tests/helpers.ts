@@ -18,6 +18,7 @@ import {
   CarBlockItem,
   TransactionMeta,
   AnyLink,
+  SerdeGatewayCtx,
 } from "@fireproof/core-types-blockstore";
 
 /* eslint-disable @typescript-eslint/no-empty-function */
@@ -174,4 +175,10 @@ class MockLoader implements Loadable {
 }
 export function mockLoader(sthis: SuperThis): Loadable {
   return new MockLoader(sthis);
+}
+
+export function mockSerdeGWCtx(sthis: SuperThis): SerdeGatewayCtx {
+  return {
+    loader: mockLoader(sthis),
+  }
 }

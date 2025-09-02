@@ -64,7 +64,8 @@ export class CRDTClockImpl {
       prevHead,
       updates,
     })) {
-      return this.processUpdates(updatesAcc, all, prevHead);
+      await this.processUpdates(updatesAcc, all, prevHead);
+      return
     }
   }
 
@@ -216,7 +217,7 @@ async function validateBlocks(logger: Logger, newHead: ClockHead, blockstore?: B
   newHead.map(async (cid) => {
     const got = await blockstore.get(cid);
     if (!got) {
-      throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
+      throw logger.Error().Str("cid", cid.toString()).Msg("validateBlocks missing block").AsError();
     }
   });
 }

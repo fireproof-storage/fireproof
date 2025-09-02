@@ -2,7 +2,7 @@ import { BuildURI, URI } from "@adviser/cement";
 import { fireproof } from "@fireproof/core-base";
 import { registerStoreProtocol } from "@fireproof/core-blockstore";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
-import { DbMetaEvent, Loadable, V2SerializedMetaKey } from "@fireproof/core-types-blockstore";
+import { DbMetaEvent, FPEnvelopeFile, Loadable, SerdeGateway, SerdeGatewayCtx, V2SerializedMetaKey } from "@fireproof/core-types-blockstore";
 import { AddKeyToDbMetaGateway } from "@fireproof/core-gateways-base";
 import { beforeAll, describe, expect, it, vitest } from "vitest";
 import { KeyBag } from "@fireproof/core-keybag";
@@ -13,6 +13,7 @@ describe("MetaKeyHack", () => {
   const storageMap = new Map();
 
   const sthis = ensureSuperThis();
+  let ctx: SerdeGatewayCtx
   const memGw = new MemoryGateway(sthis, storageMap);
   registerStoreProtocol({
     protocol: "hack:",
@@ -23,7 +24,6 @@ describe("MetaKeyHack", () => {
   });
 
   let db: Database;
-  let ctx: { loader: Loadable };
   beforeAll(async () => {
     db = fireproof("test", {
       storeUrls: {
@@ -58,10 +58,10 @@ describe("MetaKeyHack", () => {
     await rDataStoreKeyItem.Ok().upsert("zH1fyizirAiYVxoaQ2XZ3Xj", false);
 
     expect(rDataStoreKeyItem.isOk()).toBeTruthy();
-    const rUrl = await memGw.buildUrl(metaStore.url(), "main");
+    const rUrl = await memGw.buildUrl(ctx, metaStore.url(), "main");
     // console.log(">>>>", rUrl.Ok().toString())
-    const rGet = await memGw.get(rUrl.Ok(), sthis);
-    const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok())) as V2SerializedMetaKey;
+    const rGet = await memGw.get<Uint8Array>(ctx, rUrl.Ok());
+    const metas = JSON.parse(ctx.loader.sthis.txt.decode(rGet.Ok().payload)) as V2SerializedMetaKey;
     const keyMaterials = metas.keys;
     const dataStoreKeyMaterial = await rDataStoreKeyItem.Ok().asV2KeysItem();
     expect(keyMaterials.length).toBeGreaterThan(0);

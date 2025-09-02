@@ -25,6 +25,7 @@ import {
   Attached,
   NotFoundError,
   QueryResult,
+  isNotFoundError,
 } from "@fireproof/core-types-base";
 import { ensureLogger, makeName } from "@fireproof/core-runtime";
 
@@ -78,7 +79,10 @@ export class DatabaseImpl implements Database {
       const { doc } = got;
       return { ...(doc as unknown as DocWithId<T>), _id: id };
     } catch (e) {
-      throw new NotFoundError(`Not found: ${id} - ${e instanceof Error ? e.message : String(e)}`);
+      if (isNotFoundError(e)) {
+        throw e
+      }
+      throw this.logger.Error().Err(e).Msg("unexpect error").AsError()
     }
   }
 
@@ -157,7 +161,6 @@ export class DatabaseImpl implements Database {
     if (typeof opts.limit === "number" && opts.limit >= 0) {
       rows = rows.slice(0, opts.limit);
     }
-
     return { rows, clock: head, name: this.name };
   }
 
