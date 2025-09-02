@@ -51,11 +51,9 @@ class ClerkApiToken implements FPApiToken {
       return Result.Err(rEnvVal.Err());
     }
     const { CLERK_PUB_JWT_KEY, CLERK_PUB_JWT_URL } = rEnvVal.Ok();
-    if (!CLERK_PUB_JWT_URL && !CLERK_PUB_JWT_KEY) {
-      return Result.Err("You must set CLERK_PUB_JWT_URL or CLERK_PUB_JWT_KEY");
-    }
 
     const rt = await exception2Result(async () => {
+      // Try static JWT key first if provided
       if (CLERK_PUB_JWT_KEY) {
         const rCt = await exception2Result(
           async () => (await verifyToken(token, { jwtKey: CLERK_PUB_JWT_KEY })) as unknown as ClerkTemplate,
@@ -64,42 +62,70 @@ class ClerkApiToken implements FPApiToken {
           return rCt.Ok();
         }
       }
+
+      // Dynamic JWKS discovery - extract issuer from JWT
+      let jwksUrl: string;
+      
       if (CLERK_PUB_JWT_URL) {
-        // Validate URL format and security
-        if (!CLERK_PUB_JWT_URL.startsWith("https://")) {
-          throw new Error("CLERK_PUB_JWT_URL(${CLERK_PUB_JWT_URL}) must use HTTPS");
+        // Use explicitly provided JWKS URL
+        jwksUrl = CLERK_PUB_JWT_URL;
+      } else {
+        // Auto-discover JWKS URL from JWT issuer
+        const [, payloadB64] = token.split('.');
+        if (!payloadB64) {
+          throw new Error("Invalid JWT format - missing payload");
         }
-        const rJwtKey = await exception2Result(
-          async () =>
-            await fetch(CLERK_PUB_JWT_URL, {
-              method: "GET",
-              signal: AbortSignal.timeout(5000), // 5 second timeout
-            }),
-        );
-        if (rJwtKey.isOk() && rJwtKey.Ok().ok) {
-          const rCt = await exception2Result(async () => {
-            // Parse JWKS response
-            const jwksResponse = await rJwtKey.Ok().json<{ keys: JsonWebKey[] }>();
+        
+        const payload = JSON.parse(atob(payloadB64));
+        const issuer = payload.iss;
+        
+        if (!issuer) {
+          throw new Error("JWT missing issuer (iss) field - cannot auto-discover JWKS URL");
+        }
+        
+        if (!issuer.startsWith("https://")) {
+          throw new Error(`JWT issuer must use HTTPS: ${issuer}`);
+        }
+        
+        jwksUrl = `${issuer}/.well-known/jwks.json`;
+        console.log('🔍 Auto-discovered JWKS URL:', jwksUrl);
+      }
 
-            if (!jwksResponse.keys || jwksResponse.keys.length === 0) {
-              throw new Error(`No keys found in JWKS from ${CLERK_PUB_JWT_URL}`);
-            }
+      // Validate URL format and security
+      if (!jwksUrl.startsWith("https://")) {
+        throw new Error(`JWKS URL must use HTTPS: ${jwksUrl}`);
+      }
 
-            // Use the first key (standard practice for JWKS endpoints)
-            const jwsPubKey = jwksResponse.keys[0];
+      const rJwtKey = await exception2Result(
+        async () =>
+          await fetch(jwksUrl, {
+            method: "GET",
+            signal: AbortSignal.timeout(5000), // 5 second timeout
+          }),
+      );
+      
+      if (rJwtKey.isOk() && rJwtKey.Ok().ok) {
+        const rCt = await exception2Result(async () => {
+          // Parse JWKS response
+          const jwksResponse = await rJwtKey.Ok().json<{ keys: JsonWebKey[] }>();
 
-            return (await verifyJwt(token, { key: jwsPubKey })) as unknown as ClerkTemplate;
-          });
-          if (rCt.isOk()) {
-            return rCt.Ok();
-          } else {
-            throw new Error(`verifyJwt failed ${rCt.Err()} from ${CLERK_PUB_JWT_URL}`);
+          if (!jwksResponse.keys || jwksResponse.keys.length === 0) {
+            throw new Error(`No keys found in JWKS from ${jwksUrl}`);
           }
+
+          // Use the first key (standard practice for JWKS endpoints)
+          const jwsPubKey = jwksResponse.keys[0];
+
+          return (await verifyJwt(token, { key: jwsPubKey })) as unknown as ClerkTemplate;
+        });
+        if (rCt.isOk()) {
+          return rCt.Ok();
+        } else {
+          throw new Error(`verifyJwt failed ${rCt.Err()} from ${jwksUrl}`);
         }
       }
-      throw new Error(
-        "You must set CLERK_PUB_JWT_URL(${CLERK_PUB_JWT_URL}) verify with CLERK_PUB_JWT_KEY(${CLERK_PUB_JWT_KEY}) failed",
-      );
+      
+      throw new Error(`Failed to fetch JWKS from ${jwksUrl}`);
     });
     if (rt.isErr()) {
       return Result.Err(rt.Err());
