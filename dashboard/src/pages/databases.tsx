@@ -103,7 +103,7 @@ function SidebarDatabases() {
                 end
                 key={link.to}
                 to={`/fp/databases/${db.name}${link.to}`}
-                className={({ isActive }) =>
+                className={({ isActive }: { isActive: boolean }) =>
                   `block rounded px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground ${
                     isActive ? "font-bold" : ""
                   }`

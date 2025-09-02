@@ -82,6 +82,7 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
 }
 
 export type StoreType = "car" | "file" | "wal" | "meta";
+
 export interface FPStats {
   isFile(): boolean;
   isDirectory(): boolean;
