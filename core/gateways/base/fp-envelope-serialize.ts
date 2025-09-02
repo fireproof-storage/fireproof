@@ -50,7 +50,7 @@ export async function dbMetaEvent2Serialized(
   );
 }
 
-function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
+export function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
   const serializedWAL: SerializedWAL = {
     fileOperations: wal.fileOperations.map((fop) => ({
       cid: fop.cid.toString(),

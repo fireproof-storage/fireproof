@@ -320,9 +320,7 @@ export class Loader implements Loadable {
         this.blockstoreParent?.crdtParent?.ledgerParent?.name,
       );
       const local = this.attachedStores.local();
-      // console.log("ready", this.id);
       this.metaStreamReader = local.active.meta.stream().getReader();
-      // console.log("attach-local", local.active.car.url().pathname);
       await this.waitFirstMeta(this.metaStreamReader, local, { meta: this.ebOpts.meta, origin: local.active.car.url() });
     });
   }
@@ -765,7 +763,6 @@ export class Loader implements Loadable {
   }
 
   async getBlock(cid: AnyLink): Promise<FPBlock | Falsy> {
-    await this.ready();
     const got = this.cidCache.get(cid.toString());
     return got.value;
   }
