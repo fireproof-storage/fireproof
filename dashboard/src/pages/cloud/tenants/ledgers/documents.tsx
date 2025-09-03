@@ -42,7 +42,6 @@ function LedgerDocumentsContent({ tenantId, ledgerId, token }: { tenantId?: stri
     }),
   });
 
-  console.log(attach.ctx);
 
   const allDocs = useLiveQuery<Document>("_id");
   const docs = allDocs.docs.filter((doc) => !!doc);
