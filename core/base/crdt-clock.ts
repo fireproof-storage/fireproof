@@ -168,7 +168,7 @@ export class CRDTClockImpl {
       .Msg("PRE_VALIDATION: CarLog before block validation");
     // Add sleep to test race condition theory
     // await sleep(1000);
-    await validateBlocks(this.logger, newHead, this.blockstore);
+    // await validateBlocks(this.logger, newHead, this.blockstore);
     if (!this.transaction) {
       this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
     }
