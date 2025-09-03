@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 // import { rawConnect } from "@fireproof/cloud";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useFireproof } from "use-fireproof";
+import { toCloud, useFireproof } from "use-fireproof";
+import { AppContext } from "../../../../app-context.jsx";
 import { Button } from "../../../../components/Button.jsx";
 import { DynamicTable } from "../../../../components/DynamicTable.jsx";
 import { headersForDocs } from "../../../../components/dynamicTableHelpers.js";
+import { SimpleTokenStrategy } from "../../../../../../core/gateways/cloud/to-cloud.js";
 // import { DEFAULT_ENDPOINT } from "../../../../helpers.js";
 
 interface Document {
@@ -14,14 +16,33 @@ interface Document {
 
 export function LedgerDocuments() {
   const { tenantId, ledgerId } = useParams();
-  // const { cloud } = useContext(AppContext);
+  const { cloud } = useContext(AppContext);
+  const cloudToken = cloud.getCloudToken();
+
+  // Wait for token before rendering the main component
+  if (cloudToken.isPending) {
+    return <div>Loading...</div>;
+  }
+  if (!cloudToken.data) {
+    return <div>Not found</div>;
+  }
+
+  return <LedgerDocumentsContent tenantId={tenantId} ledgerId={ledgerId} token={cloudToken.data.token} />;
+}
+
+function LedgerDocumentsContent({ tenantId, ledgerId, token }: { tenantId?: string; ledgerId?: string; token: string }) {
   const navigate = useNavigate();
 
-  const { useLiveQuery, database } = useFireproof(ledgerId || "");
-  // Connect to Fireproof Cloud
-  // if (database && ledgerId && tenantId) {
-  //   rawConnect(database as any, `${tenantId}-${ledgerId}`, DEFAULT_ENDPOINT);
-  // }
+  const { useLiveQuery, database, attach } = useFireproof(ledgerId || "", {
+    attach: toCloud({
+      urls: { base: "fpcloud://localhost:8787?protocol=ws" },
+      tenant: tenantId,
+      ledger: ledgerId,
+      strategy: new SimpleTokenStrategy(token),
+    }),
+  });
+
+  console.log(attach.ctx);
 
   const allDocs = useLiveQuery<Document>("_id");
   const docs = allDocs.docs.filter((doc) => !!doc);
