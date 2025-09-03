@@ -138,7 +138,14 @@ export class CRDTClockImpl {
       .Int("prevHeadLength", prevHead.length)
       .Int("currentHeadLength", this.head.length)
       .Msg("INT_APPLY_HEAD: Entry point");
-    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
+    this.logger
+      .Debug()
+      .Int("queueSize", this.applyHeadQueue.size())
+      .Any("currentHead", this.head)
+      .Any("newHead", newHead)
+      .Any("prevHead", prevHead)
+      .Any("localUpdates", localUpdates)
+      .Msg("int_applyHead processing");
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
     if (compareClockHeads(ogHead, newHead)) {
@@ -168,7 +175,7 @@ export class CRDTClockImpl {
       .Msg("PRE_VALIDATION: CarLog before block validation");
     // Add sleep to test race condition theory
     // await sleep(1000);
-    // await validateBlocks(this.logger, newHead, this.blockstore);
+    await validateBlocks(this.logger, newHead, this.blockstore);
     if (!this.transaction) {
       this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
     }
@@ -245,8 +252,7 @@ async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTra
     try {
       head = await advance(toPailFetcher(tblocks), head, cid);
     } catch (e) {
-      logger.Error().Err(e).Msg("failed to advance head");
-      // console.log('failed to advance head:', cid.toString(), e)
+      logger.Error().Str("cid", cid.toString()).Err(e).Msg("failed to advance head");
       // continue;
     }
   }

@@ -868,18 +868,18 @@ export class Loader implements Loadable {
     const activeStore = store.active as CarStore;
     try {
       //loadedCar now is an array of AnyBlocks
-      // this.logger.Debug()
-      //   .Str("cid", carCidStr)
-      //   .Str("loaderId", this.id)
-      //   .Url(activeStore.url())
-      //   .Msg("NETWORK_REQUEST: About to load CAR from store");
+      this.logger.Debug()
+        .Str("cid", carCidStr)
+        .Str("loaderId", this.id)
+        .Url(activeStore.url())
+        .Msg("NETWORK_REQUEST: About to load CAR from store");
       loadedCar = await activeStore.load(carCid);
       // console.log("loadedCar", carCid);
-      // this.logger.Debug()
-      //   .Str("cid", carCidStr) 
-      //   .Bool("loadedCar", !!loadedCar)
-      //   .Url(activeStore.url())
-      //   .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
+      this.logger.Debug()
+        .Str("cid", carCidStr) 
+        .Bool("loadedCar", !!loadedCar)
+        .Url(activeStore.url())
+        .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
     } catch (e) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
