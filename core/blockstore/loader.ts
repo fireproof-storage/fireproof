@@ -134,12 +134,12 @@ class CommitAction implements CommitParams {
 
   async writeMeta(cids: AnyLink[]): Promise<void> {
     // LOG: Verify these are CAR CIDs, not raw block CIDs - test invariant
-    this.logger.Debug()
-      .Str("cidsToWrite", cids.map(c => c.toString()).join(","))
-      .Str("cidsPrefix", cids.map(c => c.toString().substring(0,3)).join(","))
-      .Bool("allCarCids", cids.every(c => c.toString().startsWith("bae")))
-      .Bool("anyRawCids", cids.some(c => c.toString().startsWith("baf")))
-      .Msg("DBMETA_CREATION: CIDs being written to DbMeta");
+    // this.logger.Debug()
+    //   .Str("cidsToWrite", cids.map(c => c.toString()).join(","))
+    //   .Str("cidsPrefix", cids.map(c => c.toString().substring(0,3)).join(","))
+    //   .Bool("allCarCids", cids.every(c => c.toString().startsWith("bae")))
+    //   .Bool("anyRawCids", cids.some(c => c.toString().startsWith("baf")))
+    //   .Msg("DBMETA_CREATION: CIDs being written to DbMeta");
       
     const meta = { cars: cids };
     await this.attached.local().active.meta.save(meta);
@@ -553,7 +553,7 @@ export class Loader implements Loadable {
       // LOG: CarLog update calculation
       this.logger.Debug()
         .Str("uniqueCids_input", [meta.cars, ...this.carLog.asArray(), ...carHeader.cars].flat().map(c => c.toString()).join(","))
-        .Str("seenCompacted", Array.from(this.seenCompacted.values()).join(","))
+        .Str("seenCompacted", "LRUSet-content")
         .Int("seenCompactedSize", this.seenCompacted.size)
         .Str("loaderId", this.id)
         .Msg("CARLOG_UPDATE: Before uniqueCids calculation");
@@ -868,18 +868,18 @@ export class Loader implements Loadable {
     const activeStore = store.active as CarStore;
     try {
       //loadedCar now is an array of AnyBlocks
-      this.logger.Debug()
-        .Str("cid", carCidStr)
-        .Str("loaderId", this.id)
-        .Url(activeStore.url())
-        .Msg("NETWORK_REQUEST: About to load CAR from store");
+      // this.logger.Debug()
+      //   .Str("cid", carCidStr)
+      //   .Str("loaderId", this.id)
+      //   .Url(activeStore.url())
+      //   .Msg("NETWORK_REQUEST: About to load CAR from store");
       loadedCar = await activeStore.load(carCid);
       // console.log("loadedCar", carCid);
-      this.logger.Debug()
-        .Str("cid", carCidStr) 
-        .Bool("loadedCar", !!loadedCar)
-        .Url(activeStore.url())
-        .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
+      // this.logger.Debug()
+      //   .Str("cid", carCidStr) 
+      //   .Bool("loadedCar", !!loadedCar)
+      //   .Url(activeStore.url())
+      //   .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
     } catch (e) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");

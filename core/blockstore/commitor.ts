@@ -162,12 +162,12 @@ export async function commit<T>(
   );
 
   // LOG: Verify CIDs before they go to writeMeta - test invariant
-  console.log("COMMIT_CIDS:", cids.map(c => `${c.toString().substring(0,3)}...`));
-  console.log("COMMIT_CID_VALIDATION:", {
-    allCarCids: cids.every(c => c.toString().startsWith("bae")),
-    anyRawCids: cids.some(c => c.toString().startsWith("baf")),
-    count: cids.length
-  });
+  // console.log("COMMIT_CIDS:", cids.map(c => `${c.toString().substring(0,3)}...`));
+  // console.log("COMMIT_CID_VALIDATION:", {
+  //   allCarCids: cids.every(c => c.toString().startsWith("bae")),
+  //   anyRawCids: cids.some(c => c.toString().startsWith("baf")),
+  //   count: cids.length
+  // });
 
   // await params.carStore.save({ cid, bytes });
   // const newDbMeta = { cars: cids };
