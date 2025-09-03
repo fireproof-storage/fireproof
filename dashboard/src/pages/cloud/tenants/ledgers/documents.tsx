@@ -2,11 +2,11 @@ import React, { useContext } from "react";
 // import { rawConnect } from "@fireproof/cloud";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toCloud, useFireproof } from "use-fireproof";
+import { SimpleTokenStrategy } from "../../../../../../core/gateways/cloud/to-cloud.js";
 import { AppContext } from "../../../../app-context.jsx";
 import { Button } from "../../../../components/Button.jsx";
 import { DynamicTable } from "../../../../components/DynamicTable.jsx";
 import { headersForDocs } from "../../../../components/dynamicTableHelpers.js";
-import { SimpleTokenStrategy } from "../../../../../../core/gateways/cloud/to-cloud.js";
 // import { DEFAULT_ENDPOINT } from "../../../../helpers.js";
 
 interface Document {
@@ -33,15 +33,13 @@ export function LedgerDocuments() {
 function LedgerDocumentsContent({ tenantId, ledgerId, token }: { tenantId?: string; ledgerId?: string; token: string }) {
   const navigate = useNavigate();
 
-  const { useLiveQuery, database, attach } = useFireproof(ledgerId || "", {
+  const { useLiveQuery, database } = useFireproof(ledgerId || "", {
     attach: toCloud({
-      urls: { base: "fpcloud://localhost:8787?protocol=ws" },
       tenant: tenantId,
       ledger: ledgerId,
       strategy: new SimpleTokenStrategy(token),
     }),
   });
-
 
   const allDocs = useLiveQuery<Document>("_id");
   const docs = allDocs.docs.filter((doc) => !!doc);
