@@ -39,6 +39,7 @@ import {
   type Attachable,
   type Attached,
   type CarTransaction,
+  type CRDTMeta,
   type DbMeta,
   type Falsy,
   type SuperThis,
@@ -132,6 +133,14 @@ class CommitAction implements CommitParams {
   }
 
   async writeMeta(cids: AnyLink[]): Promise<void> {
+    // LOG: Verify these are CAR CIDs, not raw block CIDs - test invariant
+    // this.logger.Debug()
+    //   .Str("cidsToWrite", cids.map(c => c.toString()).join(","))
+    //   .Str("cidsPrefix", cids.map(c => c.toString().substring(0,3)).join(","))
+    //   .Bool("allCarCids", cids.every(c => c.toString().startsWith("bae")))
+    //   .Bool("anyRawCids", cids.some(c => c.toString().startsWith("baf")))
+    //   .Msg("DBMETA_CREATION: CIDs being written to DbMeta");
+      
     const meta = { cars: cids };
     await this.attached.local().active.meta.save(meta);
     // detached remote stores
@@ -218,10 +227,11 @@ export class Loader implements Loadable {
         try {
           const store = this.attachedStores.activate(at.stores);
           await this.tryToLoadStaleCars(store);
-          const localDbMeta = this.currentMeta; // await store.local().active.meta.load();
+          const localDbMeta = this.XXXcurrentMeta; // await store.local().active.meta.load();
           const remoteDbMeta = store.active.meta.stream();
           await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
           if (localDbMeta) {
+            this.logger.Warn().Any({ url: store.active.meta.url(), localDbMeta }).Msg("localDbMeta");
             await this.ensureAttachedStore(store, localDbMeta);
           }
           /* ultra hacky */
@@ -320,9 +330,7 @@ export class Loader implements Loadable {
         this.blockstoreParent?.crdtParent?.ledgerParent?.name,
       );
       const local = this.attachedStores.local();
-      // console.log("ready", this.id);
       this.metaStreamReader = local.active.meta.stream().getReader();
-      // console.log("attach-local", local.active.car.url().pathname);
       await this.waitFirstMeta(this.metaStreamReader, local, { meta: this.ebOpts.meta, origin: local.active.car.url() });
     });
   }
@@ -513,6 +521,13 @@ export class Loader implements Loadable {
       if (this.seenMeta.has(metaKey)) return [];
       this.seenMeta.add(metaKey);
 
+      // LOG: CarLog state before merge
+      this.logger.Debug()
+        .Str("beforeMerge_carLog", this.carLog.asArray().map(cg => cg.map(c => c.toString()).join(",")).join(";"))
+        .Str("incoming_dbMeta_cars", meta.cars.map(c => c.toString()).join(","))
+        .Str("loaderId", this.id)
+        .Msg("MERGE_BEFORE: CarLog state before merge");
+
       // if (meta.key) {
       //   await this.setKey(meta.key);
       // }
@@ -521,6 +536,13 @@ export class Loader implements Loadable {
       }
       // console.log("mergeDbMetaIntoClock", activeStore.active.car.url().pathname);
       const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta, activeStore);
+      this.logger
+        .Debug()
+        .Str("loaderId", this.id)
+        .Str("carCids", meta.cars.map((c) => c.toString()).join(","))
+        .Str("extractedHead", (carHeader.meta as CRDTMeta)?.head?.map((h) => h.toString()).join(",") || "no-head")
+        .Url(activeStore.active.car.url())
+        .Msg("MERGE_META: Extracted CAR header meta");
       // fetch other cars down the compact log?
       // todo we should use a CID set for the compacted cids (how to expire?)
       // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
@@ -529,8 +551,28 @@ export class Loader implements Loadable {
       if (warns.length > 0) {
         this.logger.Warn().Any("warns", warns).Msg("error getting more readers");
       }
+      // LOG: CarLog update calculation
+      this.logger.Debug()
+        .Str("uniqueCids_input", [meta.cars, ...this.carLog.asArray(), ...carHeader.cars].flat().map(c => c.toString()).join(","))
+        .Str("seenCompacted", "LRUSet-content")
+        .Int("seenCompactedSize", this.seenCompacted.size)
+        .Str("loaderId", this.id)
+        .Msg("CARLOG_UPDATE: Before uniqueCids calculation");
+        
       const cgs = uniqueCids([meta.cars, ...this.carLog.asArray(), ...carHeader.cars], this.seenCompacted);
+      
+      this.logger.Debug()
+        .Str("uniqueCids_output", cgs.flat().map(c => c.toString()).join(","))
+        .Str("loaderId", this.id)
+        .Msg("CARLOG_UPDATE: After uniqueCids calculation");
+        
       this.carLog.update(cgs);
+      
+      // LOG: CarLog state after update
+      this.logger.Debug()
+        .Str("afterUpdate_carLog", this.carLog.asArray().map(cg => cg.map(c => c.toString()).join(",")).join(";"))
+        .Str("loaderId", this.id)
+        .Msg("MERGE_AFTER: CarLog state after update");
       // console.log(
       //   ">>>>> pre applyMeta",
       //   this.carLog
@@ -765,7 +807,6 @@ export class Loader implements Loadable {
   }
 
   async getBlock(cid: AnyLink): Promise<FPBlock | Falsy> {
-    await this.ready();
     const got = this.cidCache.get(cid.toString());
     return got.value;
   }
@@ -828,10 +869,18 @@ export class Loader implements Loadable {
     const activeStore = store.active as CarStore;
     try {
       //loadedCar now is an array of AnyBlocks
-      this.logger.Debug().Any("cid", carCidStr).Msg("loading car");
+      this.logger.Debug()
+        .Str("cid", carCidStr)
+        .Str("loaderId", this.id)
+        .Url(activeStore.url())
+        .Msg("NETWORK_REQUEST: About to load CAR from store");
       loadedCar = await activeStore.load(carCid);
       // console.log("loadedCar", carCid);
-      this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
+      this.logger.Debug()
+        .Str("cid", carCidStr) 
+        .Bool("loadedCar", !!loadedCar)
+        .Url(activeStore.url())
+        .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
     } catch (e) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
@@ -896,6 +945,10 @@ export class Loader implements Loadable {
       //   roots: [],
       // }));
     }
+    ensureLogger(this.sthis, "LoaderCarContent").Debug().Any({
+      carCid: carCidStr,
+      constent: blocks.map((b) => b.cid.toString()),
+    }).Msg("loaded-car");
     return {
       cid: carCid,
       bytes: bytes.value.data,

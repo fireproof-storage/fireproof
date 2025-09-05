@@ -56,13 +56,11 @@ export function Login() {
     }
 
     const to = URI.from(decodedUrl).withoutHostAndSchema;
-    console.log("login-tos", to);
     return <Navigate to={to} />;
   }
 
   // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")
   const redirect_url = URI.from(window.location.href).toString();
-  console.log("login-redirect_url", window.location.href);
 
   const fromApp = URI.from(window.location.href).getParam("fromApp");
   if (fromApp) {

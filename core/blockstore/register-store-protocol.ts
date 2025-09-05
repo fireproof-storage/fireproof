@@ -1,6 +1,6 @@
 import { BuildURI, ResolveOnce, runtimeFn, URI } from "@adviser/cement";
 import { SuperThis, PARAM } from "@fireproof/core-types-base";
-import { SerdeGateway, Gateway } from "@fireproof/core-types-blockstore";
+import { SerdeGateway, Gateway, FPEnvelope } from "@fireproof/core-types-blockstore";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
 import { FileGateway, FILESTORE_VERSION, sysFileSystemFactory } from "@fireproof/core-gateways-file";
 import { DefSerdeGateway, INDEXEDDB_VERSION } from "@fireproof/core-gateways-base";
@@ -165,14 +165,14 @@ if (runtimeFn().isBrowser) {
   });
 }
 
-const memory = new Map<string, Uint8Array>();
+const memory = new Map<string, FPEnvelope<unknown>>();
 registerStoreProtocol({
   protocol: "memory:",
   isDefault: false,
   defaultURI: () => {
     return BuildURI.from("memory://").pathname("ram").URI();
   },
-  gateway: async (sthis) => {
+  serdegateway: async (sthis) => {
     return new MemoryGateway(sthis, memory);
   },
 });

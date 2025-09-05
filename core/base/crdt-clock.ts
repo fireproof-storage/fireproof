@@ -64,7 +64,8 @@ export class CRDTClockImpl {
       prevHead,
       updates,
     })) {
-      return this.processUpdates(updatesAcc, all, prevHead);
+      await this.processUpdates(updatesAcc, all, prevHead);
+      return;
     }
   }
 
@@ -137,7 +138,14 @@ export class CRDTClockImpl {
       .Int("prevHeadLength", prevHead.length)
       .Int("currentHeadLength", this.head.length)
       .Msg("INT_APPLY_HEAD: Entry point");
-    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
+    this.logger
+      .Debug()
+      .Int("queueSize", this.applyHeadQueue.size())
+      .Any("currentHead", this.head)
+      .Any("newHead", newHead)
+      .Any("prevHead", prevHead)
+      .Any("localUpdates", localUpdates)
+      .Msg("int_applyHead processing");
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
     if (compareClockHeads(ogHead, newHead)) {
@@ -153,6 +161,20 @@ export class CRDTClockImpl {
     if (!this.blockstore) {
       throw this.logger.Error().Msg("missing blockstore").AsError();
     }
+    this.logger
+      .Debug()
+      .Str("dbName", this.blockstore?.crdtParent?.ledgerParent?.name || "unnamed")
+      .Str(
+        "carLog",
+        this.blockstore?.loader?.carLog
+          ?.asArray()
+          .map((cg) => cg.map((c) => c.toString()).join(","))
+          .join(";") || "no-carlog",
+      )
+      .Str("validatingHead", newHead.map((h) => h.toString()).join(","))
+      .Msg("PRE_VALIDATION: CarLog before block validation");
+    // Add sleep to test race condition theory
+    // await sleep(1000);
     await validateBlocks(this.logger, newHead, this.blockstore);
     if (!this.transaction) {
       this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
@@ -216,7 +238,7 @@ async function validateBlocks(logger: Logger, newHead: ClockHead, blockstore?: B
   newHead.map(async (cid) => {
     const got = await blockstore.get(cid);
     if (!got) {
-      throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
+      throw logger.Error().Str("cid", cid.toString()).Msg("validateBlocks missing block").AsError();
     }
   });
 }
@@ -230,8 +252,7 @@ async function advanceBlocks(logger: Logger, newHead: ClockHead, tblocks: CarTra
     try {
       head = await advance(toPailFetcher(tblocks), head, cid);
     } catch (e) {
-      logger.Error().Err(e).Msg("failed to advance head");
-      // console.log('failed to advance head:', cid.toString(), e)
+      logger.Error().Str("cid", cid.toString()).Err(e).Msg("failed to advance head");
       // continue;
     }
   }

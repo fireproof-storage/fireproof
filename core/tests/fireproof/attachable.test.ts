@@ -84,7 +84,7 @@ describe("meta check", () => {
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries()).filter(([k]) =>
+      Array.from((gws.active.car.realGateway as MemoryGateway).memories.entries()).filter(([k]) =>
         k.startsWith(`memory://${name}`),
       ),
     ).toEqual([]);
@@ -125,7 +125,7 @@ describe("meta check", () => {
     ]);
     await db.close();
     expect(
-      Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries())
+      Array.from((gws.active.car.realGateway as MemoryGateway).memories.entries())
         .filter(([k]) => k.startsWith(`memory://${name}`))
         .map(([k]) =>
           stripper(
@@ -179,7 +179,7 @@ describe("meta check", () => {
         },
       },
     ]);
-    const car = Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries())
+    const car = Array.from((gws.active.car.realGateway as MemoryGateway).memories.entries())
       .filter(([k]) => k.startsWith(`memory://${name}`))
       .map(([k, v]) => [URI.from(k).getParam(PARAM.KEY), v])
       .find(([k]) => k === "baembeig2is4vdgz4gyiadfh5uutxxeiuqtacnesnytrnilpwcu7q5m5tmu") as [string, Uint8Array];

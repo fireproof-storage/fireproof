@@ -890,7 +890,7 @@ export function isCarBlockItemReady(ifp: unknown): ifp is FPBlock<ReadyCarBlockI
 
 export function isCarBlockItemStale(ifp: unknown): ifp is FPBlock<StaleCarBlockItem> {
   const fp = ifp as FPBlock<StaleCarBlockItem>;
-  return fp.item && fp.item.type === "car" && fp.item.status === "stale";
+  return fp && fp.item && fp.item.type === "car" && fp.item.status === "stale";
 }
 
 export type BlockItem =

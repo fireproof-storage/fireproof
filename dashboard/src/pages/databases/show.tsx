@@ -39,8 +39,6 @@ function TableView({ name }: { name: string }) {
     key: name,
   });
 
-  console.log(myPetnames);
-
   const petName = myPetnames.docs[0]?.localName || "";
 
   let connection, remoteName;

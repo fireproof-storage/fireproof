@@ -218,10 +218,10 @@ export function addKeyToDbMetaEncoder(ctx: SerdeGatewayCtx, version: "v1" | "v2"
 }
 
 export class AddKeyToDbMetaGateway implements SerdeGateway {
-  private readonly sdGw: DefSerdeGateway;
+  private readonly sdGw: SerdeGateway;
   readonly version: "v1" | "v2";
-  constructor(gw: Gateway, version: "v1" | "v2") {
-    this.sdGw = new DefSerdeGateway(gw);
+  constructor(gw: SerdeGateway, version: "v1" | "v2") {
+    this.sdGw = gw;
     this.version = version;
   }
 
