@@ -100,11 +100,27 @@ export class MemoryGateway implements SerdeGateway {
       case isFPEnvelopeBlob(body):
         ensureLogger(ctx.loader.sthis, "MemoryGatewayCar")
           .Debug()
-          .Any({ id: this.id, url, len: body.payload.length })
+          .Any({ id: this.id, url, len: body.payload.length, name: iurl.getParam(PARAM.NAME) })
           .Msg("put-car");
         break;
+      case isFPEnvelopeWAL(body): {
+        ensureLogger(ctx.loader.sthis, "MemoryGatewayWal").Debug().Any({
+          id: this.id,
+          url,
+          wal: body.payload,
+          name: iurl.getParam(PARAM.NAME)
+        }).Msg("put-wal");
+        break;
+      }
       case isFPEnvelopeMeta(body): {
-        ensureLogger(ctx.loader.sthis, "MemoryGatewayMeta").Debug().Any({ id: this.id, url, meta: body.payload }).Msg("put-meta");
+        ensureLogger(ctx.loader.sthis, "MemoryGatewayMeta").Debug().Any({ 
+          id: this.id, 
+          url, 
+          meta: body.payload.reduce((acc, i) => {
+            acc.push(...i.dbMeta.cars.map(i => i.toString()))
+            return acc
+          }, [] as string[]),
+          name: iurl.getParam(PARAM.NAME) }).Msg("put-meta");
         const x = this.memories.get(url.toString());
         if (!(x && isFPEnvelopeMeta(x))) {
           break;
@@ -129,22 +145,26 @@ export class MemoryGateway implements SerdeGateway {
     return Result.Ok(undefined);
   }
 
-  log<T>(sthis: SuperThis, url: URI, r: SerdeGetResult<T>): Promise<SerdeGetResult<T>> {
+  log<T>(sthis: SuperThis, name: string | undefined, url: URI, r: SerdeGetResult<T>): Promise<SerdeGetResult<T>> {
     const out: {
       id: string;
+      name?: string;
       url: URI;
       notFound?: true;
-      meta?: FPEnvelopeMeta["payload"];
+      meta?: string[]; // FPEnvelopeMeta["payload"];
       dataLen?: number;
       wal?: FPEnvelopeWAL["payload"];
-    } = { id: this.id, url };
+    } = { id: this.id, url, name };
     if (r.isErr()) {
       out.notFound = true;
     } else {
       const v = r.Ok();
       switch (true) {
         case isFPEnvelopeMeta(v):
-          out.meta = v.payload;
+          out.meta = v.payload.reduce((acc, i) => {
+            acc.push(...i.dbMeta.cars.map(i => i.toString()))
+            return acc
+          }, [] as string[]);
           break;
         case isFPEnvelopeBlob(v):
           out.dataLen = v.payload.length;
@@ -173,9 +193,9 @@ export class MemoryGateway implements SerdeGateway {
     // logger.Debug().Url(url).Msg("get");
     const x = this.memories.get(url.toString()) as FPEnvelope<S> | undefined;
     if (!x) {
-      return this.log(ctx.loader.sthis, url, Result.Err(new NotFoundError(`not found: ${url.toString()}`)));
+      return this.log(ctx.loader.sthis, iurl.getParam(PARAM.NAME), url, Result.Err(new NotFoundError(`not found: ${url.toString()}`)));
     }
-    return this.log(ctx.loader.sthis, url, Result.Ok(x));
+    return this.log(ctx.loader.sthis, iurl.getParam(PARAM.NAME), url, Result.Ok(x));
   }
 
   delete(ctx: SerdeGatewayCtx, url: URI): Promise<VoidResult> {
