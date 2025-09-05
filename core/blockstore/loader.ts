@@ -227,10 +227,11 @@ export class Loader implements Loadable {
         try {
           const store = this.attachedStores.activate(at.stores);
           await this.tryToLoadStaleCars(store);
-          const localDbMeta = this.currentMeta; // await store.local().active.meta.load();
+          const localDbMeta = this.XXXcurrentMeta; // await store.local().active.meta.load();
           const remoteDbMeta = store.active.meta.stream();
           await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
           if (localDbMeta) {
+            this.logger.Warn().Any({ url: store.active.meta.url(), localDbMeta }).Msg("localDbMeta");
             await this.ensureAttachedStore(store, localDbMeta);
           }
           /* ultra hacky */
@@ -944,6 +945,10 @@ export class Loader implements Loadable {
       //   roots: [],
       // }));
     }
+    ensureLogger(this.sthis, "LoaderCarContent").Debug().Any({
+      carCid: carCidStr,
+      constent: blocks.map((b) => b.cid.toString()),
+    }).Msg("loaded-car");
     return {
       cid: carCid,
       bytes: bytes.value.data,

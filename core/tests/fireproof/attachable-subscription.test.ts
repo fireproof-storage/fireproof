@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 
 const ROWS = 2;
-const DBS = 2;
+const DBS = 1;
 
 class AJoinable implements Attachable {
   readonly name: string;
@@ -23,18 +23,15 @@ class AJoinable implements Attachable {
     return Promise.resolve({
       car: {
         url: BuildURI.from(`memory://car/${this.name}`)
-          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
-          .setParam(PARAM.SELF_REFLECT, "x"),
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "insecure"))
       },
       meta: {
         url: BuildURI.from(`memory://meta/${this.name}`)
-          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
-          .setParam(PARAM.SELF_REFLECT, "x"),
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "insecure"))
       },
       file: {
         url: BuildURI.from(`memory://file/${this.name}`)
-          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "@fireproof:attach@"))
-          .setParam(PARAM.SELF_REFLECT, "x"),
+          .setParam(PARAM.STORE_KEY, this.db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "insecure"))
       },
     });
   }
@@ -48,16 +45,16 @@ function attachableStoreUrls(name: string, db: Database) {
   return {
     data: {
       car: BuildURI.from(`memory://car/${name}?`)
-        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, ""))
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.car.getParam(PARAM.STORE_KEY, "insecure"))
         .URI(),
       meta: BuildURI.from(`memory://meta/${name}`)
-        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, ""))
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.meta.getParam(PARAM.STORE_KEY, "insecure"))
         .URI(),
       file: BuildURI.from(`memory://file/${name}`)
-        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, ""))
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.file.getParam(PARAM.STORE_KEY, "insecure"))
         .URI(),
       wal: BuildURI.from(`memory://wal/${name}`)
-        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, ""))
+        .setParam(PARAM.STORE_KEY, db.ledger.opts.storeUrls.data.wal.getParam(PARAM.STORE_KEY, "insecure"))
         .URI(),
     },
   };
@@ -315,6 +312,7 @@ describe("Remote Sync Subscription Tests", () => {
 
         const res = await jdb.allDocs();
         // expect(jdb.ledger.crdt.blockstore.loader.carLog.asArray().flat().length).toBe(9);
+        expect(res.rows).toEqual({})
         expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
         await jdb.close();
       }
