@@ -303,11 +303,11 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       '@hono/node-server':
-        specifier: ^1.19.0
-        version: 1.19.0(hono@4.9.4)
+        specifier: ^1.19.1
+        version: 1.19.1(hono@4.9.4)
       '@hono/node-ws':
         specifier: ^1.2.0
-        version: 1.2.0(@hono/node-server@1.19.0(hono@4.9.4))(hono@4.9.4)
+        version: 1.2.0(@hono/node-server@1.19.1(hono@4.9.4))(hono@4.9.4)
       '@libsql/client':
         specifier: ^0.15.10
         version: 0.15.14
@@ -2313,8 +2313,8 @@ packages:
   '@formkit/auto-animate@0.8.4':
     resolution: {integrity: sha512-DHHC01EJ1p70Q0z/ZFRBIY8NDnmfKccQoyoM84Tgb6omLMat6jivCdf272Y8k3nf4Lzdin/Y4R9q8uFtU0GbnA==}
 
-  '@hono/node-server@1.19.0':
-    resolution: {integrity: sha512-1k8/8OHf5VIymJEcJyVksFpT+AQ5euY0VA5hUkCnlKpD4mr8FSbvXaHblxeTTEr90OaqWzAkQaqD80qHZQKxBA==}
+  '@hono/node-server@1.19.1':
+    resolution: {integrity: sha512-h44e5s+ByUriaRIbeS/C74O8v90m0A95luyYQGMF7KEn96KkYMXO7bZAwombzTpjQTU4e0TkU8U1WBIXlwuwtA==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -6569,13 +6569,13 @@ snapshots:
 
   '@formkit/auto-animate@0.8.4': {}
 
-  '@hono/node-server@1.19.0(hono@4.9.4)':
+  '@hono/node-server@1.19.1(hono@4.9.4)':
     dependencies:
       hono: 4.9.4
 
-  '@hono/node-ws@1.2.0(@hono/node-server@1.19.0(hono@4.9.4))(hono@4.9.4)':
+  '@hono/node-ws@1.2.0(@hono/node-server@1.19.1(hono@4.9.4))(hono@4.9.4)':
     dependencies:
-      '@hono/node-server': 1.19.0(hono@4.9.4)
+      '@hono/node-server': 1.19.1(hono@4.9.4)
       hono: 4.9.4
       ws: 8.18.3
     transitivePeerDependencies:
