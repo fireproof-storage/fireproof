@@ -59,7 +59,7 @@
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.5",
     "@ipld/dag-json": "^10.2.5",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.3.1",
     "cborg": "^4.2.15",
     "charwise": "^3.0.1",
     "use-fireproof": "workspace:0.0.0",
