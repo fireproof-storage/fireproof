@@ -12,8 +12,6 @@ export default defineConfig({
       enabled: true,
       headless: true,
       provider: "playwright",
-      // provider: "webdriverio",
-      // name: "chrome",
       instances: [
         {
           browser: "chromium",
@@ -25,15 +23,8 @@ export default defineConfig({
           },
         },
       ],
-
-      // name: process.env.FP_BROWSER || "chrome", // browser name is required
-      // instances: [
-      //   {
-      //     browser: process.env.FP_BROWSER || "chrome", // browser name is required
-      //   },
-      // ],
+      screenshotFailures: false,
     },
-    globals: true,
     setupFiles: "./setup.indexeddb.ts",
   },
 });
