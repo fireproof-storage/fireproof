@@ -40,7 +40,7 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
-    "jose": "^6.0.13",
+    "jose": "^6.1.0",
     "multiformats": "^13.4.0"
   },
   "devDependencies": {

@@ -48,7 +48,7 @@
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.3",
     "hono": "^4.9.4",
-    "jose": "^6.0.13"
+    "jose": "^6.1.0"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
