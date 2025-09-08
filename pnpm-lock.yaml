@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.34.0
         version: 9.34.0(jiti@1.21.7)
@@ -95,8 +95,8 @@ importers:
         specifier: ^11.3.1
         version: 11.3.1
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
@@ -187,8 +187,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       tsx:
         specifier: ^4.20.4
         version: 4.20.5
@@ -329,7 +329,7 @@ importers:
         version: 24.3.0
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -358,8 +358,8 @@ importers:
         specifier: ^0.14.1
         version: 0.14.1
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -583,8 +583,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
 
   core/gateways/file:
     dependencies:
@@ -801,8 +801,8 @@ importers:
         specifier: ^4.2.14
         version: 4.2.14
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
@@ -969,8 +969,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../../vendor
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
@@ -1042,8 +1042,8 @@ importers:
         specifier: ^0.3.7
         version: 0.3.7
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
       minimatch:
         specifier: ^10.0.1
         version: 10.0.3
@@ -1110,7 +1110,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250826.0)(@libsql/client@0.15.14)(gel@2.1.1)(kysely@0.28.5)
@@ -1193,8 +1193,8 @@ importers:
         specifier: ^3.2.6
         version: 3.2.6
       jose:
-        specifier: ^6.0.13
-        version: 6.0.13
+        specifier: ^6.1.0
+        version: 6.1.0
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -4352,8 +4352,8 @@ packages:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
     hasBin: true
 
-  jose@6.0.13:
-    resolution: {integrity: sha512-Yms4GpbmdANamS51kKK6w4hRlKx8KTxbWyAAKT/MhUMtqbIqh5mb2HjhTNUbk7TFL8/MBB5zWSDohL7ed4k/UA==}
+  jose@6.1.0:
+    resolution: {integrity: sha512-TTQJyoEoKcC1lscpVDCSsVgYzUDg/0Bt3WE//WiTPK6uOCQC2KZS4MpugbMWt/zyjkopgZoXhZuCi00gLudfUA==}
 
   js-base64@3.7.8:
     resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
@@ -7878,7 +7878,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -8806,7 +8806,7 @@ snapshots:
 
   jiti@1.21.7: {}
 
-  jose@6.0.13: {}
+  jose@6.1.0: {}
 
   js-base64@3.7.8: {}
 
