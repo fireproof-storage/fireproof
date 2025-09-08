@@ -28,7 +28,7 @@
     "@adviser/cement": "^0.4.26",
     "@clerk/backend": "^2.9.4",
     "@clerk/clerk-js": "^5.91.2",
-    "@clerk/clerk-react": "^5.43.1",
+    "@clerk/clerk-react": "^5.46.1",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
@@ -53,7 +53,7 @@
     "use-fireproof": "workspace:0.0.0"
   },
   "devDependencies": {
-    "@clerk/clerk-react": "^5.43.1",
+    "@clerk/clerk-react": "^5.46.1",
     "@cloudflare/vite-plugin": "^1.10.1",
     "@cloudflare/workers-types": "^4.20250906.0",
     "@eslint/js": "^9.34.0",
