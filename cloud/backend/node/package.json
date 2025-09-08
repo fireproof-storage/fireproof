@@ -47,7 +47,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "@hono/node-server": "^1.19.1",
     "@hono/node-ws": "^1.2.0",
-    "@libsql/client": "^0.15.10",
+    "@libsql/client": "^0.15.15",
     "drizzle-orm": "^0.44.3",
     "hono": "^4.9.6",
     "vitest": "^3.2.4"
