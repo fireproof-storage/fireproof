@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const JWKPublicSchema = z
   .object({
-    kty: z.enum(["RSA", "EC", "oct", "OKP"]),
+    kty: z.enum(["RSA", "EC", "OKP"]),
     use: z.enum(["sig", "enc"]).optional(),
     key_ops: z
       .array(z.enum(["sign", "verify", "encrypt", "decrypt", "wrapKey", "unwrapKey", "deriveKey", "deriveBits"]))
@@ -33,7 +33,7 @@ export const JWKPublicSchema = z
       // Elliptic Curve Key
       z.object({
         kty: z.literal("EC"),
-        crv: z.enum(["P-256", "P-384", "P-521", "secp256k1"]),
+        crv: z.enum(["P-256", "P-384", "P-521"]),
         x: z.string(), // x coordinate
         y: z.string(), // y coordinate
         // d: z.string().optional(), // private key

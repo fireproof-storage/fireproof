@@ -1,5 +1,5 @@
 import { Base64EndeCoder, CertificatePayload, JWKPublic } from "@fireproof/core-types-base";
-import { jwtVerify, decodeProtectedHeader } from "jose";
+import { jwtVerify, decodeProtectedHeader, importJWK } from "jose";
 import { Certor } from "./certor.js";
 import { exception2Result, Result } from "@adviser/cement";
 
@@ -120,7 +120,9 @@ export class DeviceIdVerifyMsg {
       // console.log("Step 3: Extracting public key from certificate...");
       // publicKey = await extractPublicKeyFromCertificate(certInfo.certificate);
       // Step 4: Verify JWT signature with extracted public key
-      return jwtVerify(jwt, certInfo.certificate.asCert().certificate.subjectPublicKeyInfo, {
+      const alg = (certInfo.algorithm as string) || "ES256";
+      const key = await importJWK(certInfo.certificate.asCert().certificate.subjectPublicKeyInfo, alg);
+      return jwtVerify(jwt, key, {
         clockTolerance: this.#options.clockTolerance,
         maxTokenAge: this.#options.maxAge,
       });

@@ -1,5 +1,5 @@
 import { FPDeviceIDPayload, JWKPublic, JWKPublicSchema, FPDeviceIDPayloadSchema } from "@fireproof/core-types-base";
-import { jwtVerify, decodeProtectedHeader } from "jose";
+import { jwtVerify, decodeProtectedHeader, importJWK, calculateJwkThumbprint } from "jose";
 
 interface ValidateCSRError {
   readonly valid: false;
@@ -13,6 +13,24 @@ interface ValidateCSRSuccess {
 }
 
 type ValidateCSRResult = ValidateCSRError | ValidateCSRSuccess;
+
+function deriveAlgFromJwk(jwk: JWKPublic): string {
+  if (jwk.kty === "EC") {
+    switch (jwk.crv) {
+      case "P-256":
+        return "ES256";
+      case "P-384":
+        return "ES384";
+      case "P-521":
+        return "ES512";
+      // case "secp256k1":
+      //   return "ES256K";
+    }
+  }
+  if (jwk.kty === "OKP") return "EdDSA";
+  if (jwk.kty === "RSA") return "RS256"; // tighten if you only support PS* or specific algs
+  throw new Error("Unsupported JWK kty/crv for CSR verification");
+}
 
 export class DeviceIdValidator {
   async validateCSR(csrJWS: string): Promise<ValidateCSRResult> {
@@ -32,8 +50,11 @@ export class DeviceIdValidator {
       }
 
       // Verify the JWS
-      const { payload: fromPayload } = await jwtVerify(csrJWS, publicKey, {
+      const alg = typeof header.alg === "string" ? header.alg : deriveAlgFromJwk(publicKey);
+      const keyLike = await importJWK(publicKey, alg);
+      const { payload: fromPayload } = await jwtVerify(csrJWS, keyLike, {
         typ: "CSR+JWT",
+        algorithms: [alg],
       });
 
       const { success, data: payload } = FPDeviceIDPayloadSchema.safeParse(fromPayload);
@@ -42,6 +63,14 @@ export class DeviceIdValidator {
           valid: false,
           error: "Invalid CSR payload",
         };
+      }
+
+      const [hdrThumb, payloadThumb] = await Promise.all([
+        calculateJwkThumbprint(publicKey),
+        calculateJwkThumbprint(payload.csr.publicKey),
+      ]);
+      if (hdrThumb !== payloadThumb) {
+        return { valid: false, error: "CSR public key mismatch between header and payload" };
       }
 
       return {

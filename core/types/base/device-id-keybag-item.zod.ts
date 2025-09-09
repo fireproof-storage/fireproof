@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { JWKPrivateSchema } from "./jwk-private.zod.js";
 import { CertificatePayloadSchema } from "./fp-ca-cert-payload.zod.js";
 

@@ -16,13 +16,16 @@ async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<De
   const env = rEnv.Ok();
   const { success, data: caKey } = JWKPrivateSchema.safeParse(JSON.parse(sthis.txt.decode(base58btc.decode(env.DEVICE_ID_CA_KEY))));
   if (!success || !caKey) {
-    throw new Error("Invalid CA key");
+    return Result.Err("Invalid CA key");
   }
-
+  const rCaKey = await DeviceIdKey.createFromJWK(caKey);
+  if (rCaKey.isErr()) {
+    return Result.Err(rCaKey);
+  }
   return Result.Ok(
     new DeviceIdCA({
       base64: sthis.txt.base64,
-      caKey: await DeviceIdKey.createFromJWK(caKey),
+      caKey: rCaKey.Ok(),
       caSubject: {
         commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
       },

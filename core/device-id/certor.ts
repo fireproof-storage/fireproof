@@ -17,7 +17,7 @@ export class Certor {
     return new Certor(base64, certObj);
   }
 
-  static fromJWT(base64: Base64EndeCoder, jwtString: string) {
+  static fromUnverifiedJWT(base64: Base64EndeCoder, jwtString: string) {
     // const header = decodeProtectedHeader(jwtString);
     const payload = decodeJwt(jwtString);
     const certObj = CertificatePayloadSchema.parse(payload);

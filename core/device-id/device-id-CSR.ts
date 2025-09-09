@@ -1,4 +1,4 @@
-import { SignJWT } from "jose";
+import { calculateJwkThumbprint, SignJWT } from "jose";
 import { DeviceIdKey } from "./device-id-key.js";
 import { Subject, Extensions, FPDeviceIDPayload, FPDeviceIDPayloadSchema, SuperThis } from "@fireproof/core-types-base";
 import { exception2Result, Result } from "@adviser/cement";
@@ -42,6 +42,7 @@ export class DeviceIdCSR {
           alg: "ES256",
           typ: "CSR+JWT",
           jwk: publicJWK, // Include public key in header
+          kid: await calculateJwkThumbprint(publicJWK, "sha256"),
         })
         .setIssuedAt()
         .setExpirationTime("1h")

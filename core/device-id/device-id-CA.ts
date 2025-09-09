@@ -74,7 +74,7 @@ export class DeviceIdCA {
     if (rCert.isErr()) {
       return Result.Err(rCert);
     }
-    return Result.Ok(Certor.fromJWT(this.#opts.base64, rCert.Ok().certificateJWT).asCert());
+    return Result.Ok(Certor.fromUnverifiedJWT(this.#opts.base64, rCert.Ok().certificateJWT).asCert());
   }
 
   async issueCertificate(devId: FPDeviceIDPayload): Promise<Result<IssueCertificateResult>> {

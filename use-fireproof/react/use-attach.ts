@@ -58,7 +58,7 @@ class WebCtxImpl implements WebToCloudCtx {
   }
 
   async ready(db: Database): Promise<void> {
-    this.dbId = await db.ledger.refId();
+    this.dbId = db.ledger.refId();
     this.keyBag = this.keyBag ?? (await getKeyBag(this.sthis));
   }
 
@@ -190,14 +190,14 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
           if (rAttached.isErr()) {
             database.logger.Error().Err(rAttached).Msg("attach error");
             setAttachState((prev) => ({ ...prev, state: "error", error: rAttached.Err() }));
+          } else {
+            const attached = rAttached.Ok();
+            setAttachState((prev) => ({
+              ...prev,
+              state: "attached",
+              attached,
+            }));
           }
-          const attached = rAttached.Ok();
-
-          setAttachState((prev) => ({
-            ...prev,
-            state: "attached",
-            attached,
-          }));
         }
         prepareWebctx(config.attach);
       }
