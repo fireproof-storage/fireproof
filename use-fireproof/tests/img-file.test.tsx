@@ -188,4 +188,73 @@ describe("COMPONENT: ImgFile", () => {
     },
     TEST_TIMEOUT,
   );
+
+  it(
+    "does not cleanup blob URL when DocFileMeta returns new objects for same content",
+    async () => {
+      // Create a file with specific content
+      const fileContent = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
+      const baseFile = new File([fileContent], "same-content.svg", {
+        type: "image/svg+xml",
+        lastModified: 1234567890000, // Fixed timestamp for consistent cache key
+      });
+
+      // Create a DocFileMeta that returns new File objects with same content
+      const mockCid = { toString: () => "same-content-cid" } as AnyLink;
+      const docFileMeta: DocFileMeta = {
+        type: "image/svg+xml",
+        size: baseFile.size,
+        cid: mockCid,
+        file: async () => {
+          // Always return a new File object but with same content and metadata
+          return new File([fileContent], "same-content.svg", {
+            type: "image/svg+xml",
+            lastModified: 1234567890000, // Same timestamp for consistent cache key
+          });
+        },
+      };
+
+      const { container, rerender } = render(
+        createElement(ImgFile, {
+          file: docFileMeta,
+          alt: "Content-Based Test",
+        }),
+      );
+
+      // Wait for initial render
+      await waitFor(() => {
+        const img = container.querySelector("img");
+        expect(img).not.toBeNull();
+      });
+
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
+
+      // Force a re-render with the same DocFileMeta
+      // This will trigger the file() method again, returning a new File object
+      // but with the same content
+      rerender(
+        createElement(ImgFile, {
+          file: docFileMeta,
+          alt: "Content-Based Test Updated",
+        }),
+      );
+
+      // Wait for any async operations to complete
+      await waitFor(
+        () => {
+          const img = container.querySelector("img");
+          expect(img).not.toBeNull();
+        },
+        { timeout: 2000 },
+      );
+
+      // The blob URL should NOT be cleaned up because the content is the same
+      // even though the File object references are different
+      expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
+      // Should not create a new object URL for same content
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+    },
+    TEST_TIMEOUT,
+  );
 });
