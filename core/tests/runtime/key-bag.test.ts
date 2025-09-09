@@ -96,16 +96,7 @@ describe("KeyBag", () => {
       });
       expect(await keyExtracted(rkbf, "kaputt-x")).toBeUndefined();
     }
-    expect(KeyedV2StorageKeyItemSchema.parse(await kp.get(v1Keybag.name)).item).toEqual({
-      keys: {
-        z7oNYUrGpALe6U5ePvhdD3ufHdLerw4wPWHJERE3383zJ: {
-          default: true,
-          fingerPrint: "z7oNYUrGpALe6U5ePvhdD3ufHdLerw4wPWHJERE3383zJ",
-          key: "zL89nmBmogeRptW9b7e9j7L",
-        },
-      },
-      name: "@test-v1-keys-wal@",
-    });
+    expect(await kp.get(v1Keybag.name)).toEqual(v1Keybag);
   });
 
   it("v2 migration", async () => {
@@ -158,6 +149,38 @@ describe("KeyBag", () => {
       },
       name: "@test-v1-keys-wal@",
     });
+  });
+
+  it("don't write if on read only v1", async () => {
+    const sthis = ensureSuperThis();
+    await sthis.start();
+
+    const kp = new KeyBagProviderMemory(URI.from("memory://./dist/tests/"), sthis);
+    kp.set(v1Keybag.name, v1Keybag);
+
+    const kb = await getKeyBag(sthis, {
+      url: "memory://./dist/tests/",
+    });
+    const rKbf = await kb.getNamedKey(v1Keybag.name);
+    expect(rKbf.isOk()).toBeTruthy();
+    const orig = await kp.get(v1Keybag.name);
+    expect(orig).toEqual(v1Keybag);
+  });
+
+  it("don't write if on read only v2", async () => {
+    const sthis = ensureSuperThis();
+    await sthis.start();
+
+    const kp = new KeyBagProviderMemory(URI.from("memory://./dist/tests/"), sthis);
+    kp.set(v2Keybag.name, v2Keybag);
+
+    const kb = await getKeyBag(sthis, {
+      url: "memory://./dist/tests/",
+    });
+    const rKbf = await kb.getNamedKey(v2Keybag.name);
+    expect(rKbf.isOk()).toBeTruthy();
+    const orig = await kp.get(v2Keybag.name);
+    expect(orig).toEqual(v2Keybag);
   });
 
   it("implicit creation", async () => {
@@ -216,7 +239,7 @@ describe("KeyBag", () => {
     ]);
 
     const key3Material = kb.rt.crypto.randomBytes(kb.rt.keyLength);
-    const rKey3 = await rKbf2.Ok().upsert(key3Material, true);
+    const rKey3 = await rKbf2.Ok().upsert(key3Material, { def: true });
     const key3 = rKey3.Ok();
     if (!isKeyUpsertResultModified(key3)) {
       assert("key3 not modified");

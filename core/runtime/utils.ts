@@ -533,12 +533,12 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
 
 function hashXX(str: string): string {
   const hasher = XXH.h64();
-  hasher.update(str);
-  const res = hasher.digest();
+  // hasher.update(str);
+  const res = hasher.update(str).digest();
   const hex = res.toString(16);
   const asBytes = new Uint8Array(hex.length / 2 + 1);
   for (let i = 0; i < hex.length; i += 2) {
-    asBytes[i / 2] = parseInt(str.slice(i, i + 2), 16);
+    asBytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
   }
   return base58btc.encode(asBytes);
 }

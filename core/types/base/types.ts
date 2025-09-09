@@ -807,11 +807,17 @@ export interface KeyUpsertResultNotModified {
 
 export type KeyUpsertResult = KeyUpsertResultModified | KeyUpsertResultNotModified;
 
+export interface UpSertOpts {
+  readonly def?: boolean;
+  readonly modified?: boolean;
+  readonly doNotWrite?: boolean;
+}
+
 export interface KeysByFingerprint {
   readonly id: string;
   readonly name: string;
   get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined>;
-  upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
+  upsert(key: string | Uint8Array, opts?: UpSertOpts): Promise<Result<KeyUpsertResult>>;
   asV2StorageKeyItem(): Promise<V2StorageKeyItem>;
 }
 

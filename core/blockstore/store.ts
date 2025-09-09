@@ -106,7 +106,7 @@ export abstract class BaseStoreImpl {
   }
 
   readonly _id = new ResolveOnce<string>();
-  id(): Promise<string> {
+  id(): string {
     return this._id.once(() => hashStringSync(this.url().toString()));
   }
 

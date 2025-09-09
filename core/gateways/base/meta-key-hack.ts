@@ -95,7 +95,7 @@ export async function V2SerializedMetaKeyExtractKey(
         // side effect: in the keybag
         // this is the key gossip protocol
         // it basically collects all the keys that are used distributed metas
-        const res = await rKey.Ok().upsert(keyStr, false);
+        const res = await rKey.Ok().upsert(keyStr, { def: false });
         if (res.isErr()) {
           ctx.loader.sthis.logger.Warn().Str("keyStr", keyStr).Msg("failed to upsert key");
         }
