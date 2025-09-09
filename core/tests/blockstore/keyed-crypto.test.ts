@@ -180,7 +180,7 @@ describe("KeyBag", () => {
     expect(myKey.fingerPrint).toEqual(myKey2.fingerPrint);
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(2);
 
-    const res = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength), true);
+    const res = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength), { def: true });
     expect(res.isOk()).toBeTruthy();
     const myKey3 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(3);
@@ -202,7 +202,7 @@ describe("KeyBag", () => {
     expect(rMyKey.isOk()).toBeTruthy();
     const myKey = rMyKey.Ok();
 
-    const rUpsert1 = await myKey.upsert(key, true);
+    const rUpsert1 = await myKey.upsert(key, { def: true });
     expect(rUpsert1.Ok().modified).toBeFalsy();
 
     expect((await myKey.get())?.fingerPrint).toEqual(fpr);
@@ -213,7 +213,7 @@ describe("KeyBag", () => {
       const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
       const fpr = (await toKeyWithFingerPrint(kb, coerceMaterial(kb, key), true)).Ok().fingerPrint;
       keys.push({ key, fpr });
-      const rUpsert = await myKey.upsert(key, true);
+      const rUpsert = await myKey.upsert(key, { def: true });
       expect(rUpsert.Ok().modified).toBeTruthy();
       for (const { fpr } of keys) {
         expect((await myKey.get(fpr))?.fingerPrint).toEqual(fpr);

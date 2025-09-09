@@ -29,7 +29,7 @@ export class InternalKeyBagFingerprintItem {
           this.keysByFingerprint.reset();
           return r;
         }
-        return r.Ok().ensureMaterial(opts.materialStrOrUint8);
+        return r.Ok().ensureMaterial(opts.materialStrOrUint8, {});
       });
   }
 }

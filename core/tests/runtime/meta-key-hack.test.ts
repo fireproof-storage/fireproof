@@ -54,8 +54,8 @@ describe("MetaKeyHack", () => {
     const kb = await KeyBag.create(db.ledger.opts.keyBag);
     const rDataStoreKeyItem = await kb.getNamedKey(dataStore.url().getParam(PARAM.STORE_KEY) ?? "");
 
-    await rDataStoreKeyItem.Ok().upsert("zBUFMmu5c3VdCa4r2DZTzhR", false);
-    await rDataStoreKeyItem.Ok().upsert("zH1fyizirAiYVxoaQ2XZ3Xj", false);
+    await rDataStoreKeyItem.Ok().upsert("zBUFMmu5c3VdCa4r2DZTzhR", { def: false });
+    await rDataStoreKeyItem.Ok().upsert("zH1fyizirAiYVxoaQ2XZ3Xj", { def: false });
 
     expect(rDataStoreKeyItem.isOk()).toBeTruthy();
     const rUrl = await memGw.buildUrl(metaStore.url(), "main");

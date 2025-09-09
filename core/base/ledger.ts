@@ -169,7 +169,7 @@ class LedgerImpl implements Ledger {
     this.shells.add(shell);
   }
 
-  readonly refId = Lazy<string>(() => hashObjectSync(this.opts.storeUrls));
+  readonly refId = Lazy(() => hashObjectSync(this.opts.storeUrls));
 
   readonly _onClosedFns = new Map<string, () => void>();
   onClosed(fn: () => void): () => void {
