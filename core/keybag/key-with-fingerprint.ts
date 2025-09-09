@@ -37,7 +37,7 @@ export async function toKeyWithFingerPrint(
 export async function toV2StorageKeyItem(keybag: KeyBagIf, material: KeyMaterial, def: boolean): Promise<KeysItem> {
   const rKfp = await toKeyWithFingerPrint(keybag, material, def);
   if (rKfp.isErr()) {
-    throw rKfp;
+    throw rKfp.Err();
   }
   return {
     default: def,

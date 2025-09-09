@@ -1,5 +1,5 @@
-import { Base64EndeCoder, CertificatePayload } from "@fireproof/core-types-base";
-import { SignJWT } from "jose";
+import { Base64EndeCoder, CertificatePayload, JWTPayload } from "@fireproof/core-types-base";
+import { calculateJwkThumbprint, SignJWT } from "jose";
 import { Certor } from "./certor.js";
 import { DeviceIdKey } from "./device-id-key.js";
 
@@ -14,7 +14,7 @@ export class DeviceIdSignMsg {
     this.base64 = base64;
   }
 
-  async sign<T extends NonNullable<unknown>>(payload: T, algorithm = "ES256") {
+  async sign<T extends JWTPayload>(payload: T, algorithm = "ES256") {
     const certor = new Certor(this.base64, this.#cert);
     const x5c = [certor.asBase64()];
     const x5t = await certor.asSHA1();
@@ -23,10 +23,15 @@ export class DeviceIdSignMsg {
       .setProtectedHeader({
         alg: algorithm,
         typ: "JWT",
-        kid: await this.#key.fingerPrint(),
-        x5c: x5c, // Certificate chain
-        x5t: x5t, // SHA-1 thumbprint
-        "x5t#S256": x5tS256, // SHA-256 thumbprint
+        kid: await calculateJwkThumbprint(await this.#key.publicKey(), "sha256"),
+        crit: ["fp_x5c", "fp_x5t", "fp_x5tS256"],
+        fp_x5c: x5c, // JSON payload
+        fp_x5t: x5t, // SHA-1(base58btc(JSON))
+        fp_x5tS256: x5tS256, // SHA-256(base58btc(JSON))
+        // kid: await this.#key.fingerPrint(),
+        // x5c: x5c, // Certificate chain
+        // x5t: x5t, // SHA-1 thumbprint
+        // "x5t#S256": x5tS256, // SHA-256 thumbprint
       })
       .setIssuedAt()
       .setExpirationTime("1h")

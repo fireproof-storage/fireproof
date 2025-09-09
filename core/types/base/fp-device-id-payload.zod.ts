@@ -96,7 +96,7 @@ export const FPDeviceIDPayloadSchema = JWTPayloadSchema.extend({
     .object({
       subject: SubjectSchema,
       publicKey: JWKPublicSchema,
-      extensions: ExtensionsSchema,
+      extensions: ExtensionsSchema.optional(),
     })
     .readonly(),
 }).readonly();

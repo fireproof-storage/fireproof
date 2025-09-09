@@ -41,10 +41,14 @@ export class DeviceIdClient {
       const kBag = await getKeyBag(this.#sthis);
       let deviceIdResult = await kBag.getDeviceId();
       if (deviceIdResult.deviceId.IsNone()) {
-        const key = await DeviceIdKey.create();
-        deviceIdResult = await kBag.setDeviceId(await key.exportPrivateJWK());
+        const newKey = await DeviceIdKey.create();
+        deviceIdResult = await kBag.setDeviceId(await newKey.exportPrivateJWK());
       }
-      const key = await DeviceIdKey.createFromJWK(deviceIdResult.deviceId.unwrap());
+      const rKey = await DeviceIdKey.createFromJWK(deviceIdResult.deviceId.unwrap());
+      if (rKey.isErr()) {
+        return Result.Err(rKey);
+      }
+      const key = rKey.Ok();
       if (deviceIdResult.cert.IsNone()) {
         const csr = new DeviceIdCSR(this.#sthis, key);
         const rCsrJWT = await csr.createCSR({ commonName: `fp-dev@${await key.fingerPrint()}` });

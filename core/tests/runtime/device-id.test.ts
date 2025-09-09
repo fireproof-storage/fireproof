@@ -9,7 +9,14 @@ import {
   DeviceIdValidator,
   DeviceIdVerifyMsg,
 } from "@fireproof/core-device-id";
-import { CertificatePayload, CertificatePayloadSchema, Extensions, JWKPrivate, Subject } from "@fireproof/core-types-base";
+import {
+  CertificatePayload,
+  CertificatePayloadSchema,
+  Extensions,
+  JWKPrivate,
+  JWTPayload,
+  Subject,
+} from "@fireproof/core-types-base";
 
 const sthis = ensureSuperThis();
 
@@ -25,7 +32,11 @@ describe("DeviceIdKey", () => {
     }
     expect(jwk.d).toBeDefined(); // Private key component
 
-    const imported = await DeviceIdKey.createFromJWK(jwk as JWKPrivate);
+    const rImported = await DeviceIdKey.createFromJWK(jwk as JWKPrivate);
+    if (rImported.isErr()) {
+      assert.fail(rImported.Err().message);
+    }
+    const imported = rImported.Ok();
     const jwk2 = await imported.exportPrivateJWK();
     expect(jwk2).toEqual(jwk);
 
@@ -89,9 +100,9 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
     expect(payload.iss).toBe("csr-client");
     expect(payload.aud).toBe("certificate-authority");
     expect(payload.csr.subject).toEqual(subject);
-    expect(payload.csr.extensions.subjectAltName).toEqual(extensions.subjectAltName);
-    expect(payload.csr.extensions.keyUsage).toEqual(extensions.keyUsage);
-    expect(payload.csr.extensions.extendedKeyUsage).toEqual(extensions.extendedKeyUsage);
+    expect(payload.csr.extensions?.subjectAltName).toEqual(extensions.subjectAltName);
+    expect(payload.csr.extensions?.keyUsage).toEqual(extensions.keyUsage);
+    expect(payload.csr.extensions?.extendedKeyUsage).toEqual(extensions.extendedKeyUsage);
   });
 
   it("should fail validation for tampered CSR", async () => {
@@ -261,6 +272,16 @@ describe("DeviceIdSignMsg", () => {
     organization: "Test CA Corp",
   };
 
+  const jwtPayload = {
+    iss: "test",
+    sub: "test",
+    aud: "test",
+    iat: Math.floor(Date.now() / 1000),
+    nbf: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    jti: "test",
+  } satisfies JWTPayload;
+
   const mockActions = {
     generateSerialNumber: async () => crypto.randomUUID(),
   };
@@ -301,7 +322,7 @@ describe("DeviceIdSignMsg", () => {
 
   it("should sign a payload and include certificate information", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
-    const payload = { message: "test payload", timestamp: Date.now() };
+    const payload = { ...jwtPayload, message: "test payload", timestamp: Date.now() };
 
     const jwt = await signMsg.sign(payload);
     expect(jwt).toBeDefined();
@@ -321,7 +342,7 @@ describe("DeviceIdSignMsg", () => {
 
   it("should verify signed JWT with device public key", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
-    const payload = { message: "verification test", id: 123 };
+    const payload = { ...jwtPayload, message: "verification test", id: 123 };
 
     const jwt = await signMsg.sign(payload);
 
@@ -338,7 +359,7 @@ describe("DeviceIdSignMsg", () => {
 
   it("should include valid certificate thumbprints", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
-    const payload = { test: "thumbprint validation" };
+    const payload = { ...jwtPayload, test: "thumbprint validation" };
 
     const jwt = await signMsg.sign(payload);
     const header = decodeProtectedHeader(jwt);
@@ -352,7 +373,7 @@ describe("DeviceIdSignMsg", () => {
 
   it("should fail verification with wrong key", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
-    const payload = { message: "wrong key test" };
+    const payload = { ...jwtPayload, message: "wrong key test" };
 
     const jwt = await signMsg.sign(payload);
 
@@ -365,7 +386,7 @@ describe("DeviceIdSignMsg", () => {
   });
   it("should verify JWT with valid certificate", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
-    const payload = { message: "verification test", id: 123 };
+    const payload = { ...jwtPayload, message: "verification test", id: 123 };
     const jwt = await signMsg.sign(payload);
     expect(jwt).toBeDefined();
     expect(typeof jwt).toBe("string");
@@ -383,7 +404,7 @@ describe("DeviceIdSignMsg", () => {
 
   it.skip("change the caKey", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
-    const payload = { message: "verification test", id: 123 };
+    const payload = { ...jwtPayload, message: "verification test", id: 123 };
     const jwt = await signMsg.sign(payload);
     expect(jwt).toBeDefined();
     expect(typeof jwt).toBe("string");
@@ -408,7 +429,7 @@ describe("DeviceIdSignMsg", () => {
   it("use a new deviceId ", async () => {
     const newDeviceKey = await DeviceIdKey.create();
     const signMsg = new DeviceIdSignMsg(base64, newDeviceKey, certificate);
-    const payload = { message: "verification test", id: 123 };
+    const payload = { ...jwtPayload, message: "verification test", id: 123 };
     const jwt = await signMsg.sign(payload);
     expect(jwt).toBeDefined();
     expect(typeof jwt).toBe("string");
@@ -432,7 +453,7 @@ describe("DeviceIdSignMsg", () => {
 
   it("use a forged caCert", async () => {
     const signMsg = new DeviceIdSignMsg(base64, deviceKey, { ...certificate, nbf: certificate.nbf + 1 });
-    const payload = { message: "verification test", id: 123 };
+    const payload = { ...jwtPayload, message: "verification test", id: 123 };
     const jwt = await signMsg.sign(payload);
     expect(jwt).toBeDefined();
     expect(typeof jwt).toBe("string");

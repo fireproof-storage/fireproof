@@ -104,7 +104,7 @@ describe("KeyBag", () => {
     await sthis.start();
 
     const kp = new KeyBagProviderMemory(URI.from("memory://./dist/tests/"), sthis);
-    kp.set(v2Keybag.name, v2Keybag);
+    await kp.set(v2Keybag.name, v2Keybag);
 
     const kb = await getKeyBag(sthis, {
       url: "memory://./dist/tests/?extractKey=_deprecated_internal_api",
@@ -156,7 +156,7 @@ describe("KeyBag", () => {
     await sthis.start();
 
     const kp = new KeyBagProviderMemory(URI.from("memory://./dist/tests/"), sthis);
-    kp.set(v1Keybag.name, v1Keybag);
+    await kp.set(v1Keybag.name, v1Keybag);
 
     const kb = await getKeyBag(sthis, {
       url: "memory://./dist/tests/",
@@ -172,7 +172,7 @@ describe("KeyBag", () => {
     await sthis.start();
 
     const kp = new KeyBagProviderMemory(URI.from("memory://./dist/tests/"), sthis);
-    kp.set(v2Keybag.name, v2Keybag);
+    await kp.set(v2Keybag.name, v2Keybag);
 
     const kb = await getKeyBag(sthis, {
       url: "memory://./dist/tests/",
@@ -188,7 +188,7 @@ describe("KeyBag", () => {
     await sthis.start();
 
     const kp = new KeyBagProviderMemory(URI.from("memory://./dist/tests/"), sthis);
-    kp.set(v1Keybag.name, v1Keybag);
+    await kp.set(v1Keybag.name, v1Keybag);
 
     const kb = await getKeyBag(sthis, {
       url: "memory://./dist/tests/?extractKey=_deprecated_internal_api",
