@@ -28,6 +28,7 @@ import {
   BlockItem,
   CommitQueueIf,
 } from "@fireproof/core-types-blockstore";
+import { getKeyBag } from "@fireproof/core-keybag";
 
 import { anyBlock2FPBlock, parseCarFile } from "./loader-helpers.js";
 
