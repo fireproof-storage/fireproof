@@ -72,15 +72,21 @@ async function loadFile({
     }
   }
 
+  // Use content-based comparison instead of object reference comparison
+  // This prevents premature cleanup when DocFileMeta.file() returns new objects for same content
+  const currentKey = fileObjRef.current ? getCacheKey(fileObjRef.current) : null;
+  const newKey = fileObj ? getCacheKey(fileObj) : null;
+  const isDifferentFile = currentKey !== newKey;
+
   // Clean up previous object URL if it exists and we're loading a new file
-  if (fileObjRef.current !== fileObj && cleanupRef.current) {
+  if (isDifferentFile && cleanupRef.current) {
     cleanupRef.current();
     cleanupRef.current = null;
   }
 
   if (fileObj && /image/.test(fileType)) {
-    // Skip if it's the same exact file object
-    if (fileObjRef.current !== fileObj) {
+    // Skip if it's the same file content (even if different object reference)
+    if (isDifferentFile) {
       const src = getObjectUrl(fileObj);
       setImgDataUrl(src);
       fileObjRef.current = fileObj;
