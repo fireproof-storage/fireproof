@@ -594,3 +594,12 @@ export function timerStart(loggerOrHasLogger: Logger | HasLogger, tag: string) {
 export function timerEnd(loggerOrHasLogger: Logger | HasLogger, tag: string) {
   coerceLogger(loggerOrHasLogger).Debug().TimerEnd(tag).Msg("Timing ended");
 }
+
+export function deepFreeze<T extends object>(o?: T): T | undefined {
+  if (!o) return undefined;
+  Object.freeze(o);
+  for (const v of Object.values(o)) {
+    if (v && typeof v === "object" && !Object.isFrozen(v)) deepFreeze(v as object);
+  }
+  return o;
+}
