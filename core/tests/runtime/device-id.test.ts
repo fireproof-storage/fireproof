@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, assert } from "vitest";
-import { calculateJwkThumbprint, decodeProtectedHeader, importJWK, jwtVerify } from "jose";
+import { decodeProtectedHeader, importJWK, jwtVerify } from "jose";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import {
   DeviceIdCA,

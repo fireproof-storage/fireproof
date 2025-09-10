@@ -1,5 +1,4 @@
 import { Result } from "@adviser/cement";
-import { hashObjectAsync } from "@fireproof/core-runtime";
 import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema } from "@fireproof/core-types-base";
 import { GenerateKeyPairOptions, generateKeyPair, importJWK, exportJWK, calculateJwkThumbprint } from "jose";
 
