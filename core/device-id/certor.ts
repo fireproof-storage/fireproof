@@ -4,6 +4,7 @@ import { decodeJwt } from "jose";
 import { base58btc } from "multiformats/bases/base58";
 import { sha1 } from "multiformats/hashes/sha1";
 import { sha256 } from "multiformats/hashes/sha2";
+import { deepFreeze } from "@fireproof/core-runtime";
 import { CertificatePayload, CertificatePayloadSchema } from "@fireproof/core-types-base/fp-ca-cert-payload.zod.js";
 
 export class Certor {
@@ -25,7 +26,8 @@ export class Certor {
   }
 
   constructor(base64: Base64EndeCoder, cert: CertificatePayload) {
-    this.#cert = cert;
+    // this.#cert = cert;
+    this.#cert = deepFreeze(toSortedObject(cert)) as CertificatePayload;
     this.base64 = base64;
   }
 

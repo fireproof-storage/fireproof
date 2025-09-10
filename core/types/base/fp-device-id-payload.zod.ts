@@ -98,8 +98,11 @@ export const FPDeviceIDPayloadSchema = JWTPayloadSchema.extend({
       publicKey: JWKPublicSchema,
       extensions: ExtensionsSchema.optional(),
     })
+    .strict()
     .readonly(),
-}).readonly();
+})
+  .strict()
+  .readonly();
 
 // Type inference
 export type FPDeviceIDPayload = z.infer<typeof FPDeviceIDPayloadSchema>;

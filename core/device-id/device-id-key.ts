@@ -21,14 +21,15 @@ export class DeviceIdKey {
     },
   ): Promise<Result<DeviceIdKey>> {
     const parsed = JWKPrivateSchema.safeParse(jwk);
-    if (parsed.success && (parsed.data.kty !== "EC" || parsed.data.crv !== "P-256" || !("d" in parsed.data))) {
-      return Result.Err("Invalid JWK for ES256");
+    if (!parsed.success) {
+      return Result.Err(new Error(`Invalid JWK: ${parsed.error.message}`));
     }
-    const pair = await importJWK(jwk, "ES256", opts);
-    if (pair instanceof Uint8Array) {
-      return Result.Err("Invalid JWK");
+    const j = parsed.data;
+    if (j.kty !== "EC" || j.crv !== "P-256" || !("d" in j)) {
+      return Result.Err(new Error("Invalid JWK for ES256"));
     }
-    return Result.Ok(new DeviceIdKey(pair));
+    const key = await importJWK(j, "ES256", opts);
+    return Result.Ok(new DeviceIdKey(key as CryptoKey));
   }
 
   private constructor(pair: CryptoKey) {
@@ -51,9 +52,9 @@ export class DeviceIdKey {
 
   async publicKey(): Promise<JWKPublic> {
     const privateJWK = await exportJWK(this.#privateKey);
-    const { success, data } = JWKPublicSchema.safeParse(privateJWK);
+    const { success, data, error } = JWKPublicSchema.safeParse(privateJWK);
     if (!success || !data) {
-      throw new Error("Invalid JWK");
+      throw new Error(`Invalid public JWK: ${error.message}`);
     }
     return data;
   }
