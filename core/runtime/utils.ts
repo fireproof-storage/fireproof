@@ -32,7 +32,7 @@ import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
 import { toSortedArray } from "@adviser/cement/utils";
-import XXH from "xxhashjs";
+import { XXH } from "@adviser/ts-xxhash";
 
 //export type { Logger };
 //export { Result };

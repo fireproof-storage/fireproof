@@ -24,10 +24,9 @@ export class DeviceIdSignMsg {
         alg: algorithm,
         typ: "JWT",
         kid: await calculateJwkThumbprint(await this.#key.publicKey(), "sha256"),
-        crit: ["fp_x5c", "fp_x5t", "fp_x5tS256"],
-        fp_x5c: x5c, // JSON payload
-        fp_x5t: x5t, // SHA-1(base58btc(JSON))
-        fp_x5tS256: x5tS256, // SHA-256(base58btc(JSON))
+        x5c: x5c, // JSON payload
+        x5t: x5t, // SHA-1(base58btc(JSON))
+        "x5t#S256": x5tS256, // SHA-256(base58btc(JSON))
         // kid: await this.#key.fingerPrint(),
         // x5c: x5c, // Certificate chain
         // x5t: x5t, // SHA-1 thumbprint

@@ -1,7 +1,7 @@
 import { Result } from "@adviser/cement";
 import { hashObjectAsync } from "@fireproof/core-runtime";
 import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema } from "@fireproof/core-types-base";
-import { GenerateKeyPairOptions, generateKeyPair, importJWK, exportJWK } from "jose";
+import { GenerateKeyPairOptions, generateKeyPair, importJWK, exportJWK, calculateJwkThumbprint } from "jose";
 
 export class DeviceIdKey {
   #privateKey: CryptoKey;
@@ -37,7 +37,8 @@ export class DeviceIdKey {
   }
 
   async fingerPrint() {
-    return hashObjectAsync(await this.exportPrivateJWK());
+    return calculateJwkThumbprint(await this.exportPrivateJWK(), "sha256");
+    // return hashObjectAsync(await this.exportPrivateJWK());
   }
 
   async exportPrivateJWK(): Promise<JWKPrivate> {
