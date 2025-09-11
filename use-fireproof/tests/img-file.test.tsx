@@ -266,4 +266,209 @@ describe("COMPONENT: ImgFile", () => {
     },
     TEST_TIMEOUT,
   );
+
+  it(
+    "uses CID-based stable keys for DocFileMeta objects with different File metadata but same content",
+    async () => {
+      const fileContent = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
+      const mockCid = { toString: () => "stable-content-cid" } as AnyLink;
+
+      // First DocFileMeta with one timestamp
+      const docFileMeta1: DocFileMeta = {
+        type: "image/svg+xml",
+        size: fileContent.size,
+        cid: mockCid,
+        file: async () =>
+          new File([fileContent], "file1.svg", {
+            type: "image/svg+xml",
+            lastModified: 1000000000000, // Different timestamp
+          }),
+      };
+
+      const { container, rerender } = render(
+        createElement(ImgFile, {
+          file: docFileMeta1,
+          alt: "CID Stable Test",
+        }),
+      );
+
+      // Wait for initial render
+      await waitFor(() => {
+        const img = container.querySelector("img");
+        expect(img).not.toBeNull();
+      });
+
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
+
+      // Second DocFileMeta with SAME CID but different file metadata
+      const docFileMeta2: DocFileMeta = {
+        type: "image/svg+xml", 
+        size: fileContent.size,
+        cid: mockCid, // Same CID - should be treated as same content
+        file: async () =>
+          new File([fileContent], "different-name.svg", {
+            type: "image/svg+xml",
+            lastModified: 2000000000000, // Different timestamp
+          }),
+      };
+
+      rerender(
+        createElement(ImgFile, {
+          file: docFileMeta2,
+          alt: "CID Stable Test Updated",
+        }),
+      );
+
+      // Wait for any async operations to complete
+      await waitFor(
+        () => {
+          const img = container.querySelector("img");
+          expect(img).not.toBeNull();
+        },
+        { timeout: 2000 },
+      );
+
+      // Because the CID is the same, should NOT create new object URL or revoke old one
+      expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "creates new object URL when DocFileMeta has different CID even with same file metadata",
+    async () => {
+      const fileContent1 = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
+      const fileContent2 = new Blob(["<svg>different content</svg>"], { type: "image/svg+xml" });
+      
+      const mockCid1 = { toString: () => "content-cid-1" } as AnyLink;
+      const mockCid2 = { toString: () => "content-cid-2" } as AnyLink;
+
+      // First DocFileMeta
+      const docFileMeta1: DocFileMeta = {
+        type: "image/svg+xml",
+        size: fileContent1.size,
+        cid: mockCid1,
+        file: async () =>
+          new File([fileContent1], "same-name.svg", {
+            type: "image/svg+xml",
+            lastModified: 1234567890000, // Same metadata
+          }),
+      };
+
+      const { container, rerender } = render(
+        createElement(ImgFile, {
+          file: docFileMeta1,
+          alt: "Different CID Test",
+        }),
+      );
+
+      // Wait for initial render
+      await waitFor(() => {
+        const img = container.querySelector("img");
+        expect(img).not.toBeNull();
+      });
+
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
+
+      // Second DocFileMeta with different CID but same file metadata
+      const docFileMeta2: DocFileMeta = {
+        type: "image/svg+xml",
+        size: fileContent2.size, // Could be same size by coincidence
+        cid: mockCid2, // Different CID - should be treated as different content
+        file: async () =>
+          new File([fileContent2], "same-name.svg", {
+            type: "image/svg+xml", 
+            lastModified: 1234567890000, // Same metadata as first
+          }),
+      };
+
+      rerender(
+        createElement(ImgFile, {
+          file: docFileMeta2,
+          alt: "Different CID Test Updated",
+        }),
+      );
+
+      // Wait for any async operations to complete
+      await waitFor(
+        () => {
+          const img = container.querySelector("img");
+          expect(img).not.toBeNull();
+        },
+        { timeout: 2000 },
+      );
+
+      // Because the CID is different, should create new object URL and clean up old one
+      expect(window.URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(2);
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "handles cross-type comparison between File and DocFileMeta objects",
+    async () => {
+      const fileContent = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
+      
+      // Start with a direct File object
+      const directFile = new File([fileContent], "test.svg", {
+        type: "image/svg+xml",
+        lastModified: 1234567890000,
+      });
+
+      const { container, rerender } = render(
+        createElement(ImgFile, {
+          file: directFile,
+          alt: "Cross-type Test",
+        }),
+      );
+
+      // Wait for initial render
+      await waitFor(() => {
+        const img = container.querySelector("img");
+        expect(img).not.toBeNull();
+      });
+
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
+
+      // Now switch to DocFileMeta that returns same content but different file metadata
+      const mockCid = { toString: () => "cross-type-cid" } as AnyLink;
+      const docFileMeta: DocFileMeta = {
+        type: "image/svg+xml",
+        size: fileContent.size,
+        cid: mockCid,
+        file: async () =>
+          new File([fileContent], "different-name.svg", {
+            type: "image/svg+xml",
+            lastModified: 9999999999999, // Very different timestamp
+          }),
+      };
+
+      rerender(
+        createElement(ImgFile, {
+          file: docFileMeta,
+          alt: "Cross-type Test Updated",
+        }),
+      );
+
+      // Wait for any async operations to complete
+      await waitFor(
+        () => {
+          const img = container.querySelector("img");
+          expect(img).not.toBeNull();
+        },
+        { timeout: 2000 },
+      );
+
+      // Because we switched from File (metadata-based key) to DocFileMeta (CID-based key),
+      // these should be treated as different and trigger cleanup + new object URL
+      expect(window.URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+      expect(window.URL.createObjectURL).toHaveBeenCalledTimes(2);
+    },
+    TEST_TIMEOUT,
+  );
 });
