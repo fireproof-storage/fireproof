@@ -32,7 +32,6 @@ function getCacheKey(fileObj: File): string {
   return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
 }
 
-
 // Keyed variant so we can use DocFileMeta.cid for stable identity
 function getObjectUrlByKey(cacheKey: string, fileObj: File): string {
   if (!objectUrlCache.has(cacheKey)) {
@@ -72,14 +71,14 @@ async function loadFile({
     }
   }
 
-  // Prefer DocFileMeta.cid; fallback to file-derived key
+  // Use CID-based key for DocFileMeta, file-based key for direct File objects
   const currentKey = keyRef.current ?? null;
   const newKey =
-    (fileData && isFileMeta(fileData) && fileData.cid
+    fileData && isFileMeta(fileData) && fileData.cid
       ? `cid:${String(fileData.cid)}`
-      : fileObj
-        ? getCacheKey(fileObj)
-        : null);
+      : fileData && isFile(fileData)
+        ? getCacheKey(fileData)
+        : null;
   const isDifferentFile = currentKey !== newKey;
 
   // Defer cleanup of previous URL until after new URL is set
