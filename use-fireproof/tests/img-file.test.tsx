@@ -230,12 +230,20 @@ describe("COMPONENT: ImgFile", () => {
       expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
       expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
 
-      // Force a re-render with the same DocFileMeta
-      // This will trigger the file() method again, returning a new File object
-      // but with the same content
+      // Force a re-render with a NEW DocFileMeta object that yields the same content
+      const fileSpy = vi.fn(async () =>
+        new File([fileContent], "same-content.svg", {
+          type: "image/svg+xml",
+          lastModified: 1234567890000,
+        }),
+      );
+      const docFileMeta2: DocFileMeta = {
+        ...docFileMeta,
+        file: fileSpy,
+      };
       rerender(
         createElement(ImgFile, {
-          file: docFileMeta,
+          file: docFileMeta2,
           alt: "Content-Based Test Updated",
         }),
       );
@@ -250,10 +258,11 @@ describe("COMPONENT: ImgFile", () => {
       );
 
       // The blob URL should NOT be cleaned up because the content is the same
-      // even though the File object references are different
       expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
       // Should not create a new object URL for same content
       expect(window.URL.createObjectURL).toHaveBeenCalledTimes(1);
+      // And the resolver was invoked again
+      expect(fileSpy).toHaveBeenCalledTimes(1);
     },
     TEST_TIMEOUT,
   );
