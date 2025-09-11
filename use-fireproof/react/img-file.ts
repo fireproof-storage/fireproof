@@ -32,15 +32,12 @@ function getCacheKey(fileObj: File): string {
   return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
 }
 
-// Get or create an object URL with caching
-function getObjectUrl(fileObj: File): string {
-  const cacheKey = getCacheKey(fileObj);
-
+// Keyed variant so we can use DocFileMeta.cid for stable identity
+function getObjectUrlByKey(cacheKey: string, fileObj: File): string {
   if (!objectUrlCache.has(cacheKey)) {
     // eslint-disable-next-line no-restricted-globals
     objectUrlCache.set(cacheKey, URL.createObjectURL(fileObj));
   }
-
   return objectUrlCache.get(cacheKey) as string;
 }
 
@@ -49,11 +46,13 @@ async function loadFile({
   fileObjRef,
   cleanupRef,
   setImgDataUrl,
+  keyRef,
 }: {
   fileData?: FileType;
   fileObjRef: React.RefObject<File | null>;
   setImgDataUrl: React.Dispatch<React.SetStateAction<string>>;
   cleanupRef: React.RefObject<(() => void) | null>;
+  keyRef: React.RefObject<string | null>;
 }) {
   let fileObj: File | null = null;
   let fileType = "";
@@ -72,28 +71,35 @@ async function loadFile({
     }
   }
 
-  // Clean up previous object URL if it exists and we're loading a new file
-  if (fileObjRef.current !== fileObj && cleanupRef.current) {
-    cleanupRef.current();
-    cleanupRef.current = null;
-  }
+  // Use CID-based key for DocFileMeta, file-based key for direct File objects
+  const currentKey = keyRef.current ?? null;
+  const newKey =
+    fileData && isFileMeta(fileData) && fileData.cid
+      ? `cid:${String(fileData.cid)}`
+      : fileData && isFile(fileData)
+        ? getCacheKey(fileData)
+        : null;
+  const isDifferentFile = currentKey !== newKey;
+
+  // Defer cleanup of previous URL until after new URL is set
 
   if (fileObj && /image/.test(fileType)) {
-    // Skip if it's the same exact file object
-    if (fileObjRef.current !== fileObj) {
-      const src = getObjectUrl(fileObj);
+    // Skip if it's the same file content (even if different object reference)
+    if (isDifferentFile && newKey) {
+      const src = getObjectUrlByKey(newKey, fileObj);
       setImgDataUrl(src);
       fileObjRef.current = fileObj;
-
-      // Store cleanup function
+      const prevCleanup = cleanupRef.current;
+      // Store cleanup function keyed by content identity
       cleanupRef.current = () => {
-        const cacheKey = getCacheKey(fileObj);
-        if (objectUrlCache.has(cacheKey)) {
+        if (objectUrlCache.has(newKey)) {
           // eslint-disable-next-line no-restricted-globals
-          URL.revokeObjectURL(objectUrlCache.get(cacheKey) as string);
-          objectUrlCache.delete(cacheKey);
+          URL.revokeObjectURL(objectUrlCache.get(newKey) as string);
+          objectUrlCache.delete(newKey);
         }
       };
+      keyRef.current = newKey;
+      if (prevCleanup) prevCleanup();
 
       return cleanupRef.current;
     }
@@ -108,6 +114,7 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const [imgDataUrl, setImgDataUrl] = useState("");
   const fileObjRef = useRef<File | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const keyRef = useRef<string | null>(null);
 
   // Use meta as fallback if file is not provided (for backward compatibility)
   // Memoize fileData to prevent unnecessary re-renders
@@ -118,7 +125,7 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   useEffect(() => {
     if (!fileData) return;
     let isMounted = true;
-    loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl }).then(function handleResult(result) {
+    loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl, keyRef }).then(function handleResult(result) {
       if (isMounted) {
         // Store the result in cleanupRef.current if component is still mounted
         cleanupRef.current = result;
