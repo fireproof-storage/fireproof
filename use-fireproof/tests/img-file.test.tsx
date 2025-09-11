@@ -231,11 +231,12 @@ describe("COMPONENT: ImgFile", () => {
       expect(window.URL.revokeObjectURL).not.toHaveBeenCalled();
 
       // Force a re-render with a NEW DocFileMeta object that yields the same content
-      const fileSpy = vi.fn(async () =>
-        new File([fileContent], "same-content.svg", {
-          type: "image/svg+xml",
-          lastModified: 1234567890000,
-        }),
+      const fileSpy = vi.fn(
+        async () =>
+          new File([fileContent], "same-content.svg", {
+            type: "image/svg+xml",
+            lastModified: 1234567890000,
+          }),
       );
       const docFileMeta2: DocFileMeta = {
         ...docFileMeta,
@@ -303,7 +304,7 @@ describe("COMPONENT: ImgFile", () => {
 
       // Second DocFileMeta with SAME CID but different file metadata
       const docFileMeta2: DocFileMeta = {
-        type: "image/svg+xml", 
+        type: "image/svg+xml",
         size: fileContent.size,
         cid: mockCid, // Same CID - should be treated as same content
         file: async () =>
@@ -341,7 +342,7 @@ describe("COMPONENT: ImgFile", () => {
     async () => {
       const fileContent1 = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
       const fileContent2 = new Blob(["<svg>different content</svg>"], { type: "image/svg+xml" });
-      
+
       const mockCid1 = { toString: () => "content-cid-1" } as AnyLink;
       const mockCid2 = { toString: () => "content-cid-2" } as AnyLink;
 
@@ -380,7 +381,7 @@ describe("COMPONENT: ImgFile", () => {
         cid: mockCid2, // Different CID - should be treated as different content
         file: async () =>
           new File([fileContent2], "same-name.svg", {
-            type: "image/svg+xml", 
+            type: "image/svg+xml",
             lastModified: 1234567890000, // Same metadata as first
           }),
       };
@@ -412,7 +413,7 @@ describe("COMPONENT: ImgFile", () => {
     "handles cross-type comparison between File and DocFileMeta objects",
     async () => {
       const fileContent = new Blob([SVG_CONTENT], { type: "image/svg+xml" });
-      
+
       // Start with a direct File object
       const directFile = new File([fileContent], "test.svg", {
         type: "image/svg+xml",
