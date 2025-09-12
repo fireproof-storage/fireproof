@@ -1,8 +1,10 @@
-import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext } from "@adviser/cement";
+import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext, KeyedResolvOnce, Lazy } from "@adviser/cement";
 import { Ledger } from "@fireproof/core-types-base";
 import {
   FPCloudClaim,
+  FPCloudClaimParseSchema,
   FPCloudUri,
+  hashableFPCloudRef,
   ToCloudAttachable,
   ToCloudBase,
   ToCloudName,
@@ -12,9 +14,10 @@ import {
   TokenAndClaims,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
-import { ensureLogger, hashObjectSync } from "@fireproof/core-runtime";
+import { ensureLogger, ensureSuperThis, hashObjectSync } from "@fireproof/core-runtime";
 import { decodeJwt } from "jose/jwt/decode";
 import { URIInterceptor } from "@fireproof/core-gateways-base";
+import { stripper } from "@adviser/cement/utils";
 
 function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
   const buri = BuildURI.from(uri);
@@ -27,6 +30,58 @@ function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
   return buri.URI();
 }
 
+export class SimpleTokenStrategy implements TokenStrategie {
+  private tc: TokenAndClaims;
+  constructor(jwk: string) {
+    let claims: FPCloudClaim;
+    try {
+      const rawClaims = decodeJwt(jwk);
+      const rParse = FPCloudClaimParseSchema.safeParse(rawClaims);
+      if (rParse.success) {
+        claims = rParse.data;
+      } else {
+        throw rParse.error;
+      }
+    } catch (e) {
+      claims = {
+        userId: "test",
+        email: "test@test.de",
+        created: new Date(),
+        tenants: [{ id: "test", role: "admin" }],
+        ledgers: [{ id: "test", role: "admin", right: "write" }],
+        selected: { tenant: "test", ledger: "test" },
+      };
+    }
+
+    this.tc = {
+      token: jwk,
+      claims,
+    };
+  }
+
+  readonly hash = Lazy(() => hashObjectSync(this.tc.token));
+
+  stop(): void {
+    // console.log("SimpleTokenStrategy stop");
+    return;
+  }
+
+  open(): void {
+    // console.log("SimpleTokenStrategy open");
+    return;
+  }
+  async tryToken(): Promise<TokenAndClaims | undefined> {
+    // console.log("SimpleTokenStrategy gatherToken");
+    return this.tc;
+  }
+  async waitForToken(): Promise<TokenAndClaims | undefined> {
+    // console.log("SimpleTokenStrategy waitForToken");
+    return this.tc;
+  }
+}
+
+export const defaultSimpleTokenStrategy = new SimpleTokenStrategy("");
+
 function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
   const base = opts.urls?.base ?? "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev";
   const param = {
@@ -34,20 +89,23 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
     file: addTenantAndLedger(opts, opts.urls?.file ?? base),
     meta: addTenantAndLedger(opts, opts.urls?.meta ?? base),
   } satisfies FPCloudUri;
+  const sthis = opts.sthis ?? ensureSuperThis();
   const defOpts = {
     name: ToCloudName,
     intervalSec: 1,
     tokenWaitTimeSec: 90, // 90 seconds
     refreshTokenPresetSec: 2 * 60, // 2 minutes
     ...opts,
+    sthis: sthis,
     events: opts.events ?? {
+      hash: () => "1",
       changed: async () => {
         /* no-op */
       },
     },
-    context: opts.context ?? new AppContext(),
+    context: opts.context ?? sthis.ctx,
     urls: param,
-    strategy: opts.strategy ?? new SimpleTokenStrategy(""),
+    strategy: opts.strategy ?? defaultSimpleTokenStrategy,
   } satisfies ToCloudOpts;
   return defOpts;
 }
@@ -104,7 +162,7 @@ class TokenObserver {
 
   isExpired(token?: TokenAndClaims): boolean {
     const now = ~~(new Date().getTime() / 1000); // current time in seconds
-    return !token || definedExp(token.claims.exp) - this.opts.refreshTokenPresetSec < now;
+    return !token || definedExp(token.claims?.exp) - this.opts.refreshTokenPresetSec < now;
   }
 
   readonly _token = new ResolveOnce<TokenAndClaims>();
@@ -115,7 +173,7 @@ class TokenObserver {
       await this.opts.events?.changed(undefined);
       logger
         .Debug()
-        .Any({ claims: this.currentTokenAndClaim?.claims, exp: definedExp(this.currentTokenAndClaim?.claims.exp) })
+        .Any({ claims: this.currentTokenAndClaim?.claims, exp: definedExp(this.currentTokenAndClaim?.claims?.exp) })
         .Msg("refresh token");
       activeTokenAndClaim = await this.refreshToken(logger, ledger);
     }
@@ -155,7 +213,7 @@ class ToCloud implements ToCloudAttachable {
   configHash(db?: Ledger) {
     const hash = hashObjectSync({
       dbRefId: db?.refId(),
-      ...this.opts,
+      opts: hashForToCloudBase(this.opts),
     });
     // console.log("to-cloud-configHash", this.opts, hash);
     // console.log("to-cloud-configHash", hash, this.opts);
@@ -192,6 +250,9 @@ class ToCloud implements ToCloudAttachable {
       // console.log("getToken", token)
       const buri = BuildURI.from(uri).setParam("authJWK", token.token);
 
+      if (!token.claims) {
+        throw new Error("No claims");
+      }
       const selected = token.claims.selected ?? {};
       if (selected.tenant) {
         buri.setParam("tenant", selected.tenant);
@@ -223,45 +284,37 @@ class ToCloud implements ToCloudAttachable {
 //   resetToken(): void;
 // }
 
-export function toCloud(iopts: Partial<ToCloudBase> & ToCloudRequiredOpts): ToCloudAttachable {
-  // console.log("toCloud", iopts);
-  return new ToCloud({
-    ...iopts,
-    urls: iopts.urls ?? {},
-    events: iopts.events ?? {
-      changed: async () => {
-        /* no-op */
-      },
-    },
-    context: iopts.context ?? new AppContext(),
-    strategy: iopts.strategy,
-  });
+// function hashForFPCo
+
+export function hashForToCloudBase(opts: ToCloudOptionalOpts): string {
+  const hashable = {
+    opts: stripper(["context", "events", "strategy", "sthis"], opts),
+    ...(opts.urls ? { urls: hashableFPCloudRef(opts.urls) } : {}),
+    // ...(opts.context ? { context: opts.context.asObj() } : {}),
+    ...(opts.strategy ? { strategy: opts.strategy.hash() } : {}),
+    ...(opts.events ? { events: opts.events.hash() } : {}),
+  };
+  return hashObjectSync(hashable);
 }
 
-export class SimpleTokenStrategy implements TokenStrategie {
-  private tc: TokenAndClaims;
-  constructor(jwk: string) {
-    this.tc = {
-      token: jwk,
-      claims: decodeJwt(jwk) as FPCloudClaim,
-    };
-  }
-
-  stop(): void {
-    // console.log("SimpleTokenStrategy stop");
-    return;
-  }
-
-  open(): void {
-    // console.log("SimpleTokenStrategy open");
-    return;
-  }
-  async tryToken(): Promise<TokenAndClaims | undefined> {
-    // console.log("SimpleTokenStrategy gatherToken");
-    return this.tc;
-  }
-  async waitForToken(): Promise<TokenAndClaims | undefined> {
-    // console.log("SimpleTokenStrategy waitForToken");
-    return this.tc;
-  }
+const toClouds = new KeyedResolvOnce<ToCloudAttachable>();
+// if nothing set we need one global text per runtime
+// this could break if we are e.g. logging in multiple users in
+// the same runtime
+const defaultAppContext = new AppContext();
+export function toCloud(iopts: Partial<ToCloudBase> & ToCloudRequiredOpts): ToCloudAttachable {
+  return toClouds.get(hashForToCloudBase(iopts)).once(() => {
+    return new ToCloud({
+      ...iopts,
+      urls: iopts.urls ?? {},
+      events: iopts.events ?? {
+        hash: () => "1",
+        changed: async () => {
+          /* no-op */
+        },
+      },
+      context: iopts.context ?? defaultAppContext,
+      strategy: iopts.strategy,
+    });
+  });
 }

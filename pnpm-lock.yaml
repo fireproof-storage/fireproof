@@ -71,8 +71,8 @@ importers:
   cli:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -126,8 +126,8 @@ importers:
   cloud/3rd-party:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
@@ -151,8 +151,8 @@ importers:
   cloud/backend/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
         specifier: ^4.20250906.0
         version: 4.20250906.0
@@ -215,8 +215,8 @@ importers:
   cloud/backend/cf-d1:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
         specifier: ^4.20250906.0
         version: 4.20250906.0
@@ -276,8 +276,8 @@ importers:
   cloud/backend/node:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -337,8 +337,8 @@ importers:
   cloud/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../../core/blockstore
@@ -377,8 +377,8 @@ importers:
   cloud/todo-app:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../vendor
@@ -408,8 +408,8 @@ importers:
   core/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -454,8 +454,8 @@ importers:
   core/blockstore:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -517,8 +517,8 @@ importers:
   core/core:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -538,8 +538,8 @@ importers:
   core/device-id:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.23
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../keybag
@@ -569,8 +569,8 @@ importers:
   core/gateways/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -593,8 +593,8 @@ importers:
   core/gateways/cloud:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -623,8 +623,8 @@ importers:
   core/gateways/file:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -666,8 +666,8 @@ importers:
   core/gateways/file-deno:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -684,8 +684,8 @@ importers:
   core/gateways/file-node:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -696,8 +696,8 @@ importers:
   core/gateways/indexeddb:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -729,8 +729,8 @@ importers:
   core/gateways/memory:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -769,8 +769,8 @@ importers:
   core/keybag:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-file':
         specifier: workspace:0.0.0
         version: link:../gateways/file
@@ -799,8 +799,8 @@ importers:
   core/protocols/cloud:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -823,8 +823,8 @@ importers:
   core/protocols/dashboard:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -862,8 +862,8 @@ importers:
   core/runtime:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@adviser/ts-xxhash':
         specifier: ^1.0.2
         version: 1.0.2
@@ -899,8 +899,8 @@ importers:
   core/tests:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core
@@ -916,6 +916,9 @@ importers:
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
+      '@fireproof/core-gateways-cloud':
+        specifier: workspace:0.0.0
+        version: link:../gateways/cloud
       '@fireproof/core-gateways-file':
         specifier: workspace:0.0.0
         version: link:../gateways/file
@@ -1008,8 +1011,8 @@ importers:
   core/types/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -1035,8 +1038,8 @@ importers:
   core/types/blockstore:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1060,8 +1063,8 @@ importers:
   core/types/protocols/cloud:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1097,8 +1100,8 @@ importers:
   core/types/runtime:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
@@ -1109,8 +1112,8 @@ importers:
   dashboard:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@clerk/backend':
         specifier: ^2.12.1
         version: 2.12.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1278,8 +1281,8 @@ importers:
   use-fireproof:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../core/base
@@ -1316,6 +1319,9 @@ importers:
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
+      ts-essentials:
+        specifier: ^10.1.1
+        version: 10.1.1(typescript@5.9.2)
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -1345,8 +1351,8 @@ importers:
   vendor:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.23
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       yocto-queue:
         specifier: ^1.2.1
         version: 1.2.1
@@ -1513,8 +1519,8 @@ packages:
   '@adraffy/ens-normalize@1.11.0':
     resolution: {integrity: sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==}
 
-  '@adviser/cement@0.4.32':
-    resolution: {integrity: sha512-BpLYQyKGuvrsJbwwgclUp6qlMeDQF9WrIrs0yNAotbnDfrWFFwDRU+dDZEW6tWxq6msszu/EjpEBeH8cMnaX2A==}
+  '@adviser/cement@0.4.35':
+    resolution: {integrity: sha512-dIdgMlV34pcjv8pBy40tdA0MnM+XYOOQwFD7qG1ncmWzu7ftEHDw271oEc53TjfLb5FiLwPD+AaU6e+zBrGcrQ==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -6609,7 +6615,7 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.0': {}
 
-  '@adviser/cement@0.4.32(typescript@5.9.2)':
+  '@adviser/cement@0.4.35(typescript@5.9.2)':
     dependencies:
       ts-essentials: 10.1.1(typescript@5.9.2)
       yaml: 2.8.1

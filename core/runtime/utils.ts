@@ -69,7 +69,7 @@ class SuperThisImpl implements SuperThis {
     this.crypto = opts.crypto;
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
-    this.ctx = AppContext.merge(opts.ctx);
+    this.ctx = opts.ctx;
     // console.log("superThis", this);
   }
 
@@ -153,6 +153,7 @@ class pathOpsImpl implements PathOps {
 }
 const pathOps = new pathOpsImpl();
 const txtOps = ((txtEncoder, txtDecoder) => ({
+  id: () => "fp-txtOps",
   encode: (input: string) => txtEncoder.encode(input),
   decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
   base64: {
@@ -189,11 +190,14 @@ export function onSuperThis(fn: (sthis: SuperThis) => void): () => void {
   };
 }
 
+// const superThises = new KeyedResolvOnce<SuperThis>();
+
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
   const env = envFactory({
     symbol: osthis?.env?.symbol || "FP_ENV",
     presetEnv: presetEnv(osthis?.env?.presetEnv),
   });
+
   const ret = new SuperThisImpl({
     logger: osthis?.logger || globalLogger(),
     env,
