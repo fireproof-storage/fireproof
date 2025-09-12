@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { AttachState as AttachHook, UseFPConfig, WebCtxHook, WebToCloudCtx } from "./types.js";
-import { AppContext, BuildURI, exception2Result, KeyedResolvOnce, ResolveOnce } from "@adviser/cement";
+import { AppContext, exception2Result, KeyedResolvOnce, ResolveOnce, URI } from "@adviser/cement";
 import { decodeJwt } from "jose/jwt/decode";
 import { SuperThis, Database, KeyBagIf } from "@fireproof/core-types-base";
-import { ensureSuperThis } from "@fireproof/core-runtime";
+import { ensureSuperThis, hashObjectSync } from "@fireproof/core-runtime";
 import {
   FPCloudClaim,
   ToCloudAttachable,
@@ -14,6 +14,8 @@ import {
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
 import { getKeyBag } from "@fireproof/core-keybag";
+import { Writable } from "ts-essentials";
+import { hashForToCloudBase } from "@fireproof/core-gateways-cloud";
 
 export const WebCtx = "webCtx";
 
@@ -22,39 +24,47 @@ export type ToCloudParam = Omit<ToCloudOptionalOpts, "strategy"> &
 
 class WebCtxImpl implements WebToCloudCtx {
   readonly onActions = new Set<(token?: TokenAndClaims) => void>();
-  readonly dashboardURI: string;
-  readonly tokenApiURI: string;
+  readonly dashboardURI!: string;
+  readonly tokenApiURI!: string;
   // readonly uiURI: string;
-  readonly tokenParam: string;
+  readonly tokenParam!: string;
   // if not provided set in ready
   keyBag?: KeyBagIf;
-  readonly sthis: SuperThis;
+  readonly sthis!: SuperThis;
 
   dbId!: string;
 
-  private opts: ToCloudParam;
+  readonly opts!: ToCloudParam;
   // readonly myTokenChange = new ResolveOnce();
 
-  constructor(opts: ToCloudParam) {
+  static hash(opts: ToCloudParam) {
+    const my = {} as WebCtxImpl;
+    WebCtxImpl.prototype.setup.apply(my, [opts]);
+    return hashObjectSync({
+      dashboardURI: my.dashboardURI,
+      tokenApiURI: my.tokenApiURI,
+      tokenParam: my.tokenParam,
+      ...(my.keyBag ? { keyBag: my.keyBag.hash() } : {}),
+      ...(my.opts ? { opts: hashForToCloudBase(my.opts) } : {}),
+    });
+  }
+
+  setup(this: Writable<WebCtxImpl>, opts: ToCloudParam): void {
     this.dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/fp/cloud/api/token";
     if (!opts.tokenApiURI) {
-      this.tokenApiURI = BuildURI.from(this.dashboardURI).pathname("/api").toString();
+      this.tokenApiURI = URI.from(this.dashboardURI).build().pathname("/api").toString();
     } else {
       this.tokenApiURI = opts.tokenApiURI;
     }
     // this.uiURI = opts.uiURI ?? "https://dev.connect.fireproof.direct/api";
     this.tokenParam = opts.tokenParam ?? "fpToken";
-
     this.sthis = opts.sthis ?? ensureSuperThis();
     this.keyBag = opts.keyBag; // ?? kb.getKeyBag(ensureSuperThis());
-
-    // if (opts.keyBag) {
-    //   this.keyBag = opts.keyBag;
-    // } else {
-    //   const sthis = opts.sthis ?? ensureSuperThis();
-    //   this.keyBag = kb.getKeyBag(sthis)
-    // }
     this.opts = opts;
+  }
+
+  constructor(opts: ToCloudParam) {
+    this.setup(opts);
   }
 
   async ready(db: Database): Promise<void> {
@@ -132,8 +142,11 @@ class WebCtxImpl implements WebToCloudCtx {
 
 // export type WebToCloudOpts = WebToCloudCtx & { readonly strategy?: TokenStrategie }
 
+const webCtxs = new KeyedResolvOnce<WebToCloudCtx>();
 export function defaultWebToCloudOpts(opts: ToCloudParam): WebToCloudCtx {
-  return new WebCtxImpl(opts);
+  return webCtxs.get(WebCtxImpl.hash(opts)).once(() => {
+    return new WebCtxImpl(opts);
+  });
 }
 
 const initialCtx = {
@@ -146,7 +159,12 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
   const [attachState, setAttachState] = useState<AttachHook>({ state: "initial", ctx: initialCtx });
 
   useEffect(() => {
-    prepareWebctxs.get(database.ledger.refId()).once(() => {
+    if (!config.attach) {
+      return;
+    }
+    // this mergest the config of the ledger with the config of the attachable
+    // the attach call well
+    prepareWebctxs.get(database.ledger.refId() + config.attach.configHash(database.ledger)).once(() => {
       if (config.attach && attachState.state === "initial") {
         // const id = database.sthis.nextId().str;
         setAttachState((prev) => ({ ...prev, state: "attaching" }));
