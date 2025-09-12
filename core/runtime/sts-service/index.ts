@@ -116,7 +116,7 @@ export class SessionTokenService {
       userId: p.userId,
       tenants: p.tenants,
       ledgers: p.ledgers,
-      email: "test@test",
+      email: "test@test.de",
       created: new Date(),
       selected: {
         tenant: p.tenants[0].id,

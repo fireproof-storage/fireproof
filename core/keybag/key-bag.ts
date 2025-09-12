@@ -57,6 +57,10 @@ export class KeyBag implements KeyBagIf {
     this.#namedKeyItems = namedKeyItems;
   }
 
+  hash(): string {
+    return this.rt.id();
+  }
+
   readonly _warnOnce: ResolveOnce<void> = new ResolveOnce<void>();
   async subtleKey(materialStrOrUint8: string | Uint8Array): Promise<CryptoKey> {
     const extractable = this.rt.url.getParam(PARAM.EXTRACTKEY) === "_deprecated_internal_api";
