@@ -21,6 +21,8 @@ export interface KeyBagIf {
   readonly logger: Logger;
   readonly rt: KeyBagRuntime;
 
+  hash(): string;
+
   subtleKey(materialStrOrUint8: string | Uint8Array): Promise<CryptoKey>;
 
   ensureKeyFromUrl(url: URI, keyFactory: () => string): Promise<Result<URI>>;

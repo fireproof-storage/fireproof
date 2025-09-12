@@ -603,6 +603,76 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
   });
 });
 
+describe("useFireproof and attach toCloud complex", () => {
+  // it("string are unique", () => {
+
+  //   function mark(x: string) {
+  //     const toMark = x as unknown as { __fped?: string };
+  //     if (toMark.__fped) {
+  //       return toMark.__fped
+  //     }
+  //     toMark.__fped = (~~(Math.random() * 0x1000_0000)).toString(16);
+  //     return toMark.__fped;
+  //   }
+
+  //   const set = new Set<string>();
+  //   for (let i = 0; i < 10; i++) {
+  //     const y = "hello";
+  //     const x = mark(y);
+  //     set.add(x);
+  //   }
+  //   expect(set.size).toBe(1);
+  // });
+  it("runs offen does once", async () => {
+    const source2Id = new Map<string, string>();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    function tagFn<T extends Function>(fn: T): string {
+      // const fnProto = (fn as unknown as { __proto__?: { __fped?: string } }).__proto__;
+      // if (!fnProto) {
+      //   throw new Error("no proto");
+      // }
+      // if (fnProto && fnProto.__fped){
+      //   return fnProto.__fped;
+      // }
+      // fnProto.__fped = (~~(Math.random() * 0x1000_0000)).toString(16);
+      // return fnProto.__fped;
+
+      // const fnTag = (fn as unknown as { __fped?: string });
+      // if (fnTag.__fped) {
+      //   return fnTag.__fped;
+      // }
+      // const newTag =
+      // return newTag;
+      const src = fn.toString();
+      const sid = source2Id.get(src);
+      if (sid) {
+        return sid;
+      }
+      const id = (~~(Math.random() * 0x1000_0000)).toString(16);
+      source2Id.set(src, id);
+      return id;
+    }
+    const fnSet = new Set<string>();
+
+    for (let i = 0; i < 10; i++) {
+      const db = () => 4;
+      function x() {
+        return 4;
+      }
+      fnSet.add(tagFn(db));
+      fnSet.add(tagFn(x));
+      fnSet.add(tagFn(() => 1));
+      fnSet.add(
+        tagFn(function () {
+          return 2;
+        }),
+      );
+      fnSet.add(tagFn(it));
+    }
+    expect(fnSet.size).toBe(5);
+  });
+});
+
 describe("useFireproof calling submit()", () => {
   const dbName = "submitDb";
   let db: Database, docResult: UseDocumentResult<{ input: string }>;

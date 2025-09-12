@@ -1,4 +1,4 @@
-import { BuildURI, Logger } from "@adviser/cement";
+import { BuildURI, Lazy, Logger } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
@@ -6,6 +6,7 @@ import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fire
 import { Api } from "@fireproof/core-protocols-dashboard";
 import { WebToCloudCtx } from "./react/types.js";
 import { WebCtx } from "./react/use-attach.js";
+import { hashObjectSync } from "@fireproof/core-runtime";
 
 function defaultOverlayHtml(redirectLink: string) {
   return `
@@ -76,6 +77,12 @@ export class RedirectStrategy implements TokenStrategie {
     this.overlayCss = opts.overlayCss ?? defaultOverlayCss;
     this.overlayHtml = opts.overlayHtml ?? defaultOverlayHtml;
   }
+  readonly hash = Lazy(() =>
+    hashObjectSync({
+      overlayCss: this.overlayCss,
+      overlayHtml: this.overlayHtml("X").toString(),
+    }),
+  );
 
   open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts) {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;

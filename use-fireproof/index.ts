@@ -17,6 +17,7 @@ import {
 import { WebToCloudCtx } from "./react/types.js";
 import { defaultWebToCloudOpts, WebCtx } from "./react/use-attach.js";
 import { toCloud as toCloudCore } from "@fireproof/core-gateways-cloud";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 
 export type UseFpToCloudParam = Omit<Omit<Omit<ToCloudOptionalOpts, "strategy">, "context">, "events"> &
   Partial<WebToCloudCtx> & {
@@ -29,13 +30,20 @@ async function defaultChanged() {
   throw new Error("not ready");
 }
 
+const defaultRedirectStrategy = new RedirectStrategy();
 export function toCloud(opts: UseFpToCloudParam = {}): ToCloudAttachable {
-  const mergedEvents = { ...opts.events, changed: opts.events?.changed ?? defaultChanged };
+  const mergedEvents = {
+    ...opts.events,
+    hash: opts.events?.hash ?? (() => "1"),
+    changed: opts.events?.changed ?? defaultChanged,
+  };
+  const sthis = opts.sthis ?? ensureSuperThis();
   const myOpts = {
     ...opts,
+    sthis,
     events: mergedEvents,
-    context: opts.context ?? new AppContext(),
-    strategy: opts.strategy ?? new RedirectStrategy(),
+    context: opts.context ?? sthis.ctx /* ensureSuperThis() creates always a new context */,
+    strategy: opts.strategy ?? defaultRedirectStrategy,
     urls: opts.urls ?? {},
   };
   const webCtx = defaultWebToCloudOpts(myOpts);

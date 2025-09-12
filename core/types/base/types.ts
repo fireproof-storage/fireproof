@@ -127,6 +127,7 @@ export interface Base64EndeCoder {
   decode(input: string): string;
 }
 export interface TextEndeCoder {
+  id(): string;
   encode(input: string): Uint8Array;
   decode(input: ToUInt8): string;
   readonly base64: Base64EndeCoder;
@@ -153,6 +154,7 @@ export interface SuperThis {
   readonly pathOps: PathOps;
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
+  // hash(): string;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
   start(): Promise<void>;

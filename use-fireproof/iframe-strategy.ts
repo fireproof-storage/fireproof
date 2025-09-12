@@ -5,6 +5,10 @@ import { WebCtx } from "./react/use-attach.js";
 import { WebToCloudCtx } from "./react/types.js";
 
 export class IframeStrategy implements TokenStrategie {
+  hash(): string {
+    return "IframeStrategy: this is not a advance";
+  }
+
   fpIframeOverlay() {
     const div = document.createElement("div");
     div.id = "fpIframeOverlay";
