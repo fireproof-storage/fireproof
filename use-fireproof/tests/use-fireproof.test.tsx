@@ -623,7 +623,7 @@ describe("useFireproof and attach toCloud complex", () => {
   //   }
   //   expect(set.size).toBe(1);
   // });
-  it("runs offen does once", async () => {
+  it("tags identical function sources only once per run", async () => {
     const source2Id = new Map<string, string>();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     function tagFn<T extends Function>(fn: T): string {
@@ -648,7 +648,7 @@ describe("useFireproof and attach toCloud complex", () => {
       if (sid) {
         return sid;
       }
-      const id = (~~(Math.random() * 0x1000_0000)).toString(16);
+      const id = hashStringSync(src);
       source2Id.set(src, id);
       return id;
     }
