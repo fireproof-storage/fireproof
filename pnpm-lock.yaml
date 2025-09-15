@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.35.0
         version: 9.35.0(jiti@1.21.7)
@@ -66,7 +66,7 @@ importers:
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       wrangler:
         specifier: ^4.34.0
-        version: 4.34.0(@cloudflare/workers-types@4.20250906.0)
+        version: 4.34.0(@cloudflare/workers-types@4.20250913.0)
 
   cli:
     dependencies:
@@ -154,8 +154,8 @@ importers:
         specifier: ^0.4.35
         version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
-        specifier: ^4.20250906.0
-        version: 4.20250906.0
+        specifier: ^4.20250913.0
+        version: 4.20250913.0
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -182,7 +182,7 @@ importers:
         version: 1.0.20
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
         specifier: ^4.9.6
         version: 4.9.6
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -218,8 +218,8 @@ importers:
         specifier: ^0.4.35
         version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
-        specifier: ^4.20250906.0
-        version: 4.20250906.0
+        specifier: ^4.20250913.0
+        version: 4.20250913.0
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -246,7 +246,7 @@ importers:
         version: 0.14.1
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
         specifier: ^4.9.6
         version: 4.9.6
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       tsx:
         specifier: ^4.20.4
         version: 4.20.5
@@ -268,7 +268,7 @@ importers:
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       wrangler:
         specifier: ^4.34.0
-        version: 4.34.0(@cloudflare/workers-types@4.20250906.0)
+        version: 4.34.0(@cloudflare/workers-types@4.20250913.0)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -313,7 +313,7 @@ importers:
         version: 0.15.15
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
         specifier: ^4.9.6
         version: 4.9.6
@@ -329,7 +329,7 @@ importers:
         version: 24.3.1
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -1132,10 +1132,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.10.1
-        version: 1.12.0(vite@7.1.5(@types/node@24.3.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20250902.0)(wrangler@4.34.0(@cloudflare/workers-types@4.20250906.0))
+        version: 1.12.0(vite@7.1.5(@types/node@24.3.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20250902.0)(wrangler@4.34.0(@cloudflare/workers-types@4.20250913.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20250906.0
-        version: 4.20250906.0
+        specifier: ^4.20250913.0
+        version: 4.20250913.0
       '@eslint/js':
         specifier: ^9.35.0
         version: 9.35.0
@@ -1168,10 +1168,10 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       eslint:
         specifier: ^9.35.0
         version: 9.35.0(jiti@1.21.7)
@@ -1210,7 +1210,7 @@ importers:
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       wrangler:
         specifier: ^4.34.0
-        version: 4.34.0(@cloudflare/workers-types@4.20250906.0)
+        version: 4.34.0(@cloudflare/workers-types@4.20250913.0)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -1684,8 +1684,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20250906.0':
-    resolution: {integrity: sha512-CMRTupQpAdNZJrxRGaM2JzxmpWOnzgxcyTGmjAOcosRfi1ZsNUTAZ0kj1dzY+4bPDIdFwvvJL3t91DEpqitOJg==}
+  '@cloudflare/workers-types@4.20250913.0':
+    resolution: {integrity: sha512-JjrYEvRn7cyALxwoFTw3XChaQneHSJOXqz2t5iKEpNzAnC2iPQU75rtTK/gw03Jjy4SHY5aEBh/uqQePtonZlA==}
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
@@ -6516,7 +6516,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20250902.0
 
-  '@cloudflare/vite-plugin@1.12.0(vite@7.1.5(@types/node@24.3.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20250902.0)(wrangler@4.34.0(@cloudflare/workers-types@4.20250906.0))':
+  '@cloudflare/vite-plugin@1.12.0(vite@7.1.5(@types/node@24.3.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20250902.0)(wrangler@4.34.0(@cloudflare/workers-types@4.20250913.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.6.3(unenv@2.0.0-rc.19)(workerd@1.20250902.0)
       '@remix-run/node-fetch-server': 0.8.0
@@ -6526,7 +6526,7 @@ snapshots:
       tinyglobby: 0.2.14
       unenv: 2.0.0-rc.19
       vite: 7.1.5(@types/node@24.3.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
-      wrangler: 4.34.0(@cloudflare/workers-types@4.20250906.0)
+      wrangler: 4.34.0(@cloudflare/workers-types@4.20250913.0)
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
@@ -6563,7 +6563,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20250902.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20250906.0': {}
+  '@cloudflare/workers-types@4.20250913.0': {}
 
   '@coinbase/wallet-sdk@4.3.0':
     dependencies:
@@ -8382,7 +8382,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -8392,9 +8392,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5):
+  drizzle-orm@0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250906.0
+      '@cloudflare/workers-types': 4.20250913.0
       '@libsql/client': 0.15.15
       gel: 2.1.1
       kysely: 0.28.5
@@ -10840,7 +10840,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20250902.0
       '@cloudflare/workerd-windows-64': 1.20250902.0
 
-  wrangler@4.34.0(@cloudflare/workers-types@4.20250906.0):
+  wrangler@4.34.0(@cloudflare/workers-types@4.20250913.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.7.2(unenv@2.0.0-rc.20)(workerd@1.20250902.0)
@@ -10851,7 +10851,7 @@ snapshots:
       unenv: 2.0.0-rc.20
       workerd: 1.20250902.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250906.0
+      '@cloudflare/workers-types': 4.20250913.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
