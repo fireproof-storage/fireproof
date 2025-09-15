@@ -67,7 +67,7 @@
     "drizzle-kit": "0.30.6",
     "eslint": "^9.35.0",
     "eslint-plugin-import": "^2.32.0",
-    "multiformats": "^13.4.0",
+    "multiformats": "^13.4.1",
     "playwright": "^1.55.0",
     "playwright-chromium": "^1.55.0",
     "prettier": "^3.6.2",

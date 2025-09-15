@@ -43,7 +43,7 @@
     "i": "^0.3.7",
     "jose": "^6.1.0",
     "minimatch": "^10.0.1",
-    "multiformats": "^13.4.0",
+    "multiformats": "^13.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.62.0",

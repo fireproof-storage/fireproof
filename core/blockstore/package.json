@@ -52,7 +52,7 @@
     "@ipld/dag-cbor": "^9.2.5",
     "@ipld/dag-json": "^10.2.5",
     "@web3-storage/pail": "^0.6.2",
-    "multiformats": "^13.4.0",
+    "multiformats": "^13.4.1",
     "p-map": "^7.0.3",
     "p-retry": "^7.0.0"
   }
