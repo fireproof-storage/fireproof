@@ -42,7 +42,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "jose": "^6.1.0",
     "multiformats": "^13.4.0",
-    "zod": "^4.0.14"
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0"
