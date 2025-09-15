@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@clerk/clerk-react": "^5.47.0",
-    "@cloudflare/vite-plugin": "^1.10.1",
+    "@cloudflare/vite-plugin": "^1.13.1",
     "@cloudflare/workers-types": "^4.20250906.0",
     "@eslint/js": "^9.35.0",
     "@fireproof/core-cli": "workspace:0.0.0",
