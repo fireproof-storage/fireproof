@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.35.0
         version: 9.35.0(jiti@1.21.7)
@@ -184,8 +184,8 @@ importers:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
-        specifier: ^4.9.6
-        version: 4.9.6
+        specifier: ^4.9.7
+        version: 4.9.7
       jose:
         specifier: ^6.1.0
         version: 6.1.0
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -248,8 +248,8 @@ importers:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
-        specifier: ^4.9.6
-        version: 4.9.6
+        specifier: ^4.9.7
+        version: 4.9.7
       multiformats:
         specifier: ^13.4.0
         version: 13.4.0
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       tsx:
         specifier: ^4.20.4
         version: 4.20.5
@@ -304,10 +304,10 @@ importers:
         version: link:../../../vendor
       '@hono/node-server':
         specifier: ^1.19.1
-        version: 1.19.1(hono@4.9.6)
+        version: 1.19.1(hono@4.9.7)
       '@hono/node-ws':
         specifier: ^1.2.0
-        version: 1.2.0(@hono/node-server@1.19.1(hono@4.9.6))(hono@4.9.6)
+        version: 1.2.0(@hono/node-server@1.19.1(hono@4.9.7))(hono@4.9.7)
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
@@ -315,8 +315,8 @@ importers:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
-        specifier: ^4.9.6
-        version: 4.9.6
+        specifier: ^4.9.7
+        version: 4.9.7
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -329,7 +329,7 @@ importers:
         version: 24.3.1
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -1168,7 +1168,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
@@ -4357,8 +4357,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.9.6:
-    resolution: {integrity: sha512-doVjXhSFvYZ7y0dNokjwwSahcrAfdz+/BCLvAMa/vHLzjj8+CFyV5xteThGUsKdkaasgN+gF2mUxao+SGLpUeA==}
+  hono@4.9.7:
+    resolution: {integrity: sha512-t4Te6ERzIaC48W3x4hJmBwgNlLhmiEdEE5ViYb02ffw4ignHNHa5IBtPjmbKstmtKa8X6C35iWwK4HaqvrzG9w==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@2.8.9:
@@ -7040,14 +7040,14 @@ snapshots:
 
   '@formkit/auto-animate@0.8.4': {}
 
-  '@hono/node-server@1.19.1(hono@4.9.6)':
+  '@hono/node-server@1.19.1(hono@4.9.7)':
     dependencies:
-      hono: 4.9.6
+      hono: 4.9.7
 
-  '@hono/node-ws@1.2.0(@hono/node-server@1.19.1(hono@4.9.6))(hono@4.9.6)':
+  '@hono/node-ws@1.2.0(@hono/node-server@1.19.1(hono@4.9.7))(hono@4.9.7)':
     dependencies:
-      '@hono/node-server': 1.19.1(hono@4.9.6)
-      hono: 4.9.6
+      '@hono/node-server': 1.19.1(hono@4.9.7)
+      hono: 4.9.7
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -8382,7 +8382,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
@@ -9095,7 +9095,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.9.6: {}
+  hono@4.9.7: {}
 
   hosted-git-info@2.8.9: {}
 
