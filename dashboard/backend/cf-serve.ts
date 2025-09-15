@@ -1,7 +1,8 @@
 import { drizzle } from "drizzle-orm/d1";
-import { D1Database, Fetcher, Request as CFRequest, Response as CFResponse } from "@cloudflare/workers-types";
+import { D1Database, Fetcher, Request as CFRequest, Response as CFResponse, ResponseInit as CFResponseInit } from "@cloudflare/workers-types";
 import { CORS, createHandler } from "./create-handler.js";
 import { URI } from "@adviser/cement";
+import { handleJWKS } from "./handle-jwks.js";
 
 export interface Env {
   DB: D1Database;
@@ -16,6 +17,10 @@ export default {
       case uri.pathname.startsWith("/api"):
         // console.log("cf-serve", request.url, env);
         ares = createHandler(drizzle(env.DB), env)(request) as unknown as Promise<CFResponse>;
+        break;
+
+      case uri.pathname.startsWith("/.well-known/jwks.json"):
+        ares = handleJWKS((bi: string, init?: ResponseInit) => (new CFResponse(bi, init as CFResponseInit)) as Promise<CFResponse>);
         break;
 
       case uri.pathname.startsWith("/fp-logo.svg"):
