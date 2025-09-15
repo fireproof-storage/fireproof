@@ -44,6 +44,6 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "jose": "^6.0.12",
     "multiformats": "^13.4.0",
-    "zod": "^4.0.14"
+    "zod": "^4.1.8"
   }
 }
