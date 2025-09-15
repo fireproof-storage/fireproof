@@ -41,7 +41,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "jose": "^6.0.12",
-    "multiformats": "^13.4.0",
+    "multiformats": "^13.4.1",
     "zod": "^4.1.8"
   },
   "devDependencies": {

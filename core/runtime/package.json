@@ -45,7 +45,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "cborg": "^4.2.15",
     "jose": "^6.1.0",
-    "multiformats": "^13.4.0"
+    "multiformats": "^13.4.1"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:^"
