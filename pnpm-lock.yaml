@@ -154,8 +154,8 @@ importers:
         specifier: ^0.4.35
         version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
-        specifier: ^4.20250906.0
-        version: 4.20250906.0
+        specifier: ^4.20250913.0
+        version: 4.20250913.0
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -182,7 +182,7 @@ importers:
         version: 1.0.20
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
         specifier: ^4.9.7
         version: 4.9.7
@@ -218,8 +218,8 @@ importers:
         specifier: ^0.4.35
         version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
-        specifier: ^4.20250906.0
-        version: 4.20250906.0
+        specifier: ^4.20250913.0
+        version: 4.20250913.0
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -246,7 +246,7 @@ importers:
         version: 0.14.1
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
         specifier: ^4.9.7
         version: 4.9.7
@@ -313,7 +313,7 @@ importers:
         version: 0.15.15
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       hono:
         specifier: ^4.9.7
         version: 4.9.7
@@ -1134,8 +1134,8 @@ importers:
         specifier: ^1.10.1
         version: 1.12.0(vite@7.1.5(@types/node@24.3.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20250906.0)(wrangler@4.37.0(@cloudflare/workers-types@4.20250906.0))
       '@cloudflare/workers-types':
-        specifier: ^4.20250906.0
-        version: 4.20250906.0
+        specifier: ^4.20250913.0
+        version: 4.20250913.0
       '@eslint/js':
         specifier: ^9.35.0
         version: 9.35.0
@@ -1171,7 +1171,7 @@ importers:
         version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
-        version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
+        version: 0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
       eslint:
         specifier: ^9.35.0
         version: 9.35.0(jiti@1.21.7)
@@ -1696,8 +1696,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20250906.0':
-    resolution: {integrity: sha512-CMRTupQpAdNZJrxRGaM2JzxmpWOnzgxcyTGmjAOcosRfi1ZsNUTAZ0kj1dzY+4bPDIdFwvvJL3t91DEpqitOJg==}
+  '@cloudflare/workers-types@4.20250913.0':
+    resolution: {integrity: sha512-JjrYEvRn7cyALxwoFTw3XChaQneHSJOXqz2t5iKEpNzAnC2iPQU75rtTK/gw03Jjy4SHY5aEBh/uqQePtonZlA==}
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
@@ -6423,7 +6423,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20250906.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20250906.0': {}
+  '@cloudflare/workers-types@4.20250913.0': {}
 
   '@coinbase/wallet-sdk@4.3.0':
     dependencies:
@@ -8205,9 +8205,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5):
+  drizzle-orm@0.44.5(@cloudflare/workers-types@4.20250913.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250906.0
+      '@cloudflare/workers-types': 4.20250913.0
       '@libsql/client': 0.15.15
       gel: 2.1.1
       kysely: 0.28.5
@@ -10522,7 +10522,7 @@ snapshots:
       unenv: 2.0.0-rc.21
       workerd: 1.20250906.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20250906.0
+      '@cloudflare/workers-types': 4.20250913.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
