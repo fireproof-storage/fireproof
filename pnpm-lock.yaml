@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   drizzle-kit:
-    hash: 9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8
+    hash: qurcebuunk6oqtltwdee4xtzuy
     path: patches/drizzle-kit.patch
 
 importers:
@@ -33,7 +33,7 @@ importers:
         version: 2.4.4
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       eslint:
         specifier: ^9.35.0
         version: 9.35.0(jiti@1.21.7)
@@ -71,8 +71,8 @@ importers:
   cli:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -126,8 +126,8 @@ importers:
   cloud/3rd-party:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
@@ -151,8 +151,8 @@ importers:
   cloud/backend/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
         specifier: ^4.20250906.0
         version: 4.20250906.0
@@ -204,7 +204,7 @@ importers:
         version: link:../../../core/types/protocols/cloud
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.1)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -215,8 +215,8 @@ importers:
   cloud/backend/cf-d1:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@cloudflare/workers-types':
         specifier: ^4.20250906.0
         version: 4.20250906.0
@@ -259,7 +259,7 @@ importers:
         version: link:../../../cli
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       tsx:
         specifier: ^4.20.4
         version: 4.20.5
@@ -276,8 +276,8 @@ importers:
   cloud/backend/node:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -329,7 +329,7 @@ importers:
         version: 24.3.1
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       zx:
         specifier: ^8.8.1
         version: 8.8.1
@@ -337,8 +337,8 @@ importers:
   cloud/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../../core/blockstore
@@ -377,8 +377,8 @@ importers:
   cloud/todo-app:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../vendor
@@ -408,8 +408,8 @@ importers:
   core/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -454,8 +454,8 @@ importers:
   core/blockstore:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -514,8 +514,8 @@ importers:
   core/core:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -535,8 +535,8 @@ importers:
   core/device-id:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.23
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../keybag
@@ -566,8 +566,8 @@ importers:
   core/gateways/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -590,8 +590,8 @@ importers:
   core/gateways/cloud:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -620,8 +620,8 @@ importers:
   core/gateways/file:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -657,8 +657,8 @@ importers:
   core/gateways/file-deno:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -675,8 +675,8 @@ importers:
   core/gateways/file-node:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -687,8 +687,8 @@ importers:
   core/gateways/indexeddb:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -711,8 +711,8 @@ importers:
   core/gateways/memory:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -742,8 +742,8 @@ importers:
   core/keybag:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-gateways-file':
         specifier: workspace:0.0.0
         version: link:../gateways/file
@@ -772,8 +772,8 @@ importers:
   core/protocols/cloud:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -796,8 +796,8 @@ importers:
   core/protocols/dashboard:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -814,8 +814,8 @@ importers:
   core/runtime:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@adviser/ts-xxhash':
         specifier: ^1.0.2
         version: 1.0.2
@@ -851,8 +851,8 @@ importers:
   core/tests:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core
@@ -954,8 +954,8 @@ importers:
   core/types/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -981,8 +981,8 @@ importers:
   core/types/blockstore:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1006,8 +1006,8 @@ importers:
   core/types/protocols/cloud:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1034,8 +1034,8 @@ importers:
   core/types/runtime:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
@@ -1046,8 +1046,8 @@ importers:
   dashboard:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@clerk/backend':
         specifier: ^2.12.1
         version: 2.12.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1165,7 +1165,7 @@ importers:
         version: 10.4.21(postcss@8.5.6)
       drizzle-kit:
         specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+        version: 0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy)
       drizzle-orm:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250906.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.5)
@@ -1215,8 +1215,8 @@ importers:
   use-fireproof:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.32
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../core/base
@@ -1282,8 +1282,8 @@ importers:
   vendor:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.23
-        version: 0.4.32(typescript@5.9.2)
+        specifier: ^0.4.35
+        version: 0.4.35(typescript@5.9.2)
       yocto-queue:
         specifier: ^1.2.1
         version: 1.2.1
@@ -1315,8 +1315,8 @@ packages:
   '@adraffy/ens-normalize@1.11.0':
     resolution: {integrity: sha512-/3DDPKHqqIqxUULp8yP4zODUY1i+2xvVWsv8A79xGWdCAG+8sb0hRh0Rk2QyOJUnnbyPUAZYcpBuRe3nS2OIUg==}
 
-  '@adviser/cement@0.4.32':
-    resolution: {integrity: sha512-BpLYQyKGuvrsJbwwgclUp6qlMeDQF9WrIrs0yNAotbnDfrWFFwDRU+dDZEW6tWxq6msszu/EjpEBeH8cMnaX2A==}
+  '@adviser/cement@0.4.35':
+    resolution: {integrity: sha512-dIdgMlV34pcjv8pBy40tdA0MnM+XYOOQwFD7qG1ncmWzu7ftEHDw271oEc53TjfLb5FiLwPD+AaU6e+zBrGcrQ==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -6070,7 +6070,7 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.0': {}
 
-  '@adviser/cement@0.4.32(typescript@5.9.2)':
+  '@adviser/cement@0.4.35(typescript@5.9.2)':
     dependencies:
       ts-essentials: 10.1.1(typescript@5.9.2)
       yaml: 2.8.1
@@ -8376,7 +8376,7 @@ snapshots:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
-  drizzle-kit@0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8):
+  drizzle-kit@0.30.6(patch_hash=qurcebuunk6oqtltwdee4xtzuy):
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
