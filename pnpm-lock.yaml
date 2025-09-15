@@ -1558,8 +1558,8 @@ packages:
     resolution: {integrity: sha512-EaPXIaOb3IVyn+3NRX9GVZeKk1eL1ugWOiyPzy7hfJvxRYhTBatZrwd32+nCkQ6igvRpRG4O+o5vWS1tSErbrg==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/clerk-js@5.91.2':
-    resolution: {integrity: sha512-6oqaLGo9dLXBginLoQwLtKsZwaayvHIbGgl5CQr6wPMSxrUai7DxAGwZCfE7CvqsRzJrn6cvUGSH00lnU2fMGA==}
+  '@clerk/clerk-js@5.93.0':
+    resolution: {integrity: sha512-nhcoJCwrH7wIgiGU9J1Bnzp1zzuZFIYNQ9Bmmg/ISMYtKFgqbnNFFKJunAIQq69tMK77aKTslPMrA+/jq9w9gA==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
@@ -1572,8 +1572,8 @@ packages:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
 
-  '@clerk/localizations@3.24.2':
-    resolution: {integrity: sha512-ElOLHQJALrWbnRpdausIsdGMmRzHYjl0WxAfkaP+u+NSk/4rIlsNsdvMCSqktC5pZUIqvRGGKKLhNFrvO/gx+g==}
+  '@clerk/localizations@3.25.1':
+    resolution: {integrity: sha512-l2wXzvawzcuh17e15cGBZS3ZTx14409tOHPdqojSvWsvZtO3FzC1UJw69JylCdcBcCEQWsF22Y/4sIy6hRo+gw==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/shared@3.24.1':
@@ -5006,8 +5006,8 @@ packages:
   preact@10.24.2:
     resolution: {integrity: sha512-1cSoF0aCC8uaARATfrlz4VCBqE8LwZwRfLgkxJOQwAlQt6ayTmi0D9OF7nXid1POI5SZidFuG9CnlXbDfLqY/Q==}
 
-  preact@10.27.1:
-    resolution: {integrity: sha512-V79raXEWch/rbqoNc7nT9E4ep7lu+mI3+sBmfRD4i1M73R3WLYcCtdI0ibxGVf4eQL8ZIz2nFacqEC+rmnOORQ==}
+  preact@10.27.2:
+    resolution: {integrity: sha512-5SYSgFKSyhCbk6SrXyMpqjb5+MQBgfvEKE/OC+PujcY34sOpqtr+0AZQtPYx5IA6VxynQ7rUPCtKzyovpj9Bpg==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -5620,8 +5620,8 @@ packages:
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
 
-  viem@2.37.4:
-    resolution: {integrity: sha512-1ig5O6l1wJmaw3yrSrUimjRLQEZon2ymTqSDjdntu6Bry1/tLC2GClXeS3SiCzrifpLxzfCLQWDITYVTBA10KA==}
+  viem@2.37.6:
+    resolution: {integrity: sha512-b+1IozQ8TciVQNdQUkOH5xtFR0z7ZxR8pyloENi/a+RA408lv4LoX12ofwoiT3ip0VRhO5ni1em//X0jn/eW0g==}
     peerDependencies:
       typescript: '>=5.0.4'
     peerDependenciesMeta:
@@ -6312,7 +6312,7 @@ snapshots:
       react-dom: 19.1.1(react@19.1.1)
       tslib: 2.8.1
 
-  '@clerk/localizations@3.24.2':
+  '@clerk/localizations@3.25.1':
     dependencies:
       '@clerk/types': 4.86.0
 
@@ -6430,7 +6430,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       clsx: 1.2.1
       eventemitter3: 5.0.1
-      preact: 10.27.1
+      preact: 10.27.2
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -9614,7 +9614,7 @@ snapshots:
 
   preact@10.24.2: {}
 
-  preact@10.27.1: {}
+  preact@10.27.2: {}
 
   prelude-ls@1.2.1: {}
 
