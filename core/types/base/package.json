@@ -41,7 +41,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "@web3-storage/pail": "^0.6.2",
     "jose": "^6.0.12",
-    "multiformats": "^13.4.0",
+    "multiformats": "^13.4.1",
     "prolly-trees": "^1.0.4",
     "zod": "^4.1.8"
   }
