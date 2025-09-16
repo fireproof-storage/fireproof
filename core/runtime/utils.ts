@@ -53,6 +53,8 @@ interface superThisOpts {
   readonly txt: TextEndeCoder;
 }
 
+let timeOrderHelper = Math.floor(Math.random() * 0x1000);
+
 class SuperThisImpl implements SuperThis {
   readonly logger: Logger;
   readonly env: Env;
@@ -89,7 +91,8 @@ class SuperThisImpl implements SuperThis {
       .map((i) => i.toString(16).padStart(2, "0"))
       .join("");
     return {
-      str: `${t.slice(0, 8)}-${t.slice(8)}-7${hex.slice(0, 3)}-${hex.slice(3, 7)}-${hex.slice(7, 19)}`,
+      // str: `${t.slice(0, 8)}-${t.slice(8)}-7${(timeOrderHelper++ & 0xfff).toString(16).padStart(3, "0").slice(0, 2)}-${hex.slice(3, 7)}-${hex.slice(7, 19)}`,
+      str: `${t.slice(0, 8)}-${t.slice(8)}-7${(timeOrderHelper++ & 0xfff).toString(16).padStart(3, "0")}-${hex.slice(3, 7)}-${hex.slice(7, 19)}`,
     };
   }
 
@@ -566,6 +569,19 @@ export async function hashObjectCID<T extends NonNullable<S>, S>(o: T): Promise<
   const bytes = json.encode(toSortedArray(o));
   const hash = await sha256.digest(bytes);
   return { cid: CID.create(1, json.code, hash), bytes, obj: o };
+}
+
+export async function hashBufferCID<T extends ToUInt8 | string>(i: T): Promise<CID> {
+
+  let o: ToUInt8;
+  if (typeof i === "string") {
+    o = txtOps.encode(i);
+  } else {
+    o = i
+  }
+  const bytes = await coercePromiseIntoUint8(o);
+  const hash = await sha256.digest(bytes.Ok());
+  return CID.create(1, json.code, hash);
 }
 
 export function sleep(ms: number) {

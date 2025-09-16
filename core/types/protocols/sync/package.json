@@ -1,7 +1,7 @@
 {
-  "name": "@fireproof/core-blockstore",
+  "name": "@fireproof/core-types-protocols-sync",
   "version": "0.0.0",
-  "description": "Live ledger for the web.",
+  "description": "SyncDB Protocol to track what we send",
   "type": "module",
   "main": "./index.js",
   "scripts": {
@@ -37,24 +37,6 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.32",
-    "@fireproof/core-gateways-base": "workspace:0.0.0",
-    "@fireproof/core-gateways-cloud": "workspace:0.0.0",
-    "@fireproof/core-gateways-file": "workspace:0.0.0",
-    "@fireproof/core-gateways-indexeddb": "workspace:0.0.0",
-    "@fireproof/core-gateways-memory": "workspace:0.0.0",
-    "@fireproof/core-keybag": "workspace:0.0.0",
-    "@fireproof/core-runtime": "workspace:0.0.0",
-    "@fireproof/core-types-base": "workspace:0.0.0",
-    "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "@fireproof/core-types-runtime": "workspace:0.0.0",
-    "@fireproof/vendor": "workspace:0.0.0",
-    "@ipld/car": "^5.4.2",
-    "@ipld/dag-cbor": "^9.2.5",
-    "@ipld/dag-json": "^10.2.5",
-    "@web3-storage/pail": "^0.6.2",
-    "level": "^10.0.0",
-    "multiformats": "^13.4.0",
-    "p-map": "^7.0.3",
-    "p-retry": "^7.0.0"
+    "zod": "^4.0.14"
   }
 }

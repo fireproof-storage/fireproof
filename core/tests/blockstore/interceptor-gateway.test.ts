@@ -220,6 +220,9 @@ describe("InterceptorGateway", () => {
       gateway: async (sthis) => {
         return new URITrackGateway(sthis, new Map<string, Uint8Array>(), gwUris);
       },
+      fpsync: async () => {
+        throw new Error("fpsync for uriTest: Not implemented");
+      },
     });
     const db = fireproof("interceptor-gateway", {
       storeUrls: {

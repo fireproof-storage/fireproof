@@ -20,6 +20,9 @@ describe("MetaKeyHack", () => {
     serdegateway: async () => {
       return new AddKeyToDbMetaGateway(memGw, "v2");
     },
+    fpsync: async () => {
+      throw new Error("fpsync for hack: Not implemented");
+    },
   });
 
   let db: Database;

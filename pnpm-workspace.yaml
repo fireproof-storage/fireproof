@@ -10,6 +10,13 @@ packages:
   - "use-fireproof"
   - "dashboard"
   - "vendor"
+  - "vendor/level/iota-array"
+  - "vendor/level/functional-red-black-tree"
+  - "vendor/level/supports"
+  - "vendor/level/transcoder"
+  - "vendor/level/maybe-combine-errors"
+  - "vendor/level/module-error"
+  - "vendor/level/abstract-level"
 #catalog:
 #  adviserCement: ^0.4.20
 #

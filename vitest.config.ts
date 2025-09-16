@@ -13,6 +13,13 @@ export default defineConfig({
       "cloud/backend/base/vitest.config.ts",
       "cli/vitest.config.ts",
       "dashboard/vitest.config.ts",
+
+      "vendor/level/iota-array/vitest.config.ts",
+      "vendor/level/functional-red-black-tree/vitest.config.ts",
+      "vendor/level/supports/vitest.config.ts",
+      "vendor/level/transcoder/vitest.config.ts",
+      "vendor/level/maybe-combine-errors/vitest.config.ts",
+      "vendor/level/module-error/vitest.config.ts"
     ],
   },
 });
