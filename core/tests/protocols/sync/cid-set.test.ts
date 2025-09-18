@@ -1,28 +1,40 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { CidSetService, SyncDatabase } from "@fireproof/core-protocols-sync";
+import { describe, it, expect, afterEach, afterAll, beforeAll } from "vitest";
+import { CidSetService } from "@fireproof/core-protocols-sync";
 import { ensureSuperThis } from "@fireproof/core-runtime";
+import { getGatewayFactoryItem, SerdeGatewayFactoryItem } from "@fireproof/core-blockstore";
+import { DBTable, FPIndexedDB, CidSet } from "@fireproof/core-types-blockstore";
+import { withSuperThis, WithSuperThis } from "@fireproof/core-types-base";
+import { URI } from "@adviser/cement";
 
 describe("CidSetService", () => {
   const sthis = ensureSuperThis();
-  const db = new SyncDatabase(sthis, "dexie://test-sync-db");
+  const backendURI = URI.from(sthis.env.get("FP_STORAGE_URL"));
+  let gw: SerdeGatewayFactoryItem;
+  let db: WithSuperThis<DBTable<CidSet>>;
+  let fpDb: FPIndexedDB;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await sthis.start();
-    await db.ready();
+    gw = getGatewayFactoryItem(backendURI.protocol) as SerdeGatewayFactoryItem;
+    fpDb = await gw.fpIndexedDB(sthis, backendURI.build().appendRelative("cid-sets").URI());
+    db = withSuperThis(fpDb.fpSync.cidSets(), sthis);
+  });
+  afterEach(async () => {
+    await db.clear();
   });
 
-  afterEach(async () => {
-    await db.close();
-    await db.destroy();
+  afterAll(async () => {
+    await fpDb.close();
+    await fpDb.destroy();
   });
 
   describe("put", () => {
-        it("should create a new cid set", async () => {
+    it("should create a new cid set", async () => {
       const cidSet = {
-          cid: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55f1",
-          car: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
-          type: "cidSet",
-        }
+        cid: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55f1",
+        car: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+        type: "cidSet",
+      };
 
       const result = await CidSetService.put(db, cidSet);
 
@@ -52,7 +64,7 @@ describe("CidSetService", () => {
 
   describe("get", () => {
     it("should retrieve existing cid set", async () => {
-              const cidSet = [
+      const cidSet = [
         {
           cid: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55f1",
           car: "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
@@ -67,14 +79,13 @@ describe("CidSetService", () => {
 
       await CidSetService.put(db, cidSet);
 
-      const r1 = await CidSetService.get(db, cidSet[0].cid)
-      const r2 = await CidSetService.get(db, cidSet[1].cid)
+      const r1 = await CidSetService.get(db, cidSet[0].cid);
+      const r2 = await CidSetService.get(db, cidSet[1].cid);
 
       expect(r1.isOk()).toBe(true);
       expect(r1.Ok()).toEqual(cidSet[0]);
       expect(r2.isOk()).toBe(true);
       expect(r2.Ok()).toEqual(cidSet[1]);
-
     });
 
     it("should return undefined for non-existent cid", async () => {

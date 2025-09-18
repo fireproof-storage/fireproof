@@ -9,3 +9,5 @@ import { IndexedDBGateway as GatewayImpl } from "./gateway-impl.js";
 export { GatewayImpl };
 
 export * from "./fp-sync.js";
+
+export * from "./fp-db.js";

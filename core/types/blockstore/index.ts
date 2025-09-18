@@ -5,3 +5,5 @@ export * from "./serde-gateway.js";
 export * from "./task-manager-if.js";
 export * from "./types.js";
 export * from "./gateway.js";
+export * from "./fp-sync.js";
+export * from "./fp-db.js";

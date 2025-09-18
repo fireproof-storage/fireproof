@@ -93,6 +93,7 @@ describe("IndexedDB create on write", () => {
 
   describe("action is not creating a db", () => {
     it("del", async () => {
+      // eslint-disable-next-line no-console
       console.warn(`⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️  The Core writes on del currently that should not the case on empty db's`);
       // const dbName = `indexdb-${sthis.nextId().str}`;
       // const db = fireproof(dbName);
@@ -191,7 +192,6 @@ describe("IndexedDB create on write", () => {
       it.each(notCreating)("was created $name", async (item) => {
         await item.action(db);
         const idbs = await indexedDB.databases();
-        // console.log("idbs", idbs, dbName);
         expect(idbs.find((i) => i.name === `fp.${dbName}`)).toBeDefined();
       });
     });

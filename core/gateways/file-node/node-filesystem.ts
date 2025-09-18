@@ -1,7 +1,77 @@
 import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } from "node:fs";
 import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { toArrayBuffer } from "./to-array-buffer.js";
-import type { SysFileSystem } from "@fireproof/core-types-base";
+import type { FPSqlCmd, FPSqlConn, FPSql, FPSqlResult, SysFileSystem } from "@fireproof/core-types-base";
+import { exception2Result } from "@adviser/cement";
+import type { DatabaseSync } from "node:sqlite";
+
+class NodeSqlite implements FPSql {
+  readonly path: string;
+  readonly db: DatabaseSync;
+  readonly fs: SysFileSystem;
+
+  constructor(db: DatabaseSync, fs: SysFileSystem, path: string) {
+    this.db = db;
+    this.path = path;
+    this.fs = fs;
+  }
+
+  async batch(sqlCmds: FPSqlCmd[]): Promise<FPSqlResult[]> {
+    const ret: FPSqlResult[] = [];
+    const withStmt = sqlCmds.map((cmd) => ({
+      ...cmd,
+      argss: cmd.argss ?? [[]],
+      stmt: this.db.prepare(cmd.sql),
+    }));
+    for (const cmd of withStmt) {
+      for (const args of cmd.argss) {
+        const r = exception2Result(() => cmd.stmt.all(...args));
+        switch (true) {
+          case r.isOk():
+            ret.push({ rows: r.Ok().map((i) => Object.values(i)) });
+            break;
+          case r.isErr():
+            ret.push({ error: r.Err() });
+            break;
+        }
+      }
+    }
+    return Promise.resolve(ret);
+  }
+
+  async transaction<T>(fn: (tx: FPSql) => Promise<T>): Promise<T> {
+    return fn(this);
+  }
+
+  close(): Promise<void> {
+    this.db.close();
+    return Promise.resolve();
+  }
+  destroy(): Promise<void> {
+    return this.fs.rm(this.path);
+  }
+}
+
+class NodeSqliteConn implements FPSqlConn {
+  readonly fs: SysFileSystem;
+  readonly #dbs: (path: string) => DatabaseSync;
+
+  static async create(fs: SysFileSystem): Promise<NodeSqliteConn> {
+    const rNodeSql = await exception2Result(() => import("node:sqlite"));
+    if (rNodeSql.isErr()) {
+      throw new Error("Need node:sqlite in node 22 and deno.");
+    }
+    const { DatabaseSync } = rNodeSql.Ok();
+    return new NodeSqliteConn(fs, (path: string) => new DatabaseSync(path));
+  }
+  private constructor(fs: SysFileSystem, dbs: (path: string) => DatabaseSync) {
+    this.fs = fs;
+    this.#dbs = dbs;
+  }
+  async open(path: string): Promise<FPSql> {
+    return new NodeSqlite(this.#dbs(path), this.fs, path);
+  }
+}
 
 export class NodeFileSystem implements SysFileSystem {
   fs?: {
@@ -14,6 +84,10 @@ export class NodeFileSystem implements SysFileSystem {
     unlink: typeof unlink;
     writeFile: typeof writeFile;
   };
+
+  sqlite(): Promise<FPSqlConn> {
+    return this.start().then((fs) => NodeSqliteConn.create(fs));
+  }
 
   async start(): Promise<SysFileSystem> {
     this.fs = await import("node:fs/promises");
@@ -45,38 +119,3 @@ export class NodeFileSystem implements SysFileSystem {
     return this.fs?.writeFile(path, data);
   }
 }
-
-// import { type NodeMap, join } from "../../sys-container.js";
-// import type { ObjectEncodingOptions, PathLike } from "fs";
-// import * as fs from "fs/promises";
-// import * as path from "path";
-// import * as os from "os";
-// import * as url from "url";
-// import { toArrayBuffer } from "./utils.js";
-
-// export async function createNodeSysContainer(): Promise<NodeMap> {
-//   // const nodePath = "node:path";
-//   // const nodeOS = "node:os";
-//   // const nodeURL = "node:url";
-//   // const nodeFS = "node:fs";
-//   // const fs = (await import("node:fs")).promises;
-//   // const assert = "assert";
-//   // const path = await import("node:path");
-//   return {
-//     state: "node",
-//     ...path,
-//     // ...(await import("node:os")),
-//     // ...(await import("node:url")),
-//     ...os,
-//     ...url,
-//     ...fs,
-//     join,
-//     stat: fs.stat as NodeMap["stat"],
-//     readdir: fs.readdir as NodeMap["readdir"],
-//     readfile: async (path: PathLike, options?: ObjectEncodingOptions): Promise<Uint8Array> => {
-//       const rs = await fs.readFile(path, options);
-//       return toArrayBuffer(rs);
-//     },
-//     writefile: fs.writeFile as NodeMap["writefile"],
-//   };
-// }

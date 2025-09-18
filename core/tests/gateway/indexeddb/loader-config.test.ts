@@ -1,6 +1,7 @@
 import { fireproof } from "@fireproof/core";
 import { mockSuperThis } from "../../helpers.js";
 import { describe, beforeAll, it, expect } from "vitest";
+import { Env } from "@adviser/cement";
 
 describe("fireproof config indexeddb", () => {
   const _my_app = "my-app";
@@ -13,7 +14,11 @@ describe("fireproof config indexeddb", () => {
   });
 
   it("indexeddb-loader", async () => {
+    const env = (globalThis as unknown as Record<symbol, Record<string, string>>)[Symbol.for("FP_ENV")] as unknown as Env;
+    const pre = env.get("FP_STORAGE_URL");
+    env.delete("FP_STORAGE_URL");
     const db = fireproof(my_app());
+    env.set("FP_STORAGE_URL", pre);
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
 

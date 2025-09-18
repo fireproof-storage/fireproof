@@ -642,7 +642,7 @@ describe("StoreURIRuntime", () => {
       gateway: function (): Promise<Gateway> {
         throw new Error("Function not implemented.");
       },
-      fpsync: async () => {
+      fpIndexedDB: async () => {
         throw new Error("fpsync for murks: Not implemented");
       },
     });

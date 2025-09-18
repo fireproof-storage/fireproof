@@ -16,6 +16,7 @@ const opts = tseslint.config(
   },
   {
     ignores: [
+      "vendor/level/**",
       "babel.config.cjs",
       "jest.config.js",
       "**/dist/",

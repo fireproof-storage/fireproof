@@ -1,19 +1,31 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { CarsService, SyncDatabase } from "@fireproof/core-protocols-sync";
+import { describe, it, expect, afterEach, afterAll, beforeAll } from "vitest";
+import { CarsService } from "@fireproof/core-protocols-sync";
 import { ensureSuperThis } from "@fireproof/core-runtime";
+import { getGatewayFactoryItem, SerdeGatewayFactoryItem } from "@fireproof/core-blockstore";
+import { DBTable, FPIndexedDB, Cars } from "@fireproof/core-types-blockstore";
+import { withSuperThis, WithSuperThis } from "use-fireproof";
+import { URI } from "@adviser/cement";
 
 describe("CarsService", () => {
   const sthis = ensureSuperThis();
-  const db = new SyncDatabase(sthis, "dexie://test-sync-db");
+  const backendURI = URI.from(sthis.env.get("FP_STORAGE_URL"));
+  let gw: SerdeGatewayFactoryItem;
+  let db: WithSuperThis<DBTable<Cars>>;
+  let fpDb: FPIndexedDB;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await sthis.start();
-    await db.ready();
+    gw = getGatewayFactoryItem(backendURI.protocol) as SerdeGatewayFactoryItem;
+    fpDb = await gw.fpIndexedDB(sthis, backendURI.build().appendRelative("cars").URI());
+    db = withSuperThis(fpDb.fpSync.cars(), sthis);
+  });
+  afterEach(async () => {
+    await db.clear();
   });
 
-  afterEach(async () => {
-    await db.close();
-    await db.destroy();
+  afterAll(async () => {
+    await fpDb.close();
+    await fpDb.destroy();
   });
 
   describe("upsert", () => {
@@ -26,7 +38,7 @@ describe("CarsService", () => {
       };
 
       const result = await CarsService.upsert(db, cars);
-      
+
       expect(result.isOk()).toBe(true);
       expect(result.Ok().type).toBe("cars");
       expect(result.Ok().carCid).toBe(cars.carCid);
@@ -54,7 +66,7 @@ describe("CarsService", () => {
       };
 
       const result = await CarsService.upsert(db, updatedCars);
-      
+
       expect(result.isOk()).toBe(true);
       expect(result.Ok().peers).toEqual(["peer1", "peer2", "peer3"]);
       expect(result.Ok().entries).toEqual(["cid1", "cid2", "cid3"]);
@@ -69,7 +81,7 @@ describe("CarsService", () => {
       };
 
       const result = await CarsService.upsert(db, cars);
-      
+
       expect(result.isOk()).toBe(true);
       expect(result.Ok().peers).toEqual(["peer1", "peer2"]);
     });
@@ -85,9 +97,9 @@ describe("CarsService", () => {
       };
 
       await CarsService.upsert(db, cars);
-      
+
       const result = await CarsService.get(db, "test-get-car-cid");
-      
+
       expect(result.isOk()).toBe(true);
       expect(result.Ok()?.carCid).toBe("test-get-car-cid");
       expect(result.Ok()?.entries).toEqual(["cid1", "cid2"]);
@@ -97,7 +109,7 @@ describe("CarsService", () => {
 
     it("should return undefined for non-existent car", async () => {
       const result = await CarsService.get(db, "non-existent-car-cid");
-      
+
       expect(result.isOk()).toBe(true);
       expect(result.Ok()).toBeUndefined();
     });

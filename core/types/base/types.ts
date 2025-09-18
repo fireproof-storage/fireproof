@@ -100,6 +100,41 @@ export interface FPStats {
   birthtime: Date | Falsy;
 }
 
+export type FPSQLInputValue = null | number | bigint | string | Uint8Array;
+export type FPSQLOutputValue = null | number | bigint | string | Uint8Array;
+
+export interface FPSqlCmd {
+  sql: string;
+  argss?: FPSQLInputValue[][];
+}
+
+export interface FPSqlResultError {
+  readonly error: Error;
+}
+export function isFPSqlResultError(r: FPSqlResult): r is FPSqlResultError {
+  return (r as FPSqlResultError).error !== undefined;
+}
+export interface FPSqlResultOk {
+  readonly rows: FPSQLOutputValue[][];
+}
+
+export function isFPSqlResultOk(r: FPSqlResult): r is FPSqlResultOk {
+  return (r as FPSqlResultOk).rows !== undefined;
+}
+
+export type FPSqlResult = FPSqlResultOk | FPSqlResultError;
+
+export interface FPSql {
+  batch(sqlCmds: FPSqlCmd[]): Promise<FPSqlResult[]>;
+  transaction<T>(fn: (tx: Omit<FPSql, "transaction">) => Promise<T>): Promise<T>;
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+}
+
+export interface FPSqlConn {
+  open(path: string): Promise<FPSql>;
+}
+
 export interface SysFileSystem {
   start(): Promise<SysFileSystem>;
   mkdir(path: string, options?: { recursive: boolean }): Promise<string | undefined>;
@@ -110,6 +145,7 @@ export interface SysFileSystem {
   stat(path: string): Promise<FPStats>;
   unlink(path: string): Promise<void>;
   writefile(path: string, data: Uint8Array | string): Promise<void>;
+  sqlite(): Promise<FPSqlConn>;
 }
 
 export interface PathOps {
@@ -159,6 +195,12 @@ export interface SuperThis {
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;
+}
+
+export type WithSuperThis<T> = T & { readonly sthis: SuperThis };
+export function withSuperThis<T>(t: T, sthis: SuperThis): WithSuperThis<T> {
+  (t as { sthis: SuperThis }).sthis = sthis;
+  return t as WithSuperThis<T>;
 }
 
 export interface IdleEventFromCommitQueue {

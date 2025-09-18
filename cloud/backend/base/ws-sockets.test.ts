@@ -1,4 +1,4 @@
-import { sleep } from "@fireproof/core-runtime";
+import { consumeStream, sleep } from "@fireproof/core-runtime";
 import * as ps from "@fireproof/core-types-protocols-cloud";
 import { Msger } from "@fireproof/core-protocols-cloud";
 import { testSuperThis } from "@fireproof/cloud-base";
@@ -37,17 +37,6 @@ describe("test multiple connections", () => {
   afterAll(async () => {
     // await hserv.close();
   });
-
-  function consumeStream(stream: ReadableStream<ps.MsgWithError<ps.MsgWithConn>>, cb: (msg: ps.MsgBase) => void): void {
-    const reader = stream.getReader();
-    async function readNext() {
-      const { done, value } = await reader.read();
-      if (done) return;
-      cb(value);
-      readNext();
-    }
-    readNext();
-  }
 
   it("could open multiple connections", async () => {
     const id = sthis.nextId(4).str;

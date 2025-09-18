@@ -1,19 +1,33 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { PeersService, SyncDatabase } from "@fireproof/core-protocols-sync";
+import { describe, it, expect, afterEach, beforeAll, afterAll } from "vitest";
+import { PeersService } from "@fireproof/core-protocols-sync";
 import { ensureSuperThis, hashBufferCID } from "@fireproof/core-runtime";
+import { getGatewayFactoryItem, SerdeGatewayFactoryItem } from "@fireproof/core-blockstore";
+import { DBTable, FPIndexedDB, Peers } from "@fireproof/core-types-blockstore";
+import { withSuperThis, WithSuperThis } from "@fireproof/core-types-base";
+import { URI } from "@adviser/cement";
 
 describe("PeersService", () => {
   const sthis = ensureSuperThis();
-  const db = new SyncDatabase(sthis, "dexie://test-sync-db");
+  const backendURI = URI.from(sthis.env.get("FP_STORAGE_URL"));
+  // console.log("backendURI", backendURI.toString())
+  let gw: SerdeGatewayFactoryItem;
+  let db: WithSuperThis<DBTable<Peers>>;
+  let fpDb: FPIndexedDB;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await sthis.start();
-    await db.ready();
+    gw = getGatewayFactoryItem(backendURI.protocol) as SerdeGatewayFactoryItem;
+    fpDb = await gw.fpIndexedDB(sthis, backendURI.build().appendRelative("peers").URI());
+    db = withSuperThis(fpDb.fpSync.peers(), sthis);
   });
 
   afterEach(async () => {
-    await db.close();
-    await db.destroy();
+    await db.clear();
+  });
+
+  afterAll(async () => {
+    await fpDb.close();
+    await fpDb.destroy();
   });
 
   describe("upsert", () => {

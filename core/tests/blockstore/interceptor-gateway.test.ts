@@ -220,7 +220,7 @@ describe("InterceptorGateway", () => {
       gateway: async (sthis) => {
         return new URITrackGateway(sthis, new Map<string, Uint8Array>(), gwUris);
       },
-      fpsync: async () => {
+      fpIndexedDB: async () => {
         throw new Error("fpsync for uriTest: Not implemented");
       },
     });

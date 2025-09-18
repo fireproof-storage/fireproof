@@ -109,8 +109,8 @@ describe("KeyBag", () => {
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
-      diskBag = await p._prepare().then((db) => db.get("bag", name));
-      diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
+      diskBag = await p._prepare().then((db) => db.bag.get(name) as Promise<KeyedV2StorageKeyItem>);
+      diskBag2 = await p._prepare().then((db) => db.bag.get(name2) as Promise<KeyedV2StorageKeyItem>);
     } else {
       const p = provider as KeyBagProviderFile;
       if (typeof p._prepare !== "function") {

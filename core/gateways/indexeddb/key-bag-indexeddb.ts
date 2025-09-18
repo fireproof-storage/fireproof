@@ -1,11 +1,20 @@
-import { IDBPDatabase, openDB } from "idb";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
-import { KeyBagProvider, type SuperThis } from "@fireproof/core-types-base";
+import { KeyBagProvider, KeyedV2StorageKeyItem, type SuperThis } from "@fireproof/core-types-base";
 import { getPath } from "@fireproof/core-gateways-base";
+import { Dexie, Table } from "dexie";
+
+class KeyBagDB extends Dexie {
+  readonly bag!: Table<KeyedV2StorageKeyItem>;
+  constructor(name: string) {
+    super(name);
+    this.version(1).stores({
+      bag: "id",
+    });
+  }
+}
 
 export class KeyBagProviderIndexedDB implements KeyBagProvider {
-  readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
-
+  readonly #db = new ResolveOnce<KeyBagDB>();
   readonly dbName: string;
   readonly url: URI;
   readonly logger: Logger;
@@ -17,43 +26,44 @@ export class KeyBagProviderIndexedDB implements KeyBagProvider {
     this.dbName = getPath(this.url, this.sthis);
   }
 
-  async _prepare(): Promise<IDBPDatabase<unknown>> {
-    return this._db.once(async () => {
-      return await openDB(this.dbName, 1, {
-        upgrade(db) {
-          // console.log('upgrade:', dbName);
-          ["bag"].map((store) => {
-            db.createObjectStore(store, {
-              autoIncrement: false,
-            });
-          });
-        },
-      });
+  async _prepare(): Promise<KeyBagDB> {
+    return this.#db.once(async () => {
+      const db = new KeyBagDB(this.dbName);
+      // db.version(1).stores({
+      //   blockLogs: "seq, car, type",
+      //   cidSets: "cid, peers, type",
+      //   cars: "carCid, peers, type",
+      //   peers: "peerId, type",
+      // });
+      return db.open().then(() => db);
     });
   }
 
   async del(id: string): Promise<void> {
     const db = await this._prepare();
-    const tx = db.transaction(["bag"], "readwrite");
-    await tx.objectStore("bag").delete(id);
-    await tx.done;
+    return db.bag.delete(id);
+    // const tx = db.transaction(["bag"], "readwrite");
+    // await tx.objectStore("bag").delete(id);
+    // await tx.done;
   }
 
   async get(id: string): Promise<NonNullable<unknown> | undefined> {
     const db = await this._prepare();
-    const tx = db.transaction(["bag"], "readonly");
-    const keyItem = await tx.objectStore("bag").get(id);
-    await tx.done;
-    if (!keyItem) {
-      return undefined;
-    }
-    return keyItem;
+    return db.bag.get(id);
+    // const tx = db.transaction(["bag"], "readonly");
+    // const keyItem = await tx.objectStore("bag").get(id);
+    // await tx.done;
+    // if (!keyItem) {
+    //   return undefined;
+    // }
+    // return keyItem;
   }
 
-  async set(id: string, item: NonNullable<unknown>): Promise<void> {
+  async set(id: string, item: KeyedV2StorageKeyItem): Promise<void> {
     const db = await this._prepare();
-    const tx = db.transaction(["bag"], "readwrite");
-    await tx.objectStore("bag").put(item, id);
-    await tx.done;
+    return db.bag.put(item);
+    // const tx = db.transaction(["bag"], "readwrite");
+    // await tx.objectStore("bag").put(item, id);
+    // await tx.done;
   }
 }

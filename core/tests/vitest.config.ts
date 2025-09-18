@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: ["vitest.file.config.ts", "vitest.memory.config.ts", "vitest.indexeddb.config.ts"],
+    projects: ["vitest.file.config.ts", "vitest.memory.config.ts", "vitest.indexeddb.config.ts", "vitest.browser.memory.config.ts"],
     globalSetup: "global-setup.ts",
   },
 });

@@ -576,12 +576,11 @@ export async function hashObjectCID<T extends NonNullable<S>, S>(o: T): Promise<
 }
 
 export async function hashBufferCID<T extends ToUInt8 | string>(i: T): Promise<CID> {
-
   let o: ToUInt8;
   if (typeof i === "string") {
     o = txtOps.encode(i);
   } else {
-    o = i
+    o = i;
   }
   const bytes = await coercePromiseIntoUint8(o);
   const hash = await sha256.digest(bytes.Ok());
@@ -622,4 +621,35 @@ export function deepFreeze<T extends object>(o?: T): T | undefined {
     if (v && typeof v === "object" && !Object.isFrozen(v)) deepFreeze(v as object);
   }
   return o;
+}
+
+export function consumeStream<E>(stream: ReadableStream<E>, cb: (msg: E) => void): Promise<void> {
+  const reader = stream.getReader();
+  async function readNext() {
+    const { done, value } = await reader.read();
+    if (done) return;
+    cb(value);
+    return readNext();
+  }
+  return readNext();
+}
+
+function step<E>(iter: IterableIterator<E>, cb: (msg: E) => void, resolve: () => void, chunk: number, i: number): void {
+  const { done, value } = iter.next();
+  if (done) {
+    resolve();
+    return;
+  }
+  cb(value);
+  if (i >= chunk) {
+    setTimeout(() => step(iter, cb, resolve, chunk, 0), 0);
+    return;
+  }
+  return step(iter, cb, resolve, chunk, i + 1);
+}
+
+export function consumeIterator<E>(iter: IterableIterator<E>, cb: (msg: E) => void): Promise<void> {
+  return new Promise((resolve) => {
+    step(iter, cb, resolve, 16, 0);
+  });
 }

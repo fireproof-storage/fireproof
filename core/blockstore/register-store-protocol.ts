@@ -1,18 +1,17 @@
-import { BuildURI, Lazy, ResolveOnce, runtimeFn, URI } from "@adviser/cement";
+import { BuildURI, ResolveOnce, runtimeFn, URI } from "@adviser/cement";
 import { SuperThis, PARAM } from "@fireproof/core-types-base";
-import { SerdeGateway, Gateway } from "@fireproof/core-types-blockstore";
-import { MemoryGateway } from "@fireproof/core-gateways-memory";
-import { FileGateway, FILESTORE_VERSION, sysFileSystemFactory } from "@fireproof/core-gateways-file";
+import { SerdeGateway, Gateway, FPIndexedDB } from "@fireproof/core-types-blockstore";
+import { memFPIndexedDB, MemoryGateway } from "@fireproof/core-gateways-memory";
+import { FileGateway, FILESTORE_VERSION, sysFileFPIndexedDB, sysFileSystemFactory } from "@fireproof/core-gateways-file";
 import { DefSerdeGateway, INDEXEDDB_VERSION } from "@fireproof/core-gateways-base";
 import { CloudGateway } from "@fireproof/core-gateways-cloud";
-import { FPSyncProtocol } from "../types/protocols/sync/index.js";
 
 export interface SerdeGatewayFactoryItem {
   readonly protocol: string;
   readonly isDefault?: boolean;
   defaultURI(sthis: SuperThis): URI;
   serdegateway(sthis: SuperThis): Promise<SerdeGateway>;
-  fpsync(sthis: SuperThis, uri: URI): Promise<FPSyncProtocol<unknown>>;
+  fpIndexedDB(sthis: SuperThis, uri: URI): Promise<FPIndexedDB>;
 }
 
 class OneSerdeGatewayFactoryItem implements SerdeGatewayFactoryItem {
@@ -45,7 +44,9 @@ class OneSerdeGatewayFactoryItem implements SerdeGatewayFactoryItem {
     return this.once.once(() => this.item.serdegateway(sthis));
   }
 
-  fpsync = Lazy((sthis: SuperThis, uri: URI) => this.item.fpsync(sthis, uri));
+  async fpIndexedDB(sthis: SuperThis, uri: URI): Promise<FPIndexedDB> {
+    return this.item.fpIndexedDB(sthis, uri);
+  }
 }
 
 const storeFactory = new Map<string, OneSerdeGatewayFactoryItem>();
@@ -76,11 +77,10 @@ export interface SerdeOrGatewayFactoryItem {
   readonly serdegateway?: (sthis: SuperThis) => Promise<SerdeGateway>;
   readonly gateway?: (sthis: SuperThis) => Promise<Gateway>;
 
-  readonly fpsync: (sthis: SuperThis, uri: URI) => Promise<FPSyncProtocol<unknown>>;
+  readonly fpIndexedDB: (sthis: SuperThis, uri: URI) => Promise<FPIndexedDB>;
 }
 
 export function registerStoreProtocol(item: SerdeOrGatewayFactoryItem): () => void {
-  console.log("registerStoreProtocol", item.protocol);
   let protocol = item.protocol;
   if (!protocol.endsWith(":")) {
     protocol += ":";
@@ -151,10 +151,8 @@ if (runtimeFn().isNodeIsh || runtimeFn().isDeno) {
     gateway: async (sthis) => {
       return new FileGateway(sthis, await sysFileSystemFactory(defaultURI(sthis)));
     },
-    fpsync: async (_sthis, _uri) => {
-      throw new Error("fpsync for file: Not implemented");
-      // const { fileFPSync } = await import("@fireproof/core-gateways-file");
-      // return fileFPSync(sthis, uri) as Promise<FPSyncProtocol<unknown>>;
+    fpIndexedDB: async (sthis, uri) => {
+      return sysFileFPIndexedDB(sthis, uri);
     },
   });
 }
@@ -174,9 +172,9 @@ if (runtimeFn().isBrowser) {
       const { GatewayImpl } = await import("@fireproof/core-gateways-indexeddb");
       return new GatewayImpl();
     },
-    fpsync: async (sthis, uri) => {
-      const { indexedDBFPSync } = await import("@fireproof/core-gateways-indexeddb");
-      return indexedDBFPSync(sthis, uri) as Promise<FPSyncProtocol<unknown>>;
+    fpIndexedDB: async (sthis, uri) => {
+      const { indexeddbFPIndexedDB } = await import("@fireproof/core-gateways-indexeddb");
+      return indexeddbFPIndexedDB(sthis, uri);
     },
   });
 }
@@ -191,10 +189,9 @@ registerStoreProtocol({
   gateway: async (sthis) => {
     return new MemoryGateway(sthis, memory);
   },
-  fpsync: () => {
-    throw new Error("fpsync for memory: Not implemented");
-    // memoryFPSync as (sthis: SuperThis, uri: URI) => Promise<FPSyncProtocol<unknown>>,
-  }
+  fpIndexedDB: (sthis, uri) => {
+    return memFPIndexedDB(sthis, uri, memory);
+  },
 });
 
 //const onceRegisterFireproofCloudStoreProtocol = new KeyedResolvOnce<() => void>();
@@ -209,7 +206,7 @@ registerStoreProtocol({
   serdegateway: async (sthis: SuperThis) => {
     return new CloudGateway(sthis);
   },
-  fpsync: async () => {
+  fpIndexedDB: async () => {
     throw new Error("fpsync for fpcloud: Not implemented");
   },
 });

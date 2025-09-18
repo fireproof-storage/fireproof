@@ -1,43 +1,45 @@
-import { Cars, CarsSchema } from "@fireproof/core-types-protocols-sync";
-import { SyncDatabase } from "./sync-db.js";
-import { exception2Result, Result } from "@adviser/cement";
+import { Cars, CarsSchema, DBTable, toKV } from "@fireproof/core-types-blockstore";
+import { Result } from "@adviser/cement";
 
 type CreateCars = Omit<Cars, "type">;
 
 export const CarsService = {
-  get: async (db: SyncDatabase, carCid: string): Promise<Result<Cars | undefined>> => {
-    return exception2Result(async () => {
-      const cars = await db.cars.get(carCid);
-      return cars;
-    });
+  get: async (db: DBTable<Cars>, carCid: string): Promise<Result<Cars | undefined>> => {
+    return db.get(carCid);
   },
 
-  upsert: async (db: SyncDatabase, cars: CreateCars): Promise<Result<Cars>> => {
-    return exception2Result(async () => {
-      const entry: Cars = {
-        type: "cars",
-        ...cars,
-      };
-      // Validate with Zod schema
-      const validated = CarsSchema.safeParse(entry);
-      if (!validated.success) {
-        throw validated.error;
-      }
+  upsert: async (db: DBTable<Cars>, cars: CreateCars): Promise<Result<Cars>> => {
+    const entry: Cars = {
+      type: "cars",
+      ...cars,
+    };
+    // Validate with Zod schema
+    const validated = CarsSchema.safeParse(entry);
+    if (!validated.success) {
+      return Result.Err(validated.error);
+    }
 
-      let existing: Cars | undefined;
-      await db.transaction("rw", ["cars"], async () => {
-        const fromGet = (await db.cars.get(cars.carCid)) || { peers: [] };
-        existing = {
-          ...fromGet,
-          ...validated.data,
-          peers: fromGet.peers ? [...new Set([...fromGet.peers, ...validated.data.peers])] : validated.data.peers,
-        };
-        await db.cars.put(existing);
-      });
-      if (!existing) {
-        throw new Error("Failed to upsert cars");
+    return db.transaction(async (db) => {
+      const rFromGet = await db.get(cars.carCid);
+      if (rFromGet.isErr()) {
+        return Result.Err(rFromGet);
       }
-      return existing;
+      const fromGet = rFromGet.Ok() || { peers: [] };
+      const existing = {
+        ...fromGet,
+        ...validated.data,
+        peers: fromGet.peers ? [...new Set([...fromGet.peers, ...validated.data.peers])] : validated.data.peers,
+      };
+      return db.put(toKV(existing.carCid, existing)).then((rKv) => {
+        switch (true) {
+          case rKv.isErr():
+            return Result.Err(rKv);
+          case rKv.isOk():
+            return Result.Ok(rKv.Ok()[0].value);
+          default:
+            return Result.Err(new Error("unknown result"));
+        }
+      });
     });
   },
 };
