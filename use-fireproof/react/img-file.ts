@@ -3,7 +3,16 @@ import { DocFileMeta } from "@fireproof/core-types-base";
 import React, { useState, useEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
 
 // Cache for object URLs to avoid recreating them unnecessarily
-const objectUrlCache = new LRUMap<string, string>();
+// Use LRUMap with maxEntries to manage memory usage
+const objectUrlCache = new LRUMap<string, string>({
+  maxEntries: 50, // Limit to 50 cached object URLs to manage memory
+});
+
+// Setup automatic cleanup of evicted object URLs to prevent memory leaks
+objectUrlCache.onDelete((key, value) => {
+  // eslint-disable-next-line no-restricted-globals
+  URL.revokeObjectURL(value);
+});
 
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
@@ -27,9 +36,9 @@ function isFileMeta(obj: FileType): obj is DocFileMeta {
   return "type" in obj && "size" in obj && "file" in obj && typeof obj.file === "function";
 }
 
-// Generate a cache key for file objects
+// Generate a namespaced cache key for file objects
 function getCacheKey(fileObj: File): string {
-  return `${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
+  return `file:${fileObj.name}-${fileObj.size}-${fileObj.lastModified}`;
 }
 
 // Keyed variant so we can use DocFileMeta.cid for stable identity
@@ -71,13 +80,13 @@ async function loadFile({
     }
   }
 
-  // Use CID-based key for DocFileMeta, file-based key for direct File objects
+  // Use namespaced keys to prevent collisions: 'cid:' for DocFileMeta, 'file:' for File objects
   const currentKey = keyRef.current ?? null;
   const newKey =
     fileData && isFileMeta(fileData) && fileData.cid
       ? `cid:${String(fileData.cid)}`
       : fileData && isFile(fileData)
-        ? getCacheKey(fileData)
+        ? getCacheKey(fileData) // Already includes 'file:' prefix
         : null;
   const isDifferentFile = currentKey !== newKey;
 
