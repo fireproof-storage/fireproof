@@ -48,7 +48,7 @@ async function keyExtracted(
 }
 
 async function calculateFingerprint(rKbf: Result<KeysByFingerprint>, kb: KeyBagIf): Promise<string> {
-  const item = (await rKbf.Ok().get()) as KeyWithFingerPrint;
+  const item = (await rKbf.Ok().get())!;
   const v2Item = await item.asKeysItem();
   const keyBytes = base58btc.decode(v2Item.key);
   const hash = await kb.rt.crypto.digestSHA256(keyBytes);
@@ -293,7 +293,7 @@ describe("KeyBag", () => {
         .then((i) => KeyedV2StorageKeyItemSchema.parse(i).item),
     ).toEqual({
       keys: {
-        [kfp1?.fingerPrint as string]: {
+        [kfp1?.fingerPrint!]: {
           default: true,
           fingerPrint: kfp1?.fingerPrint,
           key: kfp1?.key,
@@ -479,8 +479,8 @@ describe("KeyBag", () => {
 });
 
 function resetDefault(keys: KeyedV2StorageKeyItem["item"]["keys"]) {
-  return Array.from(Object.values(keys)).reduce(
+  return Array.from(Object.values(keys)).reduce<KeyedV2StorageKeyItem["item"]["keys"]>(
     (acc, i) => ({ ...acc, [i.fingerPrint]: { ...i, default: false } }),
-    {} as KeyedV2StorageKeyItem["item"]["keys"],
+    {},
   );
 }

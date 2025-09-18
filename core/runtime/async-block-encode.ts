@@ -35,10 +35,10 @@ export async function asyncBlockDecode<T, Code extends number, Alg extends numbe
   const value = (await Promise.resolve(codec.decode(bytes))) as T;
   let toHash = bytes;
   if (codec.valueToHashBytes) {
-    toHash = (await Promise.resolve(codec.valueToHashBytes(value))) as ByteView<unknown>;
+    toHash = (await Promise.resolve(codec.valueToHashBytes(value)));
   }
   const hash = await hasher.digest(toHash);
-  const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
+  const cid = CID.create(1, codec.code, hash);
 
   return new mfBlock<T, Code, Alg, 1>({ value, bytes: toHash as ByteView<T>, cid });
 }

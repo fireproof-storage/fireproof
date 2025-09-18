@@ -29,7 +29,7 @@ class FPBlockImpl implements FPBlock {
 
   static async fromBlockItem<T extends BlockItem>(item: T): Promise<FPBlock> {
     const block = await asyncBlockEncode({ value: item.value, hasher, codec: dagCodec });
-    return new FPBlockImpl(block.cid, block.bytes, item as T);
+    return new FPBlockImpl(block.cid, block.bytes, item);
   }
 
   static async fromAnyBlock(cid: AnyLink, bytes: Uint8Array): Promise<FPBlock> {

@@ -407,7 +407,7 @@ describe("noop Gateway subscribe", function () {
         didCall = true;
         p.resolve();
       },
-    )) as UnsubscribeResult;
+    ));
     expect(metaSubscribeResult.isOk()).toBeTruthy();
     const ok = await db.put({ _id: "key1", hello: "world1" });
     expect(ok).toBeTruthy();

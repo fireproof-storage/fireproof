@@ -90,8 +90,8 @@ describe("KeyBag indexeddb and file", () => {
       tagLength: 128,
     };
     const data = kb.rt.crypto.randomBytes(122);
-    const rkc = (await res.Ok().get()) as KeyWithFingerPrint;
-    const ckc = (await created.Ok().get()) as KeyWithFingerPrint;
+    const rkc = (await res.Ok().get())!;
+    const ckc = (await created.Ok().get())!;
     expect(await kb.rt.crypto.encrypt(algo, rkc.key, data)).toEqual(await kb.rt.crypto.encrypt(algo, ckc.key, data));
     expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.item.keys)[0].key), data)).toEqual(
       await kb.rt.crypto.encrypt(algo, ckc.key, data),

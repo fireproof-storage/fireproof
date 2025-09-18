@@ -27,7 +27,7 @@ export class Certor {
 
   constructor(base64: Base64EndeCoder, cert: CertificatePayload) {
     // this.#cert = cert;
-    this.#cert = deepFreeze(toSortedObject(cert)) as CertificatePayload;
+    this.#cert = deepFreeze(toSortedObject(cert) ?? cert);
     this.base64 = base64;
   }
 
@@ -47,19 +47,19 @@ export class Certor {
   }
 
   async asSHA1() {
-    this.#uint8Cert ||= this.base64.decodeUint8(this.asBase64());
+    this.#uint8Cert ??= this.base64.decodeUint8(this.asBase64());
     const val = await sha1.digest(this.#uint8Cert);
     return base58btc.encode(val.bytes);
   }
 
   async asSHA256() {
-    this.#uint8Cert ||= this.base64.decodeUint8(this.asBase64());
+    this.#uint8Cert ??= this.base64.decodeUint8(this.asBase64());
     const val = await sha256.digest(this.#uint8Cert);
     return base58btc.encode(val.bytes);
   }
 
   asBase64() {
-    this.#strCert ||= this.base64.encode(JSON.stringify(toSortedObject(this.#cert)));
+    this.#strCert ??= this.base64.encode(JSON.stringify(toSortedObject(this.#cert)));
     return this.#strCert;
   }
 }

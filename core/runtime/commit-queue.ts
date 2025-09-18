@@ -5,7 +5,7 @@ import { CommitQueueIf } from "@fireproof/core-types-blockstore";
 type QueueFunction<T = void> = () => Promise<T>;
 
 export class CommitQueue<T = void> implements CommitQueueIf<T> {
-  readonly queue: QueueFunction<void>[] = [];
+  readonly queue: QueueFunction[] = [];
   processing = false;
 
   readonly traceFn: TraceFn;
@@ -64,7 +64,7 @@ export class CommitQueue<T = void> implements CommitQueueIf<T> {
       });
       const toResolve = Array.from(this._waitIdleItems);
       this._waitIdleItems.clear();
-      toResolve.map((fn) => fn.resolve());
+      toResolve.map((fn) => { fn.resolve(); });
     }
   }
 }

@@ -3,7 +3,7 @@ import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema } from "@firep
 import { GenerateKeyPairOptions, generateKeyPair, importJWK, exportJWK, calculateJwkThumbprint } from "jose";
 
 export class DeviceIdKey {
-  #privateKey: CryptoKey;
+  readonly #privateKey: CryptoKey;
 
   static async create(
     opts: GenerateKeyPairOptions = {

@@ -23,5 +23,5 @@ export function getCompactStrategyThrow(name = "fireproof"): CompactStrategy {
   if (!compactStrategyRegistry.has(key)) {
     throw new Error(`compactStrategy ${name} not found`);
   }
-  return compactStrategyRegistry.get(key) as CompactStrategy;
+  return compactStrategyRegistry.get(key)!;
 }

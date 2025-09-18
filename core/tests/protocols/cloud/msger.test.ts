@@ -98,7 +98,7 @@ class TestConnection implements MsgRawConnection {
     return Promise.resolve(Result.Ok(undefined));
   }
   readonly onMsgFn = vi.fn();
-  onMsg(msg: OnMsgFn<MsgBase>): UnReg {
+  onMsg(msg: OnMsgFn): UnReg {
     this.onMsgFn(msg);
     return () => {
       /* no-op */
@@ -243,7 +243,7 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
     super.close(o);
     return Promise.resolve(Result.Ok(undefined));
   }
-  onMsg(msg: OnMsgFn<MsgBase>): UnReg {
+  onMsg(msg: OnMsgFn): UnReg {
     super.onMsg(msg);
     // console.log("http-onMsg", msg);
     return () => {
@@ -362,7 +362,7 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
     }
     return Promise.resolve(Result.Ok(undefined));
   }
-  onMsg(msg: OnMsgFn<MsgBase>): UnReg {
+  onMsg(msg: OnMsgFn): UnReg {
     super.onMsg(msg);
     throw new Error("Method not implemented.");
   }

@@ -203,7 +203,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     pathOps,
     txt: osthis?.txt || txtOps,
   });
-  _onSuperThis.forEach((fn) => fn(ret));
+  _onSuperThis.forEach((fn) => { fn(ret); });
   return ret;
 }
 

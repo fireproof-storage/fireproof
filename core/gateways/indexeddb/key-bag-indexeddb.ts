@@ -4,7 +4,7 @@ import { KeyBagProvider, type SuperThis } from "@fireproof/core-types-base";
 import { getPath } from "@fireproof/core-gateways-base";
 
 export class KeyBagProviderIndexedDB implements KeyBagProvider {
-  readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
+  readonly _db: ResolveOnce<IDBPDatabase> = new ResolveOnce<IDBPDatabase>();
 
   readonly dbName: string;
   readonly url: URI;
@@ -17,7 +17,7 @@ export class KeyBagProviderIndexedDB implements KeyBagProvider {
     this.dbName = getPath(this.url, this.sthis);
   }
 
-  async _prepare(): Promise<IDBPDatabase<unknown>> {
+  async _prepare(): Promise<IDBPDatabase> {
     return this._db.once(async () => {
       return await openDB(this.dbName, 1, {
         upgrade(db) {

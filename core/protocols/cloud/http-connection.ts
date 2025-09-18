@@ -81,7 +81,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
   }
 
   toMsg<S extends MsgBase>(msg: MsgWithError<S>): MsgWithError<S> {
-    this.#onMsg.forEach((fn) => fn(msg));
+    this.#onMsg.forEach((fn) => { fn(msg); });
     return msg;
   }
 
@@ -99,7 +99,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
           if (MsgIsError(msg)) {
             state.controller?.close();
           } else {
-            state.timeout = setTimeout(() => this.#poll(state), state.bind.opts.pollInterval ?? 1000);
+            state.timeout = setTimeout(() => { this.#poll(state); }, state.bind.opts.pollInterval ?? 1000);
           }
         } catch (err) {
           state.controller?.error(err);
@@ -166,7 +166,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     const res = rRes.Ok();
     if (!res.ok) {
       const data = new Uint8Array(await res.arrayBuffer());
-      const ret = await exception2Result(async () => this.msgP.ende.decode(data) as S);
+      const ret = await exception2Result(async () => this.msgP.ende.decode(data));
       if (ret.isErr() || !MsgIsError(ret.Ok())) {
         return this.toMsg(
           buildErrorMsg(
@@ -186,7 +186,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
       return this.toMsg(ret.Ok());
     }
     const data = new Uint8Array(await res.arrayBuffer());
-    const ret = await exception2Result(async () => this.msgP.ende.decode(data) as S);
+    const ret = await exception2Result(async () => this.msgP.ende.decode(data));
     if (ret.isErr()) {
       return this.toMsg(
         buildErrorMsg(this, req, this.logger.Error().Err(ret.Err()).Msg("decode error").AsError(), this.sthis.txt.decode(data)),

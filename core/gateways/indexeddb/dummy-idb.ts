@@ -23,7 +23,7 @@ type AddType<
   ? undefined
   : (
       value: StoreValue<DBTypes, StoreName>,
-      key?: IDBKeyRange | StoreKey<DBTypes, StoreName> | undefined,
+      key?: IDBKeyRange | StoreKey<DBTypes, StoreName>  ,
     ) => Promise<StoreKey<DBTypes, StoreName>>;
 type PutType<
   DBTypes extends DBSchema | unknown,
@@ -33,7 +33,7 @@ type PutType<
   ? undefined
   : (
       value: StoreValue<DBTypes, StoreName>,
-      key?: IDBKeyRange | StoreKey<DBTypes, StoreName> | undefined,
+      key?: IDBKeyRange | StoreKey<DBTypes, StoreName>  ,
     ) => Promise<StoreKey<DBTypes, StoreName>>;
 
 type DeleteType<
@@ -80,7 +80,7 @@ export class ReadDummyIDBPObjectStore<
 
   readonly add: AddType<DBTypes, StoreName, Mode> = ((
     _value: StoreValue<DBTypes, StoreName>,
-    _key?: IDBKeyRange | StoreKey<DBTypes, StoreName> | undefined,
+    _key?: IDBKeyRange | StoreKey<DBTypes, StoreName>  ,
   ): Promise<StoreKey<DBTypes, StoreName>> => {
     throw new Error("add not implemented.");
   }) as AddType<DBTypes, StoreName, Mode>;
@@ -108,13 +108,13 @@ export class ReadDummyIDBPObjectStore<
     return Promise.resolve(undefined);
   }
   getAll(
-    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null | undefined,
+    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null  ,
     _count?: number,
   ): Promise<StoreValue<DBTypes, StoreName>[]> {
     return Promise.resolve([]);
   }
   getAllKeys(
-    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null | undefined,
+    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null  ,
     _count?: number,
   ): Promise<StoreKey<DBTypes, StoreName>[]> {
     return Promise.resolve([]);
@@ -128,19 +128,19 @@ export class ReadDummyIDBPObjectStore<
     throw new Error("Method not implemented.");
   }
   openCursor(
-    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null | undefined,
+    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null  ,
     _direction?: IDBCursorDirection,
   ): Promise<IDBPCursorWithValue<DBTypes, TxStores, StoreName, unknown, Mode> | null> {
     throw new Error("Method not implemented.");
   }
   openKeyCursor(
-    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null | undefined,
+    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null  ,
     _direction?: IDBCursorDirection,
   ): Promise<IDBPCursor<DBTypes, TxStores, StoreName, unknown, Mode> | null> {
     throw new Error("Method not implemented.");
   }
   iterate(
-    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null | undefined,
+    _query?: IDBKeyRange | StoreKey<DBTypes, StoreName> | null  ,
     _direction?: IDBCursorDirection,
   ): AsyncIterableIterator<IDBPCursorWithValueIteratorValue<DBTypes, TxStores, StoreName, unknown, Mode>> {
     throw new Error("Method not implemented.");
@@ -152,12 +152,12 @@ export class ReadDummyIDBPObjectStore<
     throw new Error("Method not implemented.");
   }
 
-  count(_key?: IDBKeyRange | IDBValidKey | null | undefined): Promise<number> {
+  count(_key?: IDBKeyRange | IDBValidKey | null  ): Promise<number> {
     throw new Error("count not implemented.");
   }
 }
 
-export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
+export class ReadDummyIDBPDatabase implements IDBPDatabase {
   get objectStoreNames(): TypedDOMStringList<string> {
     throw new Error("objectStoreNames not implemented.");
   }
@@ -196,19 +196,19 @@ export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
       },
     } as IDBPTransaction<unknown, Names, Mode>;
   }
-  add<Name extends string>(_storeName: Name, _value: never, _key?: IDBKeyRange | IDBValidKey | undefined): Promise<IDBValidKey> {
+  add<Name extends string>(_storeName: Name, _value: never, _key?: IDBKeyRange | IDBValidKey  ): Promise<IDBValidKey> {
     throw new Error("add not implemented.");
   }
   clear(_name: string): Promise<void> {
     throw new Error("clear not implemented.");
   }
-  count<Name extends string>(_storeName: Name, _key?: IDBKeyRange | IDBValidKey | null | undefined): Promise<number> {
+  count<Name extends string>(_storeName: Name, _key?: IDBKeyRange | IDBValidKey | null  ): Promise<number> {
     throw new Error("count not implemented.");
   }
   countFromIndex<Name extends string, IndexName extends string>(
     _storeName: Name,
     _indexName: IndexName,
-    _key?: IDBKeyRange | IDBValidKey | null | undefined,
+    _key?: IDBKeyRange | IDBValidKey | null  ,
   ): Promise<number> {
     throw new Error("countFromIndex not implemented.");
   }
@@ -227,7 +227,7 @@ export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
   }
   getAll<Name extends string>(
     _storeName: Name,
-    _query?: IDBKeyRange | IDBValidKey | null | undefined,
+    _query?: IDBKeyRange | IDBValidKey | null  ,
     _count?: number,
   ): Promise<unknown[]> {
     return Promise.resolve([]);
@@ -235,14 +235,14 @@ export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
   getAllFromIndex<Name extends string, IndexName extends string>(
     _storeName: Name,
     _indexName: IndexName,
-    _query?: IDBKeyRange | IDBValidKey | null | undefined,
+    _query?: IDBKeyRange | IDBValidKey | null  ,
     _count?: number,
   ): Promise<unknown[]> {
     return Promise.resolve([]);
   }
   getAllKeys<Name extends string>(
     _storeName: Name,
-    _query?: IDBKeyRange | IDBValidKey | null | undefined,
+    _query?: IDBKeyRange | IDBValidKey | null  ,
     _count?: number,
   ): Promise<IDBValidKey[]> {
     return Promise.resolve([]);
@@ -250,7 +250,7 @@ export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
   getAllKeysFromIndex<Name extends string, IndexName extends string>(
     _storeName: Name,
     _indexName: IndexName,
-    _query?: IDBKeyRange | IDBValidKey | null | undefined,
+    _query?: IDBKeyRange | IDBValidKey | null  ,
     _count?: number,
   ): Promise<IDBValidKey[]> {
     return Promise.resolve([]);
@@ -265,7 +265,7 @@ export class ReadDummyIDBPDatabase implements IDBPDatabase<unknown> {
   ): Promise<IDBValidKey | undefined> {
     return Promise.resolve(undefined);
   }
-  put<Name extends string>(_storeName: Name, _value: unknown, _key?: IDBKeyRange | IDBValidKey | undefined): Promise<IDBValidKey> {
+  put<Name extends string>(_storeName: Name, _value: unknown, _key?: IDBKeyRange | IDBValidKey  ): Promise<IDBValidKey> {
     throw new Error("put not implemented.");
   }
 

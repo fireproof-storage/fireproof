@@ -537,7 +537,7 @@ export interface ResOpen extends MsgBase {
 
 export function MsgIsWithConn<T extends MsgBase>(msg: T): msg is MsgWithConn<T> {
   const mwc = (msg as MsgWithConn<T>).conn;
-  return mwc && !!(mwc as QSId).reqId && !!(mwc as QSId).resId;
+  return mwc && !!(mwc).reqId && !!(mwc).resId;
 }
 
 export function MsgIsWithConnAuth<T extends MsgBase>(msg: T): msg is MsgWithConn<T> {

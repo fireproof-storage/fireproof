@@ -22,7 +22,7 @@ function dbCredentials() {
   return {
     accountId: out.Ok().CLOUDFLARE_ACCOUNT_ID,
     databaseId: out.Ok().CLOUDFLARE_DATABASE_ID,
-    token: out.Ok().CLOUDFLARE_D1_TOKEN ?? out.Ok().CLOUDFLARE_API_TOKEN,
+    token: out.Ok().CLOUDFLARE_D1_TOKEN || out.Ok().CLOUDFLARE_API_TOKEN,
   };
 }
 

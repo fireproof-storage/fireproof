@@ -64,7 +64,7 @@ function tracerAction(opts: CRDTOpts, parent?: Ledger) {
         });
         break;
       default:
-        return opts.tracer(event);
+        { opts.tracer(event); return; }
     }
   };
 }
@@ -287,6 +287,6 @@ export class CRDTImpl implements CRDT {
 
   async compact(): Promise<void> {
     const blocks = this.blockstore as EncryptedBlockstore;
-    return await blocks.compact();
+    await blocks.compact();
   }
 }

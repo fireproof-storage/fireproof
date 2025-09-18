@@ -22,13 +22,13 @@ export function preSignedUrlCmd(sthis: SuperThis) {
       accessKeyId: option({
         long: "accessKeyId",
         type: string,
-        defaultValue: () => sthis.env.get("ACCESS_KEY_ID") || "accessKeyId",
+        defaultValue: () => sthis.env.get("ACCESS_KEY_ID") ?? "accessKeyId",
         defaultValueIsSerializable: true,
       }),
       secretAccessKey: option({
         long: "secretAccessKey",
         type: string,
-        defaultValue: () => sthis.env.get("SECRET_ACCESS_KEY") || "secretAccessKey",
+        defaultValue: () => sthis.env.get("SECRET_ACCESS_KEY") ?? "secretAccessKey",
         defaultValueIsSerializable: true,
       }),
       region: option({
@@ -46,7 +46,7 @@ export function preSignedUrlCmd(sthis: SuperThis) {
       storageURL: option({
         long: "storageURL",
         type: string,
-        defaultValue: () => sthis.env.get("STORAGE_URL") || "https://bucket.example.com/db/main",
+        defaultValue: () => sthis.env.get("STORAGE_URL") ?? "https://bucket.example.com/db/main",
         defaultValueIsSerializable: true,
       }),
       path: option({
@@ -64,6 +64,7 @@ export function preSignedUrlCmd(sthis: SuperThis) {
       now: option({
         long: "now",
         type: {
+          // eslint-disable-next-line @typescript-eslint/require-await
           async from(str): Promise<string> {
             const decoded = new Date(str);
             if (isNaN(decoded.getTime())) {

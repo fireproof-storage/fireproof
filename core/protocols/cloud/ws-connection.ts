@@ -153,7 +153,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
 
   readonly #wsOnMessage = async (event: MessageEvent) => {
     const rMsg = await exception2Result(async () => {
-      const msg = this.msgP.ende.decode(await top_uint8(event.data)) as MsgBase;
+      const msg = this.msgP.ende.decode(await top_uint8(event.data));
       return msg;
     });
     if (rMsg.isErr()) {
@@ -171,7 +171,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   };
 
   async close(): Promise<Result<void>> {
-    this.#onClose.forEach((fn) => fn());
+    this.#onClose.forEach((fn) => { fn(); });
     this.#onClose.clear();
     this.#onMsg.clear();
     // console.lows.id, ion", this.id, new Error().stack);
@@ -180,7 +180,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   }
 
   toMsg<S extends MsgBase>(msg: MsgWithError<S>): MsgWithError<S> {
-    this.#onMsg.forEach((fn) => fn(msg));
+    this.#onMsg.forEach((fn) => { fn(msg); });
     return msg;
   }
 

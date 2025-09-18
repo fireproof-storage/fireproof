@@ -10,6 +10,7 @@ import {
   DeviceIdVerifyMsg,
 } from "@fireproof/core-device-id";
 import {
+  Certificate,
   CertificatePayload,
   CertificatePayloadSchema,
   Extensions,
@@ -18,7 +19,7 @@ import {
   Subject,
 } from "@fireproof/core-types-base";
 
-const sthis = ensureSuperThis();
+const superThis = ensureSuperThis();
 
 describe("DeviceIdKey", () => {
   it("should export private key as JWK", async () => {
@@ -45,8 +46,8 @@ describe("DeviceIdKey", () => {
     expect(await key.publicKey()).toEqual({
       crv: "P-256",
       kty: "EC",
-      x: expect.any(String),
-      y: expect.any(String),
+      x: expect.any(String) as string,
+      y: expect.any(String) as string,
     });
   });
 });
@@ -55,7 +56,7 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
   it("should create and validate a CSR successfully", async () => {
     // Create a key and CSR
     const key = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(sthis, key);
+    const csr = new DeviceIdCSR(superThis, key);
 
     const subject: Subject = {
       commonName: "test.example.com",
@@ -91,9 +92,6 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
     expect(validation.payload).toBeDefined();
     expect(validation.publicKey).toBeDefined();
 
-    if (!validation.payload) {
-      throw new Error("No payload");
-    }
     // Verify payload structure
     const payload = validation.payload;
     expect(payload.sub).toBe(subject.commonName);
@@ -107,7 +105,7 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
 
   it("should fail validation for tampered CSR", async () => {
     const key = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(sthis, key);
+    const csr = new DeviceIdCSR(superThis, key);
 
     const subject = { commonName: "test.example.com" };
     const rCsrJWS = await csr.createCSR(subject);
@@ -157,12 +155,12 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     // Mock CA actions
     const mockActions = {
-      generateSerialNumber: async () => crypto.randomUUID(),
+      generateSerialNumber: async () => Promise.resolve(crypto.randomUUID()),
     };
 
     // Create CA
     const ca = new DeviceIdCA({
-      base64: sthis.txt.base64,
+      base64: superThis.txt.base64,
       caKey,
       caSubject,
       actions: mockActions,
@@ -170,7 +168,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     // Create device key and CSR
     const deviceKey = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(sthis, deviceKey);
+    const csr = new DeviceIdCSR(superThis, deviceKey);
 
     const subject = {
       commonName: "device.example.com",
@@ -224,8 +222,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
     expect(certPayload.certificate).toBeDefined();
 
     // Verify certificate extensions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cert = certPayload.certificate as any;
+    const cert = certPayload.certificate as Certificate;
     expect(cert.subject).toEqual(subject);
     expect(cert.issuer).toEqual(caSubject);
     expect(cert.subjectPublicKeyInfo).toEqual(certificate.publicKey);
@@ -243,11 +240,11 @@ describe("DeviceIdCA certificate generation and validation", () => {
     const caKey = await DeviceIdKey.create();
     const caSubject = { commonName: "Test CA" };
     const mockActions = {
-      generateSerialNumber: async () => crypto.randomUUID(),
+      generateSerialNumber: async () => Promise.resolve(crypto.randomUUID()),
     };
 
     const ca = new DeviceIdCA({
-      base64: sthis.txt.base64,
+      base64: superThis.txt.base64,
       caKey,
       caSubject,
       actions: mockActions,
@@ -283,7 +280,7 @@ describe("DeviceIdSignMsg", () => {
   } satisfies JWTPayload;
 
   const mockActions = {
-    generateSerialNumber: async () => crypto.randomUUID(),
+    generateSerialNumber: async () => Promise.resolve(crypto.randomUUID()),
   };
   beforeEach(async () => {
     // Setup base64 encoder
@@ -293,14 +290,14 @@ describe("DeviceIdSignMsg", () => {
     deviceKey = await DeviceIdKey.create();
 
     ca = new DeviceIdCA({
-      base64: sthis.txt.base64,
+      base64: superThis.txt.base64,
       caKey,
       caSubject,
       actions: mockActions,
     });
 
     // Create CSR and get certificate
-    const csr = new DeviceIdCSR(sthis, deviceKey);
+    const csr = new DeviceIdCSR(superThis, deviceKey);
     const subject = {
       commonName: "device.example.com",
       organization: "Device Corp",
@@ -411,7 +408,7 @@ describe("DeviceIdSignMsg", () => {
 
     const newCaKey = await DeviceIdKey.create();
     const newCa = new DeviceIdCA({
-      base64: sthis.txt.base64,
+      base64: superThis.txt.base64,
       caKey: newCaKey,
       caSubject,
       actions: mockActions,
@@ -436,7 +433,7 @@ describe("DeviceIdSignMsg", () => {
 
     const newCaKey = await DeviceIdKey.create();
     const newCa = new DeviceIdCA({
-      base64: sthis.txt.base64,
+      base64: superThis.txt.base64,
       caKey: newCaKey,
       caSubject,
       actions: mockActions,
@@ -460,7 +457,7 @@ describe("DeviceIdSignMsg", () => {
 
     const newCaKey = await DeviceIdKey.create();
     const newCa = new DeviceIdCA({
-      base64: sthis.txt.base64,
+      base64: superThis.txt.base64,
       caKey: newCaKey,
       caSubject,
       actions: mockActions,

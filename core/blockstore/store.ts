@@ -134,7 +134,7 @@ export abstract class BaseStoreImpl {
     const res = await this.gateway.start({ loader: this.loader }, this._url);
     if (res.isErr()) {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
-      return res as Result<URI>;
+      return res;
     }
     this._url = res.Ok();
 
@@ -142,11 +142,11 @@ export abstract class BaseStoreImpl {
     const kb = await this.loader.keyBag();
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
       const key = this._url.getParam(PARAM.KEY);
-      return key as string;
+      return key!;
     });
 
     if (skRes.isErr()) {
-      return skRes as Result<URI>;
+      return skRes;
     }
     this._url = skRes.Ok();
     const version = guardVersion(this._url);
@@ -163,7 +163,7 @@ export abstract class BaseStoreImpl {
         return ready as Result<URI>;
       }
     }
-    this._onStarted.forEach((fn) => fn(dam));
+    this._onStarted.forEach((fn) => { fn(dam); });
     this.logger.Debug().Msg("started");
     return version;
   }
@@ -174,7 +174,7 @@ export async function createDbMetaEvent(sthis: SuperThis, dbMeta: DbMeta, parent
     {
       dbMeta: sthis.txt.encode(format(dbMeta)),
     },
-    parents as unknown as Link<EventView<DbMetaBinary>, number, number, 1>[],
+    parents as unknown as Link<EventView<DbMetaBinary>>[],
   );
   return {
     eventCid: event.cid as CarClockLink,
@@ -312,7 +312,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async close(): Promise<Result<void>> {
     await this.gateway.close({ loader: this.loader }, this.url());
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => { fn(); });
     return Result.Ok(undefined);
   }
   async destroy(): Promise<Result<void>> {
@@ -379,7 +379,7 @@ abstract class DataStoreImpl extends BaseStoreImpl {
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    return res.Ok();
+    res.Ok();
   }
   async remove(cid: AnyLink): Promise<Result<void>> {
     const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), cid.toString());
@@ -390,7 +390,7 @@ abstract class DataStoreImpl extends BaseStoreImpl {
   }
   async close(): Promise<Result<void>> {
     await this.gateway.close({ loader: this.loader }, this.url());
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => { fn(); });
     return Result.Ok(undefined);
   }
   destroy(): Promise<Result<void>> {
@@ -653,7 +653,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async close() {
     await this.gateway.close({ loader: this.loader }, this.url());
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => { fn(); });
     return Result.Ok(undefined);
   }
 

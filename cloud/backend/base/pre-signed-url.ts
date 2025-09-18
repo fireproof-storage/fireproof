@@ -41,7 +41,7 @@ export async function calculatePreSignedUrl(psm: PreSignedMsg, env: PreSignedEnv
   if (psm.urlParam.index?.length) {
     store = `${store}-${psm.urlParam.index}`;
   }
-  const expiresInSeconds = psm.urlParam.expires || 60 * 60;
+  const expiresInSeconds = psm.urlParam.expires ?? 60 * 60;
 
   const suffix = "";
   // switch (psm.params.store) {
@@ -65,7 +65,7 @@ export async function calculatePreSignedUrl(psm: PreSignedMsg, env: PreSignedEnv
     .URI();
   const a4f = new AwsClient({
     ...env.aws,
-    region: env.aws.region || "us-east-1",
+    region: env.aws.region ?? "us-east-1",
     service: "s3",
   });
   const signedUrl = await a4f

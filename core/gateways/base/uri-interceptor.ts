@@ -23,7 +23,7 @@ export class URIInterceptor extends PassThroughGateway {
 
   readonly #uriMapper = new Set<URIMapper>();
 
-  addMapper(mapper: URIMapper): URIInterceptor {
+  addMapper(mapper: URIMapper): this {
     this.#uriMapper.add(mapper);
     return this;
   }

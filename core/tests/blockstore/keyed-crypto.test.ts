@@ -141,7 +141,7 @@ describe("KeyBag", () => {
     expect(await kb.rt.crypto.encrypt(algo, (await res.Ok().get())!.key, data))
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       .toEqual(await kb.rt.crypto.encrypt(algo, (await created.Ok().get())!.key, data));
-    const kf = (await created.Ok().get()) as KeyWithFingerPrint;
+    const kf = (await created.Ok().get())!;
     expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.item.keys)[0].key), data)).toEqual(
       await kb.rt.crypto.encrypt(algo, kf.key, data),
     );
@@ -162,11 +162,11 @@ describe("KeyBag", () => {
     }
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(1);
 
-    const myKey = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    const myKey = (await rMyKey.Ok().get())!;
     expect(myKey.fingerPrint).toMatch(/^z/);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await rMyKey.Ok().upsert((await myKey.extract())!.key);
-    const myKey1 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+     
+    await rMyKey.Ok().upsert((await myKey.extract()).key);
+    const myKey1 = (await rMyKey.Ok().get())!;
     expect(myKey.fingerPrint).toEqual(myKey1.fingerPrint);
 
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(1);
@@ -176,13 +176,13 @@ describe("KeyBag", () => {
     const res1 = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     expect(res1.isOk()).toBeTruthy();
 
-    const myKey2 = (await rMyKey1.Ok().get()) as KeyWithFingerPrint;
+    const myKey2 = (await rMyKey1.Ok().get())!;
     expect(myKey.fingerPrint).toEqual(myKey2.fingerPrint);
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(2);
 
     const res = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength), { def: true });
     expect(res.isOk()).toBeTruthy();
-    const myKey3 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    const myKey3 = (await rMyKey.Ok().get())!;
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(3);
 
     expect(myKey.fingerPrint).not.toEqual(myKey3.fingerPrint);
@@ -297,7 +297,7 @@ describe("KeyedCryptoStore", () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const blk = await kc._encrypt({ bytes: testData, key: (await kc.key.get())!.key, iv });
       expect(blk).not.toEqual(testData);
-      const fpkey = (await genKey.Ok().get()) as KeyWithFingerPrint;
+      const fpkey = (await genKey.Ok().get())!;
       expect(fpkey.fingerPrint).toEqual(fpkey.fingerPrint);
       const dec = new Uint8Array(await kc.crypto.decrypt(kc.algo(iv), fpkey.key, blk));
       expect(dec).toEqual(testData);
@@ -316,7 +316,7 @@ describe("KeyedCryptoStore", () => {
       expect(kc.constructor.name).toBe("cryptoAction");
       const testData = kb.rt.crypto.randomBytes(1024);
       const iv = kb.rt.crypto.randomBytes(12);
-      const ks = (await kc.key.get()) as KeyWithFingerPrint;
+      const ks = (await kc.key.get())!;
       const blk = await kc._encrypt({ bytes: testData, key: ks.key, iv });
       expect(blk).not.toEqual(testData);
       const dec = await kc._decrypt({ bytes: blk, key: ks.key, iv });
@@ -350,7 +350,7 @@ describe("KeyedCrypto", () => {
     const blk = (await codec.encode(testData)) as Uint8Array;
     const myDec = cborg.decode(blk) as IvKeyIdData;
     expect(myDec.iv).toEqual(iv);
-    const kc = (await kycr.key.get()) as KeyWithFingerPrint;
+    const kc = (await kycr.key.get())!;
     expect(base58btc.encode(myDec.keyId)).toEqual(kc.fingerPrint);
     const dec = await codec.decode(blk);
     expect(dec.data).toEqual(testData);

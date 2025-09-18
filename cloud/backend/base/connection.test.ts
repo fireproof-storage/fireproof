@@ -53,8 +53,8 @@ async function refURL(sthis: SuperThis, sp: ResOptionalSignedUrl) {
     await calculatePreSignedUrl(sp, {
       storageUrl: URI.from(sthis.env.get("STORAGE_URL")),
       aws: {
-        accessKeyId: sthis.env.get("ACCESS_KEY_ID") as string,
-        secretAccessKey: sthis.env.get("SECRET_ACCESS_KEY") as string,
+        accessKeyId: sthis.env.get("ACCESS_KEY_ID")!,
+        secretAccessKey: sthis.env.get("SECRET_ACCESS_KEY")!,
         region: sthis.env.get("REGION"),
       },
       test: {
@@ -90,7 +90,7 @@ describe("Connection", () => {
   // const port = +(process.env.FP_WRANGLER_PORT || 0) || 1024 + Math.floor(Math.random() * (65536 - 1024));
   const my = defaultGestalt(msgP, { id: "FP-Universal-Client" });
 
-  const endpoint = sthis.env.get("FP_ENDPOINT") as string;
+  const endpoint = sthis.env.get("FP_ENDPOINT")!;
   const styles: { name: string; action: () => ReturnType<typeof wsStyle> | ReturnType<typeof httpStyle> }[] =
     // honoServer.name === "NodeHonoServer"
     [
@@ -195,7 +195,7 @@ describe("Connection", () => {
       });
       afterEach(async () => {
         // we might not have a connected
-        await c.close(ps.buildReqClose(sthis, auth.authType, c.virtualConn as ps.QSId));
+        await c.close(ps.buildReqClose(sthis, auth.authType, c.virtualConn!));
       });
 
       it("kaputt url http", async () => {
@@ -304,7 +304,7 @@ describe("Connection", () => {
         };
       });
       afterAll(async () => {
-        await conn.close(ps.buildReqClose(sthis, auth.authType, conn.virtualConn as ps.QSId));
+        await conn.close(ps.buildReqClose(sthis, auth.authType, conn.virtualConn!));
       });
       it("Open", async () => {
         const res = await conn.request(buildReqOpen(sthis, auth.authType, conn.conn), {

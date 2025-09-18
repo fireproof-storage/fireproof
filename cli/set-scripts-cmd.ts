@@ -60,20 +60,24 @@ export function setDependenciesCmd(sthis: SuperThis) {
         absolute: false, // Return relative paths
         caseSensitiveMatch: false,
       });
-      console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
+      console.log(`Found ${String(packagesJsonFiles.length)} package.json files to patch.`);
       for (const packageJsonPath of packagesJsonFiles) {
-        const packageJson = await fs.readJSON(packageJsonPath);
+        const packageJson = (await fs.readJSON(packageJsonPath)) as {
+          dependencies?: Record<string, string>;
+          devDependencies?: Record<string, string>;
+          peerDependencies?: Record<string, string>;
+        };
         let ref: Record<string, string>;
         if (args.devDependency) {
-          ref = packageJson.devDependencies || {};
+          ref = packageJson.devDependencies ?? {};
           packageJson.devDependencies = ref;
           console.log(`Setting devDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
         } else if (args.peerDependency) {
-          ref = packageJson.peerDependencies || {};
+          ref = packageJson.peerDependencies ?? {};
           packageJson.peerDependencies = ref;
           console.log(`Setting peerDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
         } else {
-          ref = packageJson.dependencies || {};
+          ref = packageJson.dependencies ?? {};
           packageJson.dependencies = ref;
           console.log(`Setting dependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
         }
@@ -83,7 +87,7 @@ export function setDependenciesCmd(sthis: SuperThis) {
         } else {
           ref[args.depName] = args.depVersion;
         }
-        await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
+        fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
       }
     },
   });
@@ -141,18 +145,23 @@ export function setScriptsCmd(sthis: SuperThis) {
         absolute: false, // Return relative paths
         caseSensitiveMatch: false,
       });
-      console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
+      console.log(`Found ${String(packagesJsonFiles.length)} package.json files to patch.`);
       for (const packageJsonPath of packagesJsonFiles) {
-        const packageJson = await fs.readJSON(packageJsonPath);
+        const packageJson = (await fs.readJSON(packageJsonPath)) as {
+          scripts?: Record<string, string>;
+        };
         if (args.scriptDelete || !args.scriptAction) {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete packageJson.scripts[args.scriptName];
+          if (packageJson.scripts) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete packageJson.scripts[args.scriptName];
+          }
           console.log(`Deleting script ${args.scriptName} from ${packageJsonPath}`);
         } else {
+          packageJson.scripts = packageJson.scripts ?? {};
           packageJson.scripts[args.scriptName] = args.scriptAction;
           console.log(`Setting script ${args.scriptName} to "${args.scriptAction}" in ${packageJsonPath}`);
         }
-        await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
+        fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
       }
     },
   });

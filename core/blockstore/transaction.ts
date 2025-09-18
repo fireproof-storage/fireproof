@@ -50,7 +50,7 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
   }
 
   async put(fb: FPBlock): Promise<void> {
-    return this.putSync(fb);
+    this.putSync(fb);
   }
 
   putSync(fb: FPBlock): void {

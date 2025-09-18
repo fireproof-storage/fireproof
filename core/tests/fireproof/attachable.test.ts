@@ -97,7 +97,7 @@ describe("meta check", () => {
         base: `memory://${name}`,
       },
     });
-    await db.put({ _id: `id-${0}`, value: `value-${0}` });
+    await db.put({ _id: `id-0`, value: `value-0` });
     await db.close();
 
     const db1 = fireproof(name, {
@@ -117,7 +117,7 @@ describe("meta check", () => {
       },
     });
     await db.ready();
-    await db.put({ _id: `id-${0}`, value: `value-${0}` });
+    await db.put({ _id: `id-0`, value: `value-0` });
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
     expect(db.ledger.crdt.blockstore.loader.carLog.asArray().map((i) => i.map((i) => i.toString()))).toEqual([
       ["baembeieldbalgnyxqp7rmj4cbrot75gweavqy3aw22km43zsfufrihfn7e"],

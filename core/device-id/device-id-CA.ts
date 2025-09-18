@@ -37,8 +37,8 @@ export interface DeviceIdCAOptsDefaulted {
 function defaultDeviceIdCAOpts(opts: DeviceIdCAOptsDefaulted): DeviceIdCAOpts {
   return {
     ...opts,
-    validityPeriod: opts.validityPeriod || 365 * 24 * 60 * 60, // 1 year
-    caChain: opts.caChain || [],
+    validityPeriod: opts.validityPeriod ?? 365 * 24 * 60 * 60, // 1 year
+    caChain: opts.caChain ?? [],
   };
 }
 
@@ -86,7 +86,7 @@ export class DeviceIdCA {
       // Standard JWT claims
       iss: this.#caSubject.commonName, // Issuer (CA)
       sub: devId.csr.subject.commonName, // Subject
-      aud: devId.aud || "certificate-users",
+      aud: devId.aud ?? "certificate-users",
       iat: now,
       nbf: now, // Not before
       exp: now + this.#opts.validityPeriod, // 1 year validity
@@ -166,19 +166,19 @@ export class DeviceIdCA {
       // Key Usage
       keyUsage: {
         critical: true,
-        usage: requestedExtensions.keyUsage || ["digitalSignature", "keyEncipherment"],
+        usage: requestedExtensions.keyUsage ?? ["digitalSignature", "keyEncipherment"],
       },
 
       // Extended Key Usage
       extendedKeyUsage: {
         critical: false,
-        usage: requestedExtensions.extendedKeyUsage || ["serverAuth"],
+        usage: requestedExtensions.extendedKeyUsage ?? ["serverAuth"],
       },
 
       // Subject Alternative Name
       subjectAltName: {
         critical: false,
-        names: requestedExtensions.subjectAltName || [subject.commonName],
+        names: requestedExtensions.subjectAltName ?? [subject.commonName],
       },
 
       // Authority Key Identifier (would be CA's key identifier)

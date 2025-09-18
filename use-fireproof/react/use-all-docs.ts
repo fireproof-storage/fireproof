@@ -17,7 +17,7 @@ export function createUseAllDocs(database: Database) {
       const res = await database.allDocs<T>(query);
       setResult({
         ...res,
-        docs: res.rows.map((r) => r.value as DocWithId<T>),
+        docs: res.rows.map((r) => r.value),
       });
     }, [database, queryString]);
 

@@ -92,7 +92,7 @@ export function sanitizeDocumentFields<T>(obj: T): T {
           if (typeof value === "object" && !key.startsWith("_")) {
             // Handle Date objects in properties
             if (value instanceof Date) {
-              result[key] = (value as Date).toISOString();
+              result[key] = (value).toISOString();
             } else {
               const sanitized = sanitizeDocumentFields(value);
               result[key] = sanitized;
@@ -187,7 +187,7 @@ async function processFileset(
   // let totalSize = 0
   for (const filename in files) {
     if (File === files[filename].constructor) {
-      const file = files[filename] as File;
+      const file = files[filename];
 
       // totalSize += file.size
       const { cid, blocks: fileBlocks } = await store.encodeFile(file);
@@ -208,7 +208,7 @@ async function processFileset(
   if (didPut.length) {
     const car = await dbBlockstore.loader.commitFiles(
       t,
-      { files } as unknown as TransactionMeta /* {
+      { files } as unknown /* {
       public: publicFiles,
     } */,
     );
@@ -316,7 +316,7 @@ export async function clockChangesSince<T extends DocTypes>(
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
   const eventsFetcher = (
     opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(toPailFetcher(blocks))
-  ) as EventFetcher<Operation>;
+  );
   const keys = new Set<string>();
   const updates = await gatherUpdates<T>(
     blocks,
