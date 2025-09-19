@@ -108,7 +108,7 @@ export function ApiToken() {
         });
       }, 1000);
       setRedirectCountdown((prev) => ({ ...prev, interval }));
-      return () => clearInterval(interval);
+      return () => { clearInterval(interval); };
     }
   }, [redirectCountdown.state, cloudToken]);
 

@@ -19,7 +19,7 @@ function getEnvVersion(version = "refs/tags/v0.0.0-smoke", xenv = process.env) {
   }
   if (reEndVersion.test(wversion)) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    wversion = wversion.match(reEndVersion)![1];
+    wversion = reEndVersion.exec(wversion)![1];
   }
   const calculatedVersion = wversion.replace(reScopedVersion, "$1").replace(reVersionAlphaStart, "$1");
   try {
@@ -65,8 +65,8 @@ export async function getVersion(
 }
 
 export class Version {
-  #version: string;
-  #versionPrefix: string;
+  readonly #version: string;
+  readonly #versionPrefix: string;
 
   constructor(version: string, versionPrefix: string) {
     this.#version = version;
@@ -137,8 +137,8 @@ export async function patchPackageJson(
   }
   // patchedPackageJson.name = changeScope ? : patchedPackageJson.name;
   patchedPackageJson.version = version.version;
-  delete patchedPackageJson.scripts["pack"];
-  delete patchedPackageJson.scripts["publish"];
+  delete patchedPackageJson.scripts.pack;
+  delete patchedPackageJson.scripts.publish;
   patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version.prefixedVersion);
   patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version.prefixedVersion);
 
@@ -167,14 +167,14 @@ async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
   // }
 }
 function toDenoExports(exports: Record<string, string | Record<string, string>>) {
-  return Object.entries(exports ?? {}).reduce(
+  return Object.entries(exports ?? {}).reduce<Record<string, string>>(
     (acc, [k, v]) => {
       if (typeof v === "string") {
         acc[k] = v.replace(/\.(js|mjs|cjs)$/, ".ts").replace(/\.(jsx|mjsx|cjsx)$/, ".tsx");
       } else {
         const x = Object.entries(v).reduce((acc, [_, v]) => {
           if (acc === "") {
-            if (v.match(/\.(js|mjs|cjs|)$/)) {
+            if (/\.(js|mjs|cjs|)$/.exec(v)) {
               return v.replace(/\.(js|mjs|cjs)$/, ".ts");
             }
           }
@@ -186,12 +186,12 @@ function toDenoExports(exports: Record<string, string | Record<string, string>>)
       }
       return acc;
     },
-    { ".": "./index.ts" } as Record<string, string>,
+    { ".": "./index.ts" },
   );
 }
 
 function toDenoDeps(deps: Record<string, string>, version: string) {
-  return Object.entries(deps).reduce(
+  return Object.entries(deps).reduce<Record<string, string>>(
     (acc, [k, v]) => {
       if (v.startsWith("workspace:")) {
         acc[k] = `jsr:${k}@${version}`;
@@ -204,7 +204,7 @@ function toDenoDeps(deps: Record<string, string>, version: string) {
       acc[k] = `npm:${k}@${v.replace("npm:", "")}`;
       return acc;
     },
-    {} as Record<string, string>,
+    {},
   );
 }
 interface JsrConfig {

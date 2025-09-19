@@ -259,10 +259,10 @@ export class Loader implements Loadable {
         const car = await this.storesLoadCar(carId, localCarStore);
         const rStore = await exception2Result(
           async () =>
-            await store.active.car.save({
+            { await store.active.car.save({
               cid: carId,
               bytes: await codec.encode(car.bytes),
-            }),
+            }); },
         );
         if (rStore.isErr()) {
           this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
@@ -298,7 +298,7 @@ export class Loader implements Loadable {
   }
 
   // private getBlockCache = new Map<string, AnyBlock>();
-  private seenMeta: LRUSet<string>;
+  private readonly seenMeta: LRUSet<string>;
 
   keyBag(): Promise<KeyBagIf> {
     return getKeyBag(this.sthis, this.ebOpts.keyBag);
@@ -524,7 +524,7 @@ export class Loader implements Loadable {
       // fetch other cars down the compact log?
       // todo we should use a CID set for the compacted cids (how to expire?)
       // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
-      carHeader.compact.map((c) => c.toString()).forEach((k) => this.seenCompacted.add(k), this.seenCompacted);
+      carHeader.compact.map((c) => c.toString()).forEach((k) => { this.seenCompacted.add(k); }, this.seenCompacted);
       const warns = await this.getMoreReaders(carHeader.cars.flat(), activeStore).then((res) => res.filter((r) => r.isErr()));
       if (warns.length > 0) {
         this.logger.Warn().Any("warns", warns).Msg("error getting more readers");

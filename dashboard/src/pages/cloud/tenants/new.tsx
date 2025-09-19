@@ -8,7 +8,7 @@ import { Button } from "../../../components/Button.jsx";
 
 export function newCloudAction(ctx: AppContextType) {
   return async ({ request }: { request: Request }) => {
-    const tenantName = ((await request.json()) as { tenantName?: string }).tenantName;
+    const tenantName = ((await request.json())).tenantName;
     if (!tenantName || tenantName.trim() === "") {
       return new Response("Tenant name is required", { status: 400 });
     }

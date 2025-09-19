@@ -40,7 +40,7 @@ import { jsonEnDe, defaultMsgParams } from "@fireproof/core-protocols-cloud";
 
 function cfWebSocketPair() {
   const pair = new WebSocketPair();
-  return [pair[0] as WebSocket, pair[1] as WebSocket] as const;
+  return [pair[0], pair[1]] as const;
 }
 
 export function getRoomDurableObject(env: Env, _id: string) {
@@ -59,7 +59,7 @@ function webSocket2WSContextInit(ws: WebSocket): WSContextInit<WebSocket> {
       ws.send(data);
     },
     close: (code?: number, reason?: string): void => {
-      return ws.close(code, reason);
+      ws.close(code, reason);
     },
     raw: ws,
     readyState: ws.readyState as WSReadyState,
@@ -97,7 +97,7 @@ class CFWSRoom implements WSRoom {
 
   getConns(): ConnItem<WebSocket>[] {
     if (!this.isWebsocket) {
-      return this.notWebSockets as ConnItem<WebSocket>[];
+      return this.notWebSockets;
     }
     const getWebSockets = this.#getWebSockets;
     if (!getWebSockets) {
@@ -211,7 +211,7 @@ interface CFExposeCtxItem {
 type InternalCFExposeCtxItem = Omit<CFExposeCtxItem, "ctx"> & { ctx?: ExposeCtxItem<CFWSRoom> };
 
 export class CFExposeCtx {
-  #ctxs = new Map<string, InternalCFExposeCtxItem>();
+  readonly #ctxs = new Map<string, InternalCFExposeCtxItem>();
 
   public static create(cfObj: CFExposeCtxItem["cfObj"], sthis: SuperThis, id: string): CFExposeCtx {
     const env = cfObj.env;
@@ -375,7 +375,7 @@ export class CFHonoServer extends HonoServerBase {
       const cfEnv = c.env as Env;
       const cfCtx = cfEnv.FP_EXPOSE_CTX.get(this.id);
       cfCtx.cfObj.ctx.acceptWebSocket(server, [cfCtx.id]);
-      cfCtx.ctx.wsRoom.applyGetWebSockets(this.id, () => cfCtx.cfObj.ctx.getWebSockets() as WebSocket[]);
+      cfCtx.ctx.wsRoom.applyGetWebSockets(this.id, () => cfCtx.cfObj.ctx.getWebSockets());
       cfCtx.ctx.wsRoom.applyEvents(this.id, await createEvents(c));
       server.serializeAttachment({ id: cfCtx.id });
       cfCtx.ctx.wsRoom.events.onOpen(this.id, {} as Event, server);

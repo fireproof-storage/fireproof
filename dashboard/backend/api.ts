@@ -213,7 +213,7 @@ type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUse
 };
 
 function nameFromAuth(name: string | undefined, auth: ActiveUserWithUserId): string {
-  return name ?? `${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}`;
+  return name ?? (auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId);
 }
 
 function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
@@ -1213,14 +1213,14 @@ export class FPApiSQL implements FPApiInterface {
             sqlInviteTickets.invitedTenantId,
             roles
               .filter((i) => i.role === "admin" && i.tenantId)
-              .map((i) => i.tenantId as string)
+              .map((i) => i.tenantId!)
               .flat(2),
           ),
           inArray(
             sqlInviteTickets.invitedLedgerId,
             roles
               .filter((i) => i.role === "admin" && i.ledgerId)
-              .map((i) => i.ledgerId as string)
+              .map((i) => i.ledgerId!)
               .flat(2),
           ),
         ),
@@ -1720,7 +1720,7 @@ export class FPApiSQL implements FPApiInterface {
     }
     // const now = new Date().toISOString();
     let condition = and(eq(sqlLedgerUsers.userId, auth.user.userId));
-    if (req.tenantIds && req.tenantIds.length) {
+    if (req.tenantIds?.length) {
       condition = and(condition, inArray(sqlLedgers.tenantId, req.tenantIds));
     }
     const rows = await this.db

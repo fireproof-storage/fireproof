@@ -41,7 +41,7 @@ const generateIV: Record<string, GenerateIVFn> = {
 
 function getGenerateIVFn(url: URI, opts: Partial<CodecOpts>): GenerateIVFn {
   const ivhash = opts.ivCalc || url.getParam(PARAM.IV_HASH) || "hash";
-  return generateIV[ivhash] || generateIV["hash"];
+  return generateIV[ivhash] || generateIV.hash;
 }
 
 export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {

@@ -12,7 +12,7 @@ function ensureVersion(url: URI): URI {
 }
 
 interface IDBConn {
-  readonly db: IDBPDatabase<unknown>;
+  readonly db: IDBPDatabase;
   readonly dbName: DbName;
   readonly version: string;
   readonly url: URI;
@@ -42,7 +42,7 @@ function onceCreateDB(dbName: DbName, url: URI, sthis: SuperThis): () => Promise
     // console.log("created", dbName.fullDb, (new Error()).stack);
     listDatabases.reset(); // not cool but easy
     const found = await db.get("version", "version");
-    const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
+    const version = ensureVersion(url).getParam(PARAM.VERSION)!;
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {

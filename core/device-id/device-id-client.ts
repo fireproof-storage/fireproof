@@ -10,7 +10,7 @@ import { DeviceIdCSR } from "./device-id-CSR.js";
 import { DeviceIdProtocol } from "./device-id-protocol.js";
 
 class MsgSigner {
-  #x: DeviceIdSignMsg;
+  readonly #x: DeviceIdSignMsg;
 
   constructor(x: DeviceIdSignMsg) {
     this.#x = x;

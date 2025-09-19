@@ -14,7 +14,7 @@ export class DeviceIdSignMsg {
     this.base64 = base64;
   }
 
-  async sign<T extends JWTPayload>(payload: T, algorithm = "ES256") {
+  async sign(payload: JWTPayload, algorithm = "ES256") {
     const certor = new Certor(this.base64, this.#cert);
     const x5c = [certor.asBase64()];
     const x5t = await certor.asSHA1();

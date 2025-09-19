@@ -69,11 +69,11 @@ class ClerkApiToken implements FPApiToken {
         throw new Error("Invalid JWT format - missing payload");
       }
 
-      const payload = JSON.parse(atob(payloadB64));
+      const payload = JSON.parse(atob(payloadB64)) as { iss?: string };
       const issuer = payload.iss;
 
       let jwksUrl: string;
-      if (issuer && issuer.startsWith("https://")) {
+      if (issuer?.startsWith("https://")) {
         // Use issuer from JWT (preferred)
         jwksUrl = `${issuer}/.well-known/jwks.json`;
       } else if (CLERK_PUB_JWT_URL) {
@@ -101,7 +101,7 @@ class ClerkApiToken implements FPApiToken {
           // Parse JWKS response
           const jwksResponse = await rJwtKey.Ok().json<{ keys: JsonWebKey[] }>();
 
-          if (!jwksResponse.keys || jwksResponse.keys.length === 0) {
+          if (!jwksResponse.keys.length) {
             throw new Error(`No keys found in JWKS from ${jwksUrl}`);
           }
 
@@ -166,10 +166,10 @@ class ClerkApiToken implements FPApiToken {
 //   }
 // }
 
-export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
+export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result>;
 
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
-export function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
+export function createHandler(db: DashSqlite, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),

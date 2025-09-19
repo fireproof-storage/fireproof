@@ -240,20 +240,22 @@ describe("de-serialize", () => {
       ],
     } satisfies FPEnvelopeMeta;
     const ser = await fpSerialize(sthis, msg, {
-      meta: async (sthis, payload) => {
-        return Result.Ok(sthis.txt.encode(JSON.stringify(payload.map((i) => ({ ...i, key: "key" })))));
+      meta: (sthis, payload) => {
+        return Promise.resolve(Result.Ok(sthis.txt.encode(JSON.stringify(payload.map((i) => ({ ...i, key: "key" }))))));
       },
     });
     let key = "";
     const res = await fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), ser, {
-      meta: async (sthis, payload) => {
-        const json = JSON.parse(sthis.txt.decode(payload));
-        key = json[0].key;
-        return Result.Ok(
-          json.map((i: { key?: string }) => {
-            delete i.key;
-            return i;
-          }) as SerializedMeta[],
+      meta: (sthis, payload) => {
+        const json = JSON.parse(sthis.txt.decode(payload)) as (SerializedMeta & { key?: string })[];
+        key = json[0].key ?? "";
+        return Promise.resolve(
+          Result.Ok(
+            json.map((i: { key?: string }) => {
+              delete i.key;
+              return i;
+            }) as SerializedMeta[],
+          ),
         );
       },
     });

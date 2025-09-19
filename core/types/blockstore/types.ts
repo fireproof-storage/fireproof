@@ -81,7 +81,7 @@ export interface AnyBlock {
 }
 
 export interface CIDBlock {
-  readonly cid: CID<unknown, number, number, Version>;
+  readonly cid: CID;
   readonly bytes: Uint8Array;
 }
 
@@ -728,7 +728,7 @@ export interface DocBlockItem extends BlockItemBase<DocBlockItemValue> {
   readonly value: DocBlockItemValue;
 }
 
-export function isFPBlockItem<T>(fpb: FPBlock<BlockItem>): fpb is FPBlock<FPBlockItem<T>> {
+export function isFPBlockItem<T>(fpb: FPBlock): fpb is FPBlock<FPBlockItem<T>> {
   return fpb.item.type === "fp";
 }
 

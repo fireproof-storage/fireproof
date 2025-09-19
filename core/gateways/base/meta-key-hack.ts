@@ -231,10 +231,10 @@ export class AddKeyToDbMetaGateway implements SerdeGateway {
   start(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<URI>> {
     return this.sdGw.start(ctx, baseUrl);
   }
-  close(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void, Error>> {
+  close(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void>> {
     return this.sdGw.close(ctx, baseUrl);
   }
-  async put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<void, Error>> {
+  async put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<void>> {
     return this.sdGw.put(addKeyToDbMetaEncoder(ctx, this.version), url, body);
   }
   async get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<Result<FPEnvelope<S>, Error | NotFoundError>> {
@@ -245,16 +245,16 @@ export class AddKeyToDbMetaGateway implements SerdeGateway {
   readonly lastDecodedMetas: V2SerializedMetaKey[] = [];
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  delete(ctx: SerdeGatewayCtx, url: URI, loader?: Loadable): Promise<Result<void, Error>> {
+  delete(ctx: SerdeGatewayCtx, url: URI, loader?: Loadable): Promise<Result<void>> {
     return this.sdGw.delete(ctx, url);
   }
-  subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<() => void, Error>> {
+  subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<() => void>> {
     return this.sdGw.subscribe(addKeyToDbMetaDecoder({ ...ctx, lastDecodedMetas: this.lastDecodedMetas }), url, callback);
   }
   getPlain(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<Uint8Array>> {
     return this.sdGw.getPlain(ctx, url, key);
   }
-  destroy(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void, Error>> {
+  destroy(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void>> {
     return this.sdGw.destroy(ctx, baseUrl);
   }
 }

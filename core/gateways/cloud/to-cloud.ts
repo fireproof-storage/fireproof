@@ -31,7 +31,7 @@ function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
 }
 
 export class SimpleTokenStrategy implements TokenStrategie {
-  private tc: TokenAndClaims;
+  private readonly tc: TokenAndClaims;
   constructor(jwk: string) {
     let claims: FPCloudClaim;
     try {

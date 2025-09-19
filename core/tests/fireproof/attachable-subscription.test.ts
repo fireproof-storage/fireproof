@@ -182,7 +182,7 @@ describe("Remote Sync Subscription Tests", () => {
 
   afterEach(async () => {
     // Clean up all subscriptions
-    subscriptionCallbacks.forEach((unsub) => unsub());
+    subscriptionCallbacks.forEach((unsub) => { unsub(); });
     subscriptionCallbacks = [];
     subscriptionCounts.clear();
     receivedDocs.clear();
@@ -275,7 +275,7 @@ describe("Remote Sync Subscription Tests", () => {
       // 🐛 BUG: This will timeout because subscription never fires for remote data sync
       await Promise.race([
         subscriptionPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Subscription timeout")), 5000)),
+        new Promise((_, reject) => setTimeout(() => { reject(new Error("Subscription timeout")); }, 5000)),
       ]);
 
       // Verify the subscription was triggered
@@ -299,7 +299,7 @@ describe("Remote Sync Subscription Tests", () => {
   describe("sync", () => {
     beforeEach(async () => {
       // Reset subscription tracking for each sync test
-      subscriptionCallbacks.forEach((unsub) => unsub());
+      subscriptionCallbacks.forEach((unsub) => { unsub(); });
       subscriptionCallbacks = [];
       subscriptionCounts.clear();
       receivedDocs.clear();
@@ -377,7 +377,7 @@ describe("Remote Sync Subscription Tests", () => {
       // 🐛 BUG: This will timeout because subscription never fires for reconnection sync
       await Promise.race([
         subscriptionPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Subscription timeout")), 5000)),
+        new Promise((_, reject) => setTimeout(() => { reject(new Error("Subscription timeout")); }, 5000)),
       ]);
 
       // Verify the subscription was triggered by remote sync
@@ -452,10 +452,10 @@ describe("Remote Sync Subscription Tests", () => {
 
       // Now write NEW data to databases - this WILL trigger subscriptions ✅
       // This is the key difference: NEW writes vs EXISTING data sync
-      const keys: string[] = dbs.reduce((acc, ic) => {
+      const keys: string[] = dbs.reduce<string[]>((acc, ic) => {
         acc.push(...ic.keys);
         return acc;
-      }, [] as string[]);
+      }, []);
       for (const [_index, db] of dbs.entries()) {
         await sleep(100 * Math.random());
         const dbKeys = await writeRow(db, "add-online");
@@ -471,7 +471,7 @@ describe("Remote Sync Subscription Tests", () => {
           try {
             await Promise.race([
               db.subscriptionPromise,
-              new Promise((_, reject) => setTimeout(() => reject(new Error(`Subscription timeout for db ${i}`)), 5000)),
+              new Promise((_, reject) => setTimeout(() => { reject(new Error(`Subscription timeout for db ${i}`)); }, 5000)),
             ]);
           } catch (error) {
             // Subscription timeout - this is expected if subscriptions don't work for this database

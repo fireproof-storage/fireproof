@@ -35,7 +35,7 @@ interface ServerType {
   close(fn: () => void): void;
 }
 
-type serveFn = (options: unknown, listeningListener?: ((info: unknown) => void) | undefined) => ServerType;
+type serveFn = (options: unknown, listeningListener?: ((info: unknown) => void)  ) => ServerType;
 
 export interface NodeHonoFactoryParams {
   readonly msgP?: MsgerParams;
@@ -75,14 +75,14 @@ class NodeWSRoom implements WSRoom {
     return conn;
   }
 
-  isConnected(msg: MsgBase): msg is MsgWithConn<MsgBase> {
+  isConnected(msg: MsgBase): msg is MsgWithConn {
     if (!MsgIsWithConn(msg)) {
       return false;
     }
     return this._conns.has(qsidKey(msg.conn));
   }
 
-  createEvents(outer: WSEventsConnId<unknown>): (c: Context) => WSEvents<unknown> {
+  createEvents(outer: WSEventsConnId<unknown>): (c: Context) => WSEvents {
     const id = this.sthis.nextId(12).str;
 
     return (_c: Context) => ({

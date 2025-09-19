@@ -85,7 +85,7 @@ export class RedirectStrategy implements TokenStrategie {
   );
 
   open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts) {
-    const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
+    const redirectCtx = opts.context.get(WebCtx)!;
     logger.Debug().Url(redirectCtx.dashboardURI).Msg("open redirect");
     this.resultId = sthis.nextId().str;
     const url = BuildURI.from(redirectCtx.dashboardURI)
@@ -100,12 +100,12 @@ export class RedirectStrategy implements TokenStrategie {
       url.setParam("tenant", opts.tenant);
     }
 
-    let overlayNode = document.body.querySelector("#fpOverlay") as HTMLDivElement;
+    let overlayNode = document.body.querySelector("#fpOverlay")!;
     if (!overlayNode) {
       const styleNode = document.createElement("style");
       styleNode.innerHTML = DOMPurify.sanitize(this.overlayCss);
       document.head.appendChild(styleNode);
-      overlayNode = document.createElement("div") as HTMLDivElement;
+      overlayNode = document.createElement("div");
       overlayNode.id = "fpOverlay";
       overlayNode.className = "fpOverlay";
       overlayNode.innerHTML = DOMPurify.sanitize(this.overlayHtml(url.toString()));
@@ -162,7 +162,7 @@ export class RedirectStrategy implements TokenStrategie {
 
   async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
     if (!this.currentToken) {
-      const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
+      const webCtx = opts.context.get(WebCtx)!;
       this.currentToken = await webCtx.token();
       // console.log("RedirectStrategy tryToken - ctx", this.currentToken);
     }
@@ -207,7 +207,7 @@ export class RedirectStrategy implements TokenStrategie {
     if (!this.resultId) {
       throw new Error("waitForToken not working on redirect strategy");
     }
-    const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
+    const webCtx = opts.context.get(WebCtx)!;
     const dashApi = new Api(webCtx.tokenApiURI);
     this.waitState = "started";
     return new Promise<TokenAndClaims | undefined>((resolve) => {

@@ -39,7 +39,7 @@ export async function dbMetaEvent2Serialized(
         {
           dbMeta: sthis.txt.encode(format(dbEvent.dbMeta)),
         },
-        dbEvent.parents as unknown as Link<EventView<DbMetaBinary>, number, number, 1>[],
+        dbEvent.parents as unknown as Link<EventView<DbMetaBinary>>[],
       );
       return {
         cid: event.cid.toString(),

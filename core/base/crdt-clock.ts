@@ -74,7 +74,7 @@ export class CRDTClockImpl {
       const changes = await clockChangesSince<DocTypes>(this.blockstore, this.head, prevHead, {}, this.logger);
       internalUpdates = changes.result;
     }
-    this.zoomers.forEach((fn) => fn());
+    this.zoomers.forEach((fn) => { fn(); });
     this.notifyWatchers(internalUpdates || []);
   }
 
@@ -91,8 +91,8 @@ export class CRDTClockImpl {
       .Msg("NOTIFY_WATCHERS: Triggering subscriptions");
     // Always notify both types of watchers - subscription systems need notifications
     // regardless of whether there are document updates
-    this.noPayloadWatchers.forEach((fn) => fn());
-    this.watchers.forEach((fn) => fn(updates || []));
+    this.noPayloadWatchers.forEach((fn) => { fn(); });
+    this.watchers.forEach((fn) => { fn(updates || []); });
   }
 
   onTick(fn: (updates: DocUpdate<DocTypes>[]) => void): UnReg {
@@ -197,10 +197,10 @@ export class CRDTClockImpl {
       if (changes.result.length > 0) {
         this.logger.Debug().Msg("MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
         this.notifyWatchers(changes.result);
-        this.noPayloadWatchers.forEach((fn) => fn());
+        this.noPayloadWatchers.forEach((fn) => { fn(); });
       } else {
         this.logger.Debug().Msg("MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
-        this.noPayloadWatchers.forEach((fn) => fn());
+        this.noPayloadWatchers.forEach((fn) => { fn(); });
       }
     }
   }

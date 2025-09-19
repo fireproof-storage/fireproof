@@ -27,7 +27,7 @@ async function getIndexedDBNamesWithQueries(): Promise<{ name: string; queries: 
         const allDocs = await queryDb.allDocs();
         const queries = allDocs.rows.map((row) => row.value);
 
-        return { name: dbName as string, queries };
+        return { name: dbName!, queries };
       }),
     );
 
@@ -65,7 +65,7 @@ function SidebarDatabases() {
         <div key={db.name}>
           <div className="flex items-center justify-between w-full">
             <button
-              onClick={() => navigateToDatabase(db.name)}
+              onClick={() => { navigateToDatabase(db.name); }}
               className="flex-grow text-left rounded px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
             >
               <span title={db.name}>{truncateDbName(db.name, 20)}</span>
@@ -108,7 +108,7 @@ function SidebarDatabases() {
                     isActive ? "font-bold" : ""
                   }`
                 }
-                onClick={() => setIsSidebarOpen(false)}
+                onClick={() => { setIsSidebarOpen(false); }}
               >
                 {link.label}
               </NavLink>
