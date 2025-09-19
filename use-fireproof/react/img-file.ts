@@ -83,11 +83,14 @@ async function loadFile({
         ? getCacheKey(fileData) // Already includes 'file:' prefix
         : null;
   const isDifferentFile = currentKey !== newKey;
+  
+  // If same content key, check if we have a cached URL we can reuse
+  const canReuseCache = !isDifferentFile && newKey && objectUrlCache.has(newKey);
 
   // Defer cleanup of previous URL until after new URL is set
 
   if (fileObj && /image/.test(fileType)) {
-    // Skip if it's the same file content (even if different object reference)
+    // Handle different file content
     if (isDifferentFile && newKey) {
       const src = getObjectUrlByKey(newKey, fileObj);
       setImgDataUrl(src);
@@ -106,8 +109,18 @@ async function loadFile({
 
       return cleanupRef.current;
     }
+    
+    // Handle same content key - reuse existing cached URL if available
+    if (canReuseCache && newKey) {
+      const src = objectUrlCache.get(newKey) as string;
+      setImgDataUrl(src);
+      fileObjRef.current = fileObj;
+      keyRef.current = newKey;
+      // Keep existing cleanup function - don't create a new one or call prevCleanup
+      return cleanupRef.current;
+    }
 
-    // Return existing cleanup if same file
+    // Return existing cleanup if same file and no cached URL
     return cleanupRef.current;
   }
   return null;
@@ -118,8 +131,6 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const fileObjRef = useRef<File | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const keyRef = useRef<string | null>(null);
-  const prevStableKeyRef = useRef<string | null>(null);
-  const isUnmountingRef = useRef<boolean>(false);
 
   // Use meta as fallback if file is not provided (for backward compatibility)
   // Memoize fileData to prevent unnecessary re-renders
@@ -127,26 +138,10 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
     return file || meta;
   }, [file, meta]);
 
-  // Create a stable key for useEffect dependency to prevent unnecessary cleanup
-  const stableKey = useMemo(() => {
-    if (!fileData) return null;
-    if (isFileMeta(fileData) && fileData.cid) {
-      return `cid:${String(fileData.cid)}`;
-    }
-    if (isFile(fileData)) {
-      return `file:${fileData.name}-${fileData.size}-${fileData.lastModified}`;
-    }
-    return null;
-  }, [fileData]);
 
   useEffect(() => {
     if (!fileData) return;
     let isMounted = true;
-    
-    // Track if stable key is changing to determine cleanup behavior
-    const currentStableKey = stableKey;
-    const prevStableKey = prevStableKeyRef.current;
-    const isStableKeyChanging = prevStableKey !== null && prevStableKey !== currentStableKey;
     
     loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl, keyRef }).then(function handleResult(result) {
       if (isMounted) {
@@ -161,25 +156,13 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
     return function cleanupEffect() {
       isMounted = false;
       
-      // Cleanup on unmount or when stable key actually changes (not on first render or same key)
-      const shouldCleanup = isUnmountingRef.current || (prevStableKey !== null && isStableKeyChanging);
-      
-      if (cleanupRef.current && shouldCleanup) {
+      // Always cleanup - this is the correct behavior for unmount and re-render
+      if (cleanupRef.current) {
         cleanupRef.current();
         cleanupRef.current = null;
       }
-      
-      // Update the previous stable key for next comparison
-      prevStableKeyRef.current = currentStableKey;
     };
-  }, [fileData, stableKey]);
-
-  // Track component unmounting
-  useEffect(() => {
-    return () => {
-      isUnmountingRef.current = true;
-    };
-  }, []);
+  }, [fileData]);
 
   return imgDataUrl
     ? React.createElement("img", {
