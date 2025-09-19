@@ -48,7 +48,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   const key = keyConfigOpts(sthis, name, opts);
   const item = ledgers.get(key);
   return new LedgerShell(
-    item.once((key) => {
+    item.once(({key}) => {
       const db = new LedgerImpl(sthis, {
         name,
         meta: opts?.meta,
@@ -70,7 +70,7 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
           }),
       });
       db.onClosed(() => {
-        ledgers.unget(key as string);
+        ledgers.unget(key);
       });
       return db;
     }),
