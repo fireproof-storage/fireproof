@@ -8,12 +8,6 @@ const objectUrlCache = new LRUMap<string, string>({
   maxEntries: 50, // Limit to 50 cached object URLs to manage memory
 });
 
-// Setup automatic cleanup of evicted object URLs to prevent memory leaks
-objectUrlCache.onDelete((key, value) => {
-  // eslint-disable-next-line no-restricted-globals
-  URL.revokeObjectURL(value);
-});
-
 // Union type to support both direct File objects and metadata objects
 type FileType = File | DocFileMeta;
 
@@ -124,6 +118,8 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const fileObjRef = useRef<File | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const keyRef = useRef<string | null>(null);
+  const prevStableKeyRef = useRef<string | null>(null);
+  const isUnmountingRef = useRef<boolean>(false);
 
   // Use meta as fallback if file is not provided (for backward compatibility)
   // Memoize fileData to prevent unnecessary re-renders
@@ -131,9 +127,27 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
     return file || meta;
   }, [file, meta]);
 
+  // Create a stable key for useEffect dependency to prevent unnecessary cleanup
+  const stableKey = useMemo(() => {
+    if (!fileData) return null;
+    if (isFileMeta(fileData) && fileData.cid) {
+      return `cid:${String(fileData.cid)}`;
+    }
+    if (isFile(fileData)) {
+      return `file:${fileData.name}-${fileData.size}-${fileData.lastModified}`;
+    }
+    return null;
+  }, [fileData]);
+
   useEffect(() => {
     if (!fileData) return;
     let isMounted = true;
+    
+    // Track if stable key is changing to determine cleanup behavior
+    const currentStableKey = stableKey;
+    const prevStableKey = prevStableKeyRef.current;
+    const isStableKeyChanging = prevStableKey !== null && prevStableKey !== currentStableKey;
+    
     loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl, keyRef }).then(function handleResult(result) {
       if (isMounted) {
         // Store the result in cleanupRef.current if component is still mounted
@@ -146,12 +160,26 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
 
     return function cleanupEffect() {
       isMounted = false;
-      if (cleanupRef.current) {
+      
+      // Cleanup on unmount or when stable key actually changes (not on first render or same key)
+      const shouldCleanup = isUnmountingRef.current || (prevStableKey !== null && isStableKeyChanging);
+      
+      if (cleanupRef.current && shouldCleanup) {
         cleanupRef.current();
         cleanupRef.current = null;
       }
+      
+      // Update the previous stable key for next comparison
+      prevStableKeyRef.current = currentStableKey;
     };
-  }, [fileData]);
+  }, [fileData, stableKey]);
+
+  // Track component unmounting
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true;
+    };
+  }, []);
 
   return imgDataUrl
     ? React.createElement("img", {
