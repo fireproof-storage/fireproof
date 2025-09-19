@@ -61,13 +61,13 @@
     "@eslint/js": "^9.35.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/deno": "^2.3.0",
-    "@types/node": "^24.3.1",
+    "@types/node": "^24.4.0",
     "@typescript/native-preview": "7.0.0-dev.20250915.1",
-    "deno": "^2.5.0",
+    "deno": "^2.5.1",
     "drizzle-kit": "0.30.6",
     "eslint": "^9.35.0",
     "eslint-plugin-import": "^2.32.0",
-    "multiformats": "^13.4.1",
+    "multiformats": "^13.4.0",
     "playwright": "^1.55.0",
     "playwright-chromium": "^1.55.0",
     "prettier": "^3.6.2",
@@ -75,7 +75,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.43.0",
     "vitest": "^3.2.4",
-    "wrangler": "^4.37.0"
+    "wrangler": "^4.38.0"
   },
   "repository": {
     "type": "git",

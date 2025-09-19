@@ -36,10 +36,10 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
     "@types/deno": "^2.3.0",
-    "@types/node": "^24.3.1"
+    "@types/node": "^24.4.0"
   }
 }

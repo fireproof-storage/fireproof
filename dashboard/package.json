@@ -25,7 +25,7 @@
     "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@clerk/backend": "^2.14.0",
     "@clerk/clerk-js": "^5.93.0",
     "@clerk/clerk-react": "^5.47.0",
@@ -43,7 +43,7 @@
     "i": "^0.3.7",
     "jose": "^6.1.0",
     "minimatch": "^10.0.1",
-    "multiformats": "^13.4.1",
+    "multiformats": "^13.4.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.62.0",
@@ -56,7 +56,7 @@
   "devDependencies": {
     "@clerk/clerk-react": "^5.47.0",
     "@cloudflare/vite-plugin": "^1.13.1",
-    "@cloudflare/workers-types": "^4.20250906.0",
+    "@cloudflare/workers-types": "^4.20250918.0",
     "@eslint/js": "^9.35.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@libsql/client": "^0.15.15",
@@ -77,11 +77,11 @@
     "postcss": "^8.4.49",
     "prettier": "^3.4.2",
     "rollup-plugin-visualizer": "^6.0.1",
-    "tailwindcss": "^4.1.13",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "vite": "^7.1.5",
     "vitest": "^3.2.4",
-    "wrangler": "^4.37.0",
+    "wrangler": "^4.38.0",
     "zx": "^8.8.1"
   }
 }

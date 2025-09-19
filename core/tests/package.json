@@ -40,7 +40,7 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-blockstore": "workspace:0.0.0",
@@ -61,7 +61,7 @@
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.5",
     "@ipld/dag-json": "^10.2.5",
-    "@types/node": "^24.3.1",
+    "@types/node": "^24.4.0",
     "cborg": "^4.2.15",
     "charwise": "^3.0.1",
     "jose": "^6.0.12",

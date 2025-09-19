@@ -36,7 +36,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/core-gateways-base": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
     "@fireproof/core-gateways-file": "workspace:0.0.0",
@@ -52,7 +52,7 @@
     "@ipld/dag-cbor": "^9.2.5",
     "@ipld/dag-json": "^10.2.5",
     "@web3-storage/pail": "^0.6.2",
-    "multiformats": "^13.4.1",
+    "multiformats": "^13.4.0",
     "p-map": "^7.0.3",
     "p-retry": "^7.0.0"
   }

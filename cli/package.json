@@ -39,7 +39,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
@@ -48,7 +48,7 @@
     "find-up": "^7.0.0",
     "fs-extra": "^11.3.1",
     "jose": "^6.1.0",
-    "multiformats": "^13.4.1",
+    "multiformats": "^13.4.0",
     "semver": "^7.7.2",
     "zx": "^8.8.1"
   },
