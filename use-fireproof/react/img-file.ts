@@ -1,6 +1,6 @@
 import { LRUMap } from "@adviser/cement";
 import { DocFileMeta } from "@fireproof/core-types-base";
-import React, { useState, useEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, ImgHTMLAttributes } from "react";
 
 // Cache for object URLs to avoid recreating them unnecessarily
 // Use LRUMap with maxEntries to manage memory usage
@@ -145,13 +145,15 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
     return file || meta;
   }, [file, meta]);
 
+  // Use layoutEffect to update tracking ref before useEffect cleanup runs
+  useLayoutEffect(() => {
+    nextFileDataRef.current = fileData;
+  }, [fileData]);
 
   useEffect(() => {
     if (!fileData) return;
     let isMounted = true;
     
-    // Track the fileData for this effect so cleanup can access the new value
-    nextFileDataRef.current = fileData;
     
     loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl, keyRef }).then(function handleResult(result) {
       if (isMounted) {
