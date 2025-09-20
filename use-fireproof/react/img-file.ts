@@ -83,7 +83,7 @@ async function loadFile({
         ? getCacheKey(fileData) // Already includes 'file:' prefix
         : null;
   const isDifferentFile = currentKey !== newKey;
-  
+
   // If same content key, check if we have a cached URL we can reuse
   const canReuseCache = !isDifferentFile && newKey && objectUrlCache.has(newKey);
 
@@ -105,7 +105,7 @@ async function loadFile({
             URL.revokeObjectURL(objectUrlCache.get(newKey) as string);
             objectUrlCache.delete(newKey);
           }
-        }
+        },
       };
       keyRef.current = newKey;
       if (prevCleanup && prevCleanup.revoke) {
@@ -114,7 +114,7 @@ async function loadFile({
 
       return newCleanupObj;
     }
-    
+
     // Handle same content key - reuse existing cached URL if available
     if (canReuseCache && newKey) {
       const src = objectUrlCache.get(newKey) as string;
@@ -138,7 +138,6 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   const keyRef = useRef<string | null>(null);
   const nextFileDataRef = useRef<FileType | undefined>(undefined);
 
-
   // Use meta as fallback if file is not provided (for backward compatibility)
   // Memoize fileData to prevent unnecessary re-renders
   const fileData = useMemo(() => {
@@ -153,8 +152,7 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
   useEffect(() => {
     if (!fileData) return;
     let isMounted = true;
-    
-    
+
     loadFile({ fileData, fileObjRef, cleanupRef, setImgDataUrl, keyRef }).then(function handleResult(result) {
       if (isMounted) {
         // Store the result in cleanupRef.current if component is still mounted
@@ -167,11 +165,11 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
 
     return function cleanupEffect() {
       isMounted = false;
-      
+
       // Content-aware conditional cleanup: only revoke URLs when content actually changes
       if (cleanupRef.current) {
         const currentContentKey = cleanupRef.current.contentKey;
-        
+
         // Compute next content key from the upcoming fileData (same logic as in loadFile)
         let nextContentKey = null;
         const upcomingFileData = nextFileDataRef.current;
@@ -182,20 +180,20 @@ export function ImgFile({ file, meta, ...imgProps }: ImgFileProps) {
             nextContentKey = `file:${upcomingFileData.name}-${upcomingFileData.size}-${upcomingFileData.lastModified}`;
           }
         }
-        
+
         // Different cleanup logic for File vs DocFileMeta objects:
         // - File objects: Always cleanup on effect change (including unmount)
         // - DocFileMeta objects: Only cleanup when CID actually changes
         const isContentChanging = currentContentKey !== nextContentKey;
-        const isFileObject = currentContentKey?.startsWith('file:');
-        const isDocFileMetaObject = currentContentKey?.startsWith('cid:');
-        
+        const isFileObject = currentContentKey?.startsWith("file:");
+        const isDocFileMetaObject = currentContentKey?.startsWith("cid:");
+
         const shouldCleanup = isFileObject || (isDocFileMetaObject && isContentChanging);
-        
+
         if (shouldCleanup && cleanupRef.current.revoke) {
           cleanupRef.current.revoke();
         }
-        
+
         cleanupRef.current = null;
       }
     };
