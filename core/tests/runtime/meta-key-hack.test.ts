@@ -2,11 +2,7 @@ import { BuildURI, URI } from "@adviser/cement";
 import { fireproof } from "@fireproof/core-base";
 import { registerStoreProtocol } from "@fireproof/core-blockstore";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
-import {
-  DbMetaEvent,
-  SerdeGatewayCtx,
-  V2SerializedMetaKey,
-} from "@fireproof/core-types-blockstore";
+import { DbMetaEvent, SerdeGatewayCtx, V2SerializedMetaKey } from "@fireproof/core-types-blockstore";
 import { AddKeyToDbMetaGateway } from "@fireproof/core-gateways-base";
 import { beforeAll, describe, expect, it, vitest } from "vitest";
 import { KeyBag } from "@fireproof/core-keybag";
