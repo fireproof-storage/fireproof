@@ -105,11 +105,7 @@ export class CRDTImpl implements CRDT {
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
-        this.logger
-          .Debug()
-          .Any("incomingHead", crdtMeta.head)
-          .Any("currentHead", this.clock.head)
-          .Msg("applyMeta-pre");
+        this.logger.Debug().Any("incomingHead", crdtMeta.head).Any("currentHead", this.clock.head).Msg("applyMeta-pre");
         this.logger
           .Debug()
           .Str("newHead", crdtMeta.head.map((h) => h.toString()).join(","))
@@ -119,11 +115,7 @@ export class CRDTImpl implements CRDT {
           .Str("dbName", this.opts.name || "unnamed")
           .Msg("APPLY_META: Calling applyHead for REMOTE sync");
         await this.clock.applyHead(crdtMeta.head, []);
-        this.logger
-          .Debug()
-          .Any("resultHead", crdtMeta.head)
-          .Any("clockHead", this.clock.head)
-          .Msg("applyMeta-post");
+        this.logger.Debug().Any("resultHead", crdtMeta.head).Any("clockHead", this.clock.head).Msg("applyMeta-post");
       },
       compactStrategy: rCompactStrategy.Ok(),
       gatewayInterceptor: opts.gatewayInterceptor,

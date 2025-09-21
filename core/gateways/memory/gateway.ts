@@ -104,23 +104,30 @@ export class MemoryGateway implements SerdeGateway {
           .Msg("put-car");
         break;
       case isFPEnvelopeWAL(body): {
-        ensureLogger(ctx.loader.sthis, "MemoryGatewayWal").Debug().Any({
-          id: this.id,
-          url,
-          wal: body.payload,
-          name: iurl.getParam(PARAM.NAME)
-        }).Msg("put-wal");
+        ensureLogger(ctx.loader.sthis, "MemoryGatewayWal")
+          .Debug()
+          .Any({
+            id: this.id,
+            url,
+            wal: body.payload,
+            name: iurl.getParam(PARAM.NAME),
+          })
+          .Msg("put-wal");
         break;
       }
       case isFPEnvelopeMeta(body): {
-        ensureLogger(ctx.loader.sthis, "MemoryGatewayMeta").Debug().Any({ 
-          id: this.id, 
-          url, 
-          meta: body.payload.reduce((acc, i) => {
-            acc.push(...i.dbMeta.cars.map(i => i.toString()))
-            return acc
-          }, [] as string[]),
-          name: iurl.getParam(PARAM.NAME) }).Msg("put-meta");
+        ensureLogger(ctx.loader.sthis, "MemoryGatewayMeta")
+          .Debug()
+          .Any({
+            id: this.id,
+            url,
+            meta: body.payload.reduce((acc, i) => {
+              acc.push(...i.dbMeta.cars.map((i) => i.toString()));
+              return acc;
+            }, [] as string[]),
+            name: iurl.getParam(PARAM.NAME),
+          })
+          .Msg("put-meta");
         const x = this.memories.get(url.toString());
         if (!(x && isFPEnvelopeMeta(x))) {
           break;
@@ -162,8 +169,8 @@ export class MemoryGateway implements SerdeGateway {
       switch (true) {
         case isFPEnvelopeMeta(v):
           out.meta = v.payload.reduce((acc, i) => {
-            acc.push(...i.dbMeta.cars.map(i => i.toString()))
-            return acc
+            acc.push(...i.dbMeta.cars.map((i) => i.toString()));
+            return acc;
           }, [] as string[]);
           break;
         case isFPEnvelopeBlob(v):
@@ -193,7 +200,12 @@ export class MemoryGateway implements SerdeGateway {
     // logger.Debug().Url(url).Msg("get");
     const x = this.memories.get(url.toString()) as FPEnvelope<S> | undefined;
     if (!x) {
-      return this.log(ctx.loader.sthis, iurl.getParam(PARAM.NAME), url, Result.Err(new NotFoundError(`not found: ${url.toString()}`)));
+      return this.log(
+        ctx.loader.sthis,
+        iurl.getParam(PARAM.NAME),
+        url,
+        Result.Err(new NotFoundError(`not found: ${url.toString()}`)),
+      );
     }
     return this.log(ctx.loader.sthis, iurl.getParam(PARAM.NAME), url, Result.Ok(x));
   }

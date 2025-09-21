@@ -140,7 +140,7 @@ class CommitAction implements CommitParams {
     //   .Bool("allCarCids", cids.every(c => c.toString().startsWith("bae")))
     //   .Bool("anyRawCids", cids.some(c => c.toString().startsWith("baf")))
     //   .Msg("DBMETA_CREATION: CIDs being written to DbMeta");
-      
+
     const meta = { cars: cids };
     await this.attached.local().active.meta.save(meta);
     // detached remote stores
@@ -522,9 +522,16 @@ export class Loader implements Loadable {
       this.seenMeta.add(metaKey);
 
       // LOG: CarLog state before merge
-      this.logger.Debug()
-        .Str("beforeMerge_carLog", this.carLog.asArray().map(cg => cg.map(c => c.toString()).join(",")).join(";"))
-        .Str("incoming_dbMeta_cars", meta.cars.map(c => c.toString()).join(","))
+      this.logger
+        .Debug()
+        .Str(
+          "beforeMerge_carLog",
+          this.carLog
+            .asArray()
+            .map((cg) => cg.map((c) => c.toString()).join(","))
+            .join(";"),
+        )
+        .Str("incoming_dbMeta_cars", meta.cars.map((c) => c.toString()).join(","))
         .Str("loaderId", this.id)
         .Msg("MERGE_BEFORE: CarLog state before merge");
 
@@ -552,25 +559,46 @@ export class Loader implements Loadable {
         this.logger.Warn().Any("warns", warns).Msg("error getting more readers");
       }
       // LOG: CarLog update calculation
-      this.logger.Debug()
-        .Str("uniqueCids_input", [meta.cars, ...this.carLog.asArray(), ...carHeader.cars].flat().map(c => c.toString()).join(","))
+      this.logger
+        .Debug()
+        .Str(
+          "uniqueCids_input",
+          [meta.cars, ...this.carLog.asArray(), ...carHeader.cars]
+            .flat()
+            .map((c) => c.toString())
+            .join(","),
+        )
         .Str("seenCompacted", "LRUSet-content")
         .Int("seenCompactedSize", this.seenCompacted.size)
         .Str("loaderId", this.id)
         .Msg("CARLOG_UPDATE: Before uniqueCids calculation");
-        
+
       const cgs = uniqueCids([meta.cars, ...this.carLog.asArray(), ...carHeader.cars], this.seenCompacted);
-      
-      this.logger.Debug()
-        .Str("uniqueCids_output", cgs.flat().map(c => c.toString()).join(","))
+
+      this.logger
+        .Debug()
+        .Str(
+          "uniqueCids_output",
+          cgs
+            .flat()
+            .map((c) => c.toString())
+            .join(","),
+        )
         .Str("loaderId", this.id)
         .Msg("CARLOG_UPDATE: After uniqueCids calculation");
-        
+
       this.carLog.update(cgs);
-      
+
       // LOG: CarLog state after update
-      this.logger.Debug()
-        .Str("afterUpdate_carLog", this.carLog.asArray().map(cg => cg.map(c => c.toString()).join(",")).join(";"))
+      this.logger
+        .Debug()
+        .Str(
+          "afterUpdate_carLog",
+          this.carLog
+            .asArray()
+            .map((cg) => cg.map((c) => c.toString()).join(","))
+            .join(";"),
+        )
         .Str("loaderId", this.id)
         .Msg("MERGE_AFTER: CarLog state after update");
       // console.log(
@@ -869,15 +897,17 @@ export class Loader implements Loadable {
     const activeStore = store.active as CarStore;
     try {
       //loadedCar now is an array of AnyBlocks
-      this.logger.Debug()
+      this.logger
+        .Debug()
         .Str("cid", carCidStr)
         .Str("loaderId", this.id)
         .Url(activeStore.url())
         .Msg("NETWORK_REQUEST: About to load CAR from store");
       loadedCar = await activeStore.load(carCid);
       // console.log("loadedCar", carCid);
-      this.logger.Debug()
-        .Str("cid", carCidStr) 
+      this.logger
+        .Debug()
+        .Str("cid", carCidStr)
         .Bool("loadedCar", !!loadedCar)
         .Url(activeStore.url())
         .Msg(loadedCar ? "NETWORK_SUCCESS: CAR loaded successfully" : "NETWORK_FAILURE: CAR load returned undefined");
@@ -945,10 +975,13 @@ export class Loader implements Loadable {
       //   roots: [],
       // }));
     }
-    ensureLogger(this.sthis, "LoaderCarContent").Debug().Any({
-      carCid: carCidStr,
-      constent: blocks.map((b) => b.cid.toString()),
-    }).Msg("loaded-car");
+    ensureLogger(this.sthis, "LoaderCarContent")
+      .Debug()
+      .Any({
+        carCid: carCidStr,
+        constent: blocks.map((b) => b.cid.toString()),
+      })
+      .Msg("loaded-car");
     return {
       cid: carCid,
       bytes: bytes.value.data,
