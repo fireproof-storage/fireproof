@@ -6,7 +6,6 @@ import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
-import { DefSerdeGateway } from "@fireproof/core-gateways-base";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
 import { AttachedRemotesImpl } from "@fireproof/core-blockstore";
 import { AttachedStores } from "@fireproof/core-types-blockstore";

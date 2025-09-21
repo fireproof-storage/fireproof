@@ -3,15 +3,12 @@ import {
   FPEnvelopeMeta,
   SerializedMeta,
   V2SerializedMetaKey,
-  Gateway,
-  Loadable,
   FPEnvelope,
   SerdeGateway,
   SerdeGatewayCtx,
 } from "@fireproof/core-types-blockstore";
 
 import { PARAM, SuperThis, NotFoundError } from "@fireproof/core-types-base";
-import { DefSerdeGateway } from "./def-serde-gateway.js";
 
 type V1SerializedMetaKey = SerializedMeta & {
   // old version
@@ -82,7 +79,7 @@ export async function V2SerializedMetaKeyExtractKey(
   if (!kb) {
     return Promise.resolve(Result.Err(new Error("missing keybag")));
   }
-  const dataUrl = await ctx.loader.attachedStores.local().active.car.url();
+  const dataUrl = ctx.loader.attachedStores.local().active.car.url();
   const keyName = dataUrl.getParam(PARAM.STORE_KEY);
   if (!keyName) {
     ctx.loader.sthis.logger.Warn().Url(dataUrl).Msg("missing store key");
@@ -129,7 +126,7 @@ export function addKeyToDbMetaDecoder(
     ...ctx,
     lastDecodedMetas,
     decoder: {
-      meta: async (sthis: SuperThis, raw: Uint8Array): Promise<Result<SerializedMeta[]>> => {
+      meta: async (_sthis: SuperThis, raw: Uint8Array): Promise<Result<SerializedMeta[]>> => {
         const r = await decodeAsToSerializedMeta(ctx, raw);
         if (r.isErr()) {
           return Promise.resolve(Result.Err(r));
@@ -244,8 +241,7 @@ export class AddKeyToDbMetaGateway implements SerdeGateway {
   // only for tests
   readonly lastDecodedMetas: V2SerializedMetaKey[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  delete(ctx: SerdeGatewayCtx, url: URI, loader?: Loadable): Promise<Result<void, Error>> {
+  delete(ctx: SerdeGatewayCtx, url: URI): Promise<Result<void, Error>> {
     return this.sdGw.delete(ctx, url);
   }
   subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<() => void, Error>> {

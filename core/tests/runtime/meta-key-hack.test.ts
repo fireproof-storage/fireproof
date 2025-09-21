@@ -4,9 +4,6 @@ import { registerStoreProtocol } from "@fireproof/core-blockstore";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
 import {
   DbMetaEvent,
-  FPEnvelopeFile,
-  Loadable,
-  SerdeGateway,
   SerdeGatewayCtx,
   V2SerializedMetaKey,
 } from "@fireproof/core-types-blockstore";
