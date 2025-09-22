@@ -258,8 +258,8 @@ describe("Remote Sync Subscription Tests", () => {
       const mainCarLog = db.ledger.crdt.blockstore.loader.carLog.asArray().flat();
       for (const cid of mainCarLog) {
         const carResult = await db.ledger.crdt.blockstore.loader.loadCar(
-          cid, 
-          db.ledger.crdt.blockstore.loader.attachedStores.local()
+          cid,
+          db.ledger.crdt.blockstore.loader.attachedStores.local(),
         );
         expect(carResult.item.status).not.toBe("stale");
       }
@@ -273,21 +273,21 @@ describe("Remote Sync Subscription Tests", () => {
 
       expect(Array.from(new Set(dbSub.docs.map((i) => i._id))).sort()).toEqual(refData);
 
-    // this is a good place to add more assertsions
+      // this is a good place to add more assertsions
 
       for (const dbName of joinableDBs) {
         const jdb = fireproof(dbName.name, {
           storeUrls: attachableStoreUrls(dbName.name, db),
         });
         // await jdb.compact();
-        
-        // ASSERTION: Verify all CAR files in remote DB carLog are reachable from storage  
+
+        // ASSERTION: Verify all CAR files in remote DB carLog are reachable from storage
         const remoteCarLog = jdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
-        
+
         for (const cid of remoteCarLog) {
           const carResult = await jdb.ledger.crdt.blockstore.loader.loadCar(
             cid,
-            jdb.ledger.crdt.blockstore.loader.attachedStores.local()
+            jdb.ledger.crdt.blockstore.loader.attachedStores.local(),
           );
           expect(carResult.item.status).not.toBe("stale");
         }
@@ -296,9 +296,9 @@ describe("Remote Sync Subscription Tests", () => {
         // expect(remoteCarLog.length).toBeGreaterThan(0);
 
         // ASSERTION: Cross-reference - verify remote DB has access to same CAR files as main DB
-        const mainCarLogStrings = new Set(mainCarLog.map(c => c.toString()));
-        const remoteCarLogStrings = new Set(remoteCarLog.map(c => c.toString()));
-        const missingCids = Array.from(mainCarLogStrings).filter(cid => !remoteCarLogStrings.has(cid));
+        const mainCarLogStrings = new Set(mainCarLog.map((c) => c.toString()));
+        const remoteCarLogStrings = new Set(remoteCarLog.map((c) => c.toString()));
+        const missingCids = Array.from(mainCarLogStrings).filter((cid) => !remoteCarLogStrings.has(cid));
         console.log(`MISSING_CIDS in ${dbName.name}:`, missingCids);
         console.log(`MAIN_CIDS:`, Array.from(mainCarLogStrings));
         console.log(`REMOTE_CIDS:`, Array.from(remoteCarLogStrings));
