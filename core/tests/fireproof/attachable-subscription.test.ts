@@ -331,12 +331,17 @@ describe("Remote Sync Subscription Tests", () => {
   });
 
   describe("sync", () => {
+    // Track subscription events for sync tests
+    const subscriptionCounts = new Map<string, number>();
+    const receivedDocs = new Map<string, DocWithId<string>[]>();
+    let subscriptionCallbacks: (() => void)[] = [];
+
     beforeEach(async () => {
       // Reset subscription tracking for each sync test
-      // subscriptionCallbacks.forEach((unsub) => unsub());
-      // subscriptionCallbacks = [];
-      // // subscriptionCounts.clear();
-      // receivedDocs.clear();
+      subscriptionCallbacks.forEach((unsub) => unsub());
+      subscriptionCallbacks = [];
+      subscriptionCounts.clear();
+      receivedDocs.clear();
     });
 
     it("should trigger subscriptions during offline sync reconnection", async () => {
@@ -401,18 +406,26 @@ describe("Remote Sync Subscription Tests", () => {
       const inbound = await syncDb(`inbound-db-${id}`, `memory://sync-inbound`);
 
       // Setup subscription BEFORE attaching - this simulates useLiveQuery being active
-      const subscriptionPromise = setupSubscription(inbound);
+      const dbKey = "inbound-db";
+      subscriptionCounts.set(dbKey, 0);
+      receivedDocs.set(dbKey, []);
+      
+      const unsub = inbound.subscribe<string>((sdocs) => {
+        const currentCount = subscriptionCounts.get(dbKey) || 0;
+        subscriptionCounts.set(dbKey, currentCount + 1);
+        
+        const currentDocs = receivedDocs.get(dbKey) || [];
+        currentDocs.push(...sdocs);
+        receivedDocs.set(dbKey, currentDocs);
+      }, true);
+      subscriptionCallbacks.push(unsub);
 
       // Attach to the same sync namespace - this simulates toCloud() reconnection
       // 🐛 BUG: This should trigger subscription but doesn't
       await inbound.attach(aJoinable(`sync-${id}`, inbound));
 
-      // Wait for subscription to fire (or timeout)
-      // 🐛 BUG: This will timeout because subscription never fires for reconnection sync
-      await Promise.race([
-        subscriptionPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Subscription timeout")), 5000)),
-      ]);
+      // Wait for sync to complete - give time for subscription to fire
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Verify the subscription was triggered by remote sync
       expect(subscriptionCounts.get("inbound-db")).toBeGreaterThan(0);
