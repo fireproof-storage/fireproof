@@ -13,6 +13,7 @@ describe("MetaKeyHack", () => {
   const storageMap = new Map();
 
   const sthis = ensureSuperThis();
+  let ctx: { loader: Loadable };
   const memGw = new MemoryGateway(sthis, storageMap);
   registerStoreProtocol({
     protocol: "hack:",
@@ -23,7 +24,6 @@ describe("MetaKeyHack", () => {
   });
 
   let db: Database;
-  let ctx: { loader: Loadable };
   beforeAll(async () => {
     db = fireproof("test", {
       storeUrls: {
