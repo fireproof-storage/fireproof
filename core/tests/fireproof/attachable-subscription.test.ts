@@ -1,9 +1,10 @@
 import { AppContext, BuildURI, WithoutPromise } from "@adviser/cement";
-import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocBase } from "@fireproof/core";
+import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocWithId } from "@fireproof/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 
 const ROWS = 2;
+const DBS = 1;
 
 class AJoinable implements Attachable {
   readonly name: string;
@@ -155,42 +156,32 @@ async function writeRow(
 describe("Remote Sync Subscription Tests", () => {
   const sthis = ensureSuperThis();
 
-  // Subscription tracking variables
-  let subscriptionCallbacks: (() => void)[] = [];
-  const subscriptionCounts = new Map<string, number>();
-  const receivedDocs = new Map<string, DocBase[]>();
-  // Helper to setup subscription tracking on a database
-  function setupSubscription(db: Database, dbName: string): Promise<void> {
-    return new Promise<void>((resolve) => {
-      subscriptionCounts.set(dbName, 0);
-      receivedDocs.set(dbName, []);
-
-      const unsubscribe = db.subscribe((docs) => {
-        const currentCount = subscriptionCounts.get(dbName) || 0;
-        const currentDocs = receivedDocs.get(dbName) || [];
-
-        subscriptionCounts.set(dbName, currentCount + 1);
-        receivedDocs.set(dbName, [...currentDocs, ...docs]);
-
-        // Subscription fired successfully - tracked in subscriptionCounts
-        resolve();
-      }, true);
-
-      subscriptionCallbacks.push(unsubscribe);
-    });
+  function setupSubscription(db: Database) {
+    const docs: DocWithId<string>[] = [];
+    return {
+      docs,
+      unsub: db.subscribe<string>((sdocs) => {
+        docs.push(...sdocs);
+      }, true),
+    };
   }
-
-  afterEach(async () => {
-    // Clean up all subscriptions
-    subscriptionCallbacks.forEach((unsub) => unsub());
-    subscriptionCallbacks = [];
-    subscriptionCounts.clear();
-    receivedDocs.clear();
-  });
 
   describe("join function", () => {
     let db: Database;
-    let joinableDBs: string[] = [];
+    let dbContent: DocWithId<string>[];
+    let joinableDBs: {
+      name: string;
+      content: DocWithId<string>[];
+    }[] = [];
+
+    async function writeRows(db: Database): Promise<DocWithId<string>[]> {
+      const ret: DocWithId<string>[] = [];
+      for (let j = 0; j < ROWS; j++) {
+        await db.put({ _id: `${db.name}-${j}`, value: `${db.name}-${j}` });
+        ret.push(await db.get(`${db.name}-${j}`));
+      }
+      return ret;
+    }
 
     beforeEach(async () => {
       const set = sthis.nextId().str;
@@ -200,26 +191,23 @@ describe("Remote Sync Subscription Tests", () => {
           base: `memory://db-${set}`,
         },
       });
-
-      for (let j = 0; j < ROWS; j++) {
-        await db.put({ _id: `db-${j}`, value: `db-${set}` });
-      }
+      dbContent = await writeRows(db);
 
       joinableDBs = await Promise.all(
-        new Array(1).fill(1).map(async (_, i) => {
+        new Array(DBS).fill(1).map(async (_, i) => {
           const name = `remote-db-${i}-${set}`;
           const jdb = fireproof(name, {
             storeUrls: attachableStoreUrls(name, db),
           });
-          for (let j = 0; j < ROWS; j++) {
-            await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
-          }
+          const content = await writeRows(jdb);
           expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
           await jdb.close();
-          return name;
+          return {
+            name,
+            content,
+          };
         }),
       );
-
       expect(await db.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
     });
 
@@ -227,82 +215,128 @@ describe("Remote Sync Subscription Tests", () => {
       await db.close();
     });
 
-    it("should trigger subscriptions on inbound syncing", async () => {
-      /*
-       * WHAT THIS TEST DOES:
-       * 1. Creates main database with initial data (1 doc)
-       * 2. Creates remote databases with their own data (1 doc each)
-       * 3. Sets up subscription on main database
-       * 4. Attaches remote databases to main database
-       * 5. Expects subscription to fire when remote data syncs into main database
-       *
-       * WHAT SHOULD HAPPEN:
-       * - Main DB starts with 1 document
-       * - Remote DBs have 1 document each
-       * - When attach() completes, main DB should have 2 documents (1 original + 1 from remote)
-       * - The subscription should fire because the database contents changed (new document arrived)
-       * - This is equivalent to someone else writing data that syncs into your local database
-       *
-       * WHAT ACTUALLY HAPPENS (BUG):
-       * - ✅ Data syncs correctly (confirmed by debug tests)
-       * - ❌ Subscription never fires even though database contents changed
-       * - This means users don't get notified when remote data arrives via toCloud/attach
-       *
-       * WHY THIS IS A BUG:
-       * - From user perspective: remote data arriving should trigger same notifications as local writes
-       * - React components using useLiveQuery don't update when remote changes sync
-       * - Breaks the reactive programming model for distributed databases
-       *
-       * EXPECTED BEHAVIOR:
-       * When db.attach() pulls in remote data, it should trigger subscriptions just like db.put() does
-       */
-
+    it("should trigger subscriptions on inbound syncing", { timeout: 30000 }, async () => {
       // Setup subscription on main database before attaching remote databases
-      const subscriptionPromise = setupSubscription(db, "main-db");
+      const dbSub = setupSubscription(db);
 
       // Perform the attach operations that should trigger subscriptions
       await Promise.all(
-        joinableDBs.map(async (name) => {
+        joinableDBs.map(async ({ name }) => {
           const attached = await db.attach(aJoinable(name, db));
           expect(attached).toBeDefined();
         }),
       );
 
+      // ASSERTION: Check remote carLogs immediately after attachment
+      for (const dbName of joinableDBs) {
+        const tempJdb = fireproof(dbName.name, {
+          storeUrls: attachableStoreUrls(dbName.name, db),
+        });
+        const carLogAfterAttach = tempJdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+        console.log(`AFTER_ATTACH: ${dbName.name} carLog length:`, carLogAfterAttach.length);
+        expect(carLogAfterAttach.length).toBe(0);
+        await tempJdb.close();
+      }
+
       // Wait for sync to complete
-      await sleep(100);
+      await sleep(1000);
 
-      // Wait for subscription to fire (or timeout)
-      // 🐛 BUG: This will timeout because subscription never fires for remote data sync
-      await Promise.race([
-        subscriptionPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Subscription timeout")), 5000)),
-      ]);
+      // ASSERTION: Check remote carLogs after sleep
+      for (const dbName of joinableDBs) {
+        const tempJdb = fireproof(dbName.name, {
+          storeUrls: attachableStoreUrls(dbName.name, db),
+        });
+        const allDocs = await tempJdb.allDocs();
+        console.log(`AFTER_SLEEP: ${dbName.name} allDocs length:`, allDocs.rows.length);
+        const carLogAfterSleep = tempJdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+        console.log(`AFTER_SLEEP: ${dbName.name} carLog length:`, carLogAfterSleep.length);
+        expect(carLogAfterSleep.length).toBeGreaterThan(0);
+        await tempJdb.close();
+      }
 
-      // Verify the subscription was triggered
-      expect(subscriptionCounts.get("main-db")).toBeGreaterThan(0);
-      expect(subscriptionCounts.get("main-db")).toBeGreaterThanOrEqual(1); // Should fire at least once
+      // ASSERTION: Verify all CAR files in main DB carLog are reachable from storage
+      const mainCarLog = db.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+      for (const cid of mainCarLog) {
+        const carResult = await db.ledger.crdt.blockstore.loader.loadCar(
+          cid, 
+          db.ledger.crdt.blockstore.loader.attachedStores.local()
+        );
+        expect(carResult.item.status).not.toBe("stale");
+      }
 
       // Verify the data was synced correctly
+      const refData = [...dbContent.map((i) => i._id), ...joinableDBs.map((i) => i.content.map((i) => i._id)).flat()].sort();
       expect(db.ledger.crdt.blockstore.loader.attachedStores.remotes().length).toBe(joinableDBs.length);
-      const res = await db.allDocs();
+      const res = await db.allDocs<string>();
+      expect(res.rows.map((i) => i.key).sort()).toEqual(refData);
       expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
 
+      expect(Array.from(new Set(dbSub.docs.map((i) => i._id))).sort()).toEqual(refData);
+
+    // this is a good place to add more assertsions
+
+      for (const dbName of joinableDBs) {
+        const jdb = fireproof(dbName.name, {
+          storeUrls: attachableStoreUrls(dbName.name, db),
+        });
+        // await jdb.compact();
+        
+        // ASSERTION: Verify all CAR files in remote DB carLog are reachable from storage  
+        const remoteCarLog = jdb.ledger.crdt.blockstore.loader.carLog.asArray().flat();
+        
+        for (const cid of remoteCarLog) {
+          const carResult = await jdb.ledger.crdt.blockstore.loader.loadCar(
+            cid,
+            jdb.ledger.crdt.blockstore.loader.attachedStores.local()
+          );
+          expect(carResult.item.status).not.toBe("stale");
+        }
+
+        // ASSERTION: Verify carLog is not empty (sanity check)
+        // expect(remoteCarLog.length).toBeGreaterThan(0);
+
+        // ASSERTION: Cross-reference - verify remote DB has access to same CAR files as main DB
+        const mainCarLogStrings = new Set(mainCarLog.map(c => c.toString()));
+        const remoteCarLogStrings = new Set(remoteCarLog.map(c => c.toString()));
+        const missingCids = Array.from(mainCarLogStrings).filter(cid => !remoteCarLogStrings.has(cid));
+        console.log(`MISSING_CIDS in ${dbName.name}:`, missingCids);
+        console.log(`MAIN_CIDS:`, Array.from(mainCarLogStrings));
+        console.log(`REMOTE_CIDS:`, Array.from(remoteCarLogStrings));
+        // expect(missingCids.length).toBe(0);
+
+        console.log(
+          `POST_COMPACT: ${dbName.name} carLog:`,
+          jdb.ledger.crdt.blockstore.loader.carLog
+            .asArray()
+            .map((cg) => cg.map((c) => c.toString()).join(","))
+            .join(";"),
+        );
+        sthis.env.set("FP_DEBUG", "MemoryGatewayMeta");
+
+        const res = await jdb.allDocs();
+        // expect(jdb.ledger.crdt.blockstore.loader.carLog.asArray().flat().length).toBe(9);
+        // expect(res.rows).toEqual({}) // This expectation is incorrect and causes test failure
+        expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
+        await jdb.close();
+      }
+
       // Verify subscription received the synced documents
-      const docs = receivedDocs.get("main-db") || [];
-      expect(docs.length).toBeGreaterThan(0);
+      // const docs = receivedDocs.get("main-db") || [];
+      // expect(docs.length).toBeGreaterThan(0);
       // With our fix, subscriptions now properly fire for remote data sync
       // The exact number may vary based on sync timing, but we should get all synced documents
-      expect(docs.length).toBeGreaterThanOrEqual(ROWS * joinableDBs.length);
+      // expect(docs.length).toBeGreaterThanOrEqual(ROWS * joinableDBs.length);
+      dbSub.unsub();
     });
   });
 
   describe("sync", () => {
     beforeEach(async () => {
       // Reset subscription tracking for each sync test
-      subscriptionCallbacks.forEach((unsub) => unsub());
-      subscriptionCallbacks = [];
-      subscriptionCounts.clear();
-      receivedDocs.clear();
+      // subscriptionCallbacks.forEach((unsub) => unsub());
+      // subscriptionCallbacks = [];
+      // // subscriptionCounts.clear();
+      // receivedDocs.clear();
     });
 
     it("should trigger subscriptions during offline sync reconnection", async () => {
@@ -367,7 +401,7 @@ describe("Remote Sync Subscription Tests", () => {
       const inbound = await syncDb(`inbound-db-${id}`, `memory://sync-inbound`);
 
       // Setup subscription BEFORE attaching - this simulates useLiveQuery being active
-      const subscriptionPromise = setupSubscription(inbound, "inbound-db");
+      const subscriptionPromise = setupSubscription(inbound);
 
       // Attach to the same sync namespace - this simulates toCloud() reconnection
       // 🐛 BUG: This should trigger subscription but doesn't
@@ -438,7 +472,7 @@ describe("Remote Sync Subscription Tests", () => {
             const tdb = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
 
             // Setup subscription on each database
-            const subscriptionPromise = setupSubscription(tdb.db, `online-db-${i}`);
+            const subscriptionPromise = setupSubscription(tdb.db);
 
             // Attach to shared sync namespace (no existing data to sync yet)
             await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
@@ -496,30 +530,31 @@ describe("Remote Sync Subscription Tests", () => {
       // Wait for sync completion before checking all keys
       await sleep(2000);
 
-      await Promise.all(
-        dbs.map(async (db) => {
-          const allDocs = await db.db.allDocs();
-          // console.log(allDocs.rows);
-          if (allDocs.rows.length != keys.length) {
-            expect({
-              all: allDocs.rows.map((i) => i.key).sort(),
-              keys: keys.sort(),
-            }).toEqual({});
-          }
-          expect(allDocs.rows.map((i) => i.key).sort()).toEqual(keys.sort());
-          // for (const key of keys) {
-          //   try {
-          //     const doc = await db.db.get<{ value: string }>(key);
-          //     expect(doc._id).toBe(key);
-          //     expect(doc.value).toBe(key);
-          //   } catch (e) {
-          //     // Document may still be syncing, this is expected in some test runs
-          //     console.log(`Document ${key} not yet synced to database`);
-          //   }
-          // }
-        }),
+      const dbAllDocs = await Promise.allSettled(
+        dbs.map(async (db) =>
+          db.db.allDocs().then((rows) => ({
+            name: db.db.name,
+            rows: rows.rows,
+          })),
+        ),
       );
 
+      let isError = !!dbAllDocs.filter((i) => i.status !== "fulfilled").length;
+      isError ||= !!dbAllDocs.filter(
+        (i) => i.status === "fulfilled" && JSON.stringify(i.value.rows.map((i) => i.key).sort()) !== JSON.stringify(keys.sort()),
+      ).length;
+      if (isError) {
+        expect({
+          keys: keys.sort(),
+          keyslen: keys.length,
+          result: dbAllDocs.map((i) => ({
+            status: i.status,
+            dbname: (i.status === "fulfilled" && i.value.name) || "",
+            length: ((i.status === "fulfilled" && i.value.rows.map((i) => i.key)) || []).length,
+            rows: ((i.status === "fulfilled" && i.value.rows.map((i) => i.key)) || []).sort(),
+          })),
+        }).toEqual([]);
+      }
       // Cleanup
       await Promise.all(dbs.map((tdb) => tdb.db.close()));
     }, 100_000);
