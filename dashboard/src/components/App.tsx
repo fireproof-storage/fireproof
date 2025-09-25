@@ -23,6 +23,11 @@ import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.jsx"
 import { CloudTenantMembers } from "../pages/cloud/tenants/members.jsx";
 import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.jsx";
 // import { CloudTenantOverview } from "../pages/cloud/tenants/overview.jsx";
+import { ApiTokenAuto } from "../pages/cloud/api/token-auto.jsx";
+import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.jsx";
+import { LedgerAdmin } from "../pages/cloud/tenants/ledgers/admin.jsx";
+import { LedgerDelete } from "../pages/cloud/tenants/ledgers/delete.jsx";
+import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.jsx";
 import { CloudTenantShow } from "../pages/cloud/tenants/show.jsx";
 import { Databases, databaseLoader } from "../pages/databases.jsx";
 import { DatabasesConnect, connectDatabasesLoader } from "../pages/databases/connect.jsx";
@@ -35,10 +40,6 @@ import { DocsShow } from "../pages/docs/show.jsx";
 import { Index, indexLoader } from "../pages/index.jsx";
 import { Login, loginLoader } from "../pages/login.jsx";
 import { SignUpPage, signupLoader } from "../pages/signup.jsx";
-import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.jsx";
-import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.jsx";
-import { LedgerAdmin } from "../pages/cloud/tenants/ledgers/admin.jsx";
-import { LedgerDelete } from "../pages/cloud/tenants/ledgers/delete.jsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -53,10 +54,12 @@ export function App() {
       {/* <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}> */}
 
       <Route path="/token" element={<ApiToken />} loader={redirectBackUrl} />
+      <Route path="/token-auto" element={<ApiTokenAuto />} />
 
       <Route path="/fp/cloud" element={<Cloud />}>
         <Route index element={<CloudIndex />} />
         <Route path="api/token" element={<ApiToken />} loader={redirectBackUrl} />
+        <Route path="api/token-auto" element={<ApiTokenAuto />} />
 
         <Route path="tenants">
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
