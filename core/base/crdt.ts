@@ -105,7 +105,11 @@ export class CRDTImpl implements CRDT {
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
-        // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
+        this.logger
+          .Debug()
+          .Any("incomingHead", crdtMeta.head)
+          .Any("currentHead", this.clock.head)
+          .Msg("applyMeta-pre");
         this.logger
           .Debug()
           .Str("newHead", crdtMeta.head.map((h) => h.toString()).join(","))
@@ -115,7 +119,11 @@ export class CRDTImpl implements CRDT {
           .Str("dbName", this.opts.name || "unnamed")
           .Msg("APPLY_META: Calling applyHead for REMOTE sync");
         await this.clock.applyHead(crdtMeta.head, []);
-        // console.log("applyMeta-post", crdtMeta.head, this.clock.head);
+        this.logger
+          .Debug()
+          .Any("resultHead", crdtMeta.head)
+          .Any("clockHead", this.clock.head)
+          .Msg("applyMeta-post");
       },
       compactStrategy: rCompactStrategy.Ok(),
       gatewayInterceptor: opts.gatewayInterceptor,
@@ -209,13 +217,13 @@ export class CRDTImpl implements CRDT {
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       try {
-        // console.log("bs-ready-pre")
+        this.logger.Debug().Msg("blockstore ready preparation");
         // await this.blockstore.ready();
-        // console.log("bs-ready-post-1")
+        this.logger.Debug().Msg("blockstore ready completed");
         // await this.indexBlockstore?.ready();
-        // console.log("bs-ready-post-2")
+        this.logger.Debug().Msg("index blockstore ready completed");
         // await this.clock.ready();
-        // console.log("bs-ready-post-3")
+        this.logger.Debug().Msg("clock ready completed");
         await Promise.all([
           this.blockstore.ready(),
           this.indexBlockstore ? this.indexBlockstore.ready() : Promise.resolve(),
