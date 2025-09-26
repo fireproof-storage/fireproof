@@ -96,8 +96,7 @@ export function writeEnvCmd(sthis: SuperThis) {
             if (eqIndex === -1) {
               acc[i] = param.REQUIRED;
             } else {
-              const k = i.slice(0, eqIndex);
-              const v = i.slice(eqIndex + 1);
+              const [k, v] = i.split("=", 2);
               acc[k] = v || param.REQUIRED;
             }
             return acc;
