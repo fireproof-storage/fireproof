@@ -38,7 +38,7 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/core-blockstore": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",

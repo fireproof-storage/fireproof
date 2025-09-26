@@ -36,17 +36,17 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/core-keybag": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "jose": "^6.0.12",
-    "multiformats": "^13.4.1",
+    "multiformats": "^13.4.0",
     "zod": "^4.1.8"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@types/node": "^24.1.0"
+    "@types/node": "^24.4.0"
   },
   "engines": {
     "node": ">=20"
