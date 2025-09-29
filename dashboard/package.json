@@ -65,7 +65,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.2",
+    "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "0.30.6",
     "drizzle-orm": "^0.44.3",
