@@ -1052,8 +1052,8 @@ importers:
         specifier: ^0.4.39
         version: 0.4.39(typescript@5.9.2)
       '@clerk/backend':
-        specifier: ^2.14.0
-        version: 2.14.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        specifier: ^2.16.0
+        version: 2.16.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@clerk/clerk-js':
         specifier: ^5.96.0
         version: 5.96.0(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2)(use-sync-external-store@1.5.0(react@19.1.1))(zod@4.1.9)
@@ -1529,8 +1529,8 @@ packages:
   '@base-org/account@2.0.1':
     resolution: {integrity: sha512-tySVNx+vd6XEynZL0uvB10uKiwnAfThr8AbKTwILVG86mPbLAhEOInQIk+uDnvpTvfdUhC1Bi5T/46JvFoLZQQ==}
 
-  '@clerk/backend@2.14.0':
-    resolution: {integrity: sha512-EaPXIaOb3IVyn+3NRX9GVZeKk1eL1ugWOiyPzy7hfJvxRYhTBatZrwd32+nCkQ6igvRpRG4O+o5vWS1tSErbrg==}
+  '@clerk/backend@2.16.0':
+    resolution: {integrity: sha512-8++HThdf43K2b3NeEzLhRAmT26VqtFhE+d2yr5htg/h+bKuAMrOrp62G3JGUtO/ku63KanaTQdYQjhUaRffo8w==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/clerk-js@5.96.0':
@@ -6133,10 +6133,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/backend@2.14.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@clerk/backend@2.16.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@clerk/shared': 3.25.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@clerk/types': 4.86.0
+      '@clerk/shared': 3.27.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@clerk/types': 4.89.0
       cookie: 1.0.2
       standardwebhooks: 1.0.0
       tslib: 2.8.1
