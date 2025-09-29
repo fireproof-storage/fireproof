@@ -54,7 +54,7 @@
     "@types/react": "^19.1.13",
     "@vitest/browser": "^3.2.4",
     "playwright": "^1.55.0",
-    "playwright-chromium": "^1.55.0",
+    "playwright-chromium": "^1.55.1",
     "vitest": "^3.2.4"
   }
 }
