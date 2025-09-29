@@ -184,8 +184,8 @@ importers:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250919.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.9.8
-        version: 4.9.8
+        specifier: ^4.9.9
+        version: 4.9.9
       jose:
         specifier: ^6.1.0
         version: 6.1.0
@@ -248,8 +248,8 @@ importers:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250919.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.9.8
-        version: 4.9.8
+        specifier: ^4.9.9
+        version: 4.9.9
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -304,7 +304,7 @@ importers:
         version: link:../../../vendor
       '@hono/node-server':
         specifier: ^1.19.4
-        version: 1.19.4(hono@4.9.8)
+        version: 1.19.4(hono@4.9.9)
       '@hono/node-ws':
         specifier: ^1.2.0
         version: 1.2.0(@hono/node-server@1.19.4(hono@4.9.8))(hono@4.9.8)
@@ -315,8 +315,8 @@ importers:
         specifier: ^0.44.3
         version: 0.44.5(@cloudflare/workers-types@4.20250919.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.9.8
-        version: 4.9.8
+        specifier: ^4.9.9
+        version: 4.9.9
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.5.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -4197,8 +4197,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.9.8:
-    resolution: {integrity: sha512-JW8Bb4RFWD9iOKxg5PbUarBYGM99IcxFl2FPBo2gSJO11jjUDqlP1Bmfyqt8Z/dGhIQ63PMA9LdcLefXyIasyg==}
+  hono@4.9.9:
+    resolution: {integrity: sha512-Hxw4wT6zjJGZJdkJzAx9PyBdf7ZpxaTSA0NfxqjLghwMrLBX8p33hJBzoETRakF3UJu6OdNQBZAlNSkGqKFukw==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@2.8.9:
@@ -6753,7 +6753,7 @@ snapshots:
 
   '@hono/node-server@1.19.4(hono@4.9.8)':
     dependencies:
-      hono: 4.9.8
+      hono: 4.9.9
 
   '@hono/node-ws@1.2.0(@hono/node-server@1.19.4(hono@4.9.8))(hono@4.9.8)':
     dependencies:
@@ -8709,7 +8709,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.9.8: {}
+  hono@4.9.9: {}
 
   hosted-git-info@2.8.9: {}
 
