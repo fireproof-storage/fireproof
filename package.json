@@ -71,7 +71,7 @@
     "playwright": "^1.55.0",
     "playwright-chromium": "^1.55.0",
     "prettier": "^3.6.2",
-    "tsx": "^4.20.4",
+    "tsx": "^4.20.6",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.43.0",
     "vitest": "^3.2.4",
