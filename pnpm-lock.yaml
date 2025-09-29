@@ -44,8 +44,8 @@ importers:
         specifier: ^13.4.0
         version: 13.4.1
       playwright:
-        specifier: ^1.55.0
-        version: 1.55.0
+        specifier: ^1.55.1
+        version: 1.55.1
       playwright-chromium:
         specifier: ^1.55.0
         version: 1.55.0
@@ -942,8 +942,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(playwright@1.55.0)(vite@7.1.6(@types/node@24.5.2)(jiti@1.21.7)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)
       playwright:
-        specifier: ^1.55.0
-        version: 1.55.0
+        specifier: ^1.55.1
+        version: 1.55.1
       playwright-chromium:
         specifier: ^1.55.0
         version: 1.55.0
@@ -1276,8 +1276,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(playwright@1.55.0)(vite@7.1.6(@types/node@24.5.2)(jiti@1.21.7)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)
       playwright:
-        specifier: ^1.55.0
-        version: 1.55.0
+        specifier: ^1.55.1
+        version: 1.55.1
       playwright-chromium:
         specifier: ^1.55.0
         version: 1.55.0
@@ -4895,8 +4895,13 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.55.0:
-    resolution: {integrity: sha512-sdCWStblvV1YU909Xqx0DhOjPZE4/5lJsIS84IfN9dAZfcl/CIZ5O8l3o0j7hPMjDvqoTF8ZUcc+i/GL5erstA==}
+  playwright-core@1.55.1:
+    resolution: {integrity: sha512-Z6Mh9mkwX+zxSlHqdr5AOcJnfp+xUWLCt9uKV18fhzA8eyxUd8NUWzAjxUh55RZKSYwDGX0cfaySdhZJGMoJ+w==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.55.1:
+    resolution: {integrity: sha512-cJW4Xd/G3v5ovXtJJ52MAOclqeac9S/aGGgRzLabuF8TnIb6xHvMzKIa6JmrRzUkeXJgfL1MhukP0NK6l39h3A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7425,7 +7430,7 @@ snapshots:
       vitest: 3.2.4(@types/node@24.5.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.6)(yaml@2.8.1)
       ws: 8.18.3
     optionalDependencies:
-      playwright: 1.55.0
+      playwright: 1.55.1
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -9384,9 +9389,11 @@ snapshots:
 
   playwright-core@1.55.0: {}
 
-  playwright@1.55.0:
+  playwright-core@1.55.1: {}
+
+  playwright@1.55.1:
     dependencies:
-      playwright-core: 1.55.0
+      playwright-core: 1.55.1
     optionalDependencies:
       fsevents: 2.3.2
 
