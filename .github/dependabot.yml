@@ -15,4 +15,4 @@ updates:
         versions: [">0.30.6"]
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
-#        versions: [">3.4.17"]
+#       versions: [">3.4.17"]
