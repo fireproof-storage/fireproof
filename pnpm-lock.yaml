@@ -303,11 +303,11 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       '@hono/node-server':
-        specifier: ^1.19.2
-        version: 1.19.3(hono@4.9.9)
+        specifier: ^1.19.5
+        version: 1.19.5(hono@4.9.9)
       '@hono/node-ws':
         specifier: ^1.2.0
-        version: 1.2.0(@hono/node-server@1.19.3(hono@4.9.9))(hono@4.9.9)
+        version: 1.2.0(@hono/node-server@1.19.5(hono@4.9.9))(hono@4.9.9)
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
@@ -2371,8 +2371,8 @@ packages:
   '@formkit/auto-animate@0.8.4':
     resolution: {integrity: sha512-DHHC01EJ1p70Q0z/ZFRBIY8NDnmfKccQoyoM84Tgb6omLMat6jivCdf272Y8k3nf4Lzdin/Y4R9q8uFtU0GbnA==}
 
-  '@hono/node-server@1.19.3':
-    resolution: {integrity: sha512-Fjyxfux0rMPXMSob79OmddfpK5ArJa2xLkLCV+zamHkbeXQtSNKOi0keiBKyHZ/hCRKjigjmKGp4AJnDFq8PUw==}
+  '@hono/node-server@1.19.5':
+    resolution: {integrity: sha512-iBuhh+uaaggeAuf+TftcjZyWh2GEgZcVGXkNtskLVoWaXhnJtC5HLHrU8W1KHDoucqO1MswwglmkWLFyiDn4WQ==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -6781,13 +6781,13 @@ snapshots:
 
   '@formkit/auto-animate@0.8.4': {}
 
-  '@hono/node-server@1.19.3(hono@4.9.9)':
+  '@hono/node-server@1.19.5(hono@4.9.9)':
     dependencies:
       hono: 4.9.9
 
-  '@hono/node-ws@1.2.0(@hono/node-server@1.19.3(hono@4.9.9))(hono@4.9.9)':
+  '@hono/node-ws@1.2.0(@hono/node-server@1.19.5(hono@4.9.9))(hono@4.9.9)':
     dependencies:
-      '@hono/node-server': 1.19.3(hono@4.9.9)
+      '@hono/node-server': 1.19.5(hono@4.9.9)
       hono: 4.9.9
       ws: 8.18.3
     transitivePeerDependencies:
