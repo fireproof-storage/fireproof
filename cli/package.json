@@ -44,7 +44,7 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
     "aws4fetch": "^1.0.20",
-    "cmd-ts": "^0.14.1",
+    "cmd-ts": "^0.14.2",
     "find-up": "^8.0.0",
     "fs-extra": "^11.3.1",
     "jose": "^6.1.0",
