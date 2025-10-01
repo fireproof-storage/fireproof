@@ -123,7 +123,7 @@ export class MsgDispatcher {
       this.items.set(id, item);
       return id;
     });
-    return () => ids.forEach((id) => this.items.delete(id));
+    return () => { ids.forEach((id) => this.items.delete(id)); };
   }
 
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {

@@ -34,7 +34,7 @@ export function tscCmd(sthis: SuperThis) {
     },
 
     handler: async (args) => {
-      handleTsc(args as unknown as string[], sthis);
+      return handleTsc(args as unknown as string[], sthis);
     },
   });
   return cmd;

@@ -361,7 +361,7 @@ export class AttachedRemotesImpl implements AttachedStores {
       }
       store = maxStore;
     }
-    return new ActiveStoreImpl(store as DataAndMetaStore, this);
+    return new ActiveStoreImpl(store, this);
   }
 
   async detach(): Promise<void> {
@@ -445,7 +445,7 @@ export class AttachedRemotesImpl implements AttachedStores {
             loader: this.loadable,
           }),
           {
-            detach: async () => this._remotes.unget(key),
+            detach: async () => { this._remotes.unget(key); },
             ctx: gwp.ctx,
           },
         );

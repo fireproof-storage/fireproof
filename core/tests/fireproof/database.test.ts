@@ -232,8 +232,8 @@ describe("named Ledger with record", function () {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(numDocs + 1);
 
-    const ok6 = await db.put({ _id: `id-${6}`, hello: "block" });
-    expect(ok6.id).toBe(`id-${6}`);
+    const ok6 = await db.put({ _id: `id-6`, hello: "block" });
+    expect(ok6.id).toBe(`id-6`);
 
     for (let i = 0; i < numDocs; i++) {
       const id = `id-${i}`;
@@ -246,12 +246,12 @@ describe("named Ledger with record", function () {
     const { rows: rows2 } = await db.changes([]);
     expect(rows2.length).toBe(numDocs + 1);
 
-    const ok7 = await db.del(`id-${7}`);
-    expect(ok7.id).toBe(`id-${7}`);
+    const ok7 = await db.del(`id-7`);
+    expect(ok7.id).toBe(`id-7`);
 
     const { rows: rows3 } = await db.changes([]);
     expect(rows3.length).toBe(numDocs + 1);
-    expect(rows3[numDocs].key).toBe(`id-${7}`);
+    expect(rows3[numDocs].key).toBe(`id-7`);
     expect(rows3[numDocs].value._deleted).toBe(true);
 
     // test limit
@@ -520,7 +520,7 @@ describe("ledger with files input", () => {
 
   it("Should fetch the images", async () => {
     const doc = await db.get(result.id);
-    const files = doc._files as DocFiles;
+    const files = doc._files!;
     expect(files).toBeTruthy();
     const keys = Object.keys(files);
     let fileMeta = files[keys[0]] as DocFileMeta;
@@ -531,7 +531,7 @@ describe("ledger with files input", () => {
     expect(fileMeta.size).toBe(imagefiles[0].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[0].cid);
     expect(typeof fileMeta.file).toBe("function");
-    let file = (await fileMeta.file?.()) as File;
+    let file = (await fileMeta.file?.())!;
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);
@@ -542,7 +542,7 @@ describe("ledger with files input", () => {
     expect(fileMeta.size).toBe(imagefiles[1].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[1].cid);
     expect(typeof fileMeta.file).toBe("function");
-    file = (await fileMeta.file?.()) as File;
+    file = (await fileMeta.file?.())!;
 
     expect(file.type).toBe(imagefiles[1].file.type);
     expect(file.size).toBe(imagefiles[1].file.size);
@@ -573,7 +573,7 @@ describe("ledger with files input", () => {
 
     // Retrieve the file from the database
     const retrievedDoc = await db.get("test-timestamp");
-    const files = retrievedDoc._files as DocFiles;
+    const files = retrievedDoc._files!;
     const fileMeta = files.test as DocFileMeta;
 
     // Verify the file has the correct metadata
@@ -582,7 +582,7 @@ describe("ledger with files input", () => {
     expect(typeof fileMeta.file).toBe("function");
 
     // Get the actual file
-    const retrievedFile = (await fileMeta.file?.()) as File;
+    const retrievedFile = (await fileMeta.file?.())!;
 
     // Check if lastModified is preserved
     expect(retrievedFile.lastModified).toBe(customTimestamp);
@@ -600,7 +600,7 @@ describe("ledger with files input", () => {
     expect(fileMeta.size).toBe(imagefiles[0].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[0].cid);
     expect(typeof fileMeta.file).toBe("function");
-    let file = (await fileMeta.file?.()) as File;
+    let file = (await fileMeta.file?.())!;
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);
@@ -617,7 +617,7 @@ describe("ledger with files input", () => {
     expect(fileMeta.size).toBe(imagefiles[0].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[0].cid);
     expect(typeof fileMeta.file).toBe("function");
-    file = (await fileMeta.file?.()) as File;
+    file = (await fileMeta.file?.())!;
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);

@@ -368,12 +368,12 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
     );
     return Promise.resolve({
       name: this.name,
-      keys: kis.reduce(
+      keys: kis.reduce<Record<string, KeysItem>>(
         (acc, i) => {
           acc[i.fingerPrint] = i;
           return acc;
         },
-        {} as Record<string, KeysItem>,
+        {},
       ),
     });
   }

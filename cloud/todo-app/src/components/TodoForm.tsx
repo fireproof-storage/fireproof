@@ -33,7 +33,7 @@ function TodoForm({ value, onChange, onSubmit }: TodoFormProps) {
       <input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => { onChange(e.target.value); }}
         onKeyPress={handleKeyPress}
         placeholder="What needs to be done?"
         autoFocus

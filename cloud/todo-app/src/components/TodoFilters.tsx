@@ -17,13 +17,13 @@ function TodoFilters({ currentFilter, onFilterChange, activeCount, completedCoun
   return (
     <div>
       <div className="filters">
-        <button className={currentFilter === "all" ? "active" : ""} onClick={() => onFilterChange("all")}>
+        <button className={currentFilter === "all" ? "active" : ""} onClick={() => { onFilterChange("all"); }}>
           All ({totalCount})
         </button>
-        <button className={currentFilter === "active" ? "active" : ""} onClick={() => onFilterChange("active")}>
+        <button className={currentFilter === "active" ? "active" : ""} onClick={() => { onFilterChange("active"); }}>
           Active ({activeCount})
         </button>
-        <button className={currentFilter === "completed" ? "active" : ""} onClick={() => onFilterChange("completed")}>
+        <button className={currentFilter === "completed" ? "active" : ""} onClick={() => { onFilterChange("completed"); }}>
           Completed ({completedCount})
         </button>
       </div>

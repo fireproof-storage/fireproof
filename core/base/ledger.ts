@@ -70,7 +70,8 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
           }),
       });
       db.onClosed(() => {
-        ledgers.unget(key);
+        ledgers.unget(key!);
+
       });
       return db;
     }),
@@ -186,7 +187,7 @@ class LedgerImpl implements Ledger {
       await this.ready();
       await this.crdt.close();
       await this.writeQueue.close();
-      this._onClosedFns.forEach((fn) => fn());
+      this._onClosedFns.forEach((fn) => { fn(); });
     }
     // await this.blockstore.close();
   }
@@ -269,7 +270,7 @@ class LedgerImpl implements Ledger {
     if (this._listeners.size) {
       const docs: DocWithId<DocTypes>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
-        await (async () => await listener(docs as DocWithId<DocTypes>[]))().catch((e: Error) => {
+        await (async () => { await listener(docs); })().catch((e: Error) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
@@ -280,7 +281,7 @@ class LedgerImpl implements Ledger {
     await this.ready();
     if (this._noupdate_listeners.size) {
       for (const listener of this._noupdate_listeners) {
-        await (async () => await listener([]))().catch((e: Error) => {
+        await (async () => { await listener([]); })().catch((e: Error) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }

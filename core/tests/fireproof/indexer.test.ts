@@ -24,7 +24,7 @@ interface TestType {
 
 describe("basic Index", () => {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   let didMap: boolean;
   const sthis = ensureSuperThis();
   afterEach(async () => {
@@ -142,7 +142,7 @@ describe("Index query with compound key", function () {
 
 describe("basic Index with map fun", function () {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -240,7 +240,7 @@ describe("Index query with map and compound key", function () {
 
 describe("basic Index with string fun", function () {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -272,7 +272,7 @@ describe("basic Index with string fun", function () {
 
 describe("basic Index with string fun and numeric keys", function () {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();

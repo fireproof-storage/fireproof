@@ -29,7 +29,7 @@ describe("dreamcode", function () {
   }
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
-  let result: IndexRows<Doc, string>;
+  let result: IndexRows<Doc>;
   let db: Database;
   const sthis = ensureSuperThis();
   afterEach(async () => {
@@ -72,7 +72,7 @@ describe("public API", function () {
   let db: Database;
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
-  let query: IndexRows<Doc, string>;
+  let query: IndexRows<Doc>;
   const sthis = ensureSuperThis();
 
   afterEach(async () => {
@@ -86,7 +86,7 @@ describe("public API", function () {
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
-    query = await db.query<Doc, string>((doc) => doc.foo);
+    query = await db.query<Doc>((doc) => doc.foo);
   });
   it("should be a ledger instance", function () {
     expect(db).toBeTruthy();
@@ -189,7 +189,7 @@ describe("basic ledger", function () {
   it("can define an index", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index<{ foo: string }, string>(db, "test-index", (doc) => doc.foo);
+    const idx = index<{ foo: string }>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -213,10 +213,10 @@ describe("basic ledger", function () {
       baz: string;
     }
     await db.put<TestDoc>({ _id: "test", foo: "bar", baz: "qux" });
-    const query1 = await db.query<TestDoc, string>((doc) => {
+    const query1 = await db.query<TestDoc>((doc) => {
       return doc.foo;
     });
-    const query2 = await db.query<TestDoc, string>((doc) => {
+    const query2 = await db.query<TestDoc>((doc) => {
       return doc.baz;
     });
     expect(query1).toBeTruthy();
@@ -540,7 +540,7 @@ describe("Reopening a ledger with indexes", function () {
     foo: string;
   }
   let db: Database;
-  let idx: Index<Doc, string>;
+  let idx: Index<Doc>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
   const sthis = ensureSuperThis();
@@ -560,13 +560,13 @@ describe("Reopening a ledger with indexes", function () {
       didMap = true;
       return doc.foo;
     };
-    idx = index<Doc, string>(db, "foo", mapFn);
+    idx = index<Doc>(db, "foo", mapFn);
   });
 
   it("should persist data", async () => {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
-    const idx2 = index<Doc, string>(db, "foo");
+    const idx2 = index<Doc>(db, "foo");
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();

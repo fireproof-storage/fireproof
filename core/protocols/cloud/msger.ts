@@ -50,7 +50,7 @@ export function timeout<T>(ms: number, promise: Promise<T>): Promise<T> {
     promise
       .then(resolve)
       .catch(reject)
-      .finally(() => clearTimeout(timer));
+      .finally(() => { clearTimeout(timer); });
   });
 }
 
@@ -442,7 +442,7 @@ export class VirtualConnected {
     return mOpen;
   }
 
-  private mutex = pLimit(1);
+  private readonly mutex = pLimit(1);
 
   private async getRealConn<S extends MsgBase, Q extends MsgBase, X extends MsgWithError<S> | Result<void>>(
     msg: Q,
@@ -538,7 +538,7 @@ export class VirtualConnected {
       case "recurse":
         return this.getRealConn(msg, opts, action);
       case "return":
-        return whatToDo.value as X;
+        return whatToDo.value!;
       case "action":
         if (!this.realConn) {
           throw new Error("realConn is not set, this should not happen");

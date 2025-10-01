@@ -64,7 +64,7 @@ export class InternalKeyWithFingerPrint implements KeyWithFingerPrint {
   readonly default: boolean;
   readonly fingerPrint: string;
   readonly key: CTCryptoKey;
-  #material: KeyMaterial;
+  readonly #material: KeyMaterial;
 
   constructor(opt: InternalKeyWithFingerPrintOpts) {
     this.fingerPrint = opt.fingerPrint;

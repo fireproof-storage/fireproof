@@ -28,8 +28,8 @@ function deriveAlgFromJwk(jwk: JWKPublic): string {
     }
   }
   if (jwk.kty === "OKP") return "EdDSA";
-  if (jwk.kty === "RSA") return "RS256"; // tighten if you only support PS* or specific algs
-  throw new Error("Unsupported JWK kty/crv for CSR verification");
+  // Default case for RSA or any remaining kty
+  return "RS256"; // tighten if you only support PS* or specific algs
 }
 
 export class DeviceIdValidator {
@@ -42,7 +42,7 @@ export class DeviceIdValidator {
       }
 
       const { success: successPub, data: publicKey } = JWKPublicSchema.safeParse(header.jwk);
-      if (!successPub || !publicKey) {
+      if (!successPub) {
         return {
           valid: false,
           error: "Invalid public key in CSR header",
@@ -58,7 +58,7 @@ export class DeviceIdValidator {
       });
 
       const { success, data: payload } = FPDeviceIDPayloadSchema.safeParse(fromPayload);
-      if (!success || !payload) {
+      if (!success) {
         return {
           valid: false,
           error: "Invalid CSR payload",

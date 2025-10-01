@@ -71,7 +71,7 @@ describe("MetaKeyHack", () => {
           .Ok()
           .get()
           .then(async (r) => ({
-            [r?.fingerPrint as string]: {
+            [r?.fingerPrint!]: {
               default: true,
               fingerPrint: r?.fingerPrint,
               key: await r?.extract().then((i) => i.keyStr),

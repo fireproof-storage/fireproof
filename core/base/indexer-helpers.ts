@@ -42,7 +42,7 @@ function refCompare(aRef: CompareRef, bRef: CompareRef) {
   if (aRef === Infinity) return 1;
   // if (!Number.isFinite(bRef)) throw new Error('ref may not be Infinity or NaN')
 
-  return simpleCompare(aRef, bRef) as number;
+  return simpleCompare(aRef, bRef);
 }
 
 function compare(a: CompareKey, b: CompareKey) {

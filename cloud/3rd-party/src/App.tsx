@@ -26,9 +26,11 @@ function App() {
   // const [token, setToken] = useState("");
 
   useEffect(() => {
-    database.allDocs<DocWithId<{ value: string }>>().then((rows) => {
+    const loadRows = async () => {
+      const rows = await database.allDocs<DocWithId<{ value: string }>>();
       setRows(rows.rows.map((i) => i.value));
-    });
+    };
+    loadRows().catch(console.error);
   });
 
   // attach.state === "attached" ? attach.attached.ctx().get<WebToCloudCtx>(WebCtx)?.hook()
@@ -53,13 +55,19 @@ function App() {
       <div
         className="card"
         onClick={() => {
-          database.put({ value: `3rd-${rows.length}` }).then(() => {
-            // console.log("added", rows.length);
-            database.allDocs<DocWithId<{ value: string }>>().then((rows) => {
-              // console.log("rows", rows);
-              setRows(rows.rows.map((i) => i.value));
-            });
-          });
+          database
+            .put({ value: `3rd-${String(rows.length)}` })
+            .then(() => {
+              // console.log("added", rows.length);
+              database
+                .allDocs<DocWithId<{ value: string }>>()
+                .then((rows) => {
+                  // console.log("rows", rows);
+                  setRows(rows.rows.map((i) => i.value));
+                })
+                .catch(console.error);
+            })
+            .catch(console.error);
         }}
       >
         Add

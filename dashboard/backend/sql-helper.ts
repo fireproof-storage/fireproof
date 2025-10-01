@@ -3,7 +3,7 @@ import { and, eq, or } from "drizzle-orm/sql/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export function toUndef(v: string | null | undefined): string | undefined {
-  return v ? v : undefined;
+  return v ?? undefined;
 }
 
 export function toBoolean(v: number): boolean {
@@ -49,7 +49,7 @@ export function queryCondition(
 
   const byEmail = queryEmail(query.byEmail);
   const byNick = queryNick(query.byNick);
-  let where: ReturnType<typeof and> = eq(table.userId, Math.random() + "");
+  let where: ReturnType<typeof and> = eq(table.userId, Math.random().toString());
   if (byEmail && byNick && query.andProvider) {
     where = and(eq(table.queryEmail, byEmail), eq(table.queryNick, byNick), eq(table.queryProvider, query.andProvider));
   } else if (byEmail && byNick) {
@@ -79,11 +79,11 @@ export function queryEmail(email?: string): string | undefined {
     return undefined;
   }
   email = email.trim().toLowerCase();
-  const splitEmail = email.match(/([^@]+)@(.*)$/);
+  const splitEmail = /([^@]+)@(.*)$/.exec(email);
   if (!splitEmail) {
     return undefined;
   }
-  const splitPlus = splitEmail[1].match(/(.*)\+[^+]*$/);
+  const splitPlus = /(.*)\+[^+]*$/.exec(splitEmail[1]);
   if (!splitPlus) {
     return splitEmail[1].replace(/[^a-z0-9]/g, "") + "@" + splitEmail[2];
   }

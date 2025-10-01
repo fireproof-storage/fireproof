@@ -111,7 +111,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       throw sthis.logger.Error().Msg("indexBlockstore not set").AsError();
     }
     this.blockstore = crdt.indexBlockstore;
-    this.crdt = crdt as CRDT;
+    this.crdt = crdt;
     this.applyMapFn(name, mapFn, meta);
     this.name = name;
     if (!(this.mapFnString || this.initError)) throw this.logger.Error().Msg("missing mapFnString").AsError();

@@ -74,7 +74,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
   }
 
   function addInvite(tenant: UserTenant, user: User) {
-    return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    return async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       let query: QueryUser;
       if (user.byProviders[0]?.queryProvider === "invite-per-email") {
@@ -115,7 +115,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
   return (
     <div className="bg-[--muted] shadow sm:rounded-lg p-6">
       <h2 className="text-lg font-semibold text-[--foreground] mb-4">Invite New Members</h2>
-      <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={(e) => { e.preventDefault(); }}>
         <div className="space-y-4">
           <div>
             <label htmlFor="EmailOrNick" className="block text-sm font-medium text-[--muted-foreground] mb-1">
@@ -179,7 +179,7 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
   }
 
   function handleRemoveInvite(inviteId: string) {
-    return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    return async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       const res = await cloud.api.deleteInvite({ inviteId });
       if (res.isErr()) {

@@ -16,12 +16,12 @@ export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent:
       <div className="flex h-[60px] items-center px-5 flex-shrink-0 justify-between">
         <div className="flex items-center gap-2 font-semibold">
           <FireproofHome />
-          <Link to="" onClick={() => setIsSidebarOpen?.(false)}>
+          <Link to="" onClick={() => { setIsSidebarOpen?.(false); }}>
             <span>Fireproof Connect</span>
           </Link>
         </div>
         {/* Close button for mobile */}
-        <button onClick={() => setIsSidebarOpen?.(false)} className="md:hidden p-2 rounded-md bg-[--muted] hover:bg-[--muted]/80">
+        <button onClick={() => { setIsSidebarOpen?.(false); }} className="md:hidden p-2 rounded-md bg-[--muted] hover:bg-[--muted]/80">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -50,7 +50,7 @@ export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent:
                 <Link
                   className="inline-flex h-8 items-center justify-center rounded bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
                   to={newUrl}
-                  onClick={() => setIsSidebarOpen?.(false)}
+                  onClick={() => { setIsSidebarOpen?.(false); }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

@@ -81,9 +81,9 @@ export function createUseDocument(database: Database) {
     const updateDoc = useCallback(
       (newDoc?: DocSet<T>, opts = { replace: false, reset: false }) => {
         if (!newDoc) {
-          return opts.reset ? reset() : refresh();
+          opts.reset ? reset() : refresh(); return;
         }
-        return opts.replace ? replace(newDoc as T) : merge(newDoc);
+        opts.replace ? replace(newDoc as T) : merge(newDoc);
       },
       [refresh, reset, replace, merge],
     );

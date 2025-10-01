@@ -204,7 +204,7 @@ class NoBackChannel implements MsgDispatcherCtx {
   get ws(): WSContextWithId<unknown> {
     return {
       id: "no-id",
-      send: (msg: string | ArrayBuffer | Uint8Array<ArrayBufferLike>): Promisable<Response> => {
+      send: (msg: string | ArrayBuffer | Uint8Array): Promisable<Response> => {
         return new Response(msg);
       },
     } as unknown as WSContextWithId<unknown>;
@@ -253,7 +253,7 @@ export class HonoServer {
     return this;
   }
   // readonly _register = new ResolveOnce<HonoServer>();
-  register(app: Hono): HonoServer {
+  register(app: Hono): this {
     app.options("*", () => {
       return new Response(null, {
         status: 200,
@@ -268,8 +268,8 @@ export class HonoServer {
     // app.put('/error', async (c) => c.json(buildErrorMsg(sthis, sthis.logger, await c.req.json(), new Error("test error"))))
     app.put("/fp", (c) =>
       this.factory.inject(c, async (ctx) => {
-        Object.entries(c.req.header()).forEach(([k, v]) => c.res.headers.set(k, v[0]));
-        const rMsg = await exception2Result(() => c.req.json() as Promise<MsgBase>);
+        Object.entries(c.req.header()).forEach(([k, v]) => { c.res.headers.set(k, v[0]); });
+        const rMsg = await exception2Result(() => c.req.json());
         if (rMsg.isErr()) {
           return c.json(buildErrorMsg(ctx, { tid: "internal" }, rMsg.Err()), 400, CORS.AsRecordStringString());
         }
@@ -294,7 +294,7 @@ export class HonoServer {
             },
             onMessage: async (event, ws) => {
               // console.log("onMessage:inject:", ctx.id, event.data);
-              const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)) as MsgBase);
+              const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)));
               if (rMsg.isErr()) {
                 ws.send(
                   ctx.ende.encode(
