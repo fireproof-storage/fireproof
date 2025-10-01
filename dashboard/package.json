@@ -67,7 +67,7 @@
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.20",
-    "drizzle-kit": "0.30.6",
+    "drizzle-kit": "0.31.5",
     "drizzle-orm": "^0.44.3",
     "eslint": "^9.36.0",
     "eslint-plugin-react": "^7.37.2",
