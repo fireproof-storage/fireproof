@@ -14,7 +14,7 @@ jobs:
 
       - uses: ./actions/base
         with:
-          skip_smoke: "true"
+          skip_smoke: 'true'
 
       - uses: ./actions/core-publish
         with:
