@@ -38,7 +38,7 @@
   },
   "peerDependencies": {
     "@adviser/cement": "^0.4.20",
-    "react": ">=19.1.0 <19.2.0"
+    "react": "~19.1.0"
   },
   "keywords": [
     "react",

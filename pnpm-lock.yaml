@@ -361,7 +361,7 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
       react:
-        specifier: '>=19.1.0 <19.2.0'
+        specifier: '~19.1.0'
         version: 19.1.1
     devDependencies:
       '@fireproof/core-cli':
@@ -386,7 +386,7 @@ importers:
         specifier: ~19.1.0
         version: 19.1.16
       react:
-        specifier: '>=19.1.0 <19.2.0'
+        specifier: '~19.1.0'
         version: 19.1.1
       react-dom:
         specifier: ~19.1.0
@@ -529,7 +529,7 @@ importers:
         specifier: ^24.6.1
         version: 24.6.1
       react:
-        specifier: '>=19.1.0 <19.2.0'
+        specifier: '~19.1.0'
         version: 19.1.1
 
   core/device-id:
@@ -926,7 +926,7 @@ importers:
         specifier: ^6.0.12
         version: 6.1.0
       react:
-        specifier: '>=19.1.0 <19.2.0'
+        specifier: '~19.1.0'
         version: 19.1.1
       use-fireproof:
         specifier: workspace:0.0.0
@@ -1254,7 +1254,7 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
       react:
-        specifier: '>=19.1.0 <19.2.0'
+        specifier: '~19.1.0'
         version: 19.1.1
       ts-essentials:
         specifier: ^10.1.1
