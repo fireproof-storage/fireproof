@@ -37,7 +37,7 @@
     "ts-essentials": "^10.1.1"
   },
   "peerDependencies": {
-    "@adviser/cement": "^0.4.20",
+    "@adviser/cement": ">=0.4.20",
     "react": ">=18.0.0"
   },
   "keywords": [
