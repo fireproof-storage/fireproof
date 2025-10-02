@@ -1,7 +1,10 @@
 name: "setup-runtime"
 description: "setup  runtime"
-# inputs:
-# your inputs here
+inputs:
+  skip_smoke:
+    description: "Set to 'true' to skip smoke test setup and execution."
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -65,6 +68,7 @@ runs:
       run: pnpm run test:deno
 
     - name: start-esm + npm
+      if: ${{ inputs.skip_smoke != 'true' }}
       shell: bash
       env:
         FP_CI: fp_ci
@@ -73,6 +77,7 @@ runs:
         #cp ./dist/npmrc-smoke .npmrc
 
     - name: smoke Attempt 1
+      if: ${{ inputs.skip_smoke != 'true' }}
       shell: bash
       env:
         FP_CI: fp_ci
@@ -81,8 +86,8 @@ runs:
       run: pnpm run smoke
 
     - name: smoke Attempt 2
+      if: ${{ inputs.skip_smoke != 'true' && steps.smoke_attempt1.outcome == 'failure' }}
       shell: bash
       env:
         FP_CI: fp_ci
-      if: steps.smoke_attempt1.outcome == 'failure'
       run: pnpm run smoke-retry
