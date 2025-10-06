@@ -5,7 +5,7 @@ describe("allDocs deleted document handling", () => {
   let db: Database;
 
   beforeEach(async () => {
-    db = await fireproof("test-deleted-docs");
+    db = fireproof("test-deleted-docs");
 
     // Create a mix of regular and deleted documents
     await db.put({ _id: "doc1", value: "one" });
@@ -51,7 +51,7 @@ describe("allDocs deleted document handling", () => {
 
   it("handles empty databases correctly", async () => {
     // Create a new empty database
-    const emptyDb = await fireproof("test-empty-db");
+    const emptyDb = fireproof("test-empty-db");
 
     // Test with default options
     const defaultResult = await emptyDb.allDocs();
@@ -66,7 +66,7 @@ describe("allDocs deleted document handling", () => {
 
   it("handles database with only deleted documents", async () => {
     // Create a database with only deleted documents
-    const deletedOnlyDb = await fireproof("test-deleted-only-db");
+    const deletedOnlyDb = fireproof("test-deleted-only-db");
 
     // Add only deleted documents
     await deletedOnlyDb.put({ _id: "deleted1", value: "deleted-one", _deleted: true });

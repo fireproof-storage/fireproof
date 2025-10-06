@@ -1,6 +1,6 @@
 import { URI } from "@adviser/cement";
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
-import { DocResponse, DocFileMeta, DocWithId, DocFiles, Database } from "@fireproof/core-types-base";
+import { DocResponse, DocFileMeta, DocWithId, Database } from "@fireproof/core-types-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { fireproof, LedgerShell, toStoreURIRuntime, keyConfigOpts } from "@fireproof/core-base";
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
@@ -27,13 +27,13 @@ describe("basic Ledger", () => {
     expect(ok.id).toBe("hello");
   });
   it("get missing should throw", async () => {
-    const e = await db.get("missing").catch((e) => e);
+    const e: Error = (await db.get("missing").catch((e: unknown) => e)) as Error;
     expect(e.message).toMatch(/Not found/);
   });
   it("del missing should result in deleted state", async () => {
     await db.del("missing");
 
-    const e = await db.get("missing").catch((e) => e);
+    const e: Error = (await db.get("missing").catch((e: unknown) => e)) as Error;
     expect(e.message).toMatch(/Not found/);
   });
   it("has no changes", async () => {
@@ -76,14 +76,14 @@ describe("basic Ledger with record", function () {
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
 
-    const e = await db.get("hello").catch((e) => e);
+    const e: Error = (await db.get("hello").catch((e: unknown) => e)) as Error;
     expect(e.message).toMatch(/Not found/);
   });
   it("should remove as an alias for del", async () => {
     const ok = await db.remove("hello");
     expect(ok.id).toBe("hello");
 
-    const e = await db.get("hello").catch((e) => e);
+    const e: Error = (await db.get("hello").catch((e: unknown) => e)) as Error;
     expect(e.message).toMatch(/Not found/);
   });
   it("has changes", async () => {
@@ -98,7 +98,7 @@ describe("basic Ledger with record", function () {
     expect(rows.length).toBe(1);
     // assert((db.ledger.ref === db2.ledger.ref, "should be the same ledger");
     expect((db.ledger as LedgerShell).ref).toBe((db2.ledger as LedgerShell).ref);
-    const doc = await db2.get<Doc>("hello").catch((e) => e);
+    const doc: Doc = (await db2.get<Doc>("hello").catch((e: unknown) => e)) as Doc;
     expect(doc.value).toBe("world");
     await db2.close();
   });
@@ -179,29 +179,29 @@ describe("named Ledger with record", function () {
     expect(Object.keys(doc).includes("value")).toBeFalsy();
   });
   it("should not update with Infinity value", async function () {
-    const ok = await db.put({ _id: "hello", value: Infinity }).catch((e) => e);
+    const ok: Error = (await db.put({ _id: "hello", value: Infinity }).catch((e: unknown) => e)) as Error;
     expect(ok.message).toMatch(/IPLD/);
   });
   it("should not update with undefined array value", async function () {
-    const ok = await db.put({ _id: "hello", value: [undefined] }).catch((e) => e);
+    const ok: Error = (await db.put({ _id: "hello", value: [undefined] }).catch((e: unknown) => e)) as Error;
     expect(ok.message).toMatch(/IPLD/);
   });
   it("should not update with NaN array value", async function () {
-    const ok = await db.put({ _id: "hello", value: [NaN] }).catch((e) => e);
+    const ok: Error = (await db.put({ _id: "hello", value: [NaN] }).catch((e: unknown) => e)) as Error;
     expect(ok.message).toMatch(/IPLD/);
   });
   it("should del last record", async () => {
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
 
-    const e = await db.get("hello").catch((e) => e);
+    const e: Error = (await db.get("hello").catch((e: unknown) => e)) as Error;
     expect(e.message).toMatch(/Not found/);
   });
   it("should remove as an alias for del", async () => {
     const ok = await db.remove("hello");
     expect(ok.id).toBe("hello");
 
-    const e = await db.get("hello").catch((e) => e);
+    const e: Error = (await db.get("hello").catch((e: unknown) => e)) as Error;
     expect(e.message).toMatch(/Not found/);
   });
   it("has changes", async () => {
@@ -225,9 +225,9 @@ describe("named Ledger with record", function () {
   it("should work right with a sequence of changes", async () => {
     const numDocs = 10;
     for (let i = 0; i < numDocs; i++) {
-      const doc = { _id: `id-${i}`, hello: "world" };
+      const doc = { _id: `id-${i.toString()}`, hello: "world" };
       const ok = await db.put(doc);
-      expect(ok.id).toBe(`id-${i}`);
+      expect(ok.id).toBe(`id-${i.toString()}`);
     }
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(numDocs + 1);
@@ -236,7 +236,7 @@ describe("named Ledger with record", function () {
     expect(ok6.id).toBe(`id-6`);
 
     for (let i = 0; i < numDocs; i++) {
-      const id = `id-${i}`;
+      const id = `id-${i.toString()}`;
       const doc = await db.get<{ hello: string }>(id);
       expect(doc).toBeTruthy();
       expect(doc._id).toBe(id);
@@ -262,9 +262,9 @@ describe("named Ledger with record", function () {
   it("should work right after compaction", async () => {
     const numDocs = 10;
     for (let i = 0; i < numDocs; i++) {
-      const doc = { _id: `id-${i}`, hello: "world" };
+      const doc = { _id: `id-${i.toString()}`, hello: "world" };
       const ok = await db.put(doc);
-      expect(ok.id).toBe(`id-${i}`);
+      expect(ok.id).toBe(`id-${i.toString()}`);
     }
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(numDocs + 1);
@@ -306,7 +306,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
     await sthis.start();
     db = fireproof("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
     for (let i = 0; i < 10; i++) {
-      const doc = { _id: `id-${i}`, hello: "world" };
+      const doc = { _id: `id-${i.toString()}`, hello: "world" };
       writes.push(db.put(doc));
     }
     await Promise.all(writes);
@@ -322,7 +322,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
     expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
     for (let i = 0; i < 10; i++) {
-      expect(rows[i].key).toBe("id-" + i);
+      expect(rows[i].key).toBe("id-" + i.toString());
       expect(rows[i].clock).toBeTruthy();
     }
   });
@@ -340,7 +340,7 @@ describe("basic Ledger parallel writes / public", () => {
     await sthis.start();
     db = fireproof("test-parallel-writes", { writeQueue: { chunkSize: 32 } });
     for (let i = 0; i < 10; i++) {
-      const doc = { _id: `id-${i}`, hello: "world" };
+      const doc = { _id: `id-${i.toString()}`, hello: "world" };
       writes.push(db.put(doc));
     }
     await Promise.all(writes);
@@ -353,7 +353,7 @@ describe("basic Ledger parallel writes / public", () => {
   });
   it("should write all", async () => {
     for (let i = 0; i < 10; i++) {
-      const id = `id-${i}`;
+      const id = `id-${i.toString()}`;
       const doc = await db.get<{ hello: string }>(id);
       expect(doc).toBeTruthy();
       expect(doc._id).toBe(id);
@@ -362,24 +362,24 @@ describe("basic Ledger parallel writes / public", () => {
   });
   it("should del all", async () => {
     for (let i = 0; i < 10; i++) {
-      const id = `id-${i}`;
+      const id = `id-${i.toString()}`;
       const ok = await db.del(id);
       expect(ok.id).toBe(id);
 
-      const e = await db.get(id).catch((e) => e);
+      const e: Error = (await db.get(id).catch((e: unknown) => e)) as Error;
       expect(e.message).toMatch(/Not found/);
     }
   });
   it("should delete all in parallel", async () => {
     const deletes: Promise<DocResponse>[] = [];
     for (let i = 0; i < 10; i++) {
-      const id = `id-${i}`;
+      const id = `id-${i.toString()}`;
       deletes.push(db.del(id));
     }
     await Promise.all(deletes);
     for (let i = 0; i < 10; i++) {
-      const id = `id-${i}`;
-      const e = await db.get(id).catch((e) => e);
+      const id = `id-${i.toString()}`;
+      const e: Error = (await db.get(id).catch((e: unknown) => e)) as Error;
       expect(e.message).toMatch(/Not found/);
     }
   });
@@ -390,7 +390,7 @@ describe("basic Ledger parallel writes / public", () => {
     rows.sort((a, b) => a.key.localeCompare(b.key));
     // console.log(rows);
     for (let i = 0; i < 10; i++) {
-      expect(rows[i].key).toBe("id-" + i);
+      expect(rows[i].key).toBe("id-" + i.toString());
       expect(rows[i].clock).toBeTruthy();
     }
   });
@@ -463,7 +463,7 @@ describe("basic Ledger with no update subscription", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () => {
+  beforeEach(() => {
     db = fireproof("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
@@ -514,14 +514,15 @@ describe("ledger with files input", () => {
     result = await db.put(doc);
   });
 
-  it("Should upload images", async () => {
+  it("Should upload images", () => {
     expect(result.id).toBe("images-main");
   });
 
   it("Should fetch the images", async () => {
     const doc = await db.get(result.id);
-    const files = doc._files!;
+    const files = doc._files;
     expect(files).toBeTruthy();
+    if (!files) throw new Error("Files should not be null");
     const keys = Object.keys(files);
     let fileMeta = files[keys[0]] as DocFileMeta;
     expect(fileMeta).toBeTruthy();
@@ -531,7 +532,9 @@ describe("ledger with files input", () => {
     expect(fileMeta.size).toBe(imagefiles[0].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[0].cid);
     expect(typeof fileMeta.file).toBe("function");
-    let file = (await fileMeta.file?.())!;
+    let file = await fileMeta.file?.();
+    expect(file).toBeTruthy();
+    if (!file) throw new Error("File should not be null");
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);
@@ -542,7 +545,9 @@ describe("ledger with files input", () => {
     expect(fileMeta.size).toBe(imagefiles[1].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[1].cid);
     expect(typeof fileMeta.file).toBe("function");
-    file = (await fileMeta.file?.())!;
+    file = await fileMeta.file?.();
+    expect(file).toBeTruthy();
+    if (!file) throw new Error("File should not be null");
 
     expect(file.type).toBe(imagefiles[1].file.type);
     expect(file.size).toBe(imagefiles[1].file.size);
@@ -573,7 +578,9 @@ describe("ledger with files input", () => {
 
     // Retrieve the file from the database
     const retrievedDoc = await db.get("test-timestamp");
-    const files = retrievedDoc._files!;
+    const files = retrievedDoc._files;
+    expect(files).toBeTruthy();
+    if (!files) throw new Error("Files should not be null");
     const fileMeta = files.test as DocFileMeta;
 
     // Verify the file has the correct metadata
@@ -582,7 +589,9 @@ describe("ledger with files input", () => {
     expect(typeof fileMeta.file).toBe("function");
 
     // Get the actual file
-    const retrievedFile = (await fileMeta.file?.())!;
+    const retrievedFile = await fileMeta.file?.();
+    expect(retrievedFile).toBeTruthy();
+    if (!retrievedFile) throw new Error("File should not be null");
 
     // Check if lastModified is preserved
     expect(retrievedFile.lastModified).toBe(customTimestamp);
@@ -593,14 +602,16 @@ describe("ledger with files input", () => {
       type: string;
     }
     const doc = await db.get<Doc>(result.id);
-    let files = doc._files || {};
+    let files = doc._files ?? {};
     let keys = Object.keys(files);
     let fileMeta = files[keys[0]] as DocFileMeta;
     expect(fileMeta.type).toBe(imagefiles[0].file.type);
     expect(fileMeta.size).toBe(imagefiles[0].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[0].cid);
     expect(typeof fileMeta.file).toBe("function");
-    let file = (await fileMeta.file?.())!;
+    let file = await fileMeta.file?.();
+    expect(file).toBeTruthy();
+    if (!file) throw new Error("File should not be null");
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);
@@ -610,14 +621,16 @@ describe("ledger with files input", () => {
     expect(r2.id).toBe("images-main");
     const readDoc = await db.get<Doc>(r2.id);
     expect(readDoc.type).toBe("images");
-    files = readDoc._files || {};
+    files = readDoc._files ?? {};
     keys = Object.keys(files);
     fileMeta = files[keys[0]] as DocFileMeta;
     expect(fileMeta.type).toBe(imagefiles[0].file.type);
     expect(fileMeta.size).toBe(imagefiles[0].file.size);
     expect(fileMeta.cid.toString()).toBe(imagefiles[0].cid);
     expect(typeof fileMeta.file).toBe("function");
-    file = (await fileMeta.file?.())!;
+    file = await fileMeta.file?.();
+    expect(file).toBeTruthy();
+    if (!file) throw new Error("File should not be null");
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);

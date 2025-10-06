@@ -39,6 +39,7 @@ const opts = tseslint.config(
       "coverage/",
       "smoke/react/",
       "src/missingTypes/lib.deno.d.ts",
+      "vendor/to-esm-transform.ts",
     ],
   },
   {

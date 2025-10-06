@@ -13,20 +13,22 @@ describe("concurrent opens", () => {
     const loops = 100;
     for (let i = 0; i < loops; i++) {
       setTimeout(
-        async () => {
-          const db = fireproof(`${dbBaseName}-${i}`);
-          await Promise.all(
-            new Array(3).fill(0).map(async (_, j) => {
-              await db.put({ _id: `test-${j}`, foo: "bar" });
-            }),
-          );
-          const allDocs = await db.allDocs();
-          expect(allDocs.rows.length).toBe(3);
-          await db.close();
-          dones.push(i);
-          if (dones.length >= loops) {
-            future.resolve(undefined);
-          }
+        () => {
+          (async () => {
+            const db = fireproof(`${dbBaseName}-${i.toString()}`);
+            await Promise.all(
+              new Array(3).fill(0).map(async (_, j) => {
+                await db.put({ _id: `test-${j.toString()}`, foo: "bar" });
+              }),
+            );
+            const allDocs = await db.allDocs();
+            expect(allDocs.rows.length).toBe(3);
+            await db.close();
+            dones.push(i);
+            if (dones.length >= loops) {
+              future.resolve(undefined);
+            }
+          })().catch(console.error);
         },
         ~~(Math.random() * 17),
       );

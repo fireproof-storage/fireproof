@@ -135,7 +135,9 @@ export function SignUpPage() {
               type="checkbox"
               id="emailOptIn"
               checked={emailOptIn}
-              onChange={(e) => { setEmailOptIn(e.target.checked); }}
+              onChange={(e) => {
+                setEmailOptIn(e.target.checked);
+              }}
               className="w-[18px] h-[18px] cursor-pointer mt-[3px] accent-fp-a-02"
             />
             <label htmlFor="emailOptIn" className="text-14 sm:text-16 text-fp-s cursor-pointer hover:text-fp-p">

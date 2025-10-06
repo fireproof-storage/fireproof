@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-confusing-void-expression */
 import { Database, Ledger, LedgerFactory, PARAM, fireproof } from "@fireproof/core";
-
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
 import { BuildURI, Future } from "@adviser/cement";
@@ -15,7 +15,6 @@ import {
   WALState,
   SerdeGatewayCtx,
   FPEnvelopeMeta,
-  UnsubscribeResult,
   DbMetaEvent,
 } from "@fireproof/core-types-blockstore";
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
@@ -57,7 +56,7 @@ describe("noop Gateway", function () {
     walGateway = walStore.realGateway;
   });
 
-  it("should have valid stores and gateways", async () => {
+  it("should have valid stores and gateways", () => {
     // Add assertions
     expect(carStore).toBeTruthy();
     expect(metaStore).toBeTruthy();
@@ -70,7 +69,7 @@ describe("noop Gateway", function () {
     expect(walGateway).toBeTruthy();
   });
 
-  it("should have correct store names", async () => {
+  it("should have correct store names", () => {
     // Check that all stores have the correct name
     expect(carStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
     expect(metaStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
@@ -78,7 +77,7 @@ describe("noop Gateway", function () {
     expect(walStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
   });
 
-  it("should have correct store types in URLs", async () => {
+  it("should have correct store types in URLs", () => {
     // Check that all stores have the correct store type in their URL
     expect(carStore.url().toString()).toContain("store=car");
     expect(carStore.url().toString()).toContain("suffix=.car");
@@ -87,7 +86,7 @@ describe("noop Gateway", function () {
     expect(walStore.url().toString()).toContain("store=wal");
   });
 
-  it("should have version specified in URLs", async () => {
+  it("should have version specified in URLs", () => {
     // Verify that all stores have a version specified
     expect(carStore.url().toString()).toContain("version=");
     expect(metaStore.url().toString()).toContain("version=");
@@ -95,7 +94,7 @@ describe("noop Gateway", function () {
     expect(walStore.url().toString()).toContain("version=");
   });
 
-  it("should have correct gateway types", async () => {
+  it("should have correct gateway types", () => {
     // Check that all gateways are instances of the expected gateway class
     expect(typeof carGateway).toBe("object");
     expect(typeof metaGateway).toBe("object");
@@ -181,7 +180,8 @@ describe("noop Gateway", function () {
       type: FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
-    expect(filePutResult.Ok()).toBeFalsy();
+    const fileResult = filePutResult.Ok();
+    expect(fileResult).toBeFalsy();
   });
 
   it("should get data from File Gateway", async () => {
@@ -234,7 +234,8 @@ describe("noop Gateway", function () {
         fileOperations: [],
       },
     });
-    expect(walPutResult.Ok()).toBeFalsy();
+    const result = walPutResult.Ok();
+    expect(result).toBeFalsy();
   });
 
   it("should get data from WAL Gateway", async () => {
@@ -398,7 +399,7 @@ describe("noop Gateway subscribe", function () {
     let didCall = false;
     const p = new Future<void>();
 
-    const metaSubscribeResult = (await metaGateway.subscribe(
+    const metaSubscribeResult = await metaGateway.subscribe(
       ctx,
       metaUrl.Ok().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
       async (data: FPEnvelopeMeta) => {
@@ -406,8 +407,9 @@ describe("noop Gateway subscribe", function () {
         expect(Array.isArray(data.payload)).toBeTruthy();
         didCall = true;
         p.resolve();
+        return Promise.resolve();
       },
-    ));
+    );
     expect(metaSubscribeResult.isOk()).toBeTruthy();
     const ok = await db.put({ _id: "key1", hello: "world1" });
     expect(ok).toBeTruthy();

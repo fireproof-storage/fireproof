@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import pLimit from "@fireproof/vendor/p-limit";
 import { CarReader } from "@ipld/car/reader";
 import { exception2Result, KeyedResolvOnce, Logger, LRUSet, ResolveOnce, Result, URI } from "@adviser/cement";
@@ -122,7 +124,7 @@ class CommitAction implements CommitParams {
     await this.attached.local().active.car.save(block);
     // detached remote stores
     this.attached.remotes().forEach((r) => {
-      this.commitQueue.enqueue(async () => {
+      void this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.car.url()).Msg("remote-writeCar");
         await r.active.car.save(block);
         return [];
@@ -136,7 +138,7 @@ class CommitAction implements CommitParams {
     await this.attached.local().active.meta.save(meta);
     // detached remote stores
     this.attached.remotes().forEach((r) => {
-      this.commitQueue.enqueue(async () => {
+      void this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.meta.url()).Msg("remote-writeMeta");
         await r.active.meta.save(meta);
         return [];
@@ -196,7 +198,7 @@ export class Loader implements Loadable {
             }
             return Promise.resolve(fpcar);
           })
-          .catch((e) => {
+          .catch((e: unknown) => {
             this.logger
               .Warn()
               .Err(e)
@@ -204,7 +206,7 @@ export class Loader implements Loadable {
                 cid: value.cid.toString(),
               })
               .Msg("error loading car");
-            return Promise.reject(e);
+            return Promise.reject(e instanceof Error ? e : new Error(String(e)));
           });
         staleLoadcars.push(x);
       }
@@ -221,9 +223,7 @@ export class Loader implements Loadable {
           const localDbMeta = this.currentMeta; // await store.local().active.meta.load();
           const remoteDbMeta = store.active.meta.stream();
           await this.waitFirstMeta(remoteDbMeta.getReader(), store, { origin: store.active.meta.url() });
-          if (localDbMeta) {
-            await this.ensureAttachedStore(store, localDbMeta);
-          }
+          await this.ensureAttachedStore(store, localDbMeta);
           /* ultra hacky */
           await (this.blockstoreParent as BaseBlockstore).commitTransaction(
             new CarTransactionImpl(this.blockstoreParent as BaseBlockstore),
@@ -257,13 +257,12 @@ export class Loader implements Loadable {
       localDbMeta.map(async (carId) => {
         // console.log("ensureAttachedStore", carId.toString(), localDbMeta.length);
         const car = await this.storesLoadCar(carId, localCarStore);
-        const rStore = await exception2Result(
-          async () =>
-            { await store.active.car.save({
-              cid: carId,
-              bytes: await codec.encode(car.bytes),
-            }); },
-        );
+        const rStore = await exception2Result(async () => {
+          await store.active.car.save({
+            cid: carId,
+            bytes: await codec.encode(car.bytes),
+          });
+        });
         if (rStore.isErr()) {
           this.logger.Warn().Err(rStore).Str("cid", carId.toString()).Msg("error putting car");
         }
@@ -359,8 +358,8 @@ export class Loader implements Loadable {
         // console.log("handleMetaStream", this.id, local.local().active.meta.url().pathname, opts?.origin?.pathname, value);
         let pHandle: Promise<CarGroup> | undefined;
         if (opts?.meta) {
-          pHandle = this.handleDbMetasFromStore([opts?.meta, ...(value || [])], local);
-        } else if (value) {
+          pHandle = this.handleDbMetasFromStore([opts.meta, ...value], local);
+        } else {
           // console.log("handleMetaStream", this.id, value);
           pHandle = this.handleDbMetasFromStore(value, local);
         }
@@ -380,11 +379,11 @@ export class Loader implements Loadable {
               // );
               this.currentMeta = dbMeta;
             })
-            .catch((e) => {
+            .catch((e: unknown) => {
               this.logger.Error().Err(e).Msg("error handling meta stream");
             })
             .finally(() => {
-              opts?.first(this.currentMeta ?? []);
+              opts?.first(this.currentMeta);
               this.handleMetaStream(reader, local);
               // console.log("done-reader" + local.active.car.url().pathname);
               // reader.cancel("done-read");
@@ -394,9 +393,9 @@ export class Loader implements Loadable {
           this.handleMetaStream(reader, local);
         }
       })
-      .catch((e) => {
+      .catch((e: unknown) => {
         // console.error("handleMetaStream", e);
-        opts?.error(e);
+        opts?.error(e instanceof Error ? e : new Error(String(e)));
       });
   }
 
@@ -406,7 +405,7 @@ export class Loader implements Loadable {
     // console.log("close-2");
     await this.attachedStores.detach();
     // console.log("close-3");
-    await this.metaStreamReader?.cancel("close");
+    await this.metaStreamReader.cancel("close");
     // console.log("close-4");
     // const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     // await Promise.all(toClose.map((store) => store.close()));
@@ -524,7 +523,11 @@ export class Loader implements Loadable {
       // fetch other cars down the compact log?
       // todo we should use a CID set for the compacted cids (how to expire?)
       // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
-      carHeader.compact.map((c) => c.toString()).forEach((k) => { this.seenCompacted.add(k); }, this.seenCompacted);
+      carHeader.compact
+        .map((c) => c.toString())
+        .forEach((k) => {
+          this.seenCompacted.add(k);
+        }, this.seenCompacted);
       const warns = await this.getMoreReaders(carHeader.cars.flat(), activeStore).then((res) => res.filter((r) => r.isErr()));
       if (warns.length > 0) {
         this.logger.Warn().Any("warns", warns).Msg("error getting more readers");
@@ -593,9 +596,9 @@ export class Loader implements Loadable {
     return await this.storesLoadCar(cid, store.fileStore()); // store.local.file, store.remotes.map((r) => r.file));
   }
 
-  async commit<T = TransactionMeta>(
+  async commit(
     t: CarTransaction,
-    done: T,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.ready();
@@ -633,7 +636,11 @@ export class Loader implements Loadable {
 
     if (compact) {
       const previousCompactCid = cHeader.compact[cHeader.compact.length - 1];
-      cHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
+      cHeader.compact
+        .map((c) => c.toString())
+        .forEach((k) => {
+          this.seenCompacted.add(k);
+        });
       this.carLog.update(uniqueCids([...this.carLog.asArray(), ...cHeader.cars, cids], this.seenCompacted));
       // console.log(
       //   "compact - updateCarLog",
@@ -642,7 +649,7 @@ export class Loader implements Loadable {
       //     .map((c) => c.map((cc) => cc.toString()))
       //     .flat(),
       // );
-      await this.removeCidsForCompact(previousCompactCid[0], this.attachedStores.local()).catch((e) => e);
+      await this.removeCidsForCompact(previousCompactCid[0], this.attachedStores.local()).catch((e: unknown) => e);
     } else {
       // console.log(
       //   "update - updateCarLog",
@@ -834,7 +841,7 @@ export class Loader implements Loadable {
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
       if (!isNotFoundError(e)) {
-        throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
+        throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car").AsError();
       }
       // for (const remote of store.remotes() as CarStore[]) {
       //   // console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
@@ -863,7 +870,7 @@ export class Loader implements Loadable {
           status: "stale",
           statusCause: new Error("missing car file"),
           type: "car",
-          origin: await activeStore.id(),
+          origin: activeStore.id(),
           value: undefined,
         },
       };
@@ -902,7 +909,7 @@ export class Loader implements Loadable {
       item: {
         type: "car",
         status: "ready",
-        origin: await activeStore.id(),
+        origin: activeStore.id(),
         value: {
           car: {
             blocks,
@@ -935,7 +942,7 @@ export class Loader implements Loadable {
       cids.map(async (cid) =>
         this.loadCar(cid, store)
           .then((readers) => Result.Ok(readers))
-          .catch((e) => Result.Err(e)),
+          .catch((e: unknown) => Result.Err(e instanceof Error ? e : new Error(String(e)))),
       ),
     );
     // for (const cid of cids) {

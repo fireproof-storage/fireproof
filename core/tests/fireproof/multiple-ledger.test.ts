@@ -27,11 +27,11 @@ describe("Multiple Databases", () => {
       Array(concurrentDbs)
         .fill(0)
         .map(async (_, i) => {
-          const name = `db-${group}-${i}`;
+          const name = `db-${group}-${i.toString()}`;
           const db = fireproof(name);
           dbs.push({ db, name });
           for (let i = 0; i < rows; i++) {
-            await db.put({ _id: `${name}-${i}`, hello: "world" });
+            await db.put({ _id: `${name}-${i.toString()}`, hello: "world" });
           }
         }),
     );
@@ -53,14 +53,14 @@ describe("Multiple Databases", () => {
         return Promise.all(
           Array(10)
             .fill(0)
-            .map(async (_, i) => di.db.get(`${di.name}-${i}`)),
+            .map(async (_, i) => di.db.get(`${di.name}-${i.toString()}`)),
         );
       }),
     );
     // console.log(res)
     res.forEach((res, i) => {
       for (let j = 0; j < rows; j++) {
-        expect(res[j]._id).toBe(`${random[i].name}-${j}`);
+        expect(res[j]._id).toBe(`${random[i].name}-${j.toString()}`);
       }
     });
   });

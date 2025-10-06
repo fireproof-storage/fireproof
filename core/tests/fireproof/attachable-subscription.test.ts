@@ -78,14 +78,14 @@ async function prepareDb(name: string, base: string) {
   {
     const db = await syncDb(name, base);
     await db.ready();
-    const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+    const dbId = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
     keys = await writeRow({ db, dbId }, `initial`);
     await db.close();
   }
 
   const db = await syncDb(name, base);
   await db.ready();
-  const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+  const dbId = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
   return { db, dbId, keys };
 }
 
@@ -105,7 +105,7 @@ async function writeRow(
 ) {
   const keys: string[] = [];
   for (let i = 0; i < ROWS; i++) {
-    const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
+    const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i.toString()}`;
     await pdb.db.put({
       _id: key,
       value: key,
@@ -166,8 +166,8 @@ describe("Remote Sync Subscription Tests", () => {
       receivedDocs.set(dbName, []);
 
       const unsubscribe = db.subscribe((docs) => {
-        const currentCount = subscriptionCounts.get(dbName) || 0;
-        const currentDocs = receivedDocs.get(dbName) || [];
+        const currentCount = subscriptionCounts.get(dbName) ?? 0;
+        const currentDocs = receivedDocs.get(dbName) ?? [];
 
         subscriptionCounts.set(dbName, currentCount + 1);
         receivedDocs.set(dbName, [...currentDocs, ...docs]);
@@ -180,9 +180,11 @@ describe("Remote Sync Subscription Tests", () => {
     });
   }
 
-  afterEach(async () => {
+  afterEach(() => {
     // Clean up all subscriptions
-    subscriptionCallbacks.forEach((unsub) => { unsub(); });
+    subscriptionCallbacks.forEach((unsub) => {
+      unsub();
+    });
     subscriptionCallbacks = [];
     subscriptionCounts.clear();
     receivedDocs.clear();
@@ -202,17 +204,17 @@ describe("Remote Sync Subscription Tests", () => {
       });
 
       for (let j = 0; j < ROWS; j++) {
-        await db.put({ _id: `db-${j}`, value: `db-${set}` });
+        await db.put({ _id: `db-${j.toString()}`, value: `db-${set}` });
       }
 
       joinableDBs = await Promise.all(
         new Array(1).fill(1).map(async (_, i) => {
-          const name = `remote-db-${i}-${set}`;
+          const name = `remote-db-${i.toString()}-${set}`;
           const jdb = fireproof(name, {
             storeUrls: attachableStoreUrls(name, db),
           });
           for (let j = 0; j < ROWS; j++) {
-            await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
+            await jdb.put({ _id: `${i.toString()}-${j.toString()}`, value: `${i.toString()}-${j.toString()}` });
           }
           expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
           await jdb.close();
@@ -275,7 +277,11 @@ describe("Remote Sync Subscription Tests", () => {
       // 🐛 BUG: This will timeout because subscription never fires for remote data sync
       await Promise.race([
         subscriptionPromise,
-        new Promise((_, reject) => setTimeout(() => { reject(new Error("Subscription timeout")); }, 5000)),
+        new Promise((_, reject) =>
+          setTimeout(() => {
+            reject(new Error("Subscription timeout"));
+          }, 5000),
+        ),
       ]);
 
       // Verify the subscription was triggered
@@ -288,7 +294,7 @@ describe("Remote Sync Subscription Tests", () => {
       expect(res.rows.length).toBe(ROWS + ROWS * joinableDBs.length);
 
       // Verify subscription received the synced documents
-      const docs = receivedDocs.get("main-db") || [];
+      const docs = receivedDocs.get("main-db") ?? [];
       expect(docs.length).toBeGreaterThan(0);
       // With our fix, subscriptions now properly fire for remote data sync
       // The exact number may vary based on sync timing, but we should get all synced documents
@@ -297,9 +303,11 @@ describe("Remote Sync Subscription Tests", () => {
   });
 
   describe("sync", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Reset subscription tracking for each sync test
-      subscriptionCallbacks.forEach((unsub) => { unsub(); });
+      subscriptionCallbacks.forEach((unsub) => {
+        unsub();
+      });
       subscriptionCallbacks = [];
       subscriptionCounts.clear();
       receivedDocs.clear();
@@ -377,7 +385,11 @@ describe("Remote Sync Subscription Tests", () => {
       // 🐛 BUG: This will timeout because subscription never fires for reconnection sync
       await Promise.race([
         subscriptionPromise,
-        new Promise((_, reject) => setTimeout(() => { reject(new Error("Subscription timeout")); }, 5000)),
+        new Promise((_, reject) =>
+          setTimeout(() => {
+            reject(new Error("Subscription timeout"));
+          }, 5000),
+        ),
       ]);
 
       // Verify the subscription was triggered by remote sync
@@ -385,7 +397,7 @@ describe("Remote Sync Subscription Tests", () => {
       expect(subscriptionCounts.get("inbound-db")).toBeGreaterThanOrEqual(1); // Should fire at least once
 
       // Verify subscription received the synced documents
-      const docs = receivedDocs.get("inbound-db") || [];
+      const docs = receivedDocs.get("inbound-db") ?? [];
       expect(docs.length).toBeGreaterThan(0);
       expect(docs.length).toBe(ROWS * 2); // Should receive both inbound and outbound documents
 
@@ -435,10 +447,10 @@ describe("Remote Sync Subscription Tests", () => {
         Array(3)
           .fill(0)
           .map(async (_, i) => {
-            const tdb = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
+            const tdb = await prepareDb(`online-db-${id}-${i.toString()}`, `memory://local-${id}-${i.toString()}`);
 
             // Setup subscription on each database
-            const subscriptionPromise = setupSubscription(tdb.db, `online-db-${i}`);
+            const subscriptionPromise = setupSubscription(tdb.db, `online-db-${i.toString()}`);
 
             // Attach to shared sync namespace (no existing data to sync yet)
             await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
@@ -471,7 +483,11 @@ describe("Remote Sync Subscription Tests", () => {
           try {
             await Promise.race([
               db.subscriptionPromise,
-              new Promise((_, reject) => setTimeout(() => { reject(new Error(`Subscription timeout for db ${i}`)); }, 5000)),
+              new Promise((_, reject) =>
+                setTimeout(() => {
+                  reject(new Error(`Subscription timeout for db ${i.toString()}`));
+                }, 5000),
+              ),
             ]);
           } catch (error) {
             // Subscription timeout - this is expected if subscriptions don't work for this database
@@ -482,7 +498,7 @@ describe("Remote Sync Subscription Tests", () => {
       // Verify subscriptions were triggered
       let totalSubscriptionFires = 0;
       dbs.forEach((_, i) => {
-        const count = subscriptionCounts.get(`online-db-${i}`) || 0;
+        const count = subscriptionCounts.get(`online-db-${i.toString()}`) ?? 0;
         totalSubscriptionFires += count;
         expect(count).toBeGreaterThan(0); // Each database should have at least one subscription fire
       });

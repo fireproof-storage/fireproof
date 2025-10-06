@@ -19,7 +19,7 @@ import {
   Subject,
 } from "@fireproof/core-types-base";
 
-const superThis = ensureSuperThis();
+const sthis = ensureSuperThis();
 
 describe("DeviceIdKey", () => {
   it("should export private key as JWK", async () => {
@@ -56,7 +56,7 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
   it("should create and validate a CSR successfully", async () => {
     // Create a key and CSR
     const key = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(superThis, key);
+    const csr = new DeviceIdCSR(sthis, key);
 
     const subject: Subject = {
       commonName: "test.example.com",
@@ -105,7 +105,7 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
 
   it("should fail validation for tampered CSR", async () => {
     const key = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(superThis, key);
+    const csr = new DeviceIdCSR(sthis, key);
 
     const subject = { commonName: "test.example.com" };
     const rCsrJWS = await csr.createCSR(subject);
@@ -160,7 +160,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     // Create CA
     const ca = new DeviceIdCA({
-      base64: superThis.txt.base64,
+      base64: sthis.txt.base64,
       caKey,
       caSubject,
       actions: mockActions,
@@ -168,7 +168,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     // Create device key and CSR
     const deviceKey = await DeviceIdKey.create();
-    const csr = new DeviceIdCSR(superThis, deviceKey);
+    const csr = new DeviceIdCSR(sthis, deviceKey);
 
     const subject = {
       commonName: "device.example.com",
@@ -244,7 +244,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
     };
 
     const ca = new DeviceIdCA({
-      base64: superThis.txt.base64,
+      base64: sthis.txt.base64,
       caKey,
       caSubject,
       actions: mockActions,
@@ -290,14 +290,14 @@ describe("DeviceIdSignMsg", () => {
     deviceKey = await DeviceIdKey.create();
 
     ca = new DeviceIdCA({
-      base64: superThis.txt.base64,
+      base64: sthis.txt.base64,
       caKey,
       caSubject,
       actions: mockActions,
     });
 
     // Create CSR and get certificate
-    const csr = new DeviceIdCSR(superThis, deviceKey);
+    const csr = new DeviceIdCSR(sthis, deviceKey);
     const subject = {
       commonName: "device.example.com",
       organization: "Device Corp",
@@ -408,7 +408,7 @@ describe("DeviceIdSignMsg", () => {
 
     const newCaKey = await DeviceIdKey.create();
     const newCa = new DeviceIdCA({
-      base64: superThis.txt.base64,
+      base64: sthis.txt.base64,
       caKey: newCaKey,
       caSubject,
       actions: mockActions,
@@ -433,7 +433,7 @@ describe("DeviceIdSignMsg", () => {
 
     const newCaKey = await DeviceIdKey.create();
     const newCa = new DeviceIdCA({
-      base64: superThis.txt.base64,
+      base64: sthis.txt.base64,
       caKey: newCaKey,
       caSubject,
       actions: mockActions,
@@ -457,7 +457,7 @@ describe("DeviceIdSignMsg", () => {
 
     const newCaKey = await DeviceIdKey.create();
     const newCa = new DeviceIdCA({
-      base64: superThis.txt.base64,
+      base64: sthis.txt.base64,
       caKey: newCaKey,
       caSubject,
       actions: mockActions,

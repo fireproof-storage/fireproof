@@ -1,4 +1,4 @@
-import { Database, DocWithId, fireproof, IndexRowsWithoutDocs, IndexRowsWithDocs } from "@fireproof/core";
+import { Database, fireproof, IndexRowsWithoutDocs, IndexRowsWithDocs } from "@fireproof/core";
 import { describe, beforeEach, afterEach, it, expect, assertType } from "vitest";
 
 interface TestDoc {

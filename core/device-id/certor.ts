@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/non-nullable-type-assertion-style */
 import { toSortedObject } from "@adviser/cement/utils";
 import { Base64EndeCoder } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
@@ -27,7 +28,7 @@ export class Certor {
 
   constructor(base64: Base64EndeCoder, cert: CertificatePayload) {
     // this.#cert = cert;
-    this.#cert = deepFreeze(toSortedObject(cert) ?? cert);
+    this.#cert = deepFreeze(toSortedObject(cert)) as CertificatePayload;
     this.base64 = base64;
   }
 

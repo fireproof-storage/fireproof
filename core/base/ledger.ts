@@ -75,7 +75,9 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
           }),
       });
       db.onClosed(() => {
-        ledgers.unget(key!);
+        if (key) {
+          ledgers.unget(key);
+        }
       });
       return db;
     }),
@@ -180,7 +182,7 @@ class LedgerImpl implements Ledger {
     };
   }
   async close() {
-    throw this.logger.Error().Str("db", this.name).Msg(`use shellClose`).AsError();
+    await Promise.reject(this.logger.Error().Str("db", this.name).Msg(`use shellClose`).AsError());
   }
   async shellClose(db: LedgerShell) {
     if (!this.shells.has(db)) {
@@ -191,7 +193,9 @@ class LedgerImpl implements Ledger {
       await this.ready();
       await this.crdt.close();
       await this.writeQueue.close();
-      this._onClosedFns.forEach((fn) => { fn(); });
+      this._onClosedFns.forEach((fn) => {
+        fn();
+      });
     }
     // await this.blockstore.close();
   }
@@ -204,12 +208,11 @@ class LedgerImpl implements Ledger {
 
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
-    const ret = await this._ready.once(async () => {
+    return this._ready.once(async () => {
       await this.sthis.start();
       await this.crdt.ready();
       // await this.blockstore.ready();
     });
-    return ret;
   }
 
   readonly logger: Logger;
@@ -234,7 +237,7 @@ class LedgerImpl implements Ledger {
       async (updates: DocUpdate<DocTypes>[]) => this.crdt.bulk(updates),
       this.opts.writeQueue,
     );
-    this.crdt.clock.onTock(() => this._no_update_notify());
+    this.crdt.clock.onTock(() => void this._no_update_notify());
   }
 
   async attach(a: Attachable): Promise<Attached> {
@@ -248,7 +251,7 @@ class LedgerImpl implements Ledger {
   // }
 
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
-    this.ready();
+    void this.ready();
     this.logger.Debug().Bool("updates", updates).Msg("subscribe");
     if (updates) {
       if (!this._listening) {
@@ -274,7 +277,9 @@ class LedgerImpl implements Ledger {
     if (this._listeners.size) {
       const docs: DocWithId<DocTypes>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
-        await (async () => { await listener(docs); })().catch((e: Error) => {
+        await (async () => {
+          await listener(docs);
+        })().catch((e: unknown) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
@@ -285,7 +290,9 @@ class LedgerImpl implements Ledger {
     await this.ready();
     if (this._noupdate_listeners.size) {
       for (const listener of this._noupdate_listeners) {
-        await (async () => { await listener([]); })().catch((e: Error) => {
+        await (async () => {
+          await listener([]);
+        })().catch((e: unknown) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
@@ -294,7 +301,7 @@ class LedgerImpl implements Ledger {
 }
 
 export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
-  sopts = sopts || {};
+  sopts = sopts ?? {};
   if (!sopts.base) {
     const fp_env = sthis.env.get("FP_STORAGE_URL");
     if (fp_env) {

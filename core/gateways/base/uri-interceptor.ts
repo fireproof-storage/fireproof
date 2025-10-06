@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-return-this-type */
 import { URI, Promisable, Result } from "@adviser/cement";
 import { PassThroughGateway } from "./interceptor-gateway.js";
 import {
@@ -23,7 +24,7 @@ export class URIInterceptor extends PassThroughGateway {
 
   readonly #uriMapper = new Set<URIMapper>();
 
-  addMapper(mapper: URIMapper): this {
+  addMapper(mapper: URIMapper): URIInterceptor {
     this.#uriMapper.add(mapper);
     return this;
   }

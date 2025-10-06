@@ -1,23 +1,30 @@
 import { encodeKey } from "@fireproof/core-base";
 
 // @ts-expect-error "charwise" has no types
+// cspell:ignore charwise
 import charwise from "charwise";
 import { describe, it, expect } from "vitest";
 
 describe("charwise boolean handling", () => {
   it("should encode and decode boolean values correctly", () => {
     // Test true
-    const trueEncoded = charwise.encode(true);
-    expect(charwise.decode(trueEncoded)).toBe(true);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const trueEncoded = (charwise as any).encode(true) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    expect((charwise as any).decode(trueEncoded)).toBe(true);
 
     // Test false
-    const falseEncoded = charwise.encode(false);
-    expect(charwise.decode(falseEncoded)).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const falseEncoded = (charwise as any).encode(false) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    expect((charwise as any).decode(falseEncoded)).toBe(false);
   });
 
   it("should differentiate between boolean values", () => {
-    const trueEncoded = charwise.encode(true);
-    const falseEncoded = charwise.encode(false);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const trueEncoded = (charwise as any).encode(true) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const falseEncoded = (charwise as any).encode(false) as string;
 
     // Ensure encoded values are different
     expect(trueEncoded).not.toBe(falseEncoded);
@@ -31,11 +38,16 @@ describe("charwise boolean handling", () => {
   });
 
   it("should differentiate boolean false from other values", () => {
-    const falseEncoded = charwise.encode(false);
-    const nullEncoded = charwise.encode(null);
-    const undefinedEncoded = charwise.encode(undefined);
-    const zeroEncoded = charwise.encode(0);
-    const emptyStringEncoded = charwise.encode("");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const falseEncoded = (charwise as any).encode(false) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const nullEncoded = (charwise as any).encode(null) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const undefinedEncoded = (charwise as any).encode(undefined) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const zeroEncoded = (charwise as any).encode(0) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const emptyStringEncoded = (charwise as any).encode("") as string;
 
     // Ensure false is different from other "falsy" values
     expect(falseEncoded).not.toBe(nullEncoded);
@@ -46,8 +58,10 @@ describe("charwise boolean handling", () => {
 
   it("should handle comparison of encoded boolean values", () => {
     // Test with the charwise.encode directly
-    const falseEncoded = charwise.encode(false);
-    const trueEncoded = charwise.encode(true);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const falseEncoded = (charwise as any).encode(false) as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const trueEncoded = (charwise as any).encode(true) as string;
 
     // Test with Fireproof's encodeKey function
     const falseFireproofEncoded = encodeKey(false);
@@ -58,11 +72,14 @@ describe("charwise boolean handling", () => {
     expect(trueFireproofEncoded).toBe(trueEncoded);
 
     // Test exact matching
-    const falseTest = charwise.encode(false);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    const falseTest = (charwise as any).encode(false) as string;
     expect(falseTest).toBe(falseEncoded);
 
     // Test if equality comparison works after encoding/decoding
-    expect(charwise.decode(falseEncoded)).toBe(false);
-    expect(charwise.decode(falseEncoded) === false).toBe(true);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    expect((charwise as any).decode(falseEncoded)).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    expect((charwise as any).decode(falseEncoded) === false).toBe(true);
   });
 });

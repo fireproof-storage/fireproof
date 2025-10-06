@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import {
   Logger,
   LoggerImpl,
@@ -99,11 +100,11 @@ class SuperThisImpl implements SuperThis {
 
   clone(override: Partial<SuperThisOpts>): SuperThis {
     return new SuperThisImpl({
-      logger: override.logger || this.logger,
-      env: envFactory(override.env) || this.env,
-      crypto: override.crypto || this.crypto,
-      pathOps: override.pathOps || this.pathOps,
-      txt: override.txt || this.txt,
+      logger: override.logger ?? this.logger,
+      env: envFactory(override.env),
+      crypto: override.crypto ?? this.crypto,
+      pathOps: override.pathOps ?? this.pathOps,
+      txt: override.txt ?? this.txt,
       ctx: AppContext.merge(this.ctx, override.ctx),
     });
   }
@@ -114,7 +115,7 @@ function presetEnv(ipreset?: Map<string, string> | Record<string, string>): Map<
   let preset: Record<string, string> = {};
   if (ipreset instanceof Map) {
     preset = Object.fromEntries<string>(ipreset.entries());
-  } else if (typeof ipreset === "object" && ipreset !== null) {
+  } else if (typeof ipreset === "object") {
     preset = ipreset;
   }
   const penv = new Map([
@@ -142,7 +143,7 @@ class pathOpsImpl implements PathOps {
     return path.split("/").slice(0, -1).join("/");
   }
   basename(path: string): string {
-    return path.split("/").pop() || "";
+    return path.split("/").pop() ?? "";
   }
   // homedir() {
   //     throw new Error("SysContainer:homedir is not available in seeded state");
@@ -191,19 +192,21 @@ export function onSuperThis(fn: (sthis: SuperThis) => void): () => void {
 
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
   const env = envFactory({
-    symbol: osthis?.env?.symbol || "FP_ENV",
+    symbol: osthis?.env?.symbol ?? "FP_ENV",
     presetEnv: presetEnv(osthis?.env?.presetEnv),
   });
 
   const ret = new SuperThisImpl({
-    logger: osthis?.logger || globalLogger(),
+    logger: osthis?.logger ?? globalLogger(),
     env,
-    crypto: osthis?.crypto || toCryptoRuntime(),
+    crypto: osthis?.crypto ?? toCryptoRuntime(),
     ctx: AppContext.merge(osthis?.ctx),
     pathOps,
-    txt: osthis?.txt || txtOps,
+    txt: osthis?.txt ?? txtOps,
   });
-  _onSuperThis.forEach((fn) => { fn(ret); });
+  _onSuperThis.forEach((fn) => {
+    fn(ret);
+  });
   return ret;
 }
 
@@ -223,7 +226,7 @@ export function ensureLogger(
   //   throw new Error("logger is required");
   // }
   let logger: Logger;
-  if (sthis && IsLogger(sthis.logger)) {
+  if (IsLogger(sthis.logger)) {
     logger = sthis.logger;
   } else {
     logger = globalLogger();
@@ -274,7 +277,7 @@ export function ensureLogger(
       }
     }
   }
-  registerFP_DEBUG
+  void registerFP_DEBUG
     .once(async () => {
       // console.log("registerFP_DEBUG", SysContainer.env)
       sthis.env.onSet(
@@ -297,7 +300,7 @@ export function ensureLogger(
               break;
             }
             case "FP_DEBUG":
-              logger.SetDebug(value || []);
+              logger.SetDebug(value ?? []);
               break;
             case "FP_STACK":
               logger.SetExposeStack(!!value);
@@ -351,7 +354,7 @@ export function getStore(url: URI, sthis: SuperThis, joiner: Joiner): Store {
   }
   let name: string = pathPart;
   if (url.hasParam("index")) {
-    name = joiner(url.getParam(PARAM.INDEX) || "idx", name);
+    name = joiner(url.getParam(PARAM.INDEX) ?? "idx", name);
   }
   return { pathPart, fromUrl, name };
 }
@@ -380,7 +383,7 @@ export function getName(sthis: SuperThis, url: URI): string {
 // }
 
 export async function exceptionWrapper<T, E extends Error>(fn: () => Promise<Result<T, E>>): Promise<Result<T, E>> {
-  return fn().catch((e) => Result.Err(e));
+  return fn().catch((e: unknown) => Result.Err(e as E));
 }
 
 // // the big side effect party --- hate it
@@ -440,7 +443,7 @@ export async function coercePromiseIntoUint8(raw: PromiseToUInt8): Promise<Resul
   }
   if (typeof raw.then === "function") {
     try {
-      return coercePromiseIntoUint8(await raw);
+      return await coercePromiseIntoUint8(await raw);
     } catch (e) {
       return Result.Err(e as Error);
     }
@@ -454,7 +457,7 @@ export function makeName(fnString: string) {
   const matches = Array.from(fnString.matchAll(regex), (match) => match[1].trim());
   if (matches.length === 0) {
     found = /=>\s*{?\s*([^{}]+)\s*}?/.exec(fnString);
-    if (found && found[1].includes("return")) {
+    if (found?.[1]?.includes("return")) {
       found = null;
     }
   }
@@ -475,7 +478,7 @@ export function storeType2DataMetaWal(store: StoreType) {
     case "wal":
       return store;
     default:
-      throw new Error(`unknown store ${store}`);
+      throw new Error(`unknown store ${String(store)}`);
   }
 }
 
@@ -490,7 +493,7 @@ export function ensureURIDefaults(
     readonly file: boolean;
   }>,
 ): URI {
-  ctx = ctx || {};
+  ctx = ctx ?? {};
   const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, names.name);
   if (names.localURI) {
     const rParams = names.localURI.getParamsResult({
@@ -514,9 +517,9 @@ export function ensureURIDefaults(
   // }
   if (ctx.idx) {
     ret.defParam(PARAM.INDEX, "idx");
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}-idx@`);
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME) ?? ""}-${storeType2DataMetaWal(store)}-idx@`);
   } else {
-    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${storeType2DataMetaWal(store)}@`);
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME) ?? ""}-${storeType2DataMetaWal(store)}@`);
   }
   if (store === "car") {
     ret.defParam(PARAM.SUFFIX, ".car");
@@ -526,7 +529,7 @@ export function ensureURIDefaults(
 
 export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV") {
   const key = Symbol.for(symbol);
-  const env = (globalThis as unknown as Record<symbol, Record<string, string>>)[key] ?? {};
+  const env = (globalThis as unknown as Record<symbol, Record<string, string>>)[key];
   for (const [k, v] of Object.entries(o)) {
     env[k] = v;
   }
@@ -557,11 +560,11 @@ export function hashStringSync(str: string): string {
   return hashXX(str);
 }
 
-export function hashObjectSync<T extends NonNullable<S>, S>(o: T): string {
+export function hashObjectSync<S>(o: NonNullable<S>): string {
   return hashXX(JSON.stringify(toSortedArray(o)));
 }
 
-export async function hashObjectAsync<T extends NonNullable<S>, S>(o: T): Promise<string> {
+export async function hashObjectAsync<S>(o: NonNullable<S>): Promise<string> {
   return (await hashObjectCID(o)).cid.toString();
 }
 
@@ -580,7 +583,7 @@ export function sleep(ms: number) {
  * Deep clone a value
  */
 export function deepClone<T>(value: T): T {
-  return (structuredClone ?? ((v: T) => JSON.parse(JSON.stringify(v))))(value);
+  return structuredClone(value);
 }
 
 function coerceLogger(loggerOrHasLogger: Logger | HasLogger): Logger {

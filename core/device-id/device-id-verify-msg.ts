@@ -120,7 +120,7 @@ export class DeviceIdVerifyMsg {
       // console.log("Step 3: Extracting public key from certificate...");
       // publicKey = await extractPublicKeyFromCertificate(certInfo.certificate);
       // Step 4: Verify JWT signature with extracted public key
-      const alg = (certInfo.algorithm!) || "ES256";
+      const alg = certInfo.algorithm ?? "ES256";
       const key = await importJWK(certInfo.certificate.asCert().certificate.subjectPublicKeyInfo, alg);
       return jwtVerify(jwt, key, {
         clockTolerance: this.#options.clockTolerance,
@@ -134,18 +134,12 @@ export class DeviceIdVerifyMsg {
       });
     }
     const jwtVerification = rVerify.Ok();
-    if (!jwtVerification) {
-      return this.createVerifyWithCertificateError(Result.Err("JWT verification failed"), {
-        certificateExtracted: true,
-        certificateInfo: certInfo,
-      });
-    }
 
     jwtPayload = jwtVerification.payload;
     jwtHeader = jwtVerification.protectedHeader;
 
     // Step 5: Validate certificate properties
-    const rCertValidation = await this.validateCertificate(certInfo.certificate);
+    const rCertValidation = this.validateCertificate(certInfo.certificate);
     if (rCertValidation.isErr()) {
       return this.createVerifyWithCertificateError(rCertValidation, {
         certificateExtracted: true,
@@ -232,7 +226,7 @@ export class DeviceIdVerifyMsg {
   /**
    * Validate certificate properties
    */
-  async validateCertificate(certor: Certor): Promise<Result<VerifyWithCertificateSuccess["certificate"]["validation"]>> {
+  validateCertificate(certor: Certor): Result<VerifyWithCertificateSuccess["certificate"]["validation"]> {
     const now = new Date();
     return exception2Result(() => {
       const cert = certor.asCert();

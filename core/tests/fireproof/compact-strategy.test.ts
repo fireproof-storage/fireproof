@@ -29,10 +29,10 @@ describe("compactStrategy", () => {
     });
     const db = fireproof("test-compactStrategy", {
       compactStrategy: "test",
-      storeUrls: { base: `memory://test-compactStrategy-${Date.now()}` },
+      storeUrls: { base: `memory://test-compactStrategy-${Date.now().toString()}` },
     });
     for (let i = 0; i < 10; i++) {
-      await db.put({ _id: `test-${i}`, value: i });
+      await db.put({ _id: `test-${i.toString()}`, value: i });
     }
     await db.compact();
     expect(compact).toHaveBeenCalledTimes(1);

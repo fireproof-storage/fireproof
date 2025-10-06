@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { ensureSuperThis } from "@fireproof/core-runtime";
 // import { inject } from "vitest";
 

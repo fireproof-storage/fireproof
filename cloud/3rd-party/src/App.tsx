@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { DocWithId, useFireproof, toCloud, RedirectStrategy } from "use-fireproof";
 import React, { useState, useEffect } from "react";
 import "./App.css";
@@ -26,11 +27,12 @@ function App() {
   // const [token, setToken] = useState("");
 
   useEffect(() => {
-    const loadRows = async () => {
-      const rows = await database.allDocs<DocWithId<{ value: string }>>();
-      setRows(rows.rows.map((i) => i.value));
-    };
-    loadRows().catch(console.error);
+    database
+      .allDocs<DocWithId<{ value: string }>>()
+      .then((rows) => {
+        setRows(rows.rows.map((i) => i.value));
+      })
+      .catch(console.error);
   });
 
   // attach.state === "attached" ? attach.attached.ctx().get<WebToCloudCtx>(WebCtx)?.hook()

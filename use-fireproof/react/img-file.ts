@@ -41,7 +41,7 @@ function getObjectUrlByKey(cacheKey: string, fileObj: File): string {
     // eslint-disable-next-line no-restricted-globals
     objectUrlCache.set(cacheKey, URL.createObjectURL(fileObj));
   }
-  return objectUrlCache.get(cacheKey) as string;
+  return objectUrlCache.get(cacheKey)!;
 }
 
 async function loadFile({
@@ -89,7 +89,7 @@ async function loadFile({
 
   // Defer cleanup of previous URL until after new URL is set
 
-  if (fileObj && /image/.test(fileType)) {
+  if (fileObj && fileType.includes('image')) {
     // Handle different file content
     if (isDifferentFile && newKey) {
       const src = getObjectUrlByKey(newKey, fileObj);
@@ -102,7 +102,7 @@ async function loadFile({
         revoke: () => {
           if (objectUrlCache.has(newKey)) {
             // eslint-disable-next-line no-restricted-globals
-            URL.revokeObjectURL(objectUrlCache.get(newKey) as string);
+            URL.revokeObjectURL(objectUrlCache.get(newKey)!);
             objectUrlCache.delete(newKey);
           }
         },
@@ -117,7 +117,7 @@ async function loadFile({
 
     // Handle same content key - reuse existing cached URL if available
     if (canReuseCache && newKey) {
-      const src = objectUrlCache.get(newKey) as string;
+      const src = objectUrlCache.get(newKey)!;
       setImgDataUrl(src);
       fileObjRef.current = fileObj;
       keyRef.current = newKey;
