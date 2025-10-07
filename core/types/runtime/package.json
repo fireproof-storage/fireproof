@@ -36,8 +36,8 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.35",
+    "@adviser/cement": "^0.4.39",
     "@fireproof/vendor": "workspace:0.0.0",
-    "multiformats": "^13.4.1"
+    "multiformats": "^13.4.0"
   }
 }

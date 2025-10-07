@@ -14,4 +14,4 @@ updates:
       - dependency-name: "drizzle-kit:*"
         versions: [">0.30.6"]
       - dependency-name: "tailwindcss:*"
-        versions: [">3.4.17"]
+        versions: ["version-update:semver-major"]

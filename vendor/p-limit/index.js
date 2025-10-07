@@ -78,7 +78,7 @@ export default function pLimit(concurrency) {
         validateConcurrency(newConcurrency);
         concurrency = newConcurrency;
 
-        queueMicrotask(() => {
+        Promise.resolve().then(() => {
           while (activeCount < concurrency && queue.size > 0) {
             resumeNext();
           }

@@ -48,7 +48,7 @@ export class CRDTClockImpl {
     this.blockstore = blockstore;
     this.logger = ensureLogger(blockstore.sthis, `CRDTClock`)
       .With()
-      .Str("dbName", blockstore.crdtParent?.ledgerParent?.name || "unnamed")
+      .Str("dbName", blockstore.crdtParent?.ledgerParent?.name ?? "unnamed")
       .Logger();
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this), this.logger);
   }
@@ -74,8 +74,10 @@ export class CRDTClockImpl {
       const changes = await clockChangesSince<DocTypes>(this.blockstore, this.head, prevHead, {}, this.logger);
       internalUpdates = changes.result;
     }
-    this.zoomers.forEach((fn) => { fn(); });
-    this.notifyWatchers(internalUpdates || []);
+    this.zoomers.forEach((fn) => {
+      fn();
+    });
+    this.notifyWatchers(internalUpdates);
   }
 
   notifyWatchers(updates: DocUpdate<DocTypes>[]) {
@@ -91,8 +93,12 @@ export class CRDTClockImpl {
       .Msg("NOTIFY_WATCHERS: Triggering subscriptions");
     // Always notify both types of watchers - subscription systems need notifications
     // regardless of whether there are document updates
-    this.noPayloadWatchers.forEach((fn) => { fn(); });
-    this.watchers.forEach((fn) => { fn(updates || []); });
+    this.noPayloadWatchers.forEach((fn) => {
+      fn();
+    });
+    this.watchers.forEach((fn) => {
+      fn(updates);
+    });
   }
 
   onTick(fn: (updates: DocUpdate<DocTypes>[]) => void): UnReg {
@@ -150,21 +156,16 @@ export class CRDTClockImpl {
     }
 
     // const noLoader = this.head.length === 1 && !updates?.length
-    if (!this.blockstore) {
-      throw this.logger.Error().Msg("missing blockstore").AsError();
-    }
     await validateBlocks(this.logger, newHead, this.blockstore);
-    if (!this.transaction) {
-      this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
-    }
-    const tblocks = this.transaction;
+    this.transaction ??= this.blockstore.openTransaction({ noLoader, add: false });
+    const transaction = this.transaction;
 
-    const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
-    const result = await root(toPailFetcher(tblocks), advancedHead);
+    const advancedHead = await advanceBlocks(this.logger, newHead, transaction, this.head);
+    const result = await root(toPailFetcher(transaction), advancedHead);
 
     const fpBlocks = await Promise.all(result.additions.map(anyBlock2FPBlock));
     for (const fp of fpBlocks) {
-      tblocks.putSync(fp);
+      transaction.putSync(fp);
     }
 
     //    for (const block of [
@@ -174,7 +175,7 @@ export class CRDTClockImpl {
     //      tblocks.putSync(await anyBlock2FPBlock(block));
     //    }
     if (!noLoader) {
-      await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
+      await this.blockstore.commitTransaction(transaction, { head: advancedHead }, { add: false, noLoader });
       this.transaction = undefined;
     }
     this.setHead(advancedHead);
@@ -197,10 +198,14 @@ export class CRDTClockImpl {
       if (changes.result.length > 0) {
         this.logger.Debug().Msg("MANUAL_NOTIFICATION: Calling notifyWatchers with changes");
         this.notifyWatchers(changes.result);
-        this.noPayloadWatchers.forEach((fn) => { fn(); });
+        this.noPayloadWatchers.forEach((fn) => {
+          fn();
+        });
       } else {
         this.logger.Debug().Msg("MANUAL_NOTIFICATION: Calling noPayloadWatchers directly");
-        this.noPayloadWatchers.forEach((fn) => { fn(); });
+        this.noPayloadWatchers.forEach((fn) => {
+          fn();
+        });
       }
     }
   }
@@ -212,13 +217,15 @@ function sortClockHead(clockHead: ClockHead) {
 }
 
 async function validateBlocks(logger: Logger, newHead: ClockHead, blockstore?: BaseBlockstore) {
-  if (!blockstore) throw logger.Error().Msg("missing blockstore");
-  newHead.map(async (cid) => {
-    const got = await blockstore.get(cid);
-    if (!got) {
-      throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
-    }
-  });
+  if (!blockstore) throw new Error("missing blockstore");
+  await Promise.all(
+    newHead.map(async (cid) => {
+      const got = await blockstore.get(cid);
+      if (!got) {
+        throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
+      }
+    }),
+  );
 }
 
 function compareClockHeads(head1: ClockHead, head2: ClockHead) {

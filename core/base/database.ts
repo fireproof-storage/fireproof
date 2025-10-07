@@ -86,7 +86,7 @@ export class DatabaseImpl implements Database {
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put");
     const { _id, ...value } = doc;
-    const docId = _id || this.sthis.timeOrderedNextId().str;
+    const docId = _id ?? this.sthis.timeOrderedNextId().str;
     const result = (await this.ledger.writeQueue.push({
       id: docId,
       value: {
@@ -94,14 +94,14 @@ export class DatabaseImpl implements Database {
         _id: docId,
       },
     })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+    return { id: docId, clock: result.head, name: this.name } as DocResponse;
   }
 
   async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
     await this.ready();
 
     const updates = docs.map((doc) => {
-      const id = doc._id || this.sthis.timeOrderedNextId().str;
+      const id = doc._id ?? this.sthis.timeOrderedNextId().str;
       return {
         id,
         value: {
@@ -118,7 +118,7 @@ export class DatabaseImpl implements Database {
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("del");
     const result = (await this.ledger.writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head, name: this.name } as DocResponse;
+    return { id, clock: result.head, name: this.name } as DocResponse;
   }
 
   async remove(id: string): Promise<DocResponse> {
