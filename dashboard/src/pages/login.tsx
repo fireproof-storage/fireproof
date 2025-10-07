@@ -1,7 +1,7 @@
-import React, { useContext } from "react";
 import { URI } from "@adviser/cement";
 import { SignIn } from "@clerk/clerk-react";
 import { base64url } from "jose";
+import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
 const slides = [
@@ -56,13 +56,11 @@ export function Login() {
     }
 
     const to = URI.from(decodedUrl).withoutHostAndSchema;
-    console.log("login-tos", to);
     return <Navigate to={to} />;
   }
 
   // const fromUrl = URI.from(window.location.href).getParam("redirect_url", "/fp/cloud")
   const redirect_url = URI.from(window.location.href).toString();
-  console.log("login-redirect_url", window.location.href);
 
   const fromApp = URI.from(window.location.href).getParam("fromApp");
   if (fromApp) {

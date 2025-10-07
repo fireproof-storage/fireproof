@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashStringSync, hashObjectSync } from "../../runtime/utils.js";
+import { hashStringSync, hashObjectSync } from "@fireproof/core-runtime";
 
 describe("Hash functions", () => {
   describe("hashStringSync", () => {
