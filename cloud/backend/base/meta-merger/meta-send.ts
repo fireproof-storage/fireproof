@@ -151,7 +151,7 @@ export class MetaSendSql {
     }
     // cloudflare D1 don't like [] in VALUES
     for (const i of t) {
-      this.db
+      await this.db
         .insert(sqlMetaSend)
         .values({
           ...i,

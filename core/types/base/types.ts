@@ -217,7 +217,7 @@ export type ClockHead = ClockLink[];
 export type DocFragment = Uint8Array | string | number | boolean | null | AnyLink | DocFragment[] | object;
 // | { [key: string]: DocFragment };
 
-export type DocLiteral = string | number | boolean | Uint8Array | unknown;
+export type DocLiteral = string | number | boolean | Uint8Array;
 
 export type DocObject = NonNullable<unknown>;
 export type DocTypes = DocObject;
@@ -376,7 +376,7 @@ export interface AllDocsResponse<T extends DocTypes> {
 }
 
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
-export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | unknown;
+export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment;
 
 export interface ChangesOptions {
   readonly dirty?: boolean;
@@ -867,11 +867,11 @@ export type Readonly2Writeable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
-export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
+export function isNotFoundError(e: Error | Result<unknown>): e is NotFoundError {
   if (Result.Is(e)) {
     if (e.isOk()) return false;
     e = e.Err();
   }
-  if ((e as NotFoundError).code === "ENOENT") return true;
+  if ("code" in e && e.code === "ENOENT") return true;
   return false;
 }

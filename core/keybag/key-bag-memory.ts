@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import { URI } from "@adviser/cement";
 import { KeyBagProvider, SuperThis } from "@fireproof/core-types-base";
 
@@ -39,7 +40,7 @@ export class KeyBagProviderMemory implements KeyBagProvider {
     const binKeyItem = memoryKeyBag.get(this.key(id));
     if (binKeyItem) {
       try {
-        const ki = JSON.parse(this.sthis.txt.decode(binKeyItem));
+        const ki = JSON.parse(this.sthis.txt.decode(binKeyItem)) as NonNullable<unknown>;
         return ki;
       } catch (e) {
         /* */

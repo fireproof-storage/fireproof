@@ -10,7 +10,7 @@ export const SubjectSchema = z.object({
   locality: z.string().optional(),
   organization: z.string().optional(),
   organizationalUnitName: z.string().optional(),
-  emailAddress: z.string().email().optional(),
+  emailAddress: z.string().pipe(z.email()).optional(),
   serialNumber: z.string().optional(),
   streetAddress: z.string().optional(),
   postalCode: z.string().optional(),
@@ -73,11 +73,11 @@ export const ExtensionsSchema = z.object({
       }),
     )
     .optional(),
-  crlDistributionPoints: z.array(z.string().url()).optional(),
+  crlDistributionPoints: z.array(z.string().pipe(z.url())).optional(),
   authorityInfoAccess: z
     .object({
-      ocsp: z.array(z.string().url()).optional(),
-      caIssuers: z.array(z.string().url()).optional(),
+      ocsp: z.array(z.string().pipe(z.url())).optional(),
+      caIssuers: z.array(z.string().pipe(z.url())).optional(),
     })
     .optional(),
   nameConstraints: z

@@ -22,31 +22,31 @@ import type { SuperThis } from "@fireproof/core-types-base";
 export class PassThroughGateway implements SerdeGatewayInterceptor {
   async buildUrl(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<SerdeGatewayBuildUrlReturn>> {
     const op = { url, key };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async start(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayStartReturn>> {
     const op = { url };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async close(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayCloseReturn>> {
     const op = { url };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async delete(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayDeleteReturn>> {
     const op = { url };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async destroy(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayDestroyReturn>> {
     const op = { url };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<SerdeGatewayPutReturn<T>>> {
     const op = { url, body };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayGetReturn<S>>> {
     const op = { url };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
   async subscribe(
     ctx: SerdeGatewayCtx,
@@ -54,7 +54,7 @@ export class PassThroughGateway implements SerdeGatewayInterceptor {
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
   ): Promise<Result<SerdeGatewaySubscribeReturn>> {
     const op = { url, callback };
-    return Result.Ok({ op });
+    return await Promise.resolve(Result.Ok({ op }));
   }
 }
 
@@ -66,7 +66,7 @@ export class InterceptorGateway implements SerdeGateway {
 
   constructor(sthis: SuperThis, innerGW: SerdeGateway, interceptor: SerdeGatewayInterceptor | undefined) {
     this.innerGW = innerGW;
-    this.interceptor = interceptor || passThrougthGateway;
+    this.interceptor = interceptor ?? passThrougthGateway;
   }
 
   async buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
@@ -142,9 +142,6 @@ export class InterceptorGateway implements SerdeGateway {
   }
 
   async subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (msg: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
-    if (!this.innerGW.subscribe) {
-      return Result.Err(ctx.loader.sthis.logger.Error().Url(url).Msg("subscribe not supported").AsError());
-    }
     const rret = await this.interceptor.subscribe(ctx, url, callback);
     if (rret.isErr()) {
       return Result.Err(rret.Err());

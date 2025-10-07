@@ -17,8 +17,8 @@ describe("fireproof config indexeddb", () => {
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
 
-    const fileStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
-    expect(fileStore?.url().asObj()).toEqual({
+    const fileStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.file;
+    expect(fileStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexeddb:",
       searchParams: {
@@ -32,8 +32,8 @@ describe("fireproof config indexeddb", () => {
       style: "path",
     });
 
-    const dataStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
-    expect(dataStore?.url().asObj()).toEqual({
+    const dataStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
+    expect(dataStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexeddb:",
       searchParams: {
@@ -47,8 +47,8 @@ describe("fireproof config indexeddb", () => {
       },
       style: "path",
     });
-    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
-    expect(metaStore?.url().asObj()).toEqual({
+    const metaStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
+    expect(metaStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexeddb:",
       searchParams: {
@@ -61,8 +61,8 @@ describe("fireproof config indexeddb", () => {
       },
       style: "path",
     });
-    const WALStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
-    expect(WALStore?.url().asObj()).toEqual({
+    const WALStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
+    expect(WALStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexeddb:",
       searchParams: {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { exception2Result, HttpHeader, Logger, param, Result, top_uint8, URI } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { Context, Hono } from "hono";
@@ -29,10 +30,10 @@ import {
   buildResDelMeta,
   GwCtx,
   buildEventGetMeta,
-  MsgBase,
   buildErrorMsg,
   Gestalt,
   ErrorMsg,
+  MsgBase,
 } from "@fireproof/core-types-protocols-cloud";
 import { sts } from "@fireproof/core-runtime";
 import {
@@ -205,7 +206,7 @@ class NoBackChannel implements MsgDispatcherCtx {
     return {
       id: "no-id",
       send: (msg: string | ArrayBuffer | Uint8Array): Promisable<Response> => {
-        return new Response(msg);
+        return new Response(msg as BodyInit);
       },
     } as unknown as WSContextWithId<unknown>;
   }
@@ -268,7 +269,9 @@ export class HonoServer {
     // app.put('/error', async (c) => c.json(buildErrorMsg(sthis, sthis.logger, await c.req.json(), new Error("test error"))))
     app.put("/fp", (c) =>
       this.factory.inject(c, async (ctx) => {
-        Object.entries(c.req.header()).forEach(([k, v]) => { c.res.headers.set(k, v[0]); });
+        Object.entries(c.req.header()).forEach(([k, v]) => {
+          c.res.headers.set(k, v[0]);
+        });
         const rMsg = await exception2Result(() => c.req.json());
         if (rMsg.isErr()) {
           return c.json(buildErrorMsg(ctx, { tid: "internal" }, rMsg.Err()), 400, CORS.AsRecordStringString());
@@ -292,36 +295,38 @@ export class HonoServer {
             onError: (error) => {
               ctx.logger.Error().Err(error).Msg("WebSocket error");
             },
-            onMessage: async (event, ws) => {
-              // console.log("onMessage:inject:", ctx.id, event.data);
-              const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)));
-              if (rMsg.isErr()) {
-                ws.send(
-                  ctx.ende.encode(
-                    buildErrorMsg(
-                      ctx,
-                      {
-                        message: event.data,
-                      } as ErrorMsg,
-                      rMsg.Err(),
+            onMessage: (event, ws) => {
+              void (async () => {
+                // console.log("onMessage:inject:", ctx.id, event.data);
+                const rMsg = await exception2Result(async () => ctx.ende.decode(await top_uint8(event.data)));
+                if (rMsg.isErr()) {
+                  ws.send(
+                    ctx.ende.encode(
+                      buildErrorMsg(
+                        ctx,
+                        {
+                          message: event.data,
+                        } as ErrorMsg,
+                        rMsg.Err(),
+                      ),
                     ),
-                  ),
-                );
-              } else {
-                // console.log("dp-dispatch", rMsg.Ok(), dp);
-                await dp.dispatch(
-                  {
-                    ...ctx,
-                    ws,
-                    req: {
-                      method: c.req.method,
-                      url: c.req.url,
-                      headers: HttpHeader.from(c.req.header()),
+                  );
+                } else {
+                  // console.log("dp-dispatch", rMsg.Ok(), dp);
+                  await dp.dispatch(
+                    {
+                      ...ctx,
+                      ws,
+                      req: {
+                        method: c.req.method,
+                        url: c.req.url,
+                        headers: HttpHeader.from(c.req.header()),
+                      },
                     },
-                  },
-                  rMsg.Ok(),
-                );
-              }
+                    rMsg.Ok() as MsgBase,
+                  );
+                }
+              })();
             },
 
             onClose: (_evt, _ws) => {

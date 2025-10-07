@@ -33,7 +33,7 @@ function TestComponent() {
         "data-testid": "increment",
         key: "increment",
         type: "button",
-        onClick: () => setCounter((c) => c + 1),
+        onClick: () => { setCounter((c) => c + 1); },
       },
       "Increment",
     ),

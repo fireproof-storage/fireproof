@@ -2,7 +2,7 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockLoader, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { PARAM, KeyWithFingerPrint, KeyedV2StorageKeyItem } from "@fireproof/core-types-base";
+import { PARAM, KeyedV2StorageKeyItem } from "@fireproof/core-types-base";
 import { describe, beforeAll, it, expect, beforeEach } from "vitest";
 import { coerceMaterial, getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
@@ -46,7 +46,7 @@ describe("KeyBag indexeddb and file", () => {
         randomBytes: (size: number) => new Uint8Array(size).map((_, i) => i),
       }),
     });
-    const name = "setkey" + Math.random();
+    const name = `setkey${String(Math.random())}`;
     expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
 
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
@@ -54,7 +54,7 @@ describe("KeyBag indexeddb and file", () => {
     expect(res.isOk()).toBeTruthy();
     expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
 
-    const name2 = "implicit" + Math.random();
+    const name2 = `implicit${String(Math.random())}`;
     const created = await kb.getNamedKey(name2);
     expect(created.isOk()).toBeTruthy();
 
@@ -65,8 +65,8 @@ describe("KeyBag indexeddb and file", () => {
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
-      diskBag = await p._prepare().then((db) => db.get("bag", name));
-      diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
+      diskBag = (await p._prepare().then((db) => db.get("bag", name))) as KeyedV2StorageKeyItem;
+      diskBag2 = (await p._prepare().then((db) => db.get("bag", name2))) as KeyedV2StorageKeyItem;
     } else {
       const p = provider as KeyBagProviderFile;
       const { sysFS } = await p._prepare(name);
@@ -90,7 +90,9 @@ describe("KeyBag indexeddb and file", () => {
       tagLength: 128,
     };
     const data = kb.rt.crypto.randomBytes(122);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const rkc = (await res.Ok().get())!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const ckc = (await created.Ok().get())!;
     expect(await kb.rt.crypto.encrypt(algo, rkc.key, data)).toEqual(await kb.rt.crypto.encrypt(algo, ckc.key, data));
     expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.item.keys)[0].key), data)).toEqual(
@@ -124,7 +126,7 @@ describe("KeyedCryptoStore", () => {
   it("no crypto", async () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
     for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
-      const store = await pstore;
+      const store = pstore;
       // await store.start();
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("noCrypto");

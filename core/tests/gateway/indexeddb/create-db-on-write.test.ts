@@ -25,7 +25,7 @@ describe("IndexedDB create on write", () => {
   const notCreating = [
     {
       name: "onClosed",
-      action: async (db: Database) => {
+      action: (db: Database) => {
         db.onClosed(() => {
           // console.log("closed");
         });
@@ -92,7 +92,7 @@ describe("IndexedDB create on write", () => {
   ];
 
   describe("action is not creating a db", () => {
-    it("del", async () => {
+    it("del", () => {
       console.warn(`⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️  The Core writes on del currently that should not the case on empty db's`);
       // const dbName = `indexdb-${sthis.nextId().str}`;
       // const db = fireproof(dbName);
@@ -114,7 +114,7 @@ describe("IndexedDB create on write", () => {
       });
 
       it.each(notCreating)("test $name", async (item) => {
-        await item.action(db);
+        item.action(db);
         const idbs = await indexedDB.databases();
         // console.log("idbs", idbs, dbName);
         expect(idbs.find((i) => i.name === `fp.${dbName}`)).not.toBeDefined();
@@ -147,7 +147,7 @@ describe("IndexedDB create on write", () => {
 
     describe("on fresh db", () => {
       it.each(notCreating)("not creating $name", async (item) => {
-        await item.action(db);
+        item.action(db);
         const idbs = await indexedDB.databases();
         // console.log("idbs", idbs, dbName);
         expect(idbs.find((i) => i.name === `fp.${dbName}`)).not.toBeDefined();
@@ -167,7 +167,7 @@ describe("IndexedDB create on write", () => {
         });
       });
       it.each(notCreating)("was created $name", async (item) => {
-        await item.action(db);
+        item.action(db);
         const idbs = await indexedDB.databases();
         // console.log("idbs", idbs, dbName);
         expect(idbs.find((i) => i.name === `fp.${dbName}`)).toBeDefined();
@@ -189,7 +189,7 @@ describe("IndexedDB create on write", () => {
       });
 
       it.each(notCreating)("was created $name", async (item) => {
-        await item.action(db);
+        item.action(db);
         const idbs = await indexedDB.databases();
         // console.log("idbs", idbs, dbName);
         expect(idbs.find((i) => i.name === `fp.${dbName}`)).toBeDefined();

@@ -44,7 +44,7 @@ export class DeviceIdKey {
   async exportPrivateJWK(): Promise<JWKPrivate> {
     const jwk = await exportJWK(this.#privateKey);
     const { success, data } = JWKPrivateSchema.safeParse(jwk);
-    if (!success || !data) {
+    if (!success) {
       throw new Error("Invalid JWK");
     }
     return data;
@@ -53,7 +53,7 @@ export class DeviceIdKey {
   async publicKey(): Promise<JWKPublic> {
     const privateJWK = await exportJWK(this.#privateKey);
     const { success, data, error } = JWKPublicSchema.safeParse(privateJWK);
-    if (!success || !data) {
+    if (!success) {
       throw new Error(`Invalid public JWK: ${error.message}`);
     }
     return data;

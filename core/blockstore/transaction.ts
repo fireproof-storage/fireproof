@@ -45,10 +45,12 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
     return await this.parent.get(cid);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async superGet(cid: AnyLink): Promise<FPBlock | Falsy> {
     return this.#memblock.get(cid.toString());
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async put(fb: FPBlock): Promise<void> {
     this.putSync(fb);
   }
@@ -65,11 +67,12 @@ export class CarTransactionImpl implements CarMakeable, CarTransaction {
     this.#hackUnshift = fb;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async *entries(): AsyncIterableIterator<FPBlock> {
     if (this.#hackUnshift) {
       yield this.#hackUnshift;
     }
-    for await (const blk of this.#memblock.values()) {
+    for (const blk of this.#memblock.values()) {
       yield blk;
     }
   }
@@ -95,7 +98,7 @@ export function defaultedBlockstoreRuntime(
     threshold: 1000 * 1000,
     ...opts,
     logger,
-    keyBag: opts.keyBag || {},
+    keyBag: opts.keyBag,
     crypto: toCryptoRuntime(opts.crypto),
     storeUrls: opts.storeUrls,
     taskManager: {
@@ -154,14 +157,13 @@ export class BaseBlockstoreImpl implements BlockFetcher {
   }
 
   async get(cid: AnyLink): Promise<FPBlock | Falsy> {
-    if (!cid) throw this.logger.Error().Msg("required cid").AsError();
     for (const f of this.transactions) {
       // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
       const v = await f.superGet(cid);
       if (v) return v;
     }
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
   async put(fp: FPBlock): Promise<void> {
     throw this.logger.Error().Msg("use a transaction to put").AsError();
   }
@@ -190,16 +192,12 @@ export class BaseBlockstoreImpl implements BlockFetcher {
     done: M,
     opts: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
-    if (!this.loader) throw this.logger.Error().Msg("loader required to commit").AsError();
     const cars = await this.loader.commit<M>(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
-    if (cars) {
-      this.transactions.delete(t);
-      return { meta: done, cars, t };
-    }
-    throw this.logger.Error().Msg("failed to commit car files").AsError();
+    this.transactions.delete(t);
+    return { meta: done, cars, t };
   }
 
   async *entries(): AsyncIterableIterator<FPBlock> {
@@ -258,28 +256,23 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
-    if (cars) {
-      this.transactions.delete(t);
-      return { meta: done, cars, t };
-    }
-    throw this.logger.Error().Msg("failed to commit car files").AsError();
+    this.transactions.delete(t);
+    return { meta: done, cars, t };
   }
 
   async getFile(car: AnyLink, cid: AnyLink /*, isPublic = false*/): Promise<Uint8Array> {
     await this.ready();
-    if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
     const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
     if (!isCarBlockItemReady(reader)) {
       throw this.logger.Error().Str("cid", car.toString()).Msg("car not ready").AsError();
     }
-    const block = await reader.item.value.car.blocks.find((i) => i.cid.equals(cid));
+    const block = reader.item.value.car.blocks.find((i) => i.cid.equals(cid));
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;
   }
 
   async compact() {
     await this.ready();
-    if (!this.loader) throw this.logger.Error().Msg("loader required to compact").AsError();
     if (this.loader.carLog.length < 2) return;
 
     // const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks, this.logger));

@@ -81,7 +81,7 @@ export class MetaMerger {
   // }
 
   async delMeta(mm: MetaMerge): Promise<{ now: Date; byConnection: ByConnection }> {
-    const now = mm.now || new Date();
+    const now = mm.now ?? new Date();
     const byConnection = toByConnection(mm.connection);
     const metaCIDs = mm.meta.metas.map((meta) => meta.cid);
     const connCIDs = {
@@ -106,7 +106,7 @@ export class MetaMerger {
       return;
     }
     // const { now, byConnection } = await this.delMeta(mm);
-    const now = mm.now || new Date();
+    const now = mm.now ?? new Date();
     const byConnection = toByConnection(mm.connection);
 
     await this.sql.tenant.ensure({

@@ -15,5 +15,5 @@ expectType<Promise<string>>(limit((a: string, b: number) => "", "test", 1));
 expectType<number>(limit.activeCount);
 expectType<number>(limit.pendingCount);
 
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+ 
 limit.clearQueue();

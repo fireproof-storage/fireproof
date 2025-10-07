@@ -16,7 +16,7 @@ class MsgSigner {
     this.#x = x;
   }
 
-  sign<T extends NonNullable<unknown>>(payload: T, algorithm?: string): Promise<string> {
+  sign(payload: NonNullable<unknown>, algorithm?: string): Promise<string> {
     return this.#x.sign(payload, algorithm);
   }
 }
@@ -63,7 +63,7 @@ export class DeviceIdClient {
       }
       const cert = deviceIdResult.cert.unwrap();
       if (!cert) {
-        return Result.Err(`No certificate for ${deviceIdResult.deviceId.unwrap().kid}`);
+        return Result.Err(`No certificate for ${deviceIdResult.deviceId.unwrap().kid ?? "unknown"}`);
       }
       return Result.Ok(new MsgSigner(new DeviceIdSignMsg(this.#sthis.txt.base64, key, cert.certificatePayload)));
     });
@@ -71,7 +71,7 @@ export class DeviceIdClient {
 
   // sign a message
   // @param msg: string // JWT String
-  sendSigned<T extends NonNullable<unknown>>(_payload: T, _algorithm?: string): Promise<string> {
+  sendSigned(_payload: NonNullable<unknown>, _algorithm?: string): Promise<string> {
     throw new Error("sendSigned not implemented");
   }
 }

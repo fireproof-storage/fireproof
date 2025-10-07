@@ -38,18 +38,18 @@ export class TaskManager implements TaskManagerIf {
     }
     this.queue.push({ cid: cid.toString(), dbMeta, retries: 0, store });
     this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
-    void this.processQueue();
+    await this.processQueue();
   }
 
   private async processQueue() {
     if (this.isProcessing) return;
     this.isProcessing = true;
     const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
-    const first = filteredQueue[0];
-    if (!first) {
+    if (filteredQueue.length === 0) {
       this.isProcessing = false;
       return;
     }
+    const first = filteredQueue[0];
     try {
       await this.callback(first.dbMeta, first.store);
       this.eventsWeHandled.add(first.cid);

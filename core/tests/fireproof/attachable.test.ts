@@ -521,7 +521,7 @@ describe("sync", () => {
       Array(3)
         .fill(0)
         .map(async (_, i) => {
-          const tdb = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
+          const tdb = await prepareDb(`online-db-${id}-${i.toString()}`, `memory://local-${id}-${i.toString()}`);
           await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
           return tdb;
         }),

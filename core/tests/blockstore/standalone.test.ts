@@ -131,16 +131,19 @@ describe("standalone", () => {
 
     it.each(new Array(10).fill(0).map((_, i) => ({ cid: i })))("write:$cid", async ({ cid }) => {
       const peers = new Array(10).fill(0).map((_, peer) => {
-        return { id: `test-${cid}:peer-${peer}`, value: { cid: `test-${cid}`, peer: `peer-${peer}` } };
+        return {
+          id: `test-${String(cid)}:peer-${String(peer)}`,
+          value: { cid: `test-${String(cid)}`, peer: `peer-${String(peer)}` },
+        };
       });
       await crdt.bulk(peers);
     });
     it("read", async () => {
       for (let cid = 0; cid < 10; cid++) {
         for (let peer = 0; peer < 10; peer++) {
-          const id = `test-${cid}:peer-${peer}`;
+          const id = `test-${String(cid)}:peer-${String(peer)}`;
           const res = (await crdt.get(id)) as unknown as { cid: Link; doc: { cid: string; peer: string } };
-          expect(res.doc).toEqual({ cid: `test-${cid}`, peer: `peer-${peer}` });
+          expect(res.doc).toEqual({ cid: `test-${String(cid)}`, peer: `peer-${String(peer)}` });
         }
       }
     });

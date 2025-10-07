@@ -172,7 +172,7 @@ export function ApiTokenAuto() {
         });
       }, 1000);
 
-      return () => clearInterval(timer);
+      return () => { clearInterval(timer); };
     } else if (cloudToken && !backUrl) {
       // If no back URL, try to close the window
       setTimeout(() => {
@@ -189,7 +189,7 @@ export function ApiTokenAuto() {
         <p>Something went wrong. Please try again.</p>
         <details style={{ marginTop: "10px" }}>
           <summary style={{ cursor: "pointer" }}>Details</summary>
-          <pre style={{ fontSize: "12px", marginTop: "10px" }}>{(error as Error).message}</pre>
+          <pre style={{ fontSize: "12px", marginTop: "10px" }}>{(error).message}</pre>
         </details>
       </div>
     );

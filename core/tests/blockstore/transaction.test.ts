@@ -22,14 +22,14 @@ describe("Fresh TransactionBlockstore", function () {
   // });
   it("should not put", async () => {
     const value = sthis.txt.encode("value");
-    const e = await blocks.put(await anyBlock2FPBlock({ cid: "key" as unknown as AnyLink, bytes: value })).catch((e) => e);
-    expect(e.message).toMatch(/transaction/g);
+    const e = await blocks.put(await anyBlock2FPBlock({ cid: "key" as unknown as AnyLink, bytes: value })).catch((e: unknown) => e);
+    expect((e as Error).message).toMatch(/transaction/g);
   });
   it("should yield a transaction", async () => {
-    const txR = await blocks.transaction(async (tblocks) => {
+    const txR = await blocks.transaction((tblocks) => {
       expect(tblocks).toBeTruthy();
       expect(tblocks instanceof CarTransactionImpl).toBeTruthy();
-      return { head: [] };
+      return Promise.resolve({ head: [] });
     });
     expect(txR).toBeTruthy();
     expect(txR.t).toBeTruthy();
@@ -65,7 +65,7 @@ describe("A transaction", function () {
   let tblocks: CarTransaction;
   let blocks: EncryptedBlockstore;
   const sthis = ensureSuperThis();
-  beforeEach(async () => {
+  beforeEach(() => {
     blocks = new EncryptedBlockstore(sthis, simpleBlockOpts(sthis, "test"));
     tblocks = new CarTransactionImpl(blocks);
     blocks.transactions.add(tblocks);
@@ -108,7 +108,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
       return { head: [] };
     });
   });
-  it("should have transactions", async () => {
+  it("should have transactions", () => {
     const ts = blocks.transactions;
     expect(ts.size).toEqual(2);
   });

@@ -52,11 +52,11 @@ export class FileGateway implements Gateway {
   }
 
   async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    return Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI());
+    return  await Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
   async close(): Promise<Result<void>> {
-    return Result.Ok(undefined);
+    return  await Promise.resolve(Result.Ok(undefined));
   }
 
   getFilePath(url: URI, sthis: SuperThis): string {
@@ -76,7 +76,7 @@ export class FileGateway implements Gateway {
 
   async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
-      const file = await this.getFilePath(url, sthis);
+      const file = this.getFilePath(url, sthis);
       sthis.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
       await this.fs.writefile(file, bytes);
     });

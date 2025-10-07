@@ -62,12 +62,12 @@ export const sqlInviteTickets = sqliteTable(
 
 export function sqlToInviteTickets(sqls: (typeof sqlInviteTickets.$inferSelect)[]): InviteTicket[] {
   return sqls.map((sql) => {
-    const ivp = JSON.parse(sql.invitedParams) ?? ({} as SqlInvitedParams);
+    let ivp = (JSON.parse(sql.invitedParams) ?? {}) as SqlInvitedParams;
     if (ivp.tenant) {
-      ivp.tenant = { ...ivp.tenant, id: sql.invitedTenantId };
+      ivp = { ...ivp, tenant: { ...ivp.tenant, id: sql.invitedTenantId } as typeof ivp.tenant & { id: string } };
     }
     if (ivp.ledger) {
-      ivp.ledger = { ...ivp.ledger, id: sql.invitedLedgerId };
+      ivp = { ...ivp, ledger: { ...ivp.ledger, id: sql.invitedLedgerId } as typeof ivp.ledger & { id: string } };
     }
     const objInvitedUserId: { invitedUserId?: string } = {};
     if (sql.invitedUserId) {
@@ -90,7 +90,7 @@ export function sqlToInviteTickets(sqls: (typeof sqlInviteTickets.$inferSelect)[
       expiresAfter: new Date(sql.expiresAfter),
       createdAt: new Date(sql.createdAt),
       updatedAt: new Date(sql.updatedAt),
-    };
+    } as InviteTicket;
   });
 }
 
@@ -154,7 +154,7 @@ export function prepareInviteTicket({
   return {
     inviteId: inviteId ?? sthis.nextId(12).str,
     inviterUserId: userId,
-    status: status || "pending",
+    status: status,
     // inviterTenantId: tenantId,
     queryEmail: queryEmail(query.byEmail),
     queryNick: queryNick(query.byNick),

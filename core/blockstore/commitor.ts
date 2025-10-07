@@ -89,8 +89,8 @@ export async function commitFiles(
 
 function makeFileCarHeader(result: FileTransactionMeta): TransactionMeta {
   const files: AnyLink[] = [];
-  for (const [, meta] of Object.entries(result.files || {})) {
-    if (typeof meta === "object" && meta !== null && "cid" in meta) {
+  for (const [, meta] of Object.entries(result.files ?? {})) {
+    if ("cid" in meta) {
       files.push(meta.cid as AnyLink);
     }
   }
@@ -177,7 +177,7 @@ async function prepareCarFiles(
 ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
   // const theKey = isPublic ? undefined : await this._getKey();
   const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
-  threshold = threshold || 16 * 65536;
+  threshold = threshold ?? 16 * 65536;
   let clonedt = new CarTransactionImpl(t.parent, { add: false, noLoader: false });
   // console.log("prepareCarFiles-root", rootBlock.cid.toString());
   clonedt.putSync(rootBlock);

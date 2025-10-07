@@ -30,7 +30,7 @@ export default {
       status: res.status,
       statusText: res.statusText,
       headers: {
-        ...res.headers,
+        ...Object.fromEntries(res.headers),
         ...CORS,
       },
     });

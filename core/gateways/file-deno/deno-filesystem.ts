@@ -15,7 +15,7 @@ export class DenoFileSystem implements SysFileSystem {
   };
 
   async start(): Promise<SysFileSystem> {
-    this.fs = Deno as unknown as DenoFileSystem["fs"];
+    this.fs = await Promise.resolve(Deno as unknown as DenoFileSystem["fs"])  ;
     return this;
   }
   async mkdir(path: string, options?: { recursive: boolean }): Promise<string | undefined> {

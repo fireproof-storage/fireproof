@@ -84,7 +84,7 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
           fingerPrint: i.fingerPrint,
           key: await this.keybag.subtleKey(i.key),
           material: { key: base58btc.decode(i.key), keyStr: i.key },
-          default: i.default || false,
+          default: i.default ?? false,
         }),
       })),
       // [
@@ -279,7 +279,7 @@ export class InternalKeysByFingerprint implements KeysByFingerprint {
   }
 
   async get(fingerPrint?: string | Uint8Array): Promise<KeyWithFingerPrint | undefined> {
-    fingerPrint = coerceFingerPrint(this.keybag, fingerPrint) || "*";
+    fingerPrint =  await Promise.resolve(coerceFingerPrint(this.keybag, fingerPrint) ?? "*");
     const ret = this.lookup.get(fingerPrint);
     if (!ret) {
       this.keybag.logger

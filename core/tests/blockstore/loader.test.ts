@@ -43,8 +43,9 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
 
-  override async put(fp: FPBlock): Promise<void> {
+  override put(fp: FPBlock): Promise<void> {
     this.memblock.set(fp.cid.toString(), fp);
+    return Promise.resolve();
   }
 
   // transaction<M ext(fn: (t: CarTransaction) => Promise<MetaType>, opts?: { noLoader: boolean }): Promise<MetaType> {
@@ -104,7 +105,7 @@ describe("basic Loader simple", function () {
     const reader = await loader.loadCar(carGroup[0], loader.attachedStores.local());
     assert(isCarBlockItemReady(reader));
     expect(reader).toBeTruthy();
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();
@@ -189,7 +190,7 @@ describe("basic Loader with two commits", function () {
     const reader = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(0);
     expect(parsed.cars.length).toBe(1);
@@ -204,7 +205,7 @@ describe("basic Loader with two commits", function () {
     const reader = await loader.loadCar(compactCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(2);
     expect(parsed.cars.length).toBe(0);
@@ -213,7 +214,7 @@ describe("basic Loader with two commits", function () {
   });
 
   it("compact should erase old files", async () => {
-    const cs = await loader.attachedStores.local().active.car;
+    const cs = loader.attachedStores.local().active.car;
     await loader.commit(t, { head: [block2.cid] }, { compact: true });
     expect(loader.carLog.length).toBe(1);
     await loader.commit(t, { head: [block3.cid] }, { compact: false });
@@ -221,7 +222,7 @@ describe("basic Loader with two commits", function () {
     expect(await cs.load(carCid[0])).toBeTruthy();
     await loader.commit(t, { head: [block3.cid] }, { compact: true });
     expect(loader.carLog.length).toBe(1);
-    const e0 = await cs.load(carCid[0]).catch((e) => e);
+    const e0 = await cs.load(carCid[0]).catch((e: unknown) => e);
     expect(e0 instanceof Error).toBeTruthy();
     await loader.commit(t, { head: [block4.cid] }, { compact: false });
     expect(loader.carLog.length).toBe(2);
@@ -248,7 +249,7 @@ describe("basic Loader with index commits", function () {
   });
 
   beforeEach(async () => {
-    const name = "test-loader-index" + Math.random();
+    const name = `test-loader-index${String(Math.random())}`;
     await sthis.start();
     // t = new CarTransaction()
     ib = new EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
@@ -299,7 +300,7 @@ describe("basic Loader with index commits", function () {
     const reader = await ib.loader.loadCar(carCid![0], ib.loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
+    const parsed = parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();

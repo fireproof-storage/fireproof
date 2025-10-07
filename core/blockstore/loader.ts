@@ -563,7 +563,7 @@ export class Loader implements Loadable {
     if (isCarBlockItemStale(reader)) {
       this.logger.Warn().Str("cid", dbm.cars[0].toString()).Msg("stale loadCarHeaderFromMeta");
     } else if (isCarBlockItemReady(reader)) {
-      return await parseCarFile(reader, this.logger);
+      return parseCarFile(reader, this.logger);
     }
     return {
       cars: [],
@@ -791,7 +791,7 @@ export class Loader implements Loadable {
     // if (!reader) {
     //   throw this.logger.Error().Str("cid", carCid.toString()).Msg("missing car reader").AsError();
     // }
-    const header = await parseCarFile(reader, this.logger);
+    const header = parseCarFile(reader, this.logger);
     const compacts = header.compact;
     // let got: AnyBlock | undefined;
 
@@ -803,7 +803,7 @@ export class Loader implements Loadable {
     //       promises.push(getCarCid(cid));
     //     }
     //   }
-    const got = await Promise.allSettled(compacts.map((compact) => compact.map((cid) => this.loadCar(cid, store)).flat()));
+    const got = await Promise.allSettled(compacts.map((compact) => Promise.all(compact.map((cid) => this.loadCar(cid, store)))));
     got
       .filter((result) => result.status === "rejected")
       .forEach((result) => {

@@ -44,7 +44,7 @@ class TestConnection implements MsgRawConnection {
   }
 
   readonly bindFn = vi.fn();
-  bind<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgBase>(req: MsgBase, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     this.bindFn(req, opts);
     return new ReadableStream<MsgWithError<S>>({
       start: (ctl) => {
@@ -60,7 +60,7 @@ class TestConnection implements MsgRawConnection {
     });
   }
   readonly requestFn = vi.fn();
-  request<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
+  request<S extends MsgBase>(req: MsgBase, opts: RequestOpts): Promise<MsgWithError<S>> {
     this.requestFn(req, opts);
     // console.log("request", req);
     return Promise.resolve({
@@ -73,7 +73,7 @@ class TestConnection implements MsgRawConnection {
     } as S);
   }
   readonly sendFn = vi.fn();
-  send<S extends MsgBase, Q extends MsgBase>(msg: Q): Promise<MsgWithError<S>> {
+  send<S extends MsgBase>(msg: MsgBase): Promise<MsgWithError<S>> {
     this.sendFn(msg);
     // console.log("send", msg);
     return Promise.resolve({
@@ -118,16 +118,18 @@ it("queued-raw-connection", async () => {
     curl: "http://localhost:8080",
     msgerParams: msgP,
     openWSorHttp: {
-      openHttp: async function (): Promise<Result<MsgRawConnection>> {
-        return Result.Ok(
-          new MockHttpConnection(sthis, {
-            my,
-            remote: defaultGestalt(msgP, { id: "FP-Universal-Server" }),
-          }),
+      openHttp: function (): Promise<Result<MsgRawConnection>> {
+        return Promise.resolve(
+          Result.Ok(
+            new MockHttpConnection(sthis, {
+              my,
+              remote: defaultGestalt(msgP, { id: "FP-Universal-Server" }),
+            }),
+          ),
         );
       },
-      openWS: async function (): Promise<Result<MsgRawConnection>> {
-        return Result.Ok(realConn);
+      openWS: function (): Promise<Result<MsgRawConnection>> {
+        return Promise.resolve(Result.Ok(realConn));
       },
     },
   });
@@ -188,8 +190,8 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
     this.activeBinds = new Map();
   }
 
-  bind<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
-    super.bind(req, opts);
+  bind<S extends MsgBase>(req: MsgBase, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+    void super.bind(req, opts);
     // console.log("http-bind", req, opts);
     return new ReadableStream<MsgWithError<S>>({
       start: (ctl) => {
@@ -204,8 +206,8 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
       },
     });
   }
-  request<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
-    super.request(req, opts);
+  request<S extends MsgBase>(req: MsgBase, opts: RequestOpts): Promise<MsgWithError<S>> {
+    void super.request(req, opts);
     switch (true) {
       case MsgIsReqGestalt(req):
         // console.log("http-request-gestalt", req, opts);
@@ -221,8 +223,8 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
       },
     } as S);
   }
-  send<S extends MsgBase, Q extends MsgBase>(msg: Q): Promise<MsgWithError<S>> {
-    super.send(msg);
+  send<S extends MsgBase>(msg: MsgBase): Promise<MsgWithError<S>> {
+    void super.send(msg);
     // console.log("http-send", msg);
     return Promise.resolve({
       tid: msg.tid,
@@ -234,17 +236,17 @@ class MockHttpConnection extends TestConnection implements MsgRawConnection {
     } as S);
   }
   start(): Promise<Result<void>> {
-    super.start();
+    void super.start();
     // console.log("http-start");
     return Promise.resolve(Result.Ok(undefined));
   }
   close(o: MsgBase): Promise<Result<void>> {
     // console.log("http-close");
-    super.close(o);
+    void super.close(o);
     return Promise.resolve(Result.Ok(undefined));
   }
   onMsg(msg: OnMsgFn): UnReg {
-    super.onMsg(msg);
+    void super.onMsg(msg);
     // console.log("http-onMsg", msg);
     return () => {
       /* no-op */
@@ -265,8 +267,8 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
     this.exchangedGestalt = exGestalt;
     this.activeBinds = new Map();
   }
-  bind<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
-    super.bind(req, opts);
+  bind<S extends MsgBase>(req: MsgBase, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+    void super.bind(req, opts);
     // console.log("ws-bind", req, opts);
     const id = this.sthis.nextId().str;
     return new ReadableStream<MsgWithError<S>>({
@@ -283,15 +285,15 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
           },
           controller,
         });
-        this.send(req).catch((e) => {
+        this.send(req).catch((e: unknown) => {
           // eslint-disable-next-line no-console
           console.error("send-error", e);
         });
       },
     });
   }
-  request<S extends MsgBase, Q extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
-    super.request(req, opts);
+  request<S extends MsgBase>(req: MsgBase, opts: RequestOpts): Promise<MsgWithError<S>> {
+    void super.request(req, opts);
     if (!this.isReady) {
       return Promise.resolve({
         tid: req.tid,
@@ -321,8 +323,8 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
       },
     } as S);
   }
-  send<S extends MsgBase, Q extends MsgBase>(msg: Q): Promise<MsgWithError<S>> {
-    super.send(msg);
+  send<S extends MsgBase>(msg: MsgBase): Promise<MsgWithError<S>> {
+    void super.send(msg);
     // console.log("ws-send", msg);
     if (MsgIsReqChat(msg)) {
       const res = buildResChat(msg, msg.conn, `got[${msg.message}]`);
@@ -343,12 +345,12 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
     } as S);
   }
   start(): Promise<Result<void>> {
-    super.start();
+    void super.start();
     this.isReady = true;
     return Promise.resolve(Result.Ok(undefined));
   }
   close(o: MsgBase): Promise<Result<void>> {
-    super.close(o);
+    void super.close(o);
 
     for (const [_, bind] of this.activeBinds.entries()) {
       try {
@@ -363,7 +365,7 @@ class MockWSConnection extends TestConnection implements MsgRawConnection {
     return Promise.resolve(Result.Ok(undefined));
   }
   onMsg(msg: OnMsgFn): UnReg {
-    super.onMsg(msg);
+    void super.onMsg(msg);
     throw new Error("Method not implemented.");
   }
 }
@@ -374,15 +376,15 @@ describe("retry-connection", () => {
   beforeEach(async () => {
     const rMsc = await Msger.connect(sthis, "http://localhost:8080", {
       mowh: {
-        openHttp: async function (
+        openHttp: function (
           sthis: SuperThis,
           urls: URI[],
           msgP: MsgerParamsWithEnDe,
           exGestalt: ExchangedGestalt,
         ): Promise<Result<MsgRawConnection>> {
-          return Result.Ok(new MockHttpConnection(sthis, exGestalt));
+          return Promise.resolve(Result.Ok(new MockHttpConnection(sthis, exGestalt)));
         },
-        openWS: async function (
+        openWS: function (
           sthis: SuperThis,
           url: URI,
           msgP: MsgerParamsWithEnDe,
@@ -392,7 +394,7 @@ describe("retry-connection", () => {
           //   assert.fail("WS connection already created");
           // }
           wsMock = new MockWSConnection(sthis, exGestalt);
-          return Result.Ok(wsMock);
+          return Promise.resolve(Result.Ok(wsMock));
         },
       },
     });
@@ -422,7 +424,7 @@ describe("retry-connection", () => {
         auth: {
           type: "error",
         },
-      },
+      } as MsgBase,
       {
         waitFor: (msg) => {
           return msg.type === "resChat";
@@ -452,14 +454,14 @@ describe("retry-connection", () => {
 
     for (let i = 0; i < 3; i++) {
       await connected.send({
-        tid: "1234" + i,
+        tid: "1234" + i.toString(),
         type: "reqChat",
         version: "1.0",
-        message: `ping[${i}]`,
+        message: `ping[${i.toString()}]`,
         auth: {
           type: "error",
         },
-      });
+      } as MsgBase);
       wsMock.isReady = false; // trigger not-ready error
       if (i > 0) {
         const { done, value: msgl } = await reader.read();
@@ -486,9 +488,9 @@ describe("retry-connection", () => {
             type: "error",
           },
           conn: refConn,
-          message: "got[ping[" + i + "]]",
+          message: "got[ping[" + i.toString() + "]]",
           targets: undefined,
-          tid: "1234" + i,
+          tid: "1234" + i.toString(),
           type: "resChat",
           version: "FP-MSG-1.0",
         });
@@ -510,7 +512,7 @@ describe("retry-connection", () => {
     for (let i = 0; i < 3; i++) {
       const result = await connected.request(
         {
-          tid: "1234" + i,
+          tid: "1234" + i.toString(),
           type: "test",
           version: "1.0",
           auth: {
@@ -524,7 +526,7 @@ describe("retry-connection", () => {
         },
       );
       expect(result).toEqual({
-        tid: "1234" + i,
+        tid: "1234" + i.toString(),
         type: "test",
         version: "1.0",
         auth: {
@@ -538,7 +540,7 @@ describe("retry-connection", () => {
   it("send", async () => {
     for (let i = 0; i < 3; i++) {
       const result = await connected.send({
-        tid: "1234" + i,
+        tid: "1234" + i.toString(),
         type: "test",
         version: "1.0",
         auth: {
@@ -546,7 +548,7 @@ describe("retry-connection", () => {
         },
       });
       expect(result).toEqual({
-        tid: "1234" + i,
+        tid: "1234" + i.toString(),
         type: "test",
         version: "1.0",
         auth: {

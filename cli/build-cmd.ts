@@ -43,16 +43,16 @@ export async function getVersion(
   { xfs, xenv }: Partial<Mock> = {
     xfs: {
       existsSync: fs.existsSync,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      readFile: fs.readFile as any,
+      readFile: async (path: string, encoding: string) => {
+        const buffer = await fs.readFile(path);
+        return buffer.toString(encoding as BufferEncoding);
+      },
     },
     xenv: process.env as Record<string, string>,
   },
 ) {
   let top = await findUp("tsconfig.dist.json");
-  if (!top) {
-    top = process.cwd();
-  }
+  top ??= process.cwd();
   if (fpVersionFname && xfs) {
     const fpVersionFile = path.join(path.dirname(top), fpVersionFname);
     if (xfs.existsSync(fpVersionFile)) {
@@ -90,9 +90,6 @@ export class Version {
 }
 
 function patchDeps(dep: Record<string, string>, version: string) {
-  if (typeof dep !== "object" || !dep) {
-    return;
-  }
   for (const i of Object.keys(dep)) {
     const val = dep[i];
     if (val.startsWith("workspace:")) {
@@ -104,7 +101,7 @@ function patchDeps(dep: Record<string, string>, version: string) {
 
 export interface PackageJson {
   name: string;
-  private?: "true" | string | boolean;
+  private?: string | boolean;
   license: string;
   version: string;
   scripts: Record<string, string>;
@@ -118,8 +115,8 @@ export async function patchPackageJson(
   version: Version,
   changeScope?: string,
   mock: {
-    readJSON: typeof fs.readJson;
-  } = { readJSON: fs.readJson },
+    readJSON: (path: string) => Promise<PackageJson>;
+  } = { readJSON: fs.readJson as (path: string) => Promise<PackageJson> },
 ): Promise<{
   patchedPackageJson: PackageJson;
   originalPackageJson: PackageJson;
@@ -139,27 +136,27 @@ export async function patchPackageJson(
   patchedPackageJson.version = version.version;
   delete patchedPackageJson.scripts.pack;
   delete patchedPackageJson.scripts.publish;
-  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version.prefixedVersion);
-  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version.prefixedVersion);
+  patchDeps(patchedPackageJson.dependencies, version.prefixedVersion);
+  patchDeps(patchedPackageJson.devDependencies, version.prefixedVersion);
 
   return { patchedPackageJson, originalPackageJson };
 }
 
 async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
-  const tsconfig = await fs.readJSONSync(srcTsConfig);
+  const tsconfig = (await fs.readJSONSync(srcTsConfig)) as Record<string, unknown>;
   tsconfig.extends = [await findUp("tsconfig.dist.json")];
   tsconfig.compilerOptions = {
-    ...tsconfig.compilerOptions,
+    ...(tsconfig.compilerOptions as Record<string, unknown>),
     noEmit: false,
     outDir: "../npm/",
   };
-  tsconfig.include = tsconfig.include || [];
-  tsconfig.include.push("**/*");
-  tsconfig.exclude = tsconfig.exclude || [];
-  tsconfig.exclude.push("node_modules", "dist", ".git", ".vscode");
+  tsconfig.include = (tsconfig.include as string[] | undefined) ?? [];
+  (tsconfig.include as string[]).push("**/*");
+  tsconfig.exclude = (tsconfig.exclude as string[] | undefined) ?? [];
+  (tsconfig.exclude as string[]).push("node_modules", "dist", ".git", ".vscode");
 
   console.log("tsconfig", tsconfig);
-  await fs.writeJSONSync(dstTsConfig, tsconfig, { spaces: 2 });
+  fs.writeJSONSync(dstTsConfig, tsconfig, { spaces: 2 });
   // {
   // "extends": "../../tsconfig.json",
   // "compilerOptions": {
@@ -167,7 +164,7 @@ async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
   // }
 }
 function toDenoExports(exports: Record<string, string | Record<string, string>>) {
-  return Object.entries(exports ?? {}).reduce<Record<string, string>>(
+  return Object.entries(exports).reduce<Record<string, string>>(
     (acc, [k, v]) => {
       if (typeof v === "string") {
         acc[k] = v.replace(/\.(js|mjs|cjs)$/, ".ts").replace(/\.(jsx|mjsx|cjsx)$/, ".tsx");
@@ -191,21 +188,18 @@ function toDenoExports(exports: Record<string, string | Record<string, string>>)
 }
 
 function toDenoDeps(deps: Record<string, string>, version: string) {
-  return Object.entries(deps).reduce<Record<string, string>>(
-    (acc, [k, v]) => {
-      if (v.startsWith("workspace:")) {
-        acc[k] = `jsr:${k}@${version}`;
-        return acc;
-      }
-      if (k.startsWith("@adviser/cement")) {
-        acc[k] = `jsr:${k}@${v.replace("npm:", "")}`;
-        return acc;
-      }
-      acc[k] = `npm:${k}@${v.replace("npm:", "")}`;
+  return Object.entries(deps).reduce<Record<string, string>>((acc, [k, v]) => {
+    if (v.startsWith("workspace:")) {
+      acc[k] = `jsr:${k}@${version}`;
       return acc;
-    },
-    {},
-  );
+    }
+    if (k.startsWith("@adviser/cement")) {
+      acc[k] = `jsr:${k}@${v.replace("npm:", "")}`;
+      return acc;
+    }
+    acc[k] = `npm:${k}@${v.replace("npm:", "")}`;
+    return acc;
+  }, {});
 }
 interface JsrConfig {
   name: string;
@@ -227,16 +221,13 @@ interface JsrConfig {
 }
 
 function isPrivate(p: PackageJson) {
-  return (
-    p.private &&
-    ((typeof p.private === "boolean" && p.private) || (typeof p.private === "string" && p.private.toLocaleLowerCase() === "true"))
-  );
+  return p.private && (typeof p.private === "boolean" || (typeof p.private === "string" && p.private.toLowerCase() === "true"));
 }
 
-export async function buildJsrConf(
+export function buildJsrConf(
   pj: { originalPackageJson: PackageJson; patchedPackageJson: PackageJson },
   version: string,
-): Promise<Partial<JsrConfig>> {
+): Partial<JsrConfig> {
   if (isPrivate(pj.originalPackageJson)) {
     return {};
   }
@@ -464,7 +455,7 @@ export function buildCmd(sthis: SuperThis) {
       await fs.writeJSON("package.json", packageJson.patchedPackageJson, { spaces: 2 });
       // await $`pnpm version ${args.version}`;
 
-      fs.copy(".", "../npm", {
+      await fs.copy(".", "../npm", {
         filter: (src: string, _dst: string) => {
           if (src.endsWith(".ts") || src.endsWith(".tsx")) {
             return false;
@@ -480,7 +471,7 @@ export function buildCmd(sthis: SuperThis) {
       }
 
       if (args.publishJsr) {
-        const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
+        const jsrConf = buildJsrConf(packageJson, version.prefixedVersion);
         await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
         if (!isPrivate(packageJson.originalPackageJson)) {
           await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;

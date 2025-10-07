@@ -1,4 +1,4 @@
-import React, { FormEvent } from "react";
+import React from "react";
 
 interface TodoFormProps {
   value: string;
@@ -13,7 +13,7 @@ function TodoForm({ value, onChange, onSubmit }: TodoFormProps) {
   /**
    * Handle form submission
    */
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmit();
   };
@@ -21,7 +21,7 @@ function TodoForm({ value, onChange, onSubmit }: TodoFormProps) {
   /**
    * Handle Enter key press
    */
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       onSubmit();
@@ -33,8 +33,10 @@ function TodoForm({ value, onChange, onSubmit }: TodoFormProps) {
       <input
         type="text"
         value={value}
-        onChange={(e) => { onChange(e.target.value); }}
-        onKeyPress={handleKeyPress}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
+        onKeyDown={handleKeyPress}
         placeholder="What needs to be done?"
         autoFocus
       />

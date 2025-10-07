@@ -227,7 +227,7 @@ export class MetaByTenantLedgerSql {
       (row) =>
         ({
           ...row,
-          meta: JSON.parse(row.meta),
+          meta: JSON.parse(row.meta) as CRDTEntry,
           createdAt: new Date(row.createdAt),
         }) satisfies MetaByTenantLedgerRow,
     );

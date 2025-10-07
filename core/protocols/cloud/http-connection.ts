@@ -59,11 +59,11 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     this.msgP = msgP;
   }
 
-  send<S extends MsgBase, Q extends MsgBase>(_msg: Q): Promise<MsgWithError<S>> {
+  send<S extends MsgBase>(_msg: MsgBase): Promise<MsgWithError<S>> {
     throw new Error("Method not implemented.");
   }
 
-  async start(): Promise<Result<void>> {
+  start(): Promise<Result<void>> {
     // if (this._qsOpen.req) {
     //   const sOpen = await this.request(this._qsOpen.req, { waitFor: MsgIsResOpen });
     //   if (!MsgIsResOpen(sOpen)) {
@@ -71,17 +71,19 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     //   }
     //   this._qsOpen.res = sOpen;
     // }
-    return Result.Ok(undefined);
+    return Promise.resolve(Result.Ok(undefined));
   }
 
-  async close(): Promise<Result<void>> {
-    await Promise.all(Array.from(this.activeBinds.values()).map((state) => state.controller?.close()));
+  close(_o: MsgBase): Promise<Result<void>> {
+    Array.from(this.activeBinds.values()).forEach((state) => state.controller?.close());
     this.#onMsg.clear();
-    return Result.Ok(undefined);
+    return Promise.resolve(Result.Ok(undefined));
   }
 
   toMsg<S extends MsgBase>(msg: MsgWithError<S>): MsgWithError<S> {
-    this.#onMsg.forEach((fn) => { fn(msg); });
+    this.#onMsg.forEach((fn) => {
+      fn(msg);
+    });
     return msg;
   }
 
@@ -99,21 +101,23 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
           if (MsgIsError(msg)) {
             state.controller?.close();
           } else {
-            state.timeout = setTimeout(() => { this.#poll(state); }, state.bind.opts.pollInterval ?? 1000);
+            state.timeout = setTimeout(() => {
+              this.#poll(state);
+            }, state.bind.opts.pollInterval ?? 1000);
           }
         } catch (err) {
           state.controller?.error(err);
           state.controller?.close();
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         state.controller?.error(err);
         // state.controller?.close();
       });
   }
 
   readonly activeBinds = new Map<string, ActiveStream>();
-  bind<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgBase>(req: MsgBase, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     const state: ActiveStream = {
       id: this.sthis.nextId().str,
       bind: {
@@ -134,7 +138,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     });
   }
 
-  async request<Q extends MsgBase, S extends MsgBase>(req: Q, _opts: RequestOpts): Promise<MsgWithError<S>> {
+  async request<S extends MsgBase>(req: MsgBase, _opts: RequestOpts): Promise<MsgWithError<S>> {
     const headers = HttpHeader.from();
     headers.Set("Content-Type", this.msgP.mime);
     headers.Set("Accept", this.msgP.mime);
@@ -155,7 +159,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
         fetch(ensurePath(url.cleaned, "fp"), {
           method: "PUT",
           headers: headers.AsHeaderInit(),
-          body: rReqBody.Ok(),
+          body: rReqBody.Ok().slice().buffer,
         }),
       ),
     );
@@ -166,8 +170,8 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
     const res = rRes.Ok();
     if (!res.ok) {
       const data = new Uint8Array(await res.arrayBuffer());
-      const ret = await exception2Result(async () => this.msgP.ende.decode(data));
-      if (ret.isErr() || !MsgIsError(ret.Ok())) {
+      const ret = exception2Result(() => this.msgP.ende.decode(data));
+      if (ret.isErr() || !MsgIsError(ret.Ok() as MsgBase)) {
         return this.toMsg(
           buildErrorMsg(
             this,
@@ -183,16 +187,16 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
           ),
         );
       }
-      return this.toMsg(ret.Ok());
+      return this.toMsg(ret.Ok() as MsgWithError<S>);
     }
     const data = new Uint8Array(await res.arrayBuffer());
-    const ret = await exception2Result(async () => this.msgP.ende.decode(data));
+    const ret = exception2Result(() => this.msgP.ende.decode(data));
     if (ret.isErr()) {
       return this.toMsg(
         buildErrorMsg(this, req, this.logger.Error().Err(ret.Err()).Msg("decode error").AsError(), this.sthis.txt.decode(data)),
       );
     }
-    return this.toMsg(ret.Ok());
+    return this.toMsg(ret.Ok() as MsgWithError<S>);
   }
 
   // toOnMessage<T extends MsgBase>(msg: WithErrorMsg<T>): Result<WithErrorMsg<T>> {

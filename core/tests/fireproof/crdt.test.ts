@@ -452,7 +452,7 @@ describe("Loader with a committed transaction", function () {
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
@@ -509,7 +509,7 @@ describe("Loader with two committed transactions", function () {
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(1 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
@@ -563,7 +563,7 @@ describe("Loader with many committed transactions", function () {
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(7 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();

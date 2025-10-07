@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /// <reference types="@fireproof/core-types-base/prolly-trees.d.ts" />
 import type { Block } from "multiformats";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
@@ -82,13 +83,13 @@ export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyTyp
       mapCalled = true;
       if (typeof k === "undefined") return;
       indexEntries.push({
-        key: [charwise.encode(k) as K, key],
-        value: v || null,
+        key: [(charwise as { encode: (value: unknown) => unknown }).encode(k) as K, key],
+        value: v ?? null,
       });
     });
-    if (!mapCalled && typeof mapReturn !== "undefined") {
+    if (!mapCalled && mapReturn !== undefined) {
       indexEntries.push({
-        key: [charwise.encode(mapReturn) as K, key],
+        key: [(charwise as { encode: (value: unknown) => unknown }).encode(mapReturn) as K, key],
         value: null,
       });
     }
@@ -119,12 +120,12 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
       let returnRootBlock: Block | undefined = undefined;
       let returnNode: ProllyNode<K, T> | undefined = undefined;
 
-      for await (const node of (await DbIndex.create({
+      for (const node of (await DbIndex.create({
         get: makeProllyGetBlock(tblocks),
         list: indexEntries,
         ...opts,
       })) as ProllyNode<K, T>[]) {
-        const block = await node.block;
+        const block = await (node as { block: Promise<Block> }).block;
         await tblocks.put(await anyBlock2FPBlock(block));
         returnRootBlock = block;
         returnNode = node;
@@ -137,13 +138,17 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
     }
   }
   logger.Debug().Msg("pre bulk bulkIndex");
-  const { root, blocks: newBlocks } = await inIndex.root.bulk(indexEntries);
+  const result = await inIndex.root.bulk(indexEntries);
+  const { root, blocks: newBlocks } = result as { root?: unknown; blocks: unknown[] };
   if (root) {
     logger.Debug().Msg("pre root put bulkIndex");
-    for await (const block of newBlocks) {
-      await tblocks.put(await anyBlock2FPBlock(block));
+    for (const block of newBlocks) {
+      await tblocks.put(await anyBlock2FPBlock(block as AnyBlock));
     }
-    return { root, cid: (await root.block).cid };
+    return { root, cid: (await (root as { block: Promise<{ cid: AnyLink }> }).block).cid } as {
+      root: ProllyNode<K, T>;
+      cid: AnyLink;
+    };
   } else {
     logger.Debug().Msg("pre !root bulkIndex");
     return { root: undefined, cid: undefined };
@@ -180,7 +185,7 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
   }
   const rows = resp.result.map(({ key, ...row }) => {
     // First decode the key
-    const decodedKey = charwise.decode(key);
+    const decodedKey = (charwise as { decode: (value: string) => unknown }).decode(key as string);
 
     // Use a type-safe approach with Record to check for potentially missing properties
     // This handles the case where some query results use 'row' instead of 'value'
@@ -223,11 +228,14 @@ export async function applyQuery<T extends DocObject, K extends IndexKeyType, R 
 }
 
 export function encodeRange(range: [IndexKeyType, IndexKeyType]): [string, string] {
-  return [charwise.encode(range[0]), charwise.encode(range[1])];
+  return [
+    (charwise as { encode: (value: unknown) => string }).encode(range[0]),
+    (charwise as { encode: (value: unknown) => string }).encode(range[1]),
+  ];
 }
 
 export function encodeKey(key: DocFragment): string {
-  return charwise.encode(key) as string;
+  return (charwise as { encode: (value: unknown) => string }).encode(key);
 }
 
 // export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {

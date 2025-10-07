@@ -9,6 +9,6 @@ export function sysFileSystemFactory(uri: URI): Promise<SysFileSystem> {
     case rt.isDeno:
       return import("@fireproof/core-gateways-file-deno").then((m) => m.getSysFileSystem(uri));
     default:
-      throw new Error(`unsupported runtime:${rt}`);
+      throw new Error(`unsupported runtime: ${JSON.stringify(rt)}`);
   }
 }

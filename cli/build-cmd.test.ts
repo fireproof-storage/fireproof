@@ -2,7 +2,7 @@ import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson } from
 import { expect, it } from "vitest";
 
 const mock = {
-  readJSON: (): Promise<unknown> => {
+  readJSON: (): Promise<PackageJson> => {
     return Promise.resolve({
       name: "@fireproof/core-cli",
       version: "0.0.0",
@@ -24,6 +24,9 @@ const mock = {
       devDependencies: {
         "@fireproof/core-cli": "workspace:0.0.0",
         vitest: "^3.2.4",
+      },
+      exports: {
+        ".": "./index.js",
       },
     });
   },
@@ -50,8 +53,8 @@ it("should only use prefix version in dependencies", async () => {
 it("should only use prefix version in dependencies", async () => {
   const version = new Version("0.0.0-smoke", "^");
   const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
-  const originalPackageJson = (await mock.readJSON()) as PackageJson;
-  const jsrConf = await buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
+  const originalPackageJson = await mock.readJSON();
+  const jsrConf = buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
   expect(jsrConf.version).toBe("0.0.0-smoke");
   expect(jsrConf.imports).toHaveProperty("@fireproof/vendor", "jsr:@fireproof/vendor@^0.0.0-smoke");
 });

@@ -104,13 +104,18 @@ function App() {
         <button onClick={handleResetToken}>Reset Token</button>
       </div>
 
-      <TodoForm value={newTodoText} onChange={setNewTodoText} onSubmit={handleAddTodo} />
+      <TodoForm value={newTodoText} onChange={setNewTodoText} onSubmit={() => void handleAddTodo()} />
 
       {sortedTodos.length > 0 && (
         <TodoFilters currentFilter={filter} onFilterChange={setFilter} activeCount={activeCount} completedCount={completedCount} />
       )}
 
-      <TodoList todos={filteredTodos} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} filter={filter} />
+      <TodoList
+        todos={filteredTodos}
+        onToggle={(todo) => void handleToggleTodo(todo)}
+        onDelete={(todo) => void handleDeleteTodo(todo)}
+        filter={filter}
+      />
     </div>
   );
 }

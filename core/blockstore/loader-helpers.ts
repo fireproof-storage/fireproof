@@ -27,7 +27,7 @@ class FPBlockImpl implements FPBlock {
   readonly bytes: Uint8Array;
   readonly item: BlockItem;
 
-  static async fromBlockItem<T extends BlockItem>(item: T): Promise<FPBlock> {
+  static async fromBlockItem(item: BlockItem): Promise<FPBlock> {
     const block = await asyncBlockEncode({ value: item.value, hasher, codec: dagCodec });
     return new FPBlockImpl(block.cid, block.bytes, item);
   }
@@ -154,8 +154,8 @@ export async function carHeader2FPBlock<T>(fp: CarHeader<T>): Promise<FPBlock> {
   // return new FPBlockImpl(fp.cid, fp.bytes);
 }
 
-export async function parseCarFile<T>(reader: FPBlock<ReadyCarBlockItem>, logger: Logger): Promise<CarHeader<T>> {
-  const roots = await reader.item.value.car.roots;
+export function parseCarFile<T>(reader: FPBlock<ReadyCarBlockItem>, logger: Logger): CarHeader<T> {
+  const roots = reader.item.value.car.roots;
   const header = reader.item.value.car.blocks.find((i) => i.cid.equals(roots[0]));
   if (!header) throw logger.Error().Msg("missing header block").AsError();
   // const dec = await decode({ bytes: header.bytes, hasher, codec: dagCodec });

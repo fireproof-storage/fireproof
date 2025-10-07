@@ -8,7 +8,7 @@ export function testSuperThis() {
     env: {
       presetEnv: new Map<string, string>(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Object.entries({ ...(globalThis as any).FP_ENV, ...JSON.parse(process.env.FP_TEST_ENV || "{}") }),
+        Object.entries({ ...(globalThis as any).FP_ENV, ...JSON.parse(process.env.FP_TEST_ENV ?? "{}") }),
       ),
     },
   });

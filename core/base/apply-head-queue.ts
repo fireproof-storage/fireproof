@@ -35,7 +35,7 @@ export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFuncti
         const task = queue.shift();
         if (!task) continue;
 
-        await worker(task.newHead, task.prevHead, task.updates !== undefined).catch((e) => {
+        await worker(task.newHead, task.prevHead, task.updates !== undefined).catch((e: unknown) => {
           throw logger.Error().Err(e).Msg("int_applyHead worker error").AsError();
         });
         // console.timeEnd('int_applyHead worker')
@@ -45,7 +45,7 @@ export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFuncti
         }
         // Yield the updates if there are no tasks with updates left in the queue or the current task has updates
         if (!queue.some((t) => t.updates) || task.updates) {
-          const allTasksHaveUpdates = queue.every((task) => task.updates !== null);
+          const allTasksHaveUpdates = queue.every((task) => task.updates !== undefined);
           yield { updates: allUpdates, all: allTasksHaveUpdates };
           allUpdates.length = 0;
         }

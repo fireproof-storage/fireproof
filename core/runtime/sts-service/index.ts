@@ -26,7 +26,7 @@ export async function jwk2env(jwk: CryptoKey, sthis = ensureSuperThis()): Promis
 }
 
 export async function env2jwk(env: string, alg: string, sthis = ensureSuperThis()): Promise<CryptoKey> {
-  const inJWT = JSON.parse(sthis.txt.decode(base58btc.decode(env)));
+  const inJWT = JSON.parse(sthis.txt.decode(base58btc.decode(env))) as Record<string, unknown>;
   return importJWK(inJWT, alg, { extractable: true }) as Promise<CryptoKey>;
 }
 
@@ -56,9 +56,7 @@ export class SessionTokenService {
 
   static async createFromEnv(sthis: SuperThis, sp: SessionTokenServiceFromEnvParam = {}) {
     let envToken = sthis.env.get(sp.privateEnvKey ?? envKeyDefaults.SECRET);
-    if (!envToken) {
-      envToken = sthis.env.get(sp.publicEnvKey ?? envKeyDefaults.PUBLIC);
-    }
+    envToken ??= sthis.env.get(sp.publicEnvKey ?? envKeyDefaults.PUBLIC);
     if (!envToken) {
       throw new Error(
         `env not found for: ${sp.privateEnvKey ?? envKeyDefaults.SECRET} or ${sp.publicEnvKey ?? envKeyDefaults.PUBLIC}`,

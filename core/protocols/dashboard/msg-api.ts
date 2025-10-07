@@ -9,9 +9,9 @@ export class Api {
     this.apiUrl = apiUrl;
   }
 
-  async request<S, Q>(req: Q): Promise<Result<S>> {
+  async request<S>(req: unknown): Promise<Result<S>> {
     return exception2Result(async () => {
-      const res = await fetch(this.apiUrl.toString(), {
+      const res = await fetch(this.apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -23,12 +23,12 @@ export class Api {
         const json = await res.json();
         return json as S;
       }
-      throw new Error(`Request failed: ${res.status} ${res.statusText} ${this.apiUrl}`);
+      throw new Error(`Request failed: ${String(res.status)} ${res.statusText} ${this.apiUrl}`);
     });
   }
 
   async waitForToken(req: Omit<ReqTokenByResultId, "type">, logger: Logger): Promise<Result<ResTokenByResultId>> {
-    const rTokenByResultId = await this.request<ResTokenByResultId, ReqTokenByResultId>({
+    const rTokenByResultId = await this.request<ResTokenByResultId>({
       ...req,
       type: "reqTokenByResultId",
     } satisfies ReqTokenByResultId);

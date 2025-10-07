@@ -46,7 +46,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
     const ctx = await this._prepare(id);
     try {
       const p = await ctx.sysFS.readfile(ctx.fName);
-      const ki = JSON.parse(this.sthis.txt.decode(p));
+      const ki = JSON.parse(this.sthis.txt.decode(p)) as NonNullable<unknown>;
       return ki;
     } catch (e) {
       if (isNotFoundError(e)) {

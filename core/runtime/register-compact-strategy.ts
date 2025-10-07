@@ -20,8 +20,9 @@ export function getCompactStrategy(name = "fireproof"): Result<CompactStrategy> 
 
 export function getCompactStrategyThrow(name = "fireproof"): CompactStrategy {
   const key = name.toLowerCase();
-  if (!compactStrategyRegistry.has(key)) {
+  const strategy = compactStrategyRegistry.get(key);
+  if (!strategy) {
     throw new Error(`compactStrategy ${name} not found`);
   }
-  return compactStrategyRegistry.get(key)!;
+  return strategy;
 }
