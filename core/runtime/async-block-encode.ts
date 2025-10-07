@@ -28,17 +28,14 @@ export async function asyncBlockDecode<T, Code extends number, Alg extends numbe
   codec,
   hasher,
 }: AsyncDecodeInput<T, Code, Alg> | DecodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg>> {
-  if (bytes == null) throw new Error('Missing required argument "bytes"');
-  if (codec == null || hasher == null) throw new Error("Missing required argument: codec or hasher");
-
   // outer cbor
   const value = (await Promise.resolve(codec.decode(bytes))) as T;
   let toHash = bytes;
   if (codec.valueToHashBytes) {
-    toHash = (await Promise.resolve(codec.valueToHashBytes(value))) as ByteView<unknown>;
+    toHash = await Promise.resolve(codec.valueToHashBytes(value));
   }
   const hash = await hasher.digest(toHash);
-  const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
+  const cid = CID.create(1, codec.code, hash);
 
   return new mfBlock<T, Code, Alg, 1>({ value, bytes: toHash as ByteView<T>, cid });
 }
@@ -78,7 +75,6 @@ export async function asyncBlockEncode<T, Code extends number, Alg extends numbe
   hasher,
 }: AsyncEncodeInput<T, Code, Alg> | EncodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg>> {
   if (typeof value === "undefined") throw new Error('Missing required argument "value"');
-  if (codec == null || hasher == null) throw new Error("Missing required argument: codec or hasher");
 
   let bytes: ByteView<T>;
   let hash: MultihashDigest;
@@ -107,8 +103,6 @@ export async function asyncBlockCreate<T, Code extends number, Alg extends numbe
   hasher,
   codec,
 }: CreateInput<T, Code, Alg, V>): Promise<BlockView<T, Code, Alg, V>> {
-  if (bytes == null) throw new Error('Missing required argument "bytes"');
-  if (hasher == null) throw new Error('Missing required argument "hasher"');
   const value = await Promise.resolve(codec.decode(bytes));
   const hash = await hasher.digest(bytes);
   if (!binary.equals(cid.multihash.bytes, hash.bytes)) {
@@ -149,7 +143,7 @@ export async function asyncBlockCreateUnsafe<T, Code extends number, Alg extends
   value: maybeValue,
   codec,
 }: CreateUnsafeInput<T, Code, Alg, V>): Promise<BlockView<T, Code, Alg, V>> {
-  const value = await Promise.resolve(maybeValue !== undefined ? maybeValue : codec?.decode(bytes));
+  const value = await Promise.resolve(maybeValue ?? codec?.decode(bytes));
 
   if (value === undefined) throw new Error('Missing required argument, must either provide "value" or "codec"');
 

@@ -47,7 +47,7 @@ export function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id" /*link 
           {rows.map((fields) => (
             <tr
               key={fields._id}
-              onClick={() => handleRowClick(fields)}
+              onClick={() => { handleRowClick(fields); }}
               className="hover:bg-fp-bg-02 border-b border-fp-dec-00 cursor-pointer"
             >
               {headers.map((header: string) => (

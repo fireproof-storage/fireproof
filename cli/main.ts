@@ -1,6 +1,5 @@
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { run, subcommands } from "cmd-ts";
-
 import { dotenv } from "zx";
 import { buildCmd } from "./build-cmd.js";
 import { setDependenciesCmd, setScriptsCmd } from "./set-scripts-cmd.js";

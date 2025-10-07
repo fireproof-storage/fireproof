@@ -32,7 +32,7 @@ export function keyCmd(sthis: SuperThis) {
           {
             const key = await rt.sts.env2jwk(args.ourToJWK, "ES256", sthis).then((jwk) => jwk);
             // eslint-disable-next-line no-console
-            console.log(`${JSON.stringify(await exportJWK(key))}`);
+            console.log(JSON.stringify(await exportJWK(key)));
           }
           break;
         case args.generatePair:

@@ -38,7 +38,7 @@ describe("Fresh crdt", function () {
     crdt = new CRDTImpl(sthis, dbOpts);
     await crdt.ready();
   });
-  it("should have an empty head", async () => {
+  it("should have an empty head", () => {
     const head = crdt.clock.head;
     expect(head.length).toBe(0);
   });
@@ -85,11 +85,11 @@ describe("CRDT with one record", function () {
     crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
   });
-  it("should have a one-element head", async () => {
+  it("should have a one-element head", () => {
     const head = crdt.clock.head;
     expect(head.length).toBe(1);
   });
-  it("should return the head", async () => {
+  it("should return the head", () => {
     expect(firstPut.head.length).toBe(1);
   });
   it("return the record on get", async () => {
@@ -147,7 +147,7 @@ describe("CRDT with a multi-write", function () {
       { id: "king", value: { points: 10 } },
     ]);
   });
-  it("should have a one-element head", async () => {
+  it("should have a one-element head", () => {
     const head = crdt.clock.head;
     expect(head.length).toBe(1);
     expect(firstPut.head.length).toBe(1);
@@ -224,7 +224,7 @@ describe("CRDT with two multi-writes", function () {
       { id: "jack", value: { points: 10 } },
     ]);
   });
-  it("should have a one-element head", async () => {
+  it("should have a one-element head", () => {
     const head = crdt.clock.head;
     expect(head.length).toBe(1);
     expect(firstPut.head.length).toBe(1);
@@ -380,7 +380,7 @@ describe("CRDT with an index", function () {
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<CRDTTestType, number>(crdt, "points");
+    idx = index<CRDTTestType, number>(crdt, "points");
   });
   it("should query the data", async () => {
     const got = await idx.query({ range: [9, 12] });
@@ -389,7 +389,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("should register the index", async () => {
-    const rIdx = await index<CRDTTestType, number>(crdt, "points");
+    const rIdx = index<CRDTTestType, number>(crdt, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
     const got = await rIdx.query({ range: [9, 12] });
@@ -398,9 +398,9 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it.skip("creating a different index with same name should not work", async () => {
-    const e = await index(crdt, "points", (doc) => doc._id)
+    const e = (await index(crdt, "points", (doc) => doc._id)
       .query()
-      .catch((err) => err);
+      .catch((err: unknown) => err)) as Error;
     expect(e.message).toMatch(/cannot apply/);
   });
 });
@@ -452,7 +452,7 @@ describe("Loader with a committed transaction", function () {
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
@@ -509,7 +509,7 @@ describe("Loader with two committed transactions", function () {
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(1 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();
@@ -545,7 +545,7 @@ describe("Loader with many committed transactions", function () {
     loader = blockstore.loader as Loader;
     dones = [];
     for (let i = 0; i < count; i++) {
-      const did = await crdt.bulk([{ id: `apple${i}`, value: { foo: "bar" } }]);
+      const did = await crdt.bulk([{ id: `apple${i.toString()}`, value: { foo: "bar" } }]);
       dones.push(did);
     }
   });
@@ -563,7 +563,7 @@ describe("Loader with many committed transactions", function () {
     const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     assert(isCarBlockItemReady(reader));
-    const parsed = await parseCarFile<CRDTMeta>(reader, loader.logger);
+    const parsed = parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(7 + 1 /* genesis */);
     expect(parsed.meta).toBeTruthy();

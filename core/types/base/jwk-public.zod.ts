@@ -11,7 +11,7 @@ export const JWKPublicSchema = z
       .optional(),
     alg: z.string().optional(),
     kid: z.string().optional(),
-    x5u: z.string().url().optional(),
+    x5u: z.string().pipe(z.url()).optional(),
     x5c: z.array(z.string()).optional(),
     x5t: z.string().optional(),
     "x5t#S256": z.string().optional(),

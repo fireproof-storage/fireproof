@@ -1,4 +1,4 @@
-import { Database, DocWithId, fireproof, IndexRowsWithoutDocs, IndexRowsWithDocs } from "@fireproof/core";
+import { Database, fireproof, IndexRowsWithoutDocs, IndexRowsWithDocs } from "@fireproof/core";
 import { describe, beforeEach, afterEach, it, expect, assertType } from "vitest";
 
 interface TestDoc {
@@ -73,28 +73,28 @@ describe("query return value consistency", function () {
     // Verify all returned docs are active
     result.docs.forEach((doc) => {
       // Since we know these are TestDoc documents
-      expect((doc as DocWithId<TestDoc>).active).toBe(true);
+      expect((doc).active).toBe(true);
     });
   });
 
   it("query should handle types of includeDocs", async () => {
     const resultQWithoutDocs = await db.query<TestDoc, boolean>((doc) => doc.active, { includeDocs: false });
     assertType<IndexRowsWithoutDocs<TestDoc, boolean, TestDoc>>(resultQWithoutDocs);
-    expect((resultQWithoutDocs as IndexRowsWithDocs<TestDoc, boolean>).docs).toBeFalsy();
+    expect((resultQWithoutDocs).docs).toBeFalsy();
 
     const resultQWithDocs = await db.query<TestDoc, boolean>((doc) => doc.active, { includeDocs: true });
     assertType<IndexRowsWithDocs<TestDoc, boolean, TestDoc>>(resultQWithDocs);
-    expect((resultQWithDocs as IndexRowsWithDocs<TestDoc, boolean>).docs).toBeTruthy();
+    expect((resultQWithDocs).docs).toBeTruthy();
     expect(resultQWithDocs.docs.length).toBe(3);
 
     const resultQWithoutParam = await db.query<TestDoc, boolean>((doc) => doc.active);
     assertType<IndexRowsWithDocs<TestDoc, boolean, TestDoc>>(resultQWithoutParam);
-    expect((resultQWithoutParam as IndexRowsWithDocs<TestDoc, boolean>).docs).toBeTruthy();
+    expect((resultQWithoutParam).docs).toBeTruthy();
     expect(resultQWithoutParam.docs.length).toBe(3);
 
     const resultQWithDocs2 = await db.query<TestDoc, boolean>((doc) => doc.active, { limit: 1000 });
     assertType<IndexRowsWithDocs<TestDoc, boolean, TestDoc>>(resultQWithDocs2);
-    expect((resultQWithDocs2 as IndexRowsWithDocs<TestDoc, boolean>).docs).toBeTruthy();
+    expect((resultQWithDocs2).docs).toBeTruthy();
     expect(resultQWithDocs2.docs.length).toBe(3);
 
     // const resultQWithEmptyObject = await db.query<TestDoc, boolean>((doc) => doc.active, {})
@@ -119,11 +119,11 @@ describe("query return value consistency", function () {
 
     // Verify all returned docs have active set to false
     result.docs.forEach((doc) => {
-      expect((doc as DocWithId<TestDoc>).active).toBe(false);
+      expect((doc).active).toBe(false);
     });
 
     // Make sure no documents with active: true are included
-    const activeTrue = result.docs.filter((doc) => (doc as DocWithId<TestDoc>).active === true);
+    const activeTrue = result.docs.filter((doc) => (doc).active);
     expect(activeTrue.length).toBe(0); // No active: true docs should be included
 
     // Now run a query with key: true for comparison
@@ -137,7 +137,7 @@ describe("query return value consistency", function () {
 
     // All returned docs have active set to true
     trueResult.docs.forEach((doc) => {
-      expect((doc as DocWithId<TestDoc>).active).toBe(true);
+      expect((doc).active).toBe(true);
     });
   });
 });

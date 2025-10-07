@@ -30,10 +30,8 @@ async function prepare(packages: PackageOptions[], { buildBase }: CommandArgs) {
         await $`cd ${buildBase} && pnpm install -f patched/${name}/*.tgz`;
       }),
   );
-  for (const { name: pkg, type } of packages as NamedOptions[]) {
-    if (type === "npm") {
-      await $`cd ${buildBase} && pnpm install ${pkg}`;
-    }
+  for (const { name: pkg } of packages as NamedOptions[]) {
+    await $`cd ${buildBase} && pnpm install ${pkg}`;
     await $`cd ${buildBase} && rm -rf src/${pkg}`;
     await $`cd ${buildBase} && mkdir -p src/${pkg}`;
     await $`cd ${buildBase} && rsync -vaxH node_modules/${pkg}/ src/${pkg}/`;
@@ -53,7 +51,7 @@ async function prepare(packages: PackageOptions[], { buildBase }: CommandArgs) {
 
 function patchVersion(packageJson: Record<string, unknown>) {
   let version = "refs/tags/v0.0.0-smoke";
-  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
+  if (process.env.GITHUB_REF?.startsWith("refs/tags/v")) {
     version = process.env.GITHUB_REF;
   }
   version = version.split("/").slice(-1)[0].replace(/^v/, "");
@@ -75,19 +73,16 @@ function pluginExports(name: string, exports: Exports, srcDir: string, buildBase
   result[`./${name}`] = nested;
   console.log(">>>>>=", name, srcDir);
   // !exports && console.log(">>>>>=", name, srcDir)
-  for (const [key, value] of Object.entries(exports || {})) {
+  for (const [key, value] of Object.entries(exports)) {
     // const pluggedKey = `./${path.join(name, key)}`;
 
     if (typeof value === "string") {
       nested[key] = `./${path.join(path.relative(buildBase, srcDir), value)}`;
     } else {
-      nested[key] = Object.entries(value).reduce(
-        (acc, [k, v]) => {
-          acc[k] = `./${path.join(path.relative(buildBase, srcDir), v as string)}`;
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
+      nested[key] = Object.entries(value).reduce<Record<string, string>>((acc, [k, v]) => {
+        acc[k] = `./${path.join(path.relative(buildBase, srcDir), v as string)}`;
+        return acc;
+      }, {});
     }
   }
   return result;
@@ -172,24 +167,21 @@ async function main() {
         await prepare(packages, args);
       }
       await fs.mkdir(path.dirname(args.buildPackageJson), { recursive: true });
-      const packageJson = JSON.parse(await fs.readFile(args.srcPackageJson, "utf8"));
-      patchVersion(packageJson);
+      const packageJson = JSON.parse(await fs.readFile(args.srcPackageJson, "utf8")) as PackageJson;
+      patchVersion(packageJson as unknown as Record<string, unknown>);
       // await $`pwd ; find "dist/src/@ipld/dag-json" -type f -print`
       for (const packageFile of packages.map((p) => `dist/src/${p.name}/package.json`)) {
-        const mPackageJson = JSON.parse(await fs.readFile(packageFile, "utf8"));
+        const mPackageJson = JSON.parse(await fs.readFile(packageFile, "utf8")) as PackageJson;
         await fs.unlink(packageFile);
         mergePackageJson(packageJson, mPackageJson, path.dirname(packageFile), args);
       }
       // filter our own packages
-      packageJson.dependencies = Object.entries(packageJson.dependencies).reduce(
-        (acc, [k]) => {
-          if (!packages.find((p) => p.name === k)) {
-            acc[k] = packageJson.dependencies[k];
-          }
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
+      packageJson.dependencies = Object.entries(packageJson.dependencies).reduce<Record<string, string>>((acc, [k]) => {
+        if (!packages.find((p) => p.name === k)) {
+          acc[k] = packageJson.dependencies[k];
+        }
+        return acc;
+      }, {});
       await fs.writeFile(args.buildPackageJson, JSON.stringify(packageJson, null, 2));
       const projectRoot = path.resolve(path.dirname(args.srcPackageJson));
       const gitignoreSrc = path.resolve(projectRoot, ".gitignore");
@@ -201,7 +193,7 @@ async function main() {
   await run(cmd, process.argv.slice(2));
 }
 
-main().catch((a) => {
+main().catch((a: unknown) => {
   console.error(a);
   process.exit(1);
 });

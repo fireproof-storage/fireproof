@@ -64,7 +64,7 @@ export class InternalKeyWithFingerPrint implements KeyWithFingerPrint {
   readonly default: boolean;
   readonly fingerPrint: string;
   readonly key: CTCryptoKey;
-  #material: KeyMaterial;
+  readonly #material: KeyMaterial;
 
   constructor(opt: InternalKeyWithFingerPrintOpts) {
     this.fingerPrint = opt.fingerPrint;
@@ -84,11 +84,11 @@ export class InternalKeyWithFingerPrint implements KeyWithFingerPrint {
     throw new Error("Key is not extractable");
   }
 
-  async asKeysItem(): Promise<KeysItem> {
-    return {
+  asKeysItem(): Promise<KeysItem> {
+    return Promise.resolve({
       default: this.default,
       fingerPrint: this.fingerPrint,
       key: this.#material.keyStr,
-    };
+    });
   }
 }

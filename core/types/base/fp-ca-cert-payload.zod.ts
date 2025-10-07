@@ -9,8 +9,8 @@ const CertificateSchema = z.object({
   subject: SubjectSchema,
   issuer: SubjectSchema,
   validity: z.object({
-    notBefore: z.string().datetime(),
-    notAfter: z.string().datetime(),
+    notBefore: z.string().pipe(z.iso.datetime()),
+    notAfter: z.string().pipe(z.iso.datetime()),
   }),
   subjectPublicKeyInfo: JWKPublicSchema,
   signatureAlgorithm: z.literal("ES256"),

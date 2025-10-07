@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { runtimeFn, URI } from "@adviser/cement";
 import { getFileName } from "@fireproof/core-gateways-base";
 import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter } from "@fireproof/core-runtime";
@@ -124,8 +125,8 @@ describe("utils", () => {
 
 describe("runtime", () => {
   it("runtime", () => {
-    const isDeno = !!(typeof process === "object" && process.versions?.deno);
-    const isNode = !isDeno && !!(typeof process === "object" && process.versions?.node);
+    const isDeno = !!(typeof process === "object" && process.versions.deno);
+    const isNode = !isDeno && !!(typeof process === "object" && process.versions.node);
     expect(runtimeFn()).toEqual({
       isBrowser: !(isNode || isDeno),
       isCFWorker: false,

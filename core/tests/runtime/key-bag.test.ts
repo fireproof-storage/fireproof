@@ -10,7 +10,6 @@ import {
   KeyedV2StorageKeyItem,
   KeyedV2StorageKeyItemSchema,
   KeysByFingerprint,
-  KeyWithFingerPrint,
 } from "@fireproof/core-types-base";
 import { isKeyUpsertResultModified } from "@fireproof/core-types-blockstore";
 import { UnsecuredJWT } from "jose";
@@ -48,7 +47,10 @@ async function keyExtracted(
 }
 
 async function calculateFingerprint(rKbf: Result<KeysByFingerprint>, kb: KeyBagIf): Promise<string> {
-  const item = (await rKbf.Ok().get()) as KeyWithFingerPrint;
+  const item = await rKbf.Ok().get();
+  if (!item) {
+    throw new Error("Item not found");
+  }
   const v2Item = await item.asKeysItem();
   const keyBytes = base58btc.decode(v2Item.key);
   const hash = await kb.rt.crypto.digestSHA256(keyBytes);
@@ -293,7 +295,7 @@ describe("KeyBag", () => {
         .then((i) => KeyedV2StorageKeyItemSchema.parse(i).item),
     ).toEqual({
       keys: {
-        [kfp1?.fingerPrint as string]: {
+        [kfp1?.fingerPrint ?? ""]: {
           default: true,
           fingerPrint: kfp1?.fingerPrint,
           key: kfp1?.key,
@@ -313,7 +315,7 @@ describe("KeyBag", () => {
       url: "memory://./dist/tests/?extractKey=_deprecated_internal_api",
     });
 
-    const name = "default-key" + Math.random();
+    const name = "default-key" + Math.random().toString();
     const rMyKey = await kb.getNamedKey(name);
 
     for (let i = 0; i < 10; ++i) {
@@ -321,7 +323,7 @@ describe("KeyBag", () => {
     }
   });
 
-  describe("test device id", async () => {
+  describe("test device id", () => {
     const sthis = ensureSuperThis();
     let kb: KeyBagIf;
     let key: JWKPrivate;
@@ -403,9 +405,9 @@ describe("KeyBag", () => {
       expect(rSet.deviceId.Unwrap()).toEqual({
         kty: "EC",
         crv: "P-256",
-        d: expect.any(String),
-        x: expect.any(String),
-        y: expect.any(String),
+        d: expect.any(String) as string,
+        x: expect.any(String) as string,
+        y: expect.any(String) as string,
       });
       expect(rSet.cert.IsSome()).toBeTruthy();
       expect(rSet.cert.Unwrap()).toEqual(fakeCert);
@@ -414,9 +416,9 @@ describe("KeyBag", () => {
       expect(rSet.deviceId.Unwrap()).toEqual({
         kty: "EC",
         crv: "P-256",
-        d: expect.any(String),
-        x: expect.any(String),
-        y: expect.any(String),
+        d: expect.any(String) as string,
+        x: expect.any(String) as string,
+        y: expect.any(String) as string,
       });
       expect(rGet.cert.IsNone()).toBeFalsy();
       expect(rGet.cert.Unwrap()).toEqual(fakeCert);
@@ -470,8 +472,8 @@ describe("KeyBag", () => {
           iss: "fpcloud",
           aud: "fpcloud-app",
           sub: "Test",
-          iat: expect.any(Number),
-          exp: expect.any(Number),
+          iat: expect.any(Number) as number,
+          exp: expect.any(Number) as number,
         },
       } satisfies JWTResult);
     });
@@ -479,8 +481,8 @@ describe("KeyBag", () => {
 });
 
 function resetDefault(keys: KeyedV2StorageKeyItem["item"]["keys"]) {
-  return Array.from(Object.values(keys)).reduce(
+  return Array.from(Object.values(keys)).reduce<KeyedV2StorageKeyItem["item"]["keys"]>(
     (acc, i) => ({ ...acc, [i.fingerPrint]: { ...i, default: false } }),
-    {} as KeyedV2StorageKeyItem["item"]["keys"],
+    {},
   );
 }

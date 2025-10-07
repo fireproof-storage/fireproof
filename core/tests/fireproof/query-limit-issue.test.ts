@@ -11,7 +11,7 @@ describe("query limit handling", () => {
   let db: Database;
 
   beforeEach(async () => {
-    db = await fireproof("test-query-limit");
+    db = fireproof("test-query-limit");
 
     // Create multiple documents with different completed values and priorities
     await db.put({ _id: "task1", task: "Task 1", completed: true, priority: 1 });
@@ -106,7 +106,7 @@ describe("query limit handling", () => {
   it("demonstrates the limit+1 issue with the 'keys' parameter", async () => {
     // Create a controlled test case with exact document counts
     await db.destroy();
-    db = await fireproof("test-exact-limit");
+    db = fireproof("test-exact-limit");
 
     // Create exactly 2 documents with completed=true and 2 with completed=false
     await db.put({ _id: "doc1", task: "Doc 1", completed: true });

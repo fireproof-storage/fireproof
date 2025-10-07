@@ -63,9 +63,7 @@ async function toV2KeysItem(ctx: CoerceCtx, ki: Partial<V1StorageKeyItem | V2Sto
       result.keys[i[1].fingerPrint] = i[1];
       ctx.logger.Warn().Str("name", ki.name).Msg("fingerPrint mismatch fixed");
     }
-    if (defKI === undefined) {
-      defKI = i[1];
-    }
+    defKI ??= i[1];
     if (!foundDefKI && i[1].default) {
       defKI = i[1];
       foundDefKI = true;

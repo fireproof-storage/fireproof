@@ -199,7 +199,7 @@ describe("Hash functions", () => {
     it("should handle objects with many properties", () => {
       const largeObj: Record<string, unknown> = {};
       for (let i = 0; i < 100; i++) {
-        largeObj[`prop${i}`] = `value${i}`;
+        largeObj[`prop${i.toString()}`] = `value${i.toString()}`;
       }
       const result = hashObjectSync(largeObj);
       expect(result).toEqual(expect.any(String));

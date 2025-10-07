@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/non-nullable-type-assertion-style */
 import { toSortedObject } from "@adviser/cement/utils";
 import { Base64EndeCoder } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
@@ -47,19 +48,19 @@ export class Certor {
   }
 
   async asSHA1() {
-    this.#uint8Cert ||= this.base64.decodeUint8(this.asBase64());
+    this.#uint8Cert ??= this.base64.decodeUint8(this.asBase64());
     const val = await sha1.digest(this.#uint8Cert);
     return base58btc.encode(val.bytes);
   }
 
   async asSHA256() {
-    this.#uint8Cert ||= this.base64.decodeUint8(this.asBase64());
+    this.#uint8Cert ??= this.base64.decodeUint8(this.asBase64());
     const val = await sha256.digest(this.#uint8Cert);
     return base58btc.encode(val.bytes);
   }
 
   asBase64() {
-    this.#strCert ||= this.base64.encode(JSON.stringify(toSortedObject(this.#cert)));
+    this.#strCert ??= this.base64.encode(JSON.stringify(toSortedObject(this.#cert)));
     return this.#strCert;
   }
 }

@@ -10,6 +10,7 @@ import {
   DeviceIdVerifyMsg,
 } from "@fireproof/core-device-id";
 import {
+  Certificate,
   CertificatePayload,
   CertificatePayloadSchema,
   Extensions,
@@ -45,8 +46,8 @@ describe("DeviceIdKey", () => {
     expect(await key.publicKey()).toEqual({
       crv: "P-256",
       kty: "EC",
-      x: expect.any(String),
-      y: expect.any(String),
+      x: expect.any(String) as string,
+      y: expect.any(String) as string,
     });
   });
 });
@@ -91,9 +92,6 @@ describe("DeviceIdCSR and DeviceIdValidator integration", () => {
     expect(validation.payload).toBeDefined();
     expect(validation.publicKey).toBeDefined();
 
-    if (!validation.payload) {
-      throw new Error("No payload");
-    }
     // Verify payload structure
     const payload = validation.payload;
     expect(payload.sub).toBe(subject.commonName);
@@ -157,7 +155,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     // Mock CA actions
     const mockActions = {
-      generateSerialNumber: async () => crypto.randomUUID(),
+      generateSerialNumber: async () => Promise.resolve(crypto.randomUUID()),
     };
 
     // Create CA
@@ -224,8 +222,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
     expect(certPayload.certificate).toBeDefined();
 
     // Verify certificate extensions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cert = certPayload.certificate as any;
+    const cert = certPayload.certificate as Certificate;
     expect(cert.subject).toEqual(subject);
     expect(cert.issuer).toEqual(caSubject);
     expect(cert.subjectPublicKeyInfo).toEqual(certificate.publicKey);
@@ -243,7 +240,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
     const caKey = await DeviceIdKey.create();
     const caSubject = { commonName: "Test CA" };
     const mockActions = {
-      generateSerialNumber: async () => crypto.randomUUID(),
+      generateSerialNumber: async () => Promise.resolve(crypto.randomUUID()),
     };
 
     const ca = new DeviceIdCA({
@@ -283,7 +280,7 @@ describe("DeviceIdSignMsg", () => {
   } satisfies JWTPayload;
 
   const mockActions = {
-    generateSerialNumber: async () => crypto.randomUUID(),
+    generateSerialNumber: async () => Promise.resolve(crypto.randomUUID()),
   };
   beforeEach(async () => {
     // Setup base64 encoder

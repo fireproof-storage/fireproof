@@ -9,7 +9,7 @@ export async function setup(project: TestProject) {
   cd(root);
   const id = Math.random();
   const gt = globalThis as { fpMinioSetupOnce?: ResolveOnce<void> };
-  gt.fpMinioSetupOnce = gt.fpMinioSetupOnce || new ResolveOnce<void>();
+  gt.fpMinioSetupOnce = gt.fpMinioSetupOnce ?? new ResolveOnce<void>();
   await gt.fpMinioSetupOnce.once(async () => {
     // eslint-disable-next-line no-console
     console.log("minio spinning up", id);

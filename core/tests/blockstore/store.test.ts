@@ -95,7 +95,7 @@ describe("CarStore with a saved car", function () {
 
   it("should remove a car", async () => {
     await store.remove(car.cid);
-    const { e: error } = (await store.load(car.cid).catch((e: Error) => ({ e }))) as { e: NotFoundError };
+    const { e: error } = (await store.load(car.cid).catch((e: unknown) => ({ e }))) as { e: NotFoundError };
     expect(error).toBeTruthy();
   });
 });
@@ -171,7 +171,8 @@ describe("MetaStore with a saved header", function () {
     const bytes = await store.realGateway.getPlain({ loader }, store.url(), "main");
     const data = sthis.txt.decode(bytes.Ok());
     expect(data).toMatch(/parents/);
-    const header = JSON.parse(data)[0];
+    const parsed = JSON.parse(data) as unknown[];
+    const header = parsed[0] as { parents: unknown };
     expect(header).toBeDefined();
     expect(header.parents).toBeDefined();
     // const [blockMeta] = await store.handleByteHeads(bytes);
@@ -187,13 +188,11 @@ describe("MetaStore with a saved header", function () {
 
   it("should load a header", async () => {
     const metaStream = store.stream().getReader();
-    while (true) {
-      const { done, value: cars } = await metaStream.read();
-      if (done) break;
-      // expect(loaded).toBeTruthy();
-      expect(cars).toBeTruthy();
+    const { value: cars } = await metaStream.read();
+    // expect(loaded).toBeTruthy();
+    expect(cars).toBeTruthy();
+    if (cars) {
       expect(cars.map((i) => i.cars.map((i) => i.toString())).flat(2)).toEqual([cid.toString()]);
-      break;
     }
   });
 });

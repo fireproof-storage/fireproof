@@ -52,7 +52,7 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
     // Create File object with the original file metadata
     return new File([data], "file", {
       type: meta.type,
-      lastModified: meta.lastModified || 0,
+      lastModified: meta.lastModified ?? 0,
     });
   });
 }

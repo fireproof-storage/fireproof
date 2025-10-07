@@ -15,7 +15,7 @@ export function createUseChanges(database: Database) {
 
     const refreshRows = useCallback(async () => {
       const res = await database.changes<T>(since, opts);
-      setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
+      setResult({ ...res, docs: res.rows.map((r) => r.value) });
     }, [since, queryString]);
 
     useEffect(() => {

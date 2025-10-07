@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
 import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
@@ -213,7 +214,7 @@ type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUse
 };
 
 function nameFromAuth(name: string | undefined, auth: ActiveUserWithUserId): string {
-  return name ?? `${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}`;
+  return name ?? auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId;
 }
 
 function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
@@ -234,7 +235,7 @@ export class FPApiSQL implements FPApiInterface {
     // console.log("_authVerify-1", req);
     const tokenApi = this.tokenApi[req.auth.type];
     // console.log("_authVerify-2", req);
-    if (!tokenApi) {
+    if (!(req.auth.type in this.tokenApi)) {
       return Result.Err(`invalid auth type:[${req.auth.type}]`);
     }
     const rAuth = await tokenApi.verify(req.auth.token);
@@ -832,7 +833,7 @@ export class FPApiSQL implements FPApiInterface {
                   .set({
                     invitedUserId: auth.user?.userId,
                     status: "accepted",
-                    statusReason: `accepted: ${auth.user?.userId}`,
+                    statusReason: `accepted: ${auth.user?.userId ?? "unknown"}`,
                     updatedAt: new Date().toISOString(),
                   })
                   .where(eq(sqlInviteTickets.inviteId, invite.inviteId))
@@ -1144,10 +1145,12 @@ export class FPApiSQL implements FPApiInterface {
     }
     if (req.query) {
       condition = and(
-        queryCondition(req.query, {
-          ...sqlInviteTickets,
-          userId: sqlInviteTickets.invitedUserId,
-        }),
+        queryCondition(
+          req.query,
+          Object.assign({}, sqlInviteTickets, {
+            userId: sqlInviteTickets.invitedUserId,
+          }),
+        ),
         condition,
       );
     }
@@ -1213,14 +1216,16 @@ export class FPApiSQL implements FPApiInterface {
             sqlInviteTickets.invitedTenantId,
             roles
               .filter((i) => i.role === "admin" && i.tenantId)
-              .map((i) => i.tenantId as string)
+              .map((i) => i.tenantId)
+              .filter((id): id is string => id !== undefined)
               .flat(2),
           ),
           inArray(
             sqlInviteTickets.invitedLedgerId,
             roles
               .filter((i) => i.role === "admin" && i.ledgerId)
-              .map((i) => i.ledgerId as string)
+              .map((i) => i.ledgerId)
+              .filter((id): id is string => id !== undefined)
               .flat(2),
           ),
         ),
@@ -1720,7 +1725,7 @@ export class FPApiSQL implements FPApiInterface {
     }
     // const now = new Date().toISOString();
     let condition = and(eq(sqlLedgerUsers.userId, auth.user.userId));
-    if (req.tenantIds && req.tenantIds.length) {
+    if (req.tenantIds?.length) {
       condition = and(condition, inArray(sqlLedgers.tenantId, req.tenantIds));
     }
     const rows = await this.db

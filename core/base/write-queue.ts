@@ -64,14 +64,14 @@ class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> impl
       this.logger.Error().Err(error).Msg("Error processing tasks");
     } finally {
       this.isProcessing = false;
-      setTimeout(() => this.process(), 0);
+      setTimeout(() => void this.process(), 0);
     }
   }
 
   bulk(tasks: DocUpdate<S>[]): Promise<MetaType> {
     return new Promise<MetaType>((resolve, reject) => {
       this.queue.push({ tasks, resolve, reject });
-      this.process();
+      void this.process();
     });
   }
   push(task: DocUpdate<S>): Promise<MetaType> {

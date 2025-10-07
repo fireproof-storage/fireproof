@@ -148,7 +148,7 @@ describe("InterceptorGateway", () => {
     // await sleep(1000);
     expect(gwi.fn.mock.calls.length).toBe(54);
     // might be a stupid test
-    expect(gwi.fn.mock.calls.map((i) => i[0]).sort() /* not ok there are some operation */).toEqual(
+    expect(gwi.fn.mock.calls.map((i: unknown[]) => i[0] as string).sort() /* not ok there are some operation */).toEqual(
       [
         "start",
         "start",
@@ -217,6 +217,7 @@ describe("InterceptorGateway", () => {
       defaultURI: () => {
         return BuildURI.from("uriTest://").pathname("ram").URI();
       },
+      // eslint-disable-next-line @typescript-eslint/require-await
       gateway: async (sthis) => {
         return new URITrackGateway(sthis, new Map<string, Uint8Array>(), gwUris);
       },
@@ -225,17 +226,12 @@ describe("InterceptorGateway", () => {
       storeUrls: {
         base: "uriTest://inspector-gateway",
       },
-      gatewayInterceptor: URIInterceptor.withMapper(async (uri: URI) =>
-        uri
-          .build()
-          .setParam("itis", "" + ++callCount)
-          .URI(),
-      ),
+      gatewayInterceptor: URIInterceptor.withMapper((uri: URI) => uri.build().setParam("itis", String(++callCount)).URI()),
     });
     await Promise.all(
       Array(5)
         .fill(0)
-        .map((_, i) => db.put({ _id: "foo" + i, foo: i })),
+        .map((_, i) => db.put({ _id: `foo${String(i)}`, foo: i })),
     );
     expect((await db.allDocs<{ foo: number }>()).rows.map((i) => i.value.foo)).toEqual(
       Array(5)
@@ -252,7 +248,7 @@ describe("InterceptorGateway", () => {
     ).toEqual(
       Array(gwUris.size)
         .fill(1)
-        .map((_, i) => "" + (i + 1)),
+        .map((_, i) => String(i + 1)),
     );
     unreg();
   });

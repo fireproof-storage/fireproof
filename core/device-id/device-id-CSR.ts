@@ -24,9 +24,9 @@ export class DeviceIdCSR {
         subject: subject,
         publicKey: await this.#key.publicKey(),
         extensions: {
-          subjectAltName: extensions.subjectAltName || [],
-          keyUsage: extensions.keyUsage || ["digitalSignature", "keyEncipherment"],
-          extendedKeyUsage: extensions.extendedKeyUsage || ["serverAuth"],
+          subjectAltName: extensions.subjectAltName ?? [],
+          keyUsage: extensions.keyUsage ?? ["digitalSignature", "keyEncipherment"],
+          extendedKeyUsage: extensions.extendedKeyUsage ?? ["serverAuth"],
         },
       },
     });

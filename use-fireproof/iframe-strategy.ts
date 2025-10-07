@@ -79,11 +79,11 @@ export class IframeStrategy implements TokenStrategie {
   }
 
   open(sthis: SuperThis, _logger: Logger, deviceId: string, opts: ToCloudOpts) {
-    const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
+    const redirectCtx = opts.context.get(WebCtx)!;
     document.body.appendChild(this.overlayDiv(deviceId, redirectCtx.dashboardURI));
   }
   async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
-    const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
+    const redirectCtx = opts.context.get(WebCtx)!;
     // const uri = URI.from(window.location.href);
     // const uriFpToken = uri.getParam(redirectCtx.tokenParam);
     // if (uriFpToken) {

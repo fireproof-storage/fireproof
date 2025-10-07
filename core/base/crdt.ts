@@ -63,8 +63,10 @@ function tracerAction(opts: CRDTOpts, parent?: Ledger) {
           queueLen: event.queueLen,
         });
         break;
-      default:
-        return opts.tracer(event);
+      default: {
+        opts.tracer(event);
+        return;
+      }
     }
   };
 }
@@ -104,7 +106,6 @@ export class CRDTImpl implements CRDT {
       tracer: tracerAction(opts, parent),
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
-        if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
         // console.log("applyMeta-pre", crdtMeta.head, this.clock.head);
         this.logger
           .Debug()
@@ -135,12 +136,12 @@ export class CRDTImpl implements CRDT {
         {
           tracer: opts.tracer,
           // name: opts.name,
-          applyMeta: async (meta: TransactionMeta) => {
+          applyMeta: (meta: TransactionMeta) => {
             const idxCarMeta = meta as IndexTransactionMeta;
-            if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
             for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
               index(this, name, undefined, idx);
             }
+            return Promise.resolve();
           },
           gatewayInterceptor: opts.gatewayInterceptor,
           storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
@@ -287,6 +288,6 @@ export class CRDTImpl implements CRDT {
 
   async compact(): Promise<void> {
     const blocks = this.blockstore as EncryptedBlockstore;
-    return await blocks.compact();
+    await blocks.compact();
   }
 }

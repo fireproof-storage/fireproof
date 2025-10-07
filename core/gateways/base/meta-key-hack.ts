@@ -61,7 +61,7 @@ function fromV1toV2SerializedMetaKey(v1s: unknown[], keys: string[] = []): V2Ser
 
 function isV2SerializedMetaKey(or: NonNullable<unknown>): or is Partial<V2SerializedMetaKey> {
   const my = or as Partial<V2SerializedMetaKey>;
-  return my !== null && (!my.keys || Array.isArray(my.keys)) && (!my.metas || Array.isArray(my.metas));
+  return (!my.keys || Array.isArray(my.keys)) && (!my.metas || Array.isArray(my.metas));
 }
 
 function toV2SerializedMetaKey(or: NonNullable<unknown>): V2SerializedMetaKey {
@@ -79,10 +79,7 @@ export async function V2SerializedMetaKeyExtractKey(
   v2: V2SerializedMetaKey,
 ): Promise<Result<SerializedMeta[]>> {
   const kb = await ctx.loader.keyBag();
-  if (!kb) {
-    return Promise.resolve(Result.Err(new Error("missing keybag")));
-  }
-  const dataUrl = await ctx.loader.attachedStores.local().active.car.url();
+  const dataUrl = ctx.loader.attachedStores.local().active.car.url();
   const keyName = dataUrl.getParam(PARAM.STORE_KEY);
   if (!keyName) {
     ctx.loader.sthis.logger.Warn().Url(dataUrl).Msg("missing store key");
@@ -106,9 +103,11 @@ export async function V2SerializedMetaKeyExtractKey(
 }
 
 export async function decodeAsToSerializedMeta(ctx: SerdeGatewayCtx, raw: Uint8Array): Promise<Result<V2SerializedMetaKey>> {
-  const rJsObj = exception2Result(() => JSON.parse(ctx.loader.sthis.txt.decode(raw))) as Result<NonNullable<unknown>>;
+  const rJsObj = exception2Result(() => JSON.parse(ctx.loader.sthis.txt.decode(raw)) as NonNullable<unknown>) as Result<
+    NonNullable<unknown>
+  >;
   if (rJsObj.isErr()) {
-    return Result.Err(rJsObj);
+    return Result.Err(rJsObj.Err());
   }
   const v2 = toV2SerializedMetaKey(rJsObj.unwrap());
   const metas = await V2SerializedMetaKeyExtractKey(ctx, v2);
@@ -152,9 +151,6 @@ async function wrapEncode<T extends V1SerializedMetaKey[] | V2SerializedMetaKey>
 ): Promise<Result<T>> {
   const carStore = ctx.loader.attachedStores.local().active.car;
   const kb = await ctx.loader.keyBag();
-  if (!kb) {
-    return Promise.resolve(Result.Err(new Error("missing keybag")));
-  }
   const keyName = carStore.url().getParam(PARAM.STORE_KEY) ?? "";
   const rKex = await kb.getNamedKey(keyName);
   if (rKex.isErr()) {
@@ -202,15 +198,15 @@ export function addKeyToDbMetaEncoder(ctx: SerdeGatewayCtx, version: "v1" | "v2"
             obj = await encodeAsV2SerializedMetaKey(ctx, payload);
             break;
           default:
-            return Promise.resolve(Result.Err(`unknown version:[${version}]`));
+            return Promise.resolve(Result.Err(`unknown version:[${version as string}]`));
         }
         if (obj.isErr()) {
           return Promise.resolve(Result.Err(obj));
         }
         try {
-          return Promise.resolve(Result.Ok(sthis.txt.encode(JSON.stringify(obj.Ok()))));
+          return Result.Ok(sthis.txt.encode(JSON.stringify(obj.Ok())));
         } catch (e) {
-          return Promise.resolve(Result.Err(e as Error));
+          return Result.Err(e as Error);
         }
       },
     },
@@ -231,10 +227,10 @@ export class AddKeyToDbMetaGateway implements SerdeGateway {
   start(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<URI>> {
     return this.sdGw.start(ctx, baseUrl);
   }
-  close(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void, Error>> {
+  close(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void>> {
     return this.sdGw.close(ctx, baseUrl);
   }
-  async put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<void, Error>> {
+  async put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<void>> {
     return this.sdGw.put(addKeyToDbMetaEncoder(ctx, this.version), url, body);
   }
   async get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<Result<FPEnvelope<S>, Error | NotFoundError>> {
@@ -245,16 +241,16 @@ export class AddKeyToDbMetaGateway implements SerdeGateway {
   readonly lastDecodedMetas: V2SerializedMetaKey[] = [];
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  delete(ctx: SerdeGatewayCtx, url: URI, loader?: Loadable): Promise<Result<void, Error>> {
+  delete(ctx: SerdeGatewayCtx, url: URI, loader?: Loadable): Promise<Result<void>> {
     return this.sdGw.delete(ctx, url);
   }
-  subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<() => void, Error>> {
+  subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<() => void>> {
     return this.sdGw.subscribe(addKeyToDbMetaDecoder({ ...ctx, lastDecodedMetas: this.lastDecodedMetas }), url, callback);
   }
   getPlain(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<Uint8Array>> {
     return this.sdGw.getPlain(ctx, url, key);
   }
-  destroy(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void, Error>> {
+  destroy(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<void>> {
     return this.sdGw.destroy(ctx, baseUrl);
   }
 }

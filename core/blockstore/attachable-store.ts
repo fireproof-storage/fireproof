@@ -57,7 +57,7 @@ class AttachedImpl implements Attached {
       toClose.push(this.stores.wal.close());
     }
     await Promise.all(toClose);
-    this.attachCtx.detach();
+    await this.attachCtx.detach();
   }
   ctx(): AppContext {
     return this.attachCtx.ctx;
@@ -246,7 +246,7 @@ class ActiveStoreImpl<T extends DataAndMetaAndWalStore> implements ActiveStore {
 }
 
 function isLoadable(unknown: AttachedStores | Loadable): unknown is Loadable {
-  return !!(unknown as Loadable).sthis && !!(unknown as Loadable).attachedStores;
+  return "sthis" in unknown && "attachedStores" in unknown;
 }
 
 export async function createAttachedStores(
@@ -283,6 +283,7 @@ export async function createAttachedStores(
     {
       name,
       configHash: () => cfgId,
+      // eslint-disable-next-line @typescript-eslint/require-await
       prepare: async () => gup,
     },
     (at) => Promise.resolve(at),
@@ -361,7 +362,7 @@ export class AttachedRemotesImpl implements AttachedStores {
       }
       store = maxStore;
     }
-    return new ActiveStoreImpl(store as DataAndMetaStore, this);
+    return new ActiveStoreImpl(store, this);
   }
 
   async detach(): Promise<void> {
@@ -445,7 +446,10 @@ export class AttachedRemotesImpl implements AttachedStores {
             loader: this.loadable,
           }),
           {
-            detach: async () => this._remotes.unget(key),
+            // eslint-disable-next-line @typescript-eslint/require-await
+            detach: async () => {
+              this._remotes.unget(key);
+            },
             ctx: gwp.ctx,
           },
         );
@@ -461,7 +465,7 @@ export class AttachedRemotesImpl implements AttachedStores {
         }
         return result;
       });
-      const rex = await onAttach?.(ret);
+      const rex = await onAttach(ret);
       return rex;
     });
     return ret;

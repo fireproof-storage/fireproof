@@ -80,7 +80,8 @@ class WebCtxImpl implements WebToCloudCtx {
 
   onTokenChange(on: (token?: TokenAndClaims) => void) {
     if (this.opts.onTokenChange) {
-      return this.opts.onTokenChange(on);
+      this.opts.onTokenChange(on);
+      return;
     }
     this.onActions.add(on);
     const tc = this._tokenAndClaims.value;
@@ -188,13 +189,13 @@ export function createAttach(database: Database, config: UseFPConfig): AttachHoo
                   state: "ready",
                   tokenAndClaims: token,
                   reset: () => {
-                    webCtx.resetToken().then(() =>
+                    webCtx.resetToken().then(() => {
                       setAttachState((prev) => ({
                         ...prev,
                         state: "initial",
                         ctx: initialCtx,
-                      })),
-                    );
+                      }));
+                    });
                     // setDoResetToken(true);
                   },
                 },

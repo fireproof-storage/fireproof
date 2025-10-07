@@ -128,7 +128,7 @@ function defaultURI(sthis: SuperThis) {
   return (
     BuildURI.from("file://")
       // .pathname(`${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
-      .pathname(`${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
+      .pathname(`${sthis.env.get("HOME") ?? ""}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
       .setParam(PARAM.VERSION, FILESTORE_VERSION)
       .setParam(PARAM.URL_GEN, "default")
       .setParam(PARAM.RUNTIME, rt.isNodeIsh ? "node" : rt.isDeno ? "deno" : "unknown")
@@ -172,6 +172,7 @@ registerStoreProtocol({
   defaultURI: () => {
     return BuildURI.from("memory://").pathname("ram").URI();
   },
+  // eslint-disable-next-line @typescript-eslint/require-await
   gateway: async (sthis) => {
     return new MemoryGateway(sthis, memory);
   },
@@ -186,6 +187,7 @@ registerStoreProtocol({
   defaultURI() {
     return URI.from("fpcloud://fireproof.cloud/");
   },
+  // eslint-disable-next-line @typescript-eslint/require-await
   serdegateway: async (sthis: SuperThis) => {
     return new CloudGateway(sthis);
   },

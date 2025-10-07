@@ -43,7 +43,7 @@ export class WSContextWithId<T> extends WSContext<T> {
   }
 }
 
-export type DrizzleDatebase = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>; //, ResultSet, TSchema>
+export type DrizzleDatebase = BaseSQLiteDatabase<"async", ResultSet | D1Result>; //, ResultSet, TSchema>
 // export type x = LibSQLDatabase | ReturnType<typeof d1Drizzle/* | typeof doDrizzle*/>;
 
 export interface ExposeCtxItem<T extends WSRoom> {

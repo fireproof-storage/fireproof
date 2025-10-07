@@ -29,7 +29,7 @@ describe("dreamcode", function () {
   }
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
-  let result: IndexRows<Doc, string>;
+  let result: IndexRows<Doc>;
   let db: Database;
   const sthis = ensureSuperThis();
   afterEach(async () => {
@@ -72,7 +72,7 @@ describe("public API", function () {
   let db: Database;
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
-  let query: IndexRows<Doc, string>;
+  let query: IndexRows<Doc>;
   const sthis = ensureSuperThis();
 
   afterEach(async () => {
@@ -86,7 +86,7 @@ describe("public API", function () {
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
-    query = await db.query<Doc, string>((doc) => doc.foo);
+    query = await db.query<Doc>((doc) => doc.foo);
   });
   it("should be a ledger instance", function () {
     expect(db).toBeTruthy();
@@ -138,11 +138,11 @@ describe("database fullconfig", () => {
     });
     await db.ready();
 
-    const carStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
+    const carStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car;
     expect(carStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
-    const metaStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
+    const metaStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.meta;
     expect(metaStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
-    const walStore = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
+    const walStore = db.ledger.crdt.blockstore.loader.attachedStores.local().active.wal;
     expect(walStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
 
     expect(db).toBeTruthy();
@@ -189,7 +189,7 @@ describe("basic ledger", function () {
   it("can define an index", async () => {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index<{ foo: string }, string>(db, "test-index", (doc) => doc.foo);
+    const idx = index<{ foo: string }>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -213,10 +213,10 @@ describe("basic ledger", function () {
       baz: string;
     }
     await db.put<TestDoc>({ _id: "test", foo: "bar", baz: "qux" });
-    const query1 = await db.query<TestDoc, string>((doc) => {
+    const query1 = await db.query<TestDoc>((doc) => {
       return doc.foo;
     });
-    const query2 = await db.query<TestDoc, string>((doc) => {
+    const query2 = await db.query<TestDoc>((doc) => {
       return doc.baz;
     });
     expect(query1).toBeTruthy();
@@ -250,14 +250,14 @@ describe("benchmarking with compaction", function () {
     const numDocs = 20;
     const batchSize = 5;
 
-    const doing = null;
+    // const doing = null;
     for (let i = 0; i < numDocs; i += batchSize) {
       // console.log("batch", i, db.blockstore.loader?.carLog.length);
       const ops: Promise<DocResponse>[] = [];
-      db.put({ foo: "fast" });
+      db.put({ foo: "fast" }).catch(console.error);
       // await doing
       // doing = db.compact()
-      db.put({ foo: "fast" });
+      db.put({ foo: "fast" }).catch(console.error);
       for (let j = 0; j < batchSize && i + j < numDocs; j++) {
         ops.push(
           db.put({
@@ -273,12 +273,12 @@ describe("benchmarking with compaction", function () {
       db.put({
         data: Math.random(),
         fire: Math.random().toString().repeat(25),
-      });
+      }).catch(console.error);
 
       await Promise.all(ops);
       // console.log("batch done", i, db.blockstore.loader?.carLog.length);
     }
-    await doing;
+    // await doing;
   });
 });
 
@@ -319,15 +319,17 @@ describe("benchmarking a ledger", function () {
         ops.push(
           db
             .put({
-              _id: `test${i + j}`,
+              _id: `test${(i + j).toString()}`,
               fire: Math.random()
                 .toString()
                 .repeat(25 * 1024),
             })
             .then((ok) => {
-              db.get<{ fire: string }>(`test${i + j}`).then((doc) => {
-                expect(doc.fire).toBeTruthy();
-              });
+              db.get<{ fire: string }>(`test${(i + j).toString()}`)
+                .then((doc) => {
+                  expect(doc.fire).toBeTruthy();
+                })
+                .catch(console.error);
               return ok;
             }),
         );
@@ -409,15 +411,18 @@ describe("benchmarking a ledger", function () {
     for (let i = 0; i < 100; i++) {
       const ok = newDb2
         .put({
-          _id: `test${i}`,
+          _id: `test${i.toString()}`,
           fire: Math.random()
             .toString()
             .repeat(25 * 1024),
         })
         .then(() => {
-          newDb2.get<{ fire: number }>(`test${i}`).then((doc) => {
-            expect(doc.fire).toBeTruthy();
-          });
+          newDb2
+            .get<{ fire: number }>(`test${i.toString()}`)
+            .then((doc) => {
+              expect(doc.fire).toBeTruthy();
+            })
+            .catch(console.error);
         });
       ops2.push(ok);
     }
@@ -500,10 +505,10 @@ describe("Reopening a ledger", function () {
       const blocks = db.ledger.crdt.blockstore as EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader.carLog.length).toBe(i + 1 + 1 /* genesis */);
-      const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
+      const ok = await db.put({ _id: `test${i.toString()}`, fire: "proof".repeat(50 * 1024) });
       expect(ok).toBeTruthy();
       expect(loader.carLog.length).toBe(i + 2 + 1 /* genesis */);
-      const doc = await db.get<FireType>(`test${i}`);
+      const doc = await db.get<FireType>(`test${i.toString()}`);
       expect(doc.fire).toBe("proof".repeat(50 * 1024));
       await db.close();
     }
@@ -523,12 +528,12 @@ describe("Reopening a ledger", function () {
       expect(loader.carLog.length).toBe(i + 1);
       // console.log('car log length', loader.carLog.length)
       // console.time("db put");
-      const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
+      const ok = await db.put({ _id: `test${i.toString()}`, fire: "proof".repeat(50 * 1024) });
       // console.timeEnd("db put");
       expect(ok).toBeTruthy();
       expect(loader.carLog.length).toBe(i + 2);
       // console.time("db get");
-      const doc = await db.get<FireType>(`test${i}`);
+      const doc = await db.get<FireType>(`test${i.toString()}`);
       // console.timeEnd("db get");
       expect(doc.fire).toBe("proof".repeat(50 * 1024));
     }
@@ -540,7 +545,7 @@ describe("Reopening a ledger with indexes", function () {
     foo: string;
   }
   let db: Database;
-  let idx: Index<Doc, string>;
+  let idx: Index<Doc>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
   const sthis = ensureSuperThis();
@@ -560,13 +565,13 @@ describe("Reopening a ledger with indexes", function () {
       didMap = true;
       return doc.foo;
     };
-    idx = index<Doc, string>(db, "foo", mapFn);
+    idx = index<Doc>(db, "foo", mapFn);
   });
 
   it("should persist data", async () => {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
-    const idx2 = index<Doc, string>(db, "foo");
+    const idx2 = index<Doc>(db, "foo");
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();
@@ -717,19 +722,19 @@ describe("same workload twice, same CID", function () {
     }
     headB = dbB.ledger.crdt.clock.head.toString();
   });
-  it("should have head A and B", async () => {
+  it("should have head A and B", () => {
     expect(headA).toBeTruthy();
     expect(headB).toBeTruthy();
     expect(headA).toEqual(headB);
     expect(headA.length).toBeGreaterThan(10);
   });
-  it("should have same car log", async () => {
-    const logA = dbA.ledger.crdt.blockstore.loader?.carLog;
+  it("should have same car log", () => {
+    const logA = dbA.ledger.crdt.blockstore.loader.carLog;
     expect(logA).toBeTruthy();
     assert(logA);
     expect(logA.length).toBe(docs.length + 1 /*genesis*/);
 
-    const logB = dbB.ledger.crdt.blockstore.loader?.carLog;
+    const logB = dbB.ledger.crdt.blockstore.loader.carLog;
     expect(logB).toBeTruthy();
     assert(logB);
     expect(logB.length).toBe(docs.length + 1 /*genesis*/);
@@ -746,12 +751,12 @@ describe("same workload twice, same CID", function () {
     await dbA.compact();
     await dbB.compact();
 
-    const cmpLogA = dbA.ledger.crdt.blockstore.loader?.carLog;
+    const cmpLogA = dbA.ledger.crdt.blockstore.loader.carLog;
     expect(cmpLogA).toBeTruthy();
     assert(cmpLogA);
     expect(cmpLogA.length).toBe(1);
 
-    const cmpLogB = dbB.ledger.crdt.blockstore.loader?.carLog;
+    const cmpLogB = dbB.ledger.crdt.blockstore.loader.carLog;
     expect(cmpLogB).toBeTruthy();
     assert(cmpLogB);
     expect(cmpLogB.length).toBe(1);

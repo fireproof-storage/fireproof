@@ -21,7 +21,7 @@ interface MetaConnection {
 }
 
 function toCRDTEntries(rows: MetaConnection[]) {
-  return rows.reduce(
+  return rows.reduce<V2SerializedMetaKey>(
     (r, i) => {
       r.metas.push(...i.meta.metas);
       r.keys.push(...i.meta.keys);
@@ -30,7 +30,7 @@ function toCRDTEntries(rows: MetaConnection[]) {
     {
       metas: [],
       keys: [],
-    } as V2SerializedMetaKey,
+    },
   );
 }
 
@@ -51,7 +51,7 @@ function getSQLFlavours(sthis: SuperThis): { name: string; factory: () => Promis
         const { createClient } = await import("@libsql/client");
         return drizzle(
           createClient({
-            url: sthis.env.get("FP_TEST_SQL_URL") as string,
+            url: sthis.env.get("FP_TEST_SQL_URL")!,
           }),
         );
       },

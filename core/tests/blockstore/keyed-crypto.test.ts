@@ -6,14 +6,7 @@ import * as cborg from "cborg";
 import type { KeyBagProviderIndexedDB } from "@fireproof/core-gateways-indexeddb";
 import { mockLoader, MockSuperThis, mockSuperThis } from "../helpers.js";
 import { ensureSuperThis, keyedCryptoFactory, storeType2DataMetaWal } from "@fireproof/core-runtime";
-import {
-  PARAM,
-  StoreType,
-  KeyBagIf,
-  KeyWithFingerPrint,
-  KeyedV2StorageKeyItem,
-  KeyedV2StorageKeyItemSchema,
-} from "@fireproof/core-types-base";
+import { PARAM, StoreType, KeyBagIf, KeyedV2StorageKeyItem, KeyedV2StorageKeyItemSchema } from "@fireproof/core-types-base";
 import { describe, beforeEach, it, expect } from "vitest";
 import { coerceMaterial, getKeyBag, toKeyWithFingerPrint } from "@fireproof/core-keybag";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
@@ -59,7 +52,7 @@ describe("KeyBag", () => {
     const kb = await getKeyBag(sthis);
     const key = kb.rt.crypto.randomBytes(kb.rt.keyLength);
     const keyStr = base58btc.encode(key);
-    const keyName = "extract.test" + Math.random();
+    const keyName = `extract.test${String(Math.random())}`;
     const res = await kb.getNamedKey(keyName, false, keyStr);
     expect(res.isOk()).toBeTruthy();
     const gkb = await kb.getNamedKey(keyName, true);
@@ -90,7 +83,7 @@ describe("KeyBag", () => {
     const kb = await getKeyBag(sthis, {
       url: url.toString(),
     });
-    const name = "setkey" + Math.random();
+    const name = `setkey${String(Math.random())}`;
     expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
 
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
@@ -98,7 +91,7 @@ describe("KeyBag", () => {
     expect(res.isOk()).toBeTruthy();
     expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
 
-    const name2 = "implicit" + Math.random();
+    const name2 = `implicit${String(Math.random())}`;
     const created = await kb.getNamedKey(name2);
     expect(created.isOk()).toBeTruthy();
 
@@ -109,8 +102,8 @@ describe("KeyBag", () => {
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
-      diskBag = await p._prepare().then((db) => db.get("bag", name));
-      diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
+      diskBag = (await p._prepare().then((db) => db.get("bag", name))) as KeyedV2StorageKeyItem;
+      diskBag2 = (await p._prepare().then((db) => db.get("bag", name2))) as KeyedV2StorageKeyItem;
     } else {
       const p = provider as KeyBagProviderFile;
       if (typeof p._prepare !== "function") {
@@ -141,7 +134,8 @@ describe("KeyBag", () => {
     expect(await kb.rt.crypto.encrypt(algo, (await res.Ok().get())!.key, data))
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       .toEqual(await kb.rt.crypto.encrypt(algo, (await created.Ok().get())!.key, data));
-    const kf = (await created.Ok().get()) as KeyWithFingerPrint;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const kf = (await created.Ok().get())!;
     expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.item.keys)[0].key), data)).toEqual(
       await kb.rt.crypto.encrypt(algo, kf.key, data),
     );
@@ -154,7 +148,7 @@ describe("KeyBag", () => {
     const kb = await getKeyBag(sthis, {
       url: url.build().setParam("extractKey", "_deprecated_internal_api"),
     });
-    const name = "default-key" + Math.random();
+    const name = `default-key${String(Math.random())}`;
     const rMyKey = await kb.getNamedKey(name);
 
     for (let i = 0; i < 10; ++i) {
@@ -162,11 +156,13 @@ describe("KeyBag", () => {
     }
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(1);
 
-    const myKey = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
-    expect(myKey.fingerPrint).toMatch(/^z/);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await rMyKey.Ok().upsert((await myKey.extract())!.key);
-    const myKey1 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    const myKey = (await rMyKey.Ok().get())!;
+    expect(myKey.fingerPrint).toMatch(/^z/);
+
+    await rMyKey.Ok().upsert((await myKey.extract()).key);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const myKey1 = (await rMyKey.Ok().get())!;
     expect(myKey.fingerPrint).toEqual(myKey1.fingerPrint);
 
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(1);
@@ -176,13 +172,15 @@ describe("KeyBag", () => {
     const res1 = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     expect(res1.isOk()).toBeTruthy();
 
-    const myKey2 = (await rMyKey1.Ok().get()) as KeyWithFingerPrint;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const myKey2 = (await rMyKey1.Ok().get())!;
     expect(myKey.fingerPrint).toEqual(myKey2.fingerPrint);
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(2);
 
     const res = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength), { def: true });
     expect(res.isOk()).toBeTruthy();
-    const myKey3 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const myKey3 = (await rMyKey.Ok().get())!;
     expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asV2StorageKeyItem())).keys).length).toBe(3);
 
     expect(myKey.fingerPrint).not.toEqual(myKey3.fingerPrint);
@@ -196,7 +194,7 @@ describe("KeyBag", () => {
       // }),
     });
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-    const name = "default-key" + Math.random();
+    const name = `default-key${String(Math.random())}`;
     const fpr = (await toKeyWithFingerPrint(kb, coerceMaterial(kb, key), true)).Ok().fingerPrint;
     const rMyKey = await kb.getNamedKey(name, false, key);
     expect(rMyKey.isOk()).toBeTruthy();
@@ -260,7 +258,7 @@ describe("KeyedCryptoStore", () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
     for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
-      const store = await pstore;
+      const store = pstore;
       // await store.start();
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("noCrypto");
@@ -272,7 +270,7 @@ describe("KeyedCryptoStore", () => {
 
   it("create key", async () => {
     for (const pstore of (await createAttachedStores(baseUrl, loader, "insecure")).stores.baseStores) {
-      const store = await pstore; // await bs.ensureStart(await pstore, logger);
+      const store = pstore; // await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("cryptoAction");
       // expect(kc.isEncrypting).toBe(true);
@@ -287,7 +285,7 @@ describe("KeyedCryptoStore", () => {
     const genKey = await kb.getNamedKey("@heute@", false, key);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "@heute@").URI();
     for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
-      const store = await pstore;
+      const store = pstore;
       // await store.start();
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(`@heute@`);
       const kc = await store.keyedCrypto();
@@ -297,7 +295,8 @@ describe("KeyedCryptoStore", () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const blk = await kc._encrypt({ bytes: testData, key: (await kc.key.get())!.key, iv });
       expect(blk).not.toEqual(testData);
-      const fpkey = (await genKey.Ok().get()) as KeyWithFingerPrint;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const fpkey = (await genKey.Ok().get())!;
       expect(fpkey.fingerPrint).toEqual(fpkey.fingerPrint);
       const dec = new Uint8Array(await kc.crypto.decrypt(kc.algo(iv), fpkey.key, blk));
       expect(dec).toEqual(testData);
@@ -309,14 +308,15 @@ describe("KeyedCryptoStore", () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, key).URI();
     for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
       // for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
-      const store = await pstore;
+      const store = pstore;
       // await store.start();
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(key);
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("cryptoAction");
       const testData = kb.rt.crypto.randomBytes(1024);
       const iv = kb.rt.crypto.randomBytes(12);
-      const ks = (await kc.key.get()) as KeyWithFingerPrint;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const ks = (await kc.key.get())!;
       const blk = await kc._encrypt({ bytes: testData, key: ks.key, iv });
       expect(blk).not.toEqual(testData);
       const dec = await kc._decrypt({ bytes: blk, key: ks.key, iv });
@@ -350,7 +350,8 @@ describe("KeyedCrypto", () => {
     const blk = (await codec.encode(testData)) as Uint8Array;
     const myDec = cborg.decode(blk) as IvKeyIdData;
     expect(myDec.iv).toEqual(iv);
-    const kc = (await kycr.key.get()) as KeyWithFingerPrint;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const kc = (await kycr.key.get())!;
     expect(base58btc.encode(myDec.keyId)).toEqual(kc.fingerPrint);
     const dec = await codec.decode(blk);
     expect(dec.data).toEqual(testData);

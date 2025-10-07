@@ -8,7 +8,7 @@ import { registerCompactStrategy, timerEnd, timerStart } from "@fireproof/core-r
 registerCompactStrategy({
   name: "fireproof",
   compact: async (ctx: CompactStrategyContext) => {
-    const head = ctx.clock?.head || [];
+    const head = ctx.clock?.head ?? [];
     timerStart(ctx, "compact head");
     for (const cid of head) {
       const bl = await ctx.get(cid);
@@ -90,6 +90,7 @@ registerCompactStrategy({
   name: "no-op",
   compact: async () => {
     // do nothing
+    await Promise.resolve();
     return {} as TransactionMeta;
   },
 });

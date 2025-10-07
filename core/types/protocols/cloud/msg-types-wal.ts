@@ -24,7 +24,7 @@ export function MsgIsReqGetWAL(msg: MsgBase): msg is ReqGetWAL {
 }
 
 export function buildReqGetWAL(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqGetWAL {
-  return buildReqSignedUrl<ReqGetWAL>(sthis, "reqGetWAL", sup, ctx);
+  return buildReqSignedUrl(sthis, "reqGetWAL", sup, ctx) as ReqGetWAL;
 }
 
 export interface ResGetWAL extends ResSignedUrl {
@@ -41,13 +41,7 @@ export function buildResGetWAL(
   req: MsgWithTenantLedger<MsgWithConn<ReqGetWAL>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResGetWAL>> {
-  return buildRes<MsgWithTenantLedger<MsgWithConn<ReqGetWAL>>, ResGetWAL>(
-    { method: "GET", store: "wal" },
-    "resGetWAL",
-    msgCtx,
-    req,
-    ctx,
-  );
+  return buildRes<ResGetWAL>({ method: "GET", store: "wal" }, "resGetWAL", msgCtx, req, ctx);
 }
 
 export interface ReqPutWAL extends Omit<ReqSignedUrl, "type"> {
@@ -60,7 +54,7 @@ export function MsgIsReqPutWAL(msg: MsgBase): msg is ReqPutWAL {
 }
 
 export function buildReqPutWAL(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqPutWAL {
-  return buildReqSignedUrl<ReqPutWAL>(sthis, "reqPutWAL", sup, ctx);
+  return buildReqSignedUrl(sthis, "reqPutWAL", sup, ctx) as ReqPutWAL;
 }
 
 export interface ResPutWAL extends Omit<ResSignedUrl, "type"> {
@@ -76,13 +70,7 @@ export function buildResPutWAL(
   req: MsgWithTenantLedger<MsgWithConn<ReqPutWAL>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResPutWAL>> {
-  return buildRes<MsgWithTenantLedger<MsgWithConn<ReqPutWAL>>, ResPutWAL>(
-    { method: "PUT", store: "wal" },
-    "resPutWAL",
-    msgCtx,
-    req,
-    ctx,
-  );
+  return buildRes<ResPutWAL>({ method: "PUT", store: "wal" }, "resPutWAL", msgCtx, req, ctx);
 }
 
 export interface ReqDelWAL extends Omit<ReqSignedUrl, "type"> {
@@ -94,7 +82,7 @@ export function MsgIsReqDelWAL(msg: MsgBase): msg is ReqDelWAL {
 }
 
 export function buildReqDelWAL(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqDelWAL {
-  return buildReqSignedUrl<ReqDelWAL>(sthis, "reqDelWAL", sup, ctx);
+  return buildReqSignedUrl(sthis, "reqDelWAL", sup, ctx) as ReqDelWAL;
 }
 
 export interface ResDelWAL extends Omit<ResSignedUrl, "type"> {
@@ -110,11 +98,5 @@ export function buildResDelWAL(
   req: MsgWithTenantLedger<MsgWithConn<ReqDelWAL>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResDelWAL>> {
-  return buildRes<MsgWithTenantLedger<MsgWithConn<ReqDelWAL>>, ResDelWAL>(
-    { method: "DELETE", store: "wal" },
-    "resDelWAL",
-    msgCtx,
-    req,
-    ctx,
-  );
+  return buildRes<ResDelWAL>({ method: "DELETE", store: "wal" }, "resDelWAL", msgCtx, req, ctx);
 }

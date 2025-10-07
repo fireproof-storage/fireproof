@@ -133,10 +133,10 @@ async function ensureStart<T extends Pick<BaseStore, "start"> & { logger: Logger
 }
 
 export function ensureStoreEnDeFile(ende?: Partial<StoreEnDeFile>): StoreEnDeFile {
-  ende = ende || {};
+  ende = ende ?? {};
   return {
-    encodeFile: ende.encodeFile || encodeFile,
-    decodeFile: ende.decodeFile || decodeFile,
+    encodeFile: ende.encodeFile ?? encodeFile,
+    decodeFile: ende.decodeFile ?? decodeFile,
   };
 }
 

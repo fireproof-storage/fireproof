@@ -93,9 +93,9 @@ function TableView({ name }: { name: string }) {
     navigator.clipboard.writeText(connectionUrl).then(
       () => {
         setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
+        setTimeout(() => { setCopySuccess(false); }, 2000);
       },
-      (err) => console.error("Could not copy text: ", err),
+      (err) => { console.error("Could not copy text: ", err); },
     );
   }
 
@@ -136,7 +136,7 @@ function TableView({ name }: { name: string }) {
     <div className="p-6 bg-[--muted]">
       {connection && (
         <div className="mb-4 bg-[--background] border border-[--border] rounded-md p-4">
-          <div className="flex items-center cursor-pointer" onClick={() => setShowQuickstart(!showQuickstart)}>
+          <div className="flex items-center cursor-pointer" onClick={() => { setShowQuickstart(!showQuickstart); }}>
             <h3 className="font-bold text-sm flex-grow">Quickstart</h3>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +158,7 @@ function TableView({ name }: { name: string }) {
                   className={`px-4 py-2 text-sm font-medium ${
                     activeTab === "react" ? "border-b-2 border-[--accent] text-[--accent]" : "text-[--muted-foreground]"
                   }`}
-                  onClick={() => setActiveTab("react")}
+                  onClick={() => { setActiveTab("react"); }}
                 >
                   React
                 </button>
@@ -166,7 +166,7 @@ function TableView({ name }: { name: string }) {
                   className={`px-4 py-2 text-sm font-medium ${
                     activeTab === "vanilla" ? "border-b-2 border-[--accent] text-[--accent]" : "text-[--muted-foreground]"
                   }`}
-                  onClick={() => setActiveTab("vanilla")}
+                  onClick={() => { setActiveTab("vanilla"); }}
                 >
                   Vanilla JS
                 </button>
@@ -272,7 +272,7 @@ export default function App() {
           {/* Mobile Actions Dropdown */}
           <div className="relative block @[575px]:hidden" ref={actionsRef}>
             <button
-              onClick={() => setShowActions(!showActions)}
+              onClick={() => { setShowActions(!showActions); }}
               className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80 whitespace-nowrap"
             >
               Actions

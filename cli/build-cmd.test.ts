@@ -2,8 +2,8 @@ import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson } from
 import { expect, it } from "vitest";
 
 const mock = {
-  readJSON: async (): Promise<unknown> => {
-    return {
+  readJSON: (): Promise<PackageJson> => {
+    return Promise.resolve({
       name: "@fireproof/core-cli",
       version: "0.0.0",
       description: "Live ledger for the web.",
@@ -25,7 +25,10 @@ const mock = {
         "@fireproof/core-cli": "workspace:0.0.0",
         vitest: "^3.2.4",
       },
-    };
+      exports: {
+        ".": "./index.js",
+      },
+    });
   },
 };
 
@@ -50,8 +53,8 @@ it("should only use prefix version in dependencies", async () => {
 it("should only use prefix version in dependencies", async () => {
   const version = new Version("0.0.0-smoke", "^");
   const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
-  const originalPackageJson = (await mock.readJSON()) as unknown as PackageJson;
-  const jsrConf = await buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
+  const originalPackageJson = await mock.readJSON();
+  const jsrConf = buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
   expect(jsrConf.version).toBe("0.0.0-smoke");
   expect(jsrConf.imports).toHaveProperty("@fireproof/vendor", "jsr:@fireproof/vendor@^0.0.0-smoke");
 });
@@ -70,8 +73,8 @@ it("ILLEGAL Version with gitref", async () => {
       xenv: { GITHUB_REF: "a/b/cdkdkdkdk" },
       xfs: {
         existsSync: () => false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+        readFile: (_x: string, _y = "utf-8") => Promise.resolve(""),
+      },
     }),
   ).toContain("0.0.0-smoke-");
 });
@@ -83,8 +86,7 @@ it("GITHUB_REF set and file", async () => {
       xfs: {
         existsSync: () => true,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("v0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
     }),
   ).toBe("0.0.48-smoke");
 });
@@ -96,8 +98,7 @@ it("GITHUB_REF set and not exist file", async () => {
       xfs: {
         existsSync: () => false,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("v0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
     }),
   ).toBe("0.0.45-xx");
 });
@@ -108,8 +109,7 @@ it("getVersion file with v", async () => {
       xfs: {
         existsSync: () => true,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("v0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
       xenv: {},
     }),
   ).toContain("0.0.48-smoke");
@@ -121,8 +121,7 @@ it("getVersion file without ", async () => {
       xfs: {
         existsSync: () => true,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
       xenv: {},
     }),
   ).toContain("0.0.48-smoke");
@@ -134,8 +133,7 @@ it("getVersion file with scope", async () => {
       xfs: {
         existsSync: () => true,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("wost@0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
       xenv: {},
     }),
   ).toContain("0.0.48-smoke");
@@ -147,8 +145,7 @@ it("getVersion file with scope and v", async () => {
       xfs: {
         existsSync: () => true,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("wost@v0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
       xenv: {},
     }),
   ).toContain("0.0.48-smoke");
@@ -160,8 +157,7 @@ it("getVersion file with ref", async () => {
       xfs: {
         existsSync: () => true,
         readFile: (_x: string, _y = "utf-8") => Promise.resolve("d/d/wost@0.0.48-smoke"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
+      },
       xenv: {},
     }),
   ).toContain("0.0.48-smoke");

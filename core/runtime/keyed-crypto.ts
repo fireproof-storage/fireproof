@@ -8,18 +8,18 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as CBOR from "cborg";
 
 interface GenerateIVFn {
-  calc(ko: CryptoAction, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;
-  verify(ko: CryptoAction, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): Promise<boolean>;
+  calc(ko: CryptoAction, crypto: CryptoRuntime, data: Uint8Array): Uint8Array | Promise<Uint8Array>;
+  verify(ko: CryptoAction, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): boolean | Promise<boolean>;
 }
 
 const generateIV: Record<string, GenerateIVFn> = {
   random: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    calc: async (ko: CryptoAction, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array> => {
+    calc: (ko: CryptoAction, crypto: CryptoRuntime, data: Uint8Array): Uint8Array => {
       return crypto.randomBytes(ko.ivLength);
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    verify: async (ko: CryptoAction, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): Promise<boolean> => {
+    verify: (ko: CryptoAction, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): boolean => {
       return true;
     },
   },
@@ -40,8 +40,8 @@ const generateIV: Record<string, GenerateIVFn> = {
 };
 
 function getGenerateIVFn(url: URI, opts: Partial<CodecOpts>): GenerateIVFn {
-  const ivhash = opts.ivCalc || url.getParam(PARAM.IV_HASH) || "hash";
-  return generateIV[ivhash] || generateIV["hash"];
+  const ivhash = opts.ivCalc ?? url.getParam(PARAM.IV_HASH) ?? "hash";
+  return generateIV[ivhash] ?? generateIV.hash;
 }
 
 export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
@@ -54,7 +54,7 @@ export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyI
   constructor(ko: CryptoAction, iv?: Uint8Array, opts?: CodecOpts) {
     this.ko = ko;
     this.iv = iv;
-    this.opts = opts || {};
+    this.opts = opts ?? {};
   }
 
   // hashAsBytes(data: IvKeyIdData): AsyncHashAsBytes<Uint8Array<ArrayBufferLike>> {
@@ -69,14 +69,14 @@ export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyI
   }
 
   async encode(data: Uint8Array): Promise<Uint8Array> {
-    const calcIv = this.iv || (await getGenerateIVFn(this.ko.url, this.opts).calc(this.ko, this.ko.crypto, data));
+    const calcIv = this.iv ?? (await getGenerateIVFn(this.ko.url, this.opts).calc(this.ko, this.ko.crypto, data));
     const { iv } = this.ko.algo(calcIv);
 
     const defKey = await this.ko.key.get();
     if (!defKey) {
       throw this.ko.logger.Error().Msg("default key not found").AsError();
     }
-    const keyId = base58btc.decode(defKey?.fingerPrint);
+    const keyId = base58btc.decode(defKey.fingerPrint);
     this.ko.logger.Debug().Str("fp", defKey.fingerPrint).Msg("encode");
     return CBOR.encode({
       iv: iv,
@@ -98,7 +98,7 @@ export class BlockIvKeyIdCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyI
       throw this.ko.logger.Error().Str("fp", base58btc.encode(keyId)).Msg("keyId not found").AsError();
     }
     const result = await this.ko._decrypt({ iv: iv, key: key.key, bytes: data });
-    if (!this.opts?.noIVVerify && !(await getGenerateIVFn(this.ko.url, this.opts).verify(this.ko, this.ko.crypto, iv, result))) {
+    if (!this.opts.noIVVerify && !(await getGenerateIVFn(this.ko.url, this.opts).verify(this.ko, this.ko.crypto, iv, result))) {
       throw this.ko.logger.Error().Msg("iv missmatch").AsError();
     }
     return {
@@ -137,7 +137,7 @@ class cryptoAction implements CryptoAction {
   algo(iv?: Uint8Array) {
     return {
       name: "AES-GCM",
-      iv: iv || this.crypto.randomBytes(this.ivLength),
+      iv: iv ?? this.crypto.randomBytes(this.ivLength),
       tagLength: 128,
     };
   }
@@ -159,14 +159,14 @@ class nullCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
   readonly empty = new Uint8Array();
 
   async encode(data: Uint8Array): Promise<Uint8Array> {
-    return data;
+    return await Promise.resolve(data);
   }
   async decode(data: Uint8Array): Promise<IvKeyIdData> {
-    return {
+    return await Promise.resolve({
       iv: this.empty,
       keyId: this.empty,
       data: data,
-    };
+    });
   }
 }
 
@@ -178,7 +178,7 @@ class noCrypto implements CryptoAction {
   readonly crypto: CryptoRuntime;
   readonly key: KeysByFingerprint;
   readonly isEncrypting = false;
-  readonly _fingerPrint = "noCrypto:" + Math.random();
+  readonly _fingerPrint = "noCrypto:" + Math.random().toString();
   readonly url: URI;
   constructor(url: URI, cyrt: CryptoRuntime, sthis: SuperThis) {
     this.logger = ensureLogger(sthis, "noCrypto");

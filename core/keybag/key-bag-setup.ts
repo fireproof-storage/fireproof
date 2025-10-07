@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import { URI, runtimeFn, toCryptoRuntime, KeyedResolvOnce } from "@adviser/cement";
 import { KeyBagProviderFile } from "@fireproof/core-gateways-file";
 import { ensureLogger } from "@fireproof/core-runtime";
@@ -77,11 +78,11 @@ export function defaultKeyBagUrl(sthis: SuperThis): URI {
   let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
   let url: URI;
   if (runtimeFn().isBrowser) {
-    url = URI.from(bagFnameOrUrl || "indexeddb://fp-keybag");
+    url = URI.from(bagFnameOrUrl ?? "indexeddb://fp-keybag");
   } else {
     if (!bagFnameOrUrl) {
       const home = sthis.env.get("HOME");
-      bagFnameOrUrl = `${home}/.fireproof/keybag`;
+      bagFnameOrUrl = `${home ?? ""}/.fireproof/keybag`;
       url = URI.from(`file://${bagFnameOrUrl}`);
     } else {
       url = URI.from(bagFnameOrUrl);
@@ -93,7 +94,7 @@ export function defaultKeyBagUrl(sthis: SuperThis): URI {
 }
 
 export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): KeyBagRuntime {
-  kbo = kbo || {};
+  kbo = kbo ?? {};
   if (kbo.keyRuntime) {
     return kbo.keyRuntime;
   }
@@ -105,11 +106,11 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
   } else {
     let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
     if (runtimeFn().isBrowser) {
-      url = URI.from(bagFnameOrUrl || "indexeddb://fp-keybag");
+      url = URI.from(bagFnameOrUrl ?? "indexeddb://fp-keybag");
     } else {
       if (!bagFnameOrUrl) {
         const home = sthis.env.get("HOME");
-        bagFnameOrUrl = `${home}/.fireproof/keybag`;
+        bagFnameOrUrl = `${home ?? ""}/.fireproof/keybag`;
         url = URI.from(`file://${bagFnameOrUrl}`);
       } else {
         url = URI.from(bagFnameOrUrl);
@@ -128,10 +129,10 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
 
   return {
     url,
-    crypto: kbo.crypto || toCryptoRuntime({}),
+    crypto: kbo.crypto ?? toCryptoRuntime({}),
     sthis,
     logger,
-    keyLength: kbo.keyLength || 16,
+    keyLength: kbo.keyLength ?? 16,
     getBagProvider: () => kitem.factory(url, sthis),
     id: () => {
       return url.toString();

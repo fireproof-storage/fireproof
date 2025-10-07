@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 // import PartySocket, { PartySocketOptions } from "partysocket";
 import {
   Result,
@@ -173,7 +174,7 @@ abstract class BaseGateway {
 
   protected async getObject(uri: URI, downloadUrl: string, _conn: VConnItems): Promise<Result<Uint8Array>> {
     this.logger.Debug().Any("url", { downloadUrl, uri }).Msg("get-fetch-url");
-    const rDownload = await exception2Result(async () => fetch(downloadUrl.toString(), { method: "GET" }));
+    const rDownload = await exception2Result(async () => fetch(downloadUrl, { method: "GET" }));
     if (rDownload.isErr()) {
       return this.logger.Error().Url(downloadUrl, "downloadUrl").Err(rDownload).Msg("Error in get downloadUrl").ResultError();
     }
@@ -189,7 +190,7 @@ abstract class BaseGateway {
 
   protected async delObject(uri: URI, deleteUrl: string, _conn: VConnItems): Promise<Result<void>> {
     this.logger.Debug().Any("url", { deleteUrl, uri }).Msg("get-fetch-url");
-    const rDelete = await exception2Result(async () => fetch(deleteUrl.toString(), { method: "DELETE" }));
+    const rDelete = await exception2Result(async () => fetch(deleteUrl, { method: "DELETE" }));
     if (rDelete.isErr()) {
       return this.logger.Error().Url(deleteUrl, "deleteUrl").Err(rDelete).Msg("Error in get deleteURL").ResultError();
     }
@@ -338,7 +339,7 @@ class CurrentMeta {
         }
         ctx.loader.logger.Error().Msg("Error bind should not end");
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         ctx.loader.logger.Error().Err(err).Msg("Error in bindGetMeta");
       });
     // console.log("cloud-get-3")
@@ -364,13 +365,13 @@ class MetaGateway extends BaseGateway implements StoreTypeGateway {
   constructor(sthis: SuperThis) {
     super(sthis, "Cloud-MetaGateway");
   }
-  async subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
+  subscribe(ctx: SerdeGatewayCtx, uri: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     const key = ctx.loader.sthis.nextId().str;
     const unsub = () => {
       this.subscriptions.delete(key);
     };
     this.subscriptions.set(key, callback);
-    return Result.Ok(unsub);
+    return Promise.resolve(Result.Ok(unsub));
   }
 
   async get<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<SerdeGetResult<S>> {
@@ -475,7 +476,7 @@ class WALGateway extends BaseGateway implements StoreTypeGateway {
     if (!wal) {
       return Result.Err(new NotFoundError("Not found"));
     }
-    return Result.Ok(wal as FPEnvelope<S>);
+    return await Promise.resolve(Result.Ok(wal as FPEnvelope<S>));
   }
   async put<S>(ctx: ConnectedSerdeGatewayCtx, uri: URI, body: FPEnvelope<S>): Promise<Result<void>> {
     const rKey = this.getWalKeyFromUri(uri);
@@ -483,7 +484,7 @@ class WALGateway extends BaseGateway implements StoreTypeGateway {
       return Result.Err(rKey.Err());
     }
     this.wals.set(rKey.Ok(), body as FPEnvelopeWAL);
-    return Result.Ok(undefined);
+    return await Promise.resolve(Result.Ok(undefined));
   }
   async delete(ctx: ConnectedSerdeGatewayCtx, uri: URI): Promise<Result<void>> {
     const rKey = this.getWalKeyFromUri(uri);
@@ -491,7 +492,7 @@ class WALGateway extends BaseGateway implements StoreTypeGateway {
       return Result.Err(rKey.Err());
     }
     this.wals.delete(rKey.Ok());
-    return Result.Ok(undefined);
+    return await Promise.resolve(Result.Ok(undefined));
   }
 }
 
@@ -507,7 +508,7 @@ function getStoreTypeGateway(sthis: SuperThis, uri: URI): StoreTypeGateway {
     case "wal":
       return storeTypedGateways.get(store).once(() => new WALGateway(sthis));
     default:
-      throw ensureLogger(sthis, "getStoreTypeGateway").Error().Str("store", store).Msg("Invalid store type").ResultError();
+      throw new Error(`Invalid store type: ${store ?? "undefined"}`);
   }
 }
 
@@ -541,8 +542,8 @@ export class CloudGateway implements SerdeGateway {
     // console.log("CloudGateway", this.sthis.nextId().str);
   }
 
-  async buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
-    return Result.Ok(baseUrl.build().setParam("key", key).URI());
+  buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
+    return Promise.resolve(Result.Ok(baseUrl.build().setParam("key", key).URI()));
   }
 
   async start(ctx: SerdeGatewayCtx, uri: URI): Promise<Result<URI>> {
@@ -601,7 +602,7 @@ export class CloudGateway implements SerdeGateway {
     // CAUTION here is my happen a mutation of subscriptions caused by unsub
     for (const sub of Array.from(subscriptions.values())) {
       for (const s of sub) {
-        if (s.uri.toString() === uriStr) {
+        if (s.uri === uriStr) {
           s.unsub();
         }
       }
@@ -690,8 +691,8 @@ export class CloudGateway implements SerdeGateway {
     return Result.Ok(undefined);
   }
 
-  async getPlain(): Promise<Result<Uint8Array>> {
-    return Result.Err(new Error("Not implemented"));
+  getPlain(): Promise<Result<Uint8Array>> {
+    return Promise.resolve(Result.Err(new Error("Not implemented")));
   }
 }
 // function authTypeFromUri(logger: Logger, uri: URI) {

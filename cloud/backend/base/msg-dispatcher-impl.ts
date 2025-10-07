@@ -72,14 +72,18 @@ export function ensureTendantLedger<T extends ps.MsgBase>(
       return buildErrorMsg(
         ctx,
         msg,
-        new Error(`ensureTendantLedger: missing tenant: ${tlMsg.tenant.tenant}:${msg.auth.params.claim.tenants.map((i) => i.id)}`),
+        new Error(
+          `ensureTendantLedger: missing tenant: ${tlMsg.tenant.tenant}:${msg.auth.params.claim.tenants.map((i) => i.id).join(",")}`,
+        ),
       );
     }
     if (!msg.auth.params.claim.ledgers.map((i) => i.id).includes(tlMsg.tenant.ledger)) {
       return buildErrorMsg(
         ctx,
         msg,
-        new Error(`ensureTendantLedger: missing ledger: ${tlMsg.tenant.ledger}:${msg.auth.params.claim.ledgers.map((i) => i.id)}`),
+        new Error(
+          `ensureTendantLedger: missing ledger: ${tlMsg.tenant.ledger}:${msg.auth.params.claim.ledgers.map((i) => i.id).join(",")}`,
+        ),
       );
     }
     /* need some read and write check here */

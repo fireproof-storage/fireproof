@@ -6,7 +6,7 @@ import { NodeHonoFactory } from "./node-hono-server.js";
 
 export async function setupBackendNode(
   sthis: SuperThis,
-  dbfile: LibSQLDatabase<Record<string, never>>,
+  dbfile: LibSQLDatabase,
   // backend: "D1" | "DO",
   // key: string,
   port = portRandom(sthis),

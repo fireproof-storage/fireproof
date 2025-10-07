@@ -111,7 +111,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       throw sthis.logger.Error().Msg("indexBlockstore not set").AsError();
     }
     this.blockstore = crdt.indexBlockstore;
-    this.crdt = crdt as CRDT;
+    this.crdt = crdt;
     this.applyMapFn(name, mapFn, meta);
     this.name = name;
     if (!(this.mapFnString || this.initError)) throw this.logger.Error().Msg("missing mapFnString").AsError();
@@ -170,9 +170,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
           }
         } else {
           // application code is creating an index
-          if (!mapFn) {
-            mapFn = ((doc) => (doc as unknown as Record<string, unknown>)[name] ?? undefined) as MapFn<T>;
-          }
+          mapFn ??= ((doc) => (doc as unknown as Record<string, unknown>)[name] ?? undefined) as MapFn<T>;
           if (this.mapFnString) {
             // we already loaded from a header
             if (this.mapFnString !== mapFn.toString()) {
@@ -230,7 +228,7 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       let flattenedRows = results.flat();
 
       // Apply the original limit to the combined results if it was specified
-      if (opts) {
+      if (opts.limit) {
         flattenedRows = flattenedRows.slice(0, opts.limit);
       }
       const docInc = typeof opts.includeDocs === "boolean" ? opts.includeDocs : true;
@@ -264,8 +262,8 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
       {
         // getAllEntries returns a different type than range
         result: all.result.map(({ key: [k, id], value }) => ({
-          key: k as [K, string],
-          id,
+          key: k as unknown as [K, string],
+          id: id as unknown as string,
           value,
         })),
       },
@@ -308,8 +306,8 @@ export class Index<T extends DocTypes, K extends IndexKeyType = string, R extend
     if (this.byId.root) {
       const removeIds = result.map(({ id: key }) => key);
       const { result: oldChangeEntries } = await this.byId.root.getMany(removeIds);
-      staleKeyIndexEntries = oldChangeEntries.map((key) => ({ key, del: true }));
-      removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
+      staleKeyIndexEntries = oldChangeEntries.map((key) => ({ key: key as unknown as [K, string], del: true }));
+      removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: (key as unknown as [K, string])[1], del: true }));
     }
     const indexEntries = indexEntriesForChanges<T, K>(result, this.mapFn); // use a getter to translate from string
     const byIdIndexEntries: IndexDocString[] = indexEntries.map(({ key }) => ({

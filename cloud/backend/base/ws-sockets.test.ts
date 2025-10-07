@@ -44,9 +44,9 @@ describe("test multiple connections", () => {
       const { done, value } = await reader.read();
       if (done) return;
       cb(value);
-      readNext();
+      void readNext();
     }
-    readNext();
+    void readNext();
   }
 
   it("could open multiple connections", async () => {
@@ -60,7 +60,7 @@ describe("test multiple connections", () => {
             .pathname("fp")
             .setParam("protocol", fpUrl.protocol.startsWith("https") ? "wss" : "ws")
             .setParam("random", `multi-conn-${sthis.nextId(12).str}`);
-          return Msger.connect(sthis, url, { conn: { reqId: `test-multi-conn-${i}-${id}` } });
+          return Msger.connect(sthis, url, { conn: { reqId: `test-multi-conn-${i.toString()}-${id}` } });
         }),
     ); // .then((cs) => cs.map((c) => c.Ok().attachAuth(() => Promise.resolve(Result.Ok(auth.authType)))));
 
@@ -73,7 +73,7 @@ describe("test multiple connections", () => {
     const setResOpen = new Set<string>();
     for (const rC of conns) {
       const c = rC.Ok();
-      const reqId = `test-multi-conn-open-${i}-${id}`;
+      const reqId = `test-multi-conn-open-${i.toString()}-${id}`;
       setResOpen.add(reqId);
       const stream = c.bind(ps.buildReqOpen(sthis, auth.authType, { reqId }), {
         waitFor: () => true, // MsgIsResOpen, // All

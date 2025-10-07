@@ -174,7 +174,7 @@ export class KeyBag implements KeyBagIf {
   }
   async getJwt(name: string, key?: CryptoKey | KeyObject | JWK | Uint8Array, opts?: JWTVerifyOptions): Promise<Result<JWTResult>> {
     if (this.#namedKeyItems.has(name)) {
-      const ret = await this.#namedKeyItems.get(name).once((): Result<KeyedJwtKeyBagItem> => {
+      const ret = this.#namedKeyItems.get(name).once((): Result<KeyedJwtKeyBagItem> => {
         throw new Error("Should never called");
       });
       const p = KeyedJwtKeyBagItemSchema.safeParse(ret.Ok());
@@ -186,7 +186,7 @@ export class KeyBag implements KeyBagIf {
         if (key) {
           claims = await jwtVerify(p.data.item.jwtStr, key, opts);
         } else {
-          claims = decodeJwt(p.data.item.jwtStr);
+          claims = decodeJwt(p.data.item.jwtStr) as JWTPayload;
         }
       } catch (e) {
         /* */
@@ -217,7 +217,7 @@ export class KeyBag implements KeyBagIf {
     failIfNotFound = false,
     materialStrOrUint8?: string | Uint8Array,
   ): Promise<Result<KeysByFingerprint>> {
-    const kItem = await this.#namedKeyItems.get(name).once(() => new NamedKeyItem(new InternalKeyBagFingerprintItem(this, name)));
+    const kItem = this.#namedKeyItems.get(name).once(() => new NamedKeyItem(new InternalKeyBagFingerprintItem(this, name)));
     return kItem.seq.add(() => kItem.namedItem.getNamedKey({ failIfNotFound, materialStrOrUint8 }));
   }
 

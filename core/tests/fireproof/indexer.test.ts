@@ -24,7 +24,7 @@ interface TestType {
 
 describe("basic Index", () => {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   let didMap: boolean;
   const sthis = ensureSuperThis();
   afterEach(async () => {
@@ -142,7 +142,7 @@ describe("Index query with compound key", function () {
 
 describe("basic Index with map fun", function () {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -240,7 +240,7 @@ describe("Index query with map and compound key", function () {
 
 describe("basic Index with string fun", function () {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -272,7 +272,7 @@ describe("basic Index with string fun", function () {
 
 describe("basic Index with string fun and numeric keys", function () {
   let db: Database;
-  let indexer: Index<TestType, string>;
+  let indexer: Index<TestType>;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -347,7 +347,7 @@ describe("basic Index upon cold start", function () {
       didMap++;
       return doc.title;
     };
-    indexer = await index<TestType>(crdt, "hello", mapFn);
+    indexer = index<TestType>(crdt, "hello", mapFn);
     logger.Debug().Msg("post index beforeEach");
     await indexer.ready();
     logger.Debug().Msg("post indexer.ready beforeEach");
@@ -372,7 +372,7 @@ describe("basic Index upon cold start", function () {
     const { result, head } = await crdt2.changes();
     expect(result).toBeTruthy();
     await crdt2.ready();
-    const indexer2 = await index<TestType>(crdt2, "hello", mapFn);
+    const indexer2 = index<TestType>(crdt2, "hello", mapFn);
     await indexer2.ready();
     const result2 = await indexer2.query();
     expect(indexer2.indexHead).toEqual(head);
@@ -383,7 +383,7 @@ describe("basic Index upon cold start", function () {
   it.skip("should not rerun the map function on seen changes", async () => {
     didMap = 0;
     const crdt2 = new CRDTImpl(sthis, dbOpts);
-    const indexer2 = await index(crdt2, "hello", mapFn);
+    const indexer2 = index(crdt2, "hello", mapFn);
     const { result, head } = await crdt2.changes([]);
     expect(result.length).toEqual(3);
     expect(head.length).toEqual(1);

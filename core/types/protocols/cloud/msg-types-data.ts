@@ -20,7 +20,7 @@ export interface ReqGetData extends ReqSignedUrl {
 }
 
 export function buildReqGetData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqGetData {
-  return buildReqSignedUrl<ReqGetData>(sthis, "reqGetData", sup, ctx);
+  return buildReqSignedUrl(sthis, "reqGetData", sup, ctx) as ReqGetData;
 }
 
 export function MsgIsReqGetData(msg: MsgBase): msg is ReqGetData {
@@ -45,13 +45,7 @@ export function buildResGetData(
   req: MsgWithConn<ReqGetData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResGetData>> {
-  return buildRes<MsgWithConn<ReqGetData>, ResGetData>(
-    { method: "GET", store: req.methodParam.store },
-    "resGetData",
-    msgCtx,
-    req,
-    ctx,
-  );
+  return buildRes<ResGetData>({ method: "GET", store: req.methodParam.store }, "resGetData", msgCtx, req, ctx);
 }
 
 export interface ReqPutData extends ReqSignedUrl {
@@ -64,7 +58,7 @@ export function MsgIsReqPutData(msg: MsgBase): msg is ReqPutData {
 }
 
 export function buildReqPutData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqPutData {
-  return buildReqSignedUrl<ReqPutData>(sthis, "reqPutData", sup, ctx);
+  return buildReqSignedUrl(sthis, "reqPutData", sup, ctx) as ReqPutData;
 }
 
 export interface ResPutData extends ResSignedUrl {
@@ -80,13 +74,7 @@ export function buildResPutData(
   req: MsgWithConn<ReqPutData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResPutData>> {
-  return buildRes<MsgWithConn<ReqPutData>, ResPutData>(
-    { method: "PUT", store: req.methodParam.store },
-    "resPutData",
-    msgCtx,
-    req,
-    ctx,
-  );
+  return buildRes<ResPutData>({ method: "PUT", store: req.methodParam.store }, "resPutData", msgCtx, req, ctx);
 }
 
 export interface ReqDelData extends ReqSignedUrl {
@@ -98,7 +86,7 @@ export function MsgIsReqDelData(msg: MsgBase): msg is ReqDelData {
 }
 
 export function buildReqDelData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqDelData {
-  return buildReqSignedUrl<ReqDelData>(sthis, "reqDelData", sup, ctx);
+  return buildReqSignedUrl(sthis, "reqDelData", sup, ctx) as ReqDelData;
 }
 
 export interface ResDelData extends ResSignedUrl {
@@ -114,11 +102,5 @@ export function buildResDelData(
   req: MsgWithConn<ReqDelData>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<ResDelData>> {
-  return buildRes<MsgWithConn<ReqDelData>, ResDelData>(
-    { method: "DELETE", store: req.methodParam.store },
-    "resDelData",
-    msgCtx,
-    req,
-    ctx,
-  );
+  return buildRes<ResDelData>({ method: "DELETE", store: req.methodParam.store }, "resDelData", msgCtx, req, ctx);
 }

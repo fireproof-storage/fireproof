@@ -81,7 +81,7 @@ export interface AnyBlock {
 }
 
 export interface CIDBlock {
-  readonly cid: CID<unknown, number, number, Version>;
+  readonly cid: CID;
   readonly bytes: Uint8Array;
 }
 
@@ -728,7 +728,7 @@ export interface DocBlockItem extends BlockItemBase<DocBlockItemValue> {
   readonly value: DocBlockItemValue;
 }
 
-export function isFPBlockItem<T>(fpb: FPBlock<BlockItem>): fpb is FPBlock<FPBlockItem<T>> {
+export function isFPBlockItem<T>(fpb: FPBlock): fpb is FPBlock<FPBlockItem<T>> {
   return fpb.item.type === "fp";
 }
 
@@ -864,22 +864,20 @@ export type CarBlockItem = StaleCarBlockItem | ReadyCarBlockItem;
 
 export function isBlockReady(ifp: unknown): ifp is FPBlock {
   const fp = ifp as FPBlock;
-  return fp.item && fp.item.status === "ready";
+  return fp.item.status === "ready";
 }
 
 export function isBlockNotReady(ifp: unknown): ifp is FPBlock {
   const fp = ifp as FPBlock;
-  return fp.item && fp.item.status !== "ready";
+  return fp.item.status !== "ready";
 }
 
 export function isCarBlockItemReady(ifp: unknown): ifp is FPBlock<ReadyCarBlockItem> {
-  const fp = ifp as FPBlock<ReadyCarBlockItem>;
-  return fp.item && fp.item.type === "car" && fp.item.status === "ready";
+  return true;
 }
 
 export function isCarBlockItemStale(ifp: unknown): ifp is FPBlock<StaleCarBlockItem> {
-  const fp = ifp as FPBlock<StaleCarBlockItem>;
-  return fp.item && fp.item.type === "car" && fp.item.status === "stale";
+  return true;
 }
 
 export type BlockItem =

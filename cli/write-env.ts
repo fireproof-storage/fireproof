@@ -85,18 +85,19 @@ export function writeEnvCmd(sthis: SuperThis) {
         };
 
         if (!args.excludeSecrets) {
-          vals["ACCESS_KEY_ID"] = "minioadmin";
-          vals["SECRET_ACCESS_KEY"] = "minioadmin";
+          vals.ACCESS_KEY_ID = "minioadmin";
+          vals.SECRET_ACCESS_KEY = "minioadmin";
         }
       } else {
         Array.from(new Set(args.fromEnv))
           .sort()
           .reduce((acc, i) => {
-            const [k, v] = i.split("=");
-            if (v === undefined) {
-              acc[k] = param.REQUIRED;
+            const eqIndex = i.indexOf("=");
+            if (eqIndex === -1) {
+              acc[i] = param.REQUIRED;
             } else {
-              acc[k] = v;
+              const [k, v] = i.split("=", 2);
+              acc[k] = v || param.REQUIRED;
             }
             return acc;
           }, vals);

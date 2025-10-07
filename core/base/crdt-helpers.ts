@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { asyncBlockDecode } from "@fireproof/core-runtime";
 import { parse } from "multiformats/link";
 import { Block } from "multiformats/block";
@@ -14,7 +15,7 @@ import {
 } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
-import { BlockFetcher, TransactionMeta, AnyLink, StoreRuntime } from "@fireproof/core-types-blockstore";
+import { BlockFetcher, AnyLink, StoreRuntime } from "@fireproof/core-types-blockstore";
 import {
   type EncryptedBlockstore,
   CarTransactionImpl,
@@ -43,7 +44,7 @@ import {
 import { Logger } from "@adviser/cement";
 import { Link, Version } from "multiformats";
 
-function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
+function toString(key: IndexKeyType, logger: Logger): string {
   switch (typeof key) {
     case "string":
     case "number":
@@ -92,7 +93,7 @@ export function sanitizeDocumentFields<T>(obj: T): T {
           if (typeof value === "object" && !key.startsWith("_")) {
             // Handle Date objects in properties
             if (value instanceof Date) {
-              result[key] = (value as Date).toISOString();
+              result[key] = value.toISOString();
             } else {
               const sanitized = sanitizeDocumentFields(value);
               result[key] = sanitized;
@@ -187,14 +188,14 @@ async function processFileset(
   // let totalSize = 0
   for (const filename in files) {
     if (File === files[filename].constructor) {
-      const file = files[filename] as File;
+      const file = files[filename];
 
       // totalSize += file.size
       const { cid, blocks: fileBlocks } = await store.encodeFile(file);
       didPut.push(filename);
       for (const block of fileBlocks) {
         // console.log("processFileset", block.cid.toString())
-        t.putSync(await fileBlock2FPBlock(block));
+        t.putSync(fileBlock2FPBlock(block));
       }
       files[filename] = { cid, type: file.type, size: file.size, lastModified: file.lastModified } as DocFileMeta;
     } else {
@@ -208,13 +209,13 @@ async function processFileset(
   if (didPut.length) {
     const car = await dbBlockstore.loader.commitFiles(
       t,
-      { files } as unknown as TransactionMeta /* {
+      { files } as unknown /* {
       public: publicFiles,
     } */,
     );
     if (car) {
       for (const name of didPut) {
-        files[name] = { car, ...files[name] } as DocFileMeta;
+        files[name] = Object.assign(files[name], { car }) as DocFileMeta;
       }
     }
   }
@@ -314,9 +315,9 @@ export async function clockChangesSince<T extends DocTypes>(
   opts: ChangesOptions,
   logger: Logger,
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
-  const eventsFetcher = (
-    opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(toPailFetcher(blocks))
-  ) as EventFetcher<Operation>;
+  const eventsFetcher = opts.dirty
+    ? new DirtyEventFetcher<Operation>(logger, blocks)
+    : new EventFetcher<Operation>(toPailFetcher(blocks));
   const keys = new Set<string>();
   const updates = await gatherUpdates<T>(
     blocks,
@@ -326,7 +327,7 @@ export async function clockChangesSince<T extends DocTypes>(
     [],
     keys,
     new Set<string>(),
-    opts.limit || Infinity,
+    opts.limit ?? Infinity,
     logger,
   );
   return { result: updates.reverse(), head };

@@ -123,7 +123,9 @@ export class MsgDispatcher {
       this.items.set(id, item);
       return id;
     });
-    return () => ids.forEach((id) => this.items.delete(id));
+    return () => {
+      ids.forEach((id) => this.items.delete(id));
+    };
   }
 
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {
@@ -132,8 +134,8 @@ export class MsgDispatcher {
     // if (MsgIsResChat(msg)) {
     //   console.log("send", msg.tid, ctx.ws);
     // }
-    ctx.ws?.send(str);
-    return new Response(str, {
+    ctx.ws?.send(new Uint8Array(str));
+    return new Response(str.slice(), {
       status: isError ? 500 : 200,
       headers: CORS.AsHeaderInit(),
       statusText: isError ? "error" : "ok",
@@ -157,33 +159,30 @@ export class MsgDispatcher {
     msg: T,
     fn: (msg: T) => Promisable<MsgWithError<MsgBase>>,
   ): Promise<MsgWithError<MsgBase>> {
-    if (msg.auth) {
-      const rAuth = await ctx.impl.validateAuth(ctx, msg.auth);
-      if (rAuth.isErr()) {
-        return buildErrorMsg(ctx, msg, rAuth.Err());
-      }
-      const sMsg = await fn({
-        ...msg,
-        auth: rAuth.Ok(),
-      });
-      switch (true) {
-        case isAuthTypeFPCloudJWK(sMsg.auth):
-          return sMsg;
-        case isAuthTypeFPCloud(sMsg.auth):
-          return {
-            ...sMsg,
-            auth: {
-              type: "fp-cloud-jwk",
-              params: {
-                jwk: sMsg.auth.params.jwk,
-              },
-            } satisfies FPJWKCloudAuthType as AuthType, // send me to hell ts
-          };
-        default:
-          return buildErrorMsg(ctx, msg, new Error("unexpected auth"));
-      }
+    const rAuth = await ctx.impl.validateAuth(ctx, msg.auth);
+    if (rAuth.isErr()) {
+      return buildErrorMsg(ctx, msg, rAuth.Err());
     }
-    return buildErrorMsg(ctx, msg, new Error("missing auth"));
+    const sMsg = await fn({
+      ...msg,
+      auth: rAuth.Ok(),
+    });
+    switch (true) {
+      case isAuthTypeFPCloudJWK(sMsg.auth):
+        return sMsg;
+      case isAuthTypeFPCloud(sMsg.auth):
+        return {
+          ...sMsg,
+          auth: {
+            type: "fp-cloud-jwk",
+            params: {
+              jwk: sMsg.auth.params.jwk,
+            },
+          } satisfies FPJWKCloudAuthType as AuthType, // send me to hell ts
+        };
+      default:
+        return buildErrorMsg(ctx, msg, new Error("unexpected auth"));
+    }
   }
 
   async dispatch(ctx: MsgDispatcherCtx, msg: MsgBase): Promise<Response> {
@@ -202,7 +201,7 @@ export class MsgDispatcher {
         const ret = await this.validateConn(ctx, msg, (msg) => found.fn(ctx, msg));
         return ret;
       }
-      return this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg));
+      return await this.validateAuth(ctx, msg, (msg) => found.fn(ctx, msg));
     } catch (e) {
       return buildErrorMsg(ctx, msg, e as Error);
       // } finally {

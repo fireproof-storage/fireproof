@@ -39,7 +39,7 @@ export async function dbMetaEvent2Serialized(
         {
           dbMeta: sthis.txt.encode(format(dbEvent.dbMeta)),
         },
-        dbEvent.parents as unknown as Link<EventView<DbMetaBinary>, number, number, 1>[],
+        dbEvent.parents as unknown as Link<EventView<DbMetaBinary>>[],
       );
       return {
         cid: event.cid.toString(),
@@ -67,10 +67,12 @@ function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
 }
 
 const defaultEncoder: FPEncoder = {
-  car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
-  file: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
-  meta: async (sthis: SuperThis, payload: SerializedMeta[]) => Result.Ok(sthis.txt.encode(JSON.stringify(payload))),
-  wal: async (sthis: SuperThis, payload: SerializedWAL) => Result.Ok(sthis.txt.encode(JSON.stringify(payload))),
+  car: async (sthis: SuperThis, payload: Uint8Array) => await Promise.resolve(Result.Ok(payload)),
+  file: async (sthis: SuperThis, payload: Uint8Array) => await Promise.resolve(Result.Ok(payload)),
+  meta: async (sthis: SuperThis, payload: SerializedMeta[]) =>
+    await Promise.resolve(Result.Ok(sthis.txt.encode(JSON.stringify(payload)))),
+  wal: async (sthis: SuperThis, payload: SerializedWAL) =>
+    await Promise.resolve(Result.Ok(sthis.txt.encode(JSON.stringify(payload)))),
 };
 
 export async function fpSerialize<T>(
@@ -132,21 +134,21 @@ function toCid(sthis: SuperThis, link: LinkOrCid): CID {
   return fromJSON(link);
 }
 
-async function decode2WalState(sthis: SuperThis, rserializedWAL: Result<SerializedWAL>): Promise<Result<WALState>> {
+function decode2WalState(sthis: SuperThis, rserializedWAL: Result<SerializedWAL>): Result<WALState> {
   if (rserializedWAL.isErr()) {
     return Result.Err(rserializedWAL.Err());
   }
   const serializedWAL = rserializedWAL.unwrap();
   return Result.Ok({
-    fileOperations: (serializedWAL.fileOperations || []).map((fop) => ({
+    fileOperations: (serializedWAL.fileOperations ?? []).map((fop) => ({
       cid: toCid(sthis, fop.cid),
       public: fop.public,
     })),
-    noLoaderOps: (serializedWAL.noLoaderOps || []).map((nop) => ({
-      cars: (nop.cars || []).map((i) => toCid(sthis, i)),
+    noLoaderOps: (serializedWAL.noLoaderOps ?? []).map((nop) => ({
+      cars: nop.cars.map((i) => toCid(sthis, i)),
     })),
-    operations: (serializedWAL.operations || []).map((op) => ({
-      cars: (op.cars || []).map((i) => toCid(sthis, i)),
+    operations: (serializedWAL.operations ?? []).map((op) => ({
+      cars: op.cars.map((i) => toCid(sthis, i)),
     })),
   });
 }
@@ -156,12 +158,12 @@ async function decode2WalState(sthis: SuperThis, rserializedWAL: Result<Serializ
 // export type METADecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Result<SerializedMeta[]>>;
 
 const defaultDecoder = {
-  car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
-  file: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
+  car: async (sthis: SuperThis, payload: Uint8Array) => await Promise.resolve(Result.Ok(payload)),
+  file: async (sthis: SuperThis, payload: Uint8Array) => await Promise.resolve(Result.Ok(payload)),
   meta: async (sthis: SuperThis, payload: Uint8Array) =>
-    exception2Result(() => JSON.parse(sthis.txt.decode(payload)) as SerializedMeta[]),
+    await Promise.resolve(exception2Result(() => JSON.parse(sthis.txt.decode(payload)) as SerializedMeta[])),
   wal: async (sthis: SuperThis, payload: Uint8Array) =>
-    exception2Result(() => JSON.parse(sthis.txt.decode(payload)) as SerializedWAL),
+    await Promise.resolve(exception2Result(() => JSON.parse(sthis.txt.decode(payload)) as SerializedWAL)),
 };
 
 function makeFPEnvelope<S>(type: FPEnvelopeType, payload: Result<S>): Result<FPEnvelope<S>> {
@@ -195,9 +197,7 @@ export async function fpDeserialize<S>(
     case "file":
       return makeFPEnvelope(FPEnvelopeTypes.FILE, await decoder.file(sthis, raw)) as Result<FPEnvelope<S>>;
     case "wal":
-      return makeFPEnvelope(FPEnvelopeTypes.WAL, await decode2WalState(sthis, await decoder.wal(sthis, raw))) as Result<
-        FPEnvelope<S>
-      >;
+      return makeFPEnvelope(FPEnvelopeTypes.WAL, decode2WalState(sthis, await decoder.wal(sthis, raw))) as Result<FPEnvelope<S>>;
     case "meta":
       return makeFPEnvelope(FPEnvelopeTypes.META, await decode2DbMetaEvents(sthis, await decoder.meta(sthis, raw))) as Result<
         FPEnvelope<S>

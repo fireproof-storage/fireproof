@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-confusing-void-expression */
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 import {
   type AnyBlock,
@@ -120,8 +122,8 @@ export abstract class BaseStoreImpl {
   }
   abstract close(): Promise<Result<void>>;
 
-  async ready() {
-    return;
+  ready(): Promise<void> {
+    return Promise.resolve();
   }
 
   async keyedCrypto(): Promise<CryptoAction> {
@@ -134,7 +136,7 @@ export abstract class BaseStoreImpl {
     const res = await this.gateway.start({ loader: this.loader }, this._url);
     if (res.isErr()) {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
-      return res as Result<URI>;
+      return res;
     }
     this._url = res.Ok();
 
@@ -142,11 +144,14 @@ export abstract class BaseStoreImpl {
     const kb = await this.loader.keyBag();
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
       const key = this._url.getParam(PARAM.KEY);
-      return key as string;
+      if (!key) {
+        throw this.logger.Error().Msg("missing key parameter").AsError();
+      }
+      return key;
     });
 
     if (skRes.isErr()) {
-      return skRes as Result<URI>;
+      return skRes;
     }
     this._url = skRes.Ok();
     const version = guardVersion(this._url);
@@ -155,7 +160,7 @@ export abstract class BaseStoreImpl {
       await this.close();
       return version;
     }
-    if (this.ready) {
+    if (this.ready !== BaseStoreImpl.prototype.ready) {
       const fn = this.ready.bind(this);
       const ready = await exception2Result(fn);
       if (ready.isErr()) {
@@ -163,7 +168,9 @@ export abstract class BaseStoreImpl {
         return ready as Result<URI>;
       }
     }
-    this._onStarted.forEach((fn) => fn(dam));
+    this._onStarted.forEach((fn) => {
+      fn(dam);
+    });
     this.logger.Debug().Msg("started");
     return version;
   }
@@ -174,7 +181,7 @@ export async function createDbMetaEvent(sthis: SuperThis, dbMeta: DbMeta, parent
     {
       dbMeta: sthis.txt.encode(format(dbMeta)),
     },
-    parents as unknown as Link<EventView<DbMetaBinary>, number, number, 1>[],
+    parents as unknown as Link<EventView<DbMetaBinary>>[],
   );
   return {
     eventCid: event.cid as CarClockLink,
@@ -277,7 +284,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       },
       cancel: (reason) => {
         if (reason !== "close") {
-          this.logger.Warn().Any({ reason }).Msg("unexpected meta stream end");
+          this.logger.Warn().Str("reason", String(reason)).Msg("unexpected meta stream end");
         }
         if (unsubscribe.isOk()) {
           unsubscribe.Ok()();
@@ -289,7 +296,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
-    branch = branch || "main";
+    branch = branch ?? "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
 
     // const fpMetas = await encodeEventsWithParents(this.sthis, [event], this.parents);
@@ -312,7 +319,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async close(): Promise<Result<void>> {
     await this.gateway.close({ loader: this.loader }, this.url());
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => {
+      fn();
+    });
     return Result.Ok(undefined);
   }
   async destroy(): Promise<Result<void>> {
@@ -390,7 +399,9 @@ abstract class DataStoreImpl extends BaseStoreImpl {
   }
   async close(): Promise<Result<void>> {
     await this.gateway.close({ loader: this.loader }, this.url());
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => {
+      fn();
+    });
     return Result.Ok(undefined);
   }
   destroy(): Promise<Result<void>> {
@@ -437,7 +448,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async ready(): Promise<void> {
     return this._ready.once(async () => {
-      const walState = await this.load().catch((e) => {
+      const walState = await this.load().catch((e: unknown) => {
         this.logger.Error().Err(e).Msg("error loading wal");
         return;
       });
@@ -489,7 +500,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   }
 
   async _doProcess() {
-    if (!this.loader) return;
     // if (!this.loader.xremoteCarStore) return;
 
     const operations = [...this.walState.operations];
@@ -509,7 +519,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             .Warn()
             .Any("error", error)
             .Any("fn", fn.toString())
-            .Msg(`Attempt ${error.attemptNumber} failed for ${description}. There are ${error.retriesLeft} retries left.`);
+            .Msg(
+              `Attempt ${error.attemptNumber.toString()} failed for ${description}. There are ${error.retriesLeft.toString()} retries left.`,
+            );
         },
       });
 
@@ -523,16 +535,14 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             //   return;
             // }
             for (const cid of dbMeta.cars) {
-              const car = await this.loader.attachedStores.local().active.car.load(cid);
+              await this.loader.attachedStores.local().active.car.load(cid);
               // .carStore().then((i) => i.load(cid));
-              if (!car) {
-                if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
-                  throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
-                }
-                // } else {
-                //   await this.loader.attachedStores.forRemotes((x) => x.active.car.save(car));
-                // throwFalsy(this.loader.xremoteCarStore).save(car);
+              if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
+                throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
               }
+              // } else {
+              //   await this.loader.attachedStores.forRemotes((x) => x.active.car.save(car));
+              // throwFalsy(this.loader.xremoteCarStore).save(car);
             }
             // Remove from walState after successful upload
             inplaceFilter(this.walState.noLoaderOps, (op) => op !== dbMeta);
@@ -550,8 +560,8 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             //   return;
             // }
             for (const cid of dbMeta.cars) {
-              const car = await this.loader.attachedStores.local().active.car.load(cid);
-              if (!car) {
+              await this.loader.attachedStores.local().active.car.load(cid);
+              if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                 if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
                 }
@@ -577,10 +587,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             // if (!this.loader) {
             //   return;
             // }
-            const fileBlock = await this.loader.attachedStores.local().active.file.load(fileCid);
-            if (!fileBlock) {
-              throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
-            }
+            await this.loader.attachedStores.local().active.file.load(fileCid);
             // await this.loader.attachedStores.forRemotes((x) => x.active.file.save(fileBlock, { public: publicFile }));
             // await this.loader.xremoteFileStore?.save(fileBlock, { public: publicFile });
             // Remove from walState after successful upload
@@ -594,9 +601,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       if (operations.length) {
         const lastOp = operations[operations.length - 1];
         await retryableUpload(async () => {
-          if (!this.loader) {
-            return;
-          }
           // await this.loader.xremoteMetaStore?.save(lastOp);
           // await this.loader.attachedStores.forRemotes((x) => x.active.meta.save(lastOp));
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
@@ -625,9 +629,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       }
       throw this.logger.Error().Err(bytes.Err()).Msg("error get").AsError();
     }
-    if (bytes.Ok().type !== "wal") {
-      throw this.logger.Error().Str("type", bytes.Ok().type).Msg("unexpected type").AsError();
-    }
+    // Type is already validated as "wal" by the Result type
     return bytes.Ok().payload;
   }
 
@@ -653,7 +655,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async close() {
     await this.gateway.close({ loader: this.loader }, this.url());
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => {
+      fn();
+    });
     return Result.Ok(undefined);
   }
 

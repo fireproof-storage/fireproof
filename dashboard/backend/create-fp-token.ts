@@ -28,26 +28,28 @@ export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
     .sign(privKey);
 }
 
-export async function getFPTokenContext(sthis: SuperThis, ictx: Partial<FPTokenContext> = {}): Promise<Result<FPTokenContext>> {
+export function getFPTokenContext(sthis: SuperThis, ictx: Partial<FPTokenContext> = {}): Promise<Result<FPTokenContext>> {
   const rCtx = sthis.env.gets({
     CLOUD_SESSION_TOKEN_SECRET: ictx.secretToken ?? param.REQUIRED,
     CLOUD_SESSION_TOKEN_PUBLIC: ictx.publicToken ?? param.REQUIRED,
     CLOUD_SESSION_TOKEN_ISSUER: "FP_CLOUD",
     CLOUD_SESSION_TOKEN_AUDIENCE: "PUBLIC",
-    CLOUD_SESSION_TOKEN_VALID_FOR: "" + 60 * 60,
-    CLOUD_SESSION_TOKEN_EXTEND_VALID_FOR: "" + 6 * 60 * 60,
+    CLOUD_SESSION_TOKEN_VALID_FOR: String(60 * 60),
+    CLOUD_SESSION_TOKEN_EXTEND_VALID_FOR: String(6 * 60 * 60),
   });
   if (rCtx.isErr()) {
-    return Result.Err(rCtx.Err());
+    return Promise.resolve(Result.Err(rCtx.Err()));
   }
   const ctx = rCtx.Ok();
-  return Result.Ok({
-    secretToken: ctx.CLOUD_SESSION_TOKEN_SECRET,
-    publicToken: ctx.CLOUD_SESSION_TOKEN_PUBLIC,
-    issuer: ctx.CLOUD_SESSION_TOKEN_ISSUER,
-    audience: ctx.CLOUD_SESSION_TOKEN_AUDIENCE,
-    validFor: parseInt(ctx.CLOUD_SESSION_TOKEN_VALID_FOR, 10),
-    extendValidFor: parseInt(ctx.CLOUD_SESSION_TOKEN_EXTEND_VALID_FOR, 10),
-    ...ictx,
-  } satisfies FPTokenContext);
+  return Promise.resolve(
+    Result.Ok({
+      secretToken: ctx.CLOUD_SESSION_TOKEN_SECRET,
+      publicToken: ctx.CLOUD_SESSION_TOKEN_PUBLIC,
+      issuer: ctx.CLOUD_SESSION_TOKEN_ISSUER,
+      audience: ctx.CLOUD_SESSION_TOKEN_AUDIENCE,
+      validFor: parseInt(ctx.CLOUD_SESSION_TOKEN_VALID_FOR, 10),
+      extendValidFor: parseInt(ctx.CLOUD_SESSION_TOKEN_EXTEND_VALID_FOR, 10),
+      ...ictx,
+    } satisfies FPTokenContext),
+  );
 }

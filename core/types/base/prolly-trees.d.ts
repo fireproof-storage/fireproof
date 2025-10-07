@@ -1,9 +1,9 @@
 declare module "prolly-trees/base" {
-  declare type AnyLink = Link<unknown, number, number, Version>;
+  declare type AnyLink = string;
   declare type KeyLiteral = string | number | boolean;
   declare type IndexKeyType = KeyLiteral | KeyLiteral[];
 
-  declare type DocFragment = Uint8Array | string | number | boolean | null | AnyLink | DocFragment[] | object;
+  declare type DocFragment = Uint8Array | string | number | boolean | null | DocFragment[] | object;
 
   declare interface IndexRow<K extends IndexKeyType, T extends DocFragment> {
     readonly id: string;
@@ -13,10 +13,10 @@ declare module "prolly-trees/base" {
   // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
   declare interface BaseNode<K extends IndexKeyType, T extends DocFragment> {
     getAllEntries(): PromiseLike<{ [x: string]: unknown; result: IndexRow<K, T>[] }>;
-    getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
+    getMany(removeIds: IndexKeyType[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
     range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
     get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
-    bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
+    bulk(bulk: IndexUpdateString[]): PromiseLike<{
       readonly root?: ProllyNode<K, T>;
       readonly blocks: Block[];
     }>;
@@ -45,7 +45,7 @@ declare module "prolly-trees/utils" {
   declare interface Entry {
     identity(): number;
   }
-  declare function bf<T>(factor: number): (entry: T, dist: number) => Promise<boolean>;
+  declare function bf(factor: number): (entry: unknown, dist: number) => Promise<boolean>;
   // declare function bf(factor: number): (entry: Entry) => Promise<boolean>;
   declare function simpleCompare(a: number | string, b: number | string): number;
 }

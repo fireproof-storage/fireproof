@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
 import { BuildURI, CoerceURI, Logger, Result, runtimeFn, URI } from "@adviser/cement";
 import {
   buildReqGestalt,
@@ -16,7 +17,6 @@ import {
   AuthType,
   FPJWKCloudAuthType,
   MsgWithConn,
-  ReqOpen,
   ErrorMsg,
   ReqOpenConn,
   buildReqOpen,
@@ -45,12 +45,14 @@ export function selectRandom<T>(arr: T[]): T {
 export function timeout<T>(ms: number, promise: Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(new Error(`TIMEOUT after ${ms}ms`));
+      reject(new Error(`TIMEOUT after ${ms.toString()}ms`));
     }, ms);
     promise
       .then(resolve)
       .catch(reject)
-      .finally(() => clearTimeout(timer));
+      .finally(() => {
+        clearTimeout(timer);
+      });
   });
 }
 
@@ -77,7 +79,7 @@ export interface ActiveStream {
 export function jsonEnDe(sthis: SuperThis): EnDeCoder {
   return {
     encode: (node: unknown) => sthis.txt.encode(JSON.stringify(node)),
-    decode: (data: Uint8Array) => JSON.parse(sthis.txt.decode(data)),
+    decode: <T>(data: Uint8Array) => JSON.parse(sthis.txt.decode(data)) as T,
   };
 }
 
@@ -110,24 +112,26 @@ export async function applyStart(prC: Promise<Result<MsgRawConnection>>): Promis
   return rC;
 }
 
-export async function authTypeFromUri(logger: Logger, curi: CoerceURI): Promise<Result<FPJWKCloudAuthType>> {
+export function authTypeFromUri(logger: Logger, curi: CoerceURI): Promise<Result<FPJWKCloudAuthType>> {
   const uri = URI.from(curi);
   const authJWK = uri.getParam("authJWK");
   if (!authJWK) {
-    return logger.Error().Url(uri).Msg("authJWK is required").ResultError();
+    return Promise.resolve(logger.Error().Url(uri).Msg("authJWK is required").ResultError());
   }
   // const sts = await SessionTokenService.createFromEnv();
   // const fpc = await sts.validate(authJWK);
   // if (fpc.isErr()) {
   //   return logger.Error().Err(fpc).Msg("Invalid authJWK").ResultError();
   // }
-  return Result.Ok({
-    type: "fp-cloud-jwk",
-    params: {
-      // claim: fpc.Ok().payload,
-      jwk: authJWK,
-    },
-  } satisfies FPJWKCloudAuthType);
+  return Promise.resolve(
+    Result.Ok({
+      type: "fp-cloud-jwk",
+      params: {
+        // claim: fpc.Ok().payload,
+        jwk: authJWK,
+      },
+    } satisfies FPJWKCloudAuthType),
+  );
 }
 
 function initialFPUri(curl: CoerceURI): URI {
@@ -163,13 +167,8 @@ export class Msger {
 }
 
 export class MsgOpenWSAndHttp {
-  async openHttp(
-    vc: SuperThis,
-    urls: URI[],
-    msgP: MsgerParamsWithEnDe,
-    exGestalt: ExchangedGestalt,
-  ): Promise<Result<MsgRawConnection>> {
-    return Result.Ok(new HttpConnection(vc, urls, msgP, exGestalt));
+  openHttp(vc: SuperThis, urls: URI[], msgP: MsgerParamsWithEnDe, exGestalt: ExchangedGestalt): Promise<Result<MsgRawConnection>> {
+    return Promise.resolve(Result.Ok(new HttpConnection(vc, urls, msgP, exGestalt)));
   }
 
   async openWS(
@@ -239,9 +238,9 @@ export class VirtualConnected {
     this.logger = ensureLogger(sthis, "VirtualConnected");
     this.opts = {
       ...opts,
-      openWSorHttp: opts.openWSorHttp || new MsgOpenWSAndHttp(),
-      retryCount: opts.retryCount || 3,
-      retryDelay: opts.retryDelay || 500,
+      openWSorHttp: opts.openWSorHttp ?? new MsgOpenWSAndHttp(),
+      retryCount: opts.retryCount ?? 3,
+      retryDelay: opts.retryDelay ?? 500,
       conn: { reqId: sthis.nextId().str, ...opts.conn }, // ensure conn has reqId
     } satisfies VirtualConnectedOpts;
     this.mowh = this.opts.openWSorHttp; // simplify the code
@@ -261,11 +260,9 @@ export class VirtualConnected {
     const conn = { ...this.conn, ...req.conn } satisfies QSId;
     const stream = realConn.bind<MsgBase, MsgWithConn>({ ...as.bind.msg, auth: req.auth, conn }, as.bind.opts);
     const sreader = stream.getReader();
-    while (true) {
-      const { done, value: msg } = await sreader.read();
-      if (done) {
-        return;
-      }
+    let result = await sreader.read();
+    while (!result.done) {
+      const msg = result.value;
       try {
         if (MsgIsConnected(msg, this.conn) || MsgIsConnected(msg, conn)) {
           as.controller?.enqueue(msg);
@@ -273,6 +270,7 @@ export class VirtualConnected {
       } catch (err) {
         this.sthis.logger.Error().Err(err).Any({ msg }).Msg("Error in handleBindRealConn callback[ignored]");
       }
+      result = await sreader.read();
     }
   }
 
@@ -283,16 +281,16 @@ export class VirtualConnected {
     };
   }
 
-  bind<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, iopts: RequestOpts): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgWithConn>(req: MsgWithOptionalConn, iopts: RequestOpts): ReadableStream<MsgWithError<S>> {
     const opts = this.ensureOpts(iopts);
     const id = this.sthis.nextId().str;
     return new ReadableStream<MsgWithError<S>>({
       cancel: (err) => {
-        this.sthis.logger.Debug().Msg("vc-bind-cancel", id, err);
+        this.sthis.logger.Debug().Msg("vc-bind-cancel", id, String(err));
         this.activeBinds.delete(id);
       },
       start: (ctl) => {
-        this.getRealConn(req, opts, async (realConn: MsgRawConnection) => {
+        this.getRealConn(req, opts, (realConn: MsgRawConnection) => {
           const as = {
             id,
             bind: {
@@ -302,13 +300,13 @@ export class VirtualConnected {
             controller: ctl,
           };
           this.activeBinds.set(id, as);
-          this.handleBindRealConn(realConn, req, as);
-          return Result.Ok(undefined);
-        }).catch((err: Error) => {
+          void this.handleBindRealConn(realConn, req, as);
+          return Promise.resolve(Result.Ok(undefined));
+        }).catch((err: unknown) => {
           ctl.error({
             type: "error",
             src: "VirtualConnection:bind",
-            message: err.message,
+            message: err instanceof Error ? err.message : "Unknown error",
             tid: req.tid,
             version: req.version,
             auth: req.auth,
@@ -319,10 +317,10 @@ export class VirtualConnected {
     });
   }
 
-  request<S extends MsgWithConn, Q extends MsgWithOptionalConn>(req: Q, iopts: RequestOpts): Promise<MsgWithError<S>> {
+  request<S extends MsgWithConn>(req: MsgWithOptionalConn, iopts: RequestOpts): Promise<MsgWithError<S>> {
     const opts = this.ensureOpts(iopts);
     const realFn = (realConn: MsgRawConnection) =>
-      realConn.request<S, Q>(
+      realConn.request<S, MsgWithOptionalConn>(
         {
           ...req,
           conn: { ...this.virtualConn, ...req.conn },
@@ -336,7 +334,7 @@ export class VirtualConnected {
     return this.getRealConn(req, opts, realFn);
   }
 
-  send<S extends MsgWithConn, Q extends MsgWithOptionalConn>(msg: Q): Promise<MsgWithError<S>> {
+  send<S extends MsgWithConn>(msg: MsgWithOptionalConn): Promise<MsgWithError<S>> {
     return this.getRealConn(
       msg,
       {
@@ -348,7 +346,7 @@ export class VirtualConnected {
           conn: { ...this.conn, ...msg.conn },
         };
         // console.log("VirtualConnected:send", this.id, myMsg);
-        const ret = await realConn.send<S, Q>(myMsg);
+        const ret = await realConn.send<S, MsgWithOptionalConn>(myMsg);
         return ret;
       },
     );
@@ -430,7 +428,7 @@ export class VirtualConnected {
   }
 
   private async getQSIdWithSideEffect(rawConn: MsgRawConnection, msg: MsgBase, conn: ReqOpenConn): Promise<MsgWithError<ResOpen>> {
-    const mOpen = await this.request<ResOpen, ReqOpen>(buildReqOpen(this.sthis, msg.auth, conn), {
+    const mOpen = await this.request<ResOpen>(buildReqOpen(this.sthis, msg.auth, conn), {
       waitFor: MsgIsResOpen,
       noConn: true,
       rawConn,
@@ -442,10 +440,10 @@ export class VirtualConnected {
     return mOpen;
   }
 
-  private mutex = pLimit(1);
+  private readonly mutex = pLimit(1);
 
-  private async getRealConn<S extends MsgBase, Q extends MsgBase, X extends MsgWithError<S> | Result<void>>(
-    msg: Q,
+  private async getRealConn<S extends MsgBase, X extends MsgWithError<S> | Result<void>>(
+    msg: MsgBase,
     iopts: RequestOpts,
     action: (realConn: MsgRawConnection) => Promise<X>,
   ): Promise<X> {
@@ -538,14 +536,17 @@ export class VirtualConnected {
       case "recurse":
         return this.getRealConn(msg, opts, action);
       case "return":
-        return whatToDo.value as X;
+        if (!whatToDo.value) {
+          throw new Error("whatToDo.value is undefined for return case");
+        }
+        return whatToDo.value;
       case "action":
         if (!this.realConn) {
           throw new Error("realConn is not set, this should not happen");
         }
         return action(this.realConn);
       default:
-        throw new Error(`Unknown action: ${whatToDo.whatToDo} for msg: ${msg.type} with id: ${this.id}`);
+        throw new Error(`Unknown action: ${String(whatToDo.whatToDo)} for msg: ${msg.type} with id: ${this.id}`);
     }
   }
 }

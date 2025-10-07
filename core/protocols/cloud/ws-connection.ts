@@ -125,12 +125,12 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
       if (!this.isReady) {
         this.toMsg(buildErrorMsg(this, {} as MsgBase, this.logger.Error().Msg("Received message before onOpen").AsError()));
       }
-      this.#wsOnMessage(evt);
+      void this.#wsOnMessage(evt);
     };
     this.ws.onclose = () => {
       this.isReady = false;
       // console.log("onclose", this.id);
-      this.close().catch((ierr) => {
+      this.close().catch((ierr: unknown) => {
         const err = this.logger.Error().Err(ierr).Msg("close error").AsError();
         onOpenFuture.resolve(Result.Err(err));
         this.toMsg(buildErrorMsg(this, { tid: "internal" } as MsgBase, err));
@@ -153,7 +153,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
 
   readonly #wsOnMessage = async (event: MessageEvent) => {
     const rMsg = await exception2Result(async () => {
-      const msg = this.msgP.ende.decode(await top_uint8(event.data)) as MsgBase;
+      const msg = this.msgP.ende.decode(await top_uint8(event.data as Blob));
       return msg;
     });
     if (rMsg.isErr()) {
@@ -162,29 +162,33 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
     }
     const msg = rMsg.Ok();
     // console.log("wsOnMessage", this.id, msg);
-    this.waitForTid.resolve(msg);
+    this.waitForTid.resolve(msg as MsgBase);
     // console.log("wsOnMessage", msg, this.#onMsg.size);
     Array.from(this.#onMsg.values()).forEach((cb) => {
       // console.log("cb-onmessage", this.id, msg, cb.toString());
-      cb(msg);
+      cb(msg as MsgWithError<MsgBase>);
     });
   };
 
-  async close(): Promise<Result<void>> {
-    this.#onClose.forEach((fn) => fn());
+  close(): Promise<Result<void>> {
+    this.#onClose.forEach((fn) => {
+      fn();
+    });
     this.#onClose.clear();
     this.#onMsg.clear();
     // console.lows.id, ion", this.id, new Error().stack);
     this.ws.close();
-    return Result.Ok(undefined);
+    return Promise.resolve(Result.Ok(undefined));
   }
 
   toMsg<S extends MsgBase>(msg: MsgWithError<S>): MsgWithError<S> {
-    this.#onMsg.forEach((fn) => fn(msg));
+    this.#onMsg.forEach((fn) => {
+      fn(msg);
+    });
     return msg;
   }
 
-  send<Q extends MsgBase, S extends MsgBase>(msg: Q): Promise<S> {
+  send<S extends MsgBase>(msg: MsgBase): Promise<S> {
     // console.log("send", msg);
     this.ws.send(this.msgP.ende.encode(msg));
     return Promise.resolve(msg as unknown as S);
@@ -203,7 +207,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
   }
 
   readonly activeBinds = new Map<string, ActiveStream>();
-  bind<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
+  bind<S extends MsgBase>(req: MsgBase, opts: RequestOpts): ReadableStream<MsgWithError<S>> {
     const state: ActiveStream = {
       id: this.sthis.nextId().str,
       bind: {
@@ -227,19 +231,17 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
               controller.enqueue(msg);
               return;
             }
-            if (!opts.waitFor) {
-              controller.enqueue(msg);
-            } else if (opts.waitFor(msg)) {
+            if (opts.waitFor(msg)) {
               controller.enqueue(msg);
             }
           } catch (err) {
             this.logger.Error().Err(err).Any({ msg }).Msg("Error in onMsg callback[ignored]");
           }
         });
-        this.send(req);
+        void this.send(req);
         const future = new Future<S>();
         this.waitForTid.start(this.sthis, this.logger, { tid: req.tid, future, waitFor: opts.waitFor });
-        future.asPromise().then((msg) => {
+        void future.asPromise().then((msg) => {
           if (MsgIsError(msg)) {
             // double err emitting
             controller.enqueue(msg);
@@ -251,7 +253,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
     return ret;
   }
 
-  async request<Q extends MsgBase, S extends MsgBase>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>> {
+  async request<S extends MsgBase>(req: MsgBase, opts: RequestOpts): Promise<MsgWithError<S>> {
     const future = new Future<S>();
     this.waitForTid.start(this.sthis, this.logger, {
       tid: req.tid,

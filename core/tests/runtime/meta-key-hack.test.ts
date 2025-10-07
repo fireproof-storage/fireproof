@@ -10,15 +10,15 @@ import { ensureSuperThis } from "@fireproof/core-runtime";
 import { Database, PARAM } from "@fireproof/core-types-base";
 
 describe("MetaKeyHack", () => {
-  const storageMap = new Map();
+  const storageMap = new Map<string, Uint8Array>();
 
   const sthis = ensureSuperThis();
   const memGw = new MemoryGateway(sthis, storageMap);
   registerStoreProtocol({
     protocol: "hack:",
     defaultURI: () => URI.from(`hack://localhost?version=hack`),
-    serdegateway: async () => {
-      return new AddKeyToDbMetaGateway(memGw, "v2");
+    serdegateway: async (_sthis) => {
+      return Promise.resolve(new AddKeyToDbMetaGateway(memGw, "v2"));
     },
   });
 
@@ -71,7 +71,7 @@ describe("MetaKeyHack", () => {
           .Ok()
           .get()
           .then(async (r) => ({
-            [r?.fingerPrint as string]: {
+            [r?.fingerPrint ?? ""]: {
               default: true,
               fingerPrint: r?.fingerPrint,
               key: await r?.extract().then((i) => i.keyStr),
@@ -96,8 +96,10 @@ describe("MetaKeyHack", () => {
     expect(subscribeFn).toHaveBeenCalledTimes(2);
     const addKeyToDbMetaGateway = metaStore.realGateway as AddKeyToDbMetaGateway;
     expect(
-      subscribeFn.mock.calls.map((i) => i.map((i) => i.payload.map((i: DbMetaEvent) => i.eventCid.toString()))).flat(2),
-    ).toEqual(Array.from(new Set(addKeyToDbMetaGateway.lastDecodedMetas.map((i) => i.metas.map((i) => i.cid)).flat(2))));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+      subscribeFn.mock.calls.map((i: any) => i.map((i: any) => i.payload.map((i: DbMetaEvent) => i.eventCid.toString()))).flat(2),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    ).toEqual(Array.from(new Set(addKeyToDbMetaGateway.lastDecodedMetas.map((i: any) => i.metas.map((i: any) => i.cid)).flat(2))));
     unreg.Ok()();
   });
 });

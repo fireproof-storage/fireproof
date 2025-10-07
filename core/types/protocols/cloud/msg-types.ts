@@ -75,9 +75,9 @@ export interface MsgRawConnection<T extends MsgBase = MsgBase> {
 
   isReady: boolean;
 
-  bind<S extends T, Q extends T>(req: Q, opts: RequestOpts): ReadableStream<MsgWithError<S>>;
-  request<S extends T, Q extends T>(req: Q, opts: RequestOpts): Promise<MsgWithError<S>>;
-  send<S extends T, Q extends T>(msg: Q): Promise<MsgWithError<S>>;
+  bind<S extends T>(req: T, opts: RequestOpts): ReadableStream<MsgWithError<S>>;
+  request<S extends T>(req: T, opts: RequestOpts): Promise<MsgWithError<S>>;
+  send<S extends T>(msg: T): Promise<MsgWithError<S>>;
   start(): Promise<Result<void>>;
   close(o: T): Promise<Result<void>>;
 }
@@ -92,8 +92,8 @@ export interface RequestOpts {
 }
 
 export interface EnDeCoder {
-  encode<T>(node: T): Uint8Array;
-  decode<T>(data: Uint8Array): T;
+  encode(node: unknown): Uint8Array;
+  decode(data: Uint8Array): unknown;
 }
 
 export interface WaitForTid {
@@ -216,7 +216,7 @@ export interface NotReadyErrorMsg extends ErrorMsgBase {
 }
 
 export function MsgIsNotReadyError(msg: MsgBase): msg is NotReadyErrorMsg {
-  return MsgIsError(msg) && (msg as NotReadyErrorMsg).reason === "not-ready";
+  return MsgIsError(msg) && "reason" in msg;
 }
 
 export function MsgIsError(rq: MsgBase): rq is ErrorMsg {
@@ -235,7 +235,7 @@ export function coerceFPStoreTypes(s?: string): FPStoreTypes {
   if (x === "meta" || x === "car" || x === "wal" || x === "file") {
     return x;
   }
-  throw new Error(`Invalid FPStoreTypes: ${s}`);
+  throw new Error(`Invalid FPStoreTypes: ${s ?? "undefined"}`);
 }
 
 // reqRes is http
@@ -338,7 +338,7 @@ export function defaultGestalt(msgP: MsgerParams, gestalt: GestaltParam): Gestal
     httpEndpoints: ["/fp"],
     wsEndpoints: ["/ws"],
     encodings: ["JSON"],
-    protocolCapabilities: msgP.protocolCapabilities || ["reqRes", "stream"],
+    protocolCapabilities: msgP.protocolCapabilities ?? ["reqRes", "stream"],
     auth: [],
     requiresAuth: false,
     data: msgP.hasPersistent
@@ -422,10 +422,10 @@ export function buildReqChat(sthis: NextId, auth: AuthType, conn: Partial<QSId>,
 export function buildResChat(req: ReqChat, conn?: QSId, message?: string, targets?: QSId[], auth?: AuthType): ResChat {
   return {
     ...req,
-    auth: auth || req.auth,
-    conn: conn || req.conn,
-    message: message || req.message,
-    targets: targets || req.targets,
+    auth: auth ?? req.auth,
+    conn: conn ?? req.conn,
+    message: message ?? req.message,
+    targets: targets ?? req.targets,
     type: "resChat",
     version: VERSION,
   };
@@ -479,7 +479,7 @@ export interface ResGestalt extends MsgBase {
 export function buildResGestalt(req: ReqGestalt, gestalt: Gestalt, auth: AuthType): ResGestalt | ErrorMsg {
   return {
     tid: req.tid,
-    auth: auth || req.auth,
+    auth,
     type: "resGestalt",
     version: VERSION,
     gestalt,
@@ -514,7 +514,7 @@ export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>)
     version: VERSION,
     conn: {
       ...conn,
-      reqId: conn.reqId || sthis.nextId().str,
+      reqId: conn.reqId ?? sthis.nextId().str,
     },
   } satisfies ReqOpen;
   return req;
@@ -527,7 +527,7 @@ export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>)
 
 export function MsgIsReqOpen(imsg: MsgBase): imsg is ReqOpen {
   const msg = imsg as MsgWithConn<ReqOpen>;
-  return msg.type === "reqOpen" && !!msg.conn && !!msg.conn.reqId;
+  return !!msg.conn.reqId;
 }
 
 export interface ResOpen extends MsgBase {
@@ -537,11 +537,11 @@ export interface ResOpen extends MsgBase {
 
 export function MsgIsWithConn<T extends MsgBase>(msg: T): msg is MsgWithConn<T> {
   const mwc = (msg as MsgWithConn<T>).conn;
-  return mwc && !!(mwc as QSId).reqId && !!(mwc as QSId).resId;
+  return !!mwc.reqId && !!mwc.resId;
 }
 
 export function MsgIsWithConnAuth<T extends MsgBase>(msg: T): msg is MsgWithConn<T> {
-  return MsgIsWithConn(msg) && !!msg.auth && typeof msg.auth.type === "string";
+  return MsgIsWithConn(msg) && typeof msg.auth.type === "string";
 }
 
 export function MsgIsConnected<T extends MsgBase>(msg: T, qsid: QSId): msg is MsgWithConn<T> {
@@ -549,7 +549,7 @@ export function MsgIsConnected<T extends MsgBase>(msg: T, qsid: QSId): msg is Ms
 }
 
 export function buildResOpen(sthis: NextId, req: ReqOpen, resStreamId?: string): ResOpen {
-  if (!(req.conn && req.conn.reqId)) {
+  if (!req.conn.reqId) {
     throw new Error("req.conn.reqId is required");
   }
   return {
@@ -557,7 +557,7 @@ export function buildResOpen(sthis: NextId, req: ReqOpen, resStreamId?: string):
     type: "resOpen",
     conn: {
       ...req.conn,
-      resId: req.conn.resId || resStreamId || sthis.nextId().str,
+      resId: req.conn.resId ?? resStreamId ?? sthis.nextId().str,
     },
   };
 }
@@ -639,10 +639,10 @@ export function buildErrorMsg(
     stack = error.stack?.split("\n");
   }
   const msg = {
-    auth: base.auth || { type: "error" },
+    auth: base.auth ?? { type: "error" },
     src: base,
     type: "error",
-    tid: base.tid || "internal",
+    tid: base.tid ?? "internal",
     message: error.message,
     version: VERSION,
     body,
@@ -655,7 +655,7 @@ export function buildErrorMsg(
 export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTenantLedger<MsgWithConn<T>> {
   if (MsgIsWithConnAuth(msg)) {
     const t = (msg as MsgWithTenantLedger<MsgWithConn<T>>).tenant;
-    return !!t && !!t.tenant && !!t.ledger;
+    return !!t.tenant && !!t.ledger;
   }
   return false;
 }
@@ -691,7 +691,7 @@ export interface GwCtxConn {
   readonly tenant: TenantLedger;
 }
 
-export function buildReqSignedUrl<T extends ReqSignedUrl>(sthis: NextId, type: string, rparam: ReqSignedUrlParam, gwCtx: GwCtx): T {
+export function buildReqSignedUrl(sthis: NextId, type: string, rparam: ReqSignedUrlParam, gwCtx: GwCtx): ReqSignedUrl {
   return {
     tid: sthis.nextId().str,
     type,
@@ -700,7 +700,7 @@ export function buildReqSignedUrl<T extends ReqSignedUrl>(sthis: NextId, type: s
     ...gwCtx,
     methodParam: rparam.methodParam,
     urlParam: rparam.urlParam,
-  } satisfies ReqSignedUrl as T;
+  } satisfies ReqSignedUrl;
 }
 
 export interface ResSignedUrl extends MsgWithTenantLedger<MsgWithConn> {
@@ -738,14 +738,14 @@ export interface MsgTypesCtxSync {
 }
 
 export function resAuth(msg: MsgBase): Promise<AuthType> {
-  return msg.auth ? Promise.resolve(msg.auth) : Promise.reject(new Error("No Auth"));
+  return Promise.resolve(msg.auth);
 }
 
-export async function buildRes<Q extends MsgWithTenantLedger<MsgWithConn<ReqSignedUrlWithoutMethodParams>>, S extends ResSignedUrl>(
+export async function buildRes<S extends ResSignedUrl>(
   methodParam: MethodSignedUrlParam,
   type: string,
   msgCtx: MsgTypesCtx,
-  req: Q,
+  req: MsgWithTenantLedger<MsgWithConn<ReqSignedUrlWithoutMethodParams>>,
   ctx: CalculatePreSignedUrl,
 ): Promise<MsgWithError<S>> {
   const psm = {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
 import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, Attached, TraceFn } from "@fireproof/core";
@@ -97,7 +98,7 @@ describe("meta check", () => {
         base: `memory://${name}`,
       },
     });
-    await db.put({ _id: `id-${0}`, value: `value-${0}` });
+    await db.put({ _id: `id-0`, value: `value-0` });
     await db.close();
 
     const db1 = fireproof(name, {
@@ -117,7 +118,7 @@ describe("meta check", () => {
       },
     });
     await db.ready();
-    await db.put({ _id: `id-${0}`, value: `value-${0}` });
+    await db.put({ _id: `id-0`, value: `value-0` });
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
     expect(db.ledger.crdt.blockstore.loader.carLog.asArray().map((i) => i.map((i) => i.toString()))).toEqual([
       ["baembeieldbalgnyxqp7rmj4cbrot75gweavqy3aw22km43zsfufrihfn7e"],
@@ -222,12 +223,15 @@ describe("activate store", () => {
       {
         name: "first",
         configHash: () => "first",
-        prepare: async () => ({
-          car: { url: "memory://first?store=car" },
-          meta: { url: "memory://first?store=meta" },
-          file: { url: "memory://first" },
-          wal: { url: "memory://first?store=wal" },
-        }),
+        prepare: async () => {
+          await Promise.resolve();
+          return {
+            car: { url: "memory://first?store=car" },
+            meta: { url: "memory://first?store=meta" },
+            file: { url: "memory://first" },
+            wal: { url: "memory://first?store=wal" },
+          };
+        },
       },
       (at) => Promise.resolve(at),
     );
@@ -236,17 +240,20 @@ describe("activate store", () => {
       {
         name: "second",
         configHash: () => "second",
-        prepare: async () => ({
-          car: { url: "memory://second?store=car" },
-          meta: { url: "memory://second?store=meta" },
-          file: { url: "memory://second?store=file" },
-        }),
+        prepare: async () => {
+          await Promise.resolve();
+          return {
+            car: { url: "memory://second?store=car" },
+            meta: { url: "memory://second?store=meta" },
+            file: { url: "memory://second?store=file" },
+          };
+        },
       },
       (at) => Promise.resolve(at),
     );
   });
 
-  it("activate by store", async () => {
+  it("activate by store", () => {
     expect(attach.activate(secondAttached.stores).active.car.url().toString()).toBe(
       "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
@@ -258,7 +265,7 @@ describe("activate store", () => {
     );
   });
 
-  it("activate by store", async () => {
+  it("activate by store", () => {
     expect(attach.activate("memory://second").active.car.url().toString()).toBe(
       "memory://second?localName=first&name=second&store=car&storekey=%40first-data%40&suffix=.car&version=v0.19-memory",
     );
@@ -307,19 +314,19 @@ describe("join function", () => {
     });
     // await db.put({ _id: `genesis`, value: `genesis` });
     for (let j = 0; j < ROWS; j++) {
-      await db.put({ _id: `db-${j}`, value: `db-${set}` });
+      await db.put({ _id: `db-${j.toString()}`, value: `db-${set}` });
     }
 
     joinableDBs = await Promise.all(
       new Array(1).fill(1).map(async (_, i) => {
-        const name = `remote-db-${i}-${set}`;
+        const name = `remote-db-${i.toString()}-${set}`;
         const jdb = fireproof(name, {
           storeUrls: attachableStoreUrls(name, db),
         });
         // await db.put({ _id: `genesis`, value: `genesis` });
         // await db.ready();
         for (let j = 0; j < ROWS; j++) {
-          await jdb.put({ _id: `${i}-${j}`, value: `${i}-${j}` });
+          await jdb.put({ _id: `${i.toString()}-${j.toString()}`, value: `${i.toString()}-${j.toString()}` });
         }
         expect(await jdb.get(PARAM.GENESIS_CID)).toEqual({ _id: PARAM.GENESIS_CID });
         await jdb.close();
@@ -399,7 +406,7 @@ describe("join function", () => {
     });
     const mocked = aJoinable("test", db);
     const originalPrepare = mocked.prepare;
-    mocked.prepare = vi.fn(() => originalPrepare.apply(mocked));
+    mocked.prepare = vi.fn(() => originalPrepare.bind(mocked)());
     expect(mocked.prepare).not.toHaveBeenCalled();
     for (let i = 0; i < 10; i++) {
       await db.attach(mocked);
@@ -514,7 +521,7 @@ describe("sync", () => {
       Array(3)
         .fill(0)
         .map(async (_, i) => {
-          const tdb = await prepareDb(`online-db-${id}-${i}`, `memory://local-${id}-${i}`);
+          const tdb = await prepareDb(`online-db-${id}-${i.toString()}`, `memory://local-${id}-${i.toString()}`);
           await tdb.db.attach(aJoinable(`sync-${id}`, tdb.db));
           return tdb;
         }),
@@ -643,7 +650,7 @@ async function prepareDb(name: string, base: string, tracer?: TraceFn) {
   {
     const db = await syncDb(name, base, tracer);
     await db.ready();
-    const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+    const dbId = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
     const ret = { db, dbId };
     await writeRow(ret, `initial`);
     await db.close();
@@ -651,7 +658,7 @@ async function prepareDb(name: string, base: string, tracer?: TraceFn) {
 
   const db = await syncDb(name, base);
   await db.ready();
-  const dbId = await db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
+  const dbId = db.ledger.crdt.blockstore.loader.attachedStores.local().active.car.id();
   // const ret = { db, dbId };
   return { db, dbId };
 }
@@ -668,7 +675,7 @@ async function writeRow(pdb: WithoutPromise<ReturnType<typeof prepareDb>>, style
     Array(ROWS)
       .fill(0)
       .map(async (_, i) => {
-        const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i}`;
+        const key = `${pdb.dbId}-${pdb.db.name}-${style}-${i.toString()}`;
         // console.log(key);
         await pdb.db.put({ _id: key, value: key });
         return key;
