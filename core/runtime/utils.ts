@@ -290,7 +290,12 @@ export function ensureLogger(
                   logger.SetFormatter(new JSONFormatter(logger.TxtEnDe(), 2));
                   break;
                 case "yaml":
-                  logger.SetFormatter(new YAMLFormatter(logger.TxtEnDe(), 2));
+                  // abit of a hack, but we need to wait for the import to resolve
+                  // this could cause that some logs on startup are not formatted correctly
+                  // but it removes the need to carry around yaml as a dependency
+                  YAMLFormatter.create(logger.TxtEnDe(), 2).then((yamlFormatter) => {
+                    logger.SetFormatter(yamlFormatter);
+                  });
                   break;
                 case "json":
                 default:

@@ -11,7 +11,8 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 20
     ignore:
-      - dependency-name: "drizzle-kit:*"
+      - dependency-name: "drizzle-kit"
         versions: [">0.30.6"]
-      - dependency-name: "tailwindcss:*"
-        versions: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+#       versions: [">3.4.17"]
