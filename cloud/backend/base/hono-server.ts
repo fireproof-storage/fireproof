@@ -305,7 +305,7 @@ export class HonoServer {
                       } as ErrorMsg,
                       rMsg.Err(),
                     ),
-                  ),
+                  ) as Uint8Array<ArrayBuffer>,
                 );
               } else {
                 // console.log("dp-dispatch", rMsg.Ok(), dp);
