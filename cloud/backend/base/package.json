@@ -47,7 +47,7 @@
     "@libsql/client": "^0.15.15",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.6",
-    "hono": "^4.9.9",
+    "hono": "^4.9.10",
     "jose": "^6.1.0"
   },
   "devDependencies": {
