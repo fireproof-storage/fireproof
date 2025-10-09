@@ -2,8 +2,8 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { visualizer } from "rollup-plugin-visualizer";
 import { dotenv } from "zx";
-
 import { cloudflare } from "@cloudflare/vite-plugin";
+import * as path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
