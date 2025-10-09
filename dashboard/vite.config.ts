@@ -5,6 +5,22 @@ import { dotenv } from "zx";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import * as path from "path";
 
+function defines() {
+  try {
+    return Object.entries(dotenv.load(".dev.vars")).reduce(
+      (acc, [key, value]) => {
+        // Double stringify: once to make it a string, twice to make it a JSON string literal
+        acc[`import.meta.env.${key}`] = JSON.stringify(value);
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  } catch (e) {
+    console.warn("no .dev.vars found");
+    return {};
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -15,14 +31,7 @@ export default defineConfig({
     visualizer(),
   ],
   define: {
-    ...Object.entries(dotenv.load(".dev.vars")).reduce(
-      (acc, [key, value]) => {
-        // Double stringify: once to make it a string, twice to make it a JSON string literal
-        acc[`import.meta.env.${key}`] = JSON.stringify(value);
-        return acc;
-      },
-      {} as Record<string, string>,
-    ),
+    ...defines(),
   },
   build: {
     sourcemap: true,
