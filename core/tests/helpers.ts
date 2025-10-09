@@ -24,9 +24,10 @@ import {
 export function tracer() {}
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
+  const blob = new Blob([buffer as BlobPart], opts);
   return {
-    file: new File([new Blob([buffer])], name, opts),
-    cid: (await encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
+    file: new File([blob], name, opts),
+    cid: (await encodeFile(new File([blob], name, opts))).cid.toString(),
   };
 }
 

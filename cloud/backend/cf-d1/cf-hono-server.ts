@@ -365,7 +365,7 @@ export class CFHonoServer extends HonoServerBase {
       const upgradeHeader = c.req.header("Upgrade");
       if (!upgradeHeader || upgradeHeader !== "websocket") {
         return new Response(
-          this.cfCtx.ctx.ende.encode(buildErrorMsg(this.cfCtx.ctx, {}, new Error("expected Upgrade: websocket"))),
+          this.cfCtx.ctx.ende.encode(buildErrorMsg(this.cfCtx.ctx, {}, new Error("expected Upgrade: websocket"))) as BodyInit,
           {
             status: 426,
           },

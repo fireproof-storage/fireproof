@@ -8,6 +8,7 @@ import { handleTsc, tscCmd } from "./tsc-cmd.js";
 import { writeEnvCmd } from "./write-env.js";
 import { keyCmd } from "./cloud-token-key-cmd.js";
 import { preSignedUrlCmd } from "./pre-signed-url.js";
+import { dependabotCmd } from "./dependabot-cmd.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -30,6 +31,7 @@ import { preSignedUrlCmd } from "./pre-signed-url.js";
       build: buildCmd(sthis),
       setScripts: setScriptsCmd(sthis),
       setDependencies: setDependenciesCmd(sthis),
+      dependabot: dependabotCmd(sthis),
     },
   });
 

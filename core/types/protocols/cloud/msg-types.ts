@@ -92,8 +92,8 @@ export interface RequestOpts {
 }
 
 export interface EnDeCoder {
-  encode<T>(node: T): Uint8Array;
-  decode<T>(data: Uint8Array): T;
+  encode<T>(node: T): Uint8Array<ArrayBufferLike>;
+  decode<T>(data: Uint8Array<ArrayBufferLike>): T;
 }
 
 export interface WaitForTid {

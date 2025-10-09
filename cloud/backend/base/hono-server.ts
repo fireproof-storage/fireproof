@@ -204,7 +204,7 @@ class NoBackChannel implements MsgDispatcherCtx {
   get ws(): WSContextWithId<unknown> {
     return {
       id: "no-id",
-      send: (msg: string | ArrayBuffer | Uint8Array<ArrayBufferLike>): Promisable<Response> => {
+      send: (msg: BodyInit): Promisable<Response> => {
         return new Response(msg);
       },
     } as unknown as WSContextWithId<unknown>;
