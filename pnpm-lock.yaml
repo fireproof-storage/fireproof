@@ -20,8 +20,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:cli
       '@types/deno':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.5.0
+        version: 2.5.0
       '@types/node':
         specifier: ^24.7.0
         version: 24.7.0
@@ -29,8 +29,8 @@ importers:
         specifier: 7.0.0-dev.20251008.1
         version: 7.0.0-dev.20251008.1
       deno:
-        specifier: ^2.5.2
-        version: 2.5.2
+        specifier: ^2.5.3
+        version: 2.5.3
       drizzle-kit:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
@@ -648,8 +648,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../cli
       '@types/deno':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.5.0
+        version: 2.5.0
       '@types/node':
         specifier: ^24.7.0
         version: 24.7.0
@@ -666,8 +666,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       '@types/deno':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.5.0
+        version: 2.5.0
       '@types/node':
         specifier: ^24.7.0
         version: 24.7.0
@@ -733,8 +733,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../cli
       '@types/deno':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.5.0
+        version: 2.5.0
       '@types/node':
         specifier: ^24.7.0
         version: 24.7.0
@@ -1267,8 +1267,8 @@ importers:
         specifier: ^16.3.0
         version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.1(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@types/deno':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.5.0
+        version: 2.5.0
       '@types/react':
         specifier: ^19.2.2
         version: 19.2.2
@@ -1626,33 +1626,33 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@deno/darwin-arm64@2.5.2':
-    resolution: {integrity: sha512-z2sjlI2e4KxYS3lXwvRv+6LptV+H2ejEsLrIM13omwfzh/PRBmmqJKlnmzr1z1/2LjlU7jy/ZMFXH/KmLUZ4pw==}
+  '@deno/darwin-arm64@2.5.3':
+    resolution: {integrity: sha512-s15f7EvOtNtdGhl7dAiKHN51qEub2pJToRxl5yzNjai1HuRyQzAhG5VUdJTb4dXbpuPclb5pI9oXo2wySVL75Q==}
     cpu: [arm64]
     os: [darwin]
 
-  '@deno/darwin-x64@2.5.2':
-    resolution: {integrity: sha512-CGGhbNZFA9X1A9C2IZXHS8UXb11OhnZZDj0pKOy76TGCGp6KHM9aJHUYGlAT+KPRg67RthWK1oNKHvXzMQa8GA==}
+  '@deno/darwin-x64@2.5.3':
+    resolution: {integrity: sha512-Racx5DVlOzeT6ep1RSEK95f8RQGp+UY0K+PLCwrMGbfPpkkhCrAkXBQgY+og3DiIBTG0VHn1Lt8WAtQ5t3eRGw==}
     cpu: [x64]
     os: [darwin]
 
-  '@deno/linux-arm64-glibc@2.5.2':
-    resolution: {integrity: sha512-WVF37ORK/gFI31lT+bFsuYigUde1vvqRz8nItYlBQ9Vfbbn9esVq1OQ5a7HStVavTMoghrJIspry2fucgW2ouA==}
+  '@deno/linux-arm64-glibc@2.5.3':
+    resolution: {integrity: sha512-3LczF6gOEIOfJ056d1l4LeOdi1EWhIRHUHq1bYDZTpvr+XL62Pq1s2gzcd5RucD6Pc1I3KxYDHVGOTwYi9hFoQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@deno/linux-x64-glibc@2.5.2':
-    resolution: {integrity: sha512-jFGgYAYgDqb6mOBrQKavUem8/VhcK9DNKTuwzCYPq7As2ex/SWoQ8zRjrpNhXTRP3JlB4CQCJ6burQ+Fq5C0gA==}
+  '@deno/linux-x64-glibc@2.5.3':
+    resolution: {integrity: sha512-J7dsT+Llc1PAssuZDT1ZifOIz4SRRTfl6eJEYM6GnSTTtGhmCUfUZPHQGEj1dIF60Vce/+cfInjTLqWIdMm/0g==}
     cpu: [x64]
     os: [linux]
 
-  '@deno/win32-arm64@2.5.2':
-    resolution: {integrity: sha512-c8S/lVwsyv4ge2m9xWBUGNZ42TA93GXSmk+qNQRhxwNif3+Wbfno19ujuWtYVqbT/fmFGSGi+STHPAkWTWMT9g==}
+  '@deno/win32-arm64@2.5.3':
+    resolution: {integrity: sha512-m3MRGURfUMYAMFlLllDOoZFP4vX9u8wdabVMM6SQreNuH14oTTERPUs9s+bNS/0+Wz/MP1+uXKP3s+7//LsvHw==}
     cpu: [arm64]
     os: [win32]
 
-  '@deno/win32-x64@2.5.2':
-    resolution: {integrity: sha512-iuoS2gvLiZWG7AGVQm3ALEyP9I2bHIO38XXADFaFBNX26I6tso3Dk/AyC67xt3QKapUEAP44ICNPpRxHtgvw/Q==}
+  '@deno/win32-x64@2.5.3':
+    resolution: {integrity: sha512-5Gb/YtkFrEk88lND7U1qcFbd6RASfmIAqZ8AJf98j+qsUSzjeK8GoXMNaEkhyBEfdsTdQHpbtsS0E+JG6dZXVQ==}
     cpu: [x64]
     os: [win32]
 
@@ -3048,8 +3048,8 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
-  '@types/deno@2.3.0':
-    resolution: {integrity: sha512-/4SyefQpKjwNKGkq9qG3Ln7MazfbWKvydyVFBnXzP5OQA4u1paoFtaOe1iHKycIWHHkhYag0lPxyheThV1ijzw==}
+  '@types/deno@2.5.0':
+    resolution: {integrity: sha512-g8JS38vmc0S87jKsFzre+0ZyMOUDHPVokEJymSCRlL57h6f/FdKPWBXgdFh3Z8Ees9sz11qt9VWELU9Y9ZkiVw==}
 
   '@types/eslint@7.29.0':
     resolution: {integrity: sha512-VNcvioYDH8/FxaeTKkM4/TiTwt6pBV9E3OfGmvaw8tPl0rrHCJ4Ll15HRT+pMiFAf/MLQvAzC+6RzUMEL9Ceng==}
@@ -3683,8 +3683,8 @@ packages:
   defu@6.1.4:
     resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
 
-  deno@2.5.2:
-    resolution: {integrity: sha512-Zb1iLpHRN67LfSym7iwyxUXSEZQ/VhipMsGyp7gQUCHJze0Q78neC6+YPMrZI7FP/RbqAIGNB7vfFz2EUZUQEQ==}
+  deno@2.5.3:
+    resolution: {integrity: sha512-JHNQG7QLkBi+ZKgTEQ1powU7oeI28fGlYp/ftS57xeIkMe74gvHX4tVORLRStgBa9dzPvmtKbNC82eVAAfCMZw==}
     hasBin: true
 
   dequal@2.0.3:
@@ -6428,22 +6428,22 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@deno/darwin-arm64@2.5.2':
+  '@deno/darwin-arm64@2.5.3':
     optional: true
 
-  '@deno/darwin-x64@2.5.2':
+  '@deno/darwin-x64@2.5.3':
     optional: true
 
-  '@deno/linux-arm64-glibc@2.5.2':
+  '@deno/linux-arm64-glibc@2.5.3':
     optional: true
 
-  '@deno/linux-x64-glibc@2.5.2':
+  '@deno/linux-x64-glibc@2.5.3':
     optional: true
 
-  '@deno/win32-arm64@2.5.2':
+  '@deno/win32-arm64@2.5.3':
     optional: true
 
-  '@deno/win32-x64@2.5.2':
+  '@deno/win32-x64@2.5.3':
     optional: true
 
   '@drizzle-team/brocli@0.10.2': {}
@@ -7473,7 +7473,7 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
-  '@types/deno@2.3.0': {}
+  '@types/deno@2.5.0': {}
 
   '@types/eslint@7.29.0':
     dependencies:
@@ -8204,14 +8204,14 @@ snapshots:
 
   defu@6.1.4: {}
 
-  deno@2.5.2:
+  deno@2.5.3:
     optionalDependencies:
-      '@deno/darwin-arm64': 2.5.2
-      '@deno/darwin-x64': 2.5.2
-      '@deno/linux-arm64-glibc': 2.5.2
-      '@deno/linux-x64-glibc': 2.5.2
-      '@deno/win32-arm64': 2.5.2
-      '@deno/win32-x64': 2.5.2
+      '@deno/darwin-arm64': 2.5.3
+      '@deno/darwin-x64': 2.5.3
+      '@deno/linux-arm64-glibc': 2.5.3
+      '@deno/linux-x64-glibc': 2.5.3
+      '@deno/win32-arm64': 2.5.3
+      '@deno/win32-x64': 2.5.3
 
   dequal@2.0.3: {}
 

@@ -60,10 +60,10 @@
   "devDependencies": {
     "@eslint/js": "^9.37.0",
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@types/deno": "^2.3.0",
+    "@types/deno": "^2.5.0",
     "@types/node": "^24.7.0",
     "@typescript/native-preview": "7.0.0-dev.20251008.1",
-    "deno": "^2.5.2",
+    "deno": "^2.5.3",
     "drizzle-kit": "0.30.6",
     "eslint": "^9.37.0",
     "eslint-plugin-import": "^2.32.0",
