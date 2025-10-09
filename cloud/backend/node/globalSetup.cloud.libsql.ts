@@ -28,7 +28,7 @@ export async function setup(project: TestProject) {
     //   .toString(),
     [sts.envKeyDefaults.PUBLIC]: keys.keys.strings.publicKey,
     [sts.envKeyDefaults.SECRET]: keys.keys.strings.privateKey,
-    STORAGE_URL: "http://127.0.0.1:9000/testbucket",
+    STORAGE_URL: sthis.env.get("STORAGE_URL") ?? "http://127.0.0.1:9000/testbucket",
     ACCESS_KEY_ID: "minioadmin",
     FP_ENDPOINT: sthis.env.get("FP_ENDPOINT") ?? `http://localhost:${port}`,
     SECRET_ACCESS_KEY: "minioadmin",

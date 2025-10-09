@@ -1,4 +1,4 @@
-import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson } from "./build-cmd.js";
+import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson, sanitizeNpmrc } from "./build-cmd.js";
 import { expect, it } from "vitest";
 
 const mock = {
@@ -201,4 +201,44 @@ it("getVersion ref with scope and no v", async () => {
 
 it("getVersion ref without", async () => {
   expect(await getVersion(undefined, { xenv: { GITHUB_REF: "a/ref/0.0.9-smoke" } })).toContain("0.0.9-smoke");
+});
+
+it("sanitizeNpmrc with // lhs", async () => {
+  const npmrc = [
+    "; .npmrc",
+    "enable-pre-post-scripts=true",
+    "registry=http://localhost:4873",
+    "@fireproof:registry=http://localhost:4873",
+    '//localhost:4873:_authToken="Zjk5MjVhZTg4ZTlkNzQ3MW"',
+  ].join("\n");
+  const niceNpmrc = sanitizeNpmrc(npmrc);
+  expect(niceNpmrc).toBe(
+    [
+      "; .npmrc",
+      "enable-pre-post-scripts=true",
+      "registry=http://localhost:4873/",
+      "@fireproof:registry=http://localhost:4873/",
+      '//localhost:4873/:_authToken="Zjk5MjVhZTg4ZTlkNzQ3MW"',
+    ].join("\n"),
+  );
+});
+
+it("sanitizeNpmrc with http lhs", async () => {
+  const npmrc = [
+    "; .npmrc",
+    "enable-pre-post-scripts=true",
+    "registry=http://localhost:4873",
+    "@fireproof:registry=http://localhost:4873",
+    'http://localhost:4873/meno:_authToken="Zjk5MjVhZTg4ZTlkNzQ3MW"',
+  ].join("\n");
+  const niceNpmrc = sanitizeNpmrc(npmrc);
+  expect(niceNpmrc).toBe(
+    [
+      "; .npmrc",
+      "enable-pre-post-scripts=true",
+      "registry=http://localhost:4873/",
+      "@fireproof:registry=http://localhost:4873/",
+      '//localhost:4873/meno/:_authToken="Zjk5MjVhZTg4ZTlkNzQ3MW"',
+    ].join("\n"),
+  );
 });

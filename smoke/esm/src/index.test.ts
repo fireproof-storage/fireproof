@@ -1,22 +1,28 @@
 import { page } from "@vitest/browser/context";
 import { expect, it, vi } from "vitest";
 
+interface FPWindow extends Window {
+  FP_VERSION: string;
+  FP_DEBUG: string;
+  FP_STACK: string;
+  FP_ESM: string;
+}
+
 it("esm.sh", async () => {
   const script = document.createElement("script");
+  const fpWindow = window as unknown as FPWindow;
   // eslint-disable-next-line no-console
-  console.log("FP_VERSION", (window as unknown as { FP_VERSION: string }).FP_VERSION);
+  console.log("FP_VERSION", fpWindow.FP_VERSION);
   // eslint-disable-next-line no-console
-  console.log("FP_DEBUG", (window as unknown as { FP_DEBUG: string }).FP_DEBUG);
+  console.log("FP_DEBUG", fpWindow.FP_DEBUG);
   // eslint-disable-next-line no-console
-  console.log("FP_STACK", (window as unknown as { FP_STACK: string }).FP_STACK);
-  // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
-  // // console.log("window-res", await res.text());
-  // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
-  // // console.log("window-imp", fireproof);
+  console.log("FP_STACK", fpWindow.FP_STACK);
+  // eslint-disable-next-line no-console
+  console.log("FP_ESM", fpWindow.FP_ESM);
 
   script.textContent = `
 //console.log("pre-window-js", window.FP_VERSION)
-import { fireproof } from 'http://localhost:4874/use-fireproof@${window.FP_VERSION}'
+import { fireproof } from '${fpWindow.FP_ESM ?? "http://localhost:4874"}/use-fireproof@${fpWindow.FP_VERSION}'
 
 console.log("SCRIPT FP_VERSION", window.FP_VERSION)
 function invariant(cond, message) {

@@ -5,49 +5,7 @@ export projectBase
 cd smoke/esm
 smokeDir=$(pwd)
 
-#if which docker-compose
-#then
-#  dockerCompose="docker-compose"
-#else
-#  dockerCompose="docker compose"
-#fi
-
-#cat > .env <<EOF
-#PROJECT_BASE=$projectBase
-#EOF
-#mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-#chmod -R oug+w $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
-#ls -la $projectBase/.esm-cache
-#$dockerCompose down || true
-#$dockerCompose up -d
 packageDir=${projectBase=}/dist/fireproof-core
-
-#user="admin$(date +%s)"
-#curl --retry 10 --retry-max-time 30 --retry-all-errors http://localhost:4873/
-#curl \
-#     -X PUT \
-#     -H "Content-type: application/json" \
-#     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
-#     'http://localhost:4873/-/user/org.couchdb.user:$user'
-#
-#user="admin$(date +%s)"
-#token=$(curl \
-#     -X PUT \
-#     -H "Content-type: application/json" \
-#     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
-#     'http://localhost:4873/-/user/org.couchdb.user:$user' | jq .token)
-#
-#echo "Token: $user:$token"
-#cat <<EOF > $packageDir/.npmrc
-#; .npmrc
-#enable-pre-post-scripts=true
-#//localhost:4873/:_authToken=$token
-#@fireproof:registry=http://localhost:4873
-#EOF
-
-#(cd $packageDir &&
-#	(npm unpublish --force || true) &&
-#         npm publish --no-git-checks)
 
 tmpDir=$(mktemp -d)
 cp $projectBase/dist/npmrc-smoke .npmrc
@@ -72,6 +30,7 @@ function getVersion() {
 gthis()["FP_STACK"]="stack"
 gthis()["FP_DEBUG"]="*"
 gthis()["FP_VERSION"]=getVersion()
+gthis()["FP_ESM"]="$FP_ESM" ? "$FP_ESM" : "http://localhost:4874"
 EOF
 
 pnpm install --prefer-offline --package-import-method=hardlink

@@ -1,15 +1,14 @@
 // deno run --allow-read --allow-write --allow-env --allow-import deno-test.ts
-/* eslint-disable no-console */
 
-interface DenoIF {
-  env: {
-    get: (key: string) => string | undefined;
-  };
-  readFile(path: string): Promise<Uint8Array>;
-  exit(code: number): void;
-}
+// interface DenoIF {
+//   env: {
+//     get: (key: string) => string | undefined;
+//   };
+//   readFile(path: string): Promise<Uint8Array>;
+//   exit(code: number): void;
+// }
 
-const Deno: DenoIF = (globalThis as unknown as { Deno: DenoIF }).Deno;
+// const Deno: DenoIF = (globalThis as unknown as { Deno: DenoIF }).Deno;
 
 async function getVersion() {
   const fpVersion = await Deno.readFile(`${Deno.env.get("projectBase")}/dist/fp-version.txt`).then((b) =>
@@ -25,10 +24,11 @@ async function getVersion() {
 }
 
 async function main() {
-  const url = `http://localhost:4874/@fireproof/core@${await getVersion()}`;
+  const url = `${Deno.env.get("FP_ESM") ?? "http://localhost:4874"}/@fireproof/core@${await getVersion()}`;
+  // eslint-disable-next-line no-console
   console.log("loading fireproof from ", url);
   const { fireproof, PACKAGE_VERSION } = await import(url);
-  const rt = await import(`http://localhost:4874/@fireproof/core-runtime@${await getVersion()}`);
+  const rt = await import(`${Deno.env.get("FP_ESM") ?? "http://localhost:4874"}/@fireproof/core-runtime@${await getVersion()}`);
 
   const db = fireproof("test-node", { storageUrls: { base: "memory://xxx" } });
 
@@ -40,6 +40,7 @@ async function main() {
   // const doc =
   await db.get("test");
 
+  // eslint-disable-next-line no-console
   console.log(
     `${rt.runtimeFn().isDeno ? "DENO" : "NODE"} test working version:${PACKAGE_VERSION} --> ${JSON.stringify(Deno.version)}`,
   );

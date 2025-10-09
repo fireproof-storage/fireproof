@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 set -ex
 
 projectRoot=$(pwd)
@@ -12,4 +12,4 @@ fi
 
 rm -f $projectRoot/dist/fp-version.txt
 
-exec pnpm run publish --registry http://localhost:4873
+exec pnpm run publish --registry ${FP_NPM_REGISTRY:-http://localhost:4873}
