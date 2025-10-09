@@ -155,7 +155,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
         fetch(ensurePath(url.cleaned, "fp"), {
           method: "PUT",
           headers: headers.AsHeaderInit(),
-          body: rReqBody.Ok(),
+          body: rReqBody.Ok() as BodyInit,
         }),
       ),
     );

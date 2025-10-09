@@ -128,12 +128,12 @@ export class MsgDispatcher {
 
   send(ctx: MsgDispatcherCtx, msg: MsgBase) {
     const isError = MsgIsError(msg);
-    const str = ctx.ende.encode(msg);
+    const uint8 = ctx.ende.encode(msg);
     // if (MsgIsResChat(msg)) {
     //   console.log("send", msg.tid, ctx.ws);
     // }
-    ctx.ws?.send(str);
-    return new Response(str, {
+    ctx.ws?.send(uint8);
+    return new Response(uint8 as BodyInit, {
       status: isError ? 500 : 200,
       headers: CORS.AsHeaderInit(),
       statusText: isError ? "error" : "ok",
