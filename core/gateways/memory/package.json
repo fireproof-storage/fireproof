@@ -41,7 +41,7 @@
     "@types/node": "^24.7.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.0",
+    "@adviser/cement": "^0.4.43",
     "@fireproof/core-gateways-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",

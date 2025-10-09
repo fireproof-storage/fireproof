@@ -41,7 +41,7 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.0",
+    "@adviser/cement": "^0.4.43",
     "@fireproof/vendor": "workspace:0.0.0",
     "@types/react": "^19.2.0",
     "react-dom": "^19.2.0",
