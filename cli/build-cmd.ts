@@ -6,6 +6,7 @@ import { findUp } from "find-up";
 import { cd, $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
 import { SemVer } from "semver";
+import { exception2Result } from "@adviser/cement";
 
 const reVersionAlphaStart = /^[a-z](\d+\.\d+\.\d+.*)$/;
 // const reVersionOptionalAlphaStart = /^[a-z]?(\d+\.\d+\.\d+.*)$/;
@@ -166,6 +167,50 @@ async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
   //   "outDir": "./dist"
   // }
 }
+
+export function sanitizeNpmrc(srcNpmRc: string) {
+  // enable-pre-post-scripts=true
+  // registry=http://localhost:4873
+  // @fireproof:registry=http://localhost:4873
+  // //localhost:4873:_authToken="Zjk5MjVhZTg4ZTlkNzQ3MWJkMzllMWM0MzVlNjlmMGQ6NGQ5YzIxMDhkMmZjODc2MDQwYTBiZjc4MjM0OGI0N2Y5ZDBhN2UwNGFm"
+  return srcNpmRc
+    .split("\n")
+    .map((line) => line.trim())
+    .map((line) => {
+      const [lhsUnsplitted, rhs] = line.split(/=(.*)$/);
+      let lhs = lhsUnsplitted.trim();
+      let lhsArg = "";
+      if (/:[^0-9]+[^:]*$/.test(lhs)) {
+        const olhs = lhs;
+        lhs = lhs.replace(/:[^0-9]+[^:]*$/, "");
+        lhsArg = olhs.slice(lhs.length);
+        if (lhs.startsWith("//")) {
+          lhs = "http:" + lhs;
+        }
+      }
+      // eslint-disable-next-line no-restricted-globals
+      const rLhsAsURI = exception2Result(() => new URL(lhs));
+      if (rLhsAsURI.isOk()) {
+        const url = rLhsAsURI.Ok();
+        const urlStr = url.toString();
+        const rLhs = urlStr.replace(/^[^:]+:/, "").replace(/\/*$/, "/");
+        return `${rLhs}${lhsArg}=${rhs}`;
+      } else {
+        lhs = lhs + lhsArg;
+      }
+      // eslint-disable-next-line no-restricted-globals
+      const rRhsAsURI = exception2Result(() => new URL(rhs));
+      if (rRhsAsURI.isOk()) {
+        const url = rRhsAsURI.Ok();
+        const rRhs = url.toString().replace(/\/*$/, "/");
+        return `${lhs}=${rRhs}`;
+      } else {
+        return line;
+      }
+    })
+    .join("\n");
+}
+
 function toDenoExports(exports: Record<string, string | Record<string, string>>) {
   return Object.entries(exports ?? {}).reduce(
     (acc, [k, v]) => {
@@ -508,7 +553,9 @@ export function buildCmd(sthis: SuperThis) {
         }
         if (fs.existsSync(args.npmrc)) {
           console.log(`Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
-          await fs.copyFile(args.npmrc, ".npmrc");
+          const niceNpmrc = sanitizeNpmrc(await fs.readFile(args.npmrc, "utf-8"));
+          await fs.writeFile(".npmrc", niceNpmrc);
+          // await fs.copyFile(args.npmrc, ".npmrc");
           // await $`cat .npmrc`;
           // await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
         }
