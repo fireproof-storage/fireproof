@@ -23,6 +23,7 @@ import {
 import { queryEmail, queryNick } from "./sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
 import { describe, beforeAll, expect, it } from "vitest";
+import { resWellKnownJwks } from "./well-known-jwks.js";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -1033,4 +1034,24 @@ it("queryEmail strips +....@", async () => {
   expect(queryEmail("a.C+bla@b.de")).toBe("ac@b.de");
   expect(queryEmail("a.C+huhu+@b.de")).toBe("achuhu@b.de");
   expect(queryEmail("a.C+huhu+bla@b.de")).toBe("achuhu@b.de");
+});
+
+it("resWellKnownJwks", async () => {
+  const r = await resWellKnownJwks(new Request("https://example.com/.well-known/jwks.json"), {
+    CLOUD_SESSION_TOKEN_PUBLIC:
+      "zeWndr5LEoaySgKSo2aZniYqXf5WxWq3WDGYvT4K4ggqX2wWPXAc4TXhRFrQAGUgCwkAYHCTZNn8Yqz62DzFzssSEEfMjmh5yP26YY5LBLUo14GdRKyD19zRV4jsic53jxEy3NdBs2i4rwAfyYQoPGzUUhnBxTXvqB2RYoShcs2zp",
+  });
+  expect(JSON.parse(await r.text())).toEqual({
+    keys: [
+      {
+        kty: "EC",
+        use: "sig",
+        crv: "P-256",
+        // kid: expect.any(String),
+        x: expect.any(String),
+        y: expect.any(String),
+        alg: "ES256",
+      },
+    ],
+  });
 });

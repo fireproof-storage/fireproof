@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { visualizer } from "rollup-plugin-visualizer";
-import * as path from "node:path";
+import { dotenv } from "zx";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 
@@ -14,15 +14,22 @@ export default defineConfig({
     cloudflare(),
     visualizer(),
   ],
+  define: {
+    ...Object.entries(dotenv.load(".dev.vars")).reduce(
+      (acc, [key, value]) => {
+        // Double stringify: once to make it a string, twice to make it a JSON string literal
+        acc[`import.meta.env.${key}`] = JSON.stringify(value);
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
+  },
   build: {
     sourcemap: true,
     target: "esnext",
     outDir: "./dist/static",
     emptyOutDir: true, // also necessary
     manifest: true,
-    rollupOptions: {
-      external: [".dev.vars"],
-    },
   },
   server: {
     port: 7370,
