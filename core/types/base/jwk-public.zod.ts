@@ -1,6 +1,24 @@
+import { CTJsonWebKey } from "@adviser/cement";
 import { z } from "zod";
 
 // JWK Schema
+
+export function ktyFromAlg(alg: string | undefined): "RSA" | "EC" | "OKP" {
+  if (!alg) return "EC";
+  if (alg.startsWith("RS") || alg.startsWith("PS")) return "RSA";
+  //if (alg.startsWith("ES")) return "EC";
+  return "EC";
+}
+
+export function toJwksAlg(alg: string | undefined, jwk: CTJsonWebKey): string | undefined {
+  if (jwk.kty === "RSA") return "RS256";
+  if (jwk.kty === "EC") {
+    if (jwk.crv === "P-256") return "ES256";
+    if (jwk.crv === "P-384") return "ES384";
+    if (jwk.crv === "P-521") return "ES512";
+    return undefined;
+  }
+}
 
 export const JWKPublicSchema = z
   .object({

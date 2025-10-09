@@ -370,7 +370,7 @@ class CloudApi {
       ...req,
       auth: rAuth.Ok(),
     });
-    console.log(API_URL, API_URL, reqBody);
+    // console.log(API_URL, API_URL, reqBody);
     const res = await fetch(API_URL, {
       method: "PUT",
       headers: {

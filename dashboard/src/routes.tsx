@@ -20,6 +20,7 @@ const queryClient = new QueryClient();
     routerReplace={(to) => navigate(to, { replace: true })}
     signInFallbackRedirectUrl={nextUrl}
     */
+
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>

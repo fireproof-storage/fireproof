@@ -50,7 +50,7 @@ class ClerkApiToken implements FPApiToken {
     if (rEnvVal.isErr()) {
       return Result.Err(rEnvVal.Err());
     }
-    const { CLERK_PUB_JWT_KEY, CLERK_PUB_JWT_URL } = rEnvVal.Ok();
+    const { CLERK_PUB_JWT_URL, CLERK_PUB_JWT_KEY } = rEnvVal.Ok();
 
     const rt = await exception2Result(async () => {
       // Try static JWT key first if provided

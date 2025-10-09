@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { D1Database, Fetcher, Request as CFRequest, Response as CFResponse } from "@cloudflare/workers-types";
 import { CORS, createHandler } from "./create-handler.js";
 import { URI } from "@adviser/cement";
+import { resWellKnownJwks } from "./well-known-jwks.js";
 
 export interface Env {
   DB: D1Database;
@@ -18,6 +19,9 @@ export default {
         ares = createHandler(drizzle(env.DB), env)(request) as unknown as Promise<CFResponse>;
         break;
 
+      case uri.pathname.startsWith("/.well-known/jwks.json"):
+        ares = resWellKnownJwks(request, env as unknown as Record<string, string>) as unknown as Promise<CFResponse>;
+        break;
       case uri.pathname.startsWith("/fp-logo.svg"):
       case uri.pathname.startsWith("/assets/"):
         ares = env.ASSETS.fetch(request as unknown as CFRequest);
@@ -30,7 +34,7 @@ export default {
       status: res.status,
       statusText: res.statusText,
       headers: {
-        ...res.headers,
+        ...Object.fromEntries(res.headers.entries()),
         ...CORS,
       },
     });
