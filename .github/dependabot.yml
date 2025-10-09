@@ -13,6 +13,8 @@ updates:
     ignore:
       - dependency-name: "drizzle-kit"
         versions: [">0.30.6"]
+      - dependency-name: "@adviser/cement"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
 #       versions: [">3.4.17"]
