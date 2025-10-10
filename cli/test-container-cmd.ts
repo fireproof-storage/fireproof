@@ -4,7 +4,7 @@ import { $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
 import fs from "fs-extra";
 
-function buildCmd(sthis: SuperThis) {
+function buildCmd(_sthis: SuperThis) {
   const cmd = command({
     name: "build",
     description: "Build test container with Docker and Playwright",
@@ -72,7 +72,7 @@ async function getPackageVersion(packageName: string): Promise<string | undefine
   }
 }
 
-function templateCmd(sthis: SuperThis) {
+function templateCmd(_sthis: SuperThis) {
   const cmd = command({
     name: "template",
     description: "Generate Dockerfile template for test container",
@@ -278,7 +278,7 @@ CMD ["/bin/bash"]
   return cmd;
 }
 
-function publishCmd(sthis: SuperThis) {
+function publishCmd(_sthis: SuperThis) {
   const cmd = command({
     name: "publish",
     description: "Build and publish test container to GitHub Container Registry (ghcr.io)",
