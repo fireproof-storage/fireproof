@@ -5,7 +5,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as process from "process";
 
-function exec(cmd, args, runDirectory) {
+function exec(cmd, args) {
   // process.env.PATH = `${[
   //   `${runDirectory}`,
   //   path.join(runDirectory, "./node_modules/.bin")
@@ -19,6 +19,7 @@ function exec(cmd, args, runDirectory) {
   });
 
   tsc.on("error", (error) => {
+    // eslint-disable-next-line no-console, no-undef
     console.error(`Failed to start ${cmd}: ${error.message}`);
     process.exit(1);
   });
@@ -37,6 +38,7 @@ const runDirectory = path.dirname(process.argv[idxRunIdx]);
 // } else {
 const mainJs = path.join(runDirectory, "main.js");
 if (fs.existsSync(mainJs)) {
+  // eslint-disable-next-line no-console, no-undef
   import(mainJs).catch((e) => console.error(e));
 } else {
   const restArgv = process.argv.slice(idxRunIdx + 1) ?? [];
