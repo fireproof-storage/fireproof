@@ -404,6 +404,25 @@ export interface ResDeleteLedger {
   readonly type: "resDeleteLedger";
 }
 
+export interface ReqShareWithUser {
+  readonly type: "reqShareWithUser";
+  readonly auth: AuthType;
+  readonly email: string;
+  readonly role?: Role;
+  readonly right?: ReadWrite;
+}
+
+export interface ResShareWithUser {
+  readonly type: "resShareWithUser";
+  readonly success: boolean;
+  readonly message: string;
+  readonly ledgerId: string;
+  readonly userId: string;
+  readonly email: string;
+  readonly role: Role;
+  readonly right: ReadWrite;
+}
+
 export interface ReqCloudSessionToken {
   readonly type: "reqCloudSessionToken";
   readonly auth: AuthType;
