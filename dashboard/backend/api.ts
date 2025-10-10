@@ -1,12 +1,12 @@
 import { Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
-import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
+import { and, eq, gt, gte, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
 // import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { jwtVerify } from "jose";
 import {
   AuthType,
   ClerkClaim,
   ClerkVerifyAuth,
+  FAPIMsgImpl,
   InCreateTenantParams,
   InviteTicket,
   InvitedParams,
@@ -26,6 +26,7 @@ import {
   ReqListLedgersByUser,
   ReqListTenantsByUser,
   ReqRedeemInvite,
+  ReqShareWithUser,
   ReqTokenByResultId,
   ReqUpdateLedger,
   ReqUpdateTenant,
@@ -44,6 +45,7 @@ import {
   ResListLedgersByUser,
   ResListTenantsByUser,
   ResRedeemInvite,
+  ResShareWithUser,
   ResTokenByResultId,
   ResUpdateLedger,
   ResUpdateTenant,
@@ -52,18 +54,18 @@ import {
   User,
   UserStatus,
   VerifiedAuth,
-  FAPIMsgImpl,
 } from "@fireproof/core-protocols-dashboard";
+import { sts } from "@fireproof/core-runtime";
+import { FPCloudClaim, ReadWrite, Role, toReadWrite, toRole } from "@fireproof/core-types-protocols-cloud";
+import { jwtVerify } from "jose";
+import { FPTokenContext, createFPToken, getFPTokenContext } from "./create-fp-token.js";
+import { DashSqlite } from "./create-handler.js";
 import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.js";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.js";
 import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.js";
 import { sqlTenantUsers, sqlTenants } from "./tenants.js";
 import { sqlTokenByResultId } from "./token-by-result-id.js";
 import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.js";
-import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
-import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
-import { sts } from "@fireproof/core-runtime";
-import { DashSqlite } from "./create-handler.js";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -110,6 +112,7 @@ export interface FPApiInterface {
   listLedgersByUser(req: ReqListLedgersByUser): Promise<Result<ResListLedgersByUser>>;
   updateLedger(req: ReqUpdateLedger): Promise<Result<ResUpdateLedger>>;
   deleteLedger(req: ReqDeleteLedger): Promise<Result<ResDeleteLedger>>;
+  shareWithUser(req: ReqShareWithUser): Promise<Result<ResShareWithUser>>;
 
   // listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant>
 
@@ -1709,6 +1712,109 @@ export class FPApiSQL implements FPApiInterface {
       ledgerId: req.ledger.ledgerId,
     });
   }
+
+  async shareWithUser(req: ReqShareWithUser, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResShareWithUser>> {
+    // 1. Get JWT context and verify token
+    const rCtx = await getFPTokenContext(this.sthis, ictx);
+    if (rCtx.isErr()) {
+      return Result.Err(rCtx.Err());
+    }
+    const ctx = rCtx.Ok();
+
+    const rPayload = await this.verifyFPToken(req.auth.token, ctx);
+    if (rPayload.isErr()) {
+      return Result.Err(rPayload.Err());
+    }
+    const payload = rPayload.Ok();
+
+    // 2. Extract user ID and ledger ID from token
+    if (!payload.userId) {
+      return Result.Err("No user ID in token");
+    }
+
+    if (!payload.selected?.ledger) {
+      return Result.Err("No ledger selected in token");
+    }
+
+    const userId = payload.userId;
+    const ledgerId = payload.selected.ledger;
+
+    // 3. Check if user is admin of the ledger
+    if (!(await this.isAdminOfLedger(userId, ledgerId))) {
+      return Result.Err("Not authorized to share this ledger. Admin access required.");
+    }
+
+    // 4. Get ledger details
+    const ledger = await this.db
+      .select()
+      .from(sqlLedgers)
+      .where(and(eq(sqlLedgers.ledgerId, ledgerId), eq(sqlLedgers.status, "active")))
+      .get();
+
+    if (!ledger) {
+      return Result.Err("Ledger not found or inactive");
+    }
+
+    // 5. Find user by email
+    const rUser = await queryUser(this.db, { byString: req.email });
+    if (rUser.isErr()) {
+      return Result.Err(rUser.Err());
+    }
+
+    const users = rUser.Ok();
+    if (users.length === 0) {
+      return Result.Err(`User with email ${req.email} not found. User must sign up first.`);
+    }
+
+    if (users.length > 1) {
+      return Result.Err(`Multiple users found for email ${req.email}`);
+    }
+
+    const targetUser = users[0];
+
+    // Prevent self-sharing
+    if (targetUser.userId === userId) {
+      return Result.Err("Cannot share ledger with yourself");
+    }
+
+    // 6. Add user to tenant first
+    const rAddUserToTenant = await this.addUserToTenant(this.db, {
+      userName: req.email,
+      tenantId: ledger.tenantId,
+      userId: targetUser.userId,
+      role: "member",
+    });
+
+    if (rAddUserToTenant.isErr()) {
+      return Result.Err(rAddUserToTenant.Err());
+    }
+
+    // 7. Add user to ledger
+    const rAddUser = await this.addUserToLedger(this.db, {
+      userName: req.email,
+      ledgerId: ledgerId,
+      tenantId: ledger.tenantId,
+      userId: targetUser.userId,
+      role: req.role || "member",
+      right: req.right || "read",
+    });
+
+    if (rAddUser.isErr()) {
+      return Result.Err(rAddUser.Err());
+    }
+
+    return Result.Ok({
+      type: "resShareWithUser",
+      success: true,
+      message: `Successfully shared ledger with ${req.email}`,
+      ledgerId: ledgerId,
+      userId: targetUser.userId,
+      email: req.email,
+      role: req.role || "member",
+      right: req.right || "write",
+    });
+  }
+
   async listLedgersByUser(req: ReqListLedgersByUser): Promise<Result<ResListLedgersByUser>> {
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
@@ -1899,21 +2005,10 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  /**
-   * Extract token from request, validate it, and extend expiry by 1 day
-   */
-  async extendToken(req: ReqExtendToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResExtendToken>> {
-    const rCtx = await getFPTokenContext(this.sthis, ictx);
-    if (rCtx.isErr()) {
-      return Result.Err(rCtx.Err());
-    }
-    const ctx = rCtx.Ok();
+  private async verifyFPToken(token: string, ctx: FPTokenContext): Promise<Result<FPCloudClaim>> {
     try {
-      // Get the public key for verification
       const pubKey = await sts.env2jwk(ctx.publicToken, "ES256");
-
-      // Verify the token
-      const verifyResult = await jwtVerify(req.token, pubKey, {
+      const verifyResult = await jwtVerify(token, pubKey, {
         issuer: ctx.issuer,
         audience: ctx.audience,
       });
@@ -1924,22 +2019,41 @@ export class FPApiSQL implements FPApiInterface {
       if (!payload.exp || payload.exp * 1000 <= now) {
         return Result.Err("Token is expired");
       }
-      // Create new token with extended expiry using the private key
-      // JWT expects expiration time in seconds, not milliseconds
-      const newToken = await createFPToken(
-        {
-          ...ctx,
-          validFor: ctx.extendValidFor,
-        },
-        payload,
-      );
-      return Result.Ok({
-        type: "resExtendToken",
-        token: newToken,
-      });
+
+      return Result.Ok(payload);
     } catch (error) {
-      return Result.Err(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      return Result.Err(`Token verification failed: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /**
+   * Extract token from request, validate it, and extend expiry by 1 day
+   */
+  async extendToken(req: ReqExtendToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResExtendToken>> {
+    const rCtx = await getFPTokenContext(this.sthis, ictx);
+    if (rCtx.isErr()) {
+      return Result.Err(rCtx.Err());
+    }
+    const ctx = rCtx.Ok();
+
+    const rPayload = await this.verifyFPToken(req.token, ctx);
+    if (rPayload.isErr()) {
+      return Result.Err(rPayload.Err());
+    }
+
+    // Create new token with extended expiry
+    const newToken = await createFPToken(
+      {
+        ...ctx,
+        validFor: ctx.extendValidFor,
+      },
+      rPayload.Ok(),
+    );
+
+    return Result.Ok({
+      type: "resExtendToken",
+      token: newToken,
+    });
   }
 }
 
