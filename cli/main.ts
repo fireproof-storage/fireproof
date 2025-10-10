@@ -9,6 +9,7 @@ import { writeEnvCmd } from "./write-env.js";
 import { keyCmd } from "./cloud-token-key-cmd.js";
 import { preSignedUrlCmd } from "./pre-signed-url.js";
 import { dependabotCmd } from "./dependabot-cmd.js";
+import { testContainerCmd } from "./test-container-cmd.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -20,8 +21,8 @@ import { dependabotCmd } from "./dependabot-cmd.js";
   }
 
   const cmd = subcommands({
-    name: "fp-cli",
-    description: "fireproof cli",
+    name: "core-cli",
+    description: "fireproof/core-cli",
     version: "1.0.0",
     cmds: {
       tsc: tscCmd(sthis),
@@ -32,6 +33,7 @@ import { dependabotCmd } from "./dependabot-cmd.js";
       setScripts: setScriptsCmd(sthis),
       setDependencies: setDependenciesCmd(sthis),
       dependabot: dependabotCmd(sthis),
+      testContainer: testContainerCmd(sthis),
     },
   });
 

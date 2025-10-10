@@ -5,9 +5,9 @@
   "type": "module",
   "module": "./index.js",
   "main": "./index.js",
-  "bin": "./run.sh",
+  "bin": "./run.js",
   "scripts": {
-    "build": "./run.sh tsc",
+    "build": "node ./run.js tsc",
     "test": "vitest --run",
     "pack": "FP_TSC=tsc tsx ./main.ts build --doPack",
     "publish": "FP_TSC=tsc tsx ./main.ts build"
@@ -39,6 +39,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20251009.1",
     "@adviser/cement": "^0.4.43",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
