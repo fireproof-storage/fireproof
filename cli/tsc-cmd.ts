@@ -1,7 +1,16 @@
 import { command, flag } from "cmd-ts";
 import { SuperThis } from "@fireproof/core-types-base";
 // import { findUp } from "find-up";
-import { $ } from "zx";
+import { $, quotePowerShell } from "zx";
+
+function isPowerShell() {
+  // PowerShell sets these environment variables
+  const psModulePath = process.env.PSModulePath;
+  const psExecutionPolicyPreference = process.env.PSExecutionPolicyPreference;
+
+  // Check for PowerShell-specific env vars
+  return !!(psModulePath || psExecutionPolicyPreference);
+}
 
 export async function handleTsc(args: string[], sthis: SuperThis) {
   // const top = await findUp("tsconfig.dist.json");
@@ -13,7 +22,12 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
   const cmd = [tsc, ...args];
   // console.log("args[", cmd, "]");
 
-  console.log(`Using typescript: ${cmd}`);
+  // eslint-disable-next-line no-console
+  console.log(`Using typescript: ${cmd} on ${isPowerShell() ? "PowerShell" : "Unix shell"}`);
+  if (isPowerShell()) {
+    $.quote = quotePowerShell;
+  }
+
   $.verbose = false;
   const p = $({ stdio: ["inherit", "inherit", "inherit"] })`${cmd}`;
   await p;
