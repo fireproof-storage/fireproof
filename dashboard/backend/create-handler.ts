@@ -193,18 +193,17 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
       return new Response("ok", {
         status: 200,
         headers: {
-          ...CORS,
           "Content-Type": "application/json",
         },
       });
     }
     if (!["POST", "PUT"].includes(req.method)) {
-      return new Response("Invalid request", { status: 404, headers: CORS });
+      return new Response("Invalid request", { status: 404 });
     }
     const rJso = await exception2Result(async () => await req.json());
     if (rJso.isErr()) {
       logger.Error().Err(rJso.Err()).Msg("createhandler-Error");
-      return new Response("Invalid request", { status: 404, headers: CORS });
+      return new Response("Invalid request", { status: 404 });
     }
     const jso = rJso.Ok();
 
@@ -277,7 +276,7 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         break;
 
       default:
-        return new Response("Invalid request", { status: 400, headers: CORS });
+        return new Response("Invalid request", { status: 400 });
     }
     try {
       const rRes = await res;
@@ -294,7 +293,6 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
           {
             status: 500,
             headers: {
-              ...CORS,
               "Server-Timing": `total;dur=${duration.toFixed(2)}`,
             },
           },
@@ -309,7 +307,6 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
       return new Response(JSON.stringify(rRes.Ok()), {
         status: 200,
         headers: {
-          ...CORS,
           "Content-Type": "application/json",
           "Server-Timing": `total;dur=${duration.toFixed(2)}`,
         },
@@ -326,7 +323,6 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         {
           status: 500,
           headers: {
-            ...CORS,
             "Content-Type": "application/json",
             "Server-Timing": `total;dur=${duration.toFixed(2)}`,
           },
