@@ -28,18 +28,14 @@ function exec(cmd, args) {
 // const idxTsc = process.argv.findIndex(i => i === 'tsc')
 const idxRunIdx = process.argv.findIndex((i) => i.endsWith("run.js"));
 const runDirectory = path.dirname(process.argv[idxRunIdx]);
-// console.log(runDirectory)
-// console.log(">>>>", process.argv, idxTsc, runDirectory)
-// if (idxTsc > 0) {
-//   const fp_tsc = process.env.FP_TSC ? process.env.FP_TSC : "tsgo"
-//   const restArgs = process.argv.slice(idxTsc + 1) ?? []
-//   console.log(`Using typescript: ${fp_tsc}`) // :${JSON.stringify(restArgs)}`)
-//   exec(fp_tsc, restArgs, runDirectory)
-// } else {
-const mainJs = path.join(runDirectory, "main.js");
-if (fs.existsSync(mainJs)) {
+const mainPublishedJs = path.join(runDirectory, "main.js");
+const mainWithDistJs = path.join(runDirectory, "dist", "npm", "main.js");
+const mainJs = fs.existsSync(mainPublishedJs) ? mainPublishedJs : fs.existsSync(mainWithDistJs) ? mainWithDistJs : undefined;
+if (mainJs) {
+  // make windows happy file://
+  const addFile = `file://${mainJs}`;
   // eslint-disable-next-line no-console, no-undef
-  import(mainJs).catch((e) => console.error(e));
+  import(addFile).catch((e) => console.error(e));
 } else {
   const restArgv = process.argv.slice(idxRunIdx + 1) ?? [];
   // console.log(">>>>>", restArgv)

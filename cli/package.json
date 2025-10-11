@@ -3,8 +3,6 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.js",
   "bin": "./run.js",
   "scripts": {
     "build": "node ./run.js tsc",
