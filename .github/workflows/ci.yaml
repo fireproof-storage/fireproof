@@ -14,7 +14,8 @@ on:
 #    branches: [main]
 
 jobs:
-  compile_test:
+  ci_core:
+    name: CI Core
     runs-on: ubuntu-latest
     services:
       docker:
@@ -25,7 +26,6 @@ jobs:
       options: --privileged --add-host=host.docker.internal:host-gateway --env STORAGE_URL=http://host.docker.internal:9000/testbucket --env FP_ESM=http://host.docker.internal:4874 --env FP_NPM_REGISTRY=http://host.docker.internal:4873
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
-    name: ci compile
     environment:
       name: external-pr
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
