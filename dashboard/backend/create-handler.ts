@@ -3,12 +3,12 @@ import { LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import { verifyJwt } from "@clerk/backend/jwt";
 import { SuperThis, SuperThisOpts } from "@fireproof/core";
+import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
+import { ensureLogger, ensureSuperThis } from "@fireproof/core-runtime";
+import { ResultSet } from "@libsql/client";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
-import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
-import { ensureSuperThis, ensureLogger } from "@fireproof/core-runtime";
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
-import { ResultSet } from "@libsql/client";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -193,18 +193,17 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
       return new Response("ok", {
         status: 200,
         headers: {
-          ...CORS,
           "Content-Type": "application/json",
         },
       });
     }
     if (!["POST", "PUT"].includes(req.method)) {
-      return new Response("Invalid request", { status: 404, headers: CORS });
+      return new Response("Invalid request", { status: 404 });
     }
     const rJso = await exception2Result(async () => await req.json());
     if (rJso.isErr()) {
       logger.Error().Err(rJso.Err()).Msg("createhandler-Error");
-      return new Response("Invalid request", { status: 404, headers: CORS });
+      return new Response("Invalid request", { status: 404 });
     }
     const jso = rJso.Ok();
 
@@ -272,8 +271,12 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         res = fpApi.extendToken(jso);
         break;
 
+      case FPAPIMsg.isReqShareWithUser(jso):
+        res = fpApi.shareWithUser(jso);
+        break;
+
       default:
-        return new Response("Invalid request", { status: 400, headers: CORS });
+        return new Response("Invalid request", { status: 400 });
     }
     try {
       const rRes = await res;
@@ -290,7 +293,6 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
           {
             status: 500,
             headers: {
-              ...CORS,
               "Server-Timing": `total;dur=${duration.toFixed(2)}`,
             },
           },
@@ -305,7 +307,6 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
       return new Response(JSON.stringify(rRes.Ok()), {
         status: 200,
         headers: {
-          ...CORS,
           "Content-Type": "application/json",
           "Server-Timing": `total;dur=${duration.toFixed(2)}`,
         },
@@ -322,7 +323,6 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         {
           status: 500,
           headers: {
-            ...CORS,
             "Content-Type": "application/json",
             "Server-Timing": `total;dur=${duration.toFixed(2)}`,
           },
