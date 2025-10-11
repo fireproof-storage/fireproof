@@ -28,10 +28,10 @@ function exec(cmd, args) {
 // const idxTsc = process.argv.findIndex(i => i === 'tsc')
 const idxRunIdx = process.argv.findIndex((i) => i.endsWith("run.js"));
 const runDirectory = path.dirname(process.argv[idxRunIdx]);
-const mainPublishedJs = path.join(runDirectory, "main.js");
-const mainWithDistJs = path.join(runDirectory, "dist", "npm", "main.js");
-const mainJs = fs.existsSync(mainPublishedJs) ? mainPublishedJs : fs.existsSync(mainWithDistJs) ? mainWithDistJs : undefined;
-if (mainJs) {
+const mainJs = path.join(runDirectory, "main.js");
+//const mainWithDistJs = path.join(runDirectory, "dist", "npm", "main.js");
+//const mainJs = fs.existsSync(mainPublishedJs) ? mainPublishedJs : fs.existsSync(mainWithDistJs) ? mainWithDistJs : undefined;
+if (fs.existsSync(mainJs)) {
   // make windows happy file://
   const addFile = `file://${mainJs}`;
   // eslint-disable-next-line no-console, no-undef
