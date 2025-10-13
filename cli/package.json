@@ -37,11 +37,11 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20251009.1",
     "@adviser/cement": "^0.4.43",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
+    "@typescript/native-preview": "7.0.0-dev.20251012.1",
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.14.2",
     "find-up": "^8.0.0",
