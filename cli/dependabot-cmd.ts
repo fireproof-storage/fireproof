@@ -3,6 +3,8 @@ import { command, flag, option, string } from "cmd-ts";
 import { $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
 
+type PRStatus = "SUCCESS" | "FAILURE" | "PENDING" | "ERROR" | "REBASE-PENDING" | "NO_CHECKS" | "UNKNOWN";
+
 interface StatusCheck {
   readonly __typename?: string;
   readonly state?: string;        // For StatusContext
@@ -30,7 +32,7 @@ function isDependabotRebasing(pr: PR): boolean {
   return isRebasing;
 }
 
-function getOverallStatus(pr: PR): string {
+function getOverallStatus(pr: PR): PRStatus {
   // Check if Dependabot is rebasing first
   if (isDependabotRebasing(pr)) {
     return "REBASE-PENDING";
@@ -61,7 +63,8 @@ function getOverallStatus(pr: PR): string {
   // Determine overall status: if any fail/error, show that; if any pending, show pending; else success
   if (states.some((s) => s === "FAILURE" || s === "ERROR")) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return states.find((s) => s === "FAILURE" || s === "ERROR")!;
+    const failedState = states.find((s) => s === "FAILURE" || s === "ERROR")!;
+    return failedState === "ERROR" ? "ERROR" : "FAILURE";
   } else if (states.some((s) => s === "PENDING" || s === "IN_PROGRESS")) {
     return "PENDING";
   } else if (states.some((s) => s === "SUCCESS")) {
@@ -73,7 +76,7 @@ function getOverallStatus(pr: PR): string {
       return "PENDING";
     }
   } else {
-    return states[0] || "UNKNOWN";
+    return "UNKNOWN";
   }
 }
 
