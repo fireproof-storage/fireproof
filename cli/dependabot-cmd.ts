@@ -3,22 +3,134 @@ import { command, flag, option, string } from "cmd-ts";
 import { $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
 
+interface StatusCheck {
+  readonly __typename?: string;
+  readonly state?: string;        // For StatusContext
+  readonly conclusion?: string;   // For CheckRun
+  readonly status?: string;       // For CheckRun (COMPLETED, IN_PROGRESS, etc.)
+}
+
 interface PR {
   readonly number: number;
   readonly title: string;
   readonly author: string;
   readonly url: string;
   readonly headRefName: string;
+  readonly statusCheckRollup?: StatusCheck[];
+  readonly body?: string;
+  readonly mergeable?: string;  // MERGEABLE, CONFLICTING, UNKNOWN
+  readonly mergeStateStatus?: string;  // CLEAN, DIRTY, UNSTABLE, etc.
+}
+
+function isDependabotRebasing(pr: PR): boolean {
+  // Check if Dependabot is rebasing based on merge state
+  // DIRTY means there's a rebase in progress (assuming no conflicts)
+  const hasConflict = pr.mergeable === "CONFLICTING";
+  const isRebasing = pr.mergeStateStatus === "DIRTY" && !hasConflict;
+  return isRebasing;
+}
+
+function getOverallStatus(pr: PR): string {
+  // Check if Dependabot is rebasing first
+  if (isDependabotRebasing(pr)) {
+    return "REBASE-PENDING";
+  }
+
+  // Check mergeable state - if it has conflicts, it's a failure regardless of checks
+  if (pr.mergeable === "CONFLICTING") {
+    return "FAILURE";
+  }
+
+  if (!pr.statusCheckRollup || pr.statusCheckRollup.length === 0) {
+    return "NO_CHECKS";
+  }
+
+  // Normalize status from both CheckRun and StatusContext types
+  const states = pr.statusCheckRollup.map((check) => {
+    // CheckRun has conclusion (FAILURE, SUCCESS, etc.) and status (COMPLETED, IN_PROGRESS, etc.)
+    if (check.__typename === "CheckRun") {
+      if (check.status !== "COMPLETED") {
+        return "PENDING";
+      }
+      return check.conclusion || "UNKNOWN";
+    }
+    // StatusContext has state (SUCCESS, FAILURE, PENDING, ERROR)
+    return check.state || "UNKNOWN";
+  });
+
+  // Determine overall status: if any fail/error, show that; if any pending, show pending; else success
+  if (states.some((s) => s === "FAILURE" || s === "ERROR")) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return states.find((s) => s === "FAILURE" || s === "ERROR")!;
+  } else if (states.some((s) => s === "PENDING" || s === "IN_PROGRESS")) {
+    return "PENDING";
+  } else if (states.some((s) => s === "SUCCESS")) {
+    // Only return SUCCESS if checks pass AND it's mergeable
+    if (pr.mergeable === "MERGEABLE" || pr.mergeStateStatus === "CLEAN") {
+      return "SUCCESS";
+    } else {
+      // Checks passed but mergeable state is unclear
+      return "PENDING";
+    }
+  } else {
+    return states[0] || "UNKNOWN";
+  }
 }
 
 async function fetchDependabotPRs(): Promise<PR[]> {
   try {
-    const result = await $`gh pr list --author app/dependabot --json number,title,author,url,headRefName --limit 100`;
+    const result = await $`gh pr list --author app/dependabot --json number,title,author,url,headRefName,statusCheckRollup,body,mergeable,mergeStateStatus --limit 100`;
     const prs = JSON.parse(result.stdout) as PR[];
     return prs;
   } catch (error) {
     console.error("Failed to fetch Dependabot PRs:", error);
     throw error;
+  }
+}
+
+async function waitForPRsToSucceed(prNumbers: number[], timeoutMinutes = 30): Promise<void> {
+  const startTime = Date.now();
+  const timeoutMs = timeoutMinutes * 60 * 1000;
+  const pollIntervalMs = 10000; // Poll every 10 seconds
+
+  const remainingPRs = new Set(prNumbers);
+
+  console.log(`\n⏳ Waiting for ${prNumbers.length} PR(s) to reach SUCCESS state (timeout: ${timeoutMinutes}m)...`);
+  console.log(`   Monitoring PRs: ${Array.from(remainingPRs).join(", ")}\n`);
+
+  while (remainingPRs.size > 0 && Date.now() - startTime < timeoutMs) {
+    const prs = await fetchDependabotPRs();
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+    for (const prNum of Array.from(remainingPRs)) {
+      const pr = prs.find((p) => p.number === prNum);
+      if (!pr) {
+        console.log(`⚠️  PR #${prNum} not found in list (may have been merged)`);
+        remainingPRs.delete(prNum);
+        continue;
+      }
+
+      const status = getOverallStatus(pr);
+
+      if (status === "SUCCESS") {
+        console.log(`✓ PR #${prNum} reached SUCCESS state`);
+        remainingPRs.delete(prNum);
+      } else if (status === "FAILURE" || status === "ERROR") {
+        console.log(`✗ PR #${prNum} failed with status: ${status}`);
+        remainingPRs.delete(prNum);
+      }
+    }
+
+    if (remainingPRs.size > 0) {
+      console.log(`⏳ Still waiting for ${remainingPRs.size} PR(s): ${Array.from(remainingPRs).join(", ")} (${elapsed}s elapsed)`);
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    }
+  }
+
+  if (remainingPRs.size > 0) {
+    console.log(`\n⚠️  Timeout: ${remainingPRs.size} PR(s) did not reach SUCCESS state: ${Array.from(remainingPRs).join(", ")}`);
+  } else {
+    console.log(`\n✓ All PRs reached a final state`);
   }
 }
 
@@ -70,6 +182,11 @@ export function dependabotCmd(sthis: SuperThis) {
         short: "l",
         description: "List all Dependabot PRs (default action)",
       }),
+      wait: flag({
+        long: "wait",
+        short: "w",
+        description: "Wait for PRs to reach SUCCESS state after applying (use with --rebase)",
+      }),
     },
     handler: async (args) => {
       console.log("Fetching Dependabot PRs...");
@@ -86,7 +203,23 @@ export function dependabotCmd(sthis: SuperThis) {
         prs.forEach((pr) => {
           console.log(`#${pr.number}: ${pr.title}`);
           console.log(`  URL: ${pr.url}`);
-          console.log(`  Branch: ${pr.headRefName}\n`);
+          console.log(`  Branch: ${pr.headRefName}`);
+
+          // Display GitHub Actions status
+          const overallStatus = getOverallStatus(pr);
+          if (overallStatus === "NO_CHECKS") {
+            console.log(`  Status: - No checks`);
+          } else {
+            const statusEmoji =
+              overallStatus === "SUCCESS" ? "✓" :
+              overallStatus === "FAILURE" ? "✗" :
+              overallStatus === "PENDING" ? "○" :
+              overallStatus === "REBASE-PENDING" ? "⚠️ " :
+              overallStatus === "ERROR" ? "⚠" : "?";
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            console.log(`  Status: ${statusEmoji} ${overallStatus} (${pr.statusCheckRollup!.length} check${pr.statusCheckRollup!.length !== 1 ? "s" : ""})`);
+          }
+          console.log();
         });
         return;
       }
@@ -105,14 +238,140 @@ export function dependabotCmd(sthis: SuperThis) {
 
       // Apply all PRs
       if (args.apply || args.rebase) {
-        console.log(`\nProcessing ${prs.length} Dependabot PR(s)...\n`);
-        for (const pr of prs) {
-          try {
-            await applyPR(pr, args.rebase);
-          } catch (error) {
-            console.error(`Skipping PR #${pr.number} due to error.`);
+        if (args.rebase && args.wait) {
+          // With --wait, continuously process PRs until none are left
+          let iteration = 0;
+          let remainingPRs = prs;
+          const failedToApply = new Set<number>(); // Track PRs that failed to apply
+
+          while (remainingPRs.length > 0) {
+            iteration++;
+            console.log(`\n${"=".repeat(60)}`);
+            console.log(`Iteration ${iteration}: Found ${remainingPRs.length} Dependabot PR(s)`);
+            console.log("=".repeat(60));
+
+            // Categorize PRs
+            const successPRs = remainingPRs.filter((pr) => getOverallStatus(pr) === "SUCCESS");
+            const pendingPRs = remainingPRs.filter((pr) => {
+              const status = getOverallStatus(pr);
+              return status === "PENDING" || status === "REBASE-PENDING";
+            });
+            const failedPRs = remainingPRs.filter((pr) => {
+              const status = getOverallStatus(pr);
+              return status === "FAILURE" || status === "ERROR";
+            });
+
+            console.log(`  ${successPRs.length} SUCCESS, ${pendingPRs.length} PENDING/REBASE-PENDING, ${failedPRs.length} FAILED\n`);
+
+            // Report failed PRs (check status failures)
+            if (failedPRs.length > 0) {
+              console.log(`Skipping ${failedPRs.length} PR(s) with failed checks:`);
+              failedPRs.forEach((pr) => console.log(`  - #${pr.number}: ${pr.title} (${getOverallStatus(pr)})`));
+              console.log();
+            }
+
+            // Report PRs that failed to apply in previous iterations
+            if (failedToApply.size > 0) {
+              const stillFailed = successPRs.filter((pr) => failedToApply.has(pr.number));
+              if (stillFailed.length > 0) {
+                console.log(`Retrying ${stillFailed.length} PR(s) that failed to apply previously:`);
+                stillFailed.forEach((pr) => console.log(`  - #${pr.number}: ${pr.title}`));
+                console.log();
+              }
+            }
+
+            // Process SUCCESS PRs first
+            if (successPRs.length > 0) {
+              console.log(`Rebasing ${successPRs.length} PR(s) with SUCCESS status:\n`);
+              for (const pr of successPRs) {
+                try {
+                  await applyPR(pr, true);
+                  // If successful, remove from failed list
+                  failedToApply.delete(pr.number);
+                } catch (error) {
+                  console.error(`✗ Failed to apply PR #${pr.number}, will retry in next iteration.`);
+                  failedToApply.add(pr.number);
+                }
+              }
+            }
+
+            // Wait for pending PRs if any
+            if (pendingPRs.length > 0) {
+              const pendingNumbers = pendingPRs.map((pr) => pr.number);
+              await waitForPRsToSucceed(pendingNumbers);
+            }
+
+            // If we only processed pending PRs (no SUCCESS PRs to rebase), skip the inter-iteration wait
+            // Otherwise wait before checking for new PRs
+            if (successPRs.length === 0 && pendingPRs.length > 0) {
+              // Just waited for PRs, immediately check their status for next iteration
+              console.log("\n🔄 Checking status of completed PRs...");
+            } else {
+              // Wait before next iteration to avoid hammering the API
+              console.log("\n⏳ Waiting 10 seconds before next iteration...");
+              await new Promise((resolve) => setTimeout(resolve, 10000));
+            }
+
+            // Refresh the PR list
+            remainingPRs = await fetchDependabotPRs();
+
+            // If no PRs left, we're done
+            if (remainingPRs.length === 0) {
+              if (failedToApply.size > 0) {
+                console.log(`\n⚠️  Completed, but ${failedToApply.size} PR(s) could not be applied: ${Array.from(failedToApply).join(", ")}`);
+              } else {
+                console.log("\n✓ All Dependabot PRs have been processed!");
+              }
+              break;
+            }
+
+            // Check if we're stuck (only failed-to-apply PRs remain)
+            const onlyFailedRemain = remainingPRs.every((pr) => failedToApply.has(pr.number));
+            if (onlyFailedRemain && successPRs.length === 0 && pendingPRs.length === 0) {
+              console.log(`\n⚠️  Cannot proceed: Only PRs that failed to apply remain in the list.`);
+              console.log(`Failed PRs: ${Array.from(failedToApply).join(", ")}`);
+              break;
+            }
+          }
+        } else {
+          // Original logic for --rebase without --wait or for --apply
+          let prsToProcess = prs;
+
+          if (args.rebase) {
+            // Without --wait, only process SUCCESS PRs
+            prsToProcess = prs.filter((pr) => getOverallStatus(pr) === "SUCCESS");
+
+            const rebasingCount = prs.filter((pr) => getOverallStatus(pr) === "REBASE-PENDING").length;
+            const pendingCount = prs.filter((pr) => getOverallStatus(pr) === "PENDING").length;
+            const failedCount = prs.filter((pr) => {
+              const status = getOverallStatus(pr);
+              return status === "FAILURE" || status === "ERROR";
+            }).length;
+
+            console.log(`\nFound ${prs.length} Dependabot PR(s), ${prsToProcess.length} ready to rebase.\n`);
+            if (rebasingCount > 0) {
+              console.log(`${rebasingCount} PR(s) with REBASE-PENDING status.`);
+            }
+            if (pendingCount > 0) {
+              console.log(`${pendingCount} PR(s) with PENDING status.`);
+            }
+            if (failedCount > 0) {
+              console.log(`Skipping ${failedCount} PR(s) with FAILURE/ERROR status.`);
+            }
+            console.log();
+          } else {
+            console.log(`\nProcessing ${prs.length} Dependabot PR(s)...\n`);
+          }
+
+          for (const pr of prsToProcess) {
+            try {
+              await applyPR(pr, args.rebase);
+            } catch (error) {
+              console.error(`Skipping PR #${pr.number} due to error.`);
+            }
           }
         }
+
         console.log("\nDone processing Dependabot PRs.");
       }
     },
