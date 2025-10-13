@@ -83,8 +83,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../vendor
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20251009.1
-        version: 7.0.0-dev.20251009.1
+        specifier: 7.0.0-dev.20251012.1
+        version: 7.0.0-dev.20251012.1
       aws4fetch:
         specifier: ^1.0.20
         version: 1.0.20
