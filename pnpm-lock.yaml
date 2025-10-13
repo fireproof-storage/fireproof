@@ -187,8 +187,8 @@ importers:
         specifier: ^0.44.6
         version: 0.44.6(@cloudflare/workers-types@4.20251008.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.9.10
-        version: 4.9.10
+        specifier: ^4.9.11
+        version: 4.9.11
       jose:
         specifier: ^6.1.0
         version: 6.1.0
@@ -251,8 +251,8 @@ importers:
         specifier: ^0.44.6
         version: 0.44.6(@cloudflare/workers-types@4.20251008.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.9.10
-        version: 4.9.10
+        specifier: ^4.9.11
+        version: 4.9.11
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -307,10 +307,10 @@ importers:
         version: link:../../../vendor
       '@hono/node-server':
         specifier: ^1.19.5
-        version: 1.19.5(hono@4.9.10)
+        version: 1.19.5(hono@4.9.11)
       '@hono/node-ws':
         specifier: ^1.2.0
-        version: 1.2.0(@hono/node-server@1.19.5(hono@4.9.10))(hono@4.9.10)
+        version: 1.2.0(@hono/node-server@1.19.5(hono@4.9.11))(hono@4.9.11)
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
@@ -318,8 +318,8 @@ importers:
         specifier: ^0.44.6
         version: 0.44.6(@cloudflare/workers-types@4.20251008.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.9.10
-        version: 4.9.10
+        specifier: ^4.9.11
+        version: 4.9.11
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.7.0)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -4299,8 +4299,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.9.10:
-    resolution: {integrity: sha512-AlI15ijFyKTXR7eHo7QK7OR4RoKIedZvBuRjO8iy4zrxvlY5oFCdiRG/V/lFJHCNXJ0k72ATgnyzx8Yqa5arug==}
+  hono@4.9.11:
+    resolution: {integrity: sha512-MyJ4xop3boTyXl8bJBh4i20AAZTLM3AXUJphyrUb0CpgTKYb1N703z53XiKUKchGUpcPqiiYkiLOXA3kqK3icA==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@2.8.9:
@@ -6892,14 +6892,14 @@ snapshots:
 
   '@formkit/auto-animate@0.8.4': {}
 
-  '@hono/node-server@1.19.5(hono@4.9.10)':
+  '@hono/node-server@1.19.5(hono@4.9.11)':
     dependencies:
-      hono: 4.9.10
+      hono: 4.9.11
 
-  '@hono/node-ws@1.2.0(@hono/node-server@1.19.5(hono@4.9.10))(hono@4.9.10)':
+  '@hono/node-ws@1.2.0(@hono/node-server@1.19.5(hono@4.9.11))(hono@4.9.11)':
     dependencies:
-      '@hono/node-server': 1.19.5(hono@4.9.10)
-      hono: 4.9.10
+      '@hono/node-server': 1.19.5(hono@4.9.11)
+      hono: 4.9.11
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -8960,7 +8960,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.9.10: {}
+  hono@4.9.11: {}
 
   hosted-git-info@2.8.9: {}
 
