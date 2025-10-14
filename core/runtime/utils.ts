@@ -31,8 +31,8 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
-import { toSortedArray } from "@adviser/cement/utils";
-import { XXH } from "@adviser/ts-xxhash";
+import { toSortedArray, toSorted } from "@adviser/cement/utils";
+import { XXH, XXH64 } from "@adviser/ts-xxhash";
 
 //export type { Logger };
 //export { Result };
@@ -535,18 +535,46 @@ export function setPresetEnv(o: Record<string, string>, symbol = "FP_PRESET_ENV"
   return env;
 }
 
-function hashXX(str: string): string {
-  const hasher = XXH.h64();
-  // hasher.update(str);
-  const res = hasher.update(str).digest();
-  const hex = res.toString(16);
-  const asBytes = new Uint8Array(hex.length / 2 + 1);
-  for (let i = 0; i < hex.length; i += 2) {
-    asBytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-  }
-  return base58btc.encode(asBytes);
-}
+type HasherInput = Uint8Array | string | number | boolean;
 
+class Hasher {
+  private readonly hasher: XXH64;
+  private readonly ende: typeof txtOps;
+  constructor(ende?: typeof txtOps) {
+    this.hasher = XXH.h64();
+    this.ende = ende || txtOps;
+  }
+  update(x: HasherInput): Hasher {
+    switch (true) {
+      case x instanceof Uint8Array:
+        this.hasher.update(x);
+        break;
+      case typeof x === "string":
+        this.hasher.update(this.ende.encode(x));
+        break;
+      case typeof x === "number":
+        this.hasher.update(this.ende.encode(x.toString()));
+        break;
+      case typeof x === "boolean":
+        this.hasher.update(this.ende.encode(x ? "true" : "false"));
+        break;
+      default:
+        throw new Error(`unsupported type ${typeof x}`);
+    }
+    return this;
+  }
+  digest(x?: HasherInput): string {
+    if (!(x === undefined || x === null)) {
+      this.update(x);
+    }
+    const hex = this.hasher.digest().toString(16);
+    const asBytes = new Uint8Array(hex.length / 2 + 1);
+    for (let i = 0; i < hex.length; i += 2) {
+      asBytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+    }
+    return base58btc.encode(asBytes);
+  }
+}
 export async function hashStringAsync(str: string): Promise<string> {
   const bytes = json.encode(str);
   const hash = await sha256.digest(bytes);
@@ -554,11 +582,41 @@ export async function hashStringAsync(str: string): Promise<string> {
 }
 
 export function hashStringSync(str: string): string {
-  return hashXX(str);
+  return new Hasher().update(str).digest();
 }
 
 export function hashObjectSync<T extends NonNullable<S>, S>(o: T): string {
-  return hashXX(JSON.stringify(toSortedArray(o)));
+  const hasher = new Hasher();
+  toSorted(o, (x, key) => {
+    switch (key) {
+      case "Null":
+      case "Array":
+      case "Function":
+        break;
+      case "Date":
+        hasher.update(`D:${(x as Date).toISOString()}`);
+        break;
+      case "Symbol":
+        hasher.update(`S:(x as symbol).toString()}`);
+        break;
+      case "Key":
+        hasher.update(`K:${x as string}`);
+        break;
+      case "String":
+        hasher.update(`S:${x as string}`);
+        break;
+      case "Boolean":
+        hasher.update(`B:${x ? "true" : "false"}`);
+        break;
+      case "Number":
+        hasher.update(`N:${(x as number).toString()}`);
+        break;
+      case "Uint8Array":
+        hasher.update(new Uint8Array(["U".charCodeAt(0), ":".charCodeAt(0), ...(x as Uint8Array)]));
+        break;
+    }
+  });
+  return hasher.digest();
 }
 
 export async function hashObjectAsync<T extends NonNullable<S>, S>(o: T): Promise<string> {
