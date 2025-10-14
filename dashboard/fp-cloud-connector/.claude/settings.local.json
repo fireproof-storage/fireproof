@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/menabe/Software/fproof/fireproof/dashboard/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
