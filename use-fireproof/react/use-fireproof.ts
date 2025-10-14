@@ -1,4 +1,3 @@
-import { toSortedArray } from "@adviser/cement/utils";
 import { fireproof } from "@fireproof/core-base";
 import { useMemo } from "react";
 import { createAttach } from "./use-attach.js";
@@ -8,6 +7,7 @@ import { createUseChanges } from "./use-changes.js";
 import { createUseDocument } from "./use-document.js";
 import { createUseLiveQuery } from "./use-live-query.js";
 import { Database } from "@fireproof/core-types-base";
+import { hashObjectSync } from "@fireproof/core-runtime";
 
 /**
  * @deprecated Use the `useFireproof` hook instead
@@ -29,7 +29,7 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
-  const strConfig = JSON.stringify(toSortedArray(config));
+  const strConfig = hashObjectSync(config);
 
   const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, strConfig]);
   const attach = createAttach(database, config);
