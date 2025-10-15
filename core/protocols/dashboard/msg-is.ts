@@ -1,23 +1,24 @@
 import {
-  ReqDeleteTenant,
-  ReqUpdateTenant,
+  ReqCloudSessionToken,
+  ReqCreateLedger,
   ReqCreateTenant,
   ReqDeleteInvite,
-  ReqListInvites,
-  ReqInviteUser,
-  ReqFindUser,
-  ReqRedeemInvite,
-  ReqEnsureUser,
-  ReqListTenantsByUser,
-  ReqUpdateUserTenant,
-  ReqCloudSessionToken,
-  ReqTokenByResultId,
-  ReqListLedgersByUser,
-  ReqCreateLedger,
-  ReqUpdateLedger,
   ReqDeleteLedger,
-  ResTokenByResultId,
+  ReqDeleteTenant,
+  ReqEnsureUser,
   ReqExtendToken,
+  ReqFindUser,
+  ReqInviteUser,
+  ReqListInvites,
+  ReqListLedgersByUser,
+  ReqListTenantsByUser,
+  ReqRedeemInvite,
+  ReqShareWithUser,
+  ReqTokenByResultId,
+  ReqUpdateLedger,
+  ReqUpdateTenant,
+  ReqUpdateUserTenant,
+  ResTokenByResultId,
 } from "./msg-types.js";
 
 interface FPApiMsgInterface {
@@ -40,6 +41,7 @@ interface FPApiMsgInterface {
   isUpdateLedger(jso: unknown): jso is ReqUpdateLedger;
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger;
   isReqExtendToken(jso: unknown): jso is ReqExtendToken;
+  isReqShareWithUser(jso: unknown): jso is ReqShareWithUser;
 }
 
 function hasType(jso: unknown, t: string): jso is { type: string } {
@@ -102,5 +104,8 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isReqExtendToken(jso: unknown): jso is ReqExtendToken {
     return hasType(jso, "reqExtendToken");
+  }
+  isReqShareWithUser(jso: unknown): jso is ReqShareWithUser {
+    return hasType(jso, "reqShareWithUser");
   }
 }
