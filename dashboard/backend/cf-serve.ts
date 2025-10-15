@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/d1";
 import { D1Database, Fetcher, Request as CFRequest, Response as CFResponse } from "@cloudflare/workers-types";
-import { CORS, createHandler } from "./create-handler.js";
+import { DefaultHttpHeaders, createHandler } from "./create-handler.js";
 import { URI } from "@adviser/cement";
 import { resWellKnownJwks } from "./well-known-jwks.js";
 
@@ -33,10 +33,7 @@ export default {
     return new Response(res.body as ReadableStream<Uint8Array>, {
       status: res.status,
       statusText: res.statusText,
-      headers: {
-        ...Object.fromEntries(res.headers.entries()),
-        ...CORS,
-      },
+      headers: DefaultHttpHeaders(res.headers),
     });
   },
 };
