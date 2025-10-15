@@ -39,7 +39,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.49",
+    "@adviser/cement": "^0.4.51",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "use-fireproof": "workspace:0.0.0"

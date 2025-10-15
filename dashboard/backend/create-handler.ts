@@ -1,5 +1,5 @@
 // import { auth } from "./better-auth.js";
-import { LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
+import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import { verifyJwt } from "@clerk/backend/jwt";
 import { SuperThis, SuperThisOpts } from "@fireproof/core";
@@ -12,12 +12,20 @@ import { ResultSet } from "@libsql/client";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
-export const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
-  "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
-  "Access-Control-Max-Age": "86400",
-};
+const defaultHttpHeaders = Lazy(() =>
+  HttpHeader.from({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,DELETE",
+    "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
+    "Access-Control-Max-Age": "86400",
+  }),
+);
+
+export function DefaultHttpHeaders(...h: CoercedHeadersInit[]): HeadersInit {
+  return defaultHttpHeaders()
+    .Merge(...h)
+    .AsHeaderInit();
+}
 
 interface ClerkTemplate {
   readonly app_metadata: unknown;
@@ -192,19 +200,16 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
     if (req.method === "OPTIONS") {
       return new Response("ok", {
         status: 200,
-        headers: {
-          ...CORS,
-          "Content-Type": "application/json",
-        },
+        headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
       });
     }
     if (!["POST", "PUT"].includes(req.method)) {
-      return new Response("Invalid request", { status: 404, headers: CORS });
+      return new Response("Invalid request", { status: 404, headers: DefaultHttpHeaders() });
     }
     const rJso = await exception2Result(async () => await req.json());
     if (rJso.isErr()) {
       logger.Error().Err(rJso.Err()).Msg("createhandler-Error");
-      return new Response("Invalid request", { status: 404, headers: CORS });
+      return new Response("Invalid request", { status: 404, headers: DefaultHttpHeaders() });
     }
     const jso = rJso.Ok();
 
@@ -273,7 +278,7 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         break;
 
       default:
-        return new Response("Invalid request", { status: 400, headers: CORS });
+        return new Response("Invalid request", { status: 400, headers: DefaultHttpHeaders() });
     }
     try {
       const rRes = await res;
@@ -289,10 +294,9 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
           }),
           {
             status: 500,
-            headers: {
-              ...CORS,
+            headers: DefaultHttpHeaders({
               "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-            },
+            }),
           },
         );
       }
@@ -305,7 +309,7 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
       return new Response(JSON.stringify(rRes.Ok()), {
         status: 200,
         headers: {
-          ...CORS,
+          ...DefaultHttpHeaders,
           "Content-Type": "application/json",
           "Server-Timing": `total;dur=${duration.toFixed(2)}`,
         },
@@ -322,7 +326,7 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         {
           status: 500,
           headers: {
-            ...CORS,
+            ...DefaultHttpHeaders,
             "Content-Type": "application/json",
             "Server-Timing": `total;dur=${duration.toFixed(2)}`,
           },
