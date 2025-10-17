@@ -4,6 +4,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 import { dotenv } from "zx";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import * as path from "path";
+import * as fs from "fs";
 
 function defines() {
   try {
@@ -29,6 +30,28 @@ export default defineConfig({
     react(),
     cloudflare(),
     visualizer(),
+    {
+      name: "serve-fp-cloud-connector",
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.url?.startsWith("/fp-cloud-connector/")) {
+            const filePath = path.join(__dirname, req.url.split("?")[0]);
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+              const ext = path.extname(filePath);
+              // Only serve HTML directly, let Vite handle .ts/.js files
+              if (ext === ".html") {
+                const content = fs.readFileSync(filePath);
+                res.setHeader("Content-Type", "text/html");
+                res.end(content);
+                return;
+              }
+              // For .ts/.js files, let Vite's normal processing handle them
+            }
+          }
+          next();
+        });
+      },
+    },
   ],
   define: {
     ...defines(),
@@ -43,11 +66,13 @@ export default defineConfig({
   server: {
     port: 7370,
     hmr: false,
-    proxy: {
-      "/*": {
-        rewrite: () => "/index.html",
-      },
+    fs: {
+      allow: [
+        // Allow serving files from the project root
+        "..",
+      ],
     },
+    allowedHosts: ["localhost", "dev-local-1.adviser.com", "dev-local-2.adviser.com"],
   },
   resolve: process.env.USE_SOURCE
     ? {
