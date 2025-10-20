@@ -57,7 +57,7 @@
     "@clerk/clerk-react": "^5.53.2",
     "@cloudflare/vite-plugin": "^1.13.12",
     "@cloudflare/workers-types": "^4.20251011.0",
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^9.38.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@libsql/client": "^0.15.15",
     "@libsql/kysely-libsql": "^0.4.1",
