@@ -107,8 +107,8 @@ importers:
         specifier: ^7.7.3
         version: 7.7.3
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -215,8 +215,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
   cloud/backend/cf-d1:
     dependencies:
@@ -276,8 +276,8 @@ importers:
         specifier: ^4.43.0
         version: 4.43.0(@cloudflare/workers-types@4.20251011.0)
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
   cloud/backend/node:
     dependencies:
@@ -337,8 +337,8 @@ importers:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
   cloud/base:
     dependencies:
@@ -377,8 +377,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
   cloud/todo-app:
     dependencies:
@@ -957,8 +957,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
   core/types/base:
     dependencies:
@@ -1218,8 +1218,8 @@ importers:
         specifier: ^4.43.0
         version: 4.43.0(@cloudflare/workers-types@4.20251011.0)
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
   use-fireproof:
     dependencies:
@@ -1319,8 +1319,8 @@ importers:
         specifier: ^4.19.2
         version: 4.20.5
       zx:
-        specifier: ^8.8.4
-        version: 8.8.4
+        specifier: ^8.8.5
+        version: 8.8.5
 
 packages:
 
@@ -6035,8 +6035,8 @@ packages:
       use-sync-external-store:
         optional: true
 
-  zx@8.8.4:
-    resolution: {integrity: sha512-44GcD+ZlM/v1OQtbwnSxLPcoE1ZEUICmR+RSbJZLAqfIixNLuMjLyh0DcS75OyfJ/sWYAwCWDmDvJ4hdnANAPQ==}
+  zx@8.8.5:
+    resolution: {integrity: sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -10814,4 +10814,4 @@ snapshots:
       react: 19.2.0
       use-sync-external-store: 1.6.0(react@19.2.0)
 
-  zx@8.8.4: {}
+  zx@8.8.5: {}
