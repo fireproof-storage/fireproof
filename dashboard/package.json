@@ -27,7 +27,7 @@
   "dependencies": {
     "@adviser/cement": "^0.4.51",
     "@clerk/backend": "^2.18.3",
-    "@clerk/clerk-js": "^5.99.0",
+    "@clerk/clerk-js": "^5.102.0",
     "@clerk/clerk-react": "^5.53.2",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
