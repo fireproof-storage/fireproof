@@ -47,8 +47,8 @@ importers:
         specifier: ^1.56.0
         version: 1.56.0
       playwright-chromium:
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.56.1
+        version: 1.56.1
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -951,8 +951,8 @@ importers:
         specifier: ^1.56.0
         version: 1.56.0
       playwright-chromium:
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.56.1
+        version: 1.56.1
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -1285,8 +1285,8 @@ importers:
         specifier: ^1.56.0
         version: 1.56.0
       playwright-chromium:
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.56.1
+        version: 1.56.1
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -5006,13 +5006,18 @@ packages:
     resolution: {integrity: sha512-/E57AYkoeQ25qkxMj5PBOVgF8Kiu/h7cYS30Z5+R7WaiCCBfLq58ZI/dSeaEKb9WVJV5n/03QwrN3IeWIFllvw==}
     engines: {node: '>=6'}
 
-  playwright-chromium@1.56.0:
-    resolution: {integrity: sha512-Zgph8yT2/QzhozuY8PXKV7PXSg3f0YLyI3mE9ljaqh37RtckmZJBfiqeasJVhsCgYe3P63HbdDhUQkUMNT+nog==}
+  playwright-chromium@1.56.1:
+    resolution: {integrity: sha512-5TU+NMrofQg2j+DwIaQL/9eC84hs5YGz5Wng8OOdgq+kmu8usPLedxx2pJJ1Pb2TNFNiz3167RsUNFFvY3srNA==}
     engines: {node: '>=18'}
     hasBin: true
 
   playwright-core@1.56.0:
     resolution: {integrity: sha512-1SXl7pMfemAMSDn5rkPeZljxOCYAmQnYLBTExuh6E8USHXGSX3dx6lYZN/xPpTz1vimXmPA9CDnILvmJaB8aSQ==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright-core@1.56.1:
+    resolution: {integrity: sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -9673,11 +9678,13 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-chromium@1.56.0:
+  playwright-chromium@1.56.1:
     dependencies:
-      playwright-core: 1.56.0
+      playwright-core: 1.56.1
 
   playwright-core@1.56.0: {}
+
+  playwright-core@1.56.1: {}
 
   playwright@1.56.0:
     dependencies:
