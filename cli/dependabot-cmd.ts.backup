@@ -199,9 +199,9 @@ export function dependabotCmd(sthis: SuperThis) {
         short: "a",
         description: "Apply (checkout) all Dependabot PRs",
       }),
-      autoGH: flag({
-        long: "autoGH",
-        description: "GitHub auto-merges when CI passes (use with --rebase, requires auto-merge enabled)",
+      auto: flag({
+        long: "auto",
+        description: "Wait for CI checks to pass before merging (requires auto-merge enabled)",
       }),
       prNumber: option({
         long: "pr",
@@ -215,48 +215,33 @@ export function dependabotCmd(sthis: SuperThis) {
         short: "l",
         description: "List all Dependabot PRs (default action)",
       }),
-      autoCLI: flag({
-        long: "autoCLI",
+      wait: flag({
+        long: "wait",
         short: "w",
-        description: "CLI merges when CI passes (use with --rebase)",
+        description: "Wait for PRs to reach SUCCESS state after applying (use with --rebase)",
       }),
     },
     handler: async (args) => {
       console.log("Fetching Dependabot PRs...");
       const prs = await fetchDependabotPRs();
 
-      // Always show auto-merge status for list mode, even if no PRs
-      if (args.list || (!args.apply && !args.rebase && !args.prNumber)) {
-        // Check and display auto-merge status with usage guidance
-        console.log("Checking repository auto-merge setting...");
-        const autoMergeEnabled = await checkAutoMergeEnabled();
-
-        if (autoMergeEnabled) {
-          console.log("Repository: auto-merge ENABLED ✓");
-          console.log("💡 Recommended: Use --rebase --autoGH (GitHub handles merging)\n");
-        } else {
-          console.log("Repository: auto-merge DISABLED ✗");
-          console.log("💡 Use: --rebase --autoCLI (CLI handles merging)\n");
-        }
-      }
-
       if (prs.length === 0) {
         console.log("No Dependabot PRs found.");
         return;
       }
 
-      // Check auto-merge availability if --autoGH flag is used
+      // Check auto-merge availability if --auto flag is used
       let autoMergeAvailable = false;
-      if (args.autoGH && args.rebase) {
+      if (args.auto && args.rebase) {
         console.log("Checking auto-merge availability...");
         autoMergeAvailable = await checkAutoMergeEnabled();
 
         if (!autoMergeAvailable) {
           console.error("\nERROR: Auto-merge is NOT enabled for this repository!");
-          console.error("   Cannot proceed with --autoGH flag.");
+          console.error("   Cannot proceed with --auto flag.");
           console.error("");
-          console.error("   SOLUTION: Use --rebase --autoCLI for CLI-managed merging:");
-          console.error(`   sh ../fireproof/cli/run.sh dependabot --rebase --autoCLI`);
+          console.error("   SOLUTION: Use --rebase without --auto for direct merging:");
+          console.error(`   sh ../fireproof/cli/run.sh dependabot --rebase${args.wait ? " --wait" : ""}`);
           console.error("");
           console.error("   OR ask repository owner to enable auto-merge:");
           console.error("   Repository Settings → General → Pull Requests → 'Allow auto-merge'");
@@ -269,7 +254,7 @@ export function dependabotCmd(sthis: SuperThis) {
 
       // List mode (default)
       if (args.list || (!args.apply && !args.rebase && !args.prNumber)) {
-        console.log(`Found ${prs.length} Dependabot PR(s):\n`);
+        console.log(`\nFound ${prs.length} Dependabot PR(s):\n`);
         prs.forEach((pr) => {
           console.log(`#${pr.number}: ${pr.title}`);
           console.log(`  URL: ${pr.url}`);
@@ -310,121 +295,113 @@ export function dependabotCmd(sthis: SuperThis) {
           console.error(`PR #${prNum} not found or is not a Dependabot PR.`);
           process.exit(1);
         }
-        await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable);
+        await applyPR(pr, args.rebase, args.auto && autoMergeAvailable);
         return;
       }
 
       // Apply all PRs
       if (args.apply || args.rebase) {
-        if (args.rebase && args.autoCLI) {
-          // Clean flow: show initial summary, then process with minimal output
-          const initialPRs = [...prs]; // Keep original list for final summary
-
-          // Categorize initial PRs
-          const successPRs = prs.filter((pr) => getOverallStatus(pr) === "SUCCESS");
-          const pendingPRs = prs.filter((pr) => {
-            const status = getOverallStatus(pr);
-            return status === "PENDING" || status === "REBASE-PENDING";
-          });
-          const failedPRs = prs.filter((pr) => {
-            const status = getOverallStatus(pr);
-            return status === "FAILURE" || status === "ERROR";
-          });
-
-          const totalToProcess = successPRs.length + pendingPRs.length;
-          console.log(
-            `\nProcessing ${successPRs.length} SUCCESS PRs, waiting for ${pendingPRs.length} PENDING, skipping ${failedPRs.length} FAILED\n`,
-          );
-
-          let processed = 0;
-          const processedPRs = new Set<number>();
-          const skippedPRs = new Set<number>();
-
-          // Track failed PRs immediately
-          failedPRs.forEach((pr) => skippedPRs.add(pr.number));
-
+        if (args.rebase && args.wait) {
           // With --wait, continuously process PRs until none are left
+          let iteration = 0;
           let remainingPRs = prs;
           const failedToApply = new Set<number>(); // Track PRs that failed to apply
 
           while (remainingPRs.length > 0) {
-            // Categorize current PRs
-            const currentSuccessPRs = remainingPRs.filter(
-              (pr) => getOverallStatus(pr) === "SUCCESS" && !processedPRs.has(pr.number),
-            );
-            const currentPendingPRs = remainingPRs.filter((pr) => {
+            iteration++;
+            console.log(`\n${"=".repeat(60)}`);
+            console.log(`Iteration ${iteration}: Found ${remainingPRs.length} Dependabot PR(s)`);
+            console.log("=".repeat(60));
+
+            // Categorize PRs
+            const successPRs = remainingPRs.filter((pr) => getOverallStatus(pr) === "SUCCESS");
+            const pendingPRs = remainingPRs.filter((pr) => {
               const status = getOverallStatus(pr);
-              return (status === "PENDING" || status === "REBASE-PENDING") && !processedPRs.has(pr.number);
+              return status === "PENDING" || status === "REBASE-PENDING";
+            });
+            const failedPRs = remainingPRs.filter((pr) => {
+              const status = getOverallStatus(pr);
+              return status === "FAILURE" || status === "ERROR";
             });
 
-            // Process SUCCESS PRs with clean output
-            for (const pr of currentSuccessPRs) {
-              try {
-                processed++;
-                console.log(`Processing [${processed}/${totalToProcess}]: PR #${pr.number} ✓ Enabled auto-merge`);
-                await applyPR(pr, true, args.autoGH && autoMergeAvailable);
-                processedPRs.add(pr.number);
-                failedToApply.delete(pr.number);
-              } catch (error) {
-                failedToApply.add(pr.number);
+            console.log(
+              `  ${successPRs.length} SUCCESS, ${pendingPRs.length} PENDING/REBASE-PENDING, ${failedPRs.length} FAILED\n`,
+            );
+
+            // Report failed PRs (check status failures)
+            if (failedPRs.length > 0) {
+              console.log(`Skipping ${failedPRs.length} PR(s) with failed checks:`);
+              failedPRs.forEach((pr) => console.log(`  - #${pr.number}: ${pr.title} (${getOverallStatus(pr)})`));
+              console.log();
+            }
+
+            // Report PRs that failed to apply in previous iterations
+            if (failedToApply.size > 0) {
+              const stillFailed = successPRs.filter((pr) => failedToApply.has(pr.number));
+              if (stillFailed.length > 0) {
+                console.log(`Retrying ${stillFailed.length} PR(s) that failed to apply previously:`);
+                stillFailed.forEach((pr) => console.log(`  - #${pr.number}: ${pr.title}`));
+                console.log();
+              }
+            }
+
+            // Process SUCCESS PRs first
+            if (successPRs.length > 0) {
+              console.log(`Rebasing ${successPRs.length} PR(s) with SUCCESS status:\n`);
+              for (const pr of successPRs) {
+                try {
+                  await applyPR(pr, true, args.auto && autoMergeAvailable);
+                  // If successful, remove from failed list
+                  failedToApply.delete(pr.number);
+                } catch (error) {
+                  console.error(`✗ Failed to apply PR #${pr.number}, will retry in next iteration.`);
+                  failedToApply.add(pr.number);
+                }
               }
             }
 
             // Wait for pending PRs if any
-            if (currentPendingPRs.length > 0) {
-              const pendingNumbers = currentPendingPRs.map((pr) => pr.number);
-              console.log(
-                `Waiting for CI checks on ${currentPendingPRs.length} PRs... (${Math.floor(Math.random() * 3 + 1)}m ${Math.floor(Math.random() * 60)}s elapsed)`,
-              );
+            if (pendingPRs.length > 0) {
+              const pendingNumbers = pendingPRs.map((pr) => pr.number);
               await waitForPRsToSucceed(pendingNumbers);
             }
 
+            // If we only processed pending PRs (no SUCCESS PRs to rebase), skip the inter-iteration wait
+            // Otherwise wait before checking for new PRs
+            if (successPRs.length === 0 && pendingPRs.length > 0) {
+              // Just waited for PRs, immediately check their status for next iteration
+              console.log("\n🔄 Checking status of completed PRs...");
+            } else {
+              // Wait before next iteration to avoid hammering the API
+              console.log("\n⏳ Waiting 10 seconds before next iteration...");
+              await new Promise((resolve) => setTimeout(resolve, 10000));
+            }
+
             // Refresh the PR list
-            const newRemainingPRs = await fetchDependabotPRs();
+            remainingPRs = await fetchDependabotPRs();
 
             // If no PRs left, we're done
-            if (newRemainingPRs.length === 0) {
+            if (remainingPRs.length === 0) {
+              if (failedToApply.size > 0) {
+                console.log(
+                  `\n⚠️  Completed, but ${failedToApply.size} PR(s) could not be applied: ${Array.from(failedToApply).join(", ")}`,
+                );
+              } else {
+                console.log("\n✓ All Dependabot PRs have been processed!");
+              }
               break;
             }
 
-            // Check if we made progress
-            const unprocessedPRs = newRemainingPRs.filter((pr) => !processedPRs.has(pr.number) && !skippedPRs.has(pr.number));
-            if (unprocessedPRs.length === 0) {
+            // Check if we're stuck (only failed-to-apply PRs remain)
+            const onlyFailedRemain = remainingPRs.every((pr) => failedToApply.has(pr.number));
+            if (onlyFailedRemain && successPRs.length === 0 && pendingPRs.length === 0) {
+              console.log(`\n⚠️  Cannot proceed: Only PRs that failed to apply remain in the list.`);
+              console.log(`Failed PRs: ${Array.from(failedToApply).join(", ")}`);
               break;
             }
-
-            remainingPRs = newRemainingPRs;
-
-            // Brief pause to avoid API hammering
-            if (currentSuccessPRs.length === 0 && currentPendingPRs.length === 0) {
-              await new Promise((resolve) => setTimeout(resolve, 5000));
-            }
-          }
-
-          // Final summary with two sections
-          console.log("\n" + "=".repeat(50));
-          console.log(`\nCompleted processing ${initialPRs.length} Dependabot PR(s):\n`);
-
-          const finalProcessedPRs = initialPRs.filter((pr) => processedPRs.has(pr.number));
-          const finalSkippedPRs = initialPRs.filter((pr) => skippedPRs.has(pr.number) || failedToApply.has(pr.number));
-
-          if (finalProcessedPRs.length > 0) {
-            console.log(`✓ Successfully processed ${finalProcessedPRs.length} PRs:`);
-            finalProcessedPRs.forEach((pr) => {
-              console.log(`#${pr.number}: ${pr.title} ✓ PROCESSED`);
-            });
-            console.log();
-          }
-
-          if (finalSkippedPRs.length > 0) {
-            console.log(`✗ Skipped ${finalSkippedPRs.length} PRs (CI checks failed):`);
-            finalSkippedPRs.forEach((pr) => {
-              console.log(`#${pr.number}: ${pr.title} ✗ SKIPPED`);
-              console.log(`  URL: ${pr.url}`);
-            });
           }
         } else {
-          // Original logic for --rebase without --autoCLI or for --apply
+          // Original logic for --rebase without --wait or for --apply
           let prsToProcess = prs;
 
           if (args.rebase) {
@@ -455,7 +432,7 @@ export function dependabotCmd(sthis: SuperThis) {
 
           for (const pr of prsToProcess) {
             try {
-              await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable);
+              await applyPR(pr, args.rebase, args.auto && autoMergeAvailable);
             } catch (error) {
               console.error(`Skipping PR #${pr.number} due to error.`);
             }
