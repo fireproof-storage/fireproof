@@ -841,8 +841,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       cborg:
-        specifier: ^4.2.15
-        version: 4.2.15
+        specifier: ^4.2.18
+        version: 4.2.18
       jose:
         specifier: ^6.1.0
         version: 6.1.0
@@ -923,8 +923,8 @@ importers:
         specifier: ^24.7.2
         version: 24.7.2
       cborg:
-        specifier: ^4.2.15
-        version: 4.2.15
+        specifier: ^4.2.18
+        version: 4.2.18
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -3519,6 +3519,10 @@ packages:
 
   cborg@4.2.15:
     resolution: {integrity: sha512-T+YVPemWyXcBVQdp0k61lQp2hJniRNmul0lAwTj2DTS/6dI4eCq/MRMucGqqvFqMBfmnD8tJ9aFtPu5dEGAbgw==}
+    hasBin: true
+
+  cborg@4.2.18:
+    resolution: {integrity: sha512-uzhkd5HOaLccokqeZa5B0Qz7/aa9C12pmUq5yU3vcy6I6OhTKdPHSzOuBPZfcoQHdcx8Emz/dWZbPNNfF/puvg==}
     hasBin: true
 
   chai@5.3.3:
@@ -8028,6 +8032,8 @@ snapshots:
       uint8arraylist: 2.4.8
 
   cborg@4.2.15: {}
+
+  cborg@4.2.18: {}
 
   chai@5.3.3:
     dependencies:
