@@ -44,8 +44,8 @@ importers:
         specifier: ^13.4.0
         version: 13.4.1
       playwright:
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.56.1
+        version: 1.56.1
       playwright-chromium:
         specifier: ^1.56.1
         version: 1.56.1
@@ -946,10 +946,10 @@ importers:
         version: link:../../cli
       '@vitest/browser':
         specifier: ^3.2.4
-        version: 3.2.4(playwright@1.56.0)(vite@7.1.9(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)
+        version: 3.2.4(playwright@1.56.1)(vite@7.1.9(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)
       playwright:
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.56.1
+        version: 1.56.1
       playwright-chromium:
         specifier: ^1.56.1
         version: 1.56.1
@@ -1280,10 +1280,10 @@ importers:
         version: 19.2.2
       '@vitest/browser':
         specifier: ^3.2.4
-        version: 3.2.4(playwright@1.56.0)(vite@7.1.9(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)
+        version: 3.2.4(playwright@1.56.1)(vite@7.1.9(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)
       playwright:
-        specifier: ^1.56.0
-        version: 1.56.0
+        specifier: ^1.56.1
+        version: 1.56.1
       playwright-chromium:
         specifier: ^1.56.1
         version: 1.56.1
@@ -5035,18 +5035,13 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright-core@1.56.0:
-    resolution: {integrity: sha512-1SXl7pMfemAMSDn5rkPeZljxOCYAmQnYLBTExuh6E8USHXGSX3dx6lYZN/xPpTz1vimXmPA9CDnILvmJaB8aSQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.56.1:
     resolution: {integrity: sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.56.0:
-    resolution: {integrity: sha512-X5Q1b8lOdWIE4KAoHpW3SE8HvUB+ZZsUoN64ZhjnN8dOb1UpujxBtENGiZFE+9F/yhzJwYa+ca3u43FeLbboHA==}
+  playwright@1.56.1:
+    resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -7720,7 +7715,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@3.2.4(playwright@1.56.0)(vite@7.1.6(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)':
+  '@vitest/browser@3.2.4(playwright@1.56.1)(vite@7.1.6(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)':
     dependencies:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
@@ -7732,7 +7727,7 @@ snapshots:
       vitest: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       ws: 8.18.3
     optionalDependencies:
-      playwright: 1.56.0
+      playwright: 1.56.1
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -7740,7 +7735,7 @@ snapshots:
       - vite
     optional: true
 
-  '@vitest/browser@3.2.4(playwright@1.56.0)(vite@7.1.9(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)':
+  '@vitest/browser@3.2.4(playwright@1.56.1)(vite@7.1.9(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)':
     dependencies:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
@@ -7752,7 +7747,7 @@ snapshots:
       vitest: 3.2.4(@types/node@24.7.2)(@vitest/browser@3.2.4)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       ws: 8.18.3
     optionalDependencies:
-      playwright: 1.56.0
+      playwright: 1.56.1
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -9728,13 +9723,11 @@ snapshots:
     dependencies:
       playwright-core: 1.56.1
 
-  playwright-core@1.56.0: {}
-
   playwright-core@1.56.1: {}
 
-  playwright@1.56.0:
+  playwright@1.56.1:
     dependencies:
-      playwright-core: 1.56.0
+      playwright-core: 1.56.1
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -10640,7 +10633,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.7.2
-      '@vitest/browser': 3.2.4(playwright@1.56.0)(vite@7.1.6(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)
+      '@vitest/browser': 3.2.4(playwright@1.56.1)(vite@7.1.6(@types/node@24.7.2)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@3.2.4)
     transitivePeerDependencies:
       - jiti
       - less
