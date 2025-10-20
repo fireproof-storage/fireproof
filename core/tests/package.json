@@ -62,7 +62,7 @@
     "@ipld/dag-cbor": "^9.2.5",
     "@ipld/dag-json": "^10.2.5",
     "@types/node": "^24.7.2",
-    "cborg": "^4.2.15",
+    "cborg": "^4.2.18",
     "charwise": "^3.0.1",
     "jose": "^6.0.12",
     "use-fireproof": "workspace:0.0.0",

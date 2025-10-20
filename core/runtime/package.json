@@ -43,7 +43,7 @@
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-types-runtime": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
-    "cborg": "^4.2.15",
+    "cborg": "^4.2.18",
     "jose": "^6.1.0",
     "multiformats": "^13.4.0"
   },
