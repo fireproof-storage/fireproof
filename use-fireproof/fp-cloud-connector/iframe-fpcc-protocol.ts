@@ -151,7 +151,6 @@ export class IframeFPCCProtocol implements FPCCProtocol {
   }
 
   async needsLogin(backend: BackendFPCC, event: FPCCReqRegisterLocalDbName, srcEvent: MessageEvent): Promise<void> {
-    console.log("Handling needsLogin for-1", event, this.dashboardURI);
     const loginTID = this.sthis.nextId(16).str;
     const url = BuildURI.from(this.dashboardURI)
       .setParam("back_url", "close")
@@ -163,7 +162,6 @@ export class IframeFPCCProtocol implements FPCCProtocol {
     if (event.tenant) {
       url.setParam("tenant", event.tenant);
     }
-    console.log("Handling needsLogin for-1.5", event, url.toString());
     const fpccEvtNeedsLogin: FPCCSendMessage<FPCCEvtNeedsLogin> = {
       tid: event.tid,
       type: "FPCCEvtNeedsLogin",
@@ -182,17 +180,12 @@ export class IframeFPCCProtocol implements FPCCProtocol {
       ],
       reason: "BindCloud",
     };
-    console.log("Handling needsLogin for-2", event);
     for (const dbInfo of fpccEvtNeedsLogin.loadDbNames) {
       const backend = getBackendFromRegisterLocalDbName(this.sthis, dbInfo, this.getDeviceId());
       backend.setState("waiting");
     }
-    console.log("Handling needsLogin for-3", event);
     this.sendMessage<FPCCEvtNeedsLogin>(fpccEvtNeedsLogin, srcEvent);
-    console.log("Handling needsLogin for-4", event);
-    console.log("Sent FPCCEvtNeedsLogin", loginTID, this.waitForTokenURI);
     backend.waitForAuthToken(loginTID, this.waitForTokenURI).then((authToken) => {
-      console.log("Received auth token after login", authToken);
       return Promise.allSettled(
         fpccEvtNeedsLogin.loadDbNames.map(async (dbInfo) => backend.getTokenForDb(dbInfo, authToken, event)),
       ).then((results) => {
@@ -202,7 +195,7 @@ export class IframeFPCCProtocol implements FPCCProtocol {
             backend.setFPCCEvtApp(fpccEvtApp);
             this.sendMessage<FPCCEvtApp>(fpccEvtApp, srcEvent);
             backend.setState("ready");
-            this.logger.Info().Any(fpccEvtApp).Msg("Successfully obtained token for DB after login");
+            // this.logger.Info().Any(fpccEvtApp).Msg("Successfully obtained token for DB after login");
           } else {
             this.logger.Error().Err(res.reason).Msg("Failed to obtain token for DB after login");
           }
@@ -243,28 +236,32 @@ export class IframeFPCCProtocol implements FPCCProtocol {
   }
 
   readonly handleFPCCMessage = (event: FPCCMessage, srcEvent: MessageEvent<unknown>): boolean | undefined => {
-    switch (true) {
-      case isFPCCReqRegisterLocalDbName(event): {
-        this.logger.Info().Str("appID", event.appId).Msg("Received request to register app");
-        const backend = getBackendFromRegisterLocalDbName(this.sthis, event, this.getDeviceId());
-        console.log("Running state machine for register local db name", backend.getState());
-        this.runStateMachine(backend, event, srcEvent);
-        break;
-      }
+    try {
+      switch (true) {
+        case isFPCCReqRegisterLocalDbName(event): {
+          this.logger.Info().Any(event).Msg("Iframe-Received request to register app");
+          const backend = getBackendFromRegisterLocalDbName(this.sthis, event, this.getDeviceId());
+          console.log("Running state machine for register local db name", backend.getState());
+          this.runStateMachine(backend, event, srcEvent);
+          break;
+        }
 
-      case isFPCCReqWaitConnectorReady(event): {
-        this.logger.Info().Str("appID", event.appID).Msg("Received request to wait for connector ready");
-        // Here you would implement logic to handle the wait for connector ready request
-        const readyEvent: FPCCSendMessage<FPCCEvtConnectorReady> = {
-          type: "FPCCEvtConnectorReady",
-          timestamp: Date.now(),
-          seq: event.seq,
-          devId: this.getDeviceId(),
-          dst: event.src,
-        };
-        this.sendMessage<FPCCEvtConnectorReady>(readyEvent, srcEvent);
-        break;
+        case isFPCCReqWaitConnectorReady(event): {
+          this.logger.Info().Str("appID", event.appId).Msg("Received request to wait for connector ready");
+          // Here you would implement logic to handle the wait for connector ready request
+          const readyEvent: FPCCSendMessage<FPCCEvtConnectorReady> = {
+            type: "FPCCEvtConnectorReady",
+            timestamp: Date.now(),
+            seq: event.seq,
+            devId: this.getDeviceId(),
+            dst: event.src,
+          };
+          this.sendMessage<FPCCEvtConnectorReady>(readyEvent, srcEvent);
+          break;
+        }
       }
+    } catch (error) {
+      this.logger.Error().Err(error).Msg("Error handling FPCC message");
     }
     return undefined;
   };
@@ -274,12 +271,18 @@ export class IframeFPCCProtocol implements FPCCProtocol {
   };
 
   stop(): void {
+    console.log("IframeFPCCProtocol stop called");
     this.fpccProtocol.stop();
   }
 
-  start(sendFn: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
-    this.fpccProtocol.start(sendFn);
+  injectSend(sendFn: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
+    this.fpccProtocol.injectSend(sendFn);
+  }
+
+  async ready(): Promise<FPCCProtocol> {
+    await this.fpccProtocol.ready();
     this.fpccProtocol.onFPCCMessage(this.handleFPCCMessage);
+    return this;
   }
 
   sendMessage<T extends FPCCMsgBase>(message: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void {

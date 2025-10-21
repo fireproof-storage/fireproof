@@ -9,7 +9,8 @@ export interface FPCCProtocol {
   handleFPCCMessage?: (event: FPCCMessage, srcEvent: MessageEvent<unknown>) => void;
   sendMessage<T extends FPCCMsgBase>(event: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void;
   handleError: (error: unknown) => void;
-  start(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void;
+  injectSend(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void;
+  ready(): Promise<FPCCProtocol>;
   stop(): void;
 }
 
@@ -67,11 +68,11 @@ export class FPCCProtocolBase implements FPCCProtocol {
     throw new Error("Method not implemented.");
   };
 
-  onStart(fn: () => void): void {
-    this.onStartFns.push(fn);
+  ready(): Promise<FPCCProtocol> {
+    return Promise.resolve(this);
   }
 
-  start(sendFn: (msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
+  injectSend(sendFn: (msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
     this.#sendFn = sendFn;
   }
 
