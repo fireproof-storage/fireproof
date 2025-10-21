@@ -1,0 +1,17 @@
+<html>
+  <head>
+    Fireproof Cloud Connector
+  </head>
+  <body>
+    I'm the Fireproof Cloud Connector
+    <script type="module">
+      let fpcc;
+      try {
+        fpcc = await import(new URL("fp-cloud-connector.js", window.location.href));
+      } catch (e) {
+        fpcc = await import(new URL("fp-cloud-connector.ts", window.location.href));
+      }
+      fpcc.postMessager();
+    </script>
+  </body>
+</html>

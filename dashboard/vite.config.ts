@@ -64,9 +64,12 @@ export default defineConfig({
     emptyOutDir: true, // also necessary
     manifest: true,
   },
+  //  optimizeDeps: {
+  //    include: ['use-fireproof']
+  //  },
   server: {
     port: 7370,
-    hmr: false,
+    // hmr: false,
     fs: {
       allow: [
         // Allow serving files from the project root

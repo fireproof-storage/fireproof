@@ -40,6 +40,8 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.63",
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "use-fireproof": "workspace:0.0.0"

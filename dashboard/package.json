@@ -51,7 +51,7 @@
     "react-simple-code-editor": "^0.14.1",
     "ts-essentials": "^10.1.1",
     "use-editable": "^2.3.3",
-    "use-fireproof": "workspace:0.0.0",
+    "use-fireproof": "workspace:*",
     "zod": "^4.1.12"
   },
   "devDependencies": {
