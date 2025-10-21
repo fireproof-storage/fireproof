@@ -3,32 +3,35 @@ import { PageFPCCProtocol } from "./page-fpcc-protocol.js";
 import { IframeFPCCProtocol } from "./iframe-fpcc-protocol.js";
 import { FPCCMessage, FPCCPing } from "./protocol-fp-cloud-conn.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { URI } from "@adviser/cement";
 import { Writable } from "ts-essentials";
 
 describe("FPCC Protocol", () => {
   const sthis = ensureSuperThis();
   const pageProtocol = new PageFPCCProtocol(sthis, {
-    iframeHref: URI.from("https://example.com/iframe"),
+    iframeHref: "https://example.com/iframe",
     loginWaitTime: 1000,
   });
   const iframeProtocol = new IframeFPCCProtocol(sthis);
 
-  iframeProtocol.start((evt: Writable<FPCCMessage>) => {
+  iframeProtocol.injectSend((evt: Writable<FPCCMessage>) => {
     evt.src = evt.src ?? "iframe";
+    // console.log("IframeFPCCProtocol sending message", evt);
     pageProtocol.handleMessage({ data: evt, origin: "iframe" } as MessageEvent<unknown>);
     return evt;
   });
 
-  function pageProtocolStart() {
-    pageProtocol.start((evt: Writable<FPCCMessage>) => {
-      evt.src = evt.src ?? "page";
-      iframeProtocol.handleMessage({ data: evt, origin: "page" } as MessageEvent<unknown>);
-      return evt;
+  function protocolStart() {
+    return iframeProtocol.ready().then(() => {
+      pageProtocol.injectSend((evt: Writable<FPCCMessage>) => {
+        evt.src = evt.src ?? "page";
+        iframeProtocol.handleMessage({ data: evt, origin: "page" } as MessageEvent<unknown>);
+        return evt;
+      });
+      return pageProtocol.ready();
     });
   }
 
-  it("ping-pong", () => {
+  it("ping-pong", async () => {
     const pingMessage: FPCCPing = {
       tid: "test-ping-1",
       type: "FPCCPing",
@@ -38,7 +41,7 @@ describe("FPCC Protocol", () => {
     };
     const fpccFn = vi.fn();
     pageProtocol.onFPCCMessage(fpccFn);
-    pageProtocolStart();
+    await protocolStart();
     pageProtocol.sendMessage(pingMessage);
     expect(fpccFn.mock.calls[fpccFn.mock.calls.length - 1]).toEqual([
       {
@@ -65,7 +68,7 @@ describe("FPCC Protocol", () => {
   });
 
   it("registerApp", async () => {
-    pageProtocolStart();
+    await protocolStart();
     const fpccEvtApp = await pageProtocol.registerDatabase("wurst", {
       tid: "tid-test-app-1",
       appId: "test-app-1",

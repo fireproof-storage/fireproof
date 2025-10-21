@@ -10,7 +10,7 @@ export const postMessager = Lazy(() => {
   const sthis = ensureSuperThis();
   const protocol = new IframeFPCCProtocol(sthis);
   window.addEventListener("message", protocol.handleMessage);
-  protocol.start((event: FPCCMessage, srcEvent: MessageEvent<unknown>) => {
+  protocol.injectSend((event: FPCCMessage, srcEvent: MessageEvent<unknown>) => {
     (event as { src: string }).src = event.src ?? window.location.href;
     // console.log("postMessager sending message", event);
     srcEvent.source?.postMessage(event, { targetOrigin: srcEvent.origin });
