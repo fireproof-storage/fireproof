@@ -1,9 +1,10 @@
 import { ensureLogger, sleep } from "@fireproof/core-runtime";
 import { FPCCProtocol, FPCCProtocolBase } from "./fpcc-protocol.js";
 import { SuperThis } from "@fireproof/core-types-base";
-import { Future, KeyedResolvOnce, Lazy, Logger, URI } from "@adviser/cement";
+import { Future, KeyedResolvOnce, Logger, ResolveOnce } from "@adviser/cement";
 import {
   FPCCEvtApp,
+  FPCCEvtNeedsLogin,
   FPCCMessage,
   FPCCMsgBase,
   FPCCReqRegisterLocalDbName,
@@ -18,7 +19,7 @@ import { dbAppKey } from "./iframe-fpcc-protocol.js";
 
 export interface PageFPCCProtocolOpts {
   readonly maxConnectRetries?: number;
-  readonly iframeHref: URI;
+  readonly iframeHref: string;
   readonly loginWaitTime?: number;
 }
 
@@ -34,12 +35,14 @@ export class PageFPCCProtocol implements FPCCProtocol {
   readonly maxConnectRetries: number;
   readonly dst: string;
 
-  readonly futureConnected = new Future<void>();
-  readonly onFPCCEvtNeedsLoginFns = new Set<(msg: FPCCMessage) => void>();
+  // readonly futureConnected = new Future<void>();
+  readonly onFPCCEvtNeedsLoginFns = new Set<(msg: FPCCEvtNeedsLogin) => void>();
+  readonly onFPCCEvtAppFns = new Set<(msg: FPCCEvtApp) => void>();
   readonly registerFPCCEvtApp = new KeyedResolvOnce<WaitForFPCCEvtApp>();
   readonly waitforFPCCEvtAppFutures = new Map<string, Future<FPCCEvtApp>>();
   waitForConnection?: ReturnType<typeof setInterval>;
   readonly loginWaitTime: number;
+  readonly starter = new ResolveOnce<void>();
 
   constructor(sthis: SuperThis, iopts: PageFPCCProtocolOpts) {
     const opts = {
@@ -59,9 +62,11 @@ export class PageFPCCProtocol implements FPCCProtocol {
 
   stop(): void {
     this.fpccProtocol.stop();
+    this.onFPCCEvtAppFns.clear();
     this.onFPCCEvtNeedsLoginFns.clear();
     this.waitforFPCCEvtAppFutures.clear();
     this.registerFPCCEvtApp.reset();
+    this.starter.reset();
     if (this.waitForConnection) {
       clearInterval(this.waitForConnection);
       this.waitForConnection = undefined;
@@ -77,6 +82,7 @@ export class PageFPCCProtocol implements FPCCProtocol {
   }
 
   getAppId(): string {
+    // setup in ready
     return "we-need-to-implement-app-id-this";
   }
 
@@ -84,125 +90,139 @@ export class PageFPCCProtocol implements FPCCProtocol {
     throw new Error("Method not implemented.");
   };
 
-  readonly onceConnected = Lazy((error?: Error) => {
-    if (error) {
-      this.logger.Error().Err(error).Msg("Failed to connect FPCCProtocol");
-      this.futureConnected.reject(error);
-      return;
-    }
-    this.futureConnected.resolve();
-  });
+  // readonly onceConnected = Lazy((error?: Error) => {
+  //   if (error) {
+  //     this.logger.Error().Err(error).Msg("Failed to connect FPCCProtocol");
+  //     this.futureConnected.reject(error);
+  //     return;
+  //   }
+  //   this.futureConnected.resolve();
+  // });
 
-  registerDatabase(dbName: string, ireg: Partial<FPCCReqRegisterLocalDbName> = {}): Promise<FPCCEvtApp> {
-    const reg = {
-      ...ireg,
-      tid: ireg.tid,
-      type: "FPCCReqRegisterLocalDbName",
-      appId: ireg.appId ?? this.getAppId(),
-      appURL: ireg.appURL ?? window.location.href,
-      dbName,
-      dst: ireg.dst ?? this.dst,
-    } satisfies FPCCSendMessage<FPCCReqRegisterLocalDbName>;
-    const key = dbAppKey(reg);
-    return this.registerFPCCEvtApp
-      .get(key)
-      .once(async () => {
-        if (this.waitforFPCCEvtAppFutures.has(key)) {
-          throw this.logger
-            .Error()
-            .Any({
-              key: dbAppKey(reg),
-            })
-            .Msg("multiple waitforFPCCEvtAppFuture in flight")
-            .AsError();
-        }
-        const fpccEvtAppFuture = new Future<FPCCEvtApp>();
-        this.waitforFPCCEvtAppFutures.set(key, fpccEvtAppFuture);
-        this.sendMessage<FPCCReqRegisterLocalDbName>(reg);
-        return {
-          register: reg,
-          fpccEvtApp: await Promise.race([
-            fpccEvtAppFuture.asPromise(),
-            sleep(this.loginWaitTime).then(() => {
-              throw this.logger
-                .Error()
-                .Any({
-                  key: dbAppKey(reg),
-                })
-                .Msg("timeout waiting for FPCCEvtApp")
-                .AsError();
-            }),
-          ]),
-        };
+  async registerDatabase(dbName: string, ireg: Partial<FPCCReqRegisterLocalDbName> = {}): Promise<FPCCEvtApp> {
+    return this.ready()
+      .then(() => {
+        const reg = {
+          ...ireg,
+          tid: ireg.tid,
+          type: "FPCCReqRegisterLocalDbName",
+          appId: ireg.appId ?? this.getAppId(),
+          appURL: ireg.appURL ?? window.location.href,
+          dbName,
+          dst: ireg.dst ?? this.dst,
+        } satisfies FPCCSendMessage<FPCCReqRegisterLocalDbName>;
+        const key = dbAppKey(reg);
+        return this.registerFPCCEvtApp.get(key).once(async () => {
+          if (this.waitforFPCCEvtAppFutures.has(key)) {
+            throw this.logger
+              .Error()
+              .Any({
+                key: dbAppKey(reg),
+              })
+              .Msg("multiple waitforFPCCEvtAppFuture in flight")
+              .AsError();
+          }
+          const fpccEvtAppFuture = new Future<FPCCEvtApp>();
+          this.waitforFPCCEvtAppFutures.set(key, fpccEvtAppFuture);
+          this.sendMessage<FPCCReqRegisterLocalDbName>(reg);
+          return {
+            register: reg,
+            fpccEvtApp: await Promise.race([
+              fpccEvtAppFuture.asPromise(),
+              sleep(this.loginWaitTime).then(() => {
+                throw this.logger
+                  .Error()
+                  .Any({
+                    loginWaitTime: this.loginWaitTime,
+                    key: dbAppKey(reg),
+                  })
+                  .Msg("timeout waiting for FPCCEvtApp")
+                  .AsError();
+              }),
+            ]),
+          };
+        });
       })
       .then(({ fpccEvtApp }) => fpccEvtApp);
   }
 
-  start(sendFn: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
-    this.fpccProtocol.start(sendFn);
-    let maxTries = 0;
-    this.waitForConnection = setInterval(() => {
-      if (maxTries > this.maxConnectRetries) {
-        this.logger.Error().Msg("FPCC iframe connection timeout.");
-        clearInterval(this.waitForConnection);
-        this.waitForConnection = undefined;
-        return;
-      }
-      if (maxTries && maxTries % ~~(this.maxConnectRetries / 2) === 0) {
-        this.logger.Warn().Int("tried", maxTries).Msg("Waiting for FPCC iframe connector to be ready...");
-      }
-      this.sendMessage<FPCCReqWaitConnectorReady>({
-        src: window.location.href,
-        type: "FPCCReqWaitConnectorReady",
-        dst: "iframe",
-        seq: maxTries++,
-        timestamp: Date.now(),
-        appID: this.getAppId(),
-      });
-    }, 100);
-
-    this.onFPCCMessage((msg: FPCCMessage): boolean | undefined => {
-      // console.log("PageFPCCProtocol received message", msg);
-      switch (true) {
-        case isFPCCEvtNeedsLogin(msg): {
-          this.logger.Info().Any(msg).Msg("Received needs login event from FPCC iframe");
-          this.onFPCCEvtNeedsLoginFns.forEach((cb) => cb(msg));
-          break;
-        }
-        case isFPCCEvtApp(msg): {
-          const key = dbAppKey({
-            appId: msg.appId,
-            dbName: msg.localDb.dbName,
-          });
-          const future = this.waitforFPCCEvtAppFutures.get(key);
-          console.log("PAGE-Received FPCCEvtApp for key", key, msg, future);
-          if (future) {
-            future.resolve(msg);
-            this.waitforFPCCEvtAppFutures.delete(key);
-          }
-          break;
-        }
-
-        case isFPCCEvtConnectorReady(msg): {
-          clearInterval(this.waitForConnection);
-          this.waitForConnection = undefined;
-          this.onceConnected();
-          return true;
-        }
-      }
-      return undefined;
-    });
+  injectSend(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
+    this.fpccProtocol.injectSend(send);
   }
 
-  onFPCCEvtNeedsLogin(callback: (msg: FPCCMessage) => void): void {
+  ready(): Promise<PageFPCCProtocol> {
+    return this.starter
+      .once(async () => {
+        await this.fpccProtocol.ready();
+        let maxTries = 0;
+        const appId = this.getAppId();
+        this.waitForConnection = setInterval(() => {
+          if (maxTries > this.maxConnectRetries) {
+            this.logger.Error().Msg("FPCC iframe connection timeout.");
+            clearInterval(this.waitForConnection);
+            this.waitForConnection = undefined;
+            return;
+          }
+          if (maxTries && maxTries % ~~(this.maxConnectRetries / 2) === 0) {
+            this.logger.Warn().Int("tried", maxTries).Msg("Waiting for FPCC iframe connector to be ready...");
+          }
+          this.sendMessage<FPCCReqWaitConnectorReady>({
+            src: window.location.href,
+            type: "FPCCReqWaitConnectorReady",
+            dst: "iframe",
+            seq: maxTries++,
+            timestamp: Date.now(),
+            appId,
+          });
+        }, 100);
+        const waitForConnectorReady = new Future<void>();
+
+        this.onFPCCMessage((msg: FPCCMessage): boolean | undefined => {
+          // console.log("PageFPCCProtocol received message", msg);
+          switch (true) {
+            case isFPCCEvtNeedsLogin(msg): {
+              this.logger.Info().Any(msg).Msg("Received needs login event from FPCC iframe");
+              this.onFPCCEvtNeedsLoginFns.forEach((cb) => cb(msg));
+              break;
+            }
+            case isFPCCEvtApp(msg): {
+              const key = dbAppKey({
+                appId: msg.appId,
+                dbName: msg.localDb.dbName,
+              });
+              const future = this.waitforFPCCEvtAppFutures.get(key);
+              // console.log("PAGE-Received FPCCEvtApp for key", key, msg, future);
+              if (future) {
+                future.resolve(msg);
+                this.waitforFPCCEvtAppFutures.delete(key);
+              }
+              this.onFPCCEvtAppFns.forEach((cb) => cb(msg));
+              break;
+            }
+
+            case isFPCCEvtConnectorReady(msg): {
+              clearInterval(this.waitForConnection);
+              this.waitForConnection = undefined;
+              waitForConnectorReady.resolve();
+              return true;
+            }
+          }
+          return undefined;
+        });
+        return waitForConnectorReady.asPromise();
+      })
+      .then(() => this);
+  }
+
+  onFPCCEvtNeedsLogin(callback: (msg: FPCCEvtNeedsLogin) => void): void {
     this.onFPCCEvtNeedsLoginFns.add(callback);
+  }
+
+  onFPCCEvtApp(callback: (msg: FPCCEvtApp) => void): void {
+    this.onFPCCEvtAppFns.add(callback);
   }
 
   sendMessage<T extends FPCCMsgBase>(msg: FPCCSendMessage<T>, srcEvent = new MessageEvent("sendMessage")): T {
     return this.fpccProtocol.sendMessage(msg, srcEvent);
-  }
-
-  connected(): Promise<void> {
-    return this.futureConnected.asPromise();
   }
 }

@@ -4,8 +4,8 @@
 
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "@fireproof/core-runtime";
+import { SuperThis } from "@fireproof/core-types-base";
 import { Writable } from "ts-essentials";
-import { SuperThis } from "use-fireproof";
 
 export interface MessageEvent<T> {
   data: T;

@@ -11,7 +11,7 @@
       } catch (e) {
         fpcc = await import(new URL("fp-cloud-connector.ts", window.location.href));
       }
-      fpcc.postMessager();
+      fpcc.postMessager().then(() => console.log("injected-iframe-ready"));
     </script>
   </body>
 </html>

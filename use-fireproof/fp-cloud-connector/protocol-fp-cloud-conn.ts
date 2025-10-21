@@ -117,7 +117,7 @@ export type FPCCEvtConnectorReady = z.infer<typeof FPCCEvtConnectorReadySchema>;
 export const FPCCReqWaitConnectorReadySchema = FPCCMsgBaseSchemaBase.extend({
   type: z.literal("FPCCReqWaitConnectorReady"),
   timestamp: z.number(),
-  appID: z.string(),
+  appId: z.string(),
   seq: z.number(),
 }).readonly();
 
