@@ -131,6 +131,12 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.53
         version: 0.4.53(typescript@5.9.3)
+      preact:
+        specifier: ^10.27.2
+        version: 10.27.2
+      preact-render-to-string:
+        specifier: ^6.6.2
+        version: 6.6.2(preact@10.27.2)
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -1133,7 +1139,7 @@ importers:
         specifier: ^2.3.3
         version: 2.3.3(react@19.2.0)
       use-fireproof:
-        specifier: workspace:0.0.0
+        specifier: workspace:*
         version: link:../use-fireproof
       zod:
         specifier: ^4.1.12
@@ -1149,7 +1155,7 @@ importers:
         specifier: ^9.38.0
         version: 9.38.0
       '@fireproof/core-cli':
-        specifier: workspace:0.0.0
+        specifier: workspace:*
         version: link:../cli
       '@libsql/client':
         specifier: ^0.15.15
@@ -1262,12 +1268,21 @@ importers:
       jose:
         specifier: ^6.1.0
         version: 6.1.0
+      preact:
+        specifier: ^10.27.2
+        version: 10.27.2
+      preact-render-to-string:
+        specifier: ^6.6.2
+        version: 6.6.2(preact@10.27.2)
       react:
         specifier: '>=18.0.0'
         version: 19.2.0
       ts-essentials:
         specifier: ^10.1.1
         version: 10.1.1(typescript@5.9.3)
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -5161,6 +5176,11 @@ packages:
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
+
+  preact-render-to-string@6.6.2:
+    resolution: {integrity: sha512-VJ++Pkzv6+ZOmeN/9Qvx0mRdXqnei1Lo3uu9bGvYHhoMI1VUkDT44hcpGbiokl/kuuYTayYa3yvmYTLZMplfMA==}
+    peerDependencies:
+      preact: '>=10 || >= 11.0.0-0'
 
   preact@10.24.2:
     resolution: {integrity: sha512-1cSoF0aCC8uaARATfrlz4VCBqE8LwZwRfLgkxJOQwAlQt6ayTmi0D9OF7nXid1POI5SZidFuG9CnlXbDfLqY/Q==}
@@ -9852,6 +9872,10 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  preact-render-to-string@6.6.2(preact@10.27.2):
+    dependencies:
+      preact: 10.27.2
 
   preact@10.24.2: {}
 

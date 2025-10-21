@@ -17,6 +17,16 @@ export const FPCCEvtNeedsLoginSchema = FPCCMsgBaseSchemaBase.extend({
   devId: z.string(),
   loginURL: z.string(),
   loginTID: z.string(),
+  loadDbNames: z.array(
+    z
+      .object({
+        appId: z.string(),
+        dbName: z.string(),
+        tenantId: z.string().optional(),
+        ledgerId: z.string().optional(),
+      })
+      .readonly(),
+  ),
   reason: z.enum(["BindCloud", "ConsumeAIToken", "FreeAITokenEnd"]),
 }).readonly();
 
@@ -32,20 +42,22 @@ export const FPCCErrorSchema = FPCCMsgBaseSchemaBase.extend({
 
 export type FPCCError = z.infer<typeof FPCCErrorSchema>;
 
-// FPCCReqRegisterApp schema
-export const FPCCReqRegisterAppSchema = FPCCMsgBaseSchemaBase.extend({
-  type: z.literal("FPCCReqRegisterApp"),
+// FPCCReqRegisterLocalDbName schema
+export const FPCCReqRegisterLocalDbNameSchema = FPCCMsgBaseSchemaBase.extend({
+  type: z.literal("FPCCReqRegisterLocalDbName"),
   appURL: z.string(),
-  appID: z.string(),
-  localDbNames: z.array(z.string()),
+  appId: z.string(),
+  dbName: z.string(), // localDbName
+  ledger: z.string().optional(),
+  tenant: z.string().optional(),
 }).readonly();
 
-export type FPCCReqRegisterApp = z.infer<typeof FPCCReqRegisterAppSchema>;
+export type FPCCReqRegisterLocalDbName = z.infer<typeof FPCCReqRegisterLocalDbNameSchema>;
 
 // FPCCEvtApp schema
 export const FPCCEvtAppSchema = FPCCMsgBaseSchemaBase.extend({
   type: z.literal("FPCCEvtApp"),
-  appID: z.string(),
+  appId: z.string(),
   appFavIcon: z
     .object({
       defURL: z.string(),
@@ -61,16 +73,14 @@ export const FPCCEvtAppSchema = FPCCMsgBaseSchemaBase.extend({
       iconURL: z.string(),
     })
     .readonly(),
-  localDbs: z.record(
-    z.string(),
-    z
-      .object({
-        tenantId: z.string(),
-        ledgerId: z.string(),
-        accessToken: z.string(),
-      })
-      .readonly(),
-  ),
+  localDb: z
+    .object({
+      dbName: z.string(),
+      tenantId: z.string(),
+      ledgerId: z.string(),
+      accessToken: z.string(),
+    })
+    .readonly(),
   env: z.record(z.string(), z.record(z.string(), z.string())),
 }).readonly();
 
@@ -93,14 +103,36 @@ export const FPCCPongSchema = FPCCMsgBaseSchemaBase.extend({
 
 export type FPCCPong = z.infer<typeof FPCCPongSchema>;
 
+// FPCCEvtConnectorReady schema
+export const FPCCEvtConnectorReadySchema = FPCCMsgBaseSchemaBase.extend({
+  type: z.literal("FPCCEvtConnectorReady"),
+  timestamp: z.number(),
+  seq: z.number(),
+  devId: z.string(),
+}).readonly();
+
+export type FPCCEvtConnectorReady = z.infer<typeof FPCCEvtConnectorReadySchema>;
+
+// FPCCReqWaitConnectorReady schema
+export const FPCCReqWaitConnectorReadySchema = FPCCMsgBaseSchemaBase.extend({
+  type: z.literal("FPCCReqWaitConnectorReady"),
+  timestamp: z.number(),
+  appID: z.string(),
+  seq: z.number(),
+}).readonly();
+
+export type FPCCReqWaitConnectorReady = z.infer<typeof FPCCReqWaitConnectorReadySchema>;
+
 // Union schema for all message types
 export const FPCCMessageSchema = z.discriminatedUnion("type", [
   FPCCEvtNeedsLoginSchema,
   FPCCErrorSchema,
-  FPCCReqRegisterAppSchema,
+  FPCCReqRegisterLocalDbNameSchema,
   FPCCEvtAppSchema,
   FPCCPingSchema,
   FPCCPongSchema,
+  FPCCEvtConnectorReadySchema,
+  FPCCReqWaitConnectorReadySchema,
 ]);
 
 export type FPCCMessage = z.infer<typeof FPCCMessageSchema>;
@@ -134,8 +166,8 @@ export function isFPCCError(msg: FPCCMessage): msg is FPCCError {
   return msg.type === "FPCCError";
 }
 
-export function isFPCCReqRegisterApp(msg: FPCCMessage): msg is FPCCReqRegisterApp {
-  return msg.type === "FPCCReqRegisterApp";
+export function isFPCCReqRegisterLocalDbName(msg: FPCCMessage): msg is FPCCReqRegisterLocalDbName {
+  return msg.type === "FPCCReqRegisterLocalDbName";
 }
 
 export function isFPCCEvtApp(msg: FPCCMessage): msg is FPCCEvtApp {
@@ -148,4 +180,12 @@ export function isFPCCPing(msg: FPCCMessage): msg is FPCCPing {
 
 export function isFPCCPong(msg: FPCCMessage): msg is FPCCPong {
   return msg.type === "FPCCPong";
+}
+
+export function isFPCCEvtConnectorReady(msg: FPCCMessage): msg is FPCCEvtConnectorReady {
+  return msg.type === "FPCCEvtConnectorReady";
+}
+
+export function isFPCCReqWaitConnectorReady(msg: FPCCMessage): msg is FPCCReqWaitConnectorReady {
+  return msg.type === "FPCCReqWaitConnectorReady";
 }

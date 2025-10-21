@@ -2,7 +2,7 @@
  * Consumer program that creates and inserts an iframe with in-iframe.ts
  */
 
-import { CoerceURI, URI } from "@adviser/cement";
+import { CoerceURI, KeyedResolvOnce, URI } from "@adviser/cement";
 import { PageFPCCProtocol } from "./page-fpcc-protocol.js";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { FPCCMessage } from "./protocol-fp-cloud-conn.js";
@@ -36,10 +36,11 @@ function insertIframeAsLastElement(iframe: HTMLIFrameElement): void {
   }
 }
 
+const pageProtocolInstance = new KeyedResolvOnce<PageFPCCProtocol>();
 /**
  * Main function to set up the iframe
  */
-function initializeIframe(
+export function initializeIframe(
   {
     iframeSrc,
   }: {
@@ -47,7 +48,7 @@ function initializeIframe(
   } = {
     iframeSrc: "./injected-iframe.html",
   },
-): void {
+) {
   (globalThis as Record<symbol, unknown>)[Symbol.for("FP_PRESET_ENV")] = {
     FP_DEBUG: "*",
   };
@@ -61,25 +62,33 @@ function initializeIframe(
   } else {
     iframeHref = URI.from(iframeSrc);
   }
-  const iframe = createIframe(iframeHref.toString());
-  // Add load event listener
-  const sthis = ensureSuperThis();
-  const pageProtocol = new PageFPCCProtocol(sthis);
-  console.log("Initializing FPCC iframe with src:", iframeHref.toString());
-  iframe.addEventListener("load", () => {
-    window.addEventListener("message", pageProtocol.handleMessage);
-    pageProtocol.start((event: FPCCMessage) => {
-      console.log("Sending PageFPCCProtocol", event, iframe.src);
-      iframe.contentWindow?.postMessage(event, iframe.src);
-    });
-  });
-  // Add error event listener
-  iframe.addEventListener("error", pageProtocol.handleError);
 
-  insertIframeAsLastElement(iframe);
+  return pageProtocolInstance.get(iframeHref.toString()).once(() => {
+    const iframe = createIframe(iframeHref.toString());
+    // Add load event listener
+    const sthis = ensureSuperThis();
+    const pageProtocol = new PageFPCCProtocol(sthis, { iframeHref });
+    // console.log("Initializing FPCC iframe with src:", iframeHref.toString());
+    iframe.addEventListener("load", () => {
+      window.addEventListener("message", pageProtocol.handleMessage);
+      pageProtocol.start((event: FPCCMessage) => {
+        // console.log("Sending PageFPCCProtocol", event, iframe.src);
+        (event as { dst: string }).dst = iframe.src;
+        (event as { src: string }).src = window.location.href;
+        iframe.contentWindow?.postMessage(event, iframe.src);
+        return event;
+      });
+    });
+    // Add error event listener
+    iframe.addEventListener("error", pageProtocol.handleError);
+
+    insertIframeAsLastElement(iframe);
+
+    return pageProtocol.connected().then(() => pageProtocol);
+  });
 }
 
 // Initialize when script loads
-initializeIframe();
+// initializeIframe();
 
-export { createIframe, insertIframeAsLastElement, initializeIframe };
+// export { createIframe, insertIframeAsLastElement, initializeIframe };

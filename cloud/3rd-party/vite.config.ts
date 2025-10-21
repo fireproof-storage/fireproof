@@ -13,6 +13,10 @@ export default defineConfig({
       external: [".dev.vars"],
     },
   },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js", ".jsx"],
+    // This makes Vite try .ts if .js doesn't exist
+  },
   server: {
     port: 3001,
     hmr: true,
