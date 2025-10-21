@@ -1,7 +1,7 @@
-import { SuperThis } from "use-fireproof";
 import { FPCCMessage, FPCCMsgBase, FPCCPong, FPCCSendMessage, isFPCCPing, validateFPCCMessage } from "./protocol-fp-cloud-conn.js";
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "@fireproof/core-runtime";
+import { SuperThis } from "@fireproof/core-types-base";
 
 export interface FPCCProtocol {
   // handle must be this bound method
@@ -9,12 +9,16 @@ export interface FPCCProtocol {
   handleFPCCMessage?: (event: FPCCMessage, srcEvent: MessageEvent<unknown>) => void;
   sendMessage<T extends FPCCMsgBase>(event: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void;
   handleError: (error: unknown) => void;
-  start(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => void): void;
+  start(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void;
+  stop(): void;
 }
 
 export class FPCCProtocolBase implements FPCCProtocol {
   protected readonly sthis: SuperThis;
   protected readonly logger: Logger;
+  readonly #fpccMessageHandlers: ((msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => boolean | undefined)[] = [];
+  readonly onStartFns: (() => void)[] = [];
+  #sendFn: ((msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage) | undefined = undefined;
 
   constructor(sthis: SuperThis, logger?: Logger) {
     this.sthis = sthis;
@@ -27,7 +31,7 @@ export class FPCCProtocolBase implements FPCCProtocol {
       return;
     }
     const fpCCmsg = validateFPCCMessage(event.data);
-    console.log("IframeFPCCProtocol handleMessage called", event.data, fpCCmsg.success);
+    // console.log("IframeFPCCProtocol handleMessage called", event.data, fpCCmsg.success);
     if (fpCCmsg.success) {
       this.handleFPCCMessage(fpCCmsg.data, event);
     } else {
@@ -35,28 +39,25 @@ export class FPCCProtocolBase implements FPCCProtocol {
     }
   };
 
-  #fpccMessageHandlers: ((msg: FPCCMessage) => boolean | undefined)[] = [];
-  onFPCCMessage(callback: (msg: FPCCMessage) => boolean | undefined): void {
+  onFPCCMessage(callback: (msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => boolean | undefined): void {
     this.#fpccMessageHandlers.push(callback);
   }
 
   handleFPCCMessage = (event: FPCCMessage, srcEvent: MessageEvent<unknown>) => {
     // allow handlers to process the message first and abort further processing
-    if (this.#fpccMessageHandlers.map((handler) => handler(event)).some((handled) => handled)) {
+    if (this.#fpccMessageHandlers.map((handler) => handler(event, srcEvent)).some((handled) => handled)) {
       return;
     }
     this.logger.Debug().Any("event", event).Msg("Handling FPCC message");
     switch (true) {
       case isFPCCPing(event): {
-        this.sendMessage<FPCCPong>(
-          {
-            type: "FPCCPong",
-            dst: event.src,
-            pingTid: event.tid,
-            timestamp: Date.now(),
-          },
-          srcEvent,
-        );
+        const pong: FPCCSendMessage<FPCCPong> = {
+          type: "FPCCPong",
+          dst: event.src,
+          pingTid: event.tid,
+          timestamp: Date.now(),
+        };
+        this.sendMessage<FPCCPong>(pong, srcEvent);
         break;
       }
     }
@@ -66,23 +67,32 @@ export class FPCCProtocolBase implements FPCCProtocol {
     throw new Error("Method not implemented.");
   };
 
-  #sendFn?: (msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => void;
-  start(sendFn: (msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => void): void {
+  onStart(fn: () => void): void {
+    this.onStartFns.push(fn);
+  }
+
+  start(sendFn: (msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
     this.#sendFn = sendFn;
   }
 
-  sendMessage<T extends FPCCMsgBase>(msg: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void {
+  stop(): void {
+    this.#sendFn = undefined;
+    this.#fpccMessageHandlers.splice(0, this.#fpccMessageHandlers.length);
+    this.onStartFns.splice(0, this.onStartFns.length);
+  }
+
+  sendMessage<T extends FPCCMsgBase>(msg: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): T {
     if (!this.#sendFn) {
       throw new Error("Protocol not started. Call start() before sending messages.");
     }
-    this.#sendFn(
+    return this.#sendFn(
       {
         ...msg,
-        src: msg.src ?? srcEvent.origin ?? "src-unknown",
+        src: msg.src,
         tid: msg.tid ?? this.sthis.nextId().str,
       } as FPCCMessage,
       srcEvent,
-    );
+    ) as T;
   }
 }
 
