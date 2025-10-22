@@ -1,7 +1,7 @@
 import { ensureLogger, sleep } from "@fireproof/core-runtime";
 import { FPCCProtocol, FPCCProtocolBase } from "./fpcc-protocol.js";
 import { SuperThis } from "@fireproof/core-types-base";
-import { Future, KeyedResolvOnce, Logger, ResolveOnce } from "@adviser/cement";
+import { Future, KeyedResolvOnce, Logger, ResolveOnce, Result } from "@adviser/cement";
 import {
   FPCCEvtApp,
   FPCCEvtNeedsLogin,
@@ -99,51 +99,66 @@ export class PageFPCCProtocol implements FPCCProtocol {
   //   this.futureConnected.resolve();
   // });
 
-  async registerDatabase(dbName: string, ireg: Partial<FPCCReqRegisterLocalDbName> = {}): Promise<FPCCEvtApp> {
-    return this.ready()
-      .then(() => {
-        const reg = {
-          ...ireg,
-          tid: ireg.tid,
-          type: "FPCCReqRegisterLocalDbName",
-          appId: ireg.appId ?? this.getAppId(),
-          appURL: ireg.appURL ?? window.location.href,
-          dbName,
-          dst: ireg.dst ?? this.dst,
-        } satisfies FPCCSendMessage<FPCCReqRegisterLocalDbName>;
-        const key = dbAppKey(reg);
-        return this.registerFPCCEvtApp.get(key).once(async () => {
+  async registerDatabase(dbName: string, ireg: Partial<FPCCReqRegisterLocalDbName> = {}): Promise<Result<FPCCEvtApp>> {
+    return this.ready().then(() => {
+      const sreg = {
+        ...ireg,
+        tid: ireg.tid,
+        type: "FPCCReqRegisterLocalDbName",
+        appId: ireg.appId ?? this.getAppId(),
+        appURL: ireg.appURL ?? window.location.href,
+        dbName,
+        dst: ireg.dst ?? this.dst,
+      } satisfies FPCCSendMessage<FPCCReqRegisterLocalDbName>;
+      const key = dbAppKey(sreg);
+      return this.registerFPCCEvtApp
+        .get(key)
+        .once(async () => {
           if (this.waitforFPCCEvtAppFutures.has(key)) {
-            throw this.logger
+            return this.logger
               .Error()
               .Any({
-                key: dbAppKey(reg),
+                key: dbAppKey(sreg),
               })
               .Msg("multiple waitforFPCCEvtAppFuture in flight")
-              .AsError();
+              .ResultError<WaitForFPCCEvtApp>();
           }
           const fpccEvtAppFuture = new Future<FPCCEvtApp>();
           this.waitforFPCCEvtAppFutures.set(key, fpccEvtAppFuture);
-          this.sendMessage<FPCCReqRegisterLocalDbName>(reg);
-          return {
+          const reg = this.sendMessage<FPCCReqRegisterLocalDbName>(sreg);
+
+          const rFPCCEvtApp = await Promise.race([
+            fpccEvtAppFuture
+              .asPromise()
+              .then((evt) => Result.Ok(evt))
+              .catch((error) => Result.Err<FPCCEvtApp>(error)),
+            sleep(this.loginWaitTime).then(() =>
+              this.logger
+                .Error()
+                .Any({
+                  loginWaitTime: this.loginWaitTime,
+                  key: dbAppKey(reg),
+                })
+                .Msg("timeout waiting for FPCCEvtApp")
+                .ResultError<FPCCEvtApp>(),
+            ),
+          ]);
+          this.waitforFPCCEvtAppFutures.delete(key);
+          if (rFPCCEvtApp.isErr()) {
+            throw Result.Err<WaitForFPCCEvtApp>(rFPCCEvtApp);
+          }
+          return Result.Ok({
             register: reg,
-            fpccEvtApp: await Promise.race([
-              fpccEvtAppFuture.asPromise(),
-              sleep(this.loginWaitTime).then(() => {
-                throw this.logger
-                  .Error()
-                  .Any({
-                    loginWaitTime: this.loginWaitTime,
-                    key: dbAppKey(reg),
-                  })
-                  .Msg("timeout waiting for FPCCEvtApp")
-                  .AsError();
-              }),
-            ]),
-          };
+            fpccEvtApp: rFPCCEvtApp.unwrap(),
+          } satisfies WaitForFPCCEvtApp);
+        })
+        .then((rWaitForFPCCEvtApp) => {
+          if (rWaitForFPCCEvtApp.isErr()) {
+            return Result.Err(rWaitForFPCCEvtApp);
+          }
+          return Result.Ok(rWaitForFPCCEvtApp.unwrap().fpccEvtApp);
         });
-      })
-      .then(({ fpccEvtApp }) => fpccEvtApp);
+    });
   }
 
   injectSend(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {

@@ -1,4 +1,4 @@
-import { BuildURI, Lazy, Logger } from "@adviser/cement";
+import { BuildURI, Lazy, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
@@ -7,7 +7,7 @@ import { Api } from "@fireproof/core-protocols-dashboard";
 import { WebToCloudCtx } from "./react/types.js";
 import { WebCtx } from "./react/use-attach.js";
 import { hashObjectSync } from "@fireproof/core-runtime";
-import { defaultOverlayCss, defaultOverlayHtml } from "./html-defaults.js";
+import { defaultOverlayCss, defaultOverlayHtml } from "./overlay-html-defaults.js";
 
 export interface RedirectStrategyOpts {
   readonly overlayCss: string;
@@ -152,17 +152,17 @@ export class RedirectStrategy implements TokenStrategie {
     this.waiting = setTimeout(() => this.getTokenAndClaimsByResultId(logger, dashApi, resultId, opts, resolve), opts.intervalSec);
   }
 
-  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
+  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<Result<TokenAndClaims>> {
     if (!this.resultId) {
       throw new Error("waitForToken not working on redirect strategy");
     }
     const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     const dashApi = new Api(webCtx.tokenApiURI);
     this.waitState = "started";
-    return new Promise<TokenAndClaims | undefined>((resolve) => {
+    return new Promise<Result<TokenAndClaims>>((resolve) => {
       this.getTokenAndClaimsByResultId(logger, dashApi, this.resultId, opts, (tokenAndClaims) => {
         this.currentToken = tokenAndClaims;
-        resolve(tokenAndClaims);
+        resolve(Result.Ok(tokenAndClaims));
       });
     });
   }
