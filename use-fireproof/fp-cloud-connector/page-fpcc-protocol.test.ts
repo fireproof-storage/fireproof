@@ -73,7 +73,7 @@ describe("FPCC Protocol", () => {
       tid: "tid-test-app-1",
       appId: "test-app-1",
     });
-    expect(fpccEvtApp).toEqual({
+    expect(fpccEvtApp.Ok()).toEqual({
       tid: "tid-test-app-1",
       type: "FPCCEvtApp",
       src: "fp-cloud-connector",
