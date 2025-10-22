@@ -3,7 +3,7 @@ import { Lazy } from "@adviser/cement";
 import { FPCCMessage } from "./protocol-fp-cloud-conn.js";
 import { IframeFPCCProtocol } from "./iframe-fpcc-protocol.js";
 
-export const postMessager = Lazy(() => {
+export const postMessager = Lazy(async () => {
   (globalThis as Record<symbol, unknown>)[Symbol.for("FP_PRESET_ENV")] = {
     FP_DEBUG: "*",
   };
@@ -16,5 +16,6 @@ export const postMessager = Lazy(() => {
     srcEvent.source?.postMessage(event, { targetOrigin: srcEvent.origin });
     return event;
   });
+  await protocol.ready();
   return protocol;
 });

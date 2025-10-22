@@ -2,7 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: "classic", // Use classic instead of automatic
+    }),
+  ],
   build: {
     sourcemap: true,
     target: "esnext",
