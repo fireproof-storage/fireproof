@@ -1,4 +1,4 @@
-import { Logger, CoerceURI, URI, AppContext } from "@adviser/cement";
+import { Logger, CoerceURI, URI, AppContext, Result } from "@adviser/cement";
 import { Attachable, SuperThis } from "@fireproof/core-types-base";
 import { FPCloudClaim } from "./msg-types.zod.js";
 
@@ -18,9 +18,9 @@ export interface TokenAndClaims {
 
 export interface TokenStrategie {
   hash(): string;
-  open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): void;
-  tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
-  waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
+  open(sthis: SuperThis, logger: Logger, localDbName: string, opts: ToCloudOpts): void;
+  // tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
+  waitForToken(sthis: SuperThis, logger: Logger, localDbName: string, opts: ToCloudOpts): Promise<Result<TokenAndClaims>>;
   stop(): void;
 }
 

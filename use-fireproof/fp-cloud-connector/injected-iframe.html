@@ -1,0 +1,21 @@
+<html>
+  <head>
+    Fireproof Cloud Connector
+  </head>
+  <body>
+    I'm the Fireproof Cloud Connector
+    <script type="module">
+      let fpcc;
+      try {
+        const url = new URL("fp-cloud-connector.js", window.location.href);
+        fpcc = await import(url);
+        console.log("loaded -- js", url.toString());
+      } catch (e) {
+        const url = new URL("fp-cloud-connector.ts", window.location.href);
+        fpcc = await import(url);
+        console.log("loaded -- ts", url.toString(), fpcc);
+      }
+      fpcc.postMessager().then(() => console.log("injected-iframe-ready"));
+    </script>
+  </body>
+</html>

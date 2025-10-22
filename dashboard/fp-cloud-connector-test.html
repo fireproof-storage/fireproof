@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/fp-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Test Fireproof Cloud Connector</title>
+  </head>
+  <body>
+    <h1>Interactive Test Fireproof Cloud Connector</h1>
+
+    <script type="module">
+      import { useFireproof, toCloud } from "use-fireproof";
+
+      const x = useFireproof("test-db", {
+        /* attach: toCloud() */
+      });
+      await x.put({
+        _id: "bla",
+        val: Math.random(),
+        now: new Date(),
+      });
+      console.log(x.name, await x.get("bla"));
+    </script>
+  </body>
+</html>

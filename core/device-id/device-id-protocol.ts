@@ -1,14 +1,14 @@
 import { IssueCertificateResult, JWKPrivateSchema, SuperThis } from "@fireproof/core-types-base";
-import { CAActions, DeviceIdCA } from "./device-id-CA.js";
+import { DeviceIdCA } from "./device-id-CA.js";
 import { param, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { base58btc } from "multiformats/bases/base58";
 import { DeviceIdVerifyMsg, VerifyWithCertificateResult } from "./device-id-verify-msg.js";
 
-async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<DeviceIdCA>> {
+async function ensureCA(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<Result<DeviceIdCA>> {
   const rEnv = sthis.env.gets({
-    DEVICE_ID_CA_KEY: param.REQUIRED,
-    DEVICE_ID_CA_COMMON_NAME: param.OPTIONAL,
+    DEVICE_ID_CA_KEY: opts.env?.DEVICE_ID_CA_KEY ?? param.REQUIRED,
+    DEVICE_ID_CA_COMMON_NAME: opts.env?.DEVICE_ID_CA_COMMON_NAME ?? param.OPTIONAL,
   });
   if (rEnv.isErr()) {
     throw rEnv.Err();
@@ -29,7 +29,7 @@ async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<De
       caSubject: {
         commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
       },
-      actions,
+      actions: [], // opts.actions ,
     }),
   );
 }
@@ -40,14 +40,19 @@ export interface DeviceIdProtocol {
 }
 
 export interface DeviceIdProtocolSrvOpts {
-  readonly actions: CAActions;
+  // usally from ENV
+  readonly env?: {
+    readonly DEVICE_ID_CA_KEY: string;
+    readonly DEVICE_ID_CA_COMMON_NAME?: string;
+  };
+  // readonly actions: CAActions;
 }
 
 export class DeviceIdProtocolSrv implements DeviceIdProtocol {
   readonly #ca: DeviceIdCA;
   readonly #verifyMsg: DeviceIdVerifyMsg;
   static async create(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<Result<DeviceIdProtocol>> {
-    const rCa = await ensureCA(sthis, opts.actions);
+    const rCa = await ensureCA(sthis, opts);
     if (rCa.isErr()) {
       return Result.Err(rCa);
     }
