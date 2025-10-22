@@ -1,4 +1,4 @@
-import { BuildURI, Logger } from "@adviser/cement";
+import { BuildURI, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { TokenStrategie, ToCloudOpts, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 import { WebCtx } from "./react/use-attach.js";
@@ -95,10 +95,8 @@ export class IframeStrategy implements TokenStrategie {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<TokenAndClaims | undefined> {
+  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<Result<TokenAndClaims>> {
     // throw new Error("waitForToken not implemented");
-    return new Promise(() => {
-      /* */
-    });
+    return Result.Err("not implemented");
   }
 }

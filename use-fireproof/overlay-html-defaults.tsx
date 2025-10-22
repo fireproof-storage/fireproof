@@ -1,5 +1,4 @@
-import { renderToString } from "preact-render-to-string";
-import { h as React } from "preact";
+import { React, renderToString } from "./jsx-helper.js";
 
 export function defaultOverlayHtml(redirectLink: string) {
   return renderToString(
