@@ -21,6 +21,25 @@ export function createUseDocument(database: Database) {
 
     const [doc, setDoc] = useState(initialDoc);
 
+    // Watch for changes to initialDocOrFn and update doc state
+    // We track the _id specifically since that's the primary identifier
+    const initialDocId = initialDoc._id;
+    const initialDocIdString = useMemo(() => String(initialDocId ?? ""), [initialDocId]);
+    const prevDocIdRef = useRef(doc._id);
+
+    // Reset loaded when initialDocId changes
+    useEffect(() => {
+      setLoaded(false);
+    }, [initialDocIdString]);
+
+    useEffect(() => {
+      // Update doc state if the initial doc's _id is different from what we're currently tracking
+      if (initialDocId !== prevDocIdRef.current) {
+        prevDocIdRef.current = initialDocId;
+        setDoc(initialDoc);
+      }
+    }, [initialDocId]);
+
     const refresh = useCallback(async () => {
       if (doc._id) {
         try {
