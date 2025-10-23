@@ -7,7 +7,8 @@ import type { ChangesResult } from "./types.js";
  */
 export function createUseChanges(database: Database) {
   return function useChanges<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): ChangesResult<T> {
-    const [result, setResult] = useState<ChangesResult<T>>({
+    const [loaded, setLoaded] = useState(false);
+    const [result, setResult] = useState<Omit<ChangesResult<T>, "loaded">>({
       docs: [],
     });
 
@@ -16,6 +17,7 @@ export function createUseChanges(database: Database) {
     const refreshRows = useCallback(async () => {
       const res = await database.changes<T>(since, opts);
       setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
+      setLoaded(true);
     }, [since, queryString]);
 
     useEffect(() => {
@@ -23,6 +25,6 @@ export function createUseChanges(database: Database) {
       return database.subscribe(refreshRows);
     }, [refreshRows]);
 
-    return result;
+    return { ...result, loaded };
   };
 }
