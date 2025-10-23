@@ -7,22 +7,30 @@ import type { ChangesResult } from "./types.js";
  */
 export function createUseChanges(database: Database) {
   return function useChanges<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): ChangesResult<T> {
-    const [result, setResult] = useState<ChangesResult<T>>({
+    const [loaded, setLoaded] = useState(false);
+    const [result, setResult] = useState<Omit<ChangesResult<T>, "loaded">>({
       docs: [],
     });
 
     const queryString = useMemo(() => JSON.stringify(opts), [opts]);
+    const sinceString = useMemo(() => JSON.stringify(since), [since]);
+
+    // Reset loaded when dependencies change
+    useEffect(() => {
+      setLoaded(false);
+    }, [sinceString, queryString]);
 
     const refreshRows = useCallback(async () => {
       const res = await database.changes<T>(since, opts);
       setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
-    }, [since, queryString]);
+      setLoaded(true);
+    }, [database, sinceString, queryString]);
 
     useEffect(() => {
       refreshRows(); // Initial data fetch
       return database.subscribe(refreshRows);
     }, [refreshRows]);
 
-    return result;
+    return { ...result, loaded };
   };
 }

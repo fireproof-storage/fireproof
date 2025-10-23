@@ -11,7 +11,8 @@ export function createUseLiveQuery(database: Database) {
     query = {},
     initialRows: FPIndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
-    const [result, setResult] = useState<LiveQueryResult<T, K, R>>({
+    const [loaded, setLoaded] = useState(false);
+    const [result, setResult] = useState<Omit<LiveQueryResult<T, K, R>, "loaded">>({
       docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
       rows: initialRows,
     });
@@ -19,9 +20,15 @@ export function createUseLiveQuery(database: Database) {
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
+    // Reset loaded when query dependencies change
+    useEffect(() => {
+      setLoaded(false);
+    }, [mapFnString, queryString]);
+
     const refreshRows = useCallback(async () => {
       const res = await database.query<T, K, R>(mapFn, { ...query, includeDocs: true });
       setResult(res);
+      setLoaded(true);
     }, [database, mapFnString, queryString]);
 
     useEffect(() => {
@@ -32,6 +39,6 @@ export function createUseLiveQuery(database: Database) {
       };
     }, [database, refreshRows]);
 
-    return result;
+    return { ...result, loaded };
   };
 }
