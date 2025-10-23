@@ -1072,6 +1072,9 @@ importers:
       '@clerk/clerk-react':
         specifier: ^5.53.2
         version: 5.53.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@fireproof/core-base':
+        specifier: workspace:*
+        version: link:../core/base
       '@fireproof/core-protocols-cloud':
         specifier: workspace:*
         version: link:../core/protocols/cloud

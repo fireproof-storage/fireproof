@@ -7,7 +7,7 @@
 // import { userRef } from "./db-api-schema";
 
 import { Result } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core";
+import { SuperThis } from "@fireproof/core-types-base";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
