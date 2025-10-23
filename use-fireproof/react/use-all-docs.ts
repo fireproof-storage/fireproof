@@ -14,6 +14,11 @@ export function createUseAllDocs(database: Database) {
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
 
+    // Reset loaded when query changes
+    useEffect(() => {
+      setLoaded(false);
+    }, [queryString]);
+
     const refreshRows = useCallback(async () => {
       const res = await database.allDocs<T>(query);
       setResult({
