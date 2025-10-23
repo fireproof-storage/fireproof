@@ -717,7 +717,7 @@ describe("useFireproof calling submit()", () => {
 
 describe("HOOK: loaded flag behavior", () => {
   const dbName = "loadedFlagTest";
-  let db: Database, database: Database;
+  let db: Database, database: Database | undefined;
 
   beforeEach(async () => {
     db = fireproof(dbName);
@@ -733,7 +733,7 @@ describe("HOOK: loaded flag behavior", () => {
     if (database && database.name === dbName) {
       await database.close();
       await database.destroy();
-      database = undefined as any;
+      database = undefined;
     }
   });
 
