@@ -60,13 +60,14 @@ function getOverallStatus(pr: PR): PRStatus {
     return check.state || "UNKNOWN";
   });
 
-  // Determine overall status: if any fail/error, show that; if any pending, show pending; else success
-  if (states.some((s) => s === "FAILURE" || s === "ERROR")) {
+  // Determine overall status: PENDING takes priority over FAILURE if any check is still running
+  // This handles cases where some checks are IN_PROGRESS and others have failed
+  if (states.some((s) => s === "PENDING" || s === "IN_PROGRESS")) {
+    return "PENDING";
+  } else if (states.some((s) => s === "FAILURE" || s === "ERROR")) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const failedState = states.find((s) => s === "FAILURE" || s === "ERROR")!;
     return failedState === "ERROR" ? "ERROR" : "FAILURE";
-  } else if (states.some((s) => s === "PENDING" || s === "IN_PROGRESS")) {
-    return "PENDING";
   } else if (states.some((s) => s === "SUCCESS")) {
     // Only return SUCCESS if checks pass AND it's mergeable
     if (pr.mergeable === "MERGEABLE" || pr.mergeStateStatus === "CLEAN") {
@@ -316,7 +317,7 @@ export function dependabotCmd(sthis: SuperThis) {
 
       // Apply all PRs
       if (args.apply || args.rebase) {
-        if (args.rebase && args.autoCLI) {
+        if (args.rebase && (args.autoCLI || args.autoGH)) {
           // Clean flow: show initial summary, then process with minimal output
           const initialPRs = [...prs]; // Keep original list for final summary
 
