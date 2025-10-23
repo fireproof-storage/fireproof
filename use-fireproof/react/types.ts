@@ -21,7 +21,13 @@ import type {
 } from "@fireproof/core-types-base";
 import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
-export type LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = IndexRowsWithDocs<T, K, R>;
+export interface HookResult {
+  readonly loaded: boolean;
+}
+
+export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T>
+  extends IndexRowsWithDocs<T, K, R>,
+    HookResult {}
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   mapFn: string | MapFn<T>,
@@ -29,11 +35,11 @@ export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string,
   initialRows?: FPIndexRow<K, T, R>[],
 ) => LiveQueryResult<T, K, R>;
 
-export interface AllDocsResult<T extends DocTypes> {
+export interface AllDocsResult<T extends DocTypes> extends HookResult {
   readonly docs: DocWithId<T>[];
 }
 
-export interface ChangesResult<T extends DocTypes> {
+export interface ChangesResult<T extends DocTypes> extends HookResult {
   readonly docs: DocWithId<T>[];
 }
 
@@ -54,7 +60,7 @@ export type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Pr
 
 export type UseDocumentResultTuple<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
 
-export interface UseDocumentResultObject<T extends DocTypes> {
+export interface UseDocumentResultObject<T extends DocTypes> extends HookResult {
   readonly doc: DocWithId<T>;
   merge(newDoc: Partial<T>): void;
   replace(newDoc: T): void;

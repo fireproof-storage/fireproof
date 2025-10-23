@@ -9,6 +9,7 @@ import type { DeleteDocFn, StoreDocFn, UseDocumentInitialDocOrFn, UseDocumentRes
 export function createUseDocument(database: Database) {
   return function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
     const updateHappenedRef = useRef(false);
+    const [loaded, setLoaded] = useState(false);
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
@@ -31,6 +32,7 @@ export function createUseDocument(database: Database) {
       } else {
         setDoc(initialDoc);
       }
+      setLoaded(true);
     }, [doc._id]);
 
     const save: StoreDocFn<T> = useCallback(
@@ -116,6 +118,7 @@ export function createUseDocument(database: Database) {
     // Primary Object API with both new and legacy methods
     const apiObject = {
       doc: { ...doc } as DocWithId<T>,
+      loaded,
       merge,
       replace,
       reset,
