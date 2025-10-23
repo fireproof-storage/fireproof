@@ -1,9 +1,10 @@
-import { IssueCertificateResult, JWKPrivateSchema, SuperThis } from "@fireproof/core-types-base";
+import { IssueCertificateResult, JWKPrivateSchema, JWKPublic, SuperThis } from "@fireproof/core-types-base";
 import { DeviceIdCA } from "./device-id-CA.js";
 import { param, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { base58btc } from "multiformats/bases/base58";
 import { DeviceIdVerifyMsg, VerifyWithCertificateResult } from "./device-id-verify-msg.js";
+import { hashObjectAsync } from "@fireproof/core-runtime";
 
 async function ensureCA(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<Result<DeviceIdCA>> {
   const rEnv = sthis.env.gets({
@@ -29,7 +30,13 @@ async function ensureCA(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promis
       caSubject: {
         commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
       },
-      actions: [], // opts.actions ,
+      actions: {
+        async generateSerialNumber(pub: JWKPublic): Promise<string> {
+          // const now = Date.now();
+          const hash = await hashObjectAsync(pub);
+          return hash;
+        },
+      },
     }),
   );
 }

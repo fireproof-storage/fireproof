@@ -1,5 +1,4 @@
 import { Result } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core";
 import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
 // import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose";
@@ -62,6 +61,7 @@ import { sqlTokenByResultId } from "./token-by-result-id.js";
 import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.js";
 import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
 import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
+import { SuperThis } from "@fireproof/core-types-base";
 import { sts } from "@fireproof/core-runtime";
 import { DashSqlite } from "./create-handler.js";
 

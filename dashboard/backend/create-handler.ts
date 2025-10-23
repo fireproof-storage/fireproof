@@ -2,7 +2,7 @@
 import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import { verifyJwt } from "@clerk/backend/jwt";
-import { SuperThis, SuperThisOpts } from "@fireproof/core";
+import { SuperThis, SuperThisOpts } from "@fireproof/core-types-base";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
 import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";

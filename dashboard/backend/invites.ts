@@ -4,7 +4,7 @@ import { sqlUsers } from "./users.js";
 import { sqlTenants } from "./tenants.js";
 import { sqlLedgers } from "./ledgers.js";
 import { queryEmail, queryNick, toUndef } from "./sql-helper.js";
-import { SuperThis } from "@fireproof/core";
+import { SuperThis } from "@fireproof/core-types-base";
 import {
   AuthProvider,
   InvitedParams,
