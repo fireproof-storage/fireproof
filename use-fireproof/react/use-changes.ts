@@ -13,12 +13,18 @@ export function createUseChanges(database: Database) {
     });
 
     const queryString = useMemo(() => JSON.stringify(opts), [opts]);
+    const sinceString = useMemo(() => JSON.stringify(since), [since]);
+
+    // Reset loaded when dependencies change
+    useEffect(() => {
+      setLoaded(false);
+    }, [sinceString, queryString]);
 
     const refreshRows = useCallback(async () => {
       const res = await database.changes<T>(since, opts);
       setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
       setLoaded(true);
-    }, [since, queryString]);
+    }, [database, sinceString, queryString]);
 
     useEffect(() => {
       refreshRows(); // Initial data fetch

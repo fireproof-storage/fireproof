@@ -20,6 +20,11 @@ export function createUseLiveQuery(database: Database) {
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
+    // Reset loaded when query dependencies change
+    useEffect(() => {
+      setLoaded(false);
+    }, [mapFnString, queryString]);
+
     const refreshRows = useCallback(async () => {
       const res = await database.query<T, K, R>(mapFn, { ...query, includeDocs: true });
       setResult(res);
