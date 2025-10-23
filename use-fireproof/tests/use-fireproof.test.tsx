@@ -714,3 +714,168 @@ describe("useFireproof calling submit()", () => {
     await db.destroy();
   });
 });
+
+describe("HOOK: loaded flag behavior", () => {
+  const dbName = "loadedFlagTest";
+  let db: Database, database: Database;
+
+  beforeEach(async () => {
+    db = fireproof(dbName);
+    // Add some test data
+    await db.put({ type: "todo", text: "Task 1" });
+    await db.put({ type: "todo", text: "Task 2" });
+    await db.put({ type: "note", text: "Note 1" });
+  });
+
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+    if (database && database.name === dbName) {
+      await database.close();
+      await database.destroy();
+      database = undefined as any;
+    }
+  });
+
+  it(
+    "useLiveQuery should have loaded flag that starts false and becomes true",
+    async () => {
+      const { result } = renderHook(() => {
+        const { database: db, useLiveQuery } = useFireproof(dbName);
+        database = db;
+        return useLiveQuery<{ type: string; text: string }>("type", { key: "todo" });
+      });
+
+      // Initially loaded should be false
+      expect(result.current.loaded).toBe(false);
+      expect(result.current.rows.length).toBe(0);
+
+      // Wait for data to load
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+        expect(result.current.rows.length).toBe(2);
+      });
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "useDocument should have loaded flag that becomes true after refresh",
+    async () => {
+      // First create a document to fetch
+      const docRes = await db.put({ input: "initial value" });
+
+      const { result } = renderHook(() => {
+        const { database: db, useDocument } = useFireproof(dbName);
+        database = db;
+        return useDocument<{ input: string }>({ _id: docRes.id } as { _id: string; input: string });
+      });
+
+      // Wait for loaded to become true
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+        expect(result.current.doc.input).toBe("initial value");
+      });
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "useDocument with no _id should have loaded flag true after initial render",
+    async () => {
+      const { result } = renderHook(() => {
+        const { database: db, useDocument } = useFireproof(dbName);
+        database = db;
+        return useDocument<{ input: string }>({ input: "" });
+      });
+
+      // Wait for loaded to become true (should happen immediately since no fetch needed)
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+        expect(result.current.doc.input).toBe("");
+      });
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "useAllDocs should have loaded flag that starts false and becomes true",
+    async () => {
+      const { result } = renderHook(() => {
+        const { database: db, useAllDocs } = useFireproof(dbName);
+        database = db;
+        return useAllDocs<{ type: string; text: string }>();
+      });
+
+      // Initially loaded should be false
+      expect(result.current.loaded).toBe(false);
+      expect(result.current.docs.length).toBe(0);
+
+      // Wait for data to load
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+        expect(result.current.docs.length).toBe(3);
+      });
+    },
+    TEST_TIMEOUT,
+  );
+
+  it(
+    "useChanges should have loaded flag that starts false and becomes true",
+    async () => {
+      const { result } = renderHook(() => {
+        const { database: db, useChanges } = useFireproof(dbName);
+        database = db;
+        return useChanges<{ type: string; text: string }>([], {});
+      });
+
+      // Initially loaded should be false
+      expect(result.current.loaded).toBe(false);
+      expect(result.current.docs.length).toBe(0);
+
+      // Wait for data to load
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+        expect(result.current.docs.length).toBe(3);
+      });
+    },
+    TEST_TIMEOUT,
+  );
+});
+
+describe("HOOK: loaded flag distinguishes empty from not-loaded", () => {
+  it(
+    "loaded flag distinguishes between empty results and not-yet-loaded",
+    async () => {
+      const emptyDbName = "emptyLoadedTest";
+      const emptyDb = fireproof(emptyDbName);
+      let emptyDatabase: Database | undefined;
+
+      try {
+        const { result } = renderHook(() => {
+          const { database: db, useLiveQuery } = useFireproof(emptyDbName);
+          emptyDatabase = db;
+          return useLiveQuery<{ type: string }>("type", { key: "nonexistent" });
+        });
+
+        // Before load: loaded=false, rows=[]
+        expect(result.current.loaded).toBe(false);
+        expect(result.current.rows.length).toBe(0);
+
+        // After load: loaded=true, rows=[] (legitimately empty)
+        await waitFor(() => {
+          expect(result.current.loaded).toBe(true);
+        });
+        expect(result.current.rows.length).toBe(0); // Still empty, but now we know it's loaded
+      } finally {
+        await emptyDb.close();
+        await emptyDb.destroy();
+        if (emptyDatabase) {
+          await emptyDatabase.close();
+          await emptyDatabase.destroy();
+        }
+      }
+    },
+    TEST_TIMEOUT,
+  );
+});
