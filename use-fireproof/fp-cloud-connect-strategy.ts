@@ -122,6 +122,9 @@ export class FPCloudConnectStrategy implements TokenStrategie {
       this.title,
       `left=${left},top=${top},width=${width},height=${height},scrollbars=yes,resizable=yes,popup=yes`,
     );
+    // TODO: Add popup callback handler here
+    // Need to listen for postMessage from popup window containing OAuth result
+    // Example: window.addEventListener('message', (event) => { ... })
     // window.location.href = url.toString();
   }
 

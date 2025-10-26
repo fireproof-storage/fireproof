@@ -29,7 +29,7 @@ async function ensureCA(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promis
       caSubject: {
         commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
       },
-      actions: [], // opts.actions ,
+      actions: [], // opts.actions - TODO: CAActions implementation required
     }),
   );
 }
@@ -45,7 +45,7 @@ export interface DeviceIdProtocolSrvOpts {
     readonly DEVICE_ID_CA_KEY: string;
     readonly DEVICE_ID_CA_COMMON_NAME?: string;
   };
-  // readonly actions: CAActions;
+  // readonly actions: CAActions; - TODO: CAActions implementation required
 }
 
 export class DeviceIdProtocolSrv implements DeviceIdProtocol {

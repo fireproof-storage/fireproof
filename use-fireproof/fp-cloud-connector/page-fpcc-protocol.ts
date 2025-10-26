@@ -82,7 +82,9 @@ export class PageFPCCProtocol implements FPCCProtocol {
   }
 
   getAppId(): string {
-    // setup in ready
+    // TODO: Generate or retrieve stable app ID
+    // Should be consistent across sessions for the same app origin
+    // Consider using: hash(window.location.origin) or stored value
     return "we-need-to-implement-app-id-this";
   }
 

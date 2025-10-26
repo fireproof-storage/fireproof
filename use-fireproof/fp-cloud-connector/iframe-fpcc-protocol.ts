@@ -95,6 +95,11 @@ class MemoryFPCCEvtEntity implements BackendFPCC {
   }
 
   waitForAuthToken(tid: string, tokenURI: string): Promise<string> {
+    // TODO: Implement real OAuth token exchange
+    // Should: 1) Listen for popup window callback message
+    //         2) Extract auth token from message
+    //         3) Exchange with tokenURI endpoint
+    //         4) Return real JWT token
     return sleep(100).then(() => `fake-auth-token:${tid}:${tokenURI}`);
   }
 
@@ -147,6 +152,9 @@ export class IframeFPCCProtocol implements FPCCProtocol {
   };
 
   getDeviceId(): string {
+    // TODO: Integrate with core/device-id/device-id-protocol.ts
+    // Should use DeviceIdProtocol to generate/retrieve device certificate
+    // This ties into the device identity and auth system
     return "we-need-to-implement-device-id";
   }
 

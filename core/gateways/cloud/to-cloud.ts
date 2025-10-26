@@ -248,7 +248,7 @@ class ToCloud implements ToCloudAttachable {
       // wait for the token
       // const token = await this._tokenObserver.getToken(logger, ledger);
       const rToken = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
-      if (!rToken.isErr) {
+      if (rToken.isErr()) {
         return Result.Err(rToken);
       }
       const token = rToken.unwrap();
