@@ -1,9 +1,18 @@
-import { IssueCertificateResult, JWKPrivateSchema, SuperThis } from "@fireproof/core-types-base";
-import { DeviceIdCA } from "./device-id-CA.js";
+import { IssueCertificateResult, JWKPrivateSchema, SuperThis, JWKPublic } from "@fireproof/core-types-base";
+import { CAActions, DeviceIdCA } from "./device-id-CA.js";
 import { param, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { base58btc } from "multiformats/bases/base58";
 import { DeviceIdVerifyMsg, VerifyWithCertificateResult } from "./device-id-verify-msg.js";
+
+// Stub implementation until real CAActions is integrated
+const stubCAActions: CAActions = {
+  generateSerialNumber: async (_pub: JWKPublic) => {
+    // TODO: Implement proper serial number generation based on public key
+    // This should generate a unique, deterministic serial number for the certificate
+    return `stub-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  },
+};
 
 async function ensureCA(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<Result<DeviceIdCA>> {
   const rEnv = sthis.env.gets({
@@ -29,7 +38,7 @@ async function ensureCA(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promis
       caSubject: {
         commonName: env.DEVICE_ID_CA_COMMON_NAME ?? "Fireproof CA",
       },
-      actions: [], // opts.actions - TODO: CAActions implementation required
+      actions: stubCAActions,
     }),
   );
 }
@@ -45,7 +54,7 @@ export interface DeviceIdProtocolSrvOpts {
     readonly DEVICE_ID_CA_KEY: string;
     readonly DEVICE_ID_CA_COMMON_NAME?: string;
   };
-  // readonly actions: CAActions; - TODO: CAActions implementation required
+  // Note: Uses stubCAActions until proper CAActions implementation is provided
 }
 
 export class DeviceIdProtocolSrv implements DeviceIdProtocol {
