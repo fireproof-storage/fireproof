@@ -38,7 +38,7 @@
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/deno": "^2.5.0",
-    "@types/node": "^24.8.1"
+    "@types/node": "^24.9.1"
   },
   "dependencies": {
     "@adviser/cement": "^0.4.51",
