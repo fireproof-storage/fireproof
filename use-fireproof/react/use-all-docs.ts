@@ -7,11 +7,17 @@ import type { AllDocsResult } from "./types.js";
  */
 export function createUseAllDocs(database: Database) {
   return function useAllDocs<T extends DocTypes>(query: Partial<AllDocsQueryOpts> = {}): AllDocsResult<T> {
-    const [result, setResult] = useState<AllDocsResult<T>>({
+    const [loaded, setLoaded] = useState(false);
+    const [result, setResult] = useState<Omit<AllDocsResult<T>, "loaded">>({
       docs: [],
     });
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
+
+    // Reset loaded when query changes
+    useEffect(() => {
+      setLoaded(false);
+    }, [queryString]);
 
     const refreshRows = useCallback(async () => {
       const res = await database.allDocs<T>(query);
@@ -19,6 +25,7 @@ export function createUseAllDocs(database: Database) {
         ...res,
         docs: res.rows.map((r) => r.value as DocWithId<T>),
       });
+      setLoaded(true);
     }, [database, queryString]);
 
     useEffect(() => {
@@ -29,6 +36,6 @@ export function createUseAllDocs(database: Database) {
       };
     }, [database, refreshRows]);
 
-    return result;
+    return { ...result, loaded };
   };
 }
