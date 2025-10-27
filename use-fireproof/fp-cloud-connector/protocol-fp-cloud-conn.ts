@@ -69,7 +69,7 @@ export const FPCCEvtAppSchema = FPCCMsgBaseSchemaBase.extend({
     .object({
       name: z.string(),
       email: z.string(),
-      provider: z.enum(["google", "github"]),
+      provider: z.enum(["google", "github", "unknown"]),
       iconURL: z.string(),
     })
     .readonly(),

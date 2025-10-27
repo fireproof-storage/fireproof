@@ -52,6 +52,9 @@ import {
   UserStatus,
   VerifiedAuth,
   FAPIMsgImpl,
+  FPApiParameters,
+  ResClerkPublishableKey,
+  ReqClerkPublishableKey,
 } from "@fireproof/core-protocols-dashboard";
 import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.js";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.js";
@@ -224,10 +227,12 @@ export class FPApiSQL implements FPApiInterface {
   readonly db: DashSqlite;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
-  constructor(sthis: SuperThis, db: DashSqlite, tokenApi: Record<string, FPApiToken>) {
+  readonly params: FPApiParameters;
+  constructor(sthis: SuperThis, db: DashSqlite, tokenApi: Record<string, FPApiToken>, params: FPApiParameters) {
     this.db = db;
     this.tokenApi = tokenApi;
     this.sthis = sthis;
+    this.params = params;
   }
 
   private async _authVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
@@ -313,9 +318,8 @@ export class FPApiSQL implements FPApiInterface {
         },
       };
       const rTenant = await this.insertTenant(authWithUserId, {
+        ...this.params,
         ownerUserId: userId,
-        maxAdminUsers: 5,
-        maxMemberUsers: 5,
       });
       await this.addUserToTenant(this.db, {
         userName: nameFromAuth(undefined, authWithUserId),
@@ -1407,6 +1411,7 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     const rTenant = await this.insertTenant(auth as ActiveUserWithUserId, {
+      ...this.params,
       ...req.tenant,
       ownerUserId: auth.user.userId,
     });
@@ -1427,7 +1432,10 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  private async insertTenant(auth: ActiveUserWithUserId, req: InCreateTenantParams): Promise<Result<OutTenantParams>> {
+  private async insertTenant(
+    auth: ActiveUserWithUserId,
+    req: InCreateTenantParams & FPApiParameters,
+  ): Promise<Result<OutTenantParams>> {
     const tenantId = this.sthis.nextId(12).str;
     const cnt = await this.db.$count(sqlTenants, eq(sqlTenants.ownerUserId, auth.user.userId));
     if (cnt + 1 >= auth.user.maxTenants) {
@@ -1440,9 +1448,10 @@ export class FPApiSQL implements FPApiInterface {
         tenantId,
         name: req.name ?? `my-tenant[${tenantId}]`,
         ownerUserId: auth.user.userId,
-        maxAdminUsers: req.maxAdminUsers ?? 5,
-        maxMemberUsers: req.maxMemberUsers ?? 5,
-        maxInvites: req.maxInvites ?? 10,
+        maxAdminUsers: req.maxAdminUsers,
+        maxMemberUsers: req.maxMemberUsers,
+        maxInvites: req.maxInvites,
+        maxLedgers: req.maxLedgers,
         createdAt: nowStr,
         updatedAt: nowStr,
       })
@@ -1875,6 +1884,14 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
+  async getClerkPublishableKey(_req: ReqClerkPublishableKey): Promise<Result<ResClerkPublishableKey>> {
+    return Result.Ok({
+      type: "resClerkPublishableKey",
+      publishableKey: this.params.clerkPublishableKey,
+      cloudPublicKeys: this.params.cloudPublicKeys,
+    });
+  }
+
   // this is why to expensive --- why not kv or other simple storage
   async getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>> {
     const past = new Date(new Date().getTime() - 15 * 60 * 1000).toISOString();
@@ -1949,64 +1966,3 @@ function toProvider(i: ClerkVerifyAuth): FPCloudClaim["provider"] {
   }
   return "google";
 }
-
-// // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// async attachUserToTenant(req: ReqAttachUserToTenant): Promise<Result<ResAttachUserToTenant>> {
-//     const maxTenants = await this.db.select({
-//         maxTenants: users.maxTenants
-//     }).from(users).where(eq(users.userId, req.userId)).get() ?? { maxTenants: 5 }
-
-//     const tendantCount = await this.db.$count(tenantUsers,
-//         and(
-//             eq(tenants.ownerUserId, req.userId),
-//             ne(tenantUsers.active, 0)
-//         ))
-
-//     if (tendantCount >= maxTenants.maxTenants) {
-//         return Result.Err(`max tenants reached:${maxTenants.maxTenants}`)
-//     }
-
-//     const now = new Date().toISOString();
-//     const values = {
-//         userId: req.userId,
-//         tenantId: req.tenantId,
-//         name: req.name,
-//         active: 1,
-//         createdAt: now,
-//         updatedAt: now
-//     }
-//     const rRes = await this.db
-//         .insert(tenantUsers)
-//         .values(values)
-//         .onConflictDoNothing()
-//         .returning()
-//         .run()
-//     const res = rRes.toJSON()[0]
-//     return Result.Ok({
-//         type: 'resAttachUserToTenant',
-//         name: req.name,
-//         tenant: {
-//             tenantId: res.
-//                 name: req.name,
-//             ownerUserId: req.userId,
-//             adminUserIds: [],
-//             memberUserIds: [],
-//             maxAdminUsers: 5,
-//             maxMemberUsers: 5,
-//             createdAt: new Date(),
-//             updatedAt: new Date()
-//         },
-//         userId: req.userId,
-//         role: req.role
-//     })
-
-//     // throw new Error("Method not implemented.");
-// }
-// // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// async listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant> {
-//     throw new Error("Method not implemented.");
-// }
-// // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// async attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger> {
-//     throw new Error("Method not implemented.");
-// }

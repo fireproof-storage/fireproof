@@ -12,12 +12,22 @@ import {
   isFPCCReqWaitConnectorReady,
 } from "./protocol-fp-cloud-conn.js";
 import { SuperThis } from "@fireproof/core-types-base";
-import { BuildURI, KeyedResolvOnce, Logger, Result } from "@adviser/cement";
+import { BuildURI, exception2Result, KeyedResolvSeq, Logger, Result } from "@adviser/cement";
+import {
+  DashApi,
+  AuthType,
+  ResCloudDbTokenBound,
+  ResCloudDbTokenNotBound,
+  isResCloudDbTokenBound,
+} from "@fireproof/core-protocols-dashboard";
+import { FPCloudClaimSchema, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { ClerkFPCCEvtEntity } from "./clerk-fpcc-evt-entity.js";
+import { jwtVerify } from "jose";
 
-interface IframeFPCCProtocolOpts {
-  dashboardURI: string;
-  waitForTokenURI: string;
-  backend: BackendFPCC;
+export interface IframeFPCCProtocolOpts {
+  readonly dashboardURI: string;
+  readonly cloudApiURI: string;
+  // readonly backend: BackendFPCC;
 }
 
 export interface DbKey {
@@ -29,102 +39,65 @@ export function dbAppKey(o: DbKey): string {
   return o.appId + ":" + o.dbName;
 }
 
-interface BackendFPCC {
+export type GetCloudDbTokenResult =
+  | {
+      readonly res: ResCloudDbTokenBound;
+      readonly claims: TokenAndClaims["claims"];
+    }
+  | {
+      readonly res: ResCloudDbTokenNotBound;
+    };
+export interface BackendFPCC {
+  readonly appId: string;
+  readonly dbName: string;
+  readonly deviceId: string;
+  isFPCCEvtAppReady(): boolean;
   getState(): "needs-login" | "waiting" | "ready";
   setState(state: "needs-login" | "waiting" | "ready"): "needs-login" | "waiting" | "ready";
-  waitForAuthToken(tid: string, tokenURI: string): Promise<string>;
+  waitForAuthToken(resultId: string): Promise<Result<TokenAndClaims>>;
   getFPCCEvtApp(): Promise<Result<FPCCEvtApp>>;
   setFPCCEvtApp(app: FPCCEvtApp): Promise<void>;
-  listRegisteredDbNames(): Promise<FPCCEvtApp[]>;
-  getTokenForDb(dbInfo: DbKey, authToken: string, src: Partial<FPCCMsgBase>): Promise<FPCCEvtApp>;
+  isUserLoggedIn(): Promise<boolean>;
+  getDashApiToken(): Promise<Result<AuthType>>;
+  // listRegisteredDbNames(): Promise<FPCCEvtApp[]>;
+  getCloudDbToken(auth: AuthType): Promise<Result<GetCloudDbTokenResult>>;
 }
 
-function getBackendFromRegisterLocalDbName(sthis: SuperThis, req: DbKey, deviceId: string): BackendFPCC {
-  return MemoryFPCCEvtEntity.fromRegisterLocalDbName(sthis, req, deviceId);
-}
+// function getBackendFromRegisterLocalDbName(sthis: SuperThis, dashApi: Api, req: DbKey, deviceId: string): BackendFPCC {
+//   return ClerkFPCCEvtEntity.fromRegisterLocalDbName(sthis, dashApi, req, deviceId);
+// }
 
-const memoryFPCCEvtEntities = new KeyedResolvOnce<BackendFPCC>();
-class MemoryFPCCEvtEntity implements BackendFPCC {
-  static fromRegisterLocalDbName(sthis: SuperThis, req: DbKey, deviceId: string): MemoryFPCCEvtEntity {
-    const key = dbAppKey(req);
-    return memoryFPCCEvtEntities.get(key).once(() => new MemoryFPCCEvtEntity(sthis, req, deviceId));
-  }
-  readonly dbKey: DbKey;
-  readonly deviceId: string;
-  readonly sthis: SuperThis;
-  state: "needs-login" | "waiting" | "ready" = "needs-login";
-  constructor(sthis: SuperThis, dbKey: DbKey, deviceId: string) {
-    this.dbKey = dbKey;
-    this.deviceId = deviceId;
-    this.sthis = sthis;
-  }
+const registeredDbs = new Map<string, BackendFPCC>();
 
-  fpccEvtApp?: FPCCEvtApp;
-  getFPCCEvtApp(): Promise<Result<FPCCEvtApp>> {
-    return Promise.resolve(this.fpccEvtApp ? Result.Ok(this.fpccEvtApp) : Result.Err(new Error("No FPCCEvtApp registered")));
-  }
+// static fromRegisterLocalDbName(sthis: SuperThis, dashApi: Api, req: DbKey, deviceId: string): ClerkFPCCEvtEntity {
+//   const key = dbAppKey(req);
+//   return clerkFPCCEvtEntities.get(key).once(() => new ClerkFPCCEvtEntity(sthis, dashApi, req, deviceId));
+// }
 
-  setFPCCEvtApp(app: FPCCEvtApp): Promise<void> {
-    this.fpccEvtApp = app;
-    return Promise.resolve();
-  }
-  getState(): "needs-login" | "waiting" | "ready" {
-    // For testing purposes, we always return "needs-login"
-    return this.state;
-  }
-
-  listRegisteredDbNames(): Promise<FPCCEvtApp[]> {
-    return Promise.all(
-      memoryFPCCEvtEntities
-        .values()
-        .map((key) => {
-          return key.value;
+export async function convertToTokenAndClaims(dashApi: DashApi, logger: Logger, token: string): Promise<Result<TokenAndClaims>> {
+  for (const jwkPublic of await dashApi.getClerkPublishableKey().then((r) => r.cloudPublicKeys)) {
+    const rUnknownClaims = await exception2Result(() => jwtVerify(token, jwkPublic));
+    if (rUnknownClaims.isErr() || !rUnknownClaims.Ok()?.payload) {
+      logger
+        .Warn()
+        .Err(rUnknownClaims)
+        .Any({
+          kid: jwkPublic.kid,
         })
-        .filter((v) => v.isOk())
-        .map((v) => v.Ok().getFPCCEvtApp()),
-    ).then((apps) => {
-      console.log("listRegisteredDbNames-o", apps);
-      return apps.filter((res) => res.isOk()).map((res) => res.Ok());
+        .Msg("Token failed");
+      continue;
+    }
+    const rFPCloudClaim = FPCloudClaimSchema.safeParse(rUnknownClaims.Ok().payload);
+    if (!rFPCloudClaim.success) {
+      logger.Warn().Err(rFPCloudClaim.error).Msg("Token claims validation failed");
+      continue;
+    }
+    return Result.Ok({
+      token,
+      claims: rFPCloudClaim.data,
     });
   }
-
-  setState(state: "needs-login" | "waiting" | "ready"): "needs-login" | "waiting" | "ready" {
-    const prev = this.state;
-    this.state = state;
-    return prev;
-  }
-
-  waitForAuthToken(tid: string, tokenURI: string): Promise<string> {
-    return sleep(100).then(() => `fake-auth-token:${tid}:${tokenURI}`);
-  }
-
-  async getTokenForDb(dbInfo: DbKey, authToken: string, originEvt: Partial<FPCCMsgBase>): Promise<FPCCEvtApp> {
-    await sleep(50);
-    return {
-      ...dbInfo,
-      tid: originEvt.tid ?? this.sthis.nextId(12).str,
-      type: "FPCCEvtApp",
-      src: "fp-cloud-connector",
-      dst: originEvt.src ?? "iframe",
-      appFavIcon: {
-        defURL: "https://example.com/favicon.ico",
-      },
-      devId: this.deviceId,
-      user: {
-        name: "Test User",
-        email: "test@example.com",
-        provider: "google",
-        iconURL: "https://example.com/icon.png",
-      },
-      localDb: {
-        dbName: dbInfo.dbName,
-        tenantId: "tenant-for-" + dbInfo.appId,
-        ledgerId: "ledger-for-" + dbInfo.appId,
-        accessToken: `auth-token-for-${dbInfo.appId}-${dbInfo.dbName}-with-${authToken}`,
-      },
-      env: {},
-    };
-  }
+  return Result.Err("No valid JWK found to verify token");
 }
 
 export class IframeFPCCProtocol implements FPCCProtocol {
@@ -132,14 +105,28 @@ export class IframeFPCCProtocol implements FPCCProtocol {
   readonly logger: Logger;
   readonly fpccProtocol: FPCCProtocolBase;
   readonly dashboardURI: string;
-  readonly waitForTokenURI: string;
+  readonly dashApiURI: string;
+  readonly dashApi: DashApi;
 
-  constructor(sthis: SuperThis, opts: Partial<IframeFPCCProtocolOpts> = {}) {
+  constructor(sthis: SuperThis, opts: IframeFPCCProtocolOpts) {
     this.sthis = sthis;
     this.logger = ensureLogger(sthis, "IframeFPCCProtocol");
     this.fpccProtocol = new FPCCProtocolBase(sthis, this.logger);
     this.dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/fp/cloud";
-    this.waitForTokenURI = opts.waitForTokenURI ?? "https://dev.connect.fireproof.direct/api";
+    this.dashApiURI = opts.cloudApiURI ?? "https://dev.connect.fireproof.direct/api";
+    console.log("IframeFPCCProtocol constructed with", opts);
+    this.dashApi = new DashApi(this.dashApiURI);
+  }
+
+  registeredDb(key: DbKey) {
+    const mapKey = dbAppKey(key);
+    const existing = registeredDbs.get(mapKey);
+    if (existing) {
+      return existing;
+    }
+    const newEntity = new ClerkFPCCEvtEntity(this.sthis, this.dashApi, key, this.getDeviceId());
+    registeredDbs.set(mapKey, newEntity);
+    return newEntity;
   }
 
   readonly handleMessage = (event: MessageEvent<unknown>): void => {
@@ -150,11 +137,12 @@ export class IframeFPCCProtocol implements FPCCProtocol {
     return "we-need-to-implement-device-id";
   }
 
-  async needsLogin(backend: BackendFPCC, event: FPCCReqRegisterLocalDbName, srcEvent: MessageEvent): Promise<void> {
+  async requestPageToDoLogin(backend: BackendFPCC, event: FPCCReqRegisterLocalDbName, srcEvent: MessageEvent): Promise<void> {
     const loginTID = this.sthis.nextId(16).str;
     const url = BuildURI.from(this.dashboardURI)
-      .setParam("back_url", "close")
+      .setParam("back_url", "wait-for-token") // dummy back_url since we don't return to the app here
       .setParam("result_id", loginTID)
+      .setParam("app_id", event.appId)
       .setParam("local_ledger_name", event.dbName);
     if (event.ledger) {
       url.setParam("ledger", event.ledger);
@@ -169,25 +157,18 @@ export class IframeFPCCProtocol implements FPCCProtocol {
       devId: this.getDeviceId(),
       loginURL: url.toString(),
       loginTID,
-      loadDbNames: [
-        ...(await backend.listRegisteredDbNames().then((apps) =>
-          apps.map((app) => ({
-            appId: app.appId,
-            dbName: app.localDb.dbName,
-          })),
-        )),
-        event,
-      ],
+      loadDbNames: [event],
       reason: "BindCloud",
     };
-    for (const dbInfo of fpccEvtNeedsLogin.loadDbNames) {
-      const backend = getBackendFromRegisterLocalDbName(this.sthis, dbInfo, this.getDeviceId());
-      backend.setState("waiting");
-    }
+
     this.sendMessage<FPCCEvtNeedsLogin>(fpccEvtNeedsLogin, srcEvent);
-    backend.waitForAuthToken(loginTID, this.waitForTokenURI).then((authToken) => {
+    backend.waitForAuthToken(loginTID).then((rAuthToken) => {
+      if (rAuthToken.isErr()) {
+        this.logger.Error().Err(rAuthToken).Msg("Failed to obtain auth token after login");
+        return;
+      }
       return Promise.allSettled(
-        fpccEvtNeedsLogin.loadDbNames.map(async (dbInfo) => backend.getTokenForDb(dbInfo, authToken, event)),
+        fpccEvtNeedsLogin.loadDbNames.map(async (dbInfo) => backend.getCloudDbToken(rAuthToken.Ok().token)),
       ).then((results) => {
         results.forEach((res) => {
           if (res.status === "fulfilled") {
@@ -204,7 +185,16 @@ export class IframeFPCCProtocol implements FPCCProtocol {
     });
   }
 
+  readonly stateSeq = new KeyedResolvSeq();
   runStateMachine(backend: BackendFPCC, event: FPCCMessage, srcEvent: MessageEvent<unknown>): Promise<void> {
+    return this.stateSeq.get(dbAppKey(backend)).add(() => this.atomicRunStateMachine(backend, event, srcEvent));
+  }
+
+  listRegisteredDbs(): BackendFPCC[] {
+    return Array.from(registeredDbs.values());
+  }
+
+  async atomicRunStateMachine(backend: BackendFPCC, event: FPCCMessage, srcEvent: MessageEvent<unknown>): Promise<void> {
     const bstate = backend.getState();
     switch (true) {
       case bstate === "ready" && isFPCCReqRegisterLocalDbName(event):
@@ -227,8 +217,101 @@ export class IframeFPCCProtocol implements FPCCProtocol {
         }
         break;
       case bstate === "needs-login" && isFPCCReqRegisterLocalDbName(event):
-        console.log("Backend needs login");
-        return this.needsLogin(backend, event, srcEvent);
+        {
+          console.log("Backend needs login", backend.appId, backend.dbName);
+          const rAuthToken = await backend.getDashApiToken();
+          if (rAuthToken.isErr()) {
+            console.log("User not logged in, requesting login", backend.appId, backend.dbName);
+            // make all dbs go to waiting state
+            backend.setState("waiting");
+            return this.requestPageToDoLogin(backend, event, srcEvent);
+          } else {
+            // const backend = this.registeredDb(event);
+
+            if (backend.isFPCCEvtAppReady()) {
+              const rFpccEvtApp = await backend.getFPCCEvtApp();
+              console.log("Backend is ready, sending FPCCEvtApp", backend.appId, backend.dbName, rFpccEvtApp);
+              if (rFpccEvtApp.isOk()) {
+                this.sendMessage<FPCCEvtApp>(rFpccEvtApp.Ok(), srcEvent);
+                return;
+              }
+            } else {
+              const rDbToken = await this.dashApi.getCloudDbToken({
+                auth: rAuthToken.Ok(),
+                appId: backend.appId,
+                localDbName: backend.dbName,
+                deviceId: backend.deviceId,
+              });
+              if (rDbToken.isErr()) {
+                console.log("Failed to obtain DB token, requesting login", backend.appId, backend.dbName, rDbToken);
+                // make all dbs go to waiting state
+                backend.setState("waiting");
+                await sleep(60000);
+                this.stateSeq.get(dbAppKey(backend)).add(() => this.atomicRunStateMachine(backend, event, srcEvent));
+                return;
+              }
+              if (rDbToken.Ok().status === "not-bound") {
+                console.log("DB is not bound, requesting login", backend.appId, backend.dbName);
+                // make all dbs go to waiting state
+                backend.setState("waiting");
+                return this.requestPageToDoLogin(backend, event, srcEvent);
+              } else {
+                const rCloudToken = await backend.getCloudDbToken(rAuthToken.Ok());
+                if (rCloudToken.isErr()) {
+                  this.logger.Warn().Err(rCloudToken).Msg("Failed to obtain DB token, re-running state machine after delay");
+                  await sleep(1000);
+                  this.stateSeq.get(dbAppKey(backend)).add(() => this.atomicRunStateMachine(backend, event, srcEvent));
+                  return;
+                }
+                const res = rCloudToken.Ok().res;
+                if (!isResCloudDbTokenBound(res)) {
+                  return this.requestPageToDoLogin(backend, event, srcEvent);
+                }
+                const rTandC = await convertToTokenAndClaims(this.dashApi, this.logger, res.token);
+                if (rTandC.isErr()) {
+                  this.logger
+                    .Warn()
+                    .Err(rTandC)
+                    .Msg("Failed to convert DB token to token and claims, re-running state machine after delay");
+                  await sleep(1000);
+                  this.stateSeq.get(dbAppKey(backend)).add(() => this.atomicRunStateMachine(backend, event, srcEvent));
+                  return;
+                }
+                const { token, claims } = rTandC.Ok();
+                const fpccEvtApp: FPCCEvtApp = {
+                  tid: event.tid,
+                  type: "FPCCEvtApp",
+                  src: "iframe",
+                  dst: event.src,
+                  appId: backend.appId,
+                  appFavIcon: {
+                    defURL: "https://fireproof.direct/favicon.ico",
+                  },
+                  devId: backend.deviceId,
+                  user: {
+                    name: claims.nickname ?? claims.userId,
+                    email: claims.email,
+                    provider: claims.provider ?? "unknown",
+                    iconURL: "https://fireproof.direct/favicon.ico",
+                  },
+                  localDb: {
+                    dbName: backend.dbName,
+                    tenantId: claims.selected.tenant,
+                    ledgerId: claims.selected.ledger,
+                    accessToken: token,
+                  },
+                  env: {},
+                };
+                await backend.setFPCCEvtApp(fpccEvtApp);
+                backend.setState("ready");
+                console.log("Sent FPCCEvtApp after obtaining DB token", backend.appId, backend.dbName);
+                this.sendMessage<FPCCEvtApp>(fpccEvtApp, srcEvent);
+                return;
+              }
+            }
+          }
+        }
+        break;
 
       default:
         throw this.logger.Error().Str("state", bstate).Msg("Unknown backend state").AsError();
@@ -240,7 +323,8 @@ export class IframeFPCCProtocol implements FPCCProtocol {
       switch (true) {
         case isFPCCReqRegisterLocalDbName(event): {
           this.logger.Info().Any(event).Msg("Iframe-Received request to register app");
-          const backend = getBackendFromRegisterLocalDbName(this.sthis, event, this.getDeviceId());
+          const backend = this.registeredDb(event);
+          backend.setState("needs-login");
           console.log("Running state machine for register local db name", backend.getState());
           this.runStateMachine(backend, event, srcEvent);
           break;

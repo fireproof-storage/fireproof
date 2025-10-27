@@ -9,7 +9,7 @@ export interface ToCloudAttachable extends Attachable {
 
 export interface TokenAndClaims {
   readonly token: string;
-  readonly claims?: FPCloudClaim;
+  readonly claims: FPCloudClaim;
   //   readonly exp: number;
   //   readonly tenant?: string;
   //   readonly ledger?: string;

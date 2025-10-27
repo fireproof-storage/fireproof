@@ -16,7 +16,8 @@ export class NodeFileSystem implements SysFileSystem {
   };
 
   async start(): Promise<SysFileSystem> {
-    this.fs = await import("node:fs/promises");
+    const fsPromise = "node:fs/promises";
+    this.fs = await import(/* @vite-ignore */ fsPromise);
     return this;
   }
   async mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
