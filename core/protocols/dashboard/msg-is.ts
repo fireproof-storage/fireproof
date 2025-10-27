@@ -20,6 +20,7 @@ import {
   ReqExtendToken,
   ReqClerkPublishableKey,
   ResClerkPublishableKey,
+  ReqCloudDbToken,
 } from "./msg-types.js";
 
 interface FPApiMsgInterface {
@@ -34,7 +35,8 @@ interface FPApiMsgInterface {
   isEnsureUser(jso: unknown): jso is ReqEnsureUser;
   isListTenantsByUser(jso: unknown): jso is ReqListTenantsByUser;
   isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant;
-  isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken;
+  isReqCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken;
+  isReqCloudDbToken(jso: unknown): jso is ReqCloudDbToken;
   isReqTokenByResultId(jso: unknown): jso is ReqTokenByResultId;
   isResTokenByResultId(jso: unknown): jso is ResTokenByResultId;
   isReqClerkPublishableKey(jso: unknown): jso is ReqClerkPublishableKey;
@@ -95,7 +97,7 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger {
     return hasType(jso, "reqDeleteLedger");
   }
-  isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken {
+  isReqCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken {
     return hasType(jso, "reqCloudSessionToken");
   }
   isReqTokenByResultId(jso: unknown): jso is ReqTokenByResultId {
@@ -112,5 +114,8 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isResClerkPublishableKey(jso: unknown): jso is ResClerkPublishableKey {
     return hasType(jso, "resClerkPublishableKey");
+  }
+  isReqCloudDbToken(jso: unknown): jso is ReqCloudDbToken {
+    return hasType(jso, "reqCloudDbToken");
   }
 }

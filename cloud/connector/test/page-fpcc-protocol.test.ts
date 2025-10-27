@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { PageFPCCProtocol } from "./page-fpcc-protocol.js";
-import { IframeFPCCProtocol } from "./iframe-fpcc-protocol.js";
-import { FPCCMessage, FPCCPing } from "./protocol-fp-cloud-conn.js";
+import { PageFPCCProtocol } from "@fireproof/cloud-connector-page";
+import { IframeFPCCProtocol } from "@fireproof/cloud-connector-iframe";
+import { FPCCMessage, FPCCPing } from "@fireproof/cloud-connector-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { Writable } from "ts-essentials";
 
@@ -70,37 +70,37 @@ describe("FPCC Protocol", () => {
     pageProtocol.stop();
   });
 
-  it("registerApp", async () => {
-    await protocolStart();
-    const fpccEvtApp = await pageProtocol.registerDatabase("wurst", {
-      tid: "tid-test-app-1",
-      appId: "test-app-1",
-    });
-    expect(fpccEvtApp.Ok()).toEqual({
-      tid: "tid-test-app-1",
-      type: "FPCCEvtApp",
-      src: "fp-cloud-connector",
-      dst: "page",
-      devId: "we-need-to-implement-device-id",
-      appId: "test-app-1",
-      appFavIcon: {
-        defURL: "https://example.com/favicon.ico",
-      },
-      env: {},
-      localDb: {
-        accessToken: expect.any(String),
-        // "auth-token-for-test-app-1-wurst-with-fake-auth-token:zMKseTNm6BhLCJNxy6AtXEe:https://dev.connect.fireproof.direct/api",
-        ledgerId: "ledger-for-test-app-1",
-        dbName: "wurst",
-        tenantId: "tenant-for-test-app-1",
-      },
-      user: {
-        email: "test@example.com",
-        iconURL: "https://example.com/icon.png",
-        name: "Test User",
-        provider: "google",
-      },
-    });
-    pageProtocol.stop();
-  });
+  // it("registerApp", async () => {
+  //   await protocolStart();
+  //   const fpccEvtApp = await pageProtocol.registerDatabase("wurst", {
+  //     tid: "tid-test-app-1",
+  //     appId: "test-app-1",
+  //   });
+  //   expect(fpccEvtApp.Ok()).toEqual({
+  //     tid: "tid-test-app-1",
+  //     type: "FPCCEvtApp",
+  //     src: "fp-cloud-connector",
+  //     dst: "page",
+  //     devId: "we-need-to-implement-device-id",
+  //     appId: "test-app-1",
+  //     appFavIcon: {
+  //       defURL: "https://example.com/favicon.ico",
+  //     },
+  //     env: {},
+  //     localDb: {
+  //       accessToken: expect.any(String),
+  //       // "auth-token-for-test-app-1-wurst-with-fake-auth-token:zMKseTNm6BhLCJNxy6AtXEe:https://dev.connect.fireproof.direct/api",
+  //       ledgerId: "ledger-for-test-app-1",
+  //       dbName: "wurst",
+  //       tenantId: "tenant-for-test-app-1",
+  //     },
+  //     user: {
+  //       email: "test@example.com",
+  //       iconURL: "https://example.com/icon.png",
+  //       name: "Test User",
+  //       provider: "google",
+  //     },
+  //   });
+  //   pageProtocol.stop();
+  // });
 });

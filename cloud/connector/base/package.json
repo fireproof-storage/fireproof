@@ -1,0 +1,41 @@
+{
+  "name": "@fireproof/cloud-connector-base",
+  "version": "0.0.0",
+  "description": "cloud connector shared",
+  "type": "module",
+  "scripts": {
+    "build": "core-cli tsc",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
+  },
+  "keywords": [
+    "ledger",
+    "JSON",
+    "document",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "contributors": [
+    "Meno Abels"
+  ],
+  "author": "Meno Abels",
+  "license": "AFL-2.0",
+  "homepage": "https://use-fireproof.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "dependencies": {
+    "@adviser/cement": "^0.4.53",
+    "@fireproof/core-runtime": "workspace:*",
+    "@fireproof/core-types-base": "workspace:*",
+    "@fireproof/core-types-protocols-cloud": "workspace:*",
+    "jose": "^6.0.12",
+    "ts-essentials": "^10.1.1",
+    "zod": "^4.1.12"
+  }
+}

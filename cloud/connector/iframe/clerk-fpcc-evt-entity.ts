@@ -1,11 +1,11 @@
 import { Lazy, Logger, poller, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { DashApi, AuthType, isResCloudDbTokenBound } from "@fireproof/core-protocols-dashboard";
-import { BackendFPCC, convertToTokenAndClaims, DbKey, GetCloudDbTokenResult } from "./iframe-fpcc-protocol.js";
+import { BackendFPCC, GetCloudDbTokenResult } from "./iframe-fpcc-protocol.js";
 import { ensureLogger, exceptionWrapper, sleep } from "@fireproof/core-runtime";
-import { FPCCEvtApp, FPCCMsgBase } from "./protocol-fp-cloud-conn.js";
 import { TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
-import { Clerk } from "@clerk/clerk-js";
+import { Clerk } from "@clerk/clerk-js/headless";
+import { DbKey, FPCCEvtApp, FPCCMsgBase, convertToTokenAndClaims } from "@fireproof/cloud-connector-base";
 
 const clerkSvc = Lazy(async (dashApi: DashApi) => {
   const clerkPubKey = await dashApi.getClerkPublishableKey({});

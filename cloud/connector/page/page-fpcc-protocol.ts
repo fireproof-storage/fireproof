@@ -1,8 +1,9 @@
 import { ensureLogger, sleep } from "@fireproof/core-runtime";
-import { FPCCProtocol, FPCCProtocolBase } from "./fpcc-protocol.js";
 import { SuperThis } from "@fireproof/core-types-base";
 import { Future, KeyedResolvOnce, Logger, ResolveOnce, Result } from "@adviser/cement";
 import {
+  FPCCProtocol,
+  FPCCProtocolBase,
   FPCCEvtApp,
   FPCCEvtNeedsLogin,
   FPCCMessage,
@@ -13,9 +14,8 @@ import {
   isFPCCEvtApp,
   isFPCCEvtConnectorReady,
   isFPCCEvtNeedsLogin,
-} from "./protocol-fp-cloud-conn.js";
-
-import { dbAppKey } from "./iframe-fpcc-protocol.js";
+  dbAppKey,
+} from "@fireproof/cloud-connector-base";
 
 export interface PageFPCCProtocolOpts {
   readonly maxConnectRetries?: number;

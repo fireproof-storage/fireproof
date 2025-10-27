@@ -7,12 +7,14 @@
 // import { userRef } from "./db-api-schema";
 
 import { Result } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core-types-base";
+import { JWKPublic, SuperThis } from "@fireproof/core-types-base";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
 import { FPApiSQL, type FPApiToken } from "./api.js";
 import {
+  isResCloudDbTokenBound,
+  ResClerkPublishableKey,
   type AdminTenant,
   type AuthType,
   type QueryUser,
@@ -21,9 +23,11 @@ import {
   type VerifiedAuth,
 } from "@fireproof/core-protocols-dashboard";
 import { queryEmail, queryNick } from "./sql-helper.js";
-import { ensureSuperThis, sts } from "@fireproof/core-runtime";
-import { describe, beforeAll, expect, it } from "vitest";
+import { ensureLogger, ensureSuperThis, sts } from "@fireproof/core-runtime";
+import { describe, beforeAll, expect, it, assert } from "vitest";
 import { resWellKnownJwks } from "./well-known-jwks.js";
+import { convertToTokenAndClaims } from "use-fireproof";
+import { base58btc } from "multiformats/bases/base58";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -79,6 +83,7 @@ describe("db-api", () => {
     reqs: ReqEnsureUser;
     ress: ResEnsureUser;
   }[];
+  const logger = ensureLogger(sthis, "dashboard-backend-db-api-test");
   beforeAll(async () => {
     const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
     db = drizzle(client);
@@ -1039,6 +1044,255 @@ describe("db-api", () => {
     expect(verifyExtended.payload.iss).toBe("TEST_I");
     expect(verifyExtended.payload.aud).toBe("TEST_A");
   });
+
+  // describe("getCloudDbToken", () => {
+  const ctx = {
+    secretToken:
+      "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+    publicToken:
+      "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
+    issuer: "TEST_I",
+    audience: "TEST_A",
+    validFor: 3600000, // 1 hour
+  };
+  // eslint-disable-next-line no-restricted-globals
+  const publicKey = JSON.parse(new TextDecoder().decode(base58btc.decode(ctx.publicToken))) as JWKPublic;
+
+  it("with ledger and tenant ", async () => {
+    const tenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        // ownerUserId: data[0].ress.user.userId,
+      },
+    });
+    const ledger = await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: tenant.Ok().tenant.tenantId,
+        name: `DB Token Ledger`,
+      },
+    });
+    const rRes = await fpApi.getCloudDbToken(
+      {
+        type: "reqCloudDbToken",
+        auth: data[0].reqs.auth,
+        tenantId: tenant.Ok().tenant.tenantId,
+        ledgerId: ledger.Ok().ledger.ledgerId,
+        localDbName: "not-existing-db",
+        appId: "not-existing-app",
+        deviceId: "not-existing-device",
+      },
+      ctx,
+    );
+    const res = rRes.Ok();
+    if (!isResCloudDbTokenBound(res)) {
+      assert.fail("Expected not bound response");
+      return;
+    }
+    const rTandC = await convertToTokenAndClaims(
+      {
+        getClerkPublishableKey(): Promise<ResClerkPublishableKey> {
+          return Promise.resolve({
+            type: "resClerkPublishableKey",
+            publishableKey: "undefined",
+            cloudPublicKeys: [publicKey],
+          });
+        },
+      },
+      logger,
+      res.token,
+    );
+    // console.log(rTandC);
+    expect(rTandC.isOk()).toBeTruthy();
+    const tandC = rTandC.Ok();
+    expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
+    expect(tandC.claims.selected.ledger).toBe(ledger.Ok().ledger.ledgerId);
+    expect(tandC.claims.ledgers).toEqual([
+      {
+        id: ledger.Ok().ledger.ledgerId,
+        right: "write",
+        role: "admin",
+      },
+    ]);
+  });
+  it("with non existing ledger and tenant", async () => {
+    const rRes = await fpApi.getCloudDbToken(
+      {
+        type: "reqCloudDbToken",
+        auth: data[0].reqs.auth,
+        ledgerId: "non-existing-ledger",
+        tenantId: "non-existing-tenant",
+        localDbName: `no-existing-local-db-${sthis.nextId(6).str}`,
+        appId: "not-existing-app",
+        deviceId: "not-existing-device",
+      },
+      ctx,
+    );
+    const res = rRes.Err();
+    expect(JSON.parse(res.message).msg).toEqual("User has no access to tenant or ledger");
+  });
+  it("without ledger and tenant but appId and localDbName not existing no ambiguity", async () => {
+    const tenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        defaultTenant: true,
+        // ownerUserId: data[0].ress.user.userId,
+      },
+    });
+    const rRes = await fpApi.getCloudDbToken(
+      {
+        type: "reqCloudDbToken",
+        auth: data[0].reqs.auth,
+        localDbName: `no-existing-local-db-${sthis.nextId(6).str}`,
+        appId: "not-existing-app",
+        deviceId: "not-existing-device",
+      },
+      ctx,
+    );
+    const res = rRes.Ok();
+    if (!isResCloudDbTokenBound(res)) {
+      assert.fail("Expected not bound response");
+      return;
+    }
+    const rTandC = await convertToTokenAndClaims(
+      {
+        getClerkPublishableKey(): Promise<ResClerkPublishableKey> {
+          return Promise.resolve({
+            type: "resClerkPublishableKey",
+            publishableKey: "undefined",
+            cloudPublicKeys: [publicKey],
+          });
+        },
+      },
+      logger,
+      res.token,
+    );
+    const tandC = rTandC.Ok();
+    // console.log(data.map((i) => i.ress.tenants).map((j) => j.map((k) => k.tenantId)));
+    expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
+    expect(tandC.claims.selected.ledger).toBeDefined();
+  });
+  it("without ledger and tenant but appId and localDbName existing", async () => {
+    const tenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        defaultTenant: true,
+        // ownerUserId: data[0].ress.user.userId,
+      },
+    });
+    const ledger = await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: tenant.Ok().tenant.tenantId,
+        name: `DB Token Ledger-${sthis.nextId(6).str}`,
+      },
+    });
+    const rRes = await fpApi.getCloudDbToken(
+      {
+        type: "reqCloudDbToken",
+        auth: data[0].reqs.auth,
+        localDbName: ledger.Ok().ledger.name,
+        appId: "not-existing-app",
+        deviceId: "not-existing-device",
+      },
+      ctx,
+    );
+    const res = rRes.Ok();
+    if (!isResCloudDbTokenBound(res)) {
+      assert.fail("Expected not bound response");
+      return;
+    }
+    const rTandC = await convertToTokenAndClaims(
+      {
+        getClerkPublishableKey(): Promise<ResClerkPublishableKey> {
+          return Promise.resolve({
+            type: "resClerkPublishableKey",
+            publishableKey: "undefined",
+            cloudPublicKeys: [publicKey],
+          });
+        },
+      },
+      logger,
+      res.token,
+    );
+    const tandC = rTandC.Ok();
+    // console.log(data.map((i) => i.ress.tenants).map((j) => j.map((k) => k.tenantId)));
+    expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
+    expect(tandC.claims.selected.ledger).toBe(ledger.Ok().ledger.ledgerId);
+  });
+  it("without ledger and tenant but appId and localDbName and ambiguity", async () => {
+    const tenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        defaultTenant: true,
+        // ownerUserId: data[0].ress.user.userId,
+      },
+    });
+    const name = `DB Token Ledger-${sthis.nextId(6).str}`;
+    await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: tenant.Ok().tenant.tenantId,
+        name,
+      },
+    });
+    await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: tenant.Ok().tenant.tenantId,
+        name,
+      },
+    });
+
+    const rRes = await fpApi.getCloudDbToken(
+      {
+        type: "reqCloudDbToken",
+        auth: data[0].reqs.auth,
+        tenantId: tenant.Ok().tenant.tenantId,
+        localDbName: name,
+        appId: "not-existing-app",
+        deviceId: "not-existing-device",
+      },
+      ctx,
+    );
+    const res = rRes.Ok();
+    if (!isResCloudDbTokenBound(res)) {
+      assert.fail("Expected not bound response");
+      return;
+    }
+    const rTandC = await convertToTokenAndClaims(
+      {
+        getClerkPublishableKey(): Promise<ResClerkPublishableKey> {
+          return Promise.resolve({
+            type: "resClerkPublishableKey",
+            publishableKey: "undefined",
+            cloudPublicKeys: [publicKey],
+          });
+        },
+      },
+      logger,
+      res.token,
+    );
+    const tandC = rTandC.Ok();
+    // console.log(data.map((i) => i.ress.tenants).map((j) => j.map((k) => k.tenantId)));
+    expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
+    expect(tandC.claims.selected.ledger).toBe("xxx"); //ledger.Ok().ledger.ledgerId);
+  });
+  it("without ledger but tenant appId and localDbName and no ambiguity", async () => {
+    /* empty */
+  });
+  it("without ledger but tenant appId and localDbName and ambiguity", async () => {
+    /* empty */
+  });
+  // });
 });
 
 it("queryEmail strips +....@", async () => {
