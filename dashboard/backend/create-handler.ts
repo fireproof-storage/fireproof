@@ -302,7 +302,7 @@ export async function createHandler<T extends DashSqlite>(
         res = fpApi.deleteLedger(jso);
         break;
 
-      case FPAPIMsg.isCloudSessionToken(jso):
+      case FPAPIMsg.isReqCloudSessionToken(jso):
         res = fpApi.getCloudSessionToken(jso);
         break;
 
@@ -316,6 +316,10 @@ export async function createHandler<T extends DashSqlite>(
 
       case FPAPIMsg.isReqClerkPublishableKey(jso):
         res = fpApi.getClerkPublishableKey(jso);
+        break;
+
+      case FPAPIMsg.isReqCloudDbToken(jso):
+        res = fpApi.getCloudDbToken(jso);
         break;
 
       default:

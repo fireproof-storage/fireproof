@@ -31,6 +31,8 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/cloud-connector-base": "workspace:*",
+    "@fireproof/cloud-connector-page": "workspace:*",
     "@fireproof/vendor": "workspace:0.0.0",
     "dompurify": "^3.3.0",
     "jose": "^6.1.0",

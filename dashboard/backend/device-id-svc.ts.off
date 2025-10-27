@@ -1,0 +1,160 @@
+import { SuperThis } from "@fireproof/core-types-base";
+import { DeviceIdProtocol, DeviceIdProtocolSrv, DeviceIdProtocolSrvOpts, GenerateSerialNumber } from "@fireproof/core-device-id";
+import { Result } from "@adviser/cement";
+import { calculateJwkThumbprint } from "jose";
+import { ClerkVerifyAuth, ReqEnsureDeviceId, ResEnsureDeviceId } from "@fireproof/core-protocols-dashboard";
+import { ActiveUser } from "./api.js";
+import { DashSqlite } from "./create-handler.js";
+import { sqlDevIdsPerUser } from "./device-ids.js";
+import { and, eq, gt, gte } from "drizzle-orm/sql/expressions";
+
+export interface DeviceIdSvc extends Omit<DeviceIdProtocolSrvOpts, "actions"> {
+  readonly db: DashSqlite;
+  readonly reAuthTime?: number; // seconds typically 30 days
+  readonly maxDevicesPerUser?: number; // typically 10
+  readonly revalidateTime?: number; // seconds, typically 3 days
+}
+
+export class DeviceIdService {
+  static async create(sthis: SuperThis, opts: DeviceIdSvc): Promise<Result<DeviceIdService>> {
+    const svc = new DeviceIdService(sthis, {
+      db: opts.db,
+      reAuthTime: opts.reAuthTime || (365 / 2) * 24 * 60 * 60,
+      maxDevicesPerUser: opts.maxDevicesPerUser || 10,
+      revalidateTime: opts.revalidateTime || ~~((opts.reAuthTime || (365 / 2) * 24 * 60 * 60) / 100),
+    });
+    const res = await DeviceIdProtocolSrv.create(sthis, {
+      ...opts,
+      // actions: {
+      //     generateSerialNumber: svc.generateSerialNumber.bind(svc),
+      // },
+    });
+    if (res.isErr()) {
+      return Result.Err(res);
+    }
+    return Result.Ok(svc);
+  }
+
+  readonly sthis: SuperThis;
+  deviceIdProtocol!: DeviceIdProtocol;
+  readonly reAuthTime: number;
+  readonly revalidateTime: number; // window
+  readonly maxDevicesPerUser: number;
+
+  constructor(
+    sthis: SuperThis,
+    readonly db: DashSqlite,
+    opts: DeviceIdSvc,
+  ) {
+    this.sthis = sthis;
+    this.db = db;
+    this.reAuthTime = opts.reAuthTime || (365 / 2) * 24 * 60 * 60;
+    this.maxDevicesPerUser = opts.maxDevicesPerUser || 10;
+    this.revalidateTime = opts.revalidateTime || ~~(this.reAuthTime / 100);
+  }
+
+  isValidToAddDevice(userId: string): Promise<Result<boolean>> {
+    if (getResult.status !== "active") {
+      return Result.Err(`Device ID not active: ${getResult.status}:${getResult.deviceId}:${getResult.userId}`);
+    }
+    const allDevs = await this.db
+      .select()
+      .from(sqlDevIdsPerUser)
+      .where(
+        and(
+          eq(sqlDevIdsPerUser.userId, auth.user.userId),
+          gte(sqlDevIdsPerUser.updatedAt, new Date(Date.now() - this.reAuthTime * 1000).toISOString()),
+        ),
+      )
+      .all();
+    if (!allDevs || allDevs.length === 0) {
+      return Result.Err("No active device IDs found for user");
+    }
+    const active = allDevs.filter((d) => d.status === "active");
+    if (active.length !== allDevs.length) {
+      return Result.Err(`UserID is not active: ${auth.user.userId}`);
+    }
+    if (allDevs.length >= this.maxDevicesPerUser) {
+      return Result.Err(`Too many device IDs for user: ${allDevs.length} > ${this.maxDevicesPerUser}`);
+    }
+  }
+
+  async ensureDeviceId(auth: ActiveUser<ClerkVerifyAuth>, req: ReqEnsureDeviceId): Promise<Result<ResEnsureDeviceId>> {
+    const res = await this.deviceIdProtocol.issueCertificate(req.csrJWT, {
+      generateSerialNumber: async (pub, opts) => {
+        if (!auth.user) {
+          return Result.Err("User not authenticated");
+        }
+        const hash = await calculateJwkThumbprint(pub);
+        const getResult = await this.db
+          .select()
+          .from(sqlDevIdsPerUser)
+          .where(
+            and(
+              eq(sqlDevIdsPerUser.userId, auth.user.userId),
+              eq(sqlDevIdsPerUser.deviceId, hash),
+              gt(sqlDevIdsPerUser.updatedAt, new Date(Date.now() - this.reAuthTime * 1000).toISOString()),
+            ),
+          )
+          .get();
+        if (!getResult) {
+          const isAddable = await this.isValidToAddDevice(auth.user.userId);
+          if (isAddable.isErr()) {
+            return Result.Err(isAddable.Err());
+          }
+          const now = new Date().toISOString();
+          const val = await this.db
+            .insert(sqlDevIdsPerUser)
+            .values({
+              deviceId: hash,
+              userId: auth.user.userId,
+              status: "active",
+              serial: 1,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning()
+            .get();
+          return Result.Ok({
+            serialNr: val.serial,
+            issuedAt: new Date(val.updatedAt),
+            expiryAt: new Date(val.updatedAt + opts.validityPeriod * 1000), // default 1 year
+          } satisfies GenerateSerialNumber);
+        }
+        if (getResult.status !== "active") {
+          return Result.Err(`Device ID not active: ${getResult.status}:${getResult.deviceId}:${getResult.userId}`);
+        }
+        if (new Date(getResult.updatedAt) < new Date(Date.now() - opts.validityPeriod * 1000)) {
+          return Result.Ok({
+            reauth: true,
+          });
+        }
+        if (new Date(getResult.updatedAt) < new Date(Date.now() + (opts.validityPeriod - opts.revalidateTime) * 1000)) {
+          const now = new Date();
+          await this.db
+            .update(sqlDevIdsPerUser)
+            .set({
+              updatedAt: now.toISOString(),
+              serial: getResult.serial + 1,
+            })
+            .where(and(eq(sqlDevIdsPerUser.deviceId, getResult.deviceId), eq(sqlDevIdsPerUser.userId, getResult.userId)))
+            .run();
+          return Result.Ok({
+            ...getResult,
+            serialNr: getResult.serial + 1,
+            status: "reActivated",
+            issuedAt: now,
+          } satisfies GenerateSerialNumber);
+        }
+      },
+    });
+    if (res.isErr()) {
+      return Result.Err(res);
+    }
+
+    // .update(sqlInviteTickets)
+    // .set({ status: "expired" })
+    // .where(and(eq(sqlInviteTickets.status, "pending"), lt(sqlInviteTickets.expiresAfter, new Date().toISOString())))
+    // .run();
+  }
+}

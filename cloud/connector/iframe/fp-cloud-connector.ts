@@ -1,6 +1,6 @@
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { BuildURI, Lazy, URI } from "@adviser/cement";
-import { FPCCMessage } from "./protocol-fp-cloud-conn.js";
+import { FPCCMessage } from "@fireproof/cloud-connector-base";
 import { IframeFPCCProtocol } from "./iframe-fpcc-protocol.js";
 
 export const fpCloudConnector = Lazy(async (loadUrlStr: string) => {

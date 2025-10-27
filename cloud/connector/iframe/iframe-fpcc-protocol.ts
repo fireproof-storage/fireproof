@@ -1,6 +1,6 @@
 import { ensureLogger, sleep } from "@fireproof/core-runtime";
-import { FPCCProtocol, FPCCProtocolBase } from "./fpcc-protocol.js";
 import {
+  convertToTokenAndClaims,
   FPCCEvtApp,
   FPCCEvtConnectorReady,
   FPCCEvtNeedsLogin,
@@ -10,9 +10,13 @@ import {
   FPCCSendMessage,
   isFPCCReqRegisterLocalDbName,
   isFPCCReqWaitConnectorReady,
-} from "./protocol-fp-cloud-conn.js";
+  FPCCProtocol,
+  FPCCProtocolBase,
+  dbAppKey,
+  DbKey,
+} from "@fireproof/cloud-connector-base";
 import { SuperThis } from "@fireproof/core-types-base";
-import { BuildURI, exception2Result, KeyedResolvSeq, Logger, Result } from "@adviser/cement";
+import { BuildURI, KeyedResolvSeq, Logger, Result } from "@adviser/cement";
 import {
   DashApi,
   AuthType,
@@ -20,23 +24,13 @@ import {
   ResCloudDbTokenNotBound,
   isResCloudDbTokenBound,
 } from "@fireproof/core-protocols-dashboard";
-import { FPCloudClaimSchema, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 import { ClerkFPCCEvtEntity } from "./clerk-fpcc-evt-entity.js";
-import { jwtVerify } from "jose";
 
 export interface IframeFPCCProtocolOpts {
   readonly dashboardURI: string;
   readonly cloudApiURI: string;
   // readonly backend: BackendFPCC;
-}
-
-export interface DbKey {
-  readonly appId: string;
-  readonly dbName: string;
-}
-
-export function dbAppKey(o: DbKey): string {
-  return o.appId + ":" + o.dbName;
 }
 
 export type GetCloudDbTokenResult =
@@ -73,32 +67,6 @@ const registeredDbs = new Map<string, BackendFPCC>();
 //   const key = dbAppKey(req);
 //   return clerkFPCCEvtEntities.get(key).once(() => new ClerkFPCCEvtEntity(sthis, dashApi, req, deviceId));
 // }
-
-export async function convertToTokenAndClaims(dashApi: DashApi, logger: Logger, token: string): Promise<Result<TokenAndClaims>> {
-  for (const jwkPublic of await dashApi.getClerkPublishableKey().then((r) => r.cloudPublicKeys)) {
-    const rUnknownClaims = await exception2Result(() => jwtVerify(token, jwkPublic));
-    if (rUnknownClaims.isErr() || !rUnknownClaims.Ok()?.payload) {
-      logger
-        .Warn()
-        .Err(rUnknownClaims)
-        .Any({
-          kid: jwkPublic.kid,
-        })
-        .Msg("Token failed");
-      continue;
-    }
-    const rFPCloudClaim = FPCloudClaimSchema.safeParse(rUnknownClaims.Ok().payload);
-    if (!rFPCloudClaim.success) {
-      logger.Warn().Err(rFPCloudClaim.error).Msg("Token claims validation failed");
-      continue;
-    }
-    return Result.Ok({
-      token,
-      claims: rFPCloudClaim.data,
-    });
-  }
-  return Result.Err("No valid JWK found to verify token");
-}
 
 export class IframeFPCCProtocol implements FPCCProtocol {
   readonly sthis: SuperThis;
@@ -167,21 +135,78 @@ export class IframeFPCCProtocol implements FPCCProtocol {
         this.logger.Error().Err(rAuthToken).Msg("Failed to obtain auth token after login");
         return;
       }
-      return Promise.allSettled(
-        fpccEvtNeedsLogin.loadDbNames.map(async (dbInfo) => backend.getCloudDbToken(rAuthToken.Ok().token)),
-      ).then((results) => {
-        results.forEach((res) => {
-          if (res.status === "fulfilled") {
-            const fpccEvtApp = res.value;
-            backend.setFPCCEvtApp(fpccEvtApp);
-            this.sendMessage<FPCCEvtApp>(fpccEvtApp, srcEvent);
-            backend.setState("ready");
-            // this.logger.Info().Any(fpccEvtApp).Msg("Successfully obtained token for DB after login");
-          } else {
-            this.logger.Error().Err(res.reason).Msg("Failed to obtain token for DB after login");
+      return backend
+        .getCloudDbToken({
+          type: "clerk",
+          token: rAuthToken.Ok().token,
+        })
+        .then((rCloudToken) => {
+          if (rCloudToken.isErr()) {
+            throw this.logger
+              .Error()
+              .Err(rCloudToken)
+              .Any({
+                appId: backend.appId,
+                dbName: backend.dbName,
+              })
+              .Msg("Failed to obtain DB token after login")
+              .AsError();
           }
+          const cloudToken = rCloudToken.Ok();
+          switch (cloudToken.res.status) {
+            case "not-bound":
+              throw this.logger
+                .Error()
+                .Str("status", cloudToken.res.status)
+                .Any({
+                  appId: backend.appId,
+                  dbName: backend.dbName,
+                })
+                .Msg("DB is still not bound after login")
+                .AsError();
+          }
+          return cloudToken.res.token;
+        })
+        .then((cloudToken) => convertToTokenAndClaims(this.dashApi, this.logger, cloudToken))
+        .then((rTanc) => {
+          if (rTanc.isErr()) {
+            throw this.logger
+              .Error()
+              .Err(rTanc)
+              .Any({
+                appId: backend.appId,
+                dbName: backend.dbName,
+              })
+              .Msg("Failed to convert DB token to token and claims after login");
+          }
+          const { claims, token } = rTanc.Ok();
+          const fpccEvtApp = {
+            tid: event.tid,
+            dst: event.src,
+            type: "FPCCEvtApp",
+            appId: backend.appId,
+            appFavIcon: {
+              defURL: "https://fireproof.direct/favicon.ico",
+            },
+            devId: "",
+            user: {
+              name: claims.nickname ?? claims.userId,
+              email: claims.email,
+              provider: claims.provider ?? "unknown",
+              iconURL: "https://fireproof.direct/favicon.ico",
+            },
+            localDb: {
+              dbName: backend.dbName,
+              tenantId: claims.selected.tenant,
+              ledgerId: claims.selected.ledger,
+              accessToken: token,
+            },
+            env: {}, // future env vars
+          } satisfies FPCCSendMessage<FPCCEvtApp>;
+          backend.setState("ready");
+          backend.setFPCCEvtApp(this.sendMessage<FPCCEvtApp>(fpccEvtApp, srcEvent));
+          // this.logger.Info().Any(fpccEvtApp).Msg("Successfully obtained token for DB after login");
         });
-      });
     });
   }
 
@@ -369,9 +394,9 @@ export class IframeFPCCProtocol implements FPCCProtocol {
     return this;
   }
 
-  sendMessage<T extends FPCCMsgBase>(message: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void {
+  sendMessage<T extends FPCCMsgBase>(message: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): T {
     // message.src = window.location.href;
     // console.log("IframeFPCCProtocol sendMessage called", message);
-    this.fpccProtocol.sendMessage(message, srcEvent);
+    return this.fpccProtocol.sendMessage(message, srcEvent);
   }
 }

@@ -137,6 +137,7 @@ export interface FPApiParameters {
 
 export type InCreateTenantParams = {
   readonly name?: string;
+  readonly defaultTenant?: boolean;
   readonly ownerUserId: string;
 } & Partial<FPApiParameters>;
 
@@ -433,6 +434,12 @@ export interface ResCloudDbTokenNotBound {
   readonly type: "resCloudDbToken";
   readonly status: "not-bound";
   readonly reason: string;
+  // helps in the binding process
+  readonly ledgers: {
+    readonly ledgerId: string;
+    readonly tenantId: string;
+    readonly name: string;
+  }[];
 }
 
 export type ResCloudDbToken = ResCloudDbTokenBound | ResCloudDbTokenNotBound;

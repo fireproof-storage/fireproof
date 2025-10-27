@@ -3,9 +3,9 @@
  */
 
 import { Future } from "@adviser/cement";
-import { PageFPCCProtocol } from "./page-fpcc-protocol.js";
-import { FPCCMessage } from "./protocol-fp-cloud-conn.js";
 import { Writable } from "ts-essentials";
+import { PageFPCCProtocol } from "./page-fpcc-protocol.js";
+import { FPCCMessage } from "@fireproof/cloud-connector-base";
 
 /**
  * Creates an iframe element with the specified source

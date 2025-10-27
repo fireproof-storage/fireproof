@@ -4,12 +4,10 @@ import { ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-typ
 import { ensureLogger, ensureSuperThis, hashObjectSync, sleep } from "@fireproof/core-runtime";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
 import { defaultOverlayCss, defaultOverlayHtml } from "./overlay-html-defaults.js";
+import { PageFPCCProtocol, initializeIframe } from "@fireproof/cloud-connector-page";
 
-import { initializeIframe } from "./fp-cloud-connector/page-handler.js";
-import { PageFPCCProtocol } from "./fp-cloud-connector/page-fpcc-protocol.js";
-import { FPCCEvtApp, FPCCEvtNeedsLogin } from "./fp-cloud-connector/protocol-fp-cloud-conn.js";
+import { FPCCEvtApp, FPCCEvtNeedsLogin, dbAppKey } from "@fireproof/cloud-connector-base";
 import DOMPurify from "dompurify";
-import { dbAppKey } from "./fp-cloud-connector/iframe-fpcc-protocol.js";
 
 export interface FPCloudConnectOpts extends RedirectStrategyOpts {
   readonly dashboardURI?: string;
