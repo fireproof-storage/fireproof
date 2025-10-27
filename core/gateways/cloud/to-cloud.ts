@@ -2,7 +2,7 @@ import { BuildURI, CoerceURI, URI, AppContext, KeyedResolvOnce, Lazy, Result } f
 import { Ledger } from "@fireproof/core-types-base";
 import {
   FPCloudClaim,
-  FPCloudClaimParseSchema,
+  FPCloudClaimSchema,
   FPCloudUri,
   hashableFPCloudRef,
   ToCloudAttachable,
@@ -36,7 +36,7 @@ export class SimpleTokenStrategy implements TokenStrategie {
     let claims: FPCloudClaim;
     try {
       const rawClaims = decodeJwt(jwk);
-      const rParse = FPCloudClaimParseSchema.safeParse(rawClaims);
+      const rParse = FPCloudClaimSchema.safeParse(rawClaims);
       if (rParse.success) {
         claims = rParse.data;
       } else {

@@ -1,4 +1,4 @@
-import { KeyedResolvOnce, Lazy, Logger, ResolveSeq, Result, URI } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Lazy, Logger, ResolveSeq, Result, URI } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
 import { ensureLogger, ensureSuperThis, hashObjectSync, sleep } from "@fireproof/core-runtime";
@@ -12,6 +12,8 @@ import DOMPurify from "dompurify";
 import { dbAppKey } from "./fp-cloud-connector/iframe-fpcc-protocol.js";
 
 export interface FPCloudConnectOpts extends RedirectStrategyOpts {
+  readonly dashboardURI?: string;
+  readonly cloudApiURI?: string;
   readonly fpCloudConnectURL: string;
   readonly title?: string;
   readonly sthis?: SuperThis;
@@ -54,10 +56,18 @@ export class FPCloudConnectStrategy implements TokenStrategie {
   constructor(opts: Partial<FPCloudConnectOpts> = {}) {
     this.overlayCss = opts.overlayCss ?? defaultOverlayCss();
     this.overlayHtml = opts.overlayHtml ?? defaultOverlayHtml;
-    this.fpCloudConnectURL =
+    const fpCloudConnectURL = BuildURI.from(
       opts.fpCloudConnectURL ??
-      // eslint-disable-next-line no-restricted-globals
-      new URL("fp-cloud-connector/injected-iframe.html", import.meta.url).toString();
+        // eslint-disable-next-line no-restricted-globals
+        new URL("fp-cloud-connector/injected-iframe.html", import.meta.url).toString(),
+    );
+    if (opts.dashboardURI) {
+      fpCloudConnectURL.setParam("dashboard_uri", opts.dashboardURI);
+    }
+    if (opts.cloudApiURI) {
+      fpCloudConnectURL.setParam("cloud_api_uri", opts.cloudApiURI);
+    }
+    this.fpCloudConnectURL = fpCloudConnectURL.toString();
     this.title = opts.title ?? "Fireproof Login";
     this.sthis = opts.sthis ?? ensureSuperThis();
     this.logger = ensureLogger(this.sthis, "FPCloudConnectStrategy");

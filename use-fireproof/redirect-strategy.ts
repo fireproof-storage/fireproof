@@ -3,7 +3,7 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
 import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
-import { Api } from "@fireproof/core-protocols-dashboard";
+import { DashApi } from "@fireproof/core-protocols-dashboard";
 import { WebToCloudCtx } from "./react/types.js";
 import { WebCtx } from "./react/use-attach.js";
 import { hashObjectSync } from "@fireproof/core-runtime";
@@ -120,7 +120,7 @@ export class RedirectStrategy implements TokenStrategie {
 
   async getTokenAndClaimsByResultId(
     logger: Logger,
-    dashApi: Api,
+    dashApi: DashApi,
     resultId: undefined | string,
     opts: ToCloudOpts,
     resolve: (value: TokenAndClaims) => void,
@@ -157,7 +157,7 @@ export class RedirectStrategy implements TokenStrategie {
       throw new Error("waitForToken not working on redirect strategy");
     }
     const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    const dashApi = new Api(webCtx.tokenApiURI);
+    const dashApi = new DashApi(webCtx.tokenApiURI);
     this.waitState = "started";
     return new Promise<Result<TokenAndClaims>>((resolve) => {
       this.getTokenAndClaimsByResultId(logger, dashApi, this.resultId, opts, (tokenAndClaims) => {

@@ -11,7 +11,10 @@ describe("FPCC Protocol", () => {
     iframeHref: "https://example.com/iframe",
     loginWaitTime: 1000,
   });
-  const iframeProtocol = new IframeFPCCProtocol(sthis);
+  const iframeProtocol = new IframeFPCCProtocol(sthis, {
+    dashboardURI: "https://example.com/dashboard",
+    cloudApiURI: "https://example.com/wait-for-token",
+  });
 
   iframeProtocol.injectSend((evt: Writable<FPCCMessage>) => {
     evt.src = evt.src ?? "iframe";

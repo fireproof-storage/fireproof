@@ -7,10 +7,10 @@ export const sqlTenants = sqliteTable("Tenants", {
   ownerUserId: text()
     .notNull()
     .references(() => sqlUsers.userId),
-  maxAdminUsers: int().notNull().default(5),
-  maxMemberUsers: int().notNull().default(5),
-  maxInvites: int().notNull().default(10),
-  maxLedgers: int().notNull().default(5),
+  maxAdminUsers: int().notNull(), //.default(5),
+  maxMemberUsers: int().notNull(), //.default(5),
+  maxInvites: int().notNull(), // .default(10),
+  maxLedgers: int().notNull(), // .default(5),
   status: text().notNull().default("active"),
   statusReason: text().notNull().default("just created"),
   createdAt: text().notNull(),

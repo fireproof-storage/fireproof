@@ -82,7 +82,20 @@ describe("db-api", () => {
   beforeAll(async () => {
     const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
     db = drizzle(client);
-    fpApi = new FPApiSQL(sthis, db, { clerk: new TestApiToken(sthis) });
+    fpApi = new FPApiSQL(
+      sthis,
+      db,
+      { clerk: new TestApiToken(sthis) },
+      {
+        cloudPublicKeys: [],
+        clerkPublishableKey: "test-clerk-publishable-key",
+        maxTenants: 10,
+        maxAdminUsers: 5,
+        maxMemberUsers: 5,
+        maxInvites: 10,
+        maxLedgers: 5,
+      },
+    );
 
     data.push(
       ...Array(10)

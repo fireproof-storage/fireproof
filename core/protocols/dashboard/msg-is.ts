@@ -18,6 +18,8 @@ import {
   ReqDeleteLedger,
   ResTokenByResultId,
   ReqExtendToken,
+  ReqClerkPublishableKey,
+  ResClerkPublishableKey,
 } from "./msg-types.js";
 
 interface FPApiMsgInterface {
@@ -35,6 +37,8 @@ interface FPApiMsgInterface {
   isCloudSessionToken(jso: unknown): jso is ReqCloudSessionToken;
   isReqTokenByResultId(jso: unknown): jso is ReqTokenByResultId;
   isResTokenByResultId(jso: unknown): jso is ResTokenByResultId;
+  isReqClerkPublishableKey(jso: unknown): jso is ReqClerkPublishableKey;
+  isResClerkPublishableKey(jso: unknown): jso is ResClerkPublishableKey;
   isListLedgersByUser(jso: unknown): jso is ReqListLedgersByUser;
   isCreateLedger(jso: unknown): jso is ReqCreateLedger;
   isUpdateLedger(jso: unknown): jso is ReqUpdateLedger;
@@ -102,5 +106,11 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isReqExtendToken(jso: unknown): jso is ReqExtendToken {
     return hasType(jso, "reqExtendToken");
+  }
+  isReqClerkPublishableKey(jso: unknown): jso is ReqClerkPublishableKey {
+    return hasType(jso, "reqClerkPublishableKey");
+  }
+  isResClerkPublishableKey(jso: unknown): jso is ResClerkPublishableKey {
+    return hasType(jso, "resClerkPublishableKey");
   }
 }
