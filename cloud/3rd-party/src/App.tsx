@@ -10,8 +10,8 @@ function App() {
       strategy: new FPCloudConnectStrategy({
         //   overlayCss: defaultOverlayCss,
         overlayHtml,
-        dashboardURI: "http://localhost:7370/fp/cloud/api/token",
-        cloudApiURI: "http://localhost:7370/api",
+        // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
+        // cloudApiURI: "http://localhost:7370/api",
       }),
       // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
       // tenant: "3rd-party",
