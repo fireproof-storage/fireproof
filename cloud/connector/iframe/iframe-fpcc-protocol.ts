@@ -82,7 +82,7 @@ export class IframeFPCCProtocol implements FPCCProtocol {
     this.fpccProtocol = new FPCCProtocolBase(sthis, this.logger);
     this.dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/fp/cloud";
     this.dashApiURI = opts.cloudApiURI ?? "https://dev.connect.fireproof.direct/api";
-    console.log("IframeFPCCProtocol constructed with", opts);
+    // console.log("IframeFPCCProtocol constructed with", opts);
     this.dashApi = new DashApi(this.dashApiURI);
   }
 

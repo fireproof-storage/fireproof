@@ -88,7 +88,7 @@ async function createBoundToken(
     .where(and(eq(sqlLedgers.ledgerId, req.ledgerId), eq(sqlLedgers.tenantId, req.tenantId)))
     .get();
   if (tandl) {
-    console.log("createBoundToken", auth);
+    // console.log("createBoundToken", auth);
     return Result.Ok({
       type: "resCloudDbToken",
       status: "bound",
@@ -175,7 +175,7 @@ export async function getCloudDbToken(
   }
 
   let tenantToCreateLedger: string;
-  console.log("No binding found for localDbName:", req.localDbName, "appId:", req.appId, "tenantId:", req.tenantId);
+  // console.log("No binding found for localDbName:", req.localDbName, "appId:", req.appId, "tenantId:", req.tenantId);
   if (!req.tenantId) {
     const rListLedgers = await api.listLedgersByUser({
       type: "reqListLedgersByUser",
@@ -185,7 +185,7 @@ export async function getCloudDbToken(
       return Result.Err(rListLedgers.Err());
     }
     const ledgersPerTenant = rListLedgers.Ok().ledgers.filter((l) => l.name === req.localDbName);
-    console.log("Ledgers with names for user:", auth.user.userId, ledgersPerTenant);
+    // console.log("Ledgers with names for user:", auth.user.userId, ledgersPerTenant);
     if (ledgersPerTenant.length === 1) {
       return createBoundToken(
         {
@@ -225,7 +225,7 @@ export async function getCloudDbToken(
       return logger.Error().Any({ userId: auth.user.userId }).Msg("User has no default tenant").ResultError();
     }
 
-    console.log("Using default tenant for user:", auth.user.userId, "->", defaultTenant.tenantId, rListTenants.Ok().tenants);
+    // console.log("Using default tenant for user:", auth.user.userId, "->", defaultTenant.tenantId, rListTenants.Ok().tenants);
     tenantToCreateLedger = defaultTenant.tenantId;
 
     // get all ledgers for user
@@ -405,9 +405,9 @@ export async function getCloudSessionToken(
     // });
   } else if (req.resultId) {
     api.sthis.logger.Warn().Any({ resultId: req.resultId }).Msg("resultId too short");
-    console.log("getCloudSessionToken-failed", {
-      result: req.resultId,
-    });
+    // console.log("getCloudSessionToken-failed", {
+    // result: req.resultId,
+    // });
   }
   // console.log(">>>>-post:", ctx, privKey)
   return Result.Ok({

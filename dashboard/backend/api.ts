@@ -417,9 +417,9 @@ export class FPApiSQL implements FPApiInterface {
         })
         .where(and(eq(sqlTenantUsers.userId, req.userId), ne(sqlTenantUsers.default, 0)))
         .run();
-      console.log("Clearing default tenant for user:", req.userId, req.tenantId, x);
+      // console.log("Clearing default tenant for user:", req.userId, req.tenantId, x);
     }
-    console.log("Adding user to tenant:", req.userId, "->", req.tenantId, "as", req.defaultTenant);
+    // console.log("Adding user to tenant:", req.userId, "->", req.tenantId, "as", req.defaultTenant);
     const ret = (
       await db
         .insert(sqlTenantUsers)
@@ -434,12 +434,12 @@ export class FPApiSQL implements FPApiInterface {
         })
         .returning()
     )[0];
-    const out = await db
-      .select()
-      .from(sqlTenantUsers)
-      .where(and(eq(sqlTenantUsers.userId, req.userId)))
-      .all();
-    console.log("Added user to tenant:", out);
+    // const out = await db
+    //   .select()
+    //   .from(sqlTenantUsers)
+    //   .where(and(eq(sqlTenantUsers.userId, req.userId)))
+    //   .all();
+    // console.log("Added user to tenant:", out);
     return Result.Ok({
       userName: toUndef(ret.name),
       tenantName: tenant.name,
@@ -1456,7 +1456,7 @@ export class FPApiSQL implements FPApiInterface {
       role: "admin",
       defaultTenant: req.tenant.defaultTenant ?? false,
     });
-    console.log(`Created tenant ${tenant.tenantId} for user ${auth.user.userId}: ${req.tenant.defaultTenant}`);
+    // console.log(`Created tenant ${tenant.tenantId} for user ${auth.user.userId}: ${req.tenant.defaultTenant}`);
     return Result.Ok({
       type: "resCreateTenant",
       tenant,
