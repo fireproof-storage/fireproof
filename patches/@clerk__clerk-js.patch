@@ -1,0 +1,21 @@
+diff --git a/package.json b/package.json
+index b710adceaf4b01d3c8b7eae2df52c4581c94f8e5..fe3567b54515024301e7ec819519b777f050eac2 100644
+--- a/package.json
++++ b/package.json
+@@ -10,6 +10,16 @@
+     "session",
+     "jwt"
+   ],
++  "exports": {
++    ".": {
++      "import": "./dist/clerk.mjs",
++      "types": "./dist/types/index.d.ts"
++    },
++    "./headless": {
++      "import": "./headless/index.js",
++      "types": "./headless/index.d.ts"
++    }
++  },
+   "homepage": "https://clerk.com/",
+   "bugs": {
+     "url": "https://github.com/clerk/javascript/issues"

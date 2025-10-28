@@ -19,7 +19,7 @@ import type {
   KeyBagIf,
   IndexRowsWithDocs,
 } from "@fireproof/core-types-base";
-import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { ToCloudAttachable, TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols-cloud";
 
 export type LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = IndexRowsWithDocs<T, K, R>;
 
@@ -110,7 +110,7 @@ export interface InitialTokenAndClaimsState {
 }
 export interface ReadyTokenAndClaimsState {
   readonly state: "ready";
-  readonly tokenAndClaims: TokenAndClaims;
+  readonly tokenAndClaims: TokenAndSelectedTenantAndLedger;
   readonly reset: () => void;
 }
 
@@ -130,10 +130,10 @@ export interface WebToCloudCtx {
 
   ready(db: Database): Promise<void>;
 
-  onTokenChange(on: (token?: TokenAndClaims) => void): void;
+  onTokenChange(on: (token?: TokenAndSelectedTenantAndLedger) => void): void;
   resetToken(): Promise<void>;
-  setToken(token: TokenAndClaims | string): Promise<void>;
-  token(): Promise<TokenAndClaims | undefined>;
+  setToken(token: TokenAndSelectedTenantAndLedger | string): Promise<void>;
+  token(): Promise<TokenAndSelectedTenantAndLedger | undefined>;
 }
 
 export type UseFPConfig = ConfigOpts & { readonly attach?: ToCloudAttachable };

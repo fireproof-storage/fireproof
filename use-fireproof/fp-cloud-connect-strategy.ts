@@ -1,6 +1,6 @@
 import { BuildURI, KeyedResolvOnce, Lazy, Logger, ResolveSeq, Result, URI } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
-import { ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
+import { ToCloudOpts, TokenAndSelectedTenantAndLedger, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
 import { ensureLogger, ensureSuperThis, hashObjectSync, sleep } from "@fireproof/core-runtime";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
 import { defaultOverlayCss, defaultOverlayHtml } from "./overlay-html-defaults.js";
@@ -54,11 +54,18 @@ export class FPCloudConnectStrategy implements TokenStrategie {
   constructor(opts: Partial<FPCloudConnectOpts> = {}) {
     this.overlayCss = opts.overlayCss ?? defaultOverlayCss();
     this.overlayHtml = opts.overlayHtml ?? defaultOverlayHtml;
-    const fpCloudConnectURL = BuildURI.from(
-      opts.fpCloudConnectURL ??
+
+    const dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/";
+    let fpCloudConnectURL: BuildURI;
+    if (opts.fpCloudConnectURL) {
+      fpCloudConnectURL = BuildURI.from(opts.fpCloudConnectURL);
+    } else {
+      fpCloudConnectURL = BuildURI.from(
         // eslint-disable-next-line no-restricted-globals
-        new URL("fp-cloud-connector/injected-iframe.html", import.meta.url).toString(),
-    );
+        new URL("/", dashboardURI).toString(),
+      ).pathname("/@fireproof/cloud-connector-iframe/injected-iframe.html");
+    }
+
     if (opts.dashboardURI) {
       fpCloudConnectURL.setParam("dashboard_uri", opts.dashboardURI);
     }
@@ -66,6 +73,7 @@ export class FPCloudConnectStrategy implements TokenStrategie {
       fpCloudConnectURL.setParam("cloud_api_uri", opts.cloudApiURI);
     }
     this.fpCloudConnectURL = fpCloudConnectURL.toString();
+    // console.log("FPCloudConnectStrategy constructed with fpCloudConnectURL", this.fpCloudConnectURL);
     this.title = opts.title ?? "Fireproof Login";
     this.sthis = opts.sthis ?? ensureSuperThis();
     this.logger = ensureLogger(this.sthis, "FPCloudConnectStrategy");
@@ -136,10 +144,18 @@ export class FPCloudConnectStrategy implements TokenStrategie {
   readonly openloginSeq = new ResolveSeq();
   // readonly waitForTokenPerLocalDbFuture = new KeyedResolvOnce<Future<Result<TokenAndClaims>>>();
 
-  fpccEvtApp2TokenAndClaims(evt: FPCCEvtApp): Result<TokenAndClaims> {
-    const tAndC: TokenAndClaims = {
+  fpccEvtApp2TokenAndClaims(evt: FPCCEvtApp): Result<TokenAndSelectedTenantAndLedger> {
+    // convertToTokenAndClaims({
+
+    // }, this.logger, evt.localDb.accessToken)
+    const tAndC: TokenAndSelectedTenantAndLedger = {
       token: evt.localDb.accessToken,
-      claims: {} as TokenAndClaims["claims"],
+      claims: {
+        selected: {
+          tenant: evt.localDb.tenantId,
+          ledger: evt.localDb.ledgerId,
+        },
+      },
     };
     return Result.Ok(tAndC);
   }
@@ -196,7 +212,7 @@ export class FPCloudConnectStrategy implements TokenStrategie {
     // this.waitState = "stopped";
   }
 
-  readonly waitForTokenAndClaims = new KeyedResolvOnce<Result<TokenAndClaims>>();
+  readonly waitForTokenAndClaims = new KeyedResolvOnce<Result<TokenAndSelectedTenantAndLedger>>();
   // async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
   //   console.log("FPCloudConnectStrategy tryToken called", opts);
   //   // if (!this.currentToken) {
@@ -208,7 +224,12 @@ export class FPCloudConnectStrategy implements TokenStrategie {
   //   return undefined;
   // }
 
-  async waitForToken(_sthis: SuperThis, _logger: Logger, localDbName: string, _opts: ToCloudOpts): Promise<Result<TokenAndClaims>> {
+  async waitForToken(
+    _sthis: SuperThis,
+    _logger: Logger,
+    localDbName: string,
+    _opts: ToCloudOpts,
+  ): Promise<Result<TokenAndSelectedTenantAndLedger>> {
     // console.log("FPCloudConnectStrategy waitForToken called for localDbName", localDbName);
     const ppage = await this.getPageProtocol(this.sthis);
     const key = dbAppKey({ appId: ppage.getAppId(), dbName: localDbName });

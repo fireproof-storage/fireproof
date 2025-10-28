@@ -467,6 +467,12 @@ importers:
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:*
         version: link:../../../core/types/protocols/cloud
+      preact:
+        specifier: ^10.27.2
+        version: 10.27.2
+      preact-render-to-string:
+        specifier: ^6.6.2
+        version: 6.6.2(preact@10.27.2)
 
   cloud/connector/page:
     dependencies:

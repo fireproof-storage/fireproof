@@ -88,6 +88,7 @@ async function createBoundToken(
     .where(and(eq(sqlLedgers.ledgerId, req.ledgerId), eq(sqlLedgers.tenantId, req.tenantId)))
     .get();
   if (tandl) {
+    console.log("createBoundToken", auth);
     return Result.Ok({
       type: "resCloudDbToken",
       status: "bound",

@@ -23,11 +23,31 @@ export default {
   async fetch(request: Request, env: Env) {
     const uri = URI.from(request.url);
     let ares: Promise<CFResponse>;
+    console.log("cf-serve request", request.method, uri.toString());
     switch (true) {
       case uri.pathname.startsWith("/api"):
         // console.log("cf-serve", request.url, env);
         ares = createHandler(drizzle(env.DB), env).then((fn) => fn(request) as unknown as Promise<CFResponse>);
         break;
+
+      // case uri.pathname.startsWith("/fp-cloud-connector/injected-iframe.html"): {
+      //   const html = await injectedHtml();
+      //   // console.log("cf-serve request", request.method, uri.toString(), "[",html, "]");
+      //   return new Response(html, { status: 200, headers: { "Content-Type": "text/html" } });
+      // }
+      // break;
+      case uri.pathname === "/@fireproof/cloud-connector-iframe": {
+        return new Response("Redirecting...", {
+          status: 302,
+          headers: {
+            // in production it should point to esm.sh
+            Location: "/node_modules/@fireproof/cloud-connector-iframe/index.js",
+          },
+        });
+      }
+      //   // return env.ASSETS.fetch(uri.build().pathname("@fireproof/cloud-connector-iframe").asURL(), request as unknown as CFRequest);
+      // }
+      // break;
 
       case uri.pathname.startsWith("/.well-known/jwks.json"):
         ares = resWellKnownJwks(request, env as unknown as Record<string, string>) as unknown as Promise<CFResponse>;

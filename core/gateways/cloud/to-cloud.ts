@@ -11,7 +11,7 @@ import {
   ToCloudOptionalOpts,
   ToCloudOpts,
   ToCloudRequiredOpts,
-  TokenAndClaims,
+  TokenAndSelectedTenantAndLedger,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
 import { ensureLogger, ensureSuperThis, hashObjectSync } from "@fireproof/core-runtime";
@@ -31,7 +31,7 @@ function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
 }
 
 export class SimpleTokenStrategy implements TokenStrategie {
-  private tc: TokenAndClaims;
+  private tc: TokenAndSelectedTenantAndLedger;
   constructor(jwk: string) {
     let claims: FPCloudClaim;
     try {
@@ -74,7 +74,7 @@ export class SimpleTokenStrategy implements TokenStrategie {
   //   // console.log("SimpleTokenStrategy gatherToken");
   //   return this.tc;
   // }
-  async waitForToken(): Promise<Result<TokenAndClaims>> {
+  async waitForToken(): Promise<Result<TokenAndSelectedTenantAndLedger>> {
     // console.log("SimpleTokenStrategy waitForToken");
     return Result.Ok(this.tc);
   }

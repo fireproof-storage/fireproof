@@ -24,7 +24,7 @@ import {
   ResCloudDbTokenNotBound,
   isResCloudDbTokenBound,
 } from "@fireproof/core-protocols-dashboard";
-import { TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols-cloud";
 import { ClerkFPCCEvtEntity } from "./clerk-fpcc-evt-entity.js";
 
 export interface IframeFPCCProtocolOpts {
@@ -36,7 +36,7 @@ export interface IframeFPCCProtocolOpts {
 export type GetCloudDbTokenResult =
   | {
       readonly res: ResCloudDbTokenBound;
-      readonly claims: TokenAndClaims["claims"];
+      readonly claims: TokenAndSelectedTenantAndLedger["claims"];
     }
   | {
       readonly res: ResCloudDbTokenNotBound;
@@ -48,7 +48,7 @@ export interface BackendFPCC {
   isFPCCEvtAppReady(): boolean;
   getState(): "needs-login" | "waiting" | "ready";
   setState(state: "needs-login" | "waiting" | "ready"): "needs-login" | "waiting" | "ready";
-  waitForAuthToken(resultId: string): Promise<Result<TokenAndClaims>>;
+  waitForAuthToken(resultId: string): Promise<Result<TokenAndSelectedTenantAndLedger>>;
   getFPCCEvtApp(): Promise<Result<FPCCEvtApp>>;
   setFPCCEvtApp(app: FPCCEvtApp): Promise<void>;
   isUserLoggedIn(): Promise<boolean>;

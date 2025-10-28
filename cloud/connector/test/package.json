@@ -6,8 +6,8 @@
   "private": "true",
   "scripts": {
     "build": "core-cli tsc",
-    "pack": "core-cli build --doPack",
-    "publish": "core-cli build",
+    "pack": "echo skip",
+    "publish": "echo skip",
     "test": "vitest --run"
   },
   "keywords": [
