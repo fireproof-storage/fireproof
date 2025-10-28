@@ -7,16 +7,16 @@ import { TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols
 import { Clerk } from "@clerk/clerk-js/headless";
 import { DbKey, FPCCEvtApp, FPCCMsgBase, convertToTokenAndClaims } from "@fireproof/cloud-connector-base";
 
-const clerkSvc = Lazy(async (dashApi: DashApi) => {
+export const clerkSvc = Lazy(async (dashApi: DashApi) => {
   const clerkPubKey = await dashApi.getClerkPublishableKey({});
   // console.log("clerkSvc got publishable key", rClerkPubKey);
   const clerk = new Clerk(clerkPubKey.publishableKey);
   await clerk.load();
   clerk.addListener((session) => {
     if (session.user) {
-      console.log("Iframe-Clerk-User signed in:", session.user);
+      console.log("Iframe-Clerk-User signed in:", session.user, window.location.href, clerkPubKey);
     } else {
-      console.log("Iframe-Clerk-User signed out");
+      console.log("Iframe-Clerk-User signed out", window.location.href, clerkPubKey);
     }
   });
 
