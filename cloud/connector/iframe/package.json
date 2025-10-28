@@ -37,8 +37,6 @@
     "@fireproof/core-protocols-dashboard": "workspace:*",
     "@fireproof/core-runtime": "workspace:*",
     "@fireproof/core-types-base": "workspace:*",
-    "@fireproof/core-types-protocols-cloud": "workspace:*",
-    "preact": "^10.27.2",
-    "preact-render-to-string": "^6.6.2"
+    "@fireproof/core-types-protocols-cloud": "workspace:*"
   }
 }

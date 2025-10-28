@@ -5,32 +5,76 @@ import { dotenv } from "zx";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import * as path from "path";
 import * as fs from "fs";
+import * as esbuild from "esbuild";
 
 const serveFireproofAssets = (): Plugin => ({
   name: "serve-fireproof-assets",
 
   // Development server
   configureServer(server) {
-    server.middlewares.use((req, res, next) => {
+    server.middlewares.use(async (req, res, next) => {
       // Serve the HTML file
-      if (req.url?.startsWith("/@fireproof/cloud-connector-iframe/injected-iframe.html")) {
-        const htmlPath = path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/injected-iframe.html");
-        const content = fs.readFileSync(htmlPath, "utf-8");
-        res.setHeader("Content-Type", "text/html");
-        res.end(content);
+      let url = req.url?.split("?")[0] || "";
+      if (url.startsWith("/@fireproof")) {
+        if (url === "/@fireproof/cloud-connector-iframe") {
+          url += "/index.js";
+        }
+
+        const filePath = path.resolve(__dirname, `node_modules/${url}`);
+        if (url.endsWith(".html")) {
+          const content = await fs.promises.readFile(filePath, "utf-8");
+          res.setHeader("Content-Type", "text/html");
+          res.end(content);
+          return;
+        }
+        try {
+          // Use Vite's built-in transform
+          const result = await server.transformRequest(filePath);
+          if (result) {
+            res.setHeader("Content-Type", "application/javascript");
+            res.end(result.code);
+            return;
+          }
+        } catch (e) {
+          res.statusCode = 500;
+          res.end(`Error: ${e}`);
+          return;
+        }
+        // console.log("serve-fireproof-assets", req.url, url);
+
+        // const content = fs.readFileSync(htmlPath, "utf-8");
+        // res.setHeader("Content-Type", "text/html");
+        // res.end(content);
         return;
       }
       next();
     });
   },
 
-  generateBundle() {
+  async generateBundle() {
     // Emit HTML file
     const htmlPath = path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/injected-iframe.html");
     this.emitFile({
       type: "asset",
-      fileName: "fireproof/cloud-connector-iframe/injected-iframe.html",
+      fileName: "@fireproof/cloud-connector-iframe/injected-iframe.html",
       source: fs.readFileSync(htmlPath, "utf-8"),
+    });
+
+    const result = await esbuild.build({
+      entryPoints: [path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/index.ts")],
+      bundle: true,
+      format: "esm",
+      write: false,
+      minify: false,
+      platform: "browser",
+    });
+
+    const bundledCode = result.outputFiles[0].text;
+
+    this.emitFile({
+      type: "asset",
+      fileName: "@fireproof/cloud-connector-iframe/index.js",
+      source: bundledCode,
     });
   },
 });

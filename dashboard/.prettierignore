@@ -1,0 +1,7 @@
+**/pnpm-lock.yaml
+scripts/
+**/.cache/**
+**/.esm-cache/**
+**/dist/**
+**/coverage/**
+dist/
