@@ -1225,7 +1225,83 @@ describe("db-api", () => {
     expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
     expect(tandC.claims.selected.ledger).toBe(ledger.Ok().ledger.ledgerId);
   });
-  it("without ledger and tenant but appId and localDbName and ambiguity", async () => {
+  // it("without ledger and tenant but appId and localDbName and ambiguity", async () => {
+  //   const tenant = await fpApi.createTenant({
+  //     type: "reqCreateTenant",
+  //     auth: data[0].reqs.auth,
+  //     tenant: {
+  //       defaultTenant: true,
+  //       // ownerUserId: data[0].ress.user.userId,
+  //     },
+  //   });
+  //   const name = `DB Token Ledger-${sthis.nextId(6).str}`;
+  //   await fpApi.createLedger({
+  //     type: "reqCreateLedger",
+  //     auth: data[0].reqs.auth,
+  //     ledger: {
+  //       tenantId: tenant.Ok().tenant.tenantId,
+  //       name,
+  //     },
+  //   });
+  //   await fpApi.createLedger({
+  //     type: "reqCreateLedger",
+  //     auth: data[0].reqs.auth,
+  //     ledger: {
+  //       tenantId: tenant.Ok().tenant.tenantId,
+  //       name,
+  //     },
+  //   });
+
+  //   const rRes = await fpApi.getCloudDbToken(
+  //     {
+  //       type: "reqCloudDbToken",
+  //       auth: data[0].reqs.auth,
+  //       tenantId: tenant.Ok().tenant.tenantId,
+  //       localDbName: name,
+  //       appId: "not-existing-app",
+  //       deviceId: "not-existing-device",
+  //     },
+  //     ctx,
+  //   );
+  //   const res = rRes.Ok();
+  //   if (!isResCloudDbTokenBound(res)) {
+  //     assert.fail("Expected not bound response");
+  //     return;
+  //   }
+  //   const rTandC = await convertToTokenAndClaims(
+  //     {
+  //       getClerkPublishableKey(): Promise<ResClerkPublishableKey> {
+  //         return Promise.resolve({
+  //           type: "resClerkPublishableKey",
+  //           publishableKey: "undefined",
+  //           cloudPublicKeys: [publicKey],
+  //         });
+  //       },
+  //     },
+  //     logger,
+  //     res.token,
+  //   );
+  //   const tandC = rTandC.Ok();
+  //   // console.log(data.map((i) => i.ress.tenants).map((j) => j.map((k) => k.tenantId)));
+  //   expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
+  //   expect(tandC.claims.selected.ledger).toBe("xxx"); //ledger.Ok().ledger.ledgerId);
+  // });
+  it("without ledger but tenant appId and localDbName and no ambiguity", async () => {
+    const ledgerName = `DB Token Ledger-${sthis.nextId(6).str}`;
+
+    const otherTenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {},
+    });
+    await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: otherTenant.Ok().tenant.tenantId,
+        name: ledgerName,
+      },
+    });
     const tenant = await fpApi.createTenant({
       type: "reqCreateTenant",
       auth: data[0].reqs.auth,
@@ -1234,30 +1310,20 @@ describe("db-api", () => {
         // ownerUserId: data[0].ress.user.userId,
       },
     });
-    const name = `DB Token Ledger-${sthis.nextId(6).str}`;
-    await fpApi.createLedger({
+    const ledger = await fpApi.createLedger({
       type: "reqCreateLedger",
       auth: data[0].reqs.auth,
       ledger: {
         tenantId: tenant.Ok().tenant.tenantId,
-        name,
+        name: ledgerName,
       },
     });
-    await fpApi.createLedger({
-      type: "reqCreateLedger",
-      auth: data[0].reqs.auth,
-      ledger: {
-        tenantId: tenant.Ok().tenant.tenantId,
-        name,
-      },
-    });
-
     const rRes = await fpApi.getCloudDbToken(
       {
         type: "reqCloudDbToken",
         auth: data[0].reqs.auth,
         tenantId: tenant.Ok().tenant.tenantId,
-        localDbName: name,
+        localDbName: ledgerName,
         appId: "not-existing-app",
         deviceId: "not-existing-device",
       },
@@ -1284,15 +1350,53 @@ describe("db-api", () => {
     const tandC = rTandC.Ok();
     // console.log(data.map((i) => i.ress.tenants).map((j) => j.map((k) => k.tenantId)));
     expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
-    expect(tandC.claims.selected.ledger).toBe("xxx"); //ledger.Ok().ledger.ledgerId);
+    expect(tandC.claims.selected.ledger).toBe(ledger.Ok().ledger.ledgerId); //ledger.Ok().ledger.ledgerId);
   });
-  it("without ledger but tenant appId and localDbName and no ambiguity", async () => {
-    /* empty */
+
+  it("without ledger but tenant appId and localDbName implicit create", async () => {
+    const ledgerName = `DB Token Ledger-${sthis.nextId(6).str}`;
+    const tenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        defaultTenant: true,
+        // ownerUserId: data[0].ress.user.userId,
+      },
+    });
+    const rRes = await fpApi.getCloudDbToken(
+      {
+        type: "reqCloudDbToken",
+        auth: data[0].reqs.auth,
+        tenantId: tenant.Ok().tenant.tenantId,
+        localDbName: ledgerName,
+        appId: "not-existing-app",
+        deviceId: "not-existing-device",
+      },
+      ctx,
+    );
+    const res = rRes.Ok();
+    if (!isResCloudDbTokenBound(res)) {
+      assert.fail("Expected not bound response");
+      return;
+    }
+    const rTandC = await convertToTokenAndClaims(
+      {
+        getClerkPublishableKey(): Promise<ResClerkPublishableKey> {
+          return Promise.resolve({
+            type: "resClerkPublishableKey",
+            publishableKey: "undefined",
+            cloudPublicKeys: [publicKey],
+          });
+        },
+      },
+      logger,
+      res.token,
+    );
+    const tandC = rTandC.Ok();
+    // console.log(data.map((i) => i.ress.tenants).map((j) => j.map((k) => k.tenantId)));
+    expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
+    expect(tandC.claims.selected.ledger).toBeDefined();
   });
-  it("without ledger but tenant appId and localDbName and ambiguity", async () => {
-    /* empty */
-  });
-  // });
 });
 
 it("queryEmail strips +....@", async () => {
