@@ -25,7 +25,7 @@ import {
   isResCloudDbTokenBound,
 } from "@fireproof/core-protocols-dashboard";
 import { TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols-cloud";
-import { ClerkFPCCEvtEntity } from "./clerk-fpcc-evt-entity.js";
+import { ClerkFPCCEvtEntity, clerkSvc } from "./clerk-fpcc-evt-entity.js";
 
 export interface IframeFPCCProtocolOpts {
   readonly dashboardURI: string;
@@ -389,6 +389,7 @@ export class IframeFPCCProtocol implements FPCCProtocol {
   }
 
   async ready(): Promise<FPCCProtocol> {
+    await clerkSvc(this.dashApi);
     await this.fpccProtocol.ready();
     this.fpccProtocol.onFPCCMessage(this.handleFPCCMessage);
     return this;
