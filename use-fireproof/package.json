@@ -23,6 +23,8 @@
   "gptdoc": "Fireproof/React/Usage: import { useFireproof } from 'use-fireproof'; function WordCounterApp() { const { useLiveQuery, useDocument } = useFireproof('my-word-app'); const { doc: wordInput, merge: updateWordInput, save: saveWordInput, reset: clearWordInput } = useDocument({ word: '', timestamp: Date.now() }); const recentWords = useLiveQuery('timestamp', { descending: true, limit: 10 }); const { doc: { totalSubmitted }, merge: updateTotalSubmitted, save: saveTotalSubmitted } = useDocument({ _id: 'word-counter', totalSubmitted: 0 }); const handleWordSubmission = (e) => { e.preventDefault(); updateTotalSubmitted({ totalSubmitted: totalSubmitted + 1 }); saveTotalSubmitted(); saveWordInput(); clearWordInput();}; return (<><p>{totalSubmitted} words submitted</p><form onSubmit={handleWordSubmission}><input type='text' value={wordInput.word} onChange={e => updateWordInput({ word: e.target.value })} placeholder='Enter a word' /></form><ul>{recentWords.docs.map(entry => (<li key={entry._id}>{entry.word}</li>))} </ul></>) } export default WordCounterApp;",
   "dependencies": {
     "@adviser/cement": "^0.4.53",
+    "@fireproof/cloud-connector-base": "workspace:*",
+    "@fireproof/cloud-connector-page": "workspace:*",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
     "@fireproof/core-keybag": "workspace:0.0.0",
@@ -31,8 +33,6 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
-    "@fireproof/cloud-connector-base": "workspace:*",
-    "@fireproof/cloud-connector-page": "workspace:*",
     "@fireproof/vendor": "workspace:0.0.0",
     "dompurify": "^3.3.0",
     "jose": "^6.1.0",
@@ -57,9 +57,10 @@
     "@testing-library/react": "^16.3.0",
     "@types/deno": "^2.5.0",
     "@types/react": "^19.2.2",
-    "@vitest/browser": "^4.0.3",
+    "@vitest/browser": "^4.0.4",
+    "@vitest/browser-playwright": "^4.0.4",
     "playwright": "^1.56.1",
     "playwright-chromium": "^1.56.1",
-    "vitest": "^4.0.3"
+    "vitest": "^4.0.4"
   }
 }

@@ -1,4 +1,4 @@
-import { page } from "@vitest/browser/context";
+import { page } from "vitest/browser";
 import { expect, it, vi } from "vitest";
 
 interface FPWindow extends Window {

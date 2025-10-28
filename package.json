@@ -74,7 +74,7 @@
     "tsx": "^4.20.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2",
-    "vitest": "^4.0.3",
+    "vitest": "^4.0.4",
     "wrangler": "^4.45.0"
   },
   "repository": {
@@ -103,6 +103,7 @@
       "workerd"
     ],
     "patchedDependencies": {
+      "@clerk/clerk-js": "patches/@clerk__clerk-js.patch",
       "drizzle-kit": "patches/drizzle-kit.patch"
     }
   }

@@ -36,7 +36,9 @@
     "@fireproof/cloud-connector-iframe": "workspace:*",
     "@fireproof/cloud-connector-page": "workspace:*",
     "@fireproof/core-runtime": "workspace:*",
-    "@vitest/browser": "^3.2.4",
-    "ts-essentials": "^10.1.1"
+    "@vitest/browser": "^4.0.4",
+    "@vitest/browser-playwright": "^4.0.4",
+    "ts-essentials": "^10.1.1",
+    "vitest": "^4.0.4"
   }
 }
