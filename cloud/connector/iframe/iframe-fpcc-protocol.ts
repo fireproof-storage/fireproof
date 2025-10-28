@@ -390,6 +390,9 @@ export class IframeFPCCProtocol implements FPCCProtocol {
 
   async ready(): Promise<FPCCProtocol> {
     await clerkSvc(this.dashApi);
+    setInterval(() => {
+      localStorage.setItem("iframe", new Date().toISOString());
+    }, 10000)
     await this.fpccProtocol.ready();
     this.fpccProtocol.onFPCCMessage(this.handleFPCCMessage);
     return this;
