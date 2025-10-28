@@ -409,7 +409,7 @@ export class FPApiSQL implements FPApiInterface {
     }
     const now = new Date().toISOString();
     if (req.defaultTenant) {
-      const x = await db
+      await db
         .update(sqlTenantUsers)
         .set({
           default: 0,
@@ -417,7 +417,6 @@ export class FPApiSQL implements FPApiInterface {
         })
         .where(and(eq(sqlTenantUsers.userId, req.userId), ne(sqlTenantUsers.default, 0)))
         .run();
-      // console.log("Clearing default tenant for user:", req.userId, req.tenantId, x);
     }
     // console.log("Adding user to tenant:", req.userId, "->", req.tenantId, "as", req.defaultTenant);
     const ret = (
