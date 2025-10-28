@@ -1,7 +1,5 @@
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
-
 import { defineConfig } from "vitest/config";
+import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
   test: {
@@ -11,14 +9,12 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      provider: "playwright",
+      provider: playwright({
+        // ...custom playwright options
+      }),
       instances: [
         {
           browser: "chromium",
-          context: {
-            recordVideo: undefined,
-            recordHar: undefined,
-          },
         },
       ],
       screenshotFailures: false,

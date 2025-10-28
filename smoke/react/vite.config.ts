@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
   test: {
@@ -7,16 +8,14 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      provider: "playwright",
-      // provider: "webdriverio",
+      provider: playwright({
+        // ...custom playwright options
+      }),
       instances: [
         {
-          // browser: "chrome",
           browser: "chromium",
         },
       ],
-      // name: "chrome", // browser name is required
-      // Disable screenshots
       providerOptions: {
         use: {
           screenshot: "off",
