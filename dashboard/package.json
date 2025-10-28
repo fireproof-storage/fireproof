@@ -12,6 +12,8 @@
     "build:vite": "vite build",
     "preview": "vite preview",
     "test": "vitest --run",
+    "format": "prettier .",
+    "lint": "eslint",
     "check": "pnpm format --write && core-cli tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
     "drizzle:d1-local": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
