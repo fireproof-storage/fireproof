@@ -12,7 +12,7 @@ import {
   TokenStrategie,
   TokenAndClaimsEvents,
   ToCloudAttachable,
-  TokenAndClaims,
+  TokenAndSelectedTenantAndLedger,
 } from "@fireproof/core-types-protocols-cloud";
 import { WebToCloudCtx } from "./react/types.js";
 import { defaultWebToCloudOpts, WebCtx } from "./react/use-attach.js";
@@ -52,7 +52,7 @@ export function toCloud(opts: UseFpToCloudParam = {}): ToCloudAttachable {
   const webCtx = defaultWebToCloudOpts(myOpts);
   if (!opts.events) {
     // hacky but who has a better idea?
-    myOpts.events.changed = async (token?: TokenAndClaims) => {
+    myOpts.events.changed = async (token?: TokenAndSelectedTenantAndLedger) => {
       if (token) {
         await webCtx.setToken(token);
       } else {

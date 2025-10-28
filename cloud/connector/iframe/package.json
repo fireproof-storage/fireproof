@@ -32,11 +32,13 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.53",
+    "@clerk/clerk-js": "^5.102.0",
+    "@fireproof/cloud-connector-base": "workspace:*",
+    "@fireproof/core-protocols-dashboard": "workspace:*",
     "@fireproof/core-runtime": "workspace:*",
     "@fireproof/core-types-base": "workspace:*",
-    "@fireproof/core-protocols-dashboard": "workspace:*",
     "@fireproof/core-types-protocols-cloud": "workspace:*",
-    "@fireproof/cloud-connector-base": "workspace:*",
-    "@clerk/clerk-js": "^5.102.0"
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.2"
   }
 }

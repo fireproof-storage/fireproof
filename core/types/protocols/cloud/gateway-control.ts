@@ -1,15 +1,21 @@
 import { Logger, CoerceURI, URI, AppContext, Result } from "@adviser/cement";
 import { Attachable, SuperThis } from "@fireproof/core-types-base";
-import { FPCloudClaim } from "./msg-types.zod.js";
+// import { FPCloudClaim } from "./msg-types.zod.js";
 
 export interface ToCloudAttachable extends Attachable {
   token?: string;
   readonly opts: ToCloudOpts;
 }
 
-export interface TokenAndClaims {
+export interface TokenAndSelectedTenantAndLedger {
   readonly token: string;
-  readonly claims: FPCloudClaim;
+  readonly claims: {
+    readonly selected: {
+      readonly tenant: string;
+      readonly ledger: string;
+    };
+  };
+  //FPCloudClaim;
   //   readonly exp: number;
   //   readonly tenant?: string;
   //   readonly ledger?: string;
@@ -20,7 +26,12 @@ export interface TokenStrategie {
   hash(): string;
   open(sthis: SuperThis, logger: Logger, localDbName: string, opts: ToCloudOpts): void;
   // tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
-  waitForToken(sthis: SuperThis, logger: Logger, localDbName: string, opts: ToCloudOpts): Promise<Result<TokenAndClaims>>;
+  waitForToken(
+    sthis: SuperThis,
+    logger: Logger,
+    localDbName: string,
+    opts: ToCloudOpts,
+  ): Promise<Result<TokenAndSelectedTenantAndLedger>>;
   stop(): void;
 }
 
@@ -53,7 +64,7 @@ export function hashableFPCloudRef(ref?: Partial<FPCloudRef>): { base?: string; 
 
 export interface TokenAndClaimsEvents {
   hash(): string;
-  changed(token?: TokenAndClaims): Promise<void>;
+  changed(token?: TokenAndSelectedTenantAndLedger): Promise<void>;
 }
 
 export interface ToCloudRequiredOpts {

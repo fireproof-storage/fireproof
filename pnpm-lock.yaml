@@ -433,6 +433,12 @@ importers:
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:*
         version: link:../../../core/types/protocols/cloud
+      preact:
+        specifier: ^10.27.2
+        version: 10.27.2
+      preact-render-to-string:
+        specifier: ^6.6.2
+        version: 6.6.2(preact@10.27.2)
 
   cloud/connector/page:
     dependencies:
@@ -1153,9 +1159,6 @@ importers:
       '@clerk/backend':
         specifier: ^2.19.0
         version: 2.19.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@clerk/clerk-js':
-        specifier: ^5.102.1
-        version: 5.102.1(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.12)
       '@clerk/clerk-react':
         specifier: ^5.53.3
         version: 5.53.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)

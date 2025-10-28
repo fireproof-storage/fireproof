@@ -1,8 +1,12 @@
 import { Logger, exception2Result, Result } from "@adviser/cement";
-import { FPCloudClaimSchema, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { FPCloudClaim, FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
 import { jwtVerify } from "jose";
 import { JWKPublic } from "@fireproof/core-types-base";
 
+export interface TokenAndClaims {
+  readonly token: string;
+  readonly claims: FPCloudClaim;
+}
 export async function convertToTokenAndClaims(
   dashApi: {
     getClerkPublishableKey(): Promise<{ cloudPublicKeys: JWKPublic[] }>;
@@ -24,7 +28,7 @@ export async function convertToTokenAndClaims(
     }
     const rFPCloudClaim = FPCloudClaimSchema.safeParse(rUnknownClaims.Ok().payload);
     if (!rFPCloudClaim.success) {
-      logger.Warn().Err(rFPCloudClaim.error).Msg("Token claims validation failed");
+      logger.Warn().Err(rFPCloudClaim.error).Any({ inObj: rUnknownClaims.Ok().payload }).Msg("Token claims validation failed");
       continue;
     }
     return Result.Ok({

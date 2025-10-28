@@ -1,10 +1,39 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import { visualizer } from "rollup-plugin-visualizer";
 import { dotenv } from "zx";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import * as path from "path";
 import * as fs from "fs";
+
+const serveFireproofAssets = (): Plugin => ({
+  name: "serve-fireproof-assets",
+
+  // Development server
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      // Serve the HTML file
+      if (req.url?.startsWith("/@fireproof/cloud-connector-iframe/injected-iframe.html")) {
+        const htmlPath = path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/injected-iframe.html");
+        const content = fs.readFileSync(htmlPath, "utf-8");
+        res.setHeader("Content-Type", "text/html");
+        res.end(content);
+        return;
+      }
+      next();
+    });
+  },
+
+  generateBundle() {
+    // Emit HTML file
+    const htmlPath = path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/injected-iframe.html");
+    this.emitFile({
+      type: "asset",
+      fileName: "fireproof/cloud-connector-iframe/injected-iframe.html",
+      source: fs.readFileSync(htmlPath, "utf-8"),
+    });
+  },
+});
 
 function defines() {
   try {
@@ -25,9 +54,12 @@ function defines() {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    serveFireproofAssets(),
     // multilines
     // tsconfigPaths(),
-    react(),
+    react({
+      jsxRuntime: "classic", // Use classic instead of automatic
+    }),
     cloudflare(),
     visualizer(),
     {
@@ -77,12 +109,17 @@ export default defineConfig({
     },
     allowedHosts: ["localhost", "dev-local-1.adviser.com", "dev-local-2.adviser.com"],
   },
-  resolve: process.env.USE_SOURCE
-    ? {
-        alias: {
-          "react-router": path.resolve(__dirname, "../../packages/react-router/index.js"),
-          "react-router-dom": path.resolve(__dirname, "../../packages/react-router-dom/index.jsx"),
-        },
-      }
-    : {},
+  resolve: {
+    //    ...(process.env.USE_SOURCE
+    //    ? {
+    //        alias: {
+    //          "react-router": path.resolve(__dirname, "../../packages/react-router/index.js"),
+    //          "react-router-dom": path.resolve(__dirname, "../../packages/react-router-dom/index.jsx"),
+    //        },
+    //      }
+    //    : {},
+    //    ),
+  },
 });
+
+// console.log(">>>>>>", path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/index.ts"));

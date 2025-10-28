@@ -3,7 +3,7 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { DashApi, AuthType, isResCloudDbTokenBound } from "@fireproof/core-protocols-dashboard";
 import { BackendFPCC, GetCloudDbTokenResult } from "./iframe-fpcc-protocol.js";
 import { ensureLogger, exceptionWrapper, sleep } from "@fireproof/core-runtime";
-import { TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols-cloud";
 import { Clerk } from "@clerk/clerk-js/headless";
 import { DbKey, FPCCEvtApp, FPCCMsgBase, convertToTokenAndClaims } from "@fireproof/cloud-connector-base";
 
@@ -79,7 +79,7 @@ export class ClerkFPCCEvtEntity implements BackendFPCC {
       if (!clerk.user) {
         return Result.Err(new Error("User not logged in"));
       }
-      const token = await clerk.session?.getToken();
+      const token = await clerk.session?.getToken({ template: "with-email" });
       if (!token) {
         return Result.Err(new Error("No session token available"));
       }
@@ -131,8 +131,8 @@ export class ClerkFPCCEvtEntity implements BackendFPCC {
   }
 
   //
-  async waitForAuthToken(resultId: string): Promise<Result<TokenAndClaims>> {
-    return poller<TokenAndClaims>(async () => {
+  async waitForAuthToken(resultId: string): Promise<Result<TokenAndSelectedTenantAndLedger>> {
+    return poller<TokenAndSelectedTenantAndLedger>(async () => {
       const clerk = await clerkSvc(this.dashApi);
       if (!clerk.user) {
         return {
@@ -182,7 +182,11 @@ export class ClerkFPCCEvtEntity implements BackendFPCC {
     });
   }
 
-  async getTokenForDb(dbInfo: DbKey, authToken: TokenAndClaims, originEvt: Partial<FPCCMsgBase>): Promise<FPCCEvtApp> {
+  async getTokenForDb(
+    dbInfo: DbKey,
+    authToken: TokenAndSelectedTenantAndLedger,
+    originEvt: Partial<FPCCMsgBase>,
+  ): Promise<FPCCEvtApp> {
     await sleep(50);
     return {
       ...dbInfo,

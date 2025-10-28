@@ -4,7 +4,7 @@ import { createElement } from "preact";
 const React = {
   createElement,
 };
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 // function jsxDEV(...args: unknown[]) {
 //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 //   return (React as any).call(React, ...args)

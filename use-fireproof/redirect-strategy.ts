@@ -2,7 +2,7 @@ import { BuildURI, Lazy, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import DOMPurify from "dompurify";
-import { FPCloudClaim, ToCloudOpts, TokenAndClaims, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
+import { FPCloudClaim, ToCloudOpts, TokenAndSelectedTenantAndLedger, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
 import { DashApi } from "@fireproof/core-protocols-dashboard";
 import { WebToCloudCtx } from "./react/types.js";
 import { WebCtx } from "./react/use-attach.js";
@@ -97,7 +97,7 @@ export class RedirectStrategy implements TokenStrategie {
     // window.location.href = url.toString();
   }
 
-  private currentToken?: TokenAndClaims;
+  private currentToken?: TokenAndSelectedTenantAndLedger;
 
   waiting?: ReturnType<typeof setTimeout>;
 
@@ -109,7 +109,7 @@ export class RedirectStrategy implements TokenStrategie {
     this.waitState = "stopped";
   }
 
-  async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
+  async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndSelectedTenantAndLedger | undefined> {
     if (!this.currentToken) {
       const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
       this.currentToken = await webCtx.token();
@@ -123,7 +123,7 @@ export class RedirectStrategy implements TokenStrategie {
     dashApi: DashApi,
     resultId: undefined | string,
     opts: ToCloudOpts,
-    resolve: (value: TokenAndClaims) => void,
+    resolve: (value: TokenAndSelectedTenantAndLedger) => void,
     attempts = 0,
   ) {
     if (!resultId) {
@@ -152,14 +152,19 @@ export class RedirectStrategy implements TokenStrategie {
     this.waiting = setTimeout(() => this.getTokenAndClaimsByResultId(logger, dashApi, resultId, opts, resolve), opts.intervalSec);
   }
 
-  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<Result<TokenAndClaims>> {
+  async waitForToken(
+    sthis: SuperThis,
+    logger: Logger,
+    deviceId: string,
+    opts: ToCloudOpts,
+  ): Promise<Result<TokenAndSelectedTenantAndLedger>> {
     if (!this.resultId) {
       throw new Error("waitForToken not working on redirect strategy");
     }
     const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     const dashApi = new DashApi(webCtx.tokenApiURI);
     this.waitState = "started";
-    return new Promise<Result<TokenAndClaims>>((resolve) => {
+    return new Promise<Result<TokenAndSelectedTenantAndLedger>>((resolve) => {
       this.getTokenAndClaimsByResultId(logger, dashApi, this.resultId, opts, (tokenAndClaims) => {
         this.currentToken = tokenAndClaims;
         resolve(Result.Ok(tokenAndClaims));

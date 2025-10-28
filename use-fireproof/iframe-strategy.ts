@@ -1,6 +1,6 @@
 import { BuildURI, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
-import { TokenStrategie, ToCloudOpts, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
+import { TokenStrategie, ToCloudOpts, TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols-cloud";
 import { WebCtx } from "./react/use-attach.js";
 import { WebToCloudCtx } from "./react/types.js";
 
@@ -82,7 +82,7 @@ export class IframeStrategy implements TokenStrategie {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     document.body.appendChild(this.overlayDiv(deviceId, redirectCtx.dashboardURI));
   }
-  async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
+  async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndSelectedTenantAndLedger | undefined> {
     const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     // const uri = URI.from(window.location.href);
     // const uriFpToken = uri.getParam(redirectCtx.tokenParam);
@@ -95,7 +95,7 @@ export class IframeStrategy implements TokenStrategie {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<Result<TokenAndClaims>> {
+  async waitForToken(sthis: SuperThis, logger: Logger, deviceId: string): Promise<Result<TokenAndSelectedTenantAndLedger>> {
     // throw new Error("waitForToken not implemented");
     return Result.Err("not implemented");
   }
