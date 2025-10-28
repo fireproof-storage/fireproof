@@ -467,12 +467,6 @@ importers:
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:*
         version: link:../../../core/types/protocols/cloud
-      preact:
-        specifier: ^10.27.2
-        version: 10.27.2
-      preact-render-to-string:
-        specifier: ^6.6.2
-        version: 6.6.2(preact@10.27.2)
 
   cloud/connector/page:
     dependencies:
@@ -1287,8 +1281,11 @@ importers:
       '@eslint/js':
         specifier: ^9.39.1
         version: 9.39.1
-      '@fireproof/core-cli':
+      '@fireproof/cloud-connector-iframe':
         specifier: workspace:0.0.0
+        version: link:../cloud/connector/iframe
+      '@fireproof/core-cli':
+        specifier: workspace:*
         version: link:../cli
       '@libsql/client':
         specifier: ^0.15.15
