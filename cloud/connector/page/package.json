@@ -31,10 +31,10 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.53",
+    "@adviser/cement": "^0.4.54",
     "@fireproof/cloud-connector-base": "workspace:*",
-    "@fireproof/core-types-base": "workspace:*",
     "@fireproof/core-runtime": "workspace:*",
+    "@fireproof/core-types-base": "workspace:*",
     "ts-essentials": "^10.1.1"
   }
 }
