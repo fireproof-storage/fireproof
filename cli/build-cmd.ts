@@ -560,11 +560,13 @@ export function buildCmd(sthis: SuperThis) {
           // await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
         }
         const tags = args.pubTags;
+        console.log("version ---- ", args.version);
         try {
           const semVer = new SemVer(args.version);
-          if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
+          if (semVer.prerelease.find((i) => typeof i === "string")) {
             tags.push("dev");
           }
+          console.log("version ---- ", args.version, semVer, tags);
         } catch (e) {
           console.warn(`Warn parsing version ${args.version}:`, e);
         }

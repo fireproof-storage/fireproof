@@ -1,6 +1,6 @@
 import React from "react";
 import { redirect } from "react-router-dom";
-import { fireproof } from "@fireproof/core";
+import { fireproof } from "@fireproof/core-base";
 import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "../../helpers.js";
 import { URI } from "@adviser/cement";
 

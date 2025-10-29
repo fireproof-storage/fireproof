@@ -36,7 +36,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.53",
+    "@adviser/cement": "^0.4.54",
     "@cloudflare/workers-types": "^4.20251014.0",
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
@@ -56,7 +56,7 @@
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "drizzle-kit": "0.30.6",
-    "vitest": "^4.0.3",
+    "vitest": "^4.0.4",
     "zx": "^8.8.5"
   }
 }

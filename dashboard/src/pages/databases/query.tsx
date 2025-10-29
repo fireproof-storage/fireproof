@@ -24,7 +24,7 @@ export function DatabasesQuery() {
 
   async function runTempQuery() {
     try {
-      // Try to evaluate the function to check for  errors
+      // Try to evaluate the function to check for errors
       eval(`(${editorCode})`);
       setEditorCodeFnString(editorCode);
       setUserCodeError(null);

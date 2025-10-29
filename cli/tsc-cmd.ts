@@ -28,11 +28,13 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
     $.quote = quotePowerShell;
   }
 
-  $.verbose = false;
-  const p = $({ stdio: ["inherit", "inherit", "inherit"] })`${cmd}`;
-  await p;
-  // $.verbose = true;
-  // await $`${cmd}`
+  try {
+    $.verbose = false;
+    const p = $({ stdio: ["inherit", "inherit", "inherit"] })`${cmd}`;
+    await p;
+  } catch (e) {
+    process.exit((e as { exitCode?: number }).exitCode ?? 42);
+  }
 }
 
 export function tscCmd(sthis: SuperThis) {

@@ -11,6 +11,7 @@ export default defineConfig({
       "cloud/backend/cf-d1/vitest.config.ts",
       "cloud/backend/node/vitest.config.ts",
       "cloud/backend/base/vitest.config.ts",
+      "cloud/connector/test/vitest.config.ts",
       "cli/vitest.config.ts",
       "dashboard/vitest.config.ts",
     ],

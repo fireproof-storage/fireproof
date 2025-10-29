@@ -10,7 +10,7 @@ import {
   FPCloudClaim,
   ToCloudAttachable,
   ToCloudOptionalOpts,
-  TokenAndClaims,
+  TokenAndSelectedTenantAndLedger,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
 import { getKeyBag } from "@fireproof/core-keybag";
@@ -23,7 +23,7 @@ export type ToCloudParam = Omit<ToCloudOptionalOpts, "strategy"> &
   Partial<WebToCloudCtx> & { readonly strategy?: TokenStrategie; readonly context?: AppContext };
 
 class WebCtxImpl implements WebToCloudCtx {
-  readonly onActions = new Set<(token?: TokenAndClaims) => void>();
+  readonly onActions = new Set<(token?: TokenAndSelectedTenantAndLedger) => void>();
   readonly dashboardURI!: string;
   readonly tokenApiURI!: string;
   // readonly uiURI: string;
@@ -72,13 +72,13 @@ class WebCtxImpl implements WebToCloudCtx {
     this.keyBag = this.keyBag ?? (await getKeyBag(this.sthis));
   }
 
-  async onAction(token?: TokenAndClaims) {
+  async onAction(token?: TokenAndSelectedTenantAndLedger) {
     for (const action of this.onActions.values()) {
       action(token);
     }
   }
 
-  onTokenChange(on: (token?: TokenAndClaims) => void) {
+  onTokenChange(on: (token?: TokenAndSelectedTenantAndLedger) => void) {
     if (this.opts.onTokenChange) {
       return this.opts.onTokenChange(on);
     }
@@ -92,7 +92,7 @@ class WebCtxImpl implements WebToCloudCtx {
     };
   }
 
-  readonly _tokenAndClaims = new ResolveOnce<TokenAndClaims | undefined>();
+  readonly _tokenAndClaims = new ResolveOnce<TokenAndSelectedTenantAndLedger | undefined>();
 
   async token() {
     if (this.opts.token) {
@@ -126,7 +126,7 @@ class WebCtxImpl implements WebToCloudCtx {
     this.onAction();
   }
 
-  async setToken(token: TokenAndClaims) {
+  async setToken(token: TokenAndSelectedTenantAndLedger) {
     if (this.opts.setToken) {
       return this.opts.setToken(token);
     }

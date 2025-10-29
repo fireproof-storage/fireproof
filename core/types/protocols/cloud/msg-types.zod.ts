@@ -28,11 +28,11 @@ export const FPCloudClaimSchema = JWTPayloadSchema.extend({
   email: z.email(),
   nickname: z.string().optional(),
   provider: z.enum(["github", "google"]).optional(),
-  created: z.date(),
+  created: z.coerce.date(),
   tenants: z.array(TenantClaimSchema),
   ledgers: z.array(LedgerClaimSchema),
   selected: TenantLedgerSchema,
-});
+}).readonly();
 
 // Type inference from schemas
 export type Role = z.infer<typeof RoleSchema>;
@@ -42,15 +42,15 @@ export type LedgerClaim = z.infer<typeof LedgerClaimSchema>;
 export type TenantLedger = z.infer<typeof TenantLedgerSchema>;
 export type FPCloudClaim = z.infer<typeof FPCloudClaimSchema>;
 
-// For parsing JWT payload with date transformation
-export const FPCloudClaimParseSchema = JWTPayloadSchema.extend({
-  userId: z.string(),
-  email: z.email(),
-  nickname: z.string().optional(),
-  provider: z.enum(["github", "google"]).optional(),
-  // Transform string to Date if needed (common in JWT parsing)
-  created: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num))]),
-  tenants: z.array(TenantClaimSchema),
-  ledgers: z.array(LedgerClaimSchema),
-  selected: TenantLedgerSchema,
-});
+// // For parsing JWT payload with date transformation
+// export const FPCloudClaimParseSchema = JWTPayloadSchema.extend({
+//   userId: z.string(),
+//   email: z.email(),
+//   nickname: z.string().optional(),
+//   provider: z.enum(["github", "google"]).optional(),
+//   // Transform string to Date if needed (common in JWT parsing)
+//   created: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num))]),
+//   tenants: z.array(TenantClaimSchema),
+//   ledgers: z.array(LedgerClaimSchema),
+//   selected: TenantLedgerSchema,
+// });

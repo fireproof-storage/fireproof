@@ -1,7 +1,7 @@
 import React from "react";
 
 import { useNavigate } from "react-router-dom";
-import { DocBase, DocWithId } from "@fireproof/core";
+import { DocBase, DocWithId } from "@fireproof/core-types-base";
 
 // export interface TableRow extends DocBase {
 //   // readonly _id: string;
