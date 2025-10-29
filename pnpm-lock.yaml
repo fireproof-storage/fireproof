@@ -423,7 +423,7 @@ importers:
   cloud/connector/base:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.53
+        specifier: ^0.4.54
         version: 0.4.63(typescript@5.9.3)
       '@fireproof/core-runtime':
         specifier: workspace:*
@@ -447,7 +447,7 @@ importers:
   cloud/connector/iframe:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.53
+        specifier: ^0.4.54
         version: 0.4.63(typescript@5.9.3)
       '@clerk/clerk-js':
         specifier: ^5.102.0
@@ -471,7 +471,7 @@ importers:
   cloud/connector/page:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.53
+        specifier: ^0.4.54
         version: 0.4.63(typescript@5.9.3)
       '@fireproof/cloud-connector-base':
         specifier: workspace:*
