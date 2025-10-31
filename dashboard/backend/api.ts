@@ -1777,19 +1777,7 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err("Cannot share ledger with yourself");
     }
 
-    // 6. Add user to tenant first
-    const rAddUserToTenant = await this.addUserToTenant(this.db, {
-      userName: req.email,
-      tenantId: ledger.tenantId,
-      userId: targetUser.userId,
-      role: "member",
-    });
-
-    if (rAddUserToTenant.isErr()) {
-      return Result.Err(rAddUserToTenant.Err());
-    }
-
-    // 7. Add user to ledger
+    // 6. Add user to ledger (no need to add to tenant for sharing)
     const rAddUser = await this.addUserToLedger(this.db, {
       userName: req.email,
       ledgerId: ledgerId,
@@ -1803,15 +1791,17 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(rAddUser.Err());
     }
 
+    const addedUser = rAddUser.Ok();
+
     return Result.Ok({
       type: "resShareWithUser",
       success: true,
       message: `Successfully shared ledger with ${req.email}`,
-      ledgerId: ledgerId,
-      userId: targetUser.userId,
+      ledgerId: addedUser.ledgerId,
+      userId: addedUser.userId,
       email: req.email,
-      role: req.role || "member",
-      right: req.right || "write",
+      role: addedUser.role,
+      right: addedUser.right,
     });
   }
 
