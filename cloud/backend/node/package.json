@@ -50,7 +50,7 @@
     "@libsql/client": "^0.15.15",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.4",
-    "vitest": "^4.0.3"
+    "vitest": "^4.0.6"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
