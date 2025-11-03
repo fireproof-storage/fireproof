@@ -1106,8 +1106,8 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
       minimatch:
-        specifier: ^10.0.1
-        version: 10.0.3
+        specifier: ^10.1.1
+        version: 10.1.1
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -4850,8 +4850,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  minimatch@10.0.3:
-    resolution: {integrity: sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw==}
+  minimatch@10.1.1:
+    resolution: {integrity: sha512-enIvLvRAFZYXJzkCYG5RKmPfrFArdLv+R+lbQ53BmIMLIry74bjKzX6iHAm8WYamJkhSSEabrWN5D97XnKObjQ==}
     engines: {node: 20 || >=22}
 
   minimatch@3.1.2:
@@ -9589,7 +9589,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  minimatch@10.0.3:
+  minimatch@10.1.1:
     dependencies:
       '@isaacs/brace-expansion': 5.0.0
 

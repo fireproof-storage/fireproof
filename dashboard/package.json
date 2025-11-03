@@ -42,7 +42,7 @@
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
     "jose": "^6.1.0",
-    "minimatch": "^10.0.1",
+    "minimatch": "^10.1.1",
     "multiformats": "^13.4.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
