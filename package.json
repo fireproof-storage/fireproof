@@ -63,7 +63,7 @@
     "@types/deno": "^2.5.0",
     "@types/node": "^24.9.1",
     "@typescript/native-preview": "7.0.0-dev.20251102.1",
-    "deno": "^2.5.4",
+    "deno": "^2.5.6",
     "drizzle-kit": "0.30.6",
     "eslint": "^9.39.0",
     "eslint-plugin-import": "^2.32.0",
