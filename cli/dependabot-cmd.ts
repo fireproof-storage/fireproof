@@ -65,10 +65,10 @@ function getOverallStatus(pr: PR): PRStatus {
   // This handles cases where some checks are IN_PROGRESS and others have failed
   if (states.some((s) => s === "PENDING" || s === "IN_PROGRESS")) {
     return "PENDING";
-  } else if (states.some((s) => s === "FAILURE" || s === "ERROR")) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const failedState = states.find((s) => s === "FAILURE" || s === "ERROR")!;
-    return failedState === "ERROR" ? "ERROR" : "FAILURE";
+  } else if (states.some((s) => s === "ERROR")) {
+    return "ERROR";
+  } else if (states.some((s) => s === "FAILURE")) {
+    return "FAILURE";
   } else if (states.some((s) => s === "SUCCESS")) {
     // Only return SUCCESS if checks pass AND it's mergeable
     if (pr.mergeable === "MERGEABLE" || pr.mergeStateStatus === "CLEAN") {
@@ -351,7 +351,7 @@ export function dependabotCmd(sthis: SuperThis) {
                     : status === "REBASE-PENDING"
                       ? "⚠️ "
                       : "?";
-            const modifiesPackageJson = pr.files?.some((f) => f.path.includes("package.json"));
+            const modifiesPackageJson = pr.files?.some((f) => f.path === "package.json" || f.path.endsWith("/package.json"));
             const typeLabel = modifiesPackageJson ? "[DIRECT DEP]" : "[TRANSITIVE]";
             console.log(`${index + 1}. ${statusEmoji} ${typeLabel} PR #${prNum}: ${pr.title}`);
           }
@@ -486,7 +486,9 @@ export function dependabotCmd(sthis: SuperThis) {
           );
 
           // Trigger rebase on FAILED PRs that are direct dependencies (modify package.json)
-          const directDepFailedPRs = failedPRs.filter((pr) => pr.files?.some((f) => f.path.includes("package.json")));
+          const directDepFailedPRs = failedPRs.filter((pr) =>
+            pr.files?.some((f) => f.path === "package.json" || f.path.endsWith("/package.json")),
+          );
           if (directDepFailedPRs.length > 0) {
             console.log(`🔄 Triggering rebase on ${directDepFailedPRs.length} failed direct dependency PR(s):`);
             for (const pr of directDepFailedPRs) {
