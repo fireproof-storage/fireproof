@@ -22,6 +22,7 @@ interface PR {
   readonly body?: string;
   readonly mergeable?: string; // MERGEABLE, CONFLICTING, UNKNOWN
   readonly mergeStateStatus?: string; // CLEAN, DIRTY, UNSTABLE, etc.
+  readonly files?: { path: string }[]; // Files modified by the PR
 }
 
 function isDependabotRebasing(pr: PR): boolean {
@@ -100,16 +101,79 @@ async function checkAutoMergeEnabled(): Promise<boolean> {
   }
 }
 
-async function fetchDependabotPRs(): Promise<PR[]> {
+async function fetchDependabotPRs(repo = ""): Promise<PR[]> {
   try {
-    const result =
-      await $`gh pr list --author app/dependabot --json number,title,author,url,headRefName,statusCheckRollup,body,mergeable,mergeStateStatus --limit 100`;
+    let result;
+    if (repo) {
+      result =
+        await $`gh pr list -R ${repo} --author app/dependabot --json number,title,author,url,headRefName,statusCheckRollup,body,mergeable,mergeStateStatus,files --limit 100`;
+    } else {
+      result =
+        await $`gh pr list --author app/dependabot --json number,title,author,url,headRefName,statusCheckRollup,body,mergeable,mergeStateStatus,files --limit 100`;
+    }
     const prs = JSON.parse(result.stdout) as PR[];
     return prs;
   } catch (error) {
     console.error("Failed to fetch Dependabot PRs:", error);
     throw error;
   }
+}
+
+interface PRDependency {
+  prNumber: number;
+  dependsOn: number[]; // PR numbers this PR depends on
+  reason: string; // Why it depends on them
+  priority: number; // Lower number = higher priority (merge first)
+}
+
+interface DependencyMap {
+  dependencies: PRDependency[];
+  mergeOrder: number[]; // Suggested merge order
+}
+
+function detectLockfileConflicts(prs: PR[]): DependencyMap {
+  const dependencies: PRDependency[] = [];
+  const lockfilePattern = /(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|Gemfile\.lock|Cargo\.lock|go\.sum)/;
+  const packageFilePattern = /(package\.json|Cargo\.toml|go\.mod|Gemfile)/;
+
+  // Group PRs by whether they modify package files or just lockfiles
+  const prsWithPackageFiles: PR[] = [];
+  const prsWithOnlyLockfiles: PR[] = [];
+
+  for (const pr of prs) {
+    if (!pr.files || pr.files.length === 0) {
+      continue;
+    }
+
+    const modifiesPackageFile = pr.files.some((f) => packageFilePattern.test(f.path));
+    const modifiesLockfile = pr.files.some((f) => lockfilePattern.test(f.path));
+
+    if (modifiesPackageFile) {
+      prsWithPackageFiles.push(pr);
+    } else if (modifiesLockfile) {
+      prsWithOnlyLockfiles.push(pr);
+    }
+  }
+
+  // PRs that only modify lockfiles should wait for PRs that modify package files
+  for (const pr of prsWithOnlyLockfiles) {
+    if (prsWithPackageFiles.length > 0) {
+      dependencies.push({
+        prNumber: pr.number,
+        dependsOn: prsWithPackageFiles.map((p) => p.number),
+        reason: "Lockfile-only PR should wait for package.json changes",
+        priority: 2,
+      });
+    }
+  }
+
+  // Assign priorities: package file changes = 1, lockfile only = 2
+  const mergeOrder: number[] = [...prsWithPackageFiles.map((pr) => pr.number), ...prsWithOnlyLockfiles.map((pr) => pr.number)];
+
+  return {
+    dependencies,
+    mergeOrder,
+  };
 }
 
 async function waitForPRsToSucceed(prNumbers: number[], timeoutMinutes = 30): Promise<void> {
@@ -158,7 +222,20 @@ async function waitForPRsToSucceed(prNumbers: number[], timeoutMinutes = 30): Pr
   }
 }
 
-async function applyPR(pr: PR, rebase: boolean, useAutoMerge: boolean = false): Promise<void> {
+async function triggerDependabotRebase(prNumber: number, repo = ""): Promise<void> {
+  try {
+    if (repo) {
+      await $`gh pr comment ${prNumber} -R ${repo} --body "@dependabot rebase"`;
+    } else {
+      await $`gh pr comment ${prNumber} --body "@dependabot rebase"`;
+    }
+    console.log(`   Triggered Dependabot rebase for PR #${prNumber}`);
+  } catch (error) {
+    console.error(`   Failed to trigger rebase for PR #${prNumber}:`, error);
+  }
+}
+
+async function applyPR(pr: PR, rebase: boolean, useAutoMerge = false): Promise<void> {
   try {
     console.log(`\nProcessing PR #${pr.number}: ${pr.title}`);
 
@@ -221,10 +298,67 @@ export function dependabotCmd(sthis: SuperThis) {
         short: "w",
         description: "CLI merges when CI passes (use with --rebase)",
       }),
+      mapDependencies: flag({
+        long: "map-dependencies",
+        short: "m",
+        description: "Analyze and display PR dependencies and suggested merge order",
+      }),
+      repo: option({
+        long: "repo",
+        type: string,
+        defaultValue: () => "",
+        description: "Target repository in format 'owner/repo' (e.g., 'VibesDIY/vibes.diy'). Defaults to current directory's repo.",
+      }),
     },
     handler: async (args) => {
       console.log("Fetching Dependabot PRs...");
-      const prs = await fetchDependabotPRs();
+      const prs = await fetchDependabotPRs(args.repo);
+
+      // Map dependencies mode
+      if (args.mapDependencies) {
+        console.log(`\nAnalyzing dependencies for ${prs.length} Dependabot PR(s)...\n`);
+        const depMap = detectLockfileConflicts(prs);
+
+        if (depMap.dependencies.length === 0) {
+          console.log("✓ No lockfile conflicts detected between PRs.\n");
+        } else {
+          console.log(`Found ${depMap.dependencies.length} PR(s) with potential lockfile conflicts:\n`);
+          depMap.dependencies.forEach((dep) => {
+            console.log(`PR #${dep.prNumber}:`);
+            console.log(`  Should wait for: ${dep.dependsOn.map((n) => `#${n}`).join(", ")}`);
+            console.log(`  Reason: ${dep.reason}`);
+            console.log();
+          });
+        }
+
+        console.log("Suggested merge order (merge in this sequence):");
+        console.log(depMap.mergeOrder.map((n) => `#${n}`).join(" → "));
+        console.log();
+
+        // Show PR details in merge order
+        console.log("PRs in suggested merge order:");
+        depMap.mergeOrder.forEach((prNum, index) => {
+          const pr = prs.find((p) => p.number === prNum);
+          if (pr) {
+            const status = getOverallStatus(pr);
+            const statusEmoji =
+              status === "SUCCESS"
+                ? "✓"
+                : status === "FAILURE"
+                  ? "✗"
+                  : status === "PENDING"
+                    ? "○"
+                    : status === "REBASE-PENDING"
+                      ? "⚠️ "
+                      : "?";
+            const modifiesPackageJson = pr.files?.some((f) => f.path.includes("package.json"));
+            const typeLabel = modifiesPackageJson ? "[DIRECT DEP]" : "[TRANSITIVE]";
+            console.log(`${index + 1}. ${statusEmoji} ${typeLabel} PR #${prNum}: ${pr.title}`);
+          }
+        });
+        console.log();
+        return;
+      }
 
       // Always show auto-merge status for list mode, even if no PRs
       if (args.list || (!args.apply && !args.rebase && !args.prNumber)) {
@@ -293,10 +427,9 @@ export function dependabotCmd(sthis: SuperThis) {
                       : overallStatus === "ERROR"
                         ? "⚠"
                         : "?";
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            console.log(
-              `  Status: ${statusEmoji} ${overallStatus} (${pr.statusCheckRollup!.length} check${pr.statusCheckRollup!.length !== 1 ? "s" : ""})`,
-            );
+
+            const checkCount = pr.statusCheckRollup?.length ?? 0;
+            console.log(`  Status: ${statusEmoji} ${overallStatus} (${checkCount} check${checkCount !== 1 ? "s" : ""})`);
           }
           console.log();
         });
@@ -321,35 +454,73 @@ export function dependabotCmd(sthis: SuperThis) {
           // Clean flow: show initial summary, then process with minimal output
           const initialPRs = [...prs]; // Keep original list for final summary
 
+          // Analyze dependencies and get smart merge order
+          const depMap = detectLockfileConflicts(prs);
+          console.log(`\n📊 Dependency Analysis:`);
+          if (depMap.dependencies.length > 0) {
+            console.log(`   Found ${depMap.dependencies.length} PR(s) with lockfile dependencies`);
+            console.log(`   Suggested merge order: ${depMap.mergeOrder.map((n) => `#${n}`).join(" → ")}`);
+          } else {
+            console.log(`   No lockfile conflicts detected`);
+          }
+
+          // Reorder PRs according to smart merge order
+          const orderedPRs = depMap.mergeOrder
+            .map((prNum) => prs.find((pr) => pr.number === prNum))
+            .filter((pr): pr is PR => pr !== undefined);
+
           // Categorize initial PRs
-          const successPRs = prs.filter((pr) => getOverallStatus(pr) === "SUCCESS");
-          const pendingPRs = prs.filter((pr) => {
+          const successPRs = orderedPRs.filter((pr) => getOverallStatus(pr) === "SUCCESS");
+          const pendingPRs = orderedPRs.filter((pr) => {
             const status = getOverallStatus(pr);
             return status === "PENDING" || status === "REBASE-PENDING";
           });
-          const failedPRs = prs.filter((pr) => {
+          const failedPRs = orderedPRs.filter((pr) => {
             const status = getOverallStatus(pr);
             return status === "FAILURE" || status === "ERROR";
           });
 
-          const totalToProcess = successPRs.length + pendingPRs.length;
+          const totalToProcess = successPRs.length + pendingPRs.length + failedPRs.length;
           console.log(
-            `\nProcessing ${successPRs.length} SUCCESS PRs, waiting for ${pendingPRs.length} PENDING, skipping ${failedPRs.length} FAILED\n`,
+            `\nProcessing ${successPRs.length} SUCCESS PRs, waiting for ${pendingPRs.length} PENDING, ${failedPRs.length} FAILED (will retry)\n`,
           );
+
+          // Trigger rebase on FAILED PRs that are direct dependencies (modify package.json)
+          const directDepFailedPRs = failedPRs.filter((pr) => pr.files?.some((f) => f.path.includes("package.json")));
+          if (directDepFailedPRs.length > 0) {
+            console.log(`🔄 Triggering rebase on ${directDepFailedPRs.length} failed direct dependency PR(s):`);
+            for (const pr of directDepFailedPRs) {
+              console.log(`   PR #${pr.number}: ${pr.title}`);
+              await triggerDependabotRebase(pr.number, args.repo);
+            }
+            console.log(`   Waiting 2 minutes for Dependabot to rebase and CI to run...\n`);
+            await new Promise((resolve) => setTimeout(resolve, 120000));
+
+            // After waiting, check if any PRs transitioned to SUCCESS or PENDING
+            console.log(`   Checking PR status after rebase...`);
+            const refreshedPRs = await fetchDependabotPRs(args.repo);
+            const rebasedPRNumbers = directDepFailedPRs.map((pr) => pr.number);
+            for (const prNum of rebasedPRNumbers) {
+              const pr = refreshedPRs.find((p) => p.number === prNum);
+              if (pr) {
+                const status = getOverallStatus(pr);
+                console.log(`   PR #${prNum}: ${status}`);
+              }
+            }
+            console.log();
+          }
 
           let processed = 0;
           const processedPRs = new Set<number>();
-          const skippedPRs = new Set<number>();
+          const permanentlyFailedPRs = new Set<number>(); // Only skip after multiple failures
 
-          // Track failed PRs immediately
-          failedPRs.forEach((pr) => skippedPRs.add(pr.number));
-
-          // With --wait, continuously process PRs until none are left
-          let remainingPRs = prs;
+          // With --autoCLI, continuously process PRs until none are left
+          // Use ordered PRs for smart merge order
+          let remainingPRs = orderedPRs;
           const failedToApply = new Set<number>(); // Track PRs that failed to apply
 
           while (remainingPRs.length > 0) {
-            // Categorize current PRs
+            // Categorize PRs
             const currentSuccessPRs = remainingPRs.filter(
               (pr) => getOverallStatus(pr) === "SUCCESS" && !processedPRs.has(pr.number),
             );
@@ -358,25 +529,41 @@ export function dependabotCmd(sthis: SuperThis) {
               return (status === "PENDING" || status === "REBASE-PENDING") && !processedPRs.has(pr.number);
             });
 
-            // Process SUCCESS PRs with clean output
-            for (const pr of currentSuccessPRs) {
-              try {
-                processed++;
-                console.log(`Processing [${processed}/${totalToProcess}]: PR #${pr.number} ✓ Enabled auto-merge`);
-                await applyPR(pr, true, args.autoGH && autoMergeAvailable);
-                processedPRs.add(pr.number);
-                failedToApply.delete(pr.number);
-              } catch (error) {
-                failedToApply.add(pr.number);
+            // Process SUCCESS PRs first
+            if (currentSuccessPRs.length > 0) {
+              console.log(`Rebasing ${currentSuccessPRs.length} PR(s) with SUCCESS status:\n`);
+              for (const pr of currentSuccessPRs) {
+                try {
+                  processed++;
+                  console.log(`Processing [${processed}/${totalToProcess}]: PR #${pr.number}`);
+                  await applyPR(pr, true, args.autoGH && autoMergeAvailable);
+                  processedPRs.add(pr.number);
+                  failedToApply.delete(pr.number);
+                } catch (error) {
+                  const errorMsg = String(error);
+                  if (errorMsg.includes("not mergeable")) {
+                    console.error(`✗ PR #${pr.number} is not mergeable (needs rebase), will wait for Dependabot...`);
+                    failedToApply.add(pr.number);
+                  } else {
+                    console.error(`✗ Failed to apply PR #${pr.number}, will retry in next iteration.`);
+                    failedToApply.add(pr.number);
+                  }
+                }
+              }
+
+              // After merging PRs, wait for Dependabot to rebase the remaining ones
+              if (processedPRs.size > 0 && failedToApply.size > 0) {
+                console.log(
+                  `\n⏳ Waiting 60 seconds for Dependabot to automatically rebase ${failedToApply.size} PR(s) after base branch changes...\n`,
+                );
+                await new Promise((resolve) => setTimeout(resolve, 60000));
               }
             }
 
             // Wait for pending PRs if any
             if (currentPendingPRs.length > 0) {
               const pendingNumbers = currentPendingPRs.map((pr) => pr.number);
-              console.log(
-                `Waiting for CI checks on ${currentPendingPRs.length} PRs... (${Math.floor(Math.random() * 3 + 1)}m ${Math.floor(Math.random() * 60)}s elapsed)`,
-              );
+              console.log(`Waiting for CI checks on ${currentPendingPRs.length} PRs...`);
               await waitForPRsToSucceed(pendingNumbers);
             }
 
@@ -385,20 +572,33 @@ export function dependabotCmd(sthis: SuperThis) {
 
             // If no PRs left, we're done
             if (newRemainingPRs.length === 0) {
+              console.log("\n✓ All PRs have been merged or closed!");
               break;
             }
 
-            // Check if we made progress
-            const unprocessedPRs = newRemainingPRs.filter((pr) => !processedPRs.has(pr.number) && !skippedPRs.has(pr.number));
-            if (unprocessedPRs.length === 0) {
+            // Check if we made progress or have PRs that need retry
+            const unprocessedPRs = newRemainingPRs.filter(
+              (pr) => !processedPRs.has(pr.number) && !permanentlyFailedPRs.has(pr.number),
+            );
+
+            // Continue if there are unprocessed PRs OR PRs that failed to apply (need rebase)
+            const hasWorkToDo = unprocessedPRs.length > 0 || failedToApply.size > 0;
+
+            if (!hasWorkToDo) {
+              console.log("\n✓ No more PRs to process.");
               break;
             }
 
-            remainingPRs = newRemainingPRs;
+            // Reorder remaining PRs according to dependency map
+            const newDepMap = detectLockfileConflicts(newRemainingPRs);
+            remainingPRs = newDepMap.mergeOrder
+              .map((prNum) => newRemainingPRs.find((pr) => pr.number === prNum))
+              .filter((pr): pr is PR => pr !== undefined);
 
             // Brief pause to avoid API hammering
             if (currentSuccessPRs.length === 0 && currentPendingPRs.length === 0) {
-              await new Promise((resolve) => setTimeout(resolve, 5000));
+              console.log("⏳ No PRs ready to merge, waiting 30 seconds before retry...");
+              await new Promise((resolve) => setTimeout(resolve, 30000));
             }
           }
 
@@ -407,7 +607,7 @@ export function dependabotCmd(sthis: SuperThis) {
           console.log(`\nCompleted processing ${initialPRs.length} Dependabot PR(s):\n`);
 
           const finalProcessedPRs = initialPRs.filter((pr) => processedPRs.has(pr.number));
-          const finalSkippedPRs = initialPRs.filter((pr) => skippedPRs.has(pr.number) || failedToApply.has(pr.number));
+          const finalSkippedPRs = initialPRs.filter((pr) => permanentlyFailedPRs.has(pr.number) || failedToApply.has(pr.number));
 
           if (finalProcessedPRs.length > 0) {
             console.log(`✓ Successfully processed ${finalProcessedPRs.length} PRs:`);
