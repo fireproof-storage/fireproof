@@ -19,7 +19,7 @@ const serveFireproofAssets = (): Plugin => ({
       // Serve the HTML file
       let url = req.url?.split("?")[0] || "";
       if (url.startsWith("/@fireproof")) {
-        if (url === "/@fireproof/cloud-connector-iframe") {
+        if (url === "/@fireproof/cloud-connector-svc") {
           url += "/index.js";
         }
 
@@ -64,7 +64,7 @@ const serveFireproofAssets = (): Plugin => ({
     });
 
     const result = await esbuild.build({
-      entryPoints: [path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/index.ts")],
+      entryPoints: [path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-svc/index.ts")],
       bundle: true,
       format: "esm",
       write: false,
@@ -76,7 +76,7 @@ const serveFireproofAssets = (): Plugin => ({
 
     this.emitFile({
       type: "asset",
-      fileName: "@fireproof/cloud-connector-iframe/index.js",
+      fileName: "@fireproof/cloud-connector-svc/index.js",
       source: bundledCode,
     });
   },
@@ -170,4 +170,4 @@ export default defineConfig({
   },
 });
 
-// console.log(">>>>>>", path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-iframe/index.ts"));
+// console.log(">>>>>>", path.resolve(__dirname, "node_modules/@fireproof/cloud-connector-svc/index.ts"));

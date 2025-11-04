@@ -31,6 +31,7 @@ function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
 }
 
 export class SimpleTokenStrategy implements TokenStrategie {
+  readonly waitState: "started" | "stopped" = "stopped";
   private tc: TokenAndSelectedTenantAndLedger;
   constructor(jwk: string) {
     let claims: FPCloudClaim;

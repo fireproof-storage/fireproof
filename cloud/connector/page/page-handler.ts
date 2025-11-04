@@ -5,7 +5,7 @@
 import { Future } from "@adviser/cement";
 import { Writable } from "ts-essentials";
 import { PageFPCCProtocol } from "./page-fpcc-protocol.js";
-import { FPCCMessage } from "@fireproof/cloud-connector-base";
+import { FPCCMessage, FPCCProtocolBase } from "@fireproof/cloud-connector-base";
 
 /**
  * Creates an iframe element with the specified source
@@ -39,12 +39,12 @@ function insertIframeAsLastElement(iframe: HTMLIFrameElement): void {
 /**
  * Main function to set up the iframe
  */
-export function initializeIframe(pageProtocol: PageFPCCProtocol): Promise<PageFPCCProtocol> {
+export function initializeIframe(pageProtocol: FPCCProtocolBase, iframeSrc: string): Promise<HTMLIFrameElement> {
   (globalThis as Record<symbol, unknown>)[Symbol.for("FP_PRESET_ENV")] = {
     FP_DEBUG: "*",
   };
 
-  const iframe = createIframe(pageProtocol.dst);
+  const iframe = createIframe(iframeSrc);
   const waitForLoad = new Future<void>();
   // Add load event listener
   // console.log("Initializing FPCC iframe with src:", iframeHref.toString());
@@ -63,10 +63,8 @@ export function initializeIframe(pageProtocol: PageFPCCProtocol): Promise<PageFP
   });
   // Add error event listener
   iframe.addEventListener("error", pageProtocol.handleError);
-
   insertIframeAsLastElement(iframe);
-
-  return waitForLoad.asPromise().then(() => pageProtocol);
+  return waitForLoad.asPromise().then(() => iframe);
 }
 
 // Initialize when script loads

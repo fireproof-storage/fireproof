@@ -8,11 +8,15 @@ import {
   ResTokenByResultId,
 } from "./msg-types.js";
 import { FAPIMsgImpl } from "./msg-is.js";
+import { ensureLogger } from "@fireproof/core-runtime";
+import { SuperThis } from "@fireproof/core-types-base";
 
 export class DashApi {
   readonly apiUrl: string;
   readonly isser = new FAPIMsgImpl();
-  constructor(apiUrl: string) {
+  readonly logger: Logger;
+  constructor(sthis: SuperThis, apiUrl: string) {
+    this.logger = ensureLogger(sthis, "DashApi");
     this.apiUrl = apiUrl;
   }
 

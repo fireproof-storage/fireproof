@@ -5,6 +5,7 @@ import { WebCtx } from "./react/use-attach.js";
 import { WebToCloudCtx } from "./react/types.js";
 
 export class IframeStrategy implements TokenStrategie {
+  waitState: "started" | "stopped" = "stopped";
   hash(): string {
     return "IframeStrategy: this is not a advance";
   }

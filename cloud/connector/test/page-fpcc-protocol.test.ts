@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { PageFPCCProtocol } from "@fireproof/cloud-connector-page";
-import { IframeFPCCProtocol } from "@fireproof/cloud-connector-iframe";
+import { SvcFPCCProtocol } from "@fireproof/cloud-connector-svc";
 import { FPCCMessage, FPCCPing } from "@fireproof/cloud-connector-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { Writable } from "ts-essentials";
@@ -11,7 +11,7 @@ describe("FPCC Protocol", () => {
     iframeHref: "https://example.com/iframe",
     loginWaitTime: 1000,
   });
-  const iframeProtocol = new IframeFPCCProtocol(sthis, {
+  const iframeProtocol = new SvcFPCCProtocol(sthis, {
     dashboardURI: "https://example.com/dashboard",
     cloudApiURI: "https://example.com/wait-for-token",
   });

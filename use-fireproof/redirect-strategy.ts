@@ -162,7 +162,7 @@ export class RedirectStrategy implements TokenStrategie {
       throw new Error("waitForToken not working on redirect strategy");
     }
     const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    const dashApi = new DashApi(webCtx.tokenApiURI);
+    const dashApi = new DashApi(sthis, webCtx.tokenApiURI);
     this.waitState = "started";
     return new Promise<Result<TokenAndSelectedTenantAndLedger>>((resolve) => {
       this.getTokenAndClaimsByResultId(logger, dashApi, this.resultId, opts, (tokenAndClaims) => {

@@ -1,17 +1,17 @@
 import { DocWithId, useFireproof, toCloud, FPCloudConnectStrategy } from "use-fireproof";
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { overlayHtml } from "./overlayHtml.js";
+// import { overlayHtml } from "./overlayHtml.js";
 // import { URI } from "@adviser/cement";
 
 function App() {
+
   const { database, attach } = useFireproof("fireproof-5-party", {
     attach: toCloud({
-      strategy: new FPCloudConnectStrategy({
+      strategy: FPCloudConnectStrategy({
         //   overlayCss: defaultOverlayCss,
-        overlayHtml,
+        // overlayHtml,
         // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
-        // cloudApiURI: "http://localhost:7370/api",
       }),
       // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
       // tenant: "3rd-party",

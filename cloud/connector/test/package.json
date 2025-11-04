@@ -34,6 +34,7 @@
   "dependencies": {
     "@fireproof/cloud-connector-base": "workspace:*",
     "@fireproof/cloud-connector-iframe": "workspace:*",
+    "@fireproof/cloud-connector-svc": "workspace:*",
     "@fireproof/cloud-connector-page": "workspace:*",
     "@fireproof/core-runtime": "workspace:*",
     "@vitest/browser": "^4.0.4",

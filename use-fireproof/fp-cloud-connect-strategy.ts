@@ -1,251 +1,259 @@
-import { BuildURI, KeyedResolvOnce, Lazy, Logger, ResolveSeq, Result, URI } from "@adviser/cement";
+import { Future, KeyedResolvOnce, Lazy, Logger, poller, ResolveSeq } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
-import { ToCloudOpts, TokenAndSelectedTenantAndLedger, TokenStrategie } from "@fireproof/core-types-protocols-cloud";
-import { ensureLogger, ensureSuperThis, hashObjectSync, sleep } from "@fireproof/core-runtime";
+import { TokenStrategie } from "@fireproof/core-types-protocols-cloud";
+import { ensureSuperThis, hashObjectSync, sleep } from "@fireproof/core-runtime";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
-import { defaultOverlayCss, defaultOverlayHtml } from "./overlay-html-defaults.js";
-import { PageFPCCProtocol, initializeIframe } from "@fireproof/cloud-connector-page";
 
-import { FPCCEvtApp, FPCCEvtNeedsLogin, dbAppKey } from "@fireproof/cloud-connector-base";
-import DOMPurify from "dompurify";
+import { FPCCProtocol, FPCCProtocolBase, isInIframe } from "@fireproof/cloud-connector-base";
+import { useEffect, useState } from "react";
+import { defaultFPCloudConnectorOpts, fpCloudConnector } from "../cloud/connector/svc/fp-cloud-connector.js";
+import { FPCloudConnectStrategyImpl } from "./fp-cloud-connect-strategy-impl.js";
+import { initializeIframe, PageFPCCProtocolOpts } from "@fireproof/cloud-connector-page";
+import { FPCloudFrontend, FPCloudFrontendImpl} from "./window-open-fp-cloud.js";
 
 export interface FPCloudConnectOpts extends RedirectStrategyOpts {
   readonly dashboardURI?: string;
   readonly cloudApiURI?: string;
   readonly fpCloudConnectURL: string;
+  readonly pageController: PageControllerImpl;
   readonly title?: string;
   readonly sthis?: SuperThis;
+  readonly frontend?: FPCloudFrontend;
 }
+
+// which cases exist
+// stategy is called in the calling page
+//   - ask my self if providing iframe services use them
+//   - search for iframes and ask if ready use them
+//   - if not found create an iframe and wait for it to be ready
+
+// stategy is called in an iframe
+//   - ask my self if providing iframe services use them
+//   - wait for parent to provide services
+
+interface PageControllerOpts {
+  readonly window: Window;
+  readonly sthis: SuperThis;
+  readonly logger: Logger;
+  readonly frontend: FPCloudFrontend;
+}
+
+export type PageControllerImplOpts = PageFPCCProtocolOpts & Partial<PageControllerOpts>;
+
+// const registerIframe = Lazy((callback: (iframe: HTMLIFrameElement) => void) => {
+//   // Check existing iframes first
+//   document.querySelectorAll("iframe").forEach((iframe) => {
+//     callback(iframe as HTMLIFrameElement);
+//   });
+
+//   // Watch for new iframes
+//   const observer = new MutationObserver((mutations) => {
+//     mutations.forEach((mutation) => {
+//       mutation.addedNodes.forEach((node) => {
+//         if (node.nodeName === "IFRAME") {
+//           callback(node as HTMLIFrameElement);
+//         }
+
+//         // Check if added node contains iframes
+//         if (node instanceof Element) {
+//           node.querySelectorAll("iframe").forEach((iframe) => {
+//             callback(iframe as HTMLIFrameElement);
+//           });
+//         }
+//       });
+//     });
+//   });
+
+//   observer.observe(document.body, {
+//     childList: true,
+//     subtree: true,
+//   });
+
+//   return observer; // Return so you can disconnect later
+// });
+
+export class PageControllerImpl {
+  mode: "myself" | "parent" | "child" | "unknown" | "timeout" = "unknown";
+
+  readonly window: Window;
+  readonly registerWaitTime: number;
+  readonly protocol: FPCCProtocolBase;
+  readonly sthis: SuperThis;
+  readonly intervalMs: number;
+  readonly iframeHref: string;
+  readonly frontend: FPCloudFrontend;
+
+  constructor(opts: PageControllerImplOpts) {
+    this.window = opts.window ?? window;
+    this.sthis = opts.sthis ?? ensureSuperThis();
+    this.registerWaitTime = opts.registerWaitTime || 10000;
+    this.intervalMs = opts.intervalMs || 150;
+    this.protocol = new FPCCProtocolBase(this.sthis, opts.logger);
+    this.iframeHref = opts.iframeHref;
+    this.frontend = opts.frontend ?? new FPCloudFrontendImpl({
+      sthis: this.sthis,
+    });
+  }
+
+  hash = Lazy(() =>
+    hashObjectSync({
+      registerWaitTime: this.registerWaitTime,
+      intervalMs: this.intervalMs,
+      protocol: this.protocol.hash(),
+      iframeHref: this.iframeHref,
+    }),
+  );
+
+  readonly appId = Lazy(() => {
+    // setup in ready
+    return `we-need-to-implement-app-id-this:${this.sthis.nextId(8)}`;
+  });
+
+  readonly openloginSeq = new ResolveSeq();
+  readonly ready = Lazy(async (): Promise<void> => {
+    const actions: Promise<"timeout" | "parent" | "myself" | "child">[] = [
+      sleep(this.registerWaitTime).then(() => "timeout" as const),
+    ];
+    actions.push(this.myselfWaiting().then(() => "myself" as const));
+    if (isInIframe()) {
+      actions.push(this.parentWaiting().then(() => "parent" as const));
+    } else {
+      actions.push(this.childWaiting().then(() => "child" as const));
+    }
+
+    this.protocol.onFPCCEvtNeedsLogin((msg) => {
+      this.openloginSeq.add(async () => {
+        // test if all dbs are ready
+        console.log("FPCloudConnectStrategy detected needs login event");
+        this.frontend.openFireproofLogin(msg);
+        return; 
+      });
+      // logger.Info().Msg("FPCloudConnectStrategy detected needs login event");
+    });
+
+    return Promise.race(actions).then((mode) => {
+      this.mode = mode;
+    });
+  });
+
+  
+
+  async #waitingForReady(tid: string, dst: string): Promise<void> {
+    const ready = new Future<void>();
+    const unreg = this.protocol.onFPCCEvtConnectorReady((msg, _srcEvent) => {
+      if (msg.tid === tid) {
+        return Promise.resolve();
+      }
+      ready.resolve();
+    });
+
+    const abCtl = new AbortController();
+    return Promise.race([
+      poller(
+        async () => {
+          this.protocol.sendMessage(
+            {
+              tid: tid,
+              src: "parentWaiting",
+              dst: "myself",
+              type: "FPCCReqWaitConnectorReady",
+            },
+            dst,
+          );
+          return {
+            state: "waiting",
+          };
+        },
+        {
+          intervalMs: this.intervalMs,
+          abortSignal: abCtl.signal,
+        },
+      ).then(() => {
+        /* nop */
+      }),
+      ready.asPromise(),
+    ]).finally(() => {
+      unreg();
+      abCtl.abort();
+    });
+  }
+  async parentWaiting(): Promise<void> {
+    const tid = this.sthis.nextId(16).str;
+    await this.#waitingForReady(tid, this.window.parent.location.href);
+  }
+  async childWaiting(): Promise<void> {
+    const tid = this.sthis.nextId(16).str;
+    const waitingIframes: Promise<void>[] = [];
+    const iframes = document.querySelectorAll("iframe");
+    if (iframes.length === 0) {
+      const iframe = await initializeIframe(this.protocol, this.iframeHref);
+      waitingIframes.push(this.#waitingForReady(tid, iframe.src));
+    } else {
+      iframes.forEach((iframe) => {
+        waitingIframes.push(this.#waitingForReady(tid, (iframe as HTMLIFrameElement).src));
+      });
+    }
+    return Promise.race(waitingIframes);
+  }
+  async myselfWaiting(): Promise<void> {
+    const tid = this.sthis.nextId(16).str;
+    await this.#waitingForReady(tid, this.window.location.href);
+  }
+}
+
+export const PageController = Lazy((opts: PageControllerImplOpts) => {
+  return new PageControllerImpl(opts);
+});
 
 // open(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): void;
 // tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
 // waitForToken(sthis: SuperThis, logger: Logger, deviceId: string, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;
 // stop(): void;
 
-const ppageProtocolInstances = new KeyedResolvOnce<PageFPCCProtocol>();
+// const ppageProtocolInstances = new KeyedResolvOnce<PageFPCCProtocol>();
 
-function ppageProtocolKey(iframeSrc: string): string {
-  let iframeHref: URI;
-  if (typeof iframeSrc === "string" && iframeSrc.match(/^[./]/)) {
-    // Infer the path to in-iframe.js from the current module's location
-    // eslint-disable-next-line no-restricted-globals
-    const scriptUrl = new URL(import.meta.url);
-    // eslint-disable-next-line no-restricted-globals
-    iframeHref = URI.from(new URL(iframeSrc, scriptUrl).href);
-  } else {
-    iframeHref = URI.from(iframeSrc);
-  }
-  return iframeHref.toString();
+// function ppageProtocolKey(iframeSrc: string): string {
+//   let iframeHref: URI;
+//   if (typeof iframeSrc === "string" && iframeSrc.match(/^[./]/)) {
+//     // Infer the path to in-iframe.js from the current module's location
+//     // eslint-disable-next-line no-restricted-globals
+//     const scriptUrl = new URL(import.meta.url);
+//     // eslint-disable-next-line no-restricted-globals
+//     iframeHref = URI.from(new URL(iframeSrc, scriptUrl).href);
+//   } else {
+//     iframeHref = URI.from(iframeSrc);
+//   }
+//   return iframeHref.toString();
+// }
+
+const fpCloudConnectStrategyInstances = new KeyedResolvOnce<TokenStrategie>();
+// this is the frontend of fp service connector
+export function FPCloudConnectStrategy(opts: Partial<FPCloudConnectOpts> = {}): TokenStrategie {
+  const key = hashObjectSync(opts);
+  return fpCloudConnectStrategyInstances.get(key).once(() => {
+    return new FPCloudConnectStrategyImpl(opts);
+  });
 }
 
-const registerLocalDbNames = new KeyedResolvOnce<Promise<void>, string>();
 
-export class FPCloudConnectStrategy implements TokenStrategie {
-  overlayNode?: HTMLDivElement;
-  waitState: "started" | "stopped" = "stopped";
-
-  readonly overlayCss: string;
-  readonly overlayHtml: (redirectLink: string) => string;
-  readonly title: string;
-  readonly fpCloudConnectURL: string;
-  readonly sthis: SuperThis;
-  readonly logger: Logger;
-
-  constructor(opts: Partial<FPCloudConnectOpts> = {}) {
-    this.overlayCss = opts.overlayCss ?? defaultOverlayCss();
-    this.overlayHtml = opts.overlayHtml ?? defaultOverlayHtml;
-
-    const dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/";
-    let fpCloudConnectURL: BuildURI;
-    if (opts.fpCloudConnectURL) {
-      fpCloudConnectURL = BuildURI.from(opts.fpCloudConnectURL);
-    } else {
-      fpCloudConnectURL = BuildURI.from(
-        // eslint-disable-next-line no-restricted-globals
-        new URL("/", dashboardURI).toString(),
-      ).pathname("/@fireproof/cloud-connector-iframe/injected-iframe.html");
-    }
-
-    if (opts.dashboardURI) {
-      fpCloudConnectURL.setParam("dashboard_uri", opts.dashboardURI);
-    }
-    if (opts.cloudApiURI) {
-      fpCloudConnectURL.setParam("cloud_api_uri", opts.cloudApiURI);
-    }
-    this.fpCloudConnectURL = fpCloudConnectURL.toString();
-    // console.log("FPCloudConnectStrategy constructed with fpCloudConnectURL", this.fpCloudConnectURL);
-    this.title = opts.title ?? "Fireproof Login";
-    this.sthis = opts.sthis ?? ensureSuperThis();
-    this.logger = ensureLogger(this.sthis, "FPCloudConnectStrategy");
-  }
-  readonly hash = Lazy(() =>
-    hashObjectSync({
-      overlayCss: this.overlayCss,
-      overlayHtml: this.overlayHtml("X").toString(),
-      fpCloudConnectURL: this.fpCloudConnectURL,
+// this is the backend fp service connector
+export function useFPCloudConnectSvc(): { fpSvc: FPCCProtocol; state: string } {
+  const fpSvc = fpCloudConnector(
+    defaultFPCloudConnectorOpts({
+      loadUrlStr: window.location.href,
     }),
   );
-
-  openFireproofLogin(msg: FPCCEvtNeedsLogin): void {
-    // const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-    this.logger.Debug().Url(msg.loginURL).Msg("open redirect");
-
-    let overlayNode = document.body.querySelector("#fpOverlay") as HTMLDivElement;
-    if (!overlayNode) {
-      const styleNode = document.createElement("style");
-      styleNode.innerHTML = DOMPurify.sanitize(this.overlayCss);
-      document.head.appendChild(styleNode);
-      overlayNode = document.createElement("div") as HTMLDivElement;
-      overlayNode.id = "fpOverlay";
-      overlayNode.className = "fpOverlay";
-      const myHtml = this.overlayHtml(msg.loginURL);
-      console.log("FPCloudConnectStrategy openFireproofLogin creating overlay with html", myHtml);
-      overlayNode.innerHTML = DOMPurify.sanitize(myHtml);
-      document.body.appendChild(overlayNode);
-      overlayNode.querySelector(".fpCloseButton")?.addEventListener("click", () => {
-        if (overlayNode) {
-          if (overlayNode.style.display === "block") {
-            overlayNode.style.display = "none";
-            this.stop();
-          } else {
-            overlayNode.style.display = "block";
-          }
-        }
-      });
-    }
-    overlayNode.style.display = "block";
-    this.overlayNode = overlayNode;
-    const width = 800;
-    const height = 600;
-    const parentScreenX = window.screenX || window.screenLeft; // Cross-browser compatibility
-    const parentScreenY = window.screenY || window.screenTop; // Cross-browser compatibility
-
-    // Get the parent window's outer dimensions (including chrome)
-    const parentOuterWidth = window.outerWidth;
-    const parentOuterHeight = window.outerHeight;
-
-    // Calculate the left position for the new window
-    // Midpoint of parent window's width - half of new window's width
-    const left = parentScreenX + parentOuterWidth / 2 - width / 2;
-
-    // Calculate the top position for the new window
-    // Midpoint of parent window's height - half of new window's height
-    const top = parentScreenY + parentOuterHeight / 2 - height / 2;
-
-    window.open(
-      // eslint-disable-next-line no-restricted-globals
-      new URL(msg.loginURL),
-      this.title,
-      `left=${left},top=${top},width=${width},height=${height},scrollbars=yes,resizable=yes,popup=yes`,
-    );
-    // window.location.href = url.toString();
-  }
-
-  readonly openloginSeq = new ResolveSeq();
-  // readonly waitForTokenPerLocalDbFuture = new KeyedResolvOnce<Future<Result<TokenAndClaims>>>();
-
-  fpccEvtApp2TokenAndClaims(evt: FPCCEvtApp): Result<TokenAndSelectedTenantAndLedger> {
-    // convertToTokenAndClaims({
-
-    // }, this.logger, evt.localDb.accessToken)
-    const tAndC: TokenAndSelectedTenantAndLedger = {
-      token: evt.localDb.accessToken,
-      claims: {
-        selected: {
-          tenant: evt.localDb.tenantId,
-          ledger: evt.localDb.ledgerId,
-        },
-      },
-    };
-    return Result.Ok(tAndC);
-  }
-
-  getPageProtocol(sthis: SuperThis): Promise<PageFPCCProtocol> {
-    const key = ppageProtocolKey(this.fpCloudConnectURL);
-    return ppageProtocolInstances.get(key).once(async () => {
-      console.log("FPCloudConnectStrategy creating new PageFPCCProtocol for key", key, import.meta.url);
-      const ppage = new PageFPCCProtocol(sthis, { iframeHref: key });
-      await initializeIframe(ppage);
-      await ppage.ready();
-      ppage.onFPCCEvtNeedsLogin((msg) => {
-        this.openloginSeq.add(() => {
-          // test if all dbs are ready
-          console.log("FPCloudConnectStrategy detected needs login event");
-          this.openFireproofLogin(msg);
-          return sleep(10000);
-        });
-        // logger.Info().Msg("FPCloudConnectStrategy detected needs login event");
-      });
-      // this.waitForTokenPerLocalDbFuture.get(key).once(() => new Future<void>());
-      ppage.onFPCCEvtApp((evt) => {
-        const key = dbAppKey({ appId: evt.appId, dbName: evt.localDb.dbName });
-        const rTAndC = this.fpccEvtApp2TokenAndClaims(evt);
-        console.log("FPCloudConnectStrategy received FPCCEvtApp, resolving waitForTokenAndClaims for key", key, rTAndC.Ok());
-        this.waitForTokenAndClaims.get(key).reset(() => rTAndC);
-        // if (future) {
-        //   future.resolve(rTAndC)
-        // }
-      });
-      return ppage.ready();
+  const [fpSvcState, setFpSvcState] = useState("initializing");
+  useEffect(() => {
+    console.log("useFPCloudConnect initializing token strategy");
+    fpSvc.ready().then(() => {
+      console.log("useFPCloudConnect token strategy ready");
+      setFpSvcState("ready");
     });
-  }
+  }, [fpSvc]);
 
-  open(sthis: SuperThis, logger: Logger, localDbName: string, _opts: ToCloudOpts) {
-    console.log("FPCloudConnectStrategy open called for localDbName", localDbName);
-    return this.getPageProtocol(sthis).then((ppage) => {
-      return registerLocalDbNames.get(`${localDbName}:${ppage.getAppId()}:${ppage.dst}`).once(() => {
-        console.log("FPCloudConnectStrategy open registering localDbName", localDbName);
-      });
-    });
-  }
-
-  // private currentToken?: TokenAndClaims;
-
-  // waiting?: ReturnType<typeof setTimeout>;
-
-  stop() {
-    console.log("FPCloudConnectStrategy stop called");
-    // if (this.waiting) {
-    //   clearTimeout(this.waiting);
-    //   this.waiting = undefined;
-    // }
-    // this.waitState = "stopped";
-  }
-
-  readonly waitForTokenAndClaims = new KeyedResolvOnce<Result<TokenAndSelectedTenantAndLedger>>();
-  // async tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined> {
-  //   console.log("FPCloudConnectStrategy tryToken called", opts);
-  //   // if (!this.currentToken) {
-  //   //   const webCtx = opts.context.get(WebCtx) as WebToCloudCtx;
-  //   //   this.currentToken = await webCtx.token();
-  //   //   // console.log("RedirectStrategy tryToken - ctx", this.currentToken);
-  //   // }
-  //   // return this.currentToken;
-  //   return undefined;
-  // }
-
-  async waitForToken(
-    _sthis: SuperThis,
-    _logger: Logger,
-    localDbName: string,
-    _opts: ToCloudOpts,
-  ): Promise<Result<TokenAndSelectedTenantAndLedger>> {
-    // console.log("FPCloudConnectStrategy waitForToken called for localDbName", localDbName);
-    const ppage = await this.getPageProtocol(this.sthis);
-    const key = dbAppKey({ appId: ppage.getAppId(), dbName: localDbName });
-    await this.openloginSeq.flush();
-    return this.waitForTokenAndClaims.get(key).once(() => {
-      return ppage.registerDatabase(localDbName).then((evt) => {
-        if (evt.isErr()) {
-          console.log("FPCloudConnectStrategy waitForToken registering database failed for key", key, evt);
-          return Result.Err(evt);
-        }
-        console.log("FPCloudConnectStrategy waitForToken resolving for key", key);
-        return this.fpccEvtApp2TokenAndClaims(evt.Ok());
-      });
-
-      // const future = this.waitForTokenPerLocalDbFuture.get(key).once(() => new Future<Result<TokenAndClaims>>())
-      // return future.asPromise();
-    });
-  }
+  return {
+    fpSvc,
+    state: fpSvcState,
+  };
 }

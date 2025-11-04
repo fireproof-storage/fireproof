@@ -35,11 +35,11 @@ export default {
       //   return new Response(html, { status: 200, headers: { "Content-Type": "text/html" } });
       // }
       // break;
+      case uri.pathname.startsWith("/@fireproof/cloud-connector-svc"): {
+        console.log("module request", request.method, uri.toString());
+        return env.ASSETS.fetch(uri.build().appendRelative("index.js").asURL(), request as unknown as CFRequest);
+      }
       case uri.pathname.startsWith("/@fireproof/cloud-connector-iframe"): {
-        if (uri.pathname === "/@fireproof/cloud-connector-iframe") {
-          console.log("module request", request.method, uri.toString());
-          return env.ASSETS.fetch(uri.build().appendRelative("index.js").asURL(), request as unknown as CFRequest);
-        }
         console.log("direct request", request.method, uri.toString());
         return env.ASSETS.fetch(request as unknown as CFRequest);
       }

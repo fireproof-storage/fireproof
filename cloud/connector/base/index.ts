@@ -11,3 +11,16 @@ export interface DbKey {
 export function dbAppKey(o: DbKey): string {
   return o.appId + ":" + o.dbName;
 }
+
+export function isInIframe(win: {
+  readonly self: Window | null;
+  readonly top: Window | null;
+} = window): boolean {
+  try {
+    return win.self !== win.top;
+  } catch (e) {
+    // If we can't access window.top due to cross-origin restrictions,
+    // we're definitely in an iframe
+    return true;
+  }
+}

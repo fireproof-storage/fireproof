@@ -23,6 +23,8 @@ export interface TokenAndSelectedTenantAndLedger {
 }
 
 export interface TokenStrategie {
+  waitState: "started" | "stopped";
+  ready?: () => Promise<void>;
   hash(): string;
   open(sthis: SuperThis, logger: Logger, localDbName: string, opts: ToCloudOpts): void;
   // tryToken(sthis: SuperThis, logger: Logger, opts: ToCloudOpts): Promise<TokenAndClaims | undefined>;

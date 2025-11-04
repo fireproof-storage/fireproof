@@ -22,6 +22,8 @@ import { ensureSuperThis } from "@fireproof/core-runtime";
 export { FPCloudConnectStrategy } from "./fp-cloud-connect-strategy.js";
 export { convertToTokenAndClaims } from "@fireproof/cloud-connector-base";
 
+export * as jsx from "./jsx-helper.js";
+
 export type UseFpToCloudParam = Omit<Omit<Omit<ToCloudOptionalOpts, "strategy">, "context">, "events"> &
   Partial<WebToCloudCtx> & {
     readonly strategy?: TokenStrategie;

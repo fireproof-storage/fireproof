@@ -1,11 +1,10 @@
-import { ensureLogger, sleep } from "@fireproof/core-runtime";
+import { ensureLogger, hashObjectSync, sleep } from "@fireproof/core-runtime";
 import { SuperThis } from "@fireproof/core-types-base";
-import { Future, KeyedResolvOnce, Logger, ResolveOnce, Result } from "@adviser/cement";
+import { Future, KeyedResolvOnce, Lazy, Logger, ResolveOnce, Result } from "@adviser/cement";
 import {
   FPCCProtocol,
   FPCCProtocolBase,
   FPCCEvtApp,
-  FPCCEvtNeedsLogin,
   FPCCMessage,
   FPCCMsgBase,
   FPCCReqRegisterLocalDbName,
@@ -21,6 +20,8 @@ export interface PageFPCCProtocolOpts {
   readonly maxConnectRetries?: number;
   readonly iframeHref: string;
   readonly loginWaitTime?: number;
+  readonly registerWaitTime?: number;
+  readonly intervalMs?: number;
 }
 
 interface WaitForFPCCEvtApp {
@@ -36,13 +37,13 @@ export class PageFPCCProtocol implements FPCCProtocol {
   readonly dst: string;
 
   // readonly futureConnected = new Future<void>();
-  readonly onFPCCEvtNeedsLoginFns = new Set<(msg: FPCCEvtNeedsLogin) => void>();
-  readonly onFPCCEvtAppFns = new Set<(msg: FPCCEvtApp) => void>();
   readonly registerFPCCEvtApp = new KeyedResolvOnce<WaitForFPCCEvtApp>();
   readonly waitforFPCCEvtAppFutures = new Map<string, Future<FPCCEvtApp>>();
   waitForConnection?: ReturnType<typeof setInterval>;
   readonly loginWaitTime: number;
   readonly starter = new ResolveOnce<void>();
+
+  readonly hash: () => string;
 
   constructor(sthis: SuperThis, iopts: PageFPCCProtocolOpts) {
     const opts = {
@@ -55,6 +56,7 @@ export class PageFPCCProtocol implements FPCCProtocol {
     this.logger = ensureLogger(sthis, "PageFPCCProtocol", {
       iFrameHref: this.dst,
     });
+    this.hash = Lazy(() => hashObjectSync(opts));
     this.fpccProtocol = new FPCCProtocolBase(sthis, this.logger);
     this.maxConnectRetries = opts.maxConnectRetries;
     this.loginWaitTime = opts.loginWaitTime;
@@ -62,8 +64,6 @@ export class PageFPCCProtocol implements FPCCProtocol {
 
   stop(): void {
     this.fpccProtocol.stop();
-    this.onFPCCEvtAppFns.clear();
-    this.onFPCCEvtNeedsLoginFns.clear();
     this.waitforFPCCEvtAppFutures.clear();
     this.registerFPCCEvtApp.reset();
     this.starter.reset();
@@ -71,14 +71,6 @@ export class PageFPCCProtocol implements FPCCProtocol {
       clearInterval(this.waitForConnection);
       this.waitForConnection = undefined;
     }
-  }
-
-  readonly handleMessage = (_event: MessageEvent<unknown>): void => {
-    this.fpccProtocol.handleMessage(_event);
-  };
-
-  onFPCCMessage(callback: (msg: FPCCMessage) => boolean | undefined): void {
-    this.fpccProtocol.onFPCCMessage(callback);
   }
 
   getAppId(): string {
@@ -89,15 +81,6 @@ export class PageFPCCProtocol implements FPCCProtocol {
   readonly handleError = (_error: unknown): void => {
     throw new Error("Method not implemented.");
   };
-
-  // readonly onceConnected = Lazy((error?: Error) => {
-  //   if (error) {
-  //     this.logger.Error().Err(error).Msg("Failed to connect FPCCProtocol");
-  //     this.futureConnected.reject(error);
-  //     return;
-  //   }
-  //   this.futureConnected.resolve();
-  // });
 
   async registerDatabase(dbName: string, ireg: Partial<FPCCReqRegisterLocalDbName> = {}): Promise<Result<FPCCEvtApp>> {
     return this.ready().then(() => {
@@ -161,16 +144,25 @@ export class PageFPCCProtocol implements FPCCProtocol {
     });
   }
 
-  injectSend(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown>) => FPCCMessage): void {
+  injectSend(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown> | string) => FPCCMessage): void {
     this.fpccProtocol.injectSend(send);
   }
 
-  ready(): Promise<PageFPCCProtocol> {
+  sendMessage<T extends FPCCMsgBase>(event: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void {
+    this.fpccProtocol.sendMessage(event, srcEvent);
+  }
+
+  readonly ready = Lazy(async (): Promise<PageFPCCProtocol>  => {
     return this.starter
       .once(async () => {
         await this.fpccProtocol.ready();
         let maxTries = 0;
         const appId = this.getAppId();
+
+
+
+
+
         this.waitForConnection = setInterval(() => {
           if (maxTries > this.maxConnectRetries) {
             this.logger.Error().Msg("FPCC iframe connection timeout.");
@@ -181,7 +173,7 @@ export class PageFPCCProtocol implements FPCCProtocol {
           if (maxTries && maxTries % ~~(this.maxConnectRetries / 2) === 0) {
             this.logger.Warn().Int("tried", maxTries).Msg("Waiting for FPCC iframe connector to be ready...");
           }
-          this.sendMessage<FPCCReqWaitConnectorReady>({
+          this.fpccProtocol.sendMessage<FPCCReqWaitConnectorReady>({
             src: window.location.href,
             type: "FPCCReqWaitConnectorReady",
             dst: "iframe",
@@ -192,12 +184,13 @@ export class PageFPCCProtocol implements FPCCProtocol {
         }, 100);
         const waitForConnectorReady = new Future<void>();
 
-        this.onFPCCMessage((msg: FPCCMessage): boolean | undefined => {
+        // this.fpccProtocol.onFPCCEvtNeedsLogin((msg: FPCCMessage): boolean | undefined => {
+        //       this.logger.Info().Any(msg).Msg("Received needs login event from FPCC iframe");
+        //       this.onFPCCEvtNeedsLoginFns.forEach((cb) => cb(msg));
+        // })
           // console.log("PageFPCCProtocol received message", msg);
-          switch (true) {
+          // switch (true) {
             case isFPCCEvtNeedsLogin(msg): {
-              this.logger.Info().Any(msg).Msg("Received needs login event from FPCC iframe");
-              this.onFPCCEvtNeedsLoginFns.forEach((cb) => cb(msg));
               break;
             }
             case isFPCCEvtApp(msg): {
@@ -227,15 +220,7 @@ export class PageFPCCProtocol implements FPCCProtocol {
         return waitForConnectorReady.asPromise();
       })
       .then(() => this);
-  }
-
-  onFPCCEvtNeedsLogin(callback: (msg: FPCCEvtNeedsLogin) => void): void {
-    this.onFPCCEvtNeedsLoginFns.add(callback);
-  }
-
-  onFPCCEvtApp(callback: (msg: FPCCEvtApp) => void): void {
-    this.onFPCCEvtAppFns.add(callback);
-  }
+  })
 
   sendMessage<T extends FPCCMsgBase>(msg: FPCCSendMessage<T>, srcEvent = new MessageEvent("sendMessage")): T {
     return this.fpccProtocol.sendMessage(msg, srcEvent);

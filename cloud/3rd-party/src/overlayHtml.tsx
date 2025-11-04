@@ -1,9 +1,9 @@
-import { renderToString } from "preact-render-to-string";
-import { createElement } from "preact";
+import { jsx } from "use-fireproof";
 
-const React = {
-  createElement,
-};
+const {
+  renderToString,
+  React 
+} = jsx
 
 // function jsxDEV(...args: unknown[]) {
 //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
