@@ -1,10 +1,10 @@
+import React, { useContext, useEffect, useState } from "react";
 import { URI } from "@adviser/cement";
-import { TenantLedger } from "@fireproof/core-types-protocols-cloud";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { base64url } from "jose";
-import React, { useContext, useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.jsx";
+import { TenantLedger } from "@fireproof/core-types-protocols-cloud";
 import { ListTenantsLedgersByUser } from "../../../cloud-context.jsx";
 
 interface TenantLedgerWithName {
@@ -51,11 +51,8 @@ export function ApiTokenAuto() {
     );
   }
 
-  // Get user's tenants and ledgers (includes both owned and shared ledgers)
+  // Get user's tenants and ledgers
   const { data: tenantsData, error: tenantsError } = cloud.getListTenantsLedgersByUser();
-
-  // Also get all ledgers user is a member of (including shared ones not in their tenants)
-  const { data: allUserLedgers, error: allUserLedgersError } = cloud.getListLedgersByUser();
 
   // Create ledger mutation
   const createLedgerMutation = useMutation({
@@ -73,9 +70,9 @@ export function ApiTokenAuto() {
     },
   });
 
-  // Process ledger data when tenants/ledgers are loaded
+  // Process ledger data when tenants are loaded
   useEffect(() => {
-    if (ledgerInfo) {
+    if (!tenantsData || tenantsData.length === 0 || ledgerInfo) {
       return;
     }
 
@@ -89,45 +86,27 @@ export function ApiTokenAuto() {
       return;
     }
 
-    // Look for existing ledger by name or ID in all user's ledgers (including shared)
+    // Look for existing ledger by name or ID
     let foundLedger: TenantLedgerWithName | null = null;
 
-    // First check in allUserLedgers (includes shared ledgers)
-    if (allUserLedgers?.ledgers) {
-      const matchingLedger = allUserLedgers.ledgers.find(
-        (ledger) => ledger.name === ledgerName || (ledgerId && ledger.ledgerId === ledgerId),
-      );
-
-      if (matchingLedger) {
-        foundLedger = {
-          tenant: matchingLedger.tenantId,
-          ledger: matchingLedger.ledgerId,
-          name: matchingLedger.name,
-        };
-      }
-    }
-
-    // Fallback: check in tenantsData if not found
-    if (!foundLedger && tenantsData && tenantsData.length > 0) {
-      for (const tenant of tenantsData) {
-        for (const ledger of tenant.ledgers) {
-          if (ledger.name === ledgerName || (ledgerId && ledger.ledgerId === ledgerId)) {
-            foundLedger = {
-              tenant: tenant.tenant.tenantId,
-              ledger: ledger.ledgerId,
-              name: ledger.name,
-            };
-            break;
-          }
+    for (const tenant of tenantsData) {
+      for (const ledger of tenant.ledgers) {
+        if (ledger.name === ledgerName || (ledgerId && ledger.ledgerId === ledgerId)) {
+          foundLedger = {
+            tenant: tenant.tenant.tenantId,
+            ledger: ledger.ledgerId,
+            name: ledger.name,
+          };
+          break;
         }
-        if (foundLedger) break;
       }
+      if (foundLedger) break;
     }
 
     if (foundLedger) {
       setLedgerInfo(foundLedger);
-    } else if (tenantsData && tenantsData.length > 0) {
-      // Only create a new ledger if user has tenants (don't create for shared-only users)
+    } else {
+      // Need to create a new ledger
       const targetTenant = tenantId
         ? tenantsData.find((t: ListTenantsLedgersByUser) => t.tenant.tenantId === tenantId)?.tenant
         : tenantsData[0]?.tenant;
@@ -139,7 +118,7 @@ export function ApiTokenAuto() {
         });
       }
     }
-  }, [tenantsData, allUserLedgers, tenantId, ledgerId, ledgerName, ledgerInfo, createLedgerMutation]);
+  }, [tenantsData, tenantId, ledgerId, ledgerName, ledgerInfo, createLedgerMutation]);
 
   // Handle successful ledger creation
   useEffect(() => {
@@ -203,7 +182,7 @@ export function ApiTokenAuto() {
   }, [cloudToken, backUrl, countdownSecs]);
 
   // Show errors
-  const error = tenantsError || allUserLedgersError || createLedgerMutation.error || errorToken;
+  const error = tenantsError || createLedgerMutation.error || errorToken;
   if (error) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
