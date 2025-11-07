@@ -46,6 +46,7 @@ const opts = tseslint.config(
       ],
       "no-console": ["warn"],
       "import/no-duplicates": ["error"],
+      "@typescript-eslint/unified-signatures": "off",
     },
   },
   {
