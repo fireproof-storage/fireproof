@@ -14,11 +14,11 @@ export default defineConfig({
         {
           browser: "chromium",
           //setupFile: './chromium-setup.js',
-          context: {
-            // Disable screenshots and video recording
-            recordVideo: undefined,
-            recordHar: undefined,
-          },
+          // context: {
+          //   // Disable screenshots and video recording
+          //   recordVideo: undefined,
+          //   recordHar: undefined,
+          // },
         },
       ],
       screenshotFailures: false,

@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "vitest": "^4.0.6",
+    "vitest": "^4.0.8",
     "zx": "^8.8.5"
   }
 }
