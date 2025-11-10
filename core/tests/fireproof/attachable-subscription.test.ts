@@ -1,7 +1,7 @@
-import { AppContext, BuildURI, WithoutPromise } from "@adviser/cement";
+import { AppContext, BuildURI, WithoutPromise, sleep } from "@adviser/cement";
 import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, DocBase } from "@fireproof/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 
 const ROWS = 2;
 

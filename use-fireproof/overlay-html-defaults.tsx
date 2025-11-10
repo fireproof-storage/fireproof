@@ -2,15 +2,13 @@ import { React, renderToString } from "./jsx-helper.js";
 
 export function defaultOverlayHtml(redirectLink: string) {
   return renderToString(
-    <>
-      <div className="fpOverlayContent">
-        <div className="fpCloseButton">&times;</div>
-        Fireproof Dashboard Sign in to Fireproof Dashboard
-        <a href={redirectLink} target="_blank">
-          Redirect to Fireproof
-        </a>
-      </div>
-    </>,
+    <div className="fpOverlayContent">
+      <div className="fpCloseButton">&times;</div>
+      Fireproof Dashboard Sign in to Fireproof Dashboard
+      <a href={redirectLink} target="_blank">
+        Redirect to Fireproof
+      </a>
+    </div>,
   );
 }
 

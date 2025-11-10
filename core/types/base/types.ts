@@ -159,6 +159,7 @@ export interface SuperThis {
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;
+  hash(): string;
 }
 
 export interface IdleEventFromCommitQueue {

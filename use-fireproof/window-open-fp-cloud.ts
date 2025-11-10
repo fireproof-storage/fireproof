@@ -5,12 +5,8 @@ import { Logger } from "@adviser/cement";
 import { defaultOverlayCss, defaultOverlayHtml } from "./overlay-html-defaults.js";
 import { SuperThis } from "@fireproof/core-types-base";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
+import { FPCloudFrontend } from "@fireproof/cloud-connector-page";
 
-export interface FPCloudFrontend {
-  hash(): string;
-  openFireproofLogin(msg: FPCCEvtNeedsLogin): void;
-  stop(): void;
-}
 
 export interface FPCloudFrontendImplOpts extends RedirectStrategyOpts {
   readonly sthis: SuperThis;

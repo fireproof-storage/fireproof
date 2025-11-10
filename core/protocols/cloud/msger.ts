@@ -1,4 +1,4 @@
-import { BuildURI, CoerceURI, Logger, Result, runtimeFn, URI } from "@adviser/cement";
+import { BuildURI, CoerceURI, Logger, Result, runtimeFn, URI, sleep } from "@adviser/cement";
 import {
   buildReqGestalt,
   defaultGestalt,
@@ -30,7 +30,7 @@ import {
 import { ensurePath, HttpConnection } from "./http-connection.js";
 import { WSConnection } from "./ws-connection.js";
 import { SuperThis } from "@fireproof/core-types-base";
-import { ensureLogger, sleep } from "@fireproof/core-runtime";
+import { ensureLogger } from "@fireproof/core-runtime";
 import pLimit from "@fireproof/vendor/p-limit";
 
 // const headers = {

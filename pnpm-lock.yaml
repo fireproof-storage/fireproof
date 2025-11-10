@@ -77,24 +77,8 @@ importers:
   cli:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -151,36 +135,14 @@ importers:
   cloud/3rd-party:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
->>>>>>> fade9b61 (wip [skip ci])
       preact:
         specifier: ^10.27.2
         version: 10.27.2
       preact-render-to-string:
         specifier: ^6.6.2
         version: 6.6.2(preact@10.27.2)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-      preact:
-        specifier: ^10.27.2
-        version: 10.27.2
-      preact-render-to-string:
-        specifier: ^6.6.2
-        version: 6.6.2(preact@10.27.2)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -207,24 +169,8 @@ importers:
   cloud/backend/base:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@cloudflare/workers-types':
         specifier: ^4.20251111.0
         version: 4.20251111.0
@@ -287,24 +233,8 @@ importers:
   cloud/backend/cf-d1:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@cloudflare/workers-types':
         specifier: ^4.20251111.0
         version: 4.20251111.0
@@ -364,24 +294,8 @@ importers:
   cloud/backend/node:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -441,24 +355,8 @@ importers:
   cloud/base:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../../core/blockstore
@@ -494,7 +392,6 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
-<<<<<<< HEAD
   cloud/box-party:
     dependencies:
       '@adviser/cement':
@@ -523,59 +420,11 @@ importers:
         specifier: ^7.1.12
         version: 7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
 
-||||||| parent of e125fa77 (wip [skip ci])
-=======
-  cloud/box-party:
-    dependencies:
-      '@adviser/cement':
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
-      '@fireproof/cloud-connector-svc':
-        specifier: workspace:*
-        version: link:../connector/svc
-      react:
-        specifier: ^19.2.0
-        version: 19.2.0
-      react-dom:
-        specifier: ^19.2.0
-        version: 19.2.0(react@19.2.0)
-      use-fireproof:
-        specifier: workspace:0.0.0
-        version: link:../../use-fireproof
-    devDependencies:
-      '@types/react':
-        specifier: ^19.2.2
-        version: 19.2.2
-      '@types/react-dom':
-        specifier: ^19.2.2
-        version: 19.2.2(@types/react@19.2.2)
-      '@vitejs/plugin-react':
-        specifier: ^5.1.0
-        version: 5.1.0(vite@7.1.12(@types/node@24.9.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))
-      vite:
-        specifier: ^7.1.12
-        version: 7.1.12(@types/node@24.9.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
-
->>>>>>> e125fa77 (wip [skip ci])
   cloud/connector/base:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
-        specifier: ^0.4.54
-<<<<<<< HEAD
+        specifier: ^0.4.62
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        version: 0.4.62(typescript@5.9.3)
-=======
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-runtime':
         specifier: workspace:*
         version: link:../../../core/runtime
@@ -598,22 +447,8 @@ importers:
   cloud/connector/iframe:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
-        specifier: ^0.4.54
-<<<<<<< HEAD
+        specifier: ^0.4.62
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        version: 0.4.62(typescript@5.9.3)
-=======
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@clerk/clerk-js':
         specifier: ^5.102.0
         version: 5.107.0(@types/react@19.2.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.12)
@@ -636,22 +471,8 @@ importers:
   cloud/connector/page:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
-        specifier: ^0.4.54
-<<<<<<< HEAD
+        specifier: ^0.4.62
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        version: 0.4.62(typescript@5.9.3)
-=======
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/cloud-connector-base':
         specifier: workspace:*
         version: link:../base
@@ -668,11 +489,11 @@ importers:
   cloud/connector/svc:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
+        specifier: ^0.4.62
+        version: 0.4.63(typescript@5.9.3)
       '@clerk/clerk-js':
         specifier: ^5.102.1
-        version: 5.102.1(patch_hash=b21e97952bd0811ee3373b4ce4f4c363cd8d1d7cf01ed705089e8eb2ef466f7e)(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.12)
+        version: 5.107.0(@types/react@19.2.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.12)
       '@fireproof/cloud-connector-base':
         specifier: workspace:*
         version: link:../base
@@ -725,24 +546,8 @@ importers:
   cloud/todo-app:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../vendor
@@ -772,24 +577,8 @@ importers:
   core/base:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -834,24 +623,8 @@ importers:
   core/blockstore:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -910,24 +683,8 @@ importers:
   core/core:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -947,24 +704,8 @@ importers:
   core/device-id:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../keybag
@@ -994,24 +735,8 @@ importers:
   core/gateways/base:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -1034,24 +759,8 @@ importers:
   core/gateways/cloud:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1080,24 +789,8 @@ importers:
   core/gateways/file:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1133,24 +826,8 @@ importers:
   core/gateways/file-deno:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -1167,24 +844,8 @@ importers:
   core/gateways/file-node:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -1195,24 +856,8 @@ importers:
   core/gateways/indexeddb:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1235,24 +880,8 @@ importers:
   core/gateways/memory:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1282,24 +911,8 @@ importers:
   core/keybag:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-gateways-file':
         specifier: workspace:0.0.0
         version: link:../gateways/file
@@ -1328,24 +941,8 @@ importers:
   core/protocols/cloud:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -1368,24 +965,8 @@ importers:
   core/protocols/dashboard:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -1402,24 +983,8 @@ importers:
   core/runtime:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@adviser/ts-xxhash':
         specifier: ^1.0.2
         version: 1.0.2
@@ -1455,24 +1020,8 @@ importers:
   core/tests:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core
@@ -1567,9 +1116,6 @@ importers:
       playwright-chromium:
         specifier: ^1.56.1
         version: 1.56.1
-      playwright-core:
-        specifier: ^1.56.1
-        version: 1.56.1
       vitest:
         specifier: ^4.0.8
         version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -1580,24 +1126,8 @@ importers:
   core/types/base:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -1623,24 +1153,8 @@ importers:
   core/types/blockstore:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1664,24 +1178,8 @@ importers:
   core/types/protocols/cloud:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1708,24 +1206,8 @@ importers:
   core/types/runtime:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
@@ -1736,24 +1218,8 @@ importers:
   dashboard:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@clerk/backend':
         specifier: ^2.21.0
         version: 2.21.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -1848,9 +1314,6 @@ importers:
       '@fireproof/cloud-connector-iframe':
         specifier: workspace:0.0.0
         version: link:../cloud/connector/iframe
-      '@fireproof/cloud-connector-svc':
-        specifier: workspace:0.0.0
-        version: link:../cloud/connector/svc
       '@fireproof/core-cli':
         specifier: workspace:*
         version: link:../cli
@@ -1930,24 +1393,8 @@ importers:
   use-fireproof:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       '@fireproof/cloud-connector-base':
         specifier: workspace:*
         version: link:../cloud/connector/base
@@ -2031,24 +1478,8 @@ importers:
   vendor:
     dependencies:
       '@adviser/cement':
-<<<<<<< HEAD
         specifier: ^0.4.63
         version: 0.4.63(typescript@5.9.3)
-||||||| parent of fade9b61 (wip [skip ci])
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-=======
-<<<<<<< HEAD
-        specifier: ^0.4.58
-        version: 0.4.62(typescript@5.9.3)
-||||||| parent of e125fa77 (wip [skip ci])
-        specifier: ^0.4.54
-        version: 0.4.54(typescript@5.9.3)
-=======
-        specifier: ^0.4.58
-        version: 0.4.58(typescript@5.9.3)
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
       yocto-queue:
         specifier: ^1.2.2
         version: 1.2.2
@@ -2080,24 +1511,8 @@ packages:
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
 
-<<<<<<< HEAD
   '@adviser/cement@0.4.63':
     resolution: {integrity: sha512-ctOtXLi959Ay+lO5fES55ejiNV7EHR0v9GCzCWzdbYlNOh4W165dHpplGoxsrZ2hxzKtQGIk8Qu66YOD+76mhg==}
-||||||| parent of fade9b61 (wip [skip ci])
-  '@adviser/cement@0.4.62':
-    resolution: {integrity: sha512-EwfhbibpB6eKXYw8h8CWBueZ44mIOlll08poUBkKsABTqEXbv54dflQAWX5lnRA/FNRD2ThgejWcxPKxvEvacg==}
-=======
-<<<<<<< HEAD
-  '@adviser/cement@0.4.62':
-    resolution: {integrity: sha512-EwfhbibpB6eKXYw8h8CWBueZ44mIOlll08poUBkKsABTqEXbv54dflQAWX5lnRA/FNRD2ThgejWcxPKxvEvacg==}
-||||||| parent of e125fa77 (wip [skip ci])
-  '@adviser/cement@0.4.54':
-    resolution: {integrity: sha512-LTJQqGgBb6A3pNVLJFIX2/cnkOt9WPakPFDZXQu8Jpza+ZqapqOo4rCS852ZtchjvorKwRwwQIku4OB/bbVcEg==}
-=======
-  '@adviser/cement@0.4.58':
-    resolution: {integrity: sha512-w0mRru1fZLgdXPhlwfQs2woPQwXqmHwW20KX/gWBX6e+ftMHAEJcAwIzPC5tPGJXb2bCUjf3XHU17HjlD4e1/Q==}
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -6893,19 +6308,7 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
 
-<<<<<<< HEAD
   '@adviser/cement@0.4.63(typescript@5.9.3)':
-||||||| parent of fade9b61 (wip [skip ci])
-  '@adviser/cement@0.4.62(typescript@5.9.3)':
-=======
-<<<<<<< HEAD
-  '@adviser/cement@0.4.62(typescript@5.9.3)':
-||||||| parent of e125fa77 (wip [skip ci])
-  '@adviser/cement@0.4.54(typescript@5.9.3)':
-=======
-  '@adviser/cement@0.4.58(typescript@5.9.3)':
->>>>>>> e125fa77 (wip [skip ci])
->>>>>>> fade9b61 (wip [skip ci])
     dependencies:
       ts-essentials: 10.1.1(typescript@5.9.3)
       yaml: 2.8.1

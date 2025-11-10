@@ -1,15 +1,15 @@
-import { Future, KeyedResolvOnce, Lazy, Logger, poller, ResolveSeq } from "@adviser/cement";
+import { Future, KeyedResolvOnce, Lazy, Logger, poller, ResolveSeq, sleep } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { TokenStrategie } from "@fireproof/core-types-protocols-cloud";
-import { ensureSuperThis, hashObjectSync, sleep } from "@fireproof/core-runtime";
+import { ensureSuperThis, hashObjectSync, } from "@fireproof/core-runtime";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
 
 import { FPCCProtocol, FPCCProtocolBase, isInIframe } from "@fireproof/cloud-connector-base";
 import { useEffect, useState } from "react";
 import { defaultFPCloudConnectorOpts, fpCloudConnector } from "../cloud/connector/svc/fp-cloud-connector.js";
 import { FPCloudConnectStrategyImpl } from "./fp-cloud-connect-strategy-impl.js";
-import { initializeIframe, PageFPCCProtocolOpts } from "@fireproof/cloud-connector-page";
-import { FPCloudFrontend, FPCloudFrontendImpl} from "./window-open-fp-cloud.js";
+import { FPCloudFrontend, initializeIframe, PageFPCCProtocolOpts } from "@fireproof/cloud-connector-page";
+import { FPCloudFrontendImpl} from "./window-open-fp-cloud.js";
 
 export interface FPCloudConnectOpts extends RedirectStrategyOpts {
   readonly dashboardURI?: string;

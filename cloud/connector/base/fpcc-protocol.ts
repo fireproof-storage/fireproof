@@ -20,9 +20,28 @@ import {
   isFPCCReqWaitConnectorReady,
   validateFPCCMessage,
 } from "./protocol-fp-cloud-conn.js";
-import { Logger, OnFunc } from "@adviser/cement";
+import { Logger, OnFunc, Result } from "@adviser/cement";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { SuperThis } from "@fireproof/core-types-base";
+
+export interface JustReady {
+  readonly type: "ready";
+}
+
+export interface PeerReady {
+  readonly type: "peer";
+  readonly peer: string;
+}
+
+export function isJustReady(obj: unknown): obj is JustReady {
+  return typeof obj === "object" && obj !== null && (obj as JustReady).type === "ready";
+}
+
+export function isPeerReady(obj: unknown): obj is PeerReady {
+  return typeof obj === "object" && obj !== null && (obj as PeerReady).type === "peer" && typeof (obj as PeerReady).peer === "string";
+}
+
+export type Ready = JustReady | PeerReady;
 
 export interface FPCCProtocol {
   // handle must be this bound method
@@ -31,7 +50,7 @@ export interface FPCCProtocol {
   sendMessage<T extends FPCCMsgBase>(event: FPCCSendMessage<T>, srcEvent: MessageEvent<unknown>): void;
   handleError: (error: unknown) => void;
   injectSend(send: (evt: FPCCMessage, srcEvent: MessageEvent<unknown> | string) => FPCCMessage): void;
-  ready(): Promise<FPCCProtocol>;
+  ready(): Promise<Result<Ready>>;
   stop(): void;
 }
 
@@ -143,9 +162,10 @@ export class FPCCProtocolBase implements FPCCProtocol {
     throw new Error("Method not implemented.");
   };
 
-  ready(): Promise<FPCCProtocol> {
-
-    return Promise.resolve(this);
+  ready(): Promise<Result<Ready>> {
+    return Promise.resolve(Result.Ok({
+      type: "ready" as const,
+    }))
   }
 
   injectSend(sendFn: (msg: FPCCMessage, srcEvent: MessageEvent<unknown> | string) => FPCCMessage): void {
