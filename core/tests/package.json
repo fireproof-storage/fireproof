@@ -61,7 +61,7 @@
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.5",
     "@ipld/dag-json": "^10.2.5",
-    "@types/node": "^24.9.1",
+    "@types/node": "^24.10.0",
     "cborg": "^4.2.18",
     "charwise": "^3.0.1",
     "jose": "^6.0.12",
