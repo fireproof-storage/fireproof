@@ -64,7 +64,7 @@
     "@types/node": "^24.9.1",
     "cborg": "^4.3.0",
     "charwise": "^3.0.1",
-    "jose": "^6.0.12",
+    "jose": "^6.1.1",
     "use-fireproof": "workspace:0.0.0",
     "uuidv7": "^1.0.2"
   },
