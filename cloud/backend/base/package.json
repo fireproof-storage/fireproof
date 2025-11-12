@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.58",
-    "@cloudflare/workers-types": "^4.20251014.0",
+    "@cloudflare/workers-types": "^4.20251111.0",
     "@fireproof/cloud-base": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-gateways-cloud": "workspace:0.0.0",
