@@ -25,6 +25,13 @@ interface PR {
   readonly files?: { path: string }[]; // Files modified by the PR
 }
 
+interface PRRetryTracker {
+  readonly prNumber: number;
+  readonly retryCount: number;
+  readonly wasFlaky: boolean; // true if it failed then passed on retry
+  readonly lastStatus: PRStatus;
+}
+
 function isDependabotRebasing(pr: PR): boolean {
   // Check if Dependabot is rebasing based on merge state
   // DIRTY means there's a rebase in progress (assuming no conflicts)
@@ -235,6 +242,80 @@ async function triggerDependabotRebase(prNumber: number, repo = ""): Promise<voi
   }
 }
 
+async function retryFailedPR(prNumber: number, repo = ""): Promise<void> {
+  try {
+    // Close the PR first
+    if (repo) {
+      await $`gh pr close ${prNumber} -R ${repo}`;
+    } else {
+      await $`gh pr close ${prNumber}`;
+    }
+    console.log(`   ✓ Closed PR #${prNumber}`);
+
+    // Wait for GitHub to process the close
+    console.log(`   ⏳ Waiting 30 seconds for GitHub to process...`);
+    await new Promise((resolve) => setTimeout(resolve, 30000));
+
+    // Reopen the PR to trigger fresh CI
+    if (repo) {
+      await $`gh pr comment ${prNumber} -R ${repo} --body '@dependabot reopen'`;
+    } else {
+      await $`gh pr comment ${prNumber} --body '@dependabot reopen'`;
+    }
+    console.log(`   ↻ Reopened PR #${prNumber} for fresh CI run`);
+
+    // Wait for Dependabot to process the reopen
+    console.log(`   ⏳ Waiting 30 seconds for Dependabot to process...`);
+    await new Promise((resolve) => setTimeout(resolve, 30000));
+  } catch (error) {
+    console.error(`   ✗ Failed to close/reopen PR #${prNumber}:`, error);
+    throw error;
+  }
+}
+
+async function deleteDependabotPRs(prNumbers: number[] | null, repo = ""): Promise<void> {
+  try {
+    const allPRs = await fetchDependabotPRs(repo);
+
+    // If specific PR numbers provided, filter to those
+    let prsToDelete = allPRs;
+    if (prNumbers && prNumbers.length > 0) {
+      prsToDelete = allPRs.filter((pr) => prNumbers.includes(pr.number));
+
+      if (prsToDelete.length === 0) {
+        console.log(`No Dependabot PRs found matching numbers: ${prNumbers.join(", ")}`);
+        return;
+      }
+    }
+
+    if (prsToDelete.length === 0) {
+      console.log("No Dependabot PRs found to delete.");
+      return;
+    }
+
+    console.log(`\n🗑️  Deleting ${prsToDelete.length} Dependabot PR(s)...\n`);
+
+    for (const pr of prsToDelete) {
+      try {
+        if (repo) {
+          await $`gh pr close ${pr.number} -R ${repo}`;
+        } else {
+          await $`gh pr close ${pr.number}`;
+        }
+        console.log(`✓ Closed PR #${pr.number}: ${pr.title}`);
+      } catch (error) {
+        console.error(`✗ Failed to close PR #${pr.number}:`, error);
+      }
+    }
+
+    console.log(`\n✓ Deleted ${prsToDelete.length} Dependabot PR(s)`);
+    console.log("💡 Dependabot will now create fresh PRs on the next run.\n");
+  } catch (error) {
+    console.error("Failed to delete Dependabot PRs:", error);
+    throw error;
+  }
+}
+
 async function applyPR(pr: PR, rebase: boolean, useAutoMerge = false): Promise<void> {
   try {
     console.log(`\nProcessing PR #${pr.number}: ${pr.title}`);
@@ -303,6 +384,28 @@ export function dependabotCmd(sthis: SuperThis) {
         short: "m",
         description: "Analyze and display PR dependencies and suggested merge order",
       }),
+      clean: flag({
+        long: "clean",
+        short: "c",
+        description:
+          "Delete Dependabot PRs and let Dependabot run fresh (clean slate). Use with --pr to delete specific PR(s), or without to delete all.",
+      }),
+      cleanPRs: option({
+        long: "clean-prs",
+        type: string,
+        defaultValue: () => "",
+        description: "Comma-separated PR numbers to delete (e.g., '1354,1349,1348'). Use with --clean to delete specific PRs.",
+      }),
+      retryFailed: flag({
+        long: "retry-failed",
+        description: "Retry failed PRs to detect flaky tests (reopen and wait for fresh CI run)",
+      }),
+      maxRetries: option({
+        long: "max-retries",
+        type: string,
+        defaultValue: () => "1",
+        description: "Maximum number of times to retry a failed PR (default: 1)",
+      }),
       repo: option({
         long: "repo",
         type: string,
@@ -311,6 +414,126 @@ export function dependabotCmd(sthis: SuperThis) {
       }),
     },
     handler: async (args) => {
+      // Clean mode - delete Dependabot PRs
+      if (args.clean) {
+        console.log("🧹 Clean mode: Deleting Dependabot PRs...");
+
+        // Parse PR numbers if provided
+        let prNumbers: number[] | null = null;
+        if (args.cleanPRs) {
+          prNumbers = args.cleanPRs
+            .split(",")
+            .map((n) => parseInt(n.trim(), 10))
+            .filter((n) => !isNaN(n));
+
+          if (prNumbers.length === 0) {
+            console.error("Invalid PR numbers provided to --clean-prs");
+            process.exit(1);
+          }
+        }
+
+        await deleteDependabotPRs(prNumbers, args.repo);
+        return;
+      }
+
+      // Retry failed PRs mode - detect flaky tests
+      if (args.retryFailed) {
+        console.log("🔄 Retry mode: Detecting flaky tests...\n");
+        const maxRetries = parseInt(args.maxRetries, 10) || 1;
+        const prs = await fetchDependabotPRs(args.repo);
+
+        // Find failed PRs
+        const failedPRs = prs.filter((pr) => {
+          const status = getOverallStatus(pr);
+          return status === "FAILURE" || status === "ERROR";
+        });
+
+        if (failedPRs.length === 0) {
+          console.log("✓ No failed PRs found to retry.");
+          return;
+        }
+
+        console.log(`Found ${failedPRs.length} failed PR(s). Retrying with fresh CI runs...\n`);
+        const flakyPRs: PRRetryTracker[] = [];
+
+        for (const pr of failedPRs) {
+          console.log(`Retrying PR #${pr.number}: ${pr.title}`);
+
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            console.log(`  Attempt ${attempt}/${maxRetries}:`);
+
+            // Reopen the PR to trigger fresh CI
+            await retryFailedPR(pr.number, args.repo);
+
+            // Wait for CI to complete
+            console.log(`  ⏳ Waiting 3 minutes for CI to run...`);
+            await new Promise((resolve) => setTimeout(resolve, 180000));
+
+            // Check new status
+            const refreshedPRs = await fetchDependabotPRs(args.repo);
+            const refreshedPR = refreshedPRs.find((p) => p.number === pr.number);
+
+            if (refreshedPR) {
+              const newStatus = getOverallStatus(refreshedPR);
+              console.log(`  Result: ${newStatus}`);
+
+              if (newStatus === "SUCCESS") {
+                console.log(`  ✓ FLAKY TEST DETECTED! PR #${pr.number} passed on retry\n`);
+                flakyPRs.push({
+                  prNumber: pr.number,
+                  retryCount: attempt,
+                  wasFlaky: true,
+                  lastStatus: newStatus,
+                });
+                break; // Success, no need to retry further
+              } else if (attempt < maxRetries) {
+                console.log(`  Retrying...\n`);
+              } else {
+                console.log(`  ✗ Still failing after ${maxRetries} attempt(s)\n`);
+                flakyPRs.push({
+                  prNumber: pr.number,
+                  retryCount: attempt,
+                  wasFlaky: false,
+                  lastStatus: newStatus,
+                });
+              }
+            }
+          }
+        }
+
+        // Summary
+        console.log("\n" + "=".repeat(50));
+        console.log("Flaky Test Report:\n");
+        const flakyCount = flakyPRs.filter((p) => p.wasFlaky).length;
+        const stillFailingCount = flakyPRs.filter((p) => !p.wasFlaky).length;
+
+        if (flakyCount > 0) {
+          console.log(`✓ ${flakyCount} flaky PR(s) detected (passed on retry):`);
+          flakyPRs
+            .filter((p) => p.wasFlaky)
+            .forEach((p) => {
+              const pr = failedPRs.find((fp) => fp.number === p.prNumber);
+              if (pr) {
+                console.log(`  #${p.prNumber}: ${pr.title} (passed on attempt ${p.retryCount})`);
+              }
+            });
+          console.log();
+        }
+
+        if (stillFailingCount > 0) {
+          console.log(`✗ ${stillFailingCount} PR(s) still failing after retries:`);
+          flakyPRs
+            .filter((p) => !p.wasFlaky)
+            .forEach((p) => {
+              const pr = failedPRs.find((fp) => fp.number === p.prNumber);
+              if (pr) {
+                console.log(`  #${p.prNumber}: ${pr.title} (${p.lastStatus})`);
+              }
+            });
+        }
+        return;
+      }
+
       console.log("Fetching Dependabot PRs...");
       const prs = await fetchDependabotPRs(args.repo);
 
