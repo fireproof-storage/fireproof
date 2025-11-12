@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.58",
-    "yocto-queue": "^1.2.1"
+    "yocto-queue": "^1.2.2"
   }
 }
