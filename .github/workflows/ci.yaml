@@ -5,6 +5,7 @@ on:
       - main
       - 'mabels/**'
       - 'jchris/**'
+      - 'dependabot/**'
 
     paths-ignore:
       - 'dashboard/**/*'
