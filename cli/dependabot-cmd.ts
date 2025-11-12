@@ -176,7 +176,7 @@ function detectLockfileConflicts(prs: PR[]): DependencyMap {
   };
 }
 
-async function waitForPRsToSucceed(prNumbers: number[], timeoutMinutes = 30): Promise<void> {
+async function waitForPRsToSucceed(prNumbers: number[], timeoutMinutes = 30, repo = ""): Promise<void> {
   const startTime = Date.now();
   const timeoutMs = timeoutMinutes * 60 * 1000;
   const pollIntervalMs = 10000; // Poll every 10 seconds
@@ -187,7 +187,7 @@ async function waitForPRsToSucceed(prNumbers: number[], timeoutMinutes = 30): Pr
   console.log(`   Monitoring PRs: ${Array.from(remainingPRs).join(", ")}\n`);
 
   while (remainingPRs.size > 0 && Date.now() - startTime < timeoutMs) {
-    const prs = await fetchDependabotPRs();
+    const prs = await fetchDependabotPRs(repo);
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
 
     for (const prNum of Array.from(remainingPRs)) {
@@ -566,11 +566,11 @@ export function dependabotCmd(sthis: SuperThis) {
             if (currentPendingPRs.length > 0) {
               const pendingNumbers = currentPendingPRs.map((pr) => pr.number);
               console.log(`Waiting for CI checks on ${currentPendingPRs.length} PRs...`);
-              await waitForPRsToSucceed(pendingNumbers);
+              await waitForPRsToSucceed(pendingNumbers, 30, args.repo);
             }
 
             // Refresh the PR list
-            const newRemainingPRs = await fetchDependabotPRs();
+            const newRemainingPRs = await fetchDependabotPRs(args.repo);
 
             // If no PRs left, we're done
             if (newRemainingPRs.length === 0) {
