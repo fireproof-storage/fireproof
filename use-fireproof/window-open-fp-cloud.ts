@@ -7,7 +7,6 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
 import { FPCloudFrontend } from "@fireproof/cloud-connector-page";
 
-
 export interface FPCloudFrontendImplOpts extends RedirectStrategyOpts {
   readonly sthis: SuperThis;
   readonly title: string;
@@ -45,7 +44,7 @@ export class FPCloudFrontendImpl implements FPCloudFrontend {
     this.overlayNode = undefined;
   }
 
-  openFireproofLogin(msg: FPCCEvtNeedsLogin): void {
+  openLogin(msg: FPCCEvtNeedsLogin): void {
     // const redirectCtx = opts.context.get(WebCtx) as WebToCloudCtx;
     this.logger.Debug().Url(msg.loginURL).Msg("open redirect");
 
@@ -97,6 +96,5 @@ export class FPCloudFrontendImpl implements FPCloudFrontend {
       this.title,
       `left=${left},top=${top},width=${width},height=${height},scrollbars=yes,resizable=yes,popup=yes`,
     );
-
   }
 }

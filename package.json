@@ -105,7 +105,8 @@
       "workerd"
     ],
     "patchedDependencies": {
-      "drizzle-kit": "patches/drizzle-kit.patch"
+      "drizzle-kit": "patches/drizzle-kit.patch",
+      "@clerk/clerk-js": "patches/@clerk__clerk-js.patch"
     }
   }
 }

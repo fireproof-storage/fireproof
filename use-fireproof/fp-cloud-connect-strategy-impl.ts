@@ -7,7 +7,6 @@ import { FPCCEvtApp, dbAppKey } from "@fireproof/cloud-connector-base";
 import { FPCloudConnectOpts, PageControllerImpl } from "./fp-cloud-connect-strategy.js";
 import { FPCloudFrontendImpl } from "./window-open-fp-cloud.js";
 
-
 const registerLocalDbNames = new KeyedResolvOnce<Promise<void>, string>();
 
 export class FPCloudConnectStrategyImpl implements TokenStrategie {
@@ -20,7 +19,6 @@ export class FPCloudConnectStrategyImpl implements TokenStrategie {
   readonly pageController: PageControllerImpl;
 
   constructor(opts: Partial<FPCloudConnectOpts>) {
-   
     const dashboardURI = opts.dashboardURI ?? "https://dev.connect.fireproof.direct/";
     let fpCloudConnectURL: BuildURI;
     if (opts.fpCloudConnectURL) {
@@ -46,7 +44,7 @@ export class FPCloudConnectStrategyImpl implements TokenStrategie {
       sthis: this.sthis,
       iframeHref: this.fpCloudConnectURL,
       logger: this.logger,
-      frontend: opts.frontend ?? new FPCloudFrontendImpl(opts),
+      fpCloudFrontend: opts.fpCloudFrontend ?? new FPCloudFrontendImpl(opts),
     });
   }
   readonly hash = Lazy(() =>

@@ -1,11 +1,11 @@
 import { Lazy, Logger, poller, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { DashApi, AuthType, isResCloudDbTokenBound } from "@fireproof/core-protocols-dashboard";
-import { BackendFPCC, GetCloudDbTokenResult } from "../svc/svc-fpcc-protocol.js";
-import { ensureLogger, exceptionWrapper, } from "@fireproof/core-runtime";
+import { BackendFPCC, BackendState, GetCloudDbTokenResult } from "../svc/svc-fpcc-protocol.js";
+import { ensureLogger, exceptionWrapper } from "@fireproof/core-runtime";
 import { TokenAndSelectedTenantAndLedger } from "@fireproof/core-types-protocols-cloud";
 import { Clerk } from "@clerk/clerk-js/headless";
-import { DbKey, FPCCEvtApp, convertToTokenAndClaims } from "@fireproof/cloud-connector-base";
+import { FPCCEvtApp, convertToTokenAndClaims } from "@fireproof/cloud-connector-base";
 
 export const clerkSvc = Lazy(async (dashApi: DashApi) => {
   const clerkPubKey = await dashApi.getClerkPublishableKey({});
@@ -14,16 +14,22 @@ export const clerkSvc = Lazy(async (dashApi: DashApi) => {
   await clerk.load();
   clerk.addListener((session) => {
     if (session.user) {
-      dashApi.logger.Info().Any({
-        user: session.user,
-        windowLocation: window.location.href,
-        clerkPubKey,
-      }).Msg("Svc Clerk-User signed in")
+      dashApi.logger
+        .Info()
+        .Any({
+          user: session.user,
+          windowLocation: window.location.href,
+          clerkPubKey,
+        })
+        .Msg("Svc Clerk-User signed in");
     } else {
-      dashApi.logger.Info().Any({
-        windowLocation: window.location.href,
-        clerkPubKey,
-      }).Msg("Svc Clerk-User signed out")
+      dashApi.logger
+        .Info()
+        .Any({
+          windowLocation: window.location.href,
+          clerkPubKey,
+        })
+        .Msg("Svc Clerk-User signed out");
     }
   });
 
@@ -33,32 +39,33 @@ export const clerkSvc = Lazy(async (dashApi: DashApi) => {
 // const clerkFPCCEvtEntities = new KeyedResolvOnce<BackendFPCC>();
 
 export class ClerkFPCCEvtEntity implements BackendFPCC {
-  readonly appId: string;
-  readonly dbName: string;
-  readonly deviceId: string;
+  // readonly appId: string;
+  // readonly dbName: string;
+  // readonly deviceId: string;
   readonly sthis: SuperThis;
   readonly logger: Logger;
   readonly dashApi: DashApi;
   state: "needs-login" | "waiting" | "ready" = "needs-login";
-  constructor(sthis: SuperThis, dashApi: DashApi, dbKey: DbKey, deviceId: string) {
-    this.logger = ensureLogger(sthis, `ClerkFPCCEvtEntity`, {
-      appId: dbKey.appId,
-      dbName: dbKey.dbName,
-      deviceId: deviceId,
-    });
-    this.appId = dbKey.appId;
-    this.dbName = dbKey.dbName;
-    this.deviceId = deviceId;
+  constructor(sthis: SuperThis, dashApi: DashApi/*, dbKey: DbKey, deviceId: string*/) {
+    this.logger = ensureLogger(sthis, `ClerkFPCCEvtEntity`)
+    // , {
+    //   appId: dbKey.appId,
+    //   dbName: dbKey.dbName,
+    //   deviceId: deviceId,
+    // });
+    // this.appId = dbKey.appId;
+    // this.dbName = dbKey.dbName;
+    // this.deviceId = deviceId;
     this.sthis = sthis;
     this.dashApi = dashApi;
   }
 
-  async getCloudDbToken(auth: AuthType): Promise<Result<GetCloudDbTokenResult>> {
+  async getCloudDbToken(auth: AuthType, bkey: BackendState): Promise<Result<GetCloudDbTokenResult>> {
     const rRes = await this.dashApi.getCloudDbToken({
       auth,
-      appId: this.appId,
-      localDbName: this.dbName,
-      deviceId: this.deviceId,
+      appId: bkey.appId,
+      localDbName: bkey.dbName,
+      deviceId: bkey.deviceId,
     });
     if (rRes.isErr()) {
       return Result.Err(rRes);

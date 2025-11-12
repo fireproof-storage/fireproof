@@ -1,9 +1,5 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
-// import { visualizer } from "rollup-plugin-visualizer";
-||||||| parent of 33350045 (chore: lets test the deployment)
-import { defineConfig } from "vite";
-import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig, Plugin } from "vite";
 import { dotenv } from "zx";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import * as path from "path";
@@ -131,7 +127,6 @@ export default defineConfig({
         });
       },
     },
->>>>>>> 4cf9f42f (chore: intro of fp-cloud-connector)
   ],
   define: {
     ...defines(),

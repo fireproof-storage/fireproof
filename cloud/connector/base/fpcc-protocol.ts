@@ -38,7 +38,9 @@ export function isJustReady(obj: unknown): obj is JustReady {
 }
 
 export function isPeerReady(obj: unknown): obj is PeerReady {
-  return typeof obj === "object" && obj !== null && (obj as PeerReady).type === "peer" && typeof (obj as PeerReady).peer === "string";
+  return (
+    typeof obj === "object" && obj !== null && (obj as PeerReady).type === "peer" && typeof (obj as PeerReady).peer === "string"
+  );
 }
 
 export type Ready = JustReady | PeerReady;
@@ -63,26 +65,27 @@ export class FPCCProtocolBase implements FPCCProtocol {
   readonly onMessage = OnFunc<(event: MessageEvent<unknown>) => void>();
   readonly onFPCCMessage = OnFunc<(msg: FPCCMessage, srcEvent: MessageEvent<unknown>) => void>();
 
-  readonly onFPCCEvtNeedsLogin = OnFunc<(msg: FPCCEvtNeedsLogin, srcEvent: MessageEvent<unknown>) => void>()
+  readonly onFPCCEvtNeedsLogin = OnFunc<(msg: FPCCEvtNeedsLogin, srcEvent: MessageEvent<unknown>) => void>();
   readonly onFPCCError = OnFunc<(msg: FPCCError, srcEvent: MessageEvent<unknown>) => void>();
-  readonly onFPCCReqRegisterLocalDbName = OnFunc<(msg: FPCCReqRegisterLocalDbName, srcEvent: MessageEvent<unknown>) => void>()
-  readonly onFPCCEvtApp = OnFunc<(msg: FPCCEvtApp, srcEvent: MessageEvent<unknown>) => void>()  
+  readonly onFPCCReqRegisterLocalDbName = OnFunc<(msg: FPCCReqRegisterLocalDbName, srcEvent: MessageEvent<unknown>) => void>();
+  readonly onFPCCEvtApp = OnFunc<(msg: FPCCEvtApp, srcEvent: MessageEvent<unknown>) => void>();
   readonly onFPCCPing = OnFunc<(msg: FPCCPing, srcEvent: MessageEvent<unknown>) => void>();
-  readonly onFPCCPong = OnFunc<(msg: FPCCPong, srcEvent: MessageEvent<unknown>) => void>()
+  readonly onFPCCPong = OnFunc<(msg: FPCCPong, srcEvent: MessageEvent<unknown>) => void>();
   readonly onFPCCEvtConnectorReady = OnFunc<(msg: FPCCEvtConnectorReady, srcEvent: MessageEvent<unknown>) => void>();
-  readonly onFPCCReqWaitConnectorReady = OnFunc<(msg: FPCCReqWaitConnectorReady, srcEvent: MessageEvent<unknown>) => void>(); 
+  readonly onFPCCReqWaitConnectorReady = OnFunc<(msg: FPCCReqWaitConnectorReady, srcEvent: MessageEvent<unknown>) => void>();
 
   constructor(sthis: SuperThis, logger?: Logger) {
     this.sthis = sthis;
     this.logger = logger || ensureLogger(sthis, "FPCCProtocolBase");
-    this.onMessage(event => {
+    this.onMessage((event) => {
       this.handleMessage(event);
     });
     this.onFPCCMessage((msg, srcEvent) => {
       this.#handleFPCCMessage(msg, srcEvent);
-    })
+    });
     this.onFPCCPing((msg, srcEvent) => {
-      this.sendMessage<FPCCPong>({
+      this.sendMessage<FPCCPong>(
+        {
           src: msg.dst,
           dst: msg.src,
           pingTid: msg.tid,
@@ -114,7 +117,6 @@ export class FPCCProtocolBase implements FPCCProtocol {
   #handleFPCCMessage(event: FPCCMessage, srcEvent: MessageEvent<unknown>) {
     this.logger.Debug().Any("event", event).Msg("Handling FPCC message");
     switch (true) {
-
       case isFPCCEvtNeedsLogin(event): {
         this.onFPCCEvtNeedsLogin.invoke(event, srcEvent);
         break;
@@ -154,7 +156,6 @@ export class FPCCProtocolBase implements FPCCProtocol {
         this.onFPCCReqWaitConnectorReady.invoke(event, srcEvent);
         break;
       }
-
     }
   }
 
@@ -163,9 +164,11 @@ export class FPCCProtocolBase implements FPCCProtocol {
   };
 
   ready(): Promise<Result<Ready>> {
-    return Promise.resolve(Result.Ok({
-      type: "ready" as const,
-    }))
+    return Promise.resolve(
+      Result.Ok({
+        type: "ready" as const,
+      }),
+    );
   }
 
   injectSend(sendFn: (msg: FPCCMessage, srcEvent: MessageEvent<unknown> | string) => FPCCMessage): void {

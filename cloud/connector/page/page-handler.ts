@@ -48,7 +48,7 @@ export function initializeIframe(pageProtocol: FPCCProtocolBase, iframeSrc: stri
   // Add load event listener
   // console.log("Initializing FPCC iframe with src:", iframeHref.toString());
   iframe.addEventListener("load", () => {
-        pageProtocol.injectSend((event: Writable<FPCCMessage>) => {
+    pageProtocol.injectSend((event: Writable<FPCCMessage>) => {
       // console.log("Sending PageFPCCProtocol", event, iframe.src);
       event.dst = iframe.src;
       event.src = window.location.href;

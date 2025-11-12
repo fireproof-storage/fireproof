@@ -7,7 +7,6 @@ import { mockJWK, MockJWK } from "./test-helper.js";
 
 const { MsgIsResChat, buildReqChat } = ps;
 
-
 describe("test multiple connections", () => {
   const sthis = testSuperThis();
   const fpUrl = URI.from(sthis.env.get("FP_ENDPOINT"));

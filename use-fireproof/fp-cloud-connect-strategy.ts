@@ -1,7 +1,7 @@
 import { Future, KeyedResolvOnce, Lazy, Logger, poller, ResolveSeq, sleep } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { TokenStrategie } from "@fireproof/core-types-protocols-cloud";
-import { ensureSuperThis, hashObjectSync, } from "@fireproof/core-runtime";
+import { ensureSuperThis, hashObjectSync } from "@fireproof/core-runtime";
 import { RedirectStrategyOpts } from "./redirect-strategy.js";
 
 import { FPCCProtocol, FPCCProtocolBase, isInIframe } from "@fireproof/cloud-connector-base";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { defaultFPCloudConnectorOpts, fpCloudConnector } from "../cloud/connector/svc/fp-cloud-connector.js";
 import { FPCloudConnectStrategyImpl } from "./fp-cloud-connect-strategy-impl.js";
 import { FPCloudFrontend, initializeIframe, PageFPCCProtocolOpts } from "@fireproof/cloud-connector-page";
-import { FPCloudFrontendImpl} from "./window-open-fp-cloud.js";
+import { FPCloudFrontendImpl } from "./window-open-fp-cloud.js";
 
 export interface FPCloudConnectOpts extends RedirectStrategyOpts {
   readonly dashboardURI?: string;
@@ -18,7 +18,7 @@ export interface FPCloudConnectOpts extends RedirectStrategyOpts {
   readonly pageController: PageControllerImpl;
   readonly title?: string;
   readonly sthis?: SuperThis;
-  readonly frontend?: FPCloudFrontend;
+  readonly fpCloudFrontend?: FPCloudFrontend;
 }
 
 // which cases exist
@@ -35,7 +35,7 @@ interface PageControllerOpts {
   readonly window: Window;
   readonly sthis: SuperThis;
   readonly logger: Logger;
-  readonly frontend: FPCloudFrontend;
+  // readonly frontend: FPCloudFrontend;
 }
 
 export type PageControllerImplOpts = PageFPCCProtocolOpts & Partial<PageControllerOpts>;
@@ -81,7 +81,7 @@ export class PageControllerImpl {
   readonly sthis: SuperThis;
   readonly intervalMs: number;
   readonly iframeHref: string;
-  readonly frontend: FPCloudFrontend;
+  readonly fpCloudFrontend: FPCloudFrontend;
 
   constructor(opts: PageControllerImplOpts) {
     this.window = opts.window ?? window;
@@ -90,9 +90,11 @@ export class PageControllerImpl {
     this.intervalMs = opts.intervalMs || 150;
     this.protocol = new FPCCProtocolBase(this.sthis, opts.logger);
     this.iframeHref = opts.iframeHref;
-    this.frontend = opts.frontend ?? new FPCloudFrontendImpl({
-      sthis: this.sthis,
-    });
+    this.fpCloudFrontend =
+      opts.fpCloudFrontend ??
+      new FPCloudFrontendImpl({
+        sthis: this.sthis,
+      });
   }
 
   hash = Lazy(() =>
@@ -125,8 +127,8 @@ export class PageControllerImpl {
       this.openloginSeq.add(async () => {
         // test if all dbs are ready
         console.log("FPCloudConnectStrategy detected needs login event");
-        this.frontend.openFireproofLogin(msg);
-        return; 
+        this.fpCloudFrontend.openLogin(msg);
+        return;
       });
       // logger.Info().Msg("FPCloudConnectStrategy detected needs login event");
     });
@@ -135,8 +137,6 @@ export class PageControllerImpl {
       this.mode = mode;
     });
   });
-
-  
 
   async #waitingForReady(tid: string, dst: string): Promise<void> {
     const ready = new Future<void>();
@@ -234,7 +234,6 @@ export function FPCloudConnectStrategy(opts: Partial<FPCloudConnectOpts> = {}): 
     return new FPCloudConnectStrategyImpl(opts);
   });
 }
-
 
 // this is the backend fp service connector
 export function useFPCloudConnectSvc(): { fpSvc: FPCCProtocol; state: string } {

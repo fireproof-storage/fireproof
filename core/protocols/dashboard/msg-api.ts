@@ -20,6 +20,8 @@ export class DashApi {
     this.apiUrl = apiUrl;
   }
 
+  readonly hash = Lazy(() => this.apiUrl);
+
   async request<S, Q>(req: Q): Promise<Result<S>> {
     return exception2Result(async () => {
       const res = await fetch(this.apiUrl.toString(), {

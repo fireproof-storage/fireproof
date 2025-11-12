@@ -4,7 +4,7 @@ import { CID } from "multiformats/cid";
 
 import { Index, index, fireproof, isDatabase } from "@fireproof/core-base";
 import { URI, sleep } from "@adviser/cement";
-import { ensureSuperThis, } from "@fireproof/core-runtime";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { DocResponse, DocWithId, IndexRows, Database, PARAM, MapFn, ConfigOpts } from "@fireproof/core-types-base";
 import { describe, afterEach, beforeEach, it, expect, beforeAll, assert } from "vitest";
 import { AnyLink } from "@fireproof/core-types-blockstore";

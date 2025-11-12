@@ -5,7 +5,6 @@ import "./App.css";
 // import { URI } from "@adviser/cement";
 
 function App() {
-
   const { database, attach } = useFireproof("fireproof-5-party", {
     attach: toCloud({
       strategy: FPCloudConnectStrategy({

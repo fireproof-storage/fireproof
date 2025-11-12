@@ -2,7 +2,7 @@ import { BuildURI, runtimeFn, URI, sleep } from "@adviser/cement";
 import { Link } from "multiformats";
 import { stripper } from "@adviser/cement/utils";
 import pLimit from "@fireproof/vendor/p-limit";
-import { ensureSuperThis, } from "@fireproof/core-runtime";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { CRDT, PARAM, LedgerOpts } from "@fireproof/core-types-base";
 import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
 import { Loader } from "@fireproof/core-blockstore";

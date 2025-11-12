@@ -73,7 +73,6 @@ class SuperThisImpl implements SuperThis {
 
   hash(): string {
     return "superthis-hash-is-not-implemented-but-a-dummy";
-    
   }
 
   nextId(bytes = 6): { str: string; bin: Uint8Array } {

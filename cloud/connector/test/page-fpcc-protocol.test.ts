@@ -1,15 +1,29 @@
 import { describe, expect, it, vi } from "vitest";
-import { PageFPCCProtocol } from "@fireproof/cloud-connector-page";
+import { FPCloudFrontend, pageFPCCProtocol } from "@fireproof/cloud-connector-page";
 import { SvcFPCCProtocol } from "@fireproof/cloud-connector-svc";
-import { FPCCMessage, FPCCPing } from "@fireproof/cloud-connector-base";
+import { FPCCEvtNeedsLogin, FPCCMessage, FPCCPing } from "@fireproof/cloud-connector-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { Writable } from "ts-essentials";
 
+export class TestFrontend implements FPCloudFrontend {
+  hash(): string {
+    return "test-frontend-hash";
+  }
+  openLogin(_msg: FPCCEvtNeedsLogin): void {
+    // no-op
+  }
+  stop(): void {
+    // no-op
+  }
+}
+
 describe("FPCC Protocol", () => {
   const sthis = ensureSuperThis();
-  const pageProtocol = new PageFPCCProtocol(sthis, {
+  const pageProtocol = pageFPCCProtocol({
+    sthis,
     iframeHref: "https://example.com/iframe",
     loginWaitTime: 1000,
+    fpCloudFrontend: new TestFrontend(),
   });
   const iframeProtocol = new SvcFPCCProtocol(sthis, {
     dashboardURI: "https://example.com/dashboard",
@@ -19,7 +33,7 @@ describe("FPCC Protocol", () => {
   iframeProtocol.injectSend((evt: Writable<FPCCMessage>) => {
     evt.src = evt.src ?? "iframe";
     // console.log("IframeFPCCProtocol sending message", evt);
-    pageProtocol.handleMessage({ data: evt, origin: "iframe" } as MessageEvent<unknown>);
+    pageProtocol.fpccProtocol.handleMessage({ data: evt, origin: "iframe" } as MessageEvent<unknown>);
     return evt;
   });
 
@@ -43,9 +57,9 @@ describe("FPCC Protocol", () => {
       timestamp: Date.now(),
     };
     const fpccFn = vi.fn();
-    pageProtocol.onFPCCMessage(fpccFn);
+    pageProtocol.fpccProtocol.onFPCCMessage(fpccFn);
     await protocolStart();
-    pageProtocol.sendMessage(pingMessage);
+    pageProtocol.fpccProtocol.sendMessage(pingMessage, "iframe");
     expect(fpccFn.mock.calls[fpccFn.mock.calls.length - 1]).toEqual([
       {
         dst: "page",
