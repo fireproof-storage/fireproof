@@ -1,11 +1,11 @@
-import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
+import { AppContext, BuildURI, URI, WithoutPromise, sleep } from "@adviser/cement";
 import { stripper } from "@adviser/cement/utils";
 import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, Attached, TraceFn } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
+import { ensureSuperThis } from "@fireproof/core-runtime";
 import { DefSerdeGateway } from "@fireproof/core-gateways-base";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
 import { AttachedRemotesImpl } from "@fireproof/core-blockstore";

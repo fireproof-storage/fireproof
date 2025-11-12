@@ -1,3 +1,4 @@
+import { JWKPublic } from "@fireproof/core-types-base";
 import { ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
 
 export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
@@ -124,13 +125,21 @@ export interface ResCreateTenant {
   readonly tenant: OutTenantParams;
 }
 
-export interface InCreateTenantParams {
-  readonly name?: string;
-  readonly ownerUserId: string;
-  readonly maxAdminUsers?: number;
-  readonly maxMemberUsers?: number;
-  readonly maxInvites?: number;
+export interface FPApiParameters {
+  readonly cloudPublicKeys: JWKPublic[];
+  readonly clerkPublishableKey: string;
+  readonly maxTenants: number;
+  readonly maxAdminUsers: number;
+  readonly maxMemberUsers: number;
+  readonly maxInvites: number;
+  readonly maxLedgers: number;
 }
+
+export type InCreateTenantParams = {
+  readonly name?: string;
+  readonly defaultTenant?: boolean;
+  readonly ownerUserId: string;
+} & Partial<FPApiParameters>;
 
 export interface ReqCreateTenant {
   readonly type: "reqCreateTenant";
@@ -405,6 +414,48 @@ export interface ResDeleteLedger {
   readonly type: "resDeleteLedger";
 }
 
+export interface ReqCloudDbToken {
+  readonly type: "reqCloudDbToken";
+  readonly auth: AuthType;
+  readonly tenantId?: string;
+  readonly ledgerId?: string;
+  readonly localDbName: string;
+  readonly appId: string;
+  readonly deviceId: string;
+}
+
+export interface ResCloudDbTokenBound {
+  readonly type: "resCloudDbToken";
+  readonly status: "bound";
+  readonly token: string; // JWT
+}
+
+export interface ResCloudDbTokenNotBound {
+  readonly type: "resCloudDbToken";
+  readonly status: "not-bound";
+  readonly reason: string;
+  // helps in the binding process
+  readonly ledgers: {
+    readonly ledgerId: string;
+    readonly tenantId: string;
+    readonly name: string;
+  }[];
+}
+
+export type ResCloudDbToken = ResCloudDbTokenBound | ResCloudDbTokenNotBound;
+
+export function isResCloudDbTokenBound(res: ResCloudDbToken): res is ResCloudDbTokenBound {
+  return res.status === "bound" && res.type === "resCloudDbToken";
+}
+export function isResCloudDbTokenNotBound(res: ResCloudDbToken): res is ResCloudDbTokenNotBound {
+  return res.status === "not-bound" && res.type === "resCloudDbToken";
+}
+
+export interface GetCloudDbTokenResult {
+  readonly res: ResCloudDbToken;
+  readonly claims?: unknown;
+}
+
 export interface ReqCloudSessionToken {
   readonly type: "reqCloudSessionToken";
   readonly auth: AuthType;
@@ -420,6 +471,16 @@ export interface ResCloudSessionToken {
 export interface ReqTokenByResultId {
   readonly type: "reqTokenByResultId";
   readonly resultId: string;
+}
+
+export interface ReqClerkPublishableKey {
+  readonly type: "reqClerkPublishableKey";
+}
+
+export interface ResClerkPublishableKey {
+  readonly type: "resClerkPublishableKey";
+  readonly publishableKey: string;
+  readonly cloudPublicKeys: JWKPublic[]; // same as .well-known/jwks.json
 }
 
 export interface ResTokenByResultId {

@@ -41,6 +41,10 @@ import { Index, indexLoader } from "../pages/index.jsx";
 import { Login, loginLoader } from "../pages/login.jsx";
 import { SignUpPage, signupLoader } from "../pages/signup.jsx";
 
+setInterval(() => {
+  localStorage.setItem("app", `${new Date().toISOString()}:${window.location.href}`);
+}, 10000);
+
 export function App() {
   const ctx = useContext(AppContext);
   // console.log(">>>>>>>>>>>>>>", window.location.href);

@@ -2,6 +2,7 @@ packages:
   - "core/*"
   - "cloud/*"
   - "cloud/backend/*"
+  - "cloud/connector/*"
   - "cli"
   - "core/types/*"
   - "core/types/protocols/*"

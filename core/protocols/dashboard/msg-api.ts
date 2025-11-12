@@ -1,13 +1,26 @@
-import { exception2Result, Logger, Result } from "@adviser/cement";
-import { ReqTokenByResultId, ResTokenByResultId } from "./msg-types.js";
+import { exception2Result, Lazy, Logger, Result } from "@adviser/cement";
+import {
+  ReqClerkPublishableKey,
+  ReqCloudDbToken,
+  ReqTokenByResultId,
+  ResClerkPublishableKey,
+  ResCloudDbToken,
+  ResTokenByResultId,
+} from "./msg-types.js";
 import { FAPIMsgImpl } from "./msg-is.js";
+import { ensureLogger } from "@fireproof/core-runtime";
+import { SuperThis } from "@fireproof/core-types-base";
 
-export class Api {
+export class DashApi {
   readonly apiUrl: string;
   readonly isser = new FAPIMsgImpl();
-  constructor(apiUrl: string) {
+  readonly logger: Logger;
+  constructor(sthis: SuperThis, apiUrl: string) {
+    this.logger = ensureLogger(sthis, "DashApi");
     this.apiUrl = apiUrl;
   }
+
+  readonly hash = Lazy(() => this.apiUrl);
 
   async request<S, Q>(req: Q): Promise<Result<S>> {
     return exception2Result(async () => {
@@ -25,6 +38,18 @@ export class Api {
       }
       throw new Error(`Request failed: ${res.status} ${res.statusText} ${this.apiUrl}`);
     });
+  }
+
+  readonly getClerkPublishableKey = Lazy(async (req: Omit<ReqClerkPublishableKey, "type"> = {}) => {
+    const rRes = await this.request<ResClerkPublishableKey, ReqClerkPublishableKey>({ ...req, type: "reqClerkPublishableKey" });
+    if (rRes.isErr()) {
+      throw rRes.Err();
+    }
+    return rRes.unwrap();
+  });
+
+  getCloudDbToken(req: Omit<ReqCloudDbToken, "type">): Promise<Result<ResCloudDbToken>> {
+    return this.request<ResCloudDbToken, ReqCloudDbToken>({ ...req, type: "reqCloudDbToken" });
   }
 
   async waitForToken(req: Omit<ReqTokenByResultId, "type">, logger: Logger): Promise<Result<ResTokenByResultId>> {

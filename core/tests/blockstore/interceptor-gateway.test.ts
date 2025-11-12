@@ -226,10 +226,12 @@ describe("InterceptorGateway", () => {
         base: "uriTest://inspector-gateway",
       },
       gatewayInterceptor: URIInterceptor.withMapper(async (uri: URI) =>
-        uri
-          .build()
-          .setParam("itis", "" + ++callCount)
-          .URI(),
+        Result.Ok(
+          uri
+            .build()
+            .setParam("itis", "" + ++callCount)
+            .URI(),
+        ),
       ),
     });
     await Promise.all(

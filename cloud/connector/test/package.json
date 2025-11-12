@@ -1,0 +1,45 @@
+{
+  "name": "@fireproof/cloud-connector-test",
+  "version": "0.0.0",
+  "description": "cloud connector shared test",
+  "type": "module",
+  "private": "true",
+  "scripts": {
+    "build": "core-cli tsc",
+    "pack": "echo skip",
+    "publish": "echo skip",
+    "test": "vitest --run"
+  },
+  "keywords": [
+    "ledger",
+    "JSON",
+    "document",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "contributors": [
+    "Meno Abels"
+  ],
+  "author": "Meno Abels",
+  "license": "AFL-2.0",
+  "homepage": "https://use-fireproof.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "dependencies": {
+    "@fireproof/cloud-connector-base": "workspace:*",
+    "@fireproof/cloud-connector-iframe": "workspace:*",
+    "@fireproof/cloud-connector-svc": "workspace:*",
+    "@fireproof/cloud-connector-page": "workspace:*",
+    "@fireproof/core-runtime": "workspace:*",
+    "@vitest/browser": "^4.0.8",
+    "@vitest/browser-playwright": "^4.0.8",
+    "ts-essentials": "^10.1.1",
+    "vitest": "^4.0.8"
+  }
+}

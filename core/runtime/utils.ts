@@ -71,6 +71,10 @@ class SuperThisImpl implements SuperThis {
     // console.log("superThis", this);
   }
 
+  hash(): string {
+    return "superthis-hash-is-not-implemented-but-a-dummy";
+  }
+
   nextId(bytes = 6): { str: string; bin: Uint8Array } {
     const bin = this.crypto.randomBytes(bytes);
     return {
@@ -630,9 +634,9 @@ export async function hashObjectCID<T extends NonNullable<S>, S>(o: T): Promise<
   return { cid: CID.create(1, json.code, hash), bytes, obj: o };
 }
 
-export function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// export function sleep(ms: number) {
+//   return new Promise((resolve) => setTimeout(resolve, ms));
+// }
 
 /**
  * Deep clone a value

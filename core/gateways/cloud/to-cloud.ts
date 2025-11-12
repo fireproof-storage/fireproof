@@ -1,8 +1,8 @@
-import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext, KeyedResolvOnce, Lazy } from "@adviser/cement";
+import { BuildURI, CoerceURI, URI, AppContext, KeyedResolvOnce, Lazy, Result } from "@adviser/cement";
 import { Ledger } from "@fireproof/core-types-base";
 import {
   FPCloudClaim,
-  FPCloudClaimParseSchema,
+  FPCloudClaimSchema,
   FPCloudUri,
   hashableFPCloudRef,
   ToCloudAttachable,
@@ -11,7 +11,7 @@ import {
   ToCloudOptionalOpts,
   ToCloudOpts,
   ToCloudRequiredOpts,
-  TokenAndClaims,
+  TokenAndSelectedTenantAndLedger,
   TokenStrategie,
 } from "@fireproof/core-types-protocols-cloud";
 import { ensureLogger, ensureSuperThis, hashObjectSync } from "@fireproof/core-runtime";
@@ -31,12 +31,13 @@ function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
 }
 
 export class SimpleTokenStrategy implements TokenStrategie {
-  private tc: TokenAndClaims;
+  readonly waitState: "started" | "stopped" = "stopped";
+  private tc: TokenAndSelectedTenantAndLedger;
   constructor(jwk: string) {
     let claims: FPCloudClaim;
     try {
       const rawClaims = decodeJwt(jwk);
-      const rParse = FPCloudClaimParseSchema.safeParse(rawClaims);
+      const rParse = FPCloudClaimSchema.safeParse(rawClaims);
       if (rParse.success) {
         claims = rParse.data;
       } else {
@@ -70,13 +71,13 @@ export class SimpleTokenStrategy implements TokenStrategie {
     // console.log("SimpleTokenStrategy open");
     return;
   }
-  async tryToken(): Promise<TokenAndClaims | undefined> {
-    // console.log("SimpleTokenStrategy gatherToken");
-    return this.tc;
-  }
-  async waitForToken(): Promise<TokenAndClaims | undefined> {
+  // async tryToken(): Promise<TokenAndClaims | undefined> {
+  //   // console.log("SimpleTokenStrategy gatherToken");
+  //   return this.tc;
+  // }
+  async waitForToken(): Promise<Result<TokenAndSelectedTenantAndLedger>> {
     // console.log("SimpleTokenStrategy waitForToken");
-    return this.tc;
+    return Result.Ok(this.tc);
   }
 }
 
@@ -121,79 +122,79 @@ function defaultOpts(opts: ToCloudOptionalOpts): ToCloudOpts {
 //   };
 // }
 
-function definedExp(exp?: number): number {
-  if (typeof exp === "number") {
-    return exp;
-  }
-  return new Date().getTime() / 1000;
-}
+// function definedExp(exp?: number): number {
+//   if (typeof exp === "number") {
+//     return exp;
+//   }
+//   return new Date().getTime() / 1000;
+// }
 
-class TokenObserver {
-  private readonly opts: ToCloudOpts;
+// class TokenObserver {
+//   private readonly opts: ToCloudOpts;
 
-  currentTokenAndClaim?: TokenAndClaims;
+//   currentTokenAndClaim?: TokenAndClaims;
 
-  constructor(opts: ToCloudOpts) {
-    this.opts = opts;
-  }
+//   constructor(opts: ToCloudOpts) {
+//     this.opts = opts;
+//   }
 
-  async start() {
-    return;
-  }
+//   async start() {
+//     return;
+//   }
 
-  async stop() {
-    // clear pending refresh token
-    return;
-  }
+//   async stop() {
+//     // clear pending refresh token
+//     return;
+//   }
 
-  async refreshToken(logger: Logger, ledger: Ledger) {
-    let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
-    // console.log("refreshToken", token);
-    if (this.isExpired(token)) {
-      logger.Debug().Msg("waiting for token");
-      this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
-      token = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
-      if (!token) {
-        throw new Error("Token not found");
-      }
-    }
-    return token;
-  }
+//   // async refreshToken(logger: Logger, ledger: Ledger) {
+//   //   let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
+//   //   // console.log("refreshToken", token);
+//   //   if (this.isExpired(token)) {
+//   //     logger.Debug().Msg("waiting for token");
+//   //     this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
+//   //     token = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
+//   //     if (!token) {
+//   //       throw new Error("Token not found");
+//   //     }
+//   //   }
+//   //   return token;
+//   // }
 
-  isExpired(token?: TokenAndClaims): boolean {
-    const now = ~~(new Date().getTime() / 1000); // current time in seconds
-    return !token || definedExp(token.claims?.exp) - this.opts.refreshTokenPresetSec < now;
-  }
+//   isExpired(token?: TokenAndClaims): boolean {
+//     const now = ~~(new Date().getTime() / 1000); // current time in seconds
+//     return !token || definedExp(token.claims?.exp) - this.opts.refreshTokenPresetSec < now;
+//   }
 
-  readonly _token = new ResolveOnce<TokenAndClaims>();
-  async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
-    let activeTokenAndClaim = this.currentTokenAndClaim;
-    if (this.isExpired(activeTokenAndClaim)) {
-      // console.log("refreshing token", this.currentTokenAndClaim?.claims.exp);
-      await this.opts.events?.changed(undefined);
-      logger
-        .Debug()
-        .Any({ claims: this.currentTokenAndClaim?.claims, exp: definedExp(this.currentTokenAndClaim?.claims?.exp) })
-        .Msg("refresh token");
-      activeTokenAndClaim = await this.refreshToken(logger, ledger);
-    }
+//   readonly _token = new ResolveOnce<TokenAndClaims>();
+//   async getToken(logger: Logger, ledger: Ledger): Promise<TokenAndClaims> {
+//     let activeTokenAndClaim = this.currentTokenAndClaim;
+//     if (this.isExpired(activeTokenAndClaim)) {
+//       // console.log("refreshing token", this.currentTokenAndClaim?.claims.exp);
+//       await this.opts.events?.changed(undefined);
+//       logger
+//         .Debug()
+//         .Any({ claims: this.currentTokenAndClaim?.claims, exp: definedExp(this.currentTokenAndClaim?.claims?.exp) })
+//         .Msg("refresh token");
+//       activeTokenAndClaim = await this.refreshToken(logger, ledger);
+//     }
 
-    if (activeTokenAndClaim && activeTokenAndClaim.token !== this.currentTokenAndClaim?.token) {
-      this.currentTokenAndClaim = activeTokenAndClaim;
-      await this.opts.events?.changed(activeTokenAndClaim);
-    }
-    if (this.currentTokenAndClaim) {
-      return this.currentTokenAndClaim;
-    }
-    throw logger.Error().Msg("Token not found").AsError();
-  }
+//     if (activeTokenAndClaim && activeTokenAndClaim.token !== this.currentTokenAndClaim?.token) {
+//       this.currentTokenAndClaim = activeTokenAndClaim;
+//       await this.opts.events?.changed(activeTokenAndClaim);
+//     }
+//     if (this.currentTokenAndClaim) {
+//       return this.currentTokenAndClaim;
+//     }
+//     throw logger.Error().Msg("Token not found").AsError();
+//   }
 
-  async reset() {
-    this.currentTokenAndClaim = undefined;
-    await this.opts.events?.changed(undefined);
-    return;
-  }
-}
+//   async reset() {
+//     this.currentTokenAndClaim = undefined;
+//     await this.opts.events?.changed(undefined);
+//     return;
+//   }
+// }
 
 class ToCloud implements ToCloudAttachable {
   readonly opts: ToCloudOpts;
@@ -208,7 +209,7 @@ class ToCloud implements ToCloudAttachable {
     return this.opts.name;
   }
 
-  private _tokenObserver!: TokenObserver;
+  // private _tokenObserver!: TokenObserver;
 
   configHash(db?: Ledger) {
     const hash = hashObjectSync({
@@ -240,13 +241,18 @@ class ToCloud implements ToCloudAttachable {
     const logger = ensureLogger(ledger.sthis, "ToCloud"); // .SetDebug("ToCloud");
     // console.log("ToCloud prepare", this.opts);
 
-    this._tokenObserver = new TokenObserver(this.opts);
-    await this._tokenObserver.start();
+    // this._tokenObserver = new TokenObserver(this.opts);
+    // await this._tokenObserver.start();
 
     // console.log("prepare");
     const gatewayInterceptor = URIInterceptor.withMapper(async (uri) => {
       // wait for the token
-      const token = await this._tokenObserver.getToken(logger, ledger);
+      // const token = await this._tokenObserver.getToken(logger, ledger);
+      const rToken = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
+      if (!rToken.isErr) {
+        return Result.Err(rToken);
+      }
+      const token = rToken.unwrap();
       // console.log("getToken", token)
       const buri = BuildURI.from(uri).setParam("authJWK", token.token);
 
@@ -265,14 +271,14 @@ class ToCloud implements ToCloudAttachable {
         buri.setParam("ledger", this.opts.ledger);
       }
 
-      return buri.URI();
+      return Result.Ok(buri.URI());
     });
     return {
       car: { url: this.opts.urls.car, gatewayInterceptor },
       file: { url: this.opts.urls.file, gatewayInterceptor },
       meta: { url: this.opts.urls.meta, gatewayInterceptor },
       teardown: () => {
-        this._tokenObserver.stop();
+        // this._tokenObserver.stop();
       },
       ctx: this.opts.context,
     };

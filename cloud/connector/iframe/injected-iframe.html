@@ -1,0 +1,12 @@
+<html>
+  <head>
+    Fireproof Cloud Connector
+  </head>
+  <body>
+    I'm the Fireproof Cloud Connector
+    <script type="module">
+      import { fpCloudConnector } from "/@fireproof/cloud-connector-svc";
+      fpCloudConnector(window.location.href).then(() => console.log("injected-iframe-ready", window.location.href));
+    </script>
+  </body>
+</html>

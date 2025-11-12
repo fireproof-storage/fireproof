@@ -1,8 +1,7 @@
-import { sleep } from "@fireproof/core-runtime";
 import * as ps from "@fireproof/core-types-protocols-cloud";
 import { Msger } from "@fireproof/core-protocols-cloud";
 import { testSuperThis } from "@fireproof/cloud-base";
-import { Future, URI } from "@adviser/cement";
+import { Future, URI, sleep } from "@adviser/cement";
 import { describe, beforeAll, afterAll, it, expect, assert } from "vitest";
 import { mockJWK, MockJWK } from "./test-helper.js";
 

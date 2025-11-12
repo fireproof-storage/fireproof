@@ -18,6 +18,7 @@ const opts = tseslint.config(
     ignores: [
       "babel.config.cjs",
       "jest.config.js",
+      "playwright-chrome/",
       "**/dist/",
       "**/pubdir/",
       "**/node_modules/",

@@ -2,13 +2,14 @@
 import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
 import { verifyToken } from "@clerk/backend";
 import { verifyJwt } from "@clerk/backend/jwt";
-import { SuperThis, SuperThisOpts } from "@fireproof/core";
+import { SuperThis, SuperThisOpts } from "@fireproof/core-types-base";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
 import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
 import { ensureSuperThis, ensureLogger } from "@fireproof/core-runtime";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
+import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -176,8 +177,25 @@ class ClerkApiToken implements FPApiToken {
 
 export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
 
+function coerceInt(value: undefined | string | number, def: number): number {
+  if (!value) {
+    return def;
+  }
+  if (typeof value === "number") {
+    return value;
+  }
+  const n = parseInt(value);
+  if (isNaN(n)) {
+    return def;
+  }
+  return n;
+}
+
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
-export function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
+export async function createHandler<T extends DashSqlite>(
+  db: T,
+  env: Record<string, string> | Env,
+): Promise<(req: Request) => Promise<Response>> {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),
@@ -191,10 +209,29 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
   // }
   sthis.env.sets(env as unknown as Record<string, string>);
   const logger = ensureLogger(sthis, "createHandler");
-  const fpApi = new FPApiSQL(sthis, db, {
-    clerk: new ClerkApiToken(sthis),
-    // better: new BetterApiToken(sthis),
-  });
+  if (!(env as Env).CLERK_PUBLISHABLE_KEY) {
+    throw new Error("CLERK_PUBLISHABLE_KEY is required in env");
+  }
+  const rCloudPublicKey = await getCloudPubkeyFromEnv((env as Env).CLOUD_SESSION_TOKEN_PUBLIC, sthis);
+  if (rCloudPublicKey.isErr()) {
+    throw rCloudPublicKey.Err();
+  }
+  const fpApi = new FPApiSQL(
+    sthis,
+    db,
+    {
+      clerk: new ClerkApiToken(sthis),
+    },
+    {
+      cloudPublicKeys: [rCloudPublicKey.Ok()],
+      clerkPublishableKey: (env as Env).CLERK_PUBLISHABLE_KEY,
+      maxTenants: coerceInt(env.MAX_TENANTS, 10),
+      maxAdminUsers: coerceInt(env.MAX_ADMIN_USERS, 5),
+      maxMemberUsers: coerceInt(env.MAX_MEMBER_USERS, 5),
+      maxInvites: coerceInt(env.MAX_INVITES, 10),
+      maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
+    },
+  );
   return async (req: Request): Promise<Response> => {
     const startTime = performance.now();
     if (req.method === "OPTIONS") {
@@ -265,7 +302,7 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
         res = fpApi.deleteLedger(jso);
         break;
 
-      case FPAPIMsg.isCloudSessionToken(jso):
+      case FPAPIMsg.isReqCloudSessionToken(jso):
         res = fpApi.getCloudSessionToken(jso);
         break;
 
@@ -275,6 +312,14 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
 
       case FPAPIMsg.isReqExtendToken(jso):
         res = fpApi.extendToken(jso);
+        break;
+
+      case FPAPIMsg.isReqClerkPublishableKey(jso):
+        res = fpApi.getClerkPublishableKey(jso);
+        break;
+
+      case FPAPIMsg.isReqCloudDbToken(jso):
+        res = fpApi.getCloudDbToken(jso);
         break;
 
       default:

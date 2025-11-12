@@ -1,22 +1,17 @@
-import { DocWithId, useFireproof, toCloud, RedirectStrategy } from "use-fireproof";
+import { DocWithId, useFireproof, toCloud, FPCloudConnectStrategy } from "use-fireproof";
 import React, { useState, useEffect } from "react";
 import "./App.css";
+// import { overlayHtml } from "./overlayHtml.js";
 // import { URI } from "@adviser/cement";
 
 function App() {
   const { database, attach } = useFireproof("fireproof-5-party", {
     attach: toCloud({
-      strategy: new RedirectStrategy({
+      strategy: FPCloudConnectStrategy({
         //   overlayCss: defaultOverlayCss,
-        overlayHtml: (url: string) => `<div class="fpOverlayContent">
-          <div class="fpCloseButton">&times;</div>
-          Fireproof Dashboard<br />
-          Sign in to Fireproof Dashboard
-          <a href="${url}" target="_blank">Redirect to Fireproof</a>
-        </div>`,
+        // overlayHtml,
+        // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
       }),
-      // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
-      // tokenApiURI: "http://localhost:7370/api",
       // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
       // tenant: "3rd-party",
       // ledger: "vibes",
