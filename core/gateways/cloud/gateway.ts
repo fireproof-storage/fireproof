@@ -269,7 +269,7 @@ function getGwCtx(conn: Partial<QSId>, uri: URI): Result<ReqGwCtx> {
 
 class CurrentMeta {
   // readonly boundGetMeta = new KeyedResolvOnce<ReadableStream<MsgWithError<EventGetMeta>>>();
-  readonly boundGetMeta = new KeyedResolvOnce<void>();
+  readonly boundGetMeta = new KeyedResolvOnce();
 
   readonly currentMeta = new KeyedResolvOnce<Result<FPEnvelopeMeta>>();
 
