@@ -5,7 +5,6 @@ import { describe, expect, it, vitest } from "vitest";
 import { PassThroughGateway, URIInterceptor } from "@fireproof/core-gateways-base";
 import { MemoryGateway } from "@fireproof/core-gateways-memory";
 import { registerStoreProtocol } from "@fireproof/core-blockstore";
-
 class TestInterceptor extends PassThroughGateway {
   readonly fn = vitest.fn();
 
@@ -56,12 +55,12 @@ class TestInterceptor extends PassThroughGateway {
   }
 }
 
-export class URITrackGateway implements bs.Gateway {
+export class URITrackGateway implements bs.SerdeGateway {
   readonly uris: Set<string>;
   readonly memgw: MemoryGateway;
 
-  constructor(sthis: SuperThis, memorys: Map<string, Uint8Array>, uris: Set<string>) {
-    this.memgw = new MemoryGateway(sthis, memorys);
+  constructor(sthis: SuperThis, memories: Map<string, bs.FPEnvelope<unknown>>, uris: Set<string>) {
+    this.memgw = new MemoryGateway(sthis, memories);
     this.uris = uris;
   }
 
@@ -75,44 +74,43 @@ export class URITrackGateway implements bs.Gateway {
     this.uris.add(uri.toString());
   }
 
-  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
+  buildUrl(ctx: bs.SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
     this.uriAdd(baseUrl);
-    return this.memgw.buildUrl(baseUrl, key);
+    return this.memgw.buildUrl(ctx, baseUrl, key);
   }
-  start(baseUrl: URI): Promise<Result<URI>> {
+  start(ctx: bs.SerdeGatewayCtx, baseUrl: URI): Promise<Result<URI>> {
     this.uriAdd(baseUrl);
-    return this.memgw.start(baseUrl);
+    return this.memgw.start(ctx, baseUrl);
   }
-  close(uri: URI): Promise<bs.VoidResult> {
-    this.uriAdd(uri);
-    return this.memgw.close(uri);
-  }
-  destroy(baseUrl: URI): Promise<bs.VoidResult> {
+  close(ctx: bs.SerdeGatewayCtx, baseUrl: URI): Promise<bs.VoidResult> {
     this.uriAdd(baseUrl);
-    return this.memgw.destroy(baseUrl);
+    return this.memgw.close(ctx, baseUrl);
+  }
+  destroy(ctx: bs.SerdeGatewayCtx, baseUrl: URI): Promise<bs.VoidResult> {
+    this.uriAdd(baseUrl);
+    return this.memgw.destroy(ctx, baseUrl);
   }
 
-  put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<bs.VoidResult> {
-    // console.log("put", url.getParam(PARAM.KEY), url.toString());
+  async put<T>(ctx: bs.SerdeGatewayCtx, url: URI, body: bs.FPEnvelope<T>): Promise<bs.VoidResult> {
     this.uriAdd(url);
-    return this.memgw.put(url.build().cleanParams("itis").URI(), bytes, sthis);
+    return this.memgw.put(ctx, url.build().cleanParams("itis").URI(), body);
   }
 
-  async get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
+  async get<S>(ctx: bs.SerdeGatewayCtx, url: URI): Promise<bs.SerdeGetResult<S>> {
     this.uriAdd(url);
-    const ret = await this.memgw.get(url.build().cleanParams("itis").URI(), sthis);
-    // if (ret.isErr()) {
-    //   console.log("get-err", url.getParam(PARAM.KEY), url.toString());
-    // }
-    return ret;
-  }
-  delete(url: URI): Promise<bs.VoidResult> {
-    this.uriAdd(url);
-    return this.memgw.delete(url);
+    return this.memgw.get(ctx, url.build().cleanParams("itis").URI());
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  subscribe(url: URI, callback: (meta: Uint8Array) => void, sthis: SuperThis): Promise<bs.UnsubscribeResult> {
+  delete(ctx: bs.SerdeGatewayCtx, url: URI): Promise<bs.VoidResult> {
+    this.uriAdd(url);
+    return this.memgw.delete(ctx, url);
+  }
+
+  subscribe(
+    ctx: bs.SerdeGatewayCtx,
+    url: URI,
+    _callback: (meta: bs.FPEnvelopeMeta) => Promise<void>,
+  ): Promise<bs.UnsubscribeResult> {
     this.uriAdd(url);
     return Promise.resolve(
       Result.Ok(() => {
@@ -121,9 +119,9 @@ export class URITrackGateway implements bs.Gateway {
     );
   }
 
-  async getPlain(url: URI, key: string): Promise<Result<Uint8Array>> {
+  async getPlain(ctx: bs.SerdeGatewayCtx, url: URI, key: string): Promise<Result<Uint8Array>> {
     this.uriAdd(url);
-    return this.memgw.getPlain(url, key);
+    return this.memgw.getPlain(ctx, url, key);
   }
 }
 
@@ -217,8 +215,8 @@ describe("InterceptorGateway", () => {
       defaultURI: () => {
         return BuildURI.from("uriTest://").pathname("ram").URI();
       },
-      gateway: async (sthis) => {
-        return new URITrackGateway(sthis, new Map<string, Uint8Array>(), gwUris);
+      serdegateway: async (sthis) => {
+        return new URITrackGateway(sthis, new Map<string, bs.FPEnvelope<unknown>>(), gwUris);
       },
     });
     const db = fireproof("interceptor-gateway", {
