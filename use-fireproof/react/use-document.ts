@@ -9,6 +9,7 @@ import type { DeleteDocFn, StoreDocFn, UseDocumentInitialDocOrFn, UseDocumentRes
 export function createUseDocument(database: Database) {
   return function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
     const updateHappenedRef = useRef(false);
+    const [loaded, setLoaded] = useState(false);
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
@@ -19,6 +20,25 @@ export function createUseDocument(database: Database) {
     const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
     const [doc, setDoc] = useState(initialDoc);
+
+    // Watch for changes to initialDocOrFn and update doc state
+    // We track the _id specifically since that's the primary identifier
+    const initialDocId = initialDoc._id;
+    const initialDocIdString = useMemo(() => String(initialDocId ?? ""), [initialDocId]);
+    const prevDocIdRef = useRef(doc._id);
+
+    // Reset loaded when initialDocId changes
+    useEffect(() => {
+      setLoaded(false);
+    }, [initialDocIdString]);
+
+    useEffect(() => {
+      // Update doc state if the initial doc's _id is different from what we're currently tracking
+      if (initialDocId !== prevDocIdRef.current) {
+        prevDocIdRef.current = initialDocId;
+        setDoc(initialDoc);
+      }
+    }, [initialDocId]);
 
     const refresh = useCallback(async () => {
       if (doc._id) {
@@ -31,6 +51,7 @@ export function createUseDocument(database: Database) {
       } else {
         setDoc(initialDoc);
       }
+      setLoaded(true);
     }, [doc._id]);
 
     const save: StoreDocFn<T> = useCallback(
@@ -116,6 +137,7 @@ export function createUseDocument(database: Database) {
     // Primary Object API with both new and legacy methods
     const apiObject = {
       doc: { ...doc } as DocWithId<T>,
+      loaded,
       merge,
       replace,
       reset,
