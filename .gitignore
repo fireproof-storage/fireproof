@@ -42,3 +42,4 @@ smoke/react/pnpm-lock.yaml
 **/.env.*
 .wrangler
 .npmrc
+node_modules

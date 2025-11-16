@@ -31,6 +31,16 @@ inputs:
   CLOUDFLARE_ENV:
     description: "Cloudflare environment (e.g., production, staging)"
     required: true
+  MAX_TENANTS:
+    description: "default for max tenants per new user"
+  MAX_ADMIN_USERS:
+    description: "default for max admin user for a tenant"
+  MAX_MEMBER_USERS:
+    description: "default for max member users for a tenant"
+  MAX_INVITES:
+    description: "default how many invitest could be created per tenant"
+  MAX_LEDGERS:
+    description: "default how many ledgers per tenant are allowed"
 
 runs:
   using: "composite"
@@ -51,6 +61,11 @@ runs:
         CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
         CLERK_PUB_JWT_KEY: ${{ inputs.CLERK_PUB_JWT_KEY }}
         CLERK_PUB_JWT_URL: ${{ inputs.CLERK_PUB_JWT_URL }}
+        MAX_TENANTS: ${{ inputs.MAX_TENANTS }}
+        MAX_ADMIN_USERS: ${{ inputs.MAX_ADMIN_USERS }}
+        MAX_MEMBER_USERS: ${{ inputs.MAX_MEMBER_USERS }}
+        MAX_INVITES: ${{ inputs.MAX_INVITES }}
+        MAX_LEDGERS: ${{ inputs.MAX_LEDGERS }}
         # need during build
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
@@ -59,6 +74,11 @@ runs:
           --fromEnv CLERK_PUBLISHABLE_KEY \
           --fromEnv CLERK_PUB_JWT_URL \
           --fromEnv CLERK_PUB_JWT_KEY \
+          --fromEnv MAX_TENANTS \
+          --fromEnv MAX_ADMIN_USERS \
+          --fromEnv MAX_MEMBER_USERS \
+          --fromEnv MAX_INVITES \
+          --fromEnv MAX_LEDGERS \
           --fromEnv CLOUD_SESSION_TOKEN_SECRET \
           --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
           pnpm exec wrangler -c ./wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk
