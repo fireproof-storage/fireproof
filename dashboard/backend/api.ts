@@ -53,17 +53,19 @@ import {
   UserStatus,
   VerifiedAuth,
   FAPIMsgImpl,
+  FPApiParameters,
 } from "@fireproof/core-protocols-dashboard";
 import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.js";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.js";
 import { queryCondition, queryEmail, queryNick, toBoolean, toUndef } from "./sql-helper.js";
 import { sqlTenantUsers, sqlTenants } from "./tenants.js";
 import { sqlTokenByResultId } from "./token-by-result-id.js";
-import { UserNotFoundError, getUser, isUserNotFound, queryUser, upsetUserByProvider } from "./users.js";
+import { UserNotFoundError, getUser, isUserNotFound, queryUser, sqlUsers, upsetUserByProvider } from "./users.js";
 import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
 import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { sts } from "@fireproof/core-runtime";
 import { DashSqlite } from "./create-handler.js";
+import { getTableColumns } from "drizzle-orm/utils";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -224,10 +226,13 @@ export class FPApiSQL implements FPApiInterface {
   readonly db: DashSqlite;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
-  constructor(sthis: SuperThis, db: DashSqlite, tokenApi: Record<string, FPApiToken>) {
+  readonly params: FPApiParameters;
+
+  constructor(sthis: SuperThis, db: DashSqlite, tokenApi: Record<string, FPApiToken>, params: FPApiParameters) {
     this.db = db;
     this.tokenApi = tokenApi;
     this.sthis = sthis;
+    this.params = params;
   }
 
   private async _authVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
@@ -287,7 +292,7 @@ export class FPApiSQL implements FPApiInterface {
         this.db,
         {
           userId,
-          maxTenants: 10,
+          maxTenants: this.params.maxTenants,
           status: "active",
           statusReason: "just created",
           byProviders: [
@@ -309,13 +314,12 @@ export class FPApiSQL implements FPApiInterface {
         ...activeUser.Ok(),
         user: {
           userId,
-          maxTenants: 10,
+          maxTenants: this.params.maxTenants,
         },
       };
       const rTenant = await this.insertTenant(authWithUserId, {
+        ...this.params,
         ownerUserId: userId,
-        maxAdminUsers: 5,
-        maxMemberUsers: 5,
       });
       await this.addUserToTenant(this.db, {
         userName: nameFromAuth(undefined, authWithUserId),
@@ -328,13 +332,65 @@ export class FPApiSQL implements FPApiInterface {
       // });
       return this.ensureUser(req);
     }
+    const rTenants = await this.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: req.auth,
+    });
+    if (rTenants.isErr()) {
+      return Result.Err(rTenants);
+    }
+    const tenants = rTenants.Ok().tenants;
+    const colSqlUsers = getTableColumns(sqlUsers);
+    const colSqlTenants = getTableColumns(sqlTenants);
+    const sqlDefaultLimits = {
+      maxTenants: (colSqlUsers.maxTenants.default?.valueOf() as number) ?? 5,
+      maxAdminUsers: (colSqlTenants.maxAdminUsers.default?.valueOf() as number) ?? 5,
+      maxMemberUsers: (colSqlTenants.maxMemberUsers.default?.valueOf() as number) ?? 5,
+      maxInvites: (colSqlTenants.maxInvites.default?.valueOf() as number) ?? 10,
+      maxLedgers: (colSqlTenants.maxLedgers.default?.valueOf() as number) ?? 5,
+    };
+    for (const tenant of tenants) {
+      // old default limit now overridden by params
+      if (
+        (this.params.maxTenants > sqlDefaultLimits.maxTenants && tenant.user.limits.maxTenants === sqlDefaultLimits.maxTenants) ||
+        (this.params.maxAdminUsers > sqlDefaultLimits.maxAdminUsers &&
+          tenant.tenant.limits.maxAdminUsers === sqlDefaultLimits.maxAdminUsers) ||
+        (this.params.maxMemberUsers > sqlDefaultLimits.maxMemberUsers &&
+          tenant.tenant.limits.maxMemberUsers === sqlDefaultLimits.maxMemberUsers) ||
+        (this.params.maxInvites > sqlDefaultLimits.maxInvites && tenant.tenant.limits.maxInvites === sqlDefaultLimits.maxInvites) ||
+        (this.params.maxLedgers > sqlDefaultLimits.maxLedgers && tenant.tenant.limits.maxLedgers === sqlDefaultLimits.maxLedgers)
+      ) {
+        // console.log("updating user/tenant limits...", this.params);
+        (user as { maxTenants: number }).maxTenants = this.params.maxTenants;
+        await this.db
+          .update(sqlUsers)
+          .set({
+            maxTenants: this.params.maxTenants,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(sqlUsers.userId, user.userId))
+          .run();
+        (tenant.tenant.limits as { maxAdminUsers: number }).maxAdminUsers = this.params.maxAdminUsers;
+        (tenant.tenant.limits as { maxMemberUsers: number }).maxMemberUsers = this.params.maxMemberUsers;
+        (tenant.tenant.limits as { maxInvites: number }).maxInvites = this.params.maxInvites;
+        (tenant.tenant.limits as { maxLedgers: number }).maxLedgers = this.params.maxLedgers;
+        await this.db
+          .update(sqlTenants)
+          .set({
+            maxAdminUsers: this.params.maxAdminUsers,
+            maxMemberUsers: this.params.maxMemberUsers,
+            maxInvites: this.params.maxInvites,
+            maxLedgers: this.params.maxLedgers,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(sqlTenants.tenantId, tenant.tenantId))
+          .run();
+      }
+    }
     return Result.Ok({
       type: "resEnsureUser",
       user: user,
-      tenants: await this.listTenantsByUser({
-        type: "reqListTenantsByUser",
-        auth: req.auth,
-      }).then((r) => r.Ok().tenants),
+      tenants,
     });
   }
 
@@ -550,6 +606,7 @@ export class FPApiSQL implements FPApiInterface {
       .select()
       .from(sqlTenantUsers)
       .innerJoin(sqlTenants, and(eq(sqlTenantUsers.tenantId, sqlTenants.tenantId)))
+      .innerJoin(sqlUsers, and(eq(sqlTenantUsers.userId, sqlUsers.userId)))
       .where(eq(sqlTenantUsers.userId, aur.user.userId))
       .all();
     // console.log(">>>>>", tenantUser);
@@ -566,12 +623,21 @@ export class FPApiSQL implements FPApiInterface {
                 name: toUndef(t.TenantUsers.name),
                 status: t.TenantUsers.status as UserStatus,
                 statusReason: t.TenantUsers.statusReason,
+                limits: {
+                  maxTenants: t.Users.maxTenants,
+                },
                 createdAt: new Date(t.TenantUsers.createdAt),
                 updatedAt: new Date(t.TenantUsers.updatedAt),
               },
               tenant: {
                 name: toUndef(t.Tenants.name),
                 status: t.Tenants.status as UserStatus,
+                limits: {
+                  maxAdminUsers: t.Tenants.maxAdminUsers,
+                  maxMemberUsers: t.Tenants.maxMemberUsers,
+                  maxInvites: t.Tenants.maxInvites,
+                  maxLedgers: t.Tenants.maxLedgers,
+                },
                 statusReason: t.Tenants.statusReason,
                 createdAt: new Date(t.Tenants.createdAt),
                 updatedAt: new Date(t.Tenants.updatedAt),
@@ -601,8 +667,6 @@ export class FPApiSQL implements FPApiInterface {
                   default: toBoolean(t.TenantUsers.default),
                   adminUserIds: roles[0].adminUserIds,
                   memberUserIds: roles[0].memberUserIds,
-                  maxAdminUsers: t.Tenants.maxAdminUsers,
-                  maxMemberUsers: t.Tenants.maxMemberUsers,
                 };
               default:
                 throw new Error("invalid role");
@@ -1407,6 +1471,7 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     const rTenant = await this.insertTenant(auth as ActiveUserWithUserId, {
+      ...this.params,
       ...req.tenant,
       ownerUserId: auth.user.userId,
     });
@@ -1427,7 +1492,10 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  private async insertTenant(auth: ActiveUserWithUserId, req: InCreateTenantParams): Promise<Result<OutTenantParams>> {
+  private async insertTenant(
+    auth: ActiveUserWithUserId,
+    req: InCreateTenantParams & FPApiParameters,
+  ): Promise<Result<OutTenantParams>> {
     const tenantId = this.sthis.nextId(12).str;
     const cnt = await this.db.$count(sqlTenants, eq(sqlTenants.ownerUserId, auth.user.userId));
     if (cnt + 1 >= auth.user.maxTenants) {
@@ -1440,9 +1508,10 @@ export class FPApiSQL implements FPApiInterface {
         tenantId,
         name: req.name ?? `my-tenant[${tenantId}]`,
         ownerUserId: auth.user.userId,
-        maxAdminUsers: req.maxAdminUsers ?? 5,
-        maxMemberUsers: req.maxMemberUsers ?? 5,
-        maxInvites: req.maxInvites ?? 10,
+        maxAdminUsers: req.maxAdminUsers,
+        maxMemberUsers: req.maxMemberUsers,
+        maxInvites: req.maxInvites,
+        maxLedgers: req.maxLedgers,
         createdAt: nowStr,
         updatedAt: nowStr,
       })
@@ -1830,16 +1899,9 @@ export class FPApiSQL implements FPApiInterface {
         token,
         now: new Date(),
       });
-      // console.log("getCloudSessionToken-ok", {
-      //   result: req.resultId,
-      // });
     } else if (req.resultId) {
       this.sthis.logger.Warn().Any({ resultId: req.resultId }).Msg("resultId too short");
-      console.log("getCloudSessionToken-failed", {
-        result: req.resultId,
-      });
     }
-    // console.log(">>>>-post:", ctx, privKey)
     return Result.Ok({
       type: "resCloudSessionToken",
       token,

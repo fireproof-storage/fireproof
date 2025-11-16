@@ -1,3 +1,4 @@
+import { JWKPublic } from "@fireproof/core-types-base";
 import { ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
 
 export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
@@ -124,12 +125,20 @@ export interface ResCreateTenant {
   readonly tenant: OutTenantParams;
 }
 
+export interface FPApiParameters {
+  readonly cloudPublicKeys: JWKPublic[];
+  readonly clerkPublishableKey: string;
+  readonly maxTenants: number;
+  readonly maxAdminUsers: number;
+  readonly maxMemberUsers: number;
+  readonly maxInvites: number;
+  readonly maxLedgers: number;
+}
+
 export interface InCreateTenantParams {
   readonly name?: string;
   readonly ownerUserId: string;
-  readonly maxAdminUsers?: number;
-  readonly maxMemberUsers?: number;
-  readonly maxInvites?: number;
+  readonly defaultTenant?: boolean;
 }
 
 export interface ReqCreateTenant {
@@ -206,23 +215,6 @@ export interface ResListLedgersByUser {
   readonly ledgers: LedgerUser[];
 }
 
-// export interface ReqAttachUserToLedger {
-//   readonly type: "reqAttachUserToLedger";
-//   readonly auth: AuthType;
-//   readonly tenantId: string;
-//   readonly ledgerId: string;
-//   readonly userId: string;
-//   readonly role: ReadWrite;
-// }
-
-// export interface ResAttachUserToLedger {
-//   readonly type: "resAttachUserToLedger";
-//   readonly tenantId: string;
-//   readonly ledgerId: string;
-//   readonly userId: string;
-//   readonly role: ReadWrite;
-// }
-
 export interface ReqListTenantsByUser {
   readonly type: "reqListTenantsByUser";
   readonly auth: AuthType;
@@ -236,12 +228,19 @@ export interface UserTenantCommon {
   readonly updatedAt: Date;
 }
 
+export interface TenantLimits {
+  readonly maxAdminUsers: number;
+  readonly maxMemberUsers: number;
+  readonly maxInvites: number;
+  readonly maxLedgers: number;
+}
+
 export interface UserTenant {
   readonly tenantId: string;
   readonly role: Role;
   readonly default: boolean;
-  readonly user: UserTenantCommon;
-  readonly tenant: UserTenantCommon;
+  readonly user: UserTenantCommon & { readonly limits: { readonly maxTenants: number } };
+  readonly tenant: UserTenantCommon & { readonly limits: TenantLimits };
 }
 
 export function isAdmin(ut: UserTenant) {
@@ -260,7 +259,7 @@ export interface ResListTenantsByUser {
   readonly type: "resListTenantsByUser";
   readonly userId: string;
   readonly authUserId: string;
-  readonly tenants: UserTenant[];
+  readonly tenants: (AdminTenant | UserTenant)[];
 }
 
 // export type AuthProvider = "github" | "google" | "fp";

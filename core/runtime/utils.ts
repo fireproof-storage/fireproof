@@ -665,3 +665,12 @@ export function deepFreeze<T extends object>(o?: T): T | undefined {
   }
   return o;
 }
+
+export function coerceInt(value: undefined | string | number, def: number): number {
+  if (value === undefined || value === null || value === "") {
+    return def;
+  }
+  const n = typeof value === "number" ? value : parseInt(value, 10);
+  if (!Number.isFinite(n) || Number.isNaN(n)) return def;
+  return n;
+}

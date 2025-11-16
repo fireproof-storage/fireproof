@@ -6,9 +6,10 @@ import { SuperThis, SuperThisOpts } from "@fireproof/core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
 import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
-import { ensureSuperThis, ensureLogger } from "@fireproof/core-runtime";
+import { ensureSuperThis, ensureLogger, coerceInt } from "@fireproof/core-runtime";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
+import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
 
@@ -177,7 +178,7 @@ class ClerkApiToken implements FPApiToken {
 export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
 
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
-export function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
+export async function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),
@@ -190,11 +191,34 @@ export function createHandler<T extends DashSqlite>(db: T, env: Record<string, s
   //   sthis.logger.Error().Err(e).Msg("Error setting import.meta.env");
   // }
   sthis.env.sets(env as unknown as Record<string, string>);
-  const logger = ensureLogger(sthis, "createHandler");
-  const fpApi = new FPApiSQL(sthis, db, {
-    clerk: new ClerkApiToken(sthis),
-    // better: new BetterApiToken(sthis),
+  const rClerkCloud = sthis.env.gets({
+    CLOUD_SESSION_TOKEN_PUBLIC: param.REQUIRED,
+    CLERK_PUBLISHABLE_KEY: param.REQUIRED,
   });
+  if (rClerkCloud.isErr()) {
+    throw rClerkCloud.Err();
+  }
+  const rCloudPublicKey = await getCloudPubkeyFromEnv(rClerkCloud.Ok().CLOUD_SESSION_TOKEN_PUBLIC, sthis);
+  if (rCloudPublicKey.isErr()) {
+    throw rCloudPublicKey.Err();
+  }
+  const logger = ensureLogger(sthis, "createHandler");
+  const fpApi = new FPApiSQL(
+    sthis,
+    db,
+    {
+      clerk: new ClerkApiToken(sthis),
+    },
+    {
+      cloudPublicKeys: [rCloudPublicKey.Ok()],
+      clerkPublishableKey: rClerkCloud.Ok().CLERK_PUBLISHABLE_KEY,
+      maxTenants: coerceInt(env.MAX_TENANTS, 10),
+      maxAdminUsers: coerceInt(env.MAX_ADMIN_USERS, 5),
+      maxMemberUsers: coerceInt(env.MAX_MEMBER_USERS, 5),
+      maxInvites: coerceInt(env.MAX_INVITES, 10),
+      maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
+    },
+  );
   return async (req: Request): Promise<Response> => {
     const startTime = performance.now();
     if (req.method === "OPTIONS") {

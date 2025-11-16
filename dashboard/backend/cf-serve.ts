@@ -8,7 +8,17 @@ export interface Env {
   DB: D1Database;
   // CLERK_SECRET_KEY: string;
   ASSETS: Fetcher;
+
+  MAX_TENANTS?: number;
+  MAX_ADMIN_USERS?: number;
+  MAX_MEMBER_USERS?: number;
+  MAX_INVITES?: number;
+  MAX_LEDGERS?: number;
+
+  CLERK_PUBLISHABLE_KEY: string;
+  CLOUD_SESSION_TOKEN_PUBLIC: string;
 }
+
 export default {
   async fetch(request: Request, env: Env) {
     const uri = URI.from(request.url);
@@ -16,7 +26,7 @@ export default {
     switch (true) {
       case uri.pathname.startsWith("/api"):
         // console.log("cf-serve", request.url, env);
-        ares = createHandler(drizzle(env.DB), env)(request) as unknown as Promise<CFResponse>;
+        ares = createHandler(drizzle(env.DB), env).then((fn) => fn(request) as unknown as Promise<CFResponse>);
         break;
 
       case uri.pathname.startsWith("/.well-known/jwks.json"):
