@@ -166,7 +166,5 @@ describe("HOOK: useFireproof useAllDocs", () => {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-    await database?.close();
-    await database?.destroy();
   });
 });
