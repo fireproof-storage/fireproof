@@ -720,6 +720,11 @@ describe("HOOK: hydrated flag behavior", () => {
   let db: Database, database: Database | undefined;
 
   beforeEach(async () => {
+    // Ensure clean state by destroying any existing database first
+    const cleanDb = fireproof(dbName);
+    await cleanDb.close();
+    await cleanDb.destroy();
+
     db = fireproof(dbName);
     // Add some test data
     await db.put({ type: "todo", text: "Task 1" });

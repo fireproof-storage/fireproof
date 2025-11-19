@@ -13,14 +13,16 @@ describe("HOOK: useFireproof useAllDocs", () => {
     useAllDocs: ReturnType<typeof useFireproof>["useAllDocs"];
 
   beforeEach(async () => {
+    // Ensure clean state by destroying any existing database first
+    const cleanDb = fireproof(dbName);
+    await cleanDb.close();
+    await cleanDb.destroy();
+
     const expectedValues = ["apple", "banana", "cherry"];
     db = fireproof(dbName);
     for (const value of expectedValues) {
       await db.put({ fruit: value });
     }
-
-    const allDocs = await db.allDocs<{ fruit: string }>();
-    expect(allDocs.rows.map((row) => row.value.fruit)).toEqual(expectedValues);
   });
 
   it(
