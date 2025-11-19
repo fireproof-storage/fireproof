@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DocFragment, DocTypes, DocWithId, IndexKeyType, FPIndexRow, MapFn, Database } from "@fireproof/core-types-base";
 import type { LiveQueryResult } from "./types.js";
 
@@ -20,16 +20,25 @@ export function createUseLiveQuery(database: Database) {
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
+    // Track request ID to prevent stale results from overwriting newer queries
+    const requestIdRef = useRef(0);
+
     // Reset loaded when query dependencies change
     useEffect(() => {
       setLoaded(false);
+      requestIdRef.current += 1;
     }, [mapFnString, queryString]);
 
     const refreshRows = useCallback(async () => {
+      const myReq = ++requestIdRef.current;
       const res = await database.query<T, K, R>(mapFn, { ...query, includeDocs: true });
-      setResult(res);
-      setLoaded(true);
-    }, [database, mapFnString, queryString]);
+
+      // Only update state if this is still the latest request
+      if (myReq === requestIdRef.current) {
+        setResult(res);
+        setLoaded(true);
+      }
+    }, [database, mapFn, query, mapFnString, queryString]);
 
     useEffect(() => {
       refreshRows();

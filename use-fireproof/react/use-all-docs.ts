@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AllDocsQueryOpts, DocTypes, DocWithId, Database } from "@fireproof/core-types-base";
 import type { AllDocsResult } from "./types.js";
 
@@ -14,19 +14,28 @@ export function createUseAllDocs(database: Database) {
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
 
+    // Track request ID to prevent stale results from overwriting newer queries
+    const requestIdRef = useRef(0);
+
     // Reset loaded when query changes
     useEffect(() => {
       setLoaded(false);
+      requestIdRef.current += 1;
     }, [queryString]);
 
     const refreshRows = useCallback(async () => {
+      const myReq = ++requestIdRef.current;
       const res = await database.allDocs<T>(query);
-      setResult({
-        ...res,
-        docs: res.rows.map((r) => r.value as DocWithId<T>),
-      });
-      setLoaded(true);
-    }, [database, queryString]);
+
+      // Only update state if this is still the latest request
+      if (myReq === requestIdRef.current) {
+        setResult({
+          ...res,
+          docs: res.rows.map((r) => r.value as DocWithId<T>),
+        });
+        setLoaded(true);
+      }
+    }, [database, query, queryString]);
 
     useEffect(() => {
       refreshRows();
