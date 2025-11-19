@@ -21,6 +21,9 @@ export function createUseDocument(database: Database) {
 
     const [doc, setDoc] = useState(initialDoc);
 
+    // Track request ID to prevent stale results from overwriting newer fetches
+    const requestIdRef = useRef(0);
+
     // Watch for changes to initialDocOrFn and update doc state
     // We track the _id specifically since that's the primary identifier
     const initialDocId = initialDoc._id;
@@ -30,6 +33,7 @@ export function createUseDocument(database: Database) {
     // Reset hydrated when initialDocId changes
     useEffect(() => {
       setHydrated(false);
+      requestIdRef.current += 1;
     }, [initialDocIdString]);
 
     useEffect(() => {
@@ -41,17 +45,31 @@ export function createUseDocument(database: Database) {
     }, [initialDocId]);
 
     const refresh = useCallback(async () => {
-      if (doc._id) {
+      const myReq = ++requestIdRef.current;
+      const currentDocId = doc._id;
+
+      if (currentDocId) {
         try {
-          const gotDoc = await database.get<T>(doc._id);
-          setDoc(gotDoc);
+          const gotDoc = await database.get<T>(currentDocId);
+          // Only update if this is still the latest request and the doc ID matches what we fetched
+          if (myReq === requestIdRef.current && gotDoc._id === currentDocId) {
+            setDoc(gotDoc);
+            setHydrated(true);
+          }
         } catch {
-          setDoc(initialDoc);
+          // Only update if this is still the latest request
+          if (myReq === requestIdRef.current) {
+            setDoc(initialDoc);
+            setHydrated(true);
+          }
         }
       } else {
-        setDoc(initialDoc);
+        // Only update if this is still the latest request
+        if (myReq === requestIdRef.current) {
+          setDoc(initialDoc);
+          setHydrated(true);
+        }
       }
-      setHydrated(true);
     }, [doc._id]);
 
     const save: StoreDocFn<T> = useCallback(
