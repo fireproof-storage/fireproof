@@ -716,14 +716,12 @@ describe("useFireproof calling submit()", () => {
 });
 
 describe("HOOK: hydrated flag behavior", () => {
-  const dbName = "hydratedFlagTest";
+  let dbName: string;
   let db: Database, database: Database | undefined;
 
   beforeEach(async () => {
-    // Ensure clean state by destroying any existing database first
-    const cleanDb = fireproof(dbName);
-    await cleanDb.close();
-    await cleanDb.destroy();
+    // Use unique database name for each test to avoid cross-test contamination
+    dbName = `hydratedFlagTest-${Date.now()}-${Math.random()}`;
 
     db = fireproof(dbName);
     // Add some test data

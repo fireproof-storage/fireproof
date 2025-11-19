@@ -7,22 +7,23 @@ import type { Database, AllDocsResult } from "../index.js";
 const TEST_TIMEOUT = 45000;
 
 describe("HOOK: useFireproof useAllDocs", () => {
-  const dbName = "useAllDocsTest";
+  let dbName: string;
   let db: Database,
     database: ReturnType<typeof useFireproof>["database"],
     useAllDocs: ReturnType<typeof useFireproof>["useAllDocs"];
 
   beforeEach(async () => {
-    // Ensure clean state by destroying any existing database first
-    const cleanDb = fireproof(dbName);
-    await cleanDb.close();
-    await cleanDb.destroy();
+    // Use unique database name for each test to avoid cross-test contamination
+    dbName = `useAllDocsTest-${Date.now()}-${Math.random()}`;
 
     const expectedValues = ["apple", "banana", "cherry"];
     db = fireproof(dbName);
     for (const value of expectedValues) {
       await db.put({ fruit: value });
     }
+
+    const allDocs = await db.allDocs<{ fruit: string }>();
+    expect(allDocs.rows.map((row) => row.value.fruit)).toEqual(expectedValues);
   });
 
   it(
