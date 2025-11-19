@@ -717,7 +717,7 @@ describe("useFireproof calling submit()", () => {
 
 describe("HOOK: hydrated flag behavior", () => {
   let dbName: string;
-  let db: Database, database: Database | undefined;
+  let db: Database;
 
   beforeEach(async () => {
     // Use unique database name for each test to avoid cross-test contamination
@@ -733,15 +733,13 @@ describe("HOOK: hydrated flag behavior", () => {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-    database = undefined;
   });
 
   it(
     "useLiveQuery should have hydrated flag that starts false and becomes true",
     async () => {
       const { result } = renderHook(() => {
-        const { database: db, useLiveQuery } = useFireproof(dbName);
-        database = db;
+        const { useLiveQuery } = useFireproof(dbName);
         return useLiveQuery<{ type: string; text: string }>("type", { key: "todo" });
       });
 
@@ -765,8 +763,7 @@ describe("HOOK: hydrated flag behavior", () => {
       const docRes = await db.put({ input: "initial value" });
 
       const { result } = renderHook(() => {
-        const { database: db, useDocument } = useFireproof(dbName);
-        database = db;
+        const { useDocument } = useFireproof(dbName);
         return useDocument<{ input: string }>({ _id: docRes.id } as { _id: string; input: string });
       });
 
@@ -783,8 +780,7 @@ describe("HOOK: hydrated flag behavior", () => {
     "useDocument with no _id should have hydrated flag true after initial render",
     async () => {
       const { result } = renderHook(() => {
-        const { database: db, useDocument } = useFireproof(dbName);
-        database = db;
+        const { useDocument } = useFireproof(dbName);
         return useDocument<{ input: string }>({ input: "" });
       });
 
@@ -801,8 +797,7 @@ describe("HOOK: hydrated flag behavior", () => {
     "useAllDocs should have hydrated flag that starts false and becomes true",
     async () => {
       const { result } = renderHook(() => {
-        const { database: db, useAllDocs } = useFireproof(dbName);
-        database = db;
+        const { useAllDocs } = useFireproof(dbName);
         return useAllDocs<{ type: string; text: string }>();
       });
 
@@ -823,8 +818,7 @@ describe("HOOK: hydrated flag behavior", () => {
     "useChanges should have hydrated flag that starts false and becomes true",
     async () => {
       const { result } = renderHook(() => {
-        const { database: db, useChanges } = useFireproof(dbName);
-        database = db;
+        const { useChanges } = useFireproof(dbName);
         return useChanges<{ type: string; text: string }>([], {});
       });
 
