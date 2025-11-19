@@ -730,11 +730,7 @@ describe("HOOK: hydrated flag behavior", () => {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-    if (database && database.name === dbName) {
-      await database.close();
-      await database.destroy();
-      database = undefined;
-    }
+    database = undefined;
   });
 
   it(
