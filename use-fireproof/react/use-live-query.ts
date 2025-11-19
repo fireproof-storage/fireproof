@@ -11,8 +11,8 @@ export function createUseLiveQuery(database: Database) {
     query = {},
     initialRows: FPIndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
-    const [loaded, setLoaded] = useState(false);
-    const [result, setResult] = useState<Omit<LiveQueryResult<T, K, R>, "loaded">>({
+    const [hydrated, setHydrated] = useState(false);
+    const [result, setResult] = useState<Omit<LiveQueryResult<T, K, R>, "hydrated">>({
       docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
       rows: initialRows,
     });
@@ -23,9 +23,9 @@ export function createUseLiveQuery(database: Database) {
     // Track request ID to prevent stale results from overwriting newer queries
     const requestIdRef = useRef(0);
 
-    // Reset loaded when query dependencies change
+    // Reset hydrated when query dependencies change
     useEffect(() => {
-      setLoaded(false);
+      setHydrated(false);
       requestIdRef.current += 1;
     }, [mapFnString, queryString]);
 
@@ -36,7 +36,7 @@ export function createUseLiveQuery(database: Database) {
       // Only update state if this is still the latest request
       if (myReq === requestIdRef.current) {
         setResult(res);
-        setLoaded(true);
+        setHydrated(true);
       }
     }, [database, mapFn, query, mapFnString, queryString]);
 
@@ -48,6 +48,6 @@ export function createUseLiveQuery(database: Database) {
       };
     }, [database, refreshRows]);
 
-    return { ...result, loaded };
+    return { ...result, hydrated };
   };
 }

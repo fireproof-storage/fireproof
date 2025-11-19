@@ -7,8 +7,8 @@ import type { ChangesResult } from "./types.js";
  */
 export function createUseChanges(database: Database) {
   return function useChanges<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): ChangesResult<T> {
-    const [loaded, setLoaded] = useState(false);
-    const [result, setResult] = useState<Omit<ChangesResult<T>, "loaded">>({
+    const [hydrated, setHydrated] = useState(false);
+    const [result, setResult] = useState<Omit<ChangesResult<T>, "hydrated">>({
       docs: [],
     });
 
@@ -18,9 +18,9 @@ export function createUseChanges(database: Database) {
     // Track request ID to prevent stale results from overwriting newer queries
     const requestIdRef = useRef(0);
 
-    // Reset loaded when dependencies change
+    // Reset hydrated when dependencies change
     useEffect(() => {
-      setLoaded(false);
+      setHydrated(false);
       requestIdRef.current += 1;
     }, [sinceString, queryString]);
 
@@ -31,7 +31,7 @@ export function createUseChanges(database: Database) {
       // Only update state if this is still the latest request
       if (myReq === requestIdRef.current) {
         setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
-        setLoaded(true);
+        setHydrated(true);
       }
     }, [database, since, opts, sinceString, queryString]);
 
@@ -40,6 +40,6 @@ export function createUseChanges(database: Database) {
       return database.subscribe(refreshRows);
     }, [refreshRows]);
 
-    return { ...result, loaded };
+    return { ...result, hydrated };
   };
 }
