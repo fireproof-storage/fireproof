@@ -25,7 +25,8 @@ export interface HookResult {
   readonly hydrated: boolean;
 }
 
-export type LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = IndexRowsWithDocs<T, K, R> & HookResult;
+export type LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> = IndexRowsWithDocs<T, K, R> &
+  HookResult;
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   mapFn: string | MapFn<T>,
