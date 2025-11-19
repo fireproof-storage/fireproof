@@ -715,8 +715,8 @@ describe("useFireproof calling submit()", () => {
   });
 });
 
-describe("HOOK: loaded flag behavior", () => {
-  const dbName = "loadedFlagTest";
+describe("HOOK: hydrated flag behavior", () => {
+  const dbName = "hydratedFlagTest";
   let db: Database, database: Database | undefined;
 
   beforeEach(async () => {
@@ -738,7 +738,7 @@ describe("HOOK: loaded flag behavior", () => {
   });
 
   it(
-    "useLiveQuery should have loaded flag that starts false and becomes true",
+    "useLiveQuery should have hydrated flag that starts false and becomes true",
     async () => {
       const { result } = renderHook(() => {
         const { database: db, useLiveQuery } = useFireproof(dbName);
@@ -746,13 +746,13 @@ describe("HOOK: loaded flag behavior", () => {
         return useLiveQuery<{ type: string; text: string }>("type", { key: "todo" });
       });
 
-      // Initially loaded should be false
-      expect(result.current.loaded).toBe(false);
+      // Initially hydrated should be false
+      expect(result.current.hydrated).toBe(false);
       expect(result.current.rows.length).toBe(0);
 
       // Wait for data to load
       await waitFor(() => {
-        expect(result.current.loaded).toBe(true);
+        expect(result.current.hydrated).toBe(true);
         expect(result.current.rows.length).toBe(2);
       });
     },
@@ -760,7 +760,7 @@ describe("HOOK: loaded flag behavior", () => {
   );
 
   it(
-    "useDocument should have loaded flag that becomes true after refresh",
+    "useDocument should have hydrated flag that becomes true after refresh",
     async () => {
       // First create a document to fetch
       const docRes = await db.put({ input: "initial value" });
@@ -771,9 +771,9 @@ describe("HOOK: loaded flag behavior", () => {
         return useDocument<{ input: string }>({ _id: docRes.id } as { _id: string; input: string });
       });
 
-      // Wait for loaded to become true
+      // Wait for hydrated to become true
       await waitFor(() => {
-        expect(result.current.loaded).toBe(true);
+        expect(result.current.hydrated).toBe(true);
         expect(result.current.doc.input).toBe("initial value");
       });
     },
@@ -781,7 +781,7 @@ describe("HOOK: loaded flag behavior", () => {
   );
 
   it(
-    "useDocument with no _id should have loaded flag true after initial render",
+    "useDocument with no _id should have hydrated flag true after initial render",
     async () => {
       const { result } = renderHook(() => {
         const { database: db, useDocument } = useFireproof(dbName);
@@ -789,9 +789,9 @@ describe("HOOK: loaded flag behavior", () => {
         return useDocument<{ input: string }>({ input: "" });
       });
 
-      // Wait for loaded to become true (should happen immediately since no fetch needed)
+      // Wait for hydrated to become true (should happen immediately since no fetch needed)
       await waitFor(() => {
-        expect(result.current.loaded).toBe(true);
+        expect(result.current.hydrated).toBe(true);
         expect(result.current.doc.input).toBe("");
       });
     },
@@ -799,7 +799,7 @@ describe("HOOK: loaded flag behavior", () => {
   );
 
   it(
-    "useAllDocs should have loaded flag that starts false and becomes true",
+    "useAllDocs should have hydrated flag that starts false and becomes true",
     async () => {
       const { result } = renderHook(() => {
         const { database: db, useAllDocs } = useFireproof(dbName);
@@ -807,13 +807,13 @@ describe("HOOK: loaded flag behavior", () => {
         return useAllDocs<{ type: string; text: string }>();
       });
 
-      // Initially loaded should be false
-      expect(result.current.loaded).toBe(false);
+      // Initially hydrated should be false
+      expect(result.current.hydrated).toBe(false);
       expect(result.current.docs.length).toBe(0);
 
       // Wait for data to load
       await waitFor(() => {
-        expect(result.current.loaded).toBe(true);
+        expect(result.current.hydrated).toBe(true);
         expect(result.current.docs.length).toBe(3);
       });
     },
@@ -821,7 +821,7 @@ describe("HOOK: loaded flag behavior", () => {
   );
 
   it(
-    "useChanges should have loaded flag that starts false and becomes true",
+    "useChanges should have hydrated flag that starts false and becomes true",
     async () => {
       const { result } = renderHook(() => {
         const { database: db, useChanges } = useFireproof(dbName);
@@ -829,13 +829,13 @@ describe("HOOK: loaded flag behavior", () => {
         return useChanges<{ type: string; text: string }>([], {});
       });
 
-      // Initially loaded should be false
-      expect(result.current.loaded).toBe(false);
+      // Initially hydrated should be false
+      expect(result.current.hydrated).toBe(false);
       expect(result.current.docs.length).toBe(0);
 
       // Wait for data to load
       await waitFor(() => {
-        expect(result.current.loaded).toBe(true);
+        expect(result.current.hydrated).toBe(true);
         expect(result.current.docs.length).toBe(3);
       });
     },
@@ -843,11 +843,11 @@ describe("HOOK: loaded flag behavior", () => {
   );
 });
 
-describe("HOOK: loaded flag distinguishes empty from not-loaded", () => {
+describe("HOOK: hydrated flag distinguishes empty from not-hydrated", () => {
   it(
-    "loaded flag distinguishes between empty results and not-yet-loaded",
+    "hydrated flag distinguishes between empty results and not-yet-hydrated",
     async () => {
-      const emptyDbName = "emptyLoadedTest";
+      const emptyDbName = "emptyHydratedTest";
       const emptyDb = fireproof(emptyDbName);
       let emptyDatabase: Database | undefined;
 
@@ -858,15 +858,15 @@ describe("HOOK: loaded flag distinguishes empty from not-loaded", () => {
           return useLiveQuery<{ type: string }>("type", { key: "nonexistent" });
         });
 
-        // Before load: loaded=false, rows=[]
-        expect(result.current.loaded).toBe(false);
+        // Before load: hydrated=false, rows=[]
+        expect(result.current.hydrated).toBe(false);
         expect(result.current.rows.length).toBe(0);
 
-        // After load: loaded=true, rows=[] (legitimately empty)
+        // After load: hydrated=true, rows=[] (legitimately empty)
         await waitFor(() => {
-          expect(result.current.loaded).toBe(true);
+          expect(result.current.hydrated).toBe(true);
         });
-        expect(result.current.rows.length).toBe(0); // Still empty, but now we know it's loaded
+        expect(result.current.rows.length).toBe(0); // Still empty, but now we know it's hydrated
       } finally {
         await emptyDb.close();
         await emptyDb.destroy();

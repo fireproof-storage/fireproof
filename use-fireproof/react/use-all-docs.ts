@@ -7,8 +7,8 @@ import type { AllDocsResult } from "./types.js";
  */
 export function createUseAllDocs(database: Database) {
   return function useAllDocs<T extends DocTypes>(query: Partial<AllDocsQueryOpts> = {}): AllDocsResult<T> {
-    const [loaded, setLoaded] = useState(false);
-    const [result, setResult] = useState<Omit<AllDocsResult<T>, "loaded">>({
+    const [hydrated, setHydrated] = useState(false);
+    const [result, setResult] = useState<Omit<AllDocsResult<T>, "hydrated">>({
       docs: [],
     });
 
@@ -17,9 +17,9 @@ export function createUseAllDocs(database: Database) {
     // Track request ID to prevent stale results from overwriting newer queries
     const requestIdRef = useRef(0);
 
-    // Reset loaded when query changes
+    // Reset hydrated when query changes
     useEffect(() => {
-      setLoaded(false);
+      setHydrated(false);
       requestIdRef.current += 1;
     }, [queryString]);
 
@@ -33,7 +33,7 @@ export function createUseAllDocs(database: Database) {
           ...res,
           docs: res.rows.map((r) => r.value as DocWithId<T>),
         });
-        setLoaded(true);
+        setHydrated(true);
       }
     }, [database, query, queryString]);
 
@@ -45,6 +45,6 @@ export function createUseAllDocs(database: Database) {
       };
     }, [database, refreshRows]);
 
-    return { ...result, loaded };
+    return { ...result, hydrated };
   };
 }

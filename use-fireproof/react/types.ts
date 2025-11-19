@@ -22,7 +22,7 @@ import type {
 import { ToCloudAttachable, TokenAndClaims } from "@fireproof/core-types-protocols-cloud";
 
 export interface HookResult {
-  readonly loaded: boolean;
+  readonly hydrated: boolean;
 }
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T>
