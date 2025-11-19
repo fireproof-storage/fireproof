@@ -104,8 +104,8 @@ importers:
         specifier: ^11.3.1
         version: 11.3.2
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -199,8 +199,8 @@ importers:
         specifier: ^4.10.4
         version: 4.10.4
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -370,8 +370,8 @@ importers:
         specifier: ^0.14.3
         version: 0.14.3
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -385,34 +385,6 @@ importers:
       zx:
         specifier: ^8.8.5
         version: 8.8.5
-
-  cloud/box-party:
-    dependencies:
-      '@adviser/cement':
-        specifier: 0.4.66
-        version: 0.4.66(typescript@5.9.3)
-      react:
-        specifier: ^19.2.0
-        version: 19.2.0
-      react-dom:
-        specifier: ^19.2.0
-        version: 19.2.0(react@19.2.0)
-      use-fireproof:
-        specifier: workspace:0.0.0
-        version: link:../../use-fireproof
-    devDependencies:
-      '@types/react':
-        specifier: ^19.2.2
-        version: 19.2.3
-      '@types/react-dom':
-        specifier: ^19.2.2
-        version: 19.2.3(@types/react@19.2.3)
-      '@vitejs/plugin-react':
-        specifier: ^5.1.0
-        version: 5.1.1(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))
-      vite:
-        specifier: ^7.1.12
-        version: 7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
 
   cloud/todo-app:
     dependencies:
@@ -587,8 +559,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../types/base
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -654,8 +626,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
 
   core/gateways/file:
     dependencies:
@@ -800,8 +772,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -878,8 +850,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -1041,8 +1013,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -1090,8 +1062,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -1142,8 +1114,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../../vendor
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
@@ -1218,8 +1190,8 @@ importers:
         specifier: ^0.3.7
         version: 0.3.7
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       minimatch:
         specifier: ^10.1.1
         version: 10.1.1
@@ -1372,8 +1344,8 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
       jose:
-        specifier: ^6.1.1
-        version: 6.1.1
+        specifier: ^6.1.2
+        version: 6.1.2
       react:
         specifier: '>=18.0.0'
         version: 19.2.0
@@ -4732,8 +4704,8 @@ packages:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
     hasBin: true
 
-  jose@6.1.1:
-    resolution: {integrity: sha512-GWSqjfOPf4cWOkBzw5THBjtGPhXKqYnfRBzh4Ni+ArTrQQ9unvmsA3oFLqaYKoKe5sjWmGu5wVKg9Ft1i+LQfg==}
+  jose@6.1.2:
+    resolution: {integrity: sha512-MpcPtHLE5EmztuFIqB0vzHAWJPpmN1E6L4oo+kze56LIs3MyXIj9ZHMDxqOvkP38gBR7K1v3jqd4WU2+nrfONQ==}
 
   js-base64@3.7.8:
     resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
@@ -9411,7 +9383,7 @@ snapshots:
 
   jiti@1.21.7: {}
 
-  jose@6.1.1: {}
+  jose@6.1.2: {}
 
   js-base64@3.7.8: {}
 
