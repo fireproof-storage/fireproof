@@ -246,11 +246,11 @@ async function resolveConflictsAndRebase(prNumber: number, repo = "", regenerate
   try {
     console.log(`\n🔧 Resolving conflicts for PR #${prNumber}...`);
 
-    // Checkout the PR branch
+    // Checkout the PR branch (use --force to handle previously force-pushed branches)
     if (repo) {
-      await $`gh pr checkout ${prNumber} -R ${repo}`;
+      await $`gh pr checkout ${prNumber} -R ${repo} --force`;
     } else {
-      await $`gh pr checkout ${prNumber}`;
+      await $`gh pr checkout ${prNumber} --force`;
     }
     console.log(`   ✓ Checked out PR branch`);
 
@@ -266,28 +266,35 @@ async function resolveConflictsAndRebase(prNumber: number, repo = "", regenerate
     } catch (error) {
       console.log(`   ⚠️  Rebase has conflicts, attempting to resolve...`);
 
-      // Check for pnpm-lock.yaml conflicts
+      // Resolve all conflicts
       try {
-        const statusResult = await $`git status --porcelain`;
-        const hasLockfileConflict = statusResult.stdout.includes("pnpm-lock.yaml");
-
-        if (hasLockfileConflict) {
-          console.log(`   🔨 Resolving pnpm-lock.yaml conflict...`);
-          // Use ours for pnpm-lock.yaml (take the version from main)
-          await $`git checkout --theirs pnpm-lock.yaml`;
-          // Regenerate lock file
-          await $`pnpm install`;
-          await $`git add pnpm-lock.yaml`;
-          console.log(`   ✓ Resolved pnpm-lock.yaml conflict`);
-        }
-
-        // Check for other conflicts
+        // Get list of conflicting files
         const conflictResult = await $`git diff --name-only --diff-filter=U`;
-        if (conflictResult.stdout.trim()) {
-          console.log(`   ⚠️  Other conflicts found:`);
-          console.log(conflictResult.stdout);
-          console.log(`   Please resolve manually and run: git rebase --continue`);
-          throw new Error("Manual conflict resolution required");
+        const conflictingFiles = conflictResult.stdout
+          .trim()
+          .split("\n")
+          .filter((f) => f);
+
+        if (conflictingFiles.length > 0) {
+          console.log(`   🔨 Found ${conflictingFiles.length} conflicting file(s):`);
+
+          // Resolve each conflicting file
+          for (const file of conflictingFiles) {
+            if (file === "pnpm-lock.yaml") {
+              console.log(`      • ${file} - taking version from main and regenerating...`);
+              // Use theirs for pnpm-lock.yaml (take the version from main)
+              await $`git checkout --theirs ${file}`;
+              // Regenerate lock file
+              await $`pnpm install`;
+            } else {
+              console.log(`      • ${file} - taking version from main...`);
+              // Use theirs for all other files (take the version from main)
+              await $`git checkout --theirs ${file}`;
+            }
+            // Add the resolved file
+            await $`git add ${file}`;
+          }
+          console.log(`   ✓ Resolved all ${conflictingFiles.length} conflicting file(s)`);
         }
 
         // Continue rebase
