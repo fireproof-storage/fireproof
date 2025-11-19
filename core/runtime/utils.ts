@@ -33,6 +33,7 @@ import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
 import { toSortedArray, toSorted } from "@adviser/cement/utils";
 import { XXH, XXH64 } from "@adviser/ts-xxhash";
+import { z } from "zod";
 
 //export type { Logger };
 //export { Result };
@@ -673,4 +674,30 @@ export function coerceInt(value: undefined | string | number, def: number): numb
   const n = typeof value === "number" ? value : parseInt(value, 10);
   if (!Number.isFinite(n) || Number.isNaN(n)) return def;
   return n;
+}
+
+export function makePartial<
+  T extends z.ZodObject<Record<string, z.ZodTypeAny>> | z.ZodReadonly<z.ZodObject<Record<string, z.ZodTypeAny>>>,
+>(schema: T): T {
+  // Handle both regular and readonly schemas
+  let baseSchema: z.ZodObject<Record<string, z.ZodTypeAny>>;
+  let isReadonly = false;
+
+  if ("innerType" in schema.def) {
+    // This is a ZodReadonly
+    isReadonly = true;
+    baseSchema = schema.def.innerType as z.ZodObject<Record<string, z.ZodTypeAny>>;
+  } else {
+    // This is a regular ZodObject
+    baseSchema = schema as z.ZodObject<Record<string, z.ZodTypeAny>>;
+  }
+
+  const shape = baseSchema.shape;
+  const partialShape: Record<string, z.ZodTypeAny> = {};
+  for (const key in shape) {
+    partialShape[key] = (shape[key] as z.ZodTypeAny).optional();
+  }
+  const partialObject = z.object(partialShape);
+  // Return readonly if input was readonly
+  return (isReadonly ? partialObject.readonly() : partialObject) as T;
 }

@@ -1,8 +1,9 @@
 import { runtimeFn, URI } from "@adviser/cement";
 import { getFileName } from "@fireproof/core-gateways-base";
-import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter } from "@fireproof/core-runtime";
+import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter, makePartial } from "@fireproof/core-runtime";
 import { UUID } from "uuidv7";
 import { describe, beforeAll, it, expect, assert } from "vitest";
+import { z } from "zod";
 
 describe("utils", () => {
   const sthis = ensureSuperThis();
@@ -133,5 +134,19 @@ describe("runtime", () => {
       isNodeIsh: isNode,
       isReactNative: false,
     });
+  });
+  it("zod makePartial", () => {
+    const BaseSchema = z.object({
+      a: z.string(),
+      b: z.number(),
+      c: z.boolean(),
+    });
+
+    const partialSchema = makePartial(BaseSchema);
+    const parsed = partialSchema.parse({ a: "hello", z: 1 });
+    expect(parsed).toEqual({ a: "hello" });
+
+    const parsed2 = partialSchema.safeParse({ a: "hello", b: "xx", z: 1 });
+    expect(parsed2.success).toBeFalsy();
   });
 });
