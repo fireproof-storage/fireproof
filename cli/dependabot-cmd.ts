@@ -297,8 +297,9 @@ async function resolveConflictsAndRebase(prNumber: number, repo = "", regenerate
           console.log(`   ✓ Resolved all ${conflictingFiles.length} conflicting file(s)`);
         }
 
-        // Continue rebase
-        await $`git rebase --continue`;
+        // Continue rebase with GIT_EDITOR=true to skip editor prompts
+        const env = { ...process.env, GIT_EDITOR: "true" };
+        await $({ env })`git rebase --continue`;
         console.log(`   ✓ Rebase continued successfully`);
       } catch (conflictError) {
         console.error(`   ✗ Failed to resolve conflicts:`, conflictError);
