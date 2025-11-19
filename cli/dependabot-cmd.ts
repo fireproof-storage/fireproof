@@ -33,9 +33,16 @@ interface PRRetryTracker {
 }
 
 function isDependabotRebasing(pr: PR): boolean {
-  // Check if Dependabot is rebasing based on merge state
-  // DIRTY means there's a rebase in progress (assuming no conflicts)
+  // Check if Dependabot is rebasing based on multiple signals
   const hasConflict = pr.mergeable === "CONFLICTING";
+
+  // Check for explicit Dependabot "rebasing" notice in PR body
+  if (pr.body && pr.body.includes("Rebasing")) {
+    return !hasConflict; // Only consider it rebasing if there are no conflicts
+  }
+
+  // Fallback: DIRTY state without conflicts suggests rebasing
+  // (though DIRTY can mean other things, this is a reasonable heuristic)
   const isRebasing = pr.mergeStateStatus === "DIRTY" && !hasConflict;
   return isRebasing;
 }
@@ -110,6 +117,11 @@ async function checkAutoMergeEnabled(): Promise<boolean> {
 
 async function fetchDependabotPRs(repo = ""): Promise<PR[]> {
   try {
+    // Validate repo format if provided
+    if (repo && !/^[\w.-]+\/[\w.-]+$/.test(repo)) {
+      throw new Error(`Invalid repo format: ${repo}. Expected format: owner/repo`);
+    }
+
     let result;
     if (repo) {
       result =
@@ -849,6 +861,14 @@ export function dependabotCmd(sthis: SuperThis) {
         }
         await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable, args.repo);
         return;
+      }
+
+      // Validate mutually exclusive flags
+      if (args.autoCLI && args.autoGH) {
+        console.error("ERROR: Cannot use both --autoCLI and --autoGH flags");
+        console.error("  --autoGH: GitHub auto-merges when CI passes (requires auto-merge enabled)");
+        console.error("  --autoCLI: CLI merges when CI passes");
+        process.exit(1);
       }
 
       // Apply all PRs
