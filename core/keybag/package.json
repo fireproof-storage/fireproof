@@ -42,7 +42,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
-    "jose": "^6.1.1",
+    "jose": "^6.1.2",
     "multiformats": "^13.4.0",
     "zod": "^4.1.12"
   }
