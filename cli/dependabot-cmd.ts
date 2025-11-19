@@ -242,6 +242,88 @@ async function triggerDependabotRebase(prNumber: number, repo = ""): Promise<voi
   }
 }
 
+async function resolveConflictsAndRebase(prNumber: number, repo = "", regenerateFrozenLockfile = false): Promise<void> {
+  try {
+    console.log(`\n🔧 Resolving conflicts for PR #${prNumber}...`);
+
+    // Checkout the PR branch
+    if (repo) {
+      await $`gh pr checkout ${prNumber} -R ${repo}`;
+    } else {
+      await $`gh pr checkout ${prNumber}`;
+    }
+    console.log(`   ✓ Checked out PR branch`);
+
+    // Get the current branch name
+    const branchResult = await $`git rev-parse --abbrev-ref HEAD`;
+    const branchName = branchResult.stdout.trim();
+    console.log(`   Current branch: ${branchName}`);
+
+    // Start rebase against main
+    try {
+      await $`git rebase main`;
+      console.log(`   ✓ Rebase completed without conflicts`);
+    } catch (error) {
+      console.log(`   ⚠️  Rebase has conflicts, attempting to resolve...`);
+
+      // Check for pnpm-lock.yaml conflicts
+      try {
+        const statusResult = await $`git status --porcelain`;
+        const hasLockfileConflict = statusResult.stdout.includes("pnpm-lock.yaml");
+
+        if (hasLockfileConflict) {
+          console.log(`   🔨 Resolving pnpm-lock.yaml conflict...`);
+          // Use ours for pnpm-lock.yaml (take the version from main)
+          await $`git checkout --theirs pnpm-lock.yaml`;
+          // Regenerate lock file
+          await $`pnpm install`;
+          await $`git add pnpm-lock.yaml`;
+          console.log(`   ✓ Resolved pnpm-lock.yaml conflict`);
+        }
+
+        // Check for other conflicts
+        const conflictResult = await $`git diff --name-only --diff-filter=U`;
+        if (conflictResult.stdout.trim()) {
+          console.log(`   ⚠️  Other conflicts found:`);
+          console.log(conflictResult.stdout);
+          console.log(`   Please resolve manually and run: git rebase --continue`);
+          throw new Error("Manual conflict resolution required");
+        }
+
+        // Continue rebase
+        await $`git rebase --continue`;
+        console.log(`   ✓ Rebase continued successfully`);
+      } catch (conflictError) {
+        console.error(`   ✗ Failed to resolve conflicts:`, conflictError);
+        throw conflictError;
+      }
+    }
+
+    // Regenerate frozen lockfile if requested
+    if (regenerateFrozenLockfile) {
+      console.log(`   🔒 Regenerating frozen lockfile...`);
+      try {
+        await $`pnpm install --frozen-lockfile=false`;
+        await $`git add pnpm-lock.yaml`;
+        console.log(`   ✓ Regenerated frozen lockfile`);
+      } catch (error) {
+        console.error(`   ⚠️  Failed to regenerate frozen lockfile:`, error);
+        // Don't throw - this is optional
+      }
+    }
+
+    // Force push the branch
+    console.log(`   📤 Force pushing branch...`);
+    await $`git push --force-with-lease origin ${branchName}`;
+    console.log(`   ✓ Force pushed to origin/${branchName}`);
+
+    console.log(`✓ PR #${prNumber} rebased and pushed successfully\n`);
+  } catch (error) {
+    console.error(`✗ Failed to resolve conflicts for PR #${prNumber}:`, error);
+    throw error;
+  }
+}
+
 async function retryFailedPR(prNumber: number, repo = ""): Promise<void> {
   try {
     // Close the PR first
@@ -273,7 +355,7 @@ async function retryFailedPR(prNumber: number, repo = ""): Promise<void> {
   }
 }
 
-async function deleteDependabotPRs(prNumbers: number[] | null, repo = ""): Promise<void> {
+async function deleteDependabotPRs(prNumbers: number[] | null, repo = "", autoReopen = false): Promise<void> {
   try {
     const allPRs = await fetchDependabotPRs(repo);
 
@@ -309,30 +391,68 @@ async function deleteDependabotPRs(prNumbers: number[] | null, repo = ""): Promi
     }
 
     console.log(`\n✓ Deleted ${prsToDelete.length} Dependabot PR(s)`);
-    console.log("💡 Dependabot will now create fresh PRs on the next run.\n");
+
+    if (autoReopen) {
+      console.log(`\n⏳ Waiting 30 seconds for GitHub to process closes...\n`);
+      await new Promise((resolve) => setTimeout(resolve, 30000));
+
+      console.log(`🔄 Reopening ${prsToDelete.length} Dependabot PR(s)...\n`);
+
+      for (const pr of prsToDelete) {
+        try {
+          if (repo) {
+            await $`gh pr comment ${pr.number} -R ${repo} --body '@dependabot reopen'`;
+          } else {
+            await $`gh pr comment ${pr.number} --body '@dependabot reopen'`;
+          }
+          console.log(`✓ Reopened PR #${pr.number}: ${pr.title}`);
+        } catch (error) {
+          console.error(`✗ Failed to reopen PR #${pr.number}:`, error);
+        }
+      }
+
+      console.log(`\n⏳ Waiting 30 seconds for Dependabot to process reopens...\n`);
+      await new Promise((resolve) => setTimeout(resolve, 30000));
+
+      console.log(`✓ All PRs have been closed and reopened for a fresh start!\n`);
+    } else {
+      console.log("💡 Dependabot will now create fresh PRs on the next run.\n");
+    }
   } catch (error) {
     console.error("Failed to delete Dependabot PRs:", error);
     throw error;
   }
 }
 
-async function applyPR(pr: PR, rebase: boolean, useAutoMerge = false): Promise<void> {
+async function applyPR(pr: PR, rebase: boolean, useAutoMerge = false, repo = ""): Promise<void> {
   try {
     console.log(`\nProcessing PR #${pr.number}: ${pr.title}`);
 
     if (rebase) {
       if (useAutoMerge) {
         // Use auto-merge (repository must have it enabled)
-        await $`gh pr merge ${pr.number} --auto --rebase`;
+        if (repo) {
+          await $`gh pr merge ${pr.number} -R ${repo} --auto --rebase`;
+        } else {
+          await $`gh pr merge ${pr.number} --auto --rebase`;
+        }
         console.log(`✓ Enabled auto-merge for PR #${pr.number}`);
       } else {
         // Direct merge
-        await $`gh pr merge ${pr.number} --rebase`;
+        if (repo) {
+          await $`gh pr merge ${pr.number} -R ${repo} --rebase`;
+        } else {
+          await $`gh pr merge ${pr.number} --rebase`;
+        }
         console.log(`✓ Rebased and merged PR #${pr.number}`);
       }
     } else {
       // Just checkout the PR
-      await $`gh pr checkout ${pr.number}`;
+      if (repo) {
+        await $`gh pr checkout ${pr.number} -R ${repo}`;
+      } else {
+        await $`gh pr checkout ${pr.number}`;
+      }
       console.log(`✓ Checked out PR #${pr.number}`);
     }
   } catch (error) {
@@ -396,6 +516,10 @@ export function dependabotCmd(sthis: SuperThis) {
         defaultValue: () => "",
         description: "Comma-separated PR numbers to delete (e.g., '1354,1349,1348'). Use with --clean to delete specific PRs.",
       }),
+      autoReopen: flag({
+        long: "auto-reopen",
+        description: "Automatically reopen PRs after closing them (use with --clean). Triggers fresh CI runs.",
+      }),
       retryFailed: flag({
         long: "retry-failed",
         description: "Retry failed PRs to detect flaky tests (reopen and wait for fresh CI run)",
@@ -412,11 +536,25 @@ export function dependabotCmd(sthis: SuperThis) {
         defaultValue: () => "",
         description: "Target repository in format 'owner/repo' (e.g., 'VibesDIY/vibes.diy'). Defaults to current directory's repo.",
       }),
+      resolveConflicts: flag({
+        long: "resolve-conflicts",
+        description:
+          "Resolve merge conflicts (especially pnpm-lock.yaml) by rebasing against main and auto-fixing lockfiles. Use with --pr to resolve a specific PR.",
+      }),
+      regenerateFrozenLockfile: flag({
+        long: "regenerate-frozen-lockfile",
+        description:
+          "Regenerate frozen lockfile after resolving conflicts (use with --resolve-conflicts). Useful when lockfile needs to be updated.",
+      }),
     },
     handler: async (args) => {
       // Clean mode - delete Dependabot PRs
       if (args.clean) {
-        console.log("🧹 Clean mode: Deleting Dependabot PRs...");
+        if (args.autoReopen) {
+          console.log("🧹 Clean mode: Deleting and reopening Dependabot PRs for fresh start...");
+        } else {
+          console.log("🧹 Clean mode: Deleting Dependabot PRs...");
+        }
 
         // Parse PR numbers if provided
         let prNumbers: number[] | null = null;
@@ -432,7 +570,41 @@ export function dependabotCmd(sthis: SuperThis) {
           }
         }
 
-        await deleteDependabotPRs(prNumbers, args.repo);
+        await deleteDependabotPRs(prNumbers, args.repo, args.autoReopen);
+        return;
+      }
+
+      // Resolve conflicts mode - rebase and fix lockfile conflicts
+      if (args.resolveConflicts) {
+        console.log("🔧 Resolve conflicts mode: Rebasing and fixing merge conflicts...\n");
+        const prs = await fetchDependabotPRs(args.repo);
+
+        if (args.prNumber) {
+          // Resolve conflicts for a specific PR
+          const prNum = parseInt(args.prNumber, 10);
+          const pr = prs.find((p) => p.number === prNum);
+          if (!pr) {
+            console.error(`PR #${prNum} not found or is not a Dependabot PR.`);
+            process.exit(1);
+          }
+          await resolveConflictsAndRebase(pr.number, args.repo, args.regenerateFrozenLockfile);
+        } else {
+          // Resolve conflicts for all conflicting PRs
+          const conflictingPRs = prs.filter((pr) => pr.mergeable === "CONFLICTING");
+          if (conflictingPRs.length === 0) {
+            console.log("✓ No conflicting PRs found.\n");
+            return;
+          }
+
+          console.log(`Found ${conflictingPRs.length} PR(s) with conflicts:\n`);
+          for (const pr of conflictingPRs) {
+            try {
+              await resolveConflictsAndRebase(pr.number, args.repo, args.regenerateFrozenLockfile);
+            } catch (error) {
+              console.error(`⚠️  Failed to resolve PR #${pr.number}, skipping...`);
+            }
+          }
+        }
         return;
       }
 
@@ -667,7 +839,7 @@ export function dependabotCmd(sthis: SuperThis) {
           console.error(`PR #${prNum} not found or is not a Dependabot PR.`);
           process.exit(1);
         }
-        await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable);
+        await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable, args.repo);
         return;
       }
 
@@ -761,7 +933,7 @@ export function dependabotCmd(sthis: SuperThis) {
                 try {
                   processed++;
                   console.log(`Processing [${processed}/${totalToProcess}]: PR #${pr.number}`);
-                  await applyPR(pr, true, args.autoGH && autoMergeAvailable);
+                  await applyPR(pr, true, args.autoGH && autoMergeAvailable, args.repo);
                   processedPRs.add(pr.number);
                   failedToApply.delete(pr.number);
                 } catch (error) {
@@ -881,7 +1053,7 @@ export function dependabotCmd(sthis: SuperThis) {
 
           for (const pr of prsToProcess) {
             try {
-              await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable);
+              await applyPR(pr, args.rebase, args.autoGH && autoMergeAvailable, args.repo);
             } catch (error) {
               console.error(`Skipping PR #${pr.number} due to error.`);
             }
