@@ -11,3 +11,4 @@ export * from "./device-id.js";
 export * from "./device-id-keybag-item.zod.js";
 
 export * from "./keybag-storage.zod.js";
+export * from "./database-config.zod.js";

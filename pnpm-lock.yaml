@@ -386,6 +386,34 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
+  cloud/box-party:
+    dependencies:
+      '@adviser/cement':
+        specifier: 0.4.65
+        version: 0.4.65(typescript@5.9.3)
+      react:
+        specifier: ^19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.0(react@19.2.0)
+      use-fireproof:
+        specifier: workspace:0.0.0
+        version: link:../../use-fireproof
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.2
+        version: 19.2.3
+      '@types/react-dom':
+        specifier: ^19.2.2
+        version: 19.2.3(@types/react@19.2.3)
+      '@vitejs/plugin-react':
+        specifier: ^5.1.0
+        version: 5.1.1(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))
+      vite:
+        specifier: ^7.1.12
+        version: 7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
+
   cloud/todo-app:
     dependencies:
       '@adviser/cement':
@@ -855,10 +883,79 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:^
         version: link:../../cli
+
+  core/svc/api:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.65
+        version: 0.4.65(typescript@5.9.3)
+      '@fireproof/core-runtime':
+        specifier: workspace:0.0.0
+        version: link:../../runtime
+      '@fireproof/core-svc-protocol':
+        specifier: workspace:0.0.0
+        version: link:../protocol
+      '@fireproof/core-types-base':
+        specifier: workspace:0.0.0
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
+
+  core/svc/host:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.65
+        version: 0.4.65(typescript@5.9.3)
+      '@fireproof/core-base':
+        specifier: workspace:0.0.0
+        version: link:../../base
+      '@fireproof/core-runtime':
+        specifier: workspace:0.0.0
+        version: link:../../runtime
+      '@fireproof/core-svc-protocol':
+        specifier: workspace:0.0.0
+        version: link:../protocol
+      '@fireproof/core-types-base':
+        specifier: workspace:0.0.0
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
+
+  core/svc/protocol:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.4.65
+        version: 0.4.65(typescript@5.9.3)
+      '@fireproof/core-runtime':
+        specifier: workspace:0.0.0
+        version: link:../../runtime
+      '@fireproof/core-types-base':
+        specifier: workspace:0.0.0
+        version: link:../../types/base
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:0.0.0
+        version: link:../../types/blockstore
+      cborg:
+        specifier: ^4.3.0
+        version: 4.3.0
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
 
   core/tests:
     dependencies:
@@ -901,6 +998,15 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../runtime
+      '@fireproof/core-svc-api':
+        specifier: workspace:0.0.0
+        version: link:../svc/api
+      '@fireproof/core-svc-host':
+        specifier: workspace:0.0.0
+        version: link:../svc/host
+      '@fireproof/core-svc-protocol':
+        specifier: workspace:0.0.0
+        version: link:../svc/protocol
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../types/base
@@ -946,6 +1052,9 @@ importers:
       uuidv7:
         specifier: ^1.0.2
         version: 1.0.2
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -3602,10 +3711,6 @@ packages:
 
   carstream@2.3.0:
     resolution: {integrity: sha512-2YwFg5Kxs2tqVCJv7sthWbYoUpALCYBBfTdpQcpicV7ipi6bBb1h9M4MNb1vm+724f39lUNp5VWhW43IFxfPlA==}
-
-  cborg@4.2.15:
-    resolution: {integrity: sha512-T+YVPemWyXcBVQdp0k61lQp2hJniRNmul0lAwTj2DTS/6dI4eCq/MRMucGqqvFqMBfmnD8tJ9aFtPu5dEGAbgw==}
-    hasBin: true
 
   cborg@4.3.0:
     resolution: {integrity: sha512-vOXo1pB4mdeBw3LbpoynQlZNw/H3kZVHLtPYlp8kFMreL/2YfT54F70BM1s3iDoCtQ+3C9QmiRF4rfCSSTlhBw==}
@@ -7179,18 +7284,18 @@ snapshots:
   '@ipld/car@5.4.2':
     dependencies:
       '@ipld/dag-cbor': 9.2.5
-      cborg: 4.2.15
+      cborg: 4.3.0
       multiformats: 13.4.1
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.5':
     dependencies:
-      cborg: 4.2.15
+      cborg: 4.3.0
       multiformats: 13.4.1
 
   '@ipld/dag-json@10.2.5':
     dependencies:
-      cborg: 4.2.15
+      cborg: 4.3.0
       multiformats: 13.4.1
 
   '@isaacs/balanced-match@4.0.1': {}
@@ -8136,8 +8241,6 @@ snapshots:
       '@ipld/dag-cbor': 9.2.5
       multiformats: 13.4.1
       uint8arraylist: 2.4.8
-
-  cborg@4.2.15: {}
 
   cborg@4.3.0: {}
 

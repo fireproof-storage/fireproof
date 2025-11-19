@@ -1,7 +1,7 @@
 {
-  "name": "@fireproof/core-runtime",
+  "name": "@fireproof/core-svc-host",
   "version": "0.0.0",
-  "description": "Live ledger for the web.",
+  "description": "Fireproof service layer host implementation.",
   "type": "module",
   "main": "./index.js",
   "scripts": {
@@ -27,7 +27,6 @@
   "author": "J Chris Anderson",
   "license": "AFL-2.0",
   "homepage": "https://use-fireproof.com",
-  "gptdoc": "import { fireproof } from 'use-fireproof'; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); db.subscribe(myRedrawFn); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fireproof-storage/fireproof.git"
@@ -37,18 +36,11 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.65",
-    "@adviser/ts-xxhash": "^1.0.2",
+    "@fireproof/core-base": "workspace:0.0.0",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-svc-protocol": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
-    "@fireproof/core-types-runtime": "workspace:0.0.0",
-    "@fireproof/vendor": "workspace:0.0.0",
-    "cborg": "^4.3.0",
-    "jose": "^6.1.1",
-    "multiformats": "^13.4.0",
     "zod": "^4.1.12"
-  },
-  "devDependencies": {
-    "@fireproof/core-cli": "workspace:^"
   }
 }
