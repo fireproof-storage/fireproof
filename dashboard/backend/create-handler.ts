@@ -3,12 +3,12 @@ import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Res
 import { verifyToken } from "@clerk/backend";
 import { verifyJwt } from "@clerk/backend/jwt";
 import { SuperThis, SuperThisOpts } from "@fireproof/core";
+import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
+import { coerceInt, ensureLogger, ensureSuperThis } from "@fireproof/core-runtime";
+import { ResultSet } from "@libsql/client";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
-import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
-import { ensureSuperThis, ensureLogger, coerceInt } from "@fireproof/core-runtime";
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
-import { ResultSet } from "@libsql/client";
 import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 // import { jwtVerify } from "jose/jwt/verify";
 // import { JWK } from "jose";
@@ -299,6 +299,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
 
       case FPAPIMsg.isReqExtendToken(jso):
         res = fpApi.extendToken(jso);
+        break;
+
+      case FPAPIMsg.isReqShareWithUser(jso):
+        res = fpApi.shareWithUser(jso);
         break;
 
       default:
