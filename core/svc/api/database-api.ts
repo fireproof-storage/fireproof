@@ -53,6 +53,13 @@ import {
   DBSend,
 } from "@fireproof/core-svc-protocol";
 
+const console = {
+  log: (..._args: unknown[]) => {
+    /* noop */
+  },
+  warn: globalThis.console.warn.bind(globalThis.console),
+  error: globalThis.console.error.bind(globalThis.console),
+};
 //   onClosed(fn: () => void): void;
 
 //   attach(a: Attachable): Promise<Attached>;

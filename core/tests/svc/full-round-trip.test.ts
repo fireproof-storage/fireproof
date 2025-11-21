@@ -60,9 +60,9 @@ describe("Full Round Trip Tests", () => {
         webWindow,
       });
       const transport = proxy.ledger.ctx.get("transport") as FPTransport;
-      const sendMock = vi.fn((...args: unknown[]) => Promise.resolve(console.log("sendMock called with", ...args)));
+      const sendMock = vi.fn((..._args: unknown[]) => Promise.resolve());
       transport.onSend(sendMock);
-      const recvMock = vi.fn((...args: unknown[]) => Promise.resolve(console.log("recvMock called with", ...args)));
+      const recvMock = vi.fn((..._args: unknown[]) => Promise.resolve());
       transport.onRecv(recvMock);
       return {
         webWindow,
