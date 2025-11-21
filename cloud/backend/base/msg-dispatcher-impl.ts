@@ -135,7 +135,7 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
             if (qsidEqual(conn, msg.conn)) {
               if (msg.message.startsWith("/close-connection")) {
                 setTimeout(() => {
-                  item.ws?.close();
+                  item.ws?.close(4711, "closed by /close-connection");
                   ctx.wsRoom.removeConn(...item.conns);
                 }, 50);
               }
