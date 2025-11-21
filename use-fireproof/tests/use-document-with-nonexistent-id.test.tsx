@@ -1,9 +1,9 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "../index.js"; // Adjust the import path as necessary
 import type { Database, UseDocumentResult } from "../index.js"; // Adjust the import path as necessary
 
-const TEST_TIMEOUT = 45000;
+const TEST_TIMEOUT = 5000;
 
 // Define a type for user settings
 interface TestTypeDoc {
@@ -22,7 +22,7 @@ describe("HOOK: useDocument with non-existent ID", () => {
   let useDocument: ReturnType<typeof useFireproof>["useDocument"];
   const testId = "test_settings";
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     db = fireproof(dbName);
 
     // Make sure the document doesn't exist
@@ -84,7 +84,7 @@ describe("HOOK: useDocument with non-existent ID", () => {
     TEST_TIMEOUT,
   );
 
-  afterEach(async () => {
+  afterAll(async () => {
     await db.close();
     await db.destroy();
     await database?.close();

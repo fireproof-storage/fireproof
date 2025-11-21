@@ -1,15 +1,15 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "../index.js";
 import type { Database } from "../index.js";
 
-const TEST_TIMEOUT = 45000;
+const TEST_TIMEOUT = 5000;
 
 describe("HOOK: hydrated flag resets on dependency changes", () => {
   const dbName = "hydratedResetTest";
   let db: Database;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     db = fireproof(dbName);
     // Create test documents
     await db.put({ _id: "doc1", type: "todo", text: "Task 1" });
@@ -17,7 +17,7 @@ describe("HOOK: hydrated flag resets on dependency changes", () => {
     await db.put({ _id: "doc3", type: "note", text: "Note 1" });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await db.close();
     await db.destroy();
   });
