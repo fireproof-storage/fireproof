@@ -1,17 +1,17 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { fireproof, useFireproof } from "../index.js";
 import type { Database, LiveQueryResult } from "../index.js";
 
 // Test timeout value for CI
-const TEST_TIMEOUT = 45000;
+const TEST_TIMEOUT = 5000;
 
 describe("HOOK: useFireproof database switching", () => {
   const db1Name = "db1";
   const db2Name = "db2";
   let db1: Database, db2: Database;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Setup two databases with different data
     db1 = fireproof(db1Name);
     db2 = fireproof(db2Name);
@@ -82,7 +82,7 @@ describe("HOOK: useFireproof database switching", () => {
     TEST_TIMEOUT,
   );
 
-  afterEach(async () => {
+  afterAll(async () => {
     await db1.close();
     await db1.destroy();
     await db2.close();

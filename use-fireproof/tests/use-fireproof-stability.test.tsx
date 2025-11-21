@@ -41,7 +41,7 @@ function TestComponent() {
 }
 
 // Test timeout value for CI
-const TEST_TIMEOUT = 60000; // 1 minute per test
+const TEST_TIMEOUT = 5000; // 1 minute per test
 
 describe("HOOK: useFireproof stability", () => {
   it(
