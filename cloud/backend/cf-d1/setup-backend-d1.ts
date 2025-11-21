@@ -31,7 +31,7 @@ export async function setupBackendD1(
     if (mightPid) {
       pid = +mightPid;
     }
-    if (chunk.includes("Starting local serv")) {
+    if (chunk.includes("Ready on")) {
       waitReady.resolve(true);
     }
   });
@@ -40,5 +40,6 @@ export async function setupBackendD1(
     console.error("!!", chunk.toString());
   });
   await waitReady.asPromise();
+  console.log("Wrangler Ready");
   return { port, pid, envName };
 }
