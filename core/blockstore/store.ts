@@ -29,7 +29,7 @@ import {
   UnsubscribeResult,
   CommitQueueIf,
 } from "@fireproof/core-types-blockstore";
-import { Falsy, isNotFoundError, PARAM, StoreType, SuperThis, throwFalsy } from "@fireproof/core-types-base";
+import { Falsy, isNotFoundError, PARAM, StoreType, SuperThis } from "@fireproof/core-types-base";
 import { carLogIncludesGroup } from "./loader.js";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { EventBlock } from "@web3-storage/pail/clock";
