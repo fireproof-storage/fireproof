@@ -7,14 +7,14 @@
 // import { userRef } from "./db-api-schema";
 
 import { Result } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core-types-base";
+import { SuperThis, Subject, CertificatePayloadSchema } from "@fireproof/core-types-base";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
 import { FPApiSQL, type FPApiToken } from "./api.js";
 import {
   type AdminTenant,
-  type AuthType,
+  type DashAuthType,
   type QueryUser,
   type ReqEnsureUser,
   type ResEnsureUser,
@@ -24,6 +24,7 @@ import { queryEmail, queryNick } from "./sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
 import { describe, beforeAll, expect, it } from "vitest";
 import { resWellKnownJwks } from "./well-known-jwks.js";
+import { DeviceIdCA, DeviceIdKey, DeviceIdCSR } from "@fireproof/core-device-id";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -70,6 +71,26 @@ class TestApiToken implements FPApiToken {
   }
 }
 
+async function createTestDeviceCA(sthis: SuperThis): Promise<DeviceIdCA> {
+  const caKey = await DeviceIdKey.create();
+  const caSubject: Subject = {
+    commonName: "Test Device CA",
+    organization: "Test Organization",
+    locality: "Test City",
+    stateOrProvinceName: "Test State",
+    countryName: "US",
+  };
+
+  return new DeviceIdCA({
+    base64: sthis.txt.base64,
+    caKey,
+    caSubject,
+    actions: {
+      generateSerialNumber: async () => sthis.nextId(32).str,
+    },
+  });
+}
+
 describe("db-api", () => {
   // let db: BetterSQLite3Database
   let db: LibSQLDatabase;
@@ -80,9 +101,13 @@ describe("db-api", () => {
     ress: ResEnsureUser;
   }[];
   // const logger = ensureLogger(sthis, "dashboard-backend-db-api-test");
+  let deviceCA: DeviceIdCA;
   beforeAll(async () => {
     const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
     db = drizzle(client);
+
+    deviceCA = await createTestDeviceCA(sthis);
+
     fpApi = new FPApiSQL(
       sthis,
       db,
@@ -95,6 +120,7 @@ describe("db-api", () => {
         maxMemberUsers: 5,
         maxInvites: 10,
         maxLedgers: 5,
+        deviceCA,
       },
     );
 
@@ -271,7 +297,7 @@ describe("db-api", () => {
   });
 
   it("invite to self", async () => {
-    const auth: AuthType = datas[0].reqs.auth;
+    const auth: DashAuthType = datas[0].reqs.auth;
     // const key = `test@${sthis.nextId().str}.de`;
     const resinsert = await fpApi.inviteUser({
       type: "reqInviteUser",
@@ -293,7 +319,7 @@ describe("db-api", () => {
   });
 
   it("invite to not existing id", async () => {
-    const auth: AuthType = datas[0].reqs.auth;
+    const auth: DashAuthType = datas[0].reqs.auth;
     // const key = `test@${sthis.nextId().str}.de`;
     const resinsert = await fpApi.inviteUser({
       type: "reqInviteUser",
@@ -314,7 +340,7 @@ describe("db-api", () => {
   });
 
   it("invite existing user to a tenant", async () => {
-    const auth: AuthType = datas[0].reqs.auth;
+    const auth: DashAuthType = datas[0].reqs.auth;
     // const key = `test@${sthis.nextId().str}.de`;
     const resinsert = await fpApi.inviteUser({
       type: "reqInviteUser",
@@ -363,7 +389,7 @@ describe("db-api", () => {
   });
 
   it("invite non existing user to a tenant", async () => {
-    const auth: AuthType = datas[0].reqs.auth;
+    const auth: DashAuthType = datas[0].reqs.auth;
     const key = `test@${sthis.nextId().str}.de`;
     const resinsert = await fpApi.inviteUser({
       type: "reqInviteUser",
@@ -887,8 +913,45 @@ describe("db-api", () => {
     expect(myAfterDelete.length).toEqual(0);
   });
 
+  it("getCertFromCsr should sign a valid CSR and return certificate", async () => {
+    const auth: DashAuthType = datas[0].reqs.auth;
+
+    // Generate CSR using DeviceIdKey.create() and DeviceIdCSR
+    const deviceIdKey = await DeviceIdKey.create();
+    const deviceIdCSR = new DeviceIdCSR(sthis, deviceIdKey);
+    const subject: Subject = { commonName: "default-device" };
+    const csrResult = await deviceIdCSR.createCSR(subject);
+
+    expect(csrResult.isOk()).toBeTruthy();
+    const csr = csrResult.Ok();
+
+    const result = await fpApi.getCertFromCsr({
+      type: "reqCertFromCsr",
+      auth,
+      csr,
+    });
+
+    expect(result.isOk()).toBeTruthy();
+    expect(result.Ok().type).toEqual("resCertFromCsr");
+    expect(result.Ok().certificate).toBeDefined();
+    expect(typeof result.Ok().certificate).toBe("string");
+
+    // Parse and verify the certificate JWT using jose
+    const certificateJWT = result.Ok().certificate;
+    const caPublicKey = await deviceCA.getCAKey();
+
+    // Verify the certificate was signed by the CA
+    const verified = await jwtVerify(certificateJWT, await caPublicKey.publicKey(), {
+      typ: "CERT+JWT",
+      algorithms: ["ES256"],
+    });
+
+    const claims = CertificatePayloadSchema.parse(verified.payload);
+    expect(claims.certificate.issuer.commonName).toBe("Test Device CA");
+  });
+
   it("create session with claim", async () => {
-    const auth: AuthType = datas[0].reqs.auth;
+    const auth: DashAuthType = datas[0].reqs.auth;
     // fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "
 
     const resultId = sthis.nextId(12).str;
@@ -1004,6 +1067,95 @@ describe("db-api", () => {
         ledgerId: rledger.Ok().ledger.ledgerId,
         tenantId: datas[0].ress.tenants[0].tenantId,
       },
+    });
+  });
+
+  it("check The implicit update of limits", async () => {
+    const reqEnsureUser: ReqEnsureUser = {
+      type: "reqEnsureUser",
+      auth: {
+        token: `test-${sthis.nextId().str}`,
+        type: "clerk",
+      },
+    };
+    const fpApi = new FPApiSQL(
+      sthis,
+      db,
+      { clerk: new TestApiToken(sthis) },
+      {
+        cloudPublicKeys: [],
+        clerkPublishableKey: "test-clerk-publishable-key",
+        maxTenants: 5,
+        maxAdminUsers: 5,
+        maxMemberUsers: 5,
+        maxInvites: 10,
+        maxLedgers: 5,
+        deviceCA,
+      },
+    );
+    await fpApi.ensureUser(reqEnsureUser);
+    await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: reqEnsureUser.auth,
+      tenant: {
+        // ownerUserId: data[0].ress.user.userId,
+      },
+    });
+    const user = await fpApi.ensureUser(reqEnsureUser);
+    expect(user.Ok().user.maxTenants).toEqual(5);
+    expect(user.Ok().tenants[0].tenant.limits).toEqual({
+      maxAdminUsers: 5,
+      maxMemberUsers: 5,
+      maxInvites: 10,
+      maxLedgers: 5,
+    });
+
+    const fpApi2 = new FPApiSQL(
+      sthis,
+      db,
+      { clerk: new TestApiToken(sthis) },
+      {
+        cloudPublicKeys: [],
+        clerkPublishableKey: "test-clerk-publishable-key",
+        maxTenants: 50,
+        maxAdminUsers: 50,
+        maxMemberUsers: 50,
+        maxInvites: 100,
+        maxLedgers: 50,
+        deviceCA: deviceCA,
+      },
+    );
+    const res = await fpApi2.ensureUser(reqEnsureUser);
+    expect(res.Ok().user.maxTenants).toBe(50);
+    expect(res.Ok().tenants[0].tenant.limits).toEqual({
+      maxAdminUsers: 50,
+      maxMemberUsers: 50,
+      maxInvites: 100,
+      maxLedgers: 50,
+    });
+
+    const fpApi3 = new FPApiSQL(
+      sthis,
+      db,
+      { clerk: new TestApiToken(sthis) },
+      {
+        cloudPublicKeys: [],
+        clerkPublishableKey: "test-clerk-publishable-key",
+        maxTenants: 17,
+        maxAdminUsers: 17,
+        maxMemberUsers: 17,
+        maxInvites: 17,
+        maxLedgers: 17,
+        deviceCA,
+      },
+    );
+    const dLimits = await fpApi3.ensureUser(reqEnsureUser);
+    expect(dLimits.Ok().user.maxTenants).toBe(50);
+    expect(dLimits.Ok().tenants[0].tenant.limits).toEqual({
+      maxAdminUsers: 50,
+      maxMemberUsers: 50,
+      maxInvites: 100,
+      maxLedgers: 50,
     });
   });
 
@@ -1458,94 +1610,5 @@ it("resWellKnownJwks", async () => {
         alg: "ES256",
       },
     ],
-  });
-});
-
-it("check The implicit update of limits", async () => {
-  const sthis = ensureSuperThis();
-  const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
-  const db = drizzle(client);
-  const reqEnsureUser: ReqEnsureUser = {
-    type: "reqEnsureUser",
-    auth: {
-      token: `test-${sthis.nextId().str}`,
-      type: "clerk",
-    },
-  };
-  const fpApi = new FPApiSQL(
-    sthis,
-    db,
-    { clerk: new TestApiToken(sthis) },
-    {
-      cloudPublicKeys: [],
-      clerkPublishableKey: "test-clerk-publishable-key",
-      maxTenants: 5,
-      maxAdminUsers: 5,
-      maxMemberUsers: 5,
-      maxInvites: 10,
-      maxLedgers: 5,
-    },
-  );
-  await fpApi.ensureUser(reqEnsureUser);
-  await fpApi.createTenant({
-    type: "reqCreateTenant",
-    auth: reqEnsureUser.auth,
-    tenant: {
-      // ownerUserId: data[0].ress.user.userId,
-    },
-  });
-  const user = await fpApi.ensureUser(reqEnsureUser);
-  expect(user.Ok().user.maxTenants).toEqual(5);
-  expect(user.Ok().tenants[0].tenant.limits).toEqual({
-    maxAdminUsers: 5,
-    maxMemberUsers: 5,
-    maxInvites: 10,
-    maxLedgers: 5,
-  });
-
-  const fpApi2 = new FPApiSQL(
-    sthis,
-    db,
-    { clerk: new TestApiToken(sthis) },
-    {
-      cloudPublicKeys: [],
-      clerkPublishableKey: "test-clerk-publishable-key",
-      maxTenants: 50,
-      maxAdminUsers: 50,
-      maxMemberUsers: 50,
-      maxInvites: 100,
-      maxLedgers: 50,
-    },
-  );
-  const res = await fpApi2.ensureUser(reqEnsureUser);
-  expect(res.Ok().user.maxTenants).toBe(50);
-  expect(res.Ok().tenants[0].tenant.limits).toEqual({
-    maxAdminUsers: 50,
-    maxMemberUsers: 50,
-    maxInvites: 100,
-    maxLedgers: 50,
-  });
-
-  const fpApi3 = new FPApiSQL(
-    sthis,
-    db,
-    { clerk: new TestApiToken(sthis) },
-    {
-      cloudPublicKeys: [],
-      clerkPublishableKey: "test-clerk-publishable-key",
-      maxTenants: 17,
-      maxAdminUsers: 17,
-      maxMemberUsers: 17,
-      maxInvites: 17,
-      maxLedgers: 17,
-    },
-  );
-  const dLimits = await fpApi3.ensureUser(reqEnsureUser);
-  expect(dLimits.Ok().user.maxTenants).toBe(50);
-  expect(dLimits.Ok().tenants[0].tenant.limits).toEqual({
-    maxAdminUsers: 50,
-    maxMemberUsers: 50,
-    maxInvites: 100,
-    maxLedgers: 50,
   });
 });

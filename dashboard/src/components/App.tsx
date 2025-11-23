@@ -25,6 +25,7 @@ import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.jsx";
 // import { CloudTenantOverview } from "../pages/cloud/tenants/overview.jsx";
 import { ApiTokenAuto } from "../pages/cloud/api/token-auto.jsx";
 import { ApiToken, redirectBackUrl } from "../pages/cloud/api/token.jsx";
+import { CsrToCert } from "../pages/cloud/CsrToCert.jsx"; // New import
 import { LedgerAdmin } from "../pages/cloud/tenants/ledgers/admin.jsx";
 import { LedgerDelete } from "../pages/cloud/tenants/ledgers/delete.jsx";
 import { LedgerOverview } from "../pages/cloud/tenants/ledgers/overview.jsx";
@@ -60,7 +61,7 @@ export function App() {
         <Route index element={<CloudIndex />} />
         <Route path="api/token" element={<ApiToken />} loader={redirectBackUrl} />
         <Route path="api/token-auto" element={<ApiTokenAuto />} />
-
+        <Route path="csr2cert" element={<CsrToCert />} /> {/* New route */}
         <Route path="tenants">
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
           <Route path=":tenantId">

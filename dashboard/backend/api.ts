@@ -4,7 +4,7 @@ import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressio
 // import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose";
 import {
-  AuthType,
+  DashAuthType,
   ClerkClaim,
   ClerkVerifyAuth,
   InCreateTenantParams,
@@ -30,6 +30,7 @@ import {
   ReqUpdateLedger,
   ReqUpdateTenant,
   ReqUpdateUserTenant,
+  ReqCertFromCsr,
   ResCloudSessionToken,
   ResCreateLedger,
   ResCreateTenant,
@@ -48,6 +49,7 @@ import {
   ResUpdateLedger,
   ResUpdateTenant,
   ResUpdateUserTenant,
+  ResCertFromCsr,
   RoleType,
   User,
   UserStatus,
@@ -66,6 +68,7 @@ import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/c
 import { sts } from "@fireproof/core-runtime";
 import { DashSqlite } from "./create-handler.js";
 import { getTableColumns } from "drizzle-orm/utils";
+import { DeviceIdCA } from "@fireproof/core-device-id";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -119,6 +122,7 @@ export interface FPApiInterface {
   getCloudSessionToken(req: ReqCloudSessionToken): Promise<Result<ResCloudSessionToken>>;
   getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>>;
   extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>>;
+  getCertFromCsr(req: ReqCertFromCsr): Promise<Result<ResCertFromCsr>>;
 }
 
 export const FPAPIMsg = new FAPIMsgImpl();
@@ -199,15 +203,15 @@ interface AddUserToLedger {
 // >;
 
 interface WithAuth {
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
 }
 
-interface ActiveUser<T extends AuthType = ClerkVerifyAuth> {
+interface ActiveUser<T extends DashAuthType = ClerkVerifyAuth> {
   readonly verifiedAuth: T;
   readonly user?: User;
 }
 
-type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
+type ActiveUserWithUserId<T extends DashAuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
   user: {
     userId: string;
     maxTenants: number;
@@ -227,15 +231,17 @@ export class FPApiSQL implements FPApiInterface {
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
   readonly params: FPApiParameters;
+  readonly deviceCA: DeviceIdCA;
 
   constructor(sthis: SuperThis, db: DashSqlite, tokenApi: Record<string, FPApiToken>, params: FPApiParameters) {
     this.db = db;
     this.tokenApi = tokenApi;
     this.sthis = sthis;
     this.params = params;
+    this.deviceCA = params.deviceCA;
   }
 
-  private async _authVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
+  private async _authVerifyAuth(req: { readonly auth: DashAuthType }): Promise<Result<ClerkVerifyAuth>> {
     // console.log("_authVerify-1", req);
     const tokenApi = this.tokenApi[req.auth.type];
     // console.log("_authVerify-2", req);
@@ -2002,6 +2008,36 @@ export class FPApiSQL implements FPApiInterface {
     } catch (error) {
       return Result.Err(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /**
+   * Get certificate from CSR
+   * Validates the CSR and signs it using the DeviceIdCA to create a certificate
+   */
+  async getCertFromCsr(req: ReqCertFromCsr): Promise<Result<ResCertFromCsr>> {
+    // Verify user authentication
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+
+    // Process the CSR using the DeviceIdCA
+    const rCert = await this.deviceCA.processCSR(req.csr);
+    if (rCert.isErr()) {
+      return Result.Err(rCert.Err());
+    }
+
+    const certResult = rCert.Ok();
+
+    // Return the signed certificate JWT
+    return Result.Ok({
+      type: "resCertFromCsr",
+      certificate: certResult.certificateJWT,
+    });
   }
 }
 

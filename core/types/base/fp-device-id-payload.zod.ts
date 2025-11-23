@@ -91,7 +91,7 @@ export const ExtensionsSchema = z.object({
 export type Extensions = z.infer<typeof ExtensionsSchema>;
 
 // Main FPDeviceIDPayload Schema
-export const FPDeviceIDPayloadSchema = JWTPayloadSchema.extend({
+export const FPDeviceIDCSRPayloadSchema = JWTPayloadSchema.extend({
   csr: z
     .object({
       subject: SubjectSchema,
@@ -105,4 +105,13 @@ export const FPDeviceIDPayloadSchema = JWTPayloadSchema.extend({
   .readonly();
 
 // Type inference
-export type FPDeviceIDPayload = z.infer<typeof FPDeviceIDPayloadSchema>;
+export type FPDeviceIDCSRPayload = z.infer<typeof FPDeviceIDCSRPayloadSchema>;
+
+export const FPDeviceIDSessionSchema = JWTPayloadSchema.extend({
+  deviceId: z.string(), // key fingerprint or identifier
+  seq: z.number().int().min(0), // session sequence number
+})
+  .strict()
+  .readonly();
+
+export type FPDeviceIDSession = z.infer<typeof FPDeviceIDSessionSchema>;

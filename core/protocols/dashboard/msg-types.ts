@@ -1,5 +1,6 @@
 import { JWKPublic } from "@fireproof/core-types-base";
 import { ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
+import type { DeviceIdCA } from "@fireproof/core-device-id";
 
 export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
 
@@ -71,13 +72,13 @@ export interface InviteTicket {
 
 export type UserStatus = "active" | "inactive" | "banned" | "invited";
 
-export interface AuthType {
-  readonly type: "ucan" | "clerk" | "better";
+export interface DashAuthType {
+  readonly type: "ucan" | "clerk" | "better" | "device-id";
   readonly token: string;
 }
 
 export interface VerifiedAuth {
-  readonly type: "clerk" | "better";
+  readonly type: "clerk" | "better" | "device-id";
   readonly token: string;
   readonly userId: string;
   readonly provider: string;
@@ -133,6 +134,7 @@ export interface FPApiParameters {
   readonly maxMemberUsers: number;
   readonly maxInvites: number;
   readonly maxLedgers: number;
+  readonly deviceCA: DeviceIdCA;
 }
 
 export interface InCreateTenantParams {
@@ -143,7 +145,7 @@ export interface InCreateTenantParams {
 
 export interface ReqCreateTenant {
   readonly type: "reqCreateTenant";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly tenant: Omit<InCreateTenantParams, "ownerUserId">;
 }
 
@@ -162,7 +164,7 @@ export interface ResUpdateTenant {
 
 export interface ReqUpdateTenant {
   readonly type: "reqUpdateTenant";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly tenant: InUpdateTenantParams;
 }
 
@@ -173,7 +175,7 @@ export interface ResEnsureTenant {
 
 export interface ReqRedeemInvite {
   readonly type: "reqRedeemInvite";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   // readonly query: QueryUser;
 }
 
@@ -184,7 +186,7 @@ export interface ResRedeemInvite {
 
 export interface ReqListLedgersByUser {
   readonly type: "reqListLedgersByUser";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly tenantIds?: string[];
 }
 
@@ -217,7 +219,7 @@ export interface ResListLedgersByUser {
 
 export interface ReqListTenantsByUser {
   readonly type: "reqListTenantsByUser";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
 }
 
 export interface UserTenantCommon {
@@ -266,7 +268,7 @@ export interface ResListTenantsByUser {
 
 export interface ReqFindUser {
   readonly type: "reqFindUser";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly query: QueryUser;
 }
 
@@ -302,7 +304,7 @@ export interface QueryInviteTicket {
 
 export interface ReqInviteUser {
   readonly type: "reqInviteUser";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly ticket: QueryInviteTicket; // InviteTicket & { readonly incSendEmailCount?: boolean }
 }
 
@@ -313,7 +315,7 @@ export interface ResInviteUser {
 
 export interface ReqDeleteInvite {
   readonly type: "reqDeleteInvite";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly inviteId: string;
 }
 
@@ -324,7 +326,7 @@ export interface ResDeleteInvite {
 
 export interface ReqListInvites {
   readonly type: "reqListInvites";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   // if set all invites for the given tenants are listed
   // if not set all invites for the user are listed
   readonly tenantIds?: string[];
@@ -338,7 +340,7 @@ export interface ResListInvites {
 
 export interface ReqUpdateUserTenant {
   readonly type: "reqUpdateUserTenant";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly tenantId: string;
   readonly userId?: string;
   readonly role: Role; // only if admin
@@ -362,7 +364,7 @@ export interface CreateLedger {
 
 export interface ReqCreateLedger {
   readonly type: "reqCreateLedger";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly ledger: CreateLedger;
 }
 
@@ -382,7 +384,7 @@ export interface UpdateLedger {
 
 export interface ReqUpdateLedger {
   readonly type: "reqUpdateLedger";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly ledger: UpdateLedger;
 }
 export interface ResUpdateLedger {
@@ -397,7 +399,7 @@ export interface DeleteLedger {
 
 export interface ReqDeleteLedger {
   readonly type: "reqDeleteLedger";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly ledger: DeleteLedger;
 }
 export interface ResDeleteLedger {
@@ -406,7 +408,7 @@ export interface ResDeleteLedger {
 
 export interface ReqCloudSessionToken {
   readonly type: "reqCloudSessionToken";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly selected?: Partial<TenantLedger>;
   readonly resultId?: string;
 }
@@ -435,7 +437,7 @@ export interface ResDeleteTenant {
 
 export interface ReqDeleteTenant {
   readonly type: "reqDeleteTenant";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
   readonly tenantId: string;
 }
 
@@ -461,7 +463,7 @@ export interface ResEnsureUser {
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
-  readonly auth: AuthType;
+  readonly auth: DashAuthType;
 }
 
 interface RoleBase {
@@ -504,4 +506,15 @@ export interface ReqExtendToken {
 export interface ResExtendToken {
   readonly type: "resExtendToken";
   readonly token: string;
+}
+
+export interface ReqCertFromCsr {
+  readonly type: "reqCertFromCsr";
+  readonly auth: DashAuthType;
+  readonly csr: string;
+}
+
+export interface ResCertFromCsr {
+  readonly type: "resCertFromCsr";
+  readonly certificate: string;
 }
