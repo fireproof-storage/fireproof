@@ -114,22 +114,19 @@ export class KeyBag implements KeyBagIf {
     return this.#namedKeyItems.get(id).once(async () => {
       const raw = await this.provider().then((p) => p.get(id));
       const r = KeyedDeviceIdKeyBagItemSchema.safeParse(raw);
+      let error: Error | undefined = undefined;
       if (!r.success) {
-        this.logger
-          .Error()
-          .Any({
-            item: raw,
-            errors: r,
-          })
-          .Msg("getDeviceId: unexpected item");
+        error = r.error;
         return {
           deviceId: Option.None(),
           cert: Option.None(),
+          error,
         };
       }
       return {
         deviceId: Option.Some(r.data.item.deviceId),
         cert: Option.From(r.data.item.cert),
+        error,
       };
     });
   }

@@ -9,6 +9,7 @@ import { KeyedJwtKeyBagItem } from "./keybag-storage.zod.js";
 export interface DeviceIdResult {
   readonly deviceId: Option<JWKPrivate>;
   readonly cert: Option<DeviceIdKeyBagItem["cert"]>;
+  readonly error?: Error;
 }
 
 export interface JWTResult {

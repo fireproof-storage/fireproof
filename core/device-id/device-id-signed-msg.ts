@@ -1,4 +1,4 @@
-import { Base64EndeCoder, CertificatePayload, JWTPayload } from "@fireproof/core-types-base";
+import { BaseXXEndeCoder, CertificatePayload, JWTPayload } from "@fireproof/core-types-base";
 import { calculateJwkThumbprint, SignJWT } from "jose";
 import { Certor } from "./certor.js";
 import { DeviceIdKey } from "./device-id-key.js";
@@ -6,9 +6,9 @@ import { DeviceIdKey } from "./device-id-key.js";
 export class DeviceIdSignMsg {
   readonly #key: DeviceIdKey;
   readonly #cert: CertificatePayload; // Cert Signed by DeviceIdCA
-  readonly base64: Base64EndeCoder;
+  readonly base64: BaseXXEndeCoder;
 
-  constructor(base64: Base64EndeCoder, key: DeviceIdKey, cert: CertificatePayload) {
+  constructor(base64: BaseXXEndeCoder, key: DeviceIdKey, cert: CertificatePayload) {
     this.#key = key;
     this.#cert = cert;
     this.base64 = base64;

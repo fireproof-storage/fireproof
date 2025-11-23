@@ -37,7 +37,9 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.66",
+    "@adviser/cement": "^0.4.68",
+    "@fireproof/core-device-id": "workspace:0.0.0",
+    "@fireproof/core-keybag": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",

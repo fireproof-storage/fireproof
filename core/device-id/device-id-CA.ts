@@ -1,24 +1,29 @@
 import {
-  Base64EndeCoder,
+  BaseXXEndeCoder,
   CertificatePayload,
+  CertificatePayloadSchema,
   Extensions,
-  FPDeviceIDPayload,
+  FPDeviceIDCSRPayload,
   IssueCertificateResult,
+  JWKPrivate,
+  JWKPrivateSchema,
   JWKPublic,
   Subject,
+  SuperThis,
 } from "@fireproof/core-types-base";
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 import { DeviceIdKey } from "./device-id-key.js";
 import { DeviceIdValidator } from "./device-id-validator.js";
 import { Certor } from "./certor.js";
-import { Result } from "@adviser/cement";
+import { Result, exception2Result } from "@adviser/cement";
 import { hashObjectAsync } from "@fireproof/core-runtime";
+import { base58btc } from "multiformats/bases/base58";
 
 export interface CAActions {
   generateSerialNumber(pub: JWKPublic): Promise<string>;
 }
 interface DeviceIdCAOpts {
-  readonly base64: Base64EndeCoder;
+  readonly base64: BaseXXEndeCoder;
   readonly caKey: DeviceIdKey;
   readonly caSubject: Subject;
   readonly actions: CAActions;
@@ -26,7 +31,7 @@ interface DeviceIdCAOpts {
   readonly caChain: string[];
 }
 export interface DeviceIdCAOptsDefaulted {
-  readonly base64: Base64EndeCoder;
+  readonly base64: BaseXXEndeCoder;
   readonly caKey: DeviceIdKey;
   readonly caSubject: Subject;
   readonly actions: CAActions;
@@ -42,6 +47,11 @@ function defaultDeviceIdCAOpts(opts: DeviceIdCAOptsDefaulted): DeviceIdCAOpts {
   };
 }
 
+export interface DeviceIdCAJsonParam {
+  readonly privateKey: JWKPrivate | string; // JWKPrivate object or base58btc-encoded string
+  readonly signedCert: string;
+}
+
 export class DeviceIdCA {
   readonly #opts: DeviceIdCAOpts;
 
@@ -52,6 +62,91 @@ export class DeviceIdCA {
     this.#opts = defaultDeviceIdCAOpts(opts);
     this.#caKey = opts.caKey;
     this.#caSubject = opts.caSubject;
+  }
+
+  /**
+   * Create a DeviceIdCA from the JSON output of the CLI ca-cert command.
+   * Verifies the certificate signature before creating the CA instance.
+   *
+   * @param sthis - SuperThis instance for configuration
+   * @param caJson - JSON object with privateKey (JWKPrivate or base58btc string) and signedCert from CLI
+   * @param actions - CA actions for generating serial numbers
+   * @returns Result containing the DeviceIdCA instance or an error
+   */
+  static async from(sthis: SuperThis, caJson: DeviceIdCAJsonParam, actions: CAActions): Promise<Result<DeviceIdCA>> {
+    // Decode private key if it's a base58btc string, otherwise use as-is
+    let privateKey: JWKPrivate;
+    if (typeof caJson.privateKey === "string") {
+      const rPrivateKey = await exception2Result(async () => {
+        const decoded = base58btc.decode(caJson.privateKey as string);
+        const jsonString = sthis.txt.decode(decoded);
+        return JSON.parse(jsonString);
+      });
+      if (rPrivateKey.isErr()) {
+        return Result.Err(`Failed to decode privateKey: ${rPrivateKey.Err().message}`);
+      }
+
+      // Validate the decoded private key
+      const parseResult = JWKPrivateSchema.safeParse(rPrivateKey.Ok());
+      if (!parseResult.success) {
+        return Result.Err(`Invalid private key format: ${parseResult.error.message}`);
+      }
+      privateKey = parseResult.data;
+    } else {
+      privateKey = caJson.privateKey;
+    }
+
+    // Create DeviceIdKey from private key
+    const keyResult = await DeviceIdKey.createFromJWK(privateKey);
+    if (keyResult.isErr()) {
+      return Result.Err(`Failed to create DeviceIdKey: ${keyResult.Err().message}`);
+    }
+    const caKey = keyResult.Ok();
+
+    // Get public key for verification
+    const publicKeyResult = await exception2Result(async () => await caKey.publicKey());
+    if (publicKeyResult.isErr()) {
+      return Result.Err(`Failed to get public key: ${publicKeyResult.Err().message}`);
+    }
+    const publicKey = publicKeyResult.Ok();
+
+    // Verify the certificate was signed by this key
+    const verifyResult = await exception2Result(
+      async () =>
+        await jwtVerify(caJson.signedCert, publicKey, {
+          typ: "CERT+JWT",
+          algorithms: ["ES256"],
+        }),
+    );
+
+    if (verifyResult.isErr()) {
+      return Result.Err(`Certificate verification failed: ${verifyResult.Err().message}`);
+    }
+
+    const verified = verifyResult.Ok();
+
+    // Parse and validate the certificate payload
+    const parseResult = CertificatePayloadSchema.safeParse(verified.payload);
+    if (!parseResult.success) {
+      return Result.Err(`Invalid certificate payload: ${parseResult.error.message}: ${JSON.stringify(verified.payload)}`);
+    }
+
+    const claims = parseResult.data;
+    const caSubject: Subject = claims.certificate.issuer;
+
+    // Create the DeviceIdCA instance
+    const deviceCA = new DeviceIdCA({
+      base64: sthis.txt.base64,
+      caKey,
+      caSubject,
+      actions,
+    });
+
+    return Result.Ok(deviceCA);
+  }
+
+  getCAKey() {
+    return this.#caKey;
   }
 
   async processCSR(csrJWS: string): Promise<Result<IssueCertificateResult>> {
@@ -77,7 +172,7 @@ export class DeviceIdCA {
     return Result.Ok(Certor.fromUnverifiedJWT(this.#opts.base64, rCert.Ok().certificateJWT).asCert());
   }
 
-  async issueCertificate(devId: FPDeviceIDPayload): Promise<Result<IssueCertificateResult>> {
+  async issueCertificate(devId: FPDeviceIDCSRPayload): Promise<Result<IssueCertificateResult>> {
     const now = Math.floor(Date.now() / 1000);
     const serialNumber = await this.#opts.actions.generateSerialNumber(await this.#caKey.publicKey());
 

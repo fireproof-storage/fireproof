@@ -154,6 +154,7 @@ const txtOps = ((txtEncoder, txtDecoder) => ({
   id: () => "fp-txtOps",
   encode: (input: string) => txtEncoder.encode(input),
   decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
+
   base64: {
     encode: (input: ToUInt8 | string) => {
       if (typeof input === "string") {
@@ -167,13 +168,29 @@ const txtOps = ((txtEncoder, txtDecoder) => ({
       return btoa(charStr);
     },
     decodeUint8: (input: string) => {
-      const data = atob(input);
+      const data = atob(input.replace(/\s+/g, ""));
       return new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
     },
     decode: (input: string) => {
-      const data = atob(input);
+      const data = atob(input.replace(/\s+/g, ""));
       const uint8 = new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
       return txtDecoder.decode(uint8);
+    },
+  },
+  base58: {
+    encode: (input: ToUInt8 | string) => {
+      if (typeof input === "string") {
+        const data = txtEncoder.encode(input);
+        return base58btc.encode(data);
+      }
+      return base58btc.encode(coerceIntoUint8(input).Ok());
+    },
+    decodeUint8: (input: string) => {
+      return base58btc.decode(input.replace(/\s+/g, ""));
+    },
+    decode: (input: string) => {
+      const data = base58btc.decode(input.replace(/\s+/g, ""));
+      return txtDecoder.decode(data);
     },
   },
   // eslint-disable-next-line no-restricted-globals
@@ -700,4 +717,133 @@ export function makePartial<
   const partialObject = z.object(partialShape);
   // Return readonly if input was readonly
   return (isReadonly ? partialObject.readonly() : partialObject) as T;
+}
+
+/*
+   should be able to parse mime blocks like:
+   start is skipped
+   -----BEGIN SOMETHING-----
+   something
+   -----END SOMETHING-----
+   end is skipped
+   or
+   djfjfjsdjfdjsfjd
+   dfddsfkdkdskdk
+   then is end and begin are undefined
+
+*/
+export interface MimeBlock {
+  readonly preBegin?: string;
+  readonly begin?: string;
+  readonly end?: string;
+  readonly postEnd?: string;
+  readonly content: string;
+}
+
+export function mimeBlockParser(mime: string): MimeBlock[] {
+  const blocks: MimeBlock[] = [];
+  const lines = mime.split("\n");
+
+  let i = 0;
+  let lastProcessedIndex = -1; // Track the last line we've added to a block
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Check if this line starts a PEM-style block
+    // Minimum 3 dashes, allow optional whitespace before/after dashes and case-insensitive BEGIN/END
+    const beginMatch = line.match(/^(-{3,})\s*(BEGIN)\s+(.+?)\s*(-{3,})$/i);
+
+    if (beginMatch) {
+      // Found a BEGIN marker
+      const leadingDashes = beginMatch[1].length;
+      const trailingDashes = beginMatch[4].length;
+      const blockType = beginMatch[3];
+
+      // Create a regex pattern for the matching END marker (case-insensitive)
+      // Escape special regex characters in blockType
+      const escapedBlockType = blockType.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // END marker must have the same number of leading and trailing dashes as BEGIN
+      const endPattern = new RegExp(`^-{${leadingDashes}}\\s*(END)\\s+${escapedBlockType}\\s*-{${trailingDashes}}$`, "i");
+
+      // Collect preBegin content (everything between lastProcessedIndex and current BEGIN)
+      const preBegin: string[] = [];
+      for (let j = lastProcessedIndex + 1; j < i; j++) {
+        preBegin.push(lines[j]);
+      }
+
+      // Move past the BEGIN line
+      i++;
+
+      // Collect content lines until END marker
+      const contentLines: string[] = [];
+      let foundEnd = false;
+      let endLine = "";
+      while (i < lines.length) {
+        if (endPattern.test(lines[i])) {
+          foundEnd = true;
+          endLine = lines[i];
+          break;
+        }
+        contentLines.push(lines[i]);
+        i++;
+      }
+
+      if (foundEnd) {
+        i++; // Move past the END line
+
+        // Collect postEnd content (everything after END marker until next BEGIN or end of string)
+        const postEnd: string[] = [];
+        while (i < lines.length && !lines[i].match(/^-{3,}\s*BEGIN\s+.+-{3,}$/i)) {
+          postEnd.push(lines[i]);
+          i++;
+        }
+
+        blocks.push({
+          preBegin: preBegin.length > 0 ? preBegin.join("\n") : undefined,
+          begin: line,
+          content: contentLines.join("\n"),
+          end: endLine,
+          postEnd: postEnd.length > 0 ? postEnd.join("\n") : undefined,
+        });
+
+        // Update lastProcessedIndex to include all content up to before the next unprocessed line
+        lastProcessedIndex = i - 1;
+      } else {
+        // No END marker found, treat entire content (including BEGIN line) as plain text
+        const allContent: string[] = [...preBegin, line, ...contentLines];
+        blocks.push({
+          begin: undefined,
+          end: undefined,
+          content: allContent.join("\n"),
+          preBegin: undefined,
+          postEnd: undefined,
+        });
+        // Update lastProcessedIndex to the last line we consumed
+        lastProcessedIndex = i - 1;
+      }
+    } else {
+      // No BEGIN marker found, skip this line (it will be picked up as preBegin or we're at the end)
+      i++;
+    }
+  }
+
+  // Handle any remaining unprocessed lines at the end
+  if (lastProcessedIndex < lines.length - 1) {
+    const remainingLines: string[] = [];
+    for (let j = lastProcessedIndex + 1; j < lines.length; j++) {
+      remainingLines.push(lines[j]);
+    }
+    if (remainingLines.length > 0) {
+      blocks.push({
+        begin: undefined,
+        end: undefined,
+        content: remainingLines.join("\n"),
+        preBegin: undefined,
+        postEnd: undefined,
+      });
+    }
+  }
+
+  return blocks;
 }
