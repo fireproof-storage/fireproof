@@ -40,6 +40,13 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.4.72",
+    "@fireproof/core": "workspace:*",
+    "@fireproof/core-device-id": "workspace:*",
+    "@fireproof/core-keybag": "workspace:*",
+    "@fireproof/core-protocols-dashboard": "workspace:*",
+    "@fireproof/core-runtime": "workspace:*",
+    "@fireproof/core-types-protocols-cloud": "workspace:*",
+    "jose": "^6.1.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "use-fireproof": "workspace:0.0.0"

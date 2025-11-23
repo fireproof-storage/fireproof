@@ -72,13 +72,19 @@ importers:
         version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       wrangler:
         specifier: ^4.50.0
-        version: 4.50.0(@cloudflare/workers-types@4.20251121.0)
+        version: 4.50.0(@cloudflare/workers-types@4.20251125.0)
 
   cli:
     dependencies:
       '@adviser/cement':
         specifier: ^0.4.72
         version: 0.4.72(typescript@5.9.3)
+      '@fireproof/core-device-id':
+        specifier: workspace:0.0.0
+        version: link:../core/device-id
+      '@fireproof/core-keybag':
+        specifier: workspace:0.0.0
+        version: link:../core/keybag
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../core/runtime
@@ -137,6 +143,27 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.72
         version: 0.4.72(typescript@5.9.3)
+      '@fireproof/core':
+        specifier: workspace:*
+        version: link:../../core/core
+      '@fireproof/core-device-id':
+        specifier: workspace:*
+        version: link:../../core/device-id
+      '@fireproof/core-keybag':
+        specifier: workspace:*
+        version: link:../../core/keybag
+      '@fireproof/core-protocols-dashboard':
+        specifier: workspace:*
+        version: link:../../core/protocols/dashboard
+      '@fireproof/core-runtime':
+        specifier: workspace:*
+        version: link:../../core/runtime
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:*
+        version: link:../../core/types/protocols/cloud
+      jose:
+        specifier: ^6.1.2
+        version: 6.1.2
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -167,7 +194,7 @@ importers:
         version: 0.4.72(typescript@5.9.3)
       '@cloudflare/workers-types':
         specifier: ^4.20251121.0
-        version: 4.20251121.0
+        version: 4.20251125.0
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -194,7 +221,7 @@ importers:
         version: 1.0.20
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251121.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        version: 0.44.7(@cloudflare/workers-types@4.20251125.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.10.6
         version: 4.10.6
@@ -231,7 +258,7 @@ importers:
         version: 0.4.72(typescript@5.9.3)
       '@cloudflare/workers-types':
         specifier: ^4.20251121.0
-        version: 4.20251121.0
+        version: 4.20251125.0
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -258,7 +285,7 @@ importers:
         version: 0.14.3
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251121.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        version: 0.44.7(@cloudflare/workers-types@4.20251125.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.10.6
         version: 4.10.6
@@ -280,7 +307,7 @@ importers:
         version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       wrangler:
         specifier: ^4.50.0
-        version: 4.50.0(@cloudflare/workers-types@4.20251121.0)
+        version: 4.50.0(@cloudflare/workers-types@4.20251125.0)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -325,7 +352,7 @@ importers:
         version: 0.15.15
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251121.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        version: 0.44.7(@cloudflare/workers-types@4.20251125.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.10.6
         version: 4.10.6
@@ -810,6 +837,9 @@ importers:
       '@adviser/cement':
         specifier: ^0.4.72
         version: 0.4.72(typescript@5.9.3)
+      '@fireproof/core-device-id':
+        specifier: workspace:0.0.0
+        version: link:../../device-id
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -822,6 +852,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
 
   core/runtime:
     dependencies:
@@ -1156,6 +1189,9 @@ importers:
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core/core
+      '@fireproof/core-device-id':
+        specifier: workspace:0.0.0
+        version: link:../core/device-id
       '@fireproof/core-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../core/protocols/cloud
@@ -1225,10 +1261,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.15.2
-        version: 1.15.2(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20251118.0)(wrangler@4.50.0(@cloudflare/workers-types@4.20251121.0))
+        version: 1.15.2(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20251118.0)(wrangler@4.50.0(@cloudflare/workers-types@4.20251125.0))
       '@cloudflare/workers-types':
         specifier: ^4.20251121.0
-        version: 4.20251121.0
+        version: 4.20251125.0
       '@eslint/js':
         specifier: ^9.39.1
         version: 9.39.1
@@ -1264,7 +1300,7 @@ importers:
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251121.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        version: 0.44.7(@cloudflare/workers-types@4.20251125.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@1.21.7)
@@ -1303,7 +1339,7 @@ importers:
         version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
       wrangler:
         specifier: ^4.50.0
-        version: 4.50.0(@cloudflare/workers-types@4.20251121.0)
+        version: 4.50.0(@cloudflare/workers-types@4.20251125.0)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -1746,8 +1782,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20251121.0':
-    resolution: {integrity: sha512-jzFg7hEGKzpEalxTCanN6lM8IdkvO/brsERp/+OyMms4Zi0nhDPUAg9dUcKU8wDuDUnzbjkplY6YRwle7Cq6gA==}
+  '@cloudflare/workers-types@4.20251125.0':
+    resolution: {integrity: sha512-YZdO/IX10DiHb2v+7H2CL5SKAbxJQIG22jNefgtW86YMf5LvQk6f75v5T/j1ju56MBwm6RzcqvsECF+cXs2h3g==}
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
@@ -3563,8 +3599,8 @@ packages:
       zod:
         optional: true
 
-  abitype@1.2.0:
-    resolution: {integrity: sha512-fD3ROjckUrWsybaSor2AdWxzA0e/DSyV2dA4aYd7bd8orHsoJjl09fOgKfUkTDfk0BsDGBf4NBgu/c7JoS2Npw==}
+  abitype@1.1.2:
+    resolution: {integrity: sha512-mqpSSIuddHs7t3IgsAweIZgYIQT4RhpIzrdcSN4fvHp9d77O0mglAAQ7fnI3r/hHIvgMwdpJAKr2T9K9leccYw==}
     peerDependencies:
       typescript: '>=5.0.4'
       zod: ^3.22.0 || ^4.0.0
@@ -5282,18 +5318,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright-core@1.57.0:
-    resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright@1.56.1:
     resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.57.0:
-    resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -5988,8 +6014,8 @@ packages:
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
 
-  viem@2.40.2:
-    resolution: {integrity: sha512-iZXVl5Uip1BUQv0PI9yOq+vHGRTnJ0a8azC5IAAJMSrvdkGrvghIwGskp3+g243fpzFlO/iqAFrWIG15SDoiTQ==}
+  viem@2.39.3:
+    resolution: {integrity: sha512-s11rPQRvUEdc5qHK3xT4fIk4qvgPAaLwaTFq+EbFlcJJD+Xn3R4mc9H6B6fquEiHl/mdsdbG/uKCnYpoNtHNHw==}
     peerDependencies:
       typescript: '>=5.0.4'
     peerDependenciesMeta:
@@ -6257,6 +6283,9 @@ packages:
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
+
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
   zod@4.1.13:
     resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
@@ -6621,7 +6650,7 @@ snapshots:
       idb-keyval: 6.2.1
       ox: 0.6.9(typescript@5.9.3)(zod@4.1.13)
       preact: 10.24.2
-      viem: 2.40.2(typescript@5.9.3)(zod@4.1.13)
+      viem: 2.39.3(typescript@5.9.3)(zod@4.1.13)
       zustand: 5.0.3(@types/react@19.2.6)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     transitivePeerDependencies:
       - '@types/react'
@@ -6736,7 +6765,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20251118.0
 
-  '@cloudflare/vite-plugin@1.15.2(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20251118.0)(wrangler@4.50.0(@cloudflare/workers-types@4.20251121.0))':
+  '@cloudflare/vite-plugin@1.15.2(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(workerd@1.20251118.0)(wrangler@4.50.0(@cloudflare/workers-types@4.20251125.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.7.11(unenv@2.0.0-rc.24)(workerd@1.20251118.0)
       '@remix-run/node-fetch-server': 0.8.1
@@ -6746,7 +6775,7 @@ snapshots:
       tinyglobby: 0.2.15
       unenv: 2.0.0-rc.24
       vite: 7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
-      wrangler: 4.50.0(@cloudflare/workers-types@4.20251121.0)
+      wrangler: 4.50.0(@cloudflare/workers-types@4.20251125.0)
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
@@ -6768,7 +6797,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20251118.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20251121.0': {}
+  '@cloudflare/workers-types@4.20251125.0': {}
 
   '@coinbase/wallet-sdk@4.3.0':
     dependencies:
@@ -8104,6 +8133,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@vitest/browser-playwright@4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)':
+    dependencies:
+      '@vitest/browser': 4.0.8(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
+      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))
+      playwright: 1.56.1
+      tinyrainbow: 3.0.3
+      vitest: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
+
   '@vitest/browser-playwright@4.0.8(playwright@1.56.1)(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)':
     dependencies:
       '@vitest/browser': 4.0.8(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
@@ -8116,20 +8159,6 @@ snapshots:
       - msw
       - utf-8-validate
       - vite
-
-  '@vitest/browser-playwright@4.0.8(playwright@1.57.0)(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)':
-    dependencies:
-      '@vitest/browser': 4.0.8(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
-      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))
-      playwright: 1.57.0
-      tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-    optional: true
 
   '@vitest/browser@4.0.8(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)':
     dependencies:
@@ -8234,7 +8263,7 @@ snapshots:
       typescript: 5.9.3
       zod: 4.1.13
 
-  abitype@1.2.0(typescript@5.9.3)(zod@4.1.13):
+  abitype@1.1.2(typescript@5.9.3)(zod@4.1.13):
     optionalDependencies:
       typescript: 5.9.3
       zod: 4.1.13
@@ -8694,9 +8723,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.7(@cloudflare/workers-types@4.20251121.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7):
+  drizzle-orm@0.44.7(@cloudflare/workers-types@4.20251125.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251121.0
+      '@cloudflare/workers-types': 4.20251125.0
       '@libsql/client': 0.15.15
       gel: 2.1.1
       kysely: 0.28.7
@@ -10029,7 +10058,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.0(typescript@5.9.3)(zod@4.1.13)
+      abitype: 1.1.2(typescript@5.9.3)(zod@4.1.13)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
@@ -10044,7 +10073,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.0(typescript@5.9.3)(zod@4.1.13)
+      abitype: 1.1.2(typescript@5.9.3)(zod@4.1.13)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
@@ -10145,21 +10174,11 @@ snapshots:
 
   playwright-core@1.56.1: {}
 
-  playwright-core@1.57.0:
-    optional: true
-
   playwright@1.56.1:
     dependencies:
       playwright-core: 1.56.1
     optionalDependencies:
       fsevents: 2.3.2
-
-  playwright@1.57.0:
-    dependencies:
-      playwright-core: 1.57.0
-    optionalDependencies:
-      fsevents: 2.3.2
-    optional: true
 
   plur@4.0.0:
     dependencies:
@@ -10961,7 +10980,7 @@ snapshots:
 
   varint@6.0.0: {}
 
-  viem@2.40.2(typescript@5.9.3)(zod@4.1.13):
+  viem@2.39.3(typescript@5.9.3)(zod@4.1.13):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
@@ -11032,7 +11051,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.10.1
-      '@vitest/browser-playwright': 4.0.8(playwright@1.57.0)(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
+      '@vitest/browser-playwright': 4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
     transitivePeerDependencies:
       - jiti
       - less
@@ -11113,7 +11132,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20251118.0
       '@cloudflare/workerd-windows-64': 1.20251118.0
 
-  wrangler@4.50.0(@cloudflare/workers-types@4.20251121.0):
+  wrangler@4.50.0(@cloudflare/workers-types@4.20251125.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.7.11(unenv@2.0.0-rc.24)(workerd@1.20251118.0)
@@ -11124,7 +11143,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20251118.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251121.0
+      '@cloudflare/workers-types': 4.20251125.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
@@ -11199,6 +11218,8 @@ snapshots:
       zod: 4.1.13
 
   zod@3.22.3: {}
+
+  zod@4.1.12: {}
 
   zod@4.1.13: {}
 

@@ -1,10 +1,11 @@
-import { Result, exception2Result } from "@adviser/cement";
-import { exportJWK, importJWK, JWTVerifyResult, jwtVerify, SignJWT } from "jose";
+import { BuildURI, CoerceURI, KeyedResolvOnce, Result, exception2Result, timeouted } from "@adviser/cement";
+import { exportJWK, importJWK, JWTVerifyResult, jwtVerify, SignJWT, JWK } from "jose";
 import { generateKeyPair, GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { base58btc } from "multiformats/bases/base58";
-import { ensureSuperThis } from "../utils.js";
-import { SuperThis } from "@fireproof/core-types-base";
+import { ensureSuperThis, mimeBlockParser } from "../utils.js";
+import { JWKPublic, JWKPublicSchema, SuperThis } from "@fireproof/core-types-base";
 import { BaseTokenParam, FPCloudClaim, TokenForParam } from "@fireproof/core-types-protocols-cloud";
+import { z } from "zod";
 
 export const envKeyDefaults = {
   SECRET: "CLOUD_SESSION_TOKEN_SECRET",
@@ -31,6 +32,7 @@ export async function env2jwk(env: string, alg: string, sthis = ensureSuperThis(
 }
 
 export interface KeysResult {
+  readonly alg: string;
   readonly material: CryptoKeyPair;
   readonly strings: { readonly publicKey: string; readonly privateKey: string };
 }
@@ -46,6 +48,7 @@ export class SessionTokenService {
   ): Promise<KeysResult> {
     const material = await generateKeyPairFN(alg, options);
     return {
+      alg,
       material,
       strings: {
         publicKey: await jwk2env(material.publicKey),
@@ -131,4 +134,165 @@ export class SessionTokenService {
       .sign(this.#key);
     return token;
   }
+}
+
+const keysFromWellKnownJwksCache = new KeyedResolvOnce<JWKPublic[]>({
+  resetAfter: 30 * 60 * 1000, // 30 minutes
+});
+
+export interface VerifyTokenOptions {
+  readonly fetchTimeoutMs?: number;
+  readonly sthis?: SuperThis;
+  readonly fetch?: typeof globalThis.fetch;
+  readonly verifyToken?: (token: string, pubKey: JWK) => Promise<Result<{ payload: unknown }>>;
+}
+
+type CoerceJWKType = string | JWK | JWKPublic;
+
+function testEncodeJWK(k: string, decodeFn: (input: string) => string): Result<JWK> {
+  const res = exception2Result(() => decodeFn(k));
+  if (res.isErr()) {
+    return Result.Err(res);
+  }
+  const resStr = res.Ok();
+  const key = exception2Result(() => JSON.parse(resStr)) as Result<JWK>;
+  if (key.isOk()) {
+    const parsed = JWKPublicSchema.safeParse(key.Ok());
+    if (parsed.success) {
+      return Result.Ok(parsed.data);
+    } else {
+      return Result.Err(`Invalid JWK format: ${parsed.error.message}`);
+    }
+  }
+  return key;
+}
+
+export function coerceJWKPublic(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJWKType[])[]): JWK[] {
+  return i
+    .flat()
+    .map((k) => {
+      if (typeof k === "string") {
+        for (const { content } of mimeBlockParser(k)) {
+          for (const decodeFn of [(a: string) => a, sthis.txt.base64.decode, sthis.txt.base58.decode]) {
+            const rKey = testEncodeJWK(content, decodeFn);
+            if (rKey.isOk()) {
+              return [rKey.Ok()];
+            }
+          }
+        }
+        return [];
+      } else {
+        return [k];
+      }
+    })
+    .flat();
+}
+
+export async function verifyToken<S extends z.ZodTypeAny>(
+  token: string,
+  presetPubKey: (string | JWK | JWKPublic)[],
+  wellKnownUrls: CoerceURI[],
+  schema: S,
+  iopts: VerifyTokenOptions = {},
+): Promise<Result<z.infer<S>>> {
+  const opts: Required<VerifyTokenOptions> = {
+    fetchTimeoutMs: 1000,
+    fetch: globalThis.fetch,
+    verifyToken: async (token: string, pubKey: JWK): Promise<Result<{ payload: unknown }>> => {
+      const rRes = await exception2Result(() => jwtVerify(token, pubKey));
+      if (rRes.isErr()) {
+        return Result.Err(rRes);
+      }
+      const res = rRes.Ok();
+      if (!res) {
+        return Result.Err("JWT verification failed");
+      }
+      return Result.Ok(res);
+    },
+    ...iopts,
+    sthis: iopts.sthis ?? ensureSuperThis(),
+  };
+
+  for (const pubKey of presetPubKey) {
+    const coercedKeys = coerceJWKPublic(opts.sthis, pubKey);
+    for (const key of coercedKeys) {
+      const rVerify = await internVerifyToken(token, key, schema, opts);
+      if (rVerify.isOk()) {
+        return rVerify;
+      }
+    }
+  }
+  const errors: Error[] = [];
+  for (const cUrl of wellKnownUrls) {
+    const url = BuildURI.from(cUrl);
+    const p = url.URI();
+    if (p.pathname === "" || p.pathname === "/") {
+      url.pathname("/.well-known/jwks.json");
+    }
+    const rPubKeys = await fetchWellKnownJwks(url.toString(), opts);
+    if (rPubKeys.isErr()) {
+      errors.push(rPubKeys.Err());
+      continue;
+    }
+    for (const pubKey of rPubKeys.Ok()) {
+      const rVerify = await internVerifyToken(token, pubKey, schema, opts);
+      if (rVerify.isOk()) {
+        return rVerify;
+      }
+      // console.log("xxx", pubKey, rVerify.Err());
+    }
+  }
+  return Result.Err(`No well-known JWKS URL could verify the token: ${errors.map((e) => e.message).join("; ")}`);
+}
+
+async function fetchWellKnownJwks(url: string, opts: VerifyTokenOptions): Promise<Result<JWKPublic[]>> {
+  return keysFromWellKnownJwksCache.get(url).once(async () => {
+    const timeout = await timeouted(
+      (opts.fetch ?? fetch)(url, {
+        method: "GET",
+      }).then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch well-known JWKS from ${url}: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      }),
+      {
+        timeout: opts.fetchTimeoutMs ?? 1000,
+      },
+    );
+    // console.log(">>>>>>", JSON.stringify(timeout));
+    switch (timeout.state) {
+      case "timeout":
+        return Result.Err(`Timeout fetching well-known JWKS from ${url}`);
+      case "error":
+        return Result.Err(`Error fetching well-known JWKS from ${url}: ${timeout.error.message}`);
+      case "success": {
+        const parsed = z.object({ keys: JWKPublicSchema.array() }).safeParse(timeout.value);
+        if (!parsed.success) {
+          return Result.Err(parsed.error);
+        }
+        return Result.Ok(parsed.data.keys);
+      }
+      default:
+        return Result.Err("Unknown error fetching well-known JWKS");
+    }
+  });
+}
+
+async function internVerifyToken<S extends z.ZodTypeAny>(
+  token: string,
+  presetPubKey: JWK | JWKPublic,
+  schema: S,
+  opts: Required<VerifyTokenOptions>,
+): Promise<Result<z.infer<S>>> {
+  // console.log("internVerifyToken", token, presetPubKey);
+  const rVerify = await opts.verifyToken(token, presetPubKey);
+  if (rVerify.isErr()) {
+    return Result.Err(rVerify);
+  }
+  const parsed = schema.safeParse(rVerify.Ok().payload);
+  if (!parsed.success) {
+    return Result.Err(parsed.error);
+  }
+  return Result.Ok(parsed.data);
 }

@@ -1,4 +1,4 @@
-import { FPDeviceIDPayload, JWKPublic, JWKPublicSchema, FPDeviceIDPayloadSchema } from "@fireproof/core-types-base";
+import { FPDeviceIDCSRPayload, JWKPublic, JWKPublicSchema, FPDeviceIDCSRPayloadSchema } from "@fireproof/core-types-base";
 import { jwtVerify, decodeProtectedHeader, importJWK, calculateJwkThumbprint } from "jose";
 
 interface ValidateCSRError {
@@ -8,7 +8,7 @@ interface ValidateCSRError {
 
 interface ValidateCSRSuccess {
   readonly valid: true;
-  readonly payload: FPDeviceIDPayload;
+  readonly payload: FPDeviceIDCSRPayload;
   readonly publicKey: JWKPublic;
 }
 
@@ -57,7 +57,7 @@ export class DeviceIdValidator {
         algorithms: [alg],
       });
 
-      const { success, data: payload } = FPDeviceIDPayloadSchema.safeParse(fromPayload);
+      const { success, data: payload } = FPDeviceIDCSRPayloadSchema.safeParse(fromPayload);
       if (!success || !payload) {
         return {
           valid: false,

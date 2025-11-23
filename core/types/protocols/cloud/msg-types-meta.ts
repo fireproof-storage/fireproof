@@ -4,35 +4,25 @@ import {
   MsgBase,
   MsgWithTenantLedger,
   NextId,
-  ResOptionalSignedUrl,
   MsgTypesCtx,
   SignedUrlParam,
-  MethodSignedUrlParam,
-  ResSignedUrl,
   VERSION,
   ReqSignedUrl,
   MethodSignedUrlParams,
   MsgWithConn,
-  MsgWithOptionalConn,
   ReqGwCtx,
+  MsgBaseSchema,
+  SignedUrlParamSchema,
+  MethodSignedUrlParamSchema,
+  ResSignedUrlSchema,
+  QSIdSchema,
+  ResOptionalSignedUrlSchema,
 } from "./msg-types.js";
+import { TenantLedgerSchema } from "./msg-types.zod.js";
 import { V2SerializedMetaKey } from "@fireproof/core-types-blockstore";
+import { z } from "zod";
 
 /* Put Meta */
-export interface ReqPutMeta extends MsgWithTenantLedger<MsgWithOptionalConn> {
-  readonly type: "reqPutMeta";
-  readonly methodParam: MethodSignedUrlParam;
-  readonly urlParam: SignedUrlParam;
-  readonly meta: V2SerializedMetaKey;
-}
-
-export interface ResPutMetaVal {
-  readonly type: "resPutMeta";
-  readonly meta: V2SerializedMetaKey;
-}
-
-export type ResPutMeta = ResPutMetaVal & ResSignedUrl & MsgWithTenantLedger<MsgWithConn>;
-
 export function buildReqPutMeta(
   sthis: NextId,
   auth: AuthType,
@@ -84,19 +74,8 @@ export function MsgIsResPutMeta(qs: MsgBase): qs is ResPutMeta {
 }
 
 /* Bind Meta */
-export interface BindGetMeta extends MsgWithTenantLedger<MsgWithOptionalConn & ReqSignedUrl> {
-  readonly type: "bindGetMeta";
-  // readonly methodParams: MethodSignedUrlParam;
-  // readonly params: SignedUrlParam;
-}
-
 export function MsgIsBindGetMeta(msg: MsgBase): msg is BindGetMeta {
   return msg.type === "bindGetMeta";
-}
-
-export interface EventGetMeta extends MsgWithTenantLedger<MsgWithConn>, Omit<ResSignedUrl, "conn"> {
-  readonly type: "eventGetMeta";
-  readonly meta: V2SerializedMetaKey;
 }
 
 export function buildBindGetMeta(sthis: NextId, auth: AuthType, msp: MethodSignedUrlParams, gwCtx: ReqGwCtx): BindGetMeta {
@@ -136,12 +115,6 @@ export function MsgIsEventGetMeta(qs: MsgBase): qs is EventGetMeta {
 }
 
 /* Del Meta */
-export interface ReqDelMeta extends MsgWithTenantLedger<MsgWithOptionalConn> {
-  readonly type: "reqDelMeta";
-  readonly urlParam: SignedUrlParam;
-  readonly meta?: V2SerializedMetaKey;
-}
-
 export function buildReqDelMeta(
   sthis: NextId,
   auth: AuthType,
@@ -164,10 +137,6 @@ export function buildReqDelMeta(
 
 export function MsgIsReqDelMeta(msg: MsgBase): msg is ReqDelMeta {
   return msg.type === "reqDelMeta";
-}
-
-export interface ResDelMeta extends MsgWithTenantLedger<MsgWithConn>, ResOptionalSignedUrl {
-  readonly type: "resDelMeta";
 }
 
 export function buildResDelMeta(
@@ -193,3 +162,72 @@ export function buildResDelMeta(
 export function MsgIsResDelMeta(qs: MsgBase): qs is ResDelMeta {
   return qs.type === "resDelMeta";
 }
+
+// ============================================================================
+// Zod Schemas for Meta Messages
+// ============================================================================
+
+// Note: V2SerializedMetaKey comes from @fireproof/core-types-blockstore
+// We'll use z.any() for now to avoid circular dependencies
+const V2SerializedMetaKeySchema = z.any() as z.ZodType<V2SerializedMetaKey>;
+
+// ReqPutMeta and ResPutMeta
+export const ReqPutMetaSchema = MsgBaseSchema.extend({
+  type: z.literal("reqPutMeta"),
+  conn: QSIdSchema.partial().optional(),
+  tenant: TenantLedgerSchema,
+  methodParam: MethodSignedUrlParamSchema,
+  urlParam: SignedUrlParamSchema,
+  meta: V2SerializedMetaKeySchema,
+});
+
+export type ReqPutMeta = z.infer<typeof ReqPutMetaSchema>;
+
+export const ResPutMetaValSchema = z.object({
+  type: z.literal("resPutMeta"),
+  meta: V2SerializedMetaKeySchema,
+});
+
+export type ResPutMetaVal = z.infer<typeof ResPutMetaValSchema>;
+
+export const ResPutMetaSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resPutMeta"),
+  meta: V2SerializedMetaKeySchema,
+});
+
+export type ResPutMeta = z.infer<typeof ResPutMetaSchema>;
+
+// BindGetMeta and EventGetMeta
+export const BindGetMetaSchema = MsgBaseSchema.extend({
+  type: z.literal("bindGetMeta"),
+  conn: QSIdSchema.partial().optional(),
+  tenant: TenantLedgerSchema,
+  methodParam: MethodSignedUrlParamSchema,
+  urlParam: SignedUrlParamSchema,
+});
+
+export type BindGetMeta = z.infer<typeof BindGetMetaSchema>;
+
+export const EventGetMetaSchema = ResSignedUrlSchema.extend({
+  type: z.literal("eventGetMeta"),
+  meta: V2SerializedMetaKeySchema,
+});
+
+export type EventGetMeta = z.infer<typeof EventGetMetaSchema>;
+
+// ReqDelMeta and ResDelMeta
+export const ReqDelMetaSchema = MsgBaseSchema.extend({
+  type: z.literal("reqDelMeta"),
+  conn: QSIdSchema.partial().optional(),
+  tenant: TenantLedgerSchema,
+  urlParam: SignedUrlParamSchema,
+  meta: V2SerializedMetaKeySchema.optional(),
+});
+
+export type ReqDelMeta = z.infer<typeof ReqDelMetaSchema>;
+
+export const ResDelMetaSchema = ResOptionalSignedUrlSchema.extend({
+  type: z.literal("resDelMeta"),
+});
+
+export type ResDelMeta = z.infer<typeof ResDelMetaSchema>;

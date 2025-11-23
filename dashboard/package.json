@@ -30,6 +30,7 @@
     "@clerk/clerk-js": "^5.111.0",
     "@clerk/clerk-react": "^5.56.2",
     "@fireproof/core": "workspace:0.0.0",
+    "@fireproof/core-device-id": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",

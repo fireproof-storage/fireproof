@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ExtensionsSchema, SubjectSchema } from "./fp-device-id-payload.zod.js";
 import { JWKPublicSchema } from "./jwk-public.zod.js";
 // Certificate Payload Schema
-const CertificateSchema = z.object({
+export const CertificateSchema = z.object({
   version: z.literal("3"), // X.509 v3
   serialNumber: z.string(),
   subject: SubjectSchema,
