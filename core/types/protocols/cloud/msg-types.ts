@@ -1,17 +1,13 @@
 import { Future, Logger, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core-types-base";
 import { CalculatePreSignedUrl } from "./msg-types-data.js";
-import { FPCloudClaim, ReadWrite, Role, TenantLedger } from "./msg-types.zod.js";
+import { FPCloudClaimSchema, ReadWrite, Role, TenantLedger, TenantLedgerSchema } from "./msg-types.zod.js";
+import { z } from "zod/v4";
 // import { PreSignedMsg } from "./pre-signed-url.js";
 
 export const VERSION = "FP-MSG-1.0";
 
-export interface BaseTokenParam {
-  readonly alg: string; // defaults ES256
-  readonly issuer: string;
-  readonly audience: string;
-  readonly validFor: number;
-}
+// BaseTokenParam type now inferred from Zod schema (defined below)
 
 // export type ReadWrite = "read" | "write";
 
@@ -54,7 +50,7 @@ export function toRole(i?: string): Role {
 //   return typeof r === "object" && !!r && (r as FPWaitTokenResult).type === "FPWaitTokenResult";
 // }
 
-export type TokenForParam = FPCloudClaim & Partial<BaseTokenParam>;
+// TokenForParam type now inferred from Zod schema (defined below)
 
 export type MsgWithError<T extends MsgBase> = T | ErrorMsg;
 
@@ -112,10 +108,6 @@ export interface NextId {
   readonly nextId: SuperThis["nextId"];
 }
 
-export interface AuthType {
-  readonly type: "ucan" | "error" | "fp-cloud-jwk" | "fp-cloud";
-}
-
 export function isAuthTypeFPCloudJWK(a: AuthType): a is FPJWKCloudAuthType {
   return a.type === "fp-cloud-jwk";
 }
@@ -124,36 +116,10 @@ export function isAuthTypeFPCloud(a: AuthType): a is FPCloudAuthType {
   return a.type === "fp-cloud";
 }
 
-export interface UCanAuth extends AuthType {
-  readonly type: "ucan";
-  readonly params: {
-    readonly tbd: string;
-  };
-}
-export interface FPJWKCloudAuthType extends AuthType {
-  readonly type: "fp-cloud-jwk";
-  readonly params: {
-    readonly jwk: string;
-  };
-}
-
-export interface FPCloudAuthType extends AuthType {
-  readonly type: "fp-cloud";
-  readonly params: {
-    readonly claim: TokenForParam;
-    readonly jwk: string; // for reply
-  };
-}
-
 export type AuthFactory = (tp?: Partial<TokenForParam>) => Promise<Result<AuthType>>;
 
 export function keyTenantLedger(t: TenantLedger): string {
   return `${t.tenant}:${t.ledger}`;
-}
-
-export interface QSId {
-  readonly reqId: string;
-  readonly resId: string;
 }
 
 export function qsidEqual(a: QSId, b: QSId): boolean {
@@ -172,21 +138,11 @@ export function qsidKey(qsid: QSId): string {
 //   readonly conn: Connection;
 // }
 
-export interface MsgBase {
-  readonly tid: string;
-  readonly type: string;
-  readonly version: string;
-  readonly auth: AuthType;
-}
-
 export function MsgIsTid(msg: MsgBase, tid: string): boolean {
   return !msg.tid || msg.tid === tid;
 }
 
-export interface MsgConnAuth {
-  readonly conn: QSId;
-  readonly auth: AuthType;
-}
+// MsgConnAuth type now inferred from Zod schema (defined below)
 
 export type MsgWithConn<T extends MsgBase = MsgBase> = T & { readonly conn: QSId };
 
@@ -199,21 +155,7 @@ export type MsgWithOptionalConn<T extends MsgBase = MsgBase> = T & { readonly co
 export type MsgWithOptionalTenantLedger<T extends MsgWithConn> = T & { readonly tenant?: Partial<TenantLedger> };
 export type MsgWithTenantLedger<T extends MsgWithOptionalConn> = T & { readonly tenant: TenantLedger };
 
-export type ErrorMsg = ErrorMsgBase | NotReadyErrorMsg;
-
-export interface ErrorMsgBase extends MsgWithOptionalConn {
-  readonly type: "error";
-  readonly src: unknown;
-  readonly message: string;
-  readonly body?: string;
-  readonly stack?: string[];
-}
-
-export interface NotReadyErrorMsg extends ErrorMsgBase {
-  readonly reason: "not-ready";
-  readonly src: "not-ready";
-  readonly message: "Not Ready";
-}
+// ErrorMsg types now inferred from Zod schemas (defined below)
 
 export function MsgIsNotReadyError(msg: MsgBase): msg is NotReadyErrorMsg {
   return MsgIsError(msg) && (msg as NotReadyErrorMsg).reason === "not-ready";
@@ -320,14 +262,7 @@ export interface Gestalt {
   readonly eventTypes: string[];
 }
 
-export interface MsgerParams {
-  readonly mime: string;
-  readonly auth?: AuthType;
-  readonly hasPersistent?: boolean;
-  readonly protocolCapabilities?: ProtocolCapabilities[];
-  // readonly protocol: "http" | "ws";
-  readonly timeout: number; // msec
-}
+// MsgerParams type now inferred from Zod schema (defined below)
 
 // force the server id
 export type GestaltParam = Partial<Gestalt> & { readonly id: string };
@@ -396,17 +331,6 @@ export function defaultGestalt(msgP: MsgerParams, gestalt: GestaltParam): Gestal
   };
 }
 
-export interface ReqChat extends MsgWithConn {
-  readonly type: "reqChat";
-  readonly message: string;
-  readonly targets: QSId[];
-}
-export interface ResChat extends MsgWithConn {
-  readonly type: "resChat";
-  readonly message: string;
-  readonly targets: QSId[];
-}
-
 export function buildReqChat(sthis: NextId, auth: AuthType, conn: Partial<QSId>, message: string, targets?: QSId[]): ReqChat {
   return {
     tid: sthis.nextId().str,
@@ -443,11 +367,6 @@ export function MsgIsResChat(msg: MsgBase): msg is ResChat {
  * The ReqGestalt message is used to request the
  * features of the Responder.
  */
-export interface ReqGestalt extends MsgBase {
-  readonly type: "reqGestalt";
-  readonly gestalt: Gestalt;
-  readonly publish?: boolean; // for testing
-}
 
 export function MsgIsReqGestalt(msg: MsgBase): msg is ReqGestalt {
   return msg.type === "reqGestalt";
@@ -464,17 +383,11 @@ export function buildReqGestalt(sthis: NextId, auth: AuthType, gestalt: Gestalt,
   };
 }
 
-export interface ConnInfo {
-  readonly connIds: string[];
-}
+// ConnInfo type now inferred from Zod schema (defined below)
 /**
  * The ResGestalt message is used to respond with
  * the features of the Responder.
  */
-export interface ResGestalt extends MsgBase {
-  readonly type: "resGestalt";
-  readonly gestalt: Gestalt;
-}
 
 export function buildResGestalt(req: ReqGestalt, gestalt: Gestalt, auth: AuthType): ResGestalt | ErrorMsg {
   return {
@@ -495,16 +408,6 @@ export function MsgIsResGestalt(msg: MsgBase): msg is ResGestalt {
 //   readonly reqId?: string;
 //   readonly resId?: string; // for double open
 // }
-
-export interface ReqOpenConn {
-  readonly reqId: string;
-  readonly resId?: string;
-}
-
-export interface ReqOpen extends Omit<MsgWithConn, "conn"> {
-  readonly type: "reqOpen";
-  readonly conn: ReqOpenConn;
-}
 
 export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>): ReqOpen {
   const req = {
@@ -528,11 +431,6 @@ export function buildReqOpen(sthis: NextId, auth: AuthType, conn: Partial<QSId>)
 export function MsgIsReqOpen(imsg: MsgBase): imsg is ReqOpen {
   const msg = imsg as MsgWithConn<ReqOpen>;
   return msg.type === "reqOpen" && !!msg.conn && !!msg.conn.reqId;
-}
-
-export interface ResOpen extends MsgBase {
-  readonly type: "resOpen";
-  readonly conn: QSId;
 }
 
 export function MsgIsWithConn<T extends MsgBase>(msg: T): msg is MsgWithConn<T> {
@@ -566,16 +464,8 @@ export function MsgIsResOpen(msg: MsgBase): msg is ResOpen {
   return msg.type === "resOpen";
 }
 
-export interface ReqClose extends MsgWithConn {
-  readonly type: "reqClose";
-}
-
 export function MsgIsReqClose(msg: MsgBase): msg is ReqClose {
   return msg.type === "reqClose" && MsgIsWithConn(msg);
-}
-
-export interface ResClose extends MsgWithConn {
-  readonly type: "resClose";
 }
 
 export function MsgIsResClose(msg: MsgBase): msg is ResClose {
@@ -598,20 +488,6 @@ export function buildReqClose(sthis: NextId, auth: AuthType, conn: QSId): ReqClo
     version: VERSION,
     conn,
   };
-}
-
-export interface SignedUrlParam {
-  // base path
-  readonly path?: string;
-  // name of the file
-  readonly key: string;
-  readonly expires?: number; // seconds
-  readonly index?: string;
-}
-
-export interface MethodSignedUrlParam {
-  readonly method: HttpMethods;
-  readonly store: FPStoreTypes;
 }
 
 // export type ReqSignedUrlParam = Omit<SignedUrlParam, "method" | "store">;
@@ -660,36 +536,10 @@ export function MsgIsTenantLedger<T extends MsgBase>(msg: T): msg is MsgWithTena
   return false;
 }
 
-export interface MethodParams {
-  readonly methodParam: MethodSignedUrlParam;
-}
-
-export interface SignedUrlParams {
-  readonly urlParam: SignedUrlParam;
-}
-
-export type MethodSignedUrlParams = MethodParams & SignedUrlParams;
-
 export type ReqSignedUrlWithoutMethodParams = SignedUrlParams & MsgWithTenantLedger<MsgWithConn>;
 export type ReqSignedUrl = MethodSignedUrlParams & MsgWithTenantLedger<MsgWithOptionalConn>;
 
-export interface GwCtx {
-  readonly tid?: string;
-  readonly conn: QSId;
-  readonly tenant: TenantLedger;
-}
-
-export interface ReqGwCtx {
-  readonly tid?: string;
-  readonly conn: Partial<QSId>;
-  readonly tenant: TenantLedger;
-}
-
-export interface GwCtxConn {
-  readonly tid?: string;
-  readonly conn: QSId;
-  readonly tenant: TenantLedger;
-}
+// GwCtx, ReqGwCtx, and GwCtxConn types now inferred from Zod schemas (defined below)
 
 export function buildReqSignedUrl<T extends ReqSignedUrl>(sthis: NextId, type: string, rparam: ReqSignedUrlParam, gwCtx: GwCtx): T {
   return {
@@ -701,20 +551,6 @@ export function buildReqSignedUrl<T extends ReqSignedUrl>(sthis: NextId, type: s
     methodParam: rparam.methodParam,
     urlParam: rparam.urlParam,
   } satisfies ReqSignedUrl as T;
-}
-
-export interface ResSignedUrl extends MsgWithTenantLedger<MsgWithConn> {
-  // readonly type: "resSignedUrl";
-  readonly methodParam: MethodSignedUrlParam;
-  readonly urlParam: SignedUrlParam;
-  readonly signedUrl: string;
-}
-
-export interface ResOptionalSignedUrl extends MsgWithTenantLedger<MsgWithConn> {
-  // readonly type: "resSignedUrl";
-  readonly urlParam: SignedUrlParam;
-  readonly methodParam: MethodSignedUrlParam;
-  readonly signedUrl?: string;
 }
 
 export interface MsgTypesCtx {
@@ -740,6 +576,362 @@ export interface MsgTypesCtxSync {
 export function resAuth(msg: MsgBase): Promise<AuthType> {
   return msg.auth ? Promise.resolve(msg.auth) : Promise.reject(new Error("No Auth"));
 }
+
+// ============================================================================
+// Zod Schemas for Req/Res Messages
+// ============================================================================
+
+// Base schemas - Auth types as discriminated union
+const UCanAuthSchema = z
+  .object({
+    type: z.literal("ucan"),
+    params: z
+      .object({
+        tbd: z.string(),
+      })
+      .readonly(),
+  })
+  .readonly();
+
+const FPJWKCloudAuthTypeSchema = z
+  .object({
+    type: z.literal("fp-cloud-jwk"),
+    params: z
+      .object({
+        jwk: z.string(),
+      })
+      .readonly(),
+  })
+  .readonly();
+
+// BaseTokenParam schema
+const BaseTokenParamSchemaBase = z.object({
+  alg: z.string(), // defaults ES256
+  issuer: z.string(),
+  audience: z.string(),
+  validFor: z.number(),
+});
+
+export const BaseTokenParamSchema = BaseTokenParamSchemaBase.readonly();
+
+export type BaseTokenParam = z.infer<typeof BaseTokenParamSchema>;
+// TokenForParam schema - intersection of FPCloudClaim and Partial<BaseTokenParam>
+export const TokenForParamSchema = FPCloudClaimSchema.and(BaseTokenParamSchemaBase.partial()).readonly();
+export type TokenForParam = z.infer<typeof TokenForParamSchema>;
+
+const FPCloudAuthTypeSchema = z
+  .object({
+    type: z.literal("fp-cloud"),
+    params: z
+      .object({
+        claim: TokenForParamSchema,
+        jwk: z.string(),
+      })
+      .readonly(),
+  })
+  .readonly();
+
+const ErrorAuthSchema = z
+  .object({
+    type: z.literal("error"),
+  })
+  .readonly();
+
+const FPDeviceIdAuthSchema = z
+  .object({
+    type: z.literal("device-id"),
+    params: z
+      .object({
+        sessionToken: z.string(),
+      })
+      .readonly(),
+  })
+  .readonly();
+
+export const AuthTypeSchema = z.discriminatedUnion("type", [
+  UCanAuthSchema,
+  FPJWKCloudAuthTypeSchema,
+  FPCloudAuthTypeSchema,
+  FPDeviceIdAuthSchema,
+  ErrorAuthSchema,
+]);
+
+export type AuthType = z.infer<typeof AuthTypeSchema>;
+export type UCanAuth = z.infer<typeof UCanAuthSchema>;
+export type FPJWKCloudAuthType = z.infer<typeof FPJWKCloudAuthTypeSchema>;
+export type FPCloudAuthType = z.infer<typeof FPCloudAuthTypeSchema>;
+
+export const QSIdSchema = z.object({
+  reqId: z.string(),
+  resId: z.string(),
+});
+
+export type QSId = z.infer<typeof QSIdSchema>;
+
+export const MsgBaseSchema = z.object({
+  tid: z.string(),
+  type: z.string(),
+  version: z.string(),
+  auth: AuthTypeSchema,
+});
+
+export const MsgBaseSchemaReadonly = MsgBaseSchema.readonly();
+
+export type MsgBase = z.infer<typeof MsgBaseSchemaReadonly>;
+
+export const GestaltSchema: z.ZodType<Gestalt> = z.object({
+  storeTypes: z.array(z.enum(["meta", "car", "wal", "file"])),
+  id: z.string(),
+  protocolCapabilities: z.array(z.enum(["reqRes", "stream"])),
+  httpEndpoints: z.array(z.string()),
+  wsEndpoints: z.array(z.string()),
+  encodings: z.array(z.enum(["JSON", "CBOR"])),
+  auth: z.array(AuthTypeSchema),
+  requiresAuth: z.boolean(),
+  data: z
+    .object({
+      inband: z.boolean(),
+      outband: z.boolean(),
+    })
+    .optional(),
+  meta: z
+    .object({
+      inband: z.literal(true),
+      outband: z.boolean(),
+    })
+    .optional(),
+  wal: z
+    .object({
+      inband: z.boolean(),
+      outband: z.boolean(),
+    })
+    .optional(),
+  reqTypes: z.array(z.string()),
+  resTypes: z.array(z.string()),
+  eventTypes: z.array(z.string()),
+});
+
+export const MethodSignedUrlParamSchema = z.object({
+  method: z.enum(["GET", "PUT", "DELETE"]),
+  store: z.enum(["meta", "car", "wal", "file"]),
+});
+
+export type MethodSignedUrlParam = z.infer<typeof MethodSignedUrlParamSchema>;
+
+export const SignedUrlParamSchema = z.object({
+  path: z.string().optional(),
+  key: z.string(),
+  expires: z.number().optional(),
+  index: z.string().optional(),
+});
+
+export type SignedUrlParam = z.infer<typeof SignedUrlParamSchema>;
+
+// Composite parameter schemas
+export const MethodParamsSchema = z.object({
+  methodParam: MethodSignedUrlParamSchema,
+});
+
+export type MethodParams = z.infer<typeof MethodParamsSchema>;
+
+export const SignedUrlParamsSchema = z.object({
+  urlParam: SignedUrlParamSchema,
+});
+
+export type SignedUrlParams = z.infer<typeof SignedUrlParamsSchema>;
+
+export const MethodSignedUrlParamsSchema = MethodParamsSchema.and(SignedUrlParamsSchema);
+
+export type MethodSignedUrlParams = z.infer<typeof MethodSignedUrlParamsSchema>;
+
+// ReqChat and ResChat
+export const ReqChatSchema = MsgBaseSchema.extend({
+  type: z.literal("reqChat"),
+  conn: QSIdSchema,
+  message: z.string(),
+  targets: z.array(QSIdSchema),
+}).readonly();
+
+export const ResChatSchema = MsgBaseSchema.extend({
+  type: z.literal("resChat"),
+  conn: QSIdSchema,
+  message: z.string(),
+  targets: z.array(QSIdSchema),
+}).readonly();
+
+// ReqGestalt and ResGestalt
+export const ReqGestaltSchema = MsgBaseSchema.extend({
+  type: z.literal("reqGestalt"),
+  gestalt: GestaltSchema,
+  publish: z.boolean().optional(),
+}).readonly();
+
+export const ResGestaltSchema = MsgBaseSchema.extend({
+  type: z.literal("resGestalt"),
+  gestalt: GestaltSchema,
+}).readonly();
+
+// ReqOpen and ResOpen
+export const ReqOpenConnSchema = z
+  .object({
+    reqId: z.string(),
+    resId: z.string().optional(),
+  })
+  .readonly();
+
+export type ReqOpenConn = z.infer<typeof ReqOpenConnSchema>;
+
+export const ReqOpenSchema = MsgBaseSchema.extend({
+  type: z.literal("reqOpen"),
+  conn: ReqOpenConnSchema,
+}).readonly();
+
+export const ResOpenSchema = MsgBaseSchema.extend({
+  type: z.literal("resOpen"),
+  conn: QSIdSchema,
+}).readonly();
+
+// ReqClose and ResClose
+export const ReqCloseSchema = MsgBaseSchema.extend({
+  type: z.literal("reqClose"),
+  conn: QSIdSchema,
+}).readonly();
+
+export const ResCloseSchema = MsgBaseSchema.extend({
+  type: z.literal("resClose"),
+  conn: QSIdSchema,
+}).readonly();
+
+// MsgConnAuth schema
+export const MsgConnAuthSchema = z
+  .object({
+    conn: QSIdSchema,
+    auth: AuthTypeSchema,
+  })
+  .readonly();
+
+export type MsgConnAuth = z.infer<typeof MsgConnAuthSchema>;
+
+// ErrorMsg schemas
+export const ErrorMsgBaseSchema = z
+  .object({
+    type: z.literal("error"),
+    src: z.unknown(),
+    message: z.string(),
+    body: z.string().optional(),
+    stack: z.array(z.string()).optional(),
+    conn: QSIdSchema.partial().optional(),
+    tid: z.string(),
+    version: z.string(),
+    auth: AuthTypeSchema,
+  })
+  .readonly();
+
+export const NotReadyErrorMsgSchema = z
+  .object({
+    type: z.literal("error"),
+    src: z.literal("not-ready"),
+    message: z.literal("Not Ready"),
+    reason: z.literal("not-ready"),
+    body: z.string().optional(),
+    stack: z.array(z.string()).optional(),
+    conn: QSIdSchema.partial().optional(),
+    tid: z.string(),
+    version: z.string(),
+    auth: AuthTypeSchema,
+  })
+  .readonly();
+
+export const ErrorMsgSchema = z.union([ErrorMsgBaseSchema, NotReadyErrorMsgSchema]);
+
+// Type inference for error messages
+export type ErrorMsgBase = z.infer<typeof ErrorMsgBaseSchema>;
+export type NotReadyErrorMsg = z.infer<typeof NotReadyErrorMsgSchema>;
+export type ErrorMsg = z.infer<typeof ErrorMsgSchema>;
+
+// ConnInfo schema
+export const ConnInfoSchema = z
+  .object({
+    connIds: z.array(z.string()),
+  })
+  .readonly();
+
+export type ConnInfo = z.infer<typeof ConnInfoSchema>;
+
+// MsgerParams schema
+export const MsgerParamsSchema = z
+  .object({
+    mime: z.string(),
+    auth: AuthTypeSchema.optional(),
+    hasPersistent: z.boolean().optional(),
+    protocolCapabilities: z.array(z.enum(["reqRes", "stream"])).optional(),
+    timeout: z.number(),
+  })
+  .readonly();
+
+export type MsgerParams = z.infer<typeof MsgerParamsSchema>;
+
+// GwCtx schema
+export const GwCtxSchema = z
+  .object({
+    tid: z.string().optional(),
+    conn: QSIdSchema,
+    tenant: TenantLedgerSchema,
+  })
+  .readonly();
+
+export type GwCtx = z.infer<typeof GwCtxSchema>;
+
+// ReqGwCtx schema
+export const ReqGwCtxSchema = z
+  .object({
+    tid: z.string().optional(),
+    conn: QSIdSchema.partial(),
+    tenant: TenantLedgerSchema,
+  })
+  .readonly();
+
+export type ReqGwCtx = z.infer<typeof ReqGwCtxSchema>;
+
+// GwCtxConn schema
+export const GwCtxConnSchema = z
+  .object({
+    tid: z.string().optional(),
+    conn: QSIdSchema,
+    tenant: TenantLedgerSchema,
+  })
+  .readonly();
+
+export type GwCtxConn = z.infer<typeof GwCtxConnSchema>;
+
+// ResSignedUrl and ResOptionalSignedUrl
+export const ResSignedUrlSchema = MsgBaseSchema.extend({
+  conn: QSIdSchema,
+  tenant: TenantLedgerSchema,
+  methodParam: MethodSignedUrlParamSchema,
+  urlParam: SignedUrlParamSchema,
+  signedUrl: z.string(),
+});
+
+export const ResOptionalSignedUrlSchema = MsgBaseSchema.extend({
+  conn: QSIdSchema,
+  tenant: TenantLedgerSchema,
+  urlParam: SignedUrlParamSchema,
+  methodParam: MethodSignedUrlParamSchema,
+  signedUrl: z.string().optional(),
+});
+
+// Type inference - replace original interfaces with inferred types
+export type ReqChat = z.infer<typeof ReqChatSchema>;
+export type ResChat = z.infer<typeof ResChatSchema>;
+export type ReqGestalt = z.infer<typeof ReqGestaltSchema>;
+export type ResGestalt = z.infer<typeof ResGestaltSchema>;
+export type ReqOpen = z.infer<typeof ReqOpenSchema>;
+export type ResOpen = z.infer<typeof ResOpenSchema>;
+export type ReqClose = z.infer<typeof ReqCloseSchema>;
+export type ResClose = z.infer<typeof ResCloseSchema>;
+export type ResSignedUrl = z.infer<typeof ResSignedUrlSchema>;
+export type ResOptionalSignedUrl = z.infer<typeof ResOptionalSignedUrlSchema>;
 
 export async function buildRes<Q extends MsgWithTenantLedger<MsgWithConn<ReqSignedUrlWithoutMethodParams>>, S extends ResSignedUrl>(
   methodParam: MethodSignedUrlParam,

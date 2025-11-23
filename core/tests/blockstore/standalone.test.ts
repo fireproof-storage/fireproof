@@ -1,6 +1,5 @@
-import { BuildURI, runtimeFn, URI } from "@adviser/cement";
+import { stripper, BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { Link } from "multiformats";
-import { stripper } from "@adviser/cement/utils";
 import pLimit from "@fireproof/vendor/p-limit";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 import { CRDT, PARAM, LedgerOpts } from "@fireproof/core-types-base";

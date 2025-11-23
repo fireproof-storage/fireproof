@@ -1,7 +1,8 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // JWT Payload Schema (standard claims)
 export const JWTPayloadSchema = z.object({
+  azp: z.string().optional(), // authorized party
   iss: z.string().optional(), // issuer
   sub: z.string().optional(), // subject
   aud: z.union([z.string(), z.array(z.string())]).optional(), // audience

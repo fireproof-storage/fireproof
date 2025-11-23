@@ -1,4 +1,15 @@
-import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector, Logger, AppContext } from "@adviser/cement";
+import {
+  BuildURI,
+  MockLogger,
+  runtimeFn,
+  toCryptoRuntime,
+  URI,
+  LogCollector,
+  Logger,
+  AppContext,
+  ConsoleWriterStreamDefaultWriter,
+  ConsoleWriterStream,
+} from "@adviser/cement";
 import { SuperThis, SuperThisOpts, PARAM, Attachable, Attached, CarTransaction, Falsy, DbMeta, KeyBagIf } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
@@ -57,7 +68,7 @@ export function storageURL(sthis: SuperThis): URI {
 export type MockSuperThis = SuperThis & { ctx: { readonly logCollector: LogCollector } };
 export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   const mockLog = MockLogger({
-    pass: new utils.ConsoleWriterStreamDefaultWriter(new utils.ConsoleWriterStream()),
+    pass: new ConsoleWriterStreamDefaultWriter(new ConsoleWriterStream()),
   });
   return ensureSuperThis({
     ...sthis,

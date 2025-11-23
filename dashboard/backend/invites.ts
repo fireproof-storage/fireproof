@@ -1,4 +1,4 @@
-import { stripper } from "@adviser/cement/utils";
+import { stripper } from "@adviser/cement";
 import { int, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 import { sqlUsers } from "./users.js";
 import { sqlTenants } from "./tenants.js";

@@ -1,7 +1,8 @@
-import { Base64EndeCoder, CertificatePayload, JWKPublic } from "@fireproof/core-types-base";
+import { BaseXXEndeCoder, CertificatePayload, JWKPublic } from "@fireproof/core-types-base";
 import { jwtVerify, decodeProtectedHeader, importJWK } from "jose";
 import { Certor } from "./certor.js";
 import { exception2Result, Result } from "@adviser/cement";
+import z from "zod/v4";
 
 interface HeaderCertInfo {
   readonly certificate: Certor;
@@ -14,9 +15,9 @@ interface HeaderCertInfo {
   readonly rawHeader: unknown;
 }
 
-interface VerifyWithCertificateSuccess {
+interface VerifyWithCertificateSuccess<T = unknown> {
   readonly valid: true;
-  readonly payload: unknown;
+  readonly payload: T;
   readonly header: unknown;
   readonly certificate: HeaderCertInfo & {
     readonly validation: {
@@ -49,19 +50,21 @@ interface VerifyWithCertificateError {
   readonly verificationTimestamp: string;
 }
 
-export type VerifyWithCertificateResult = VerifyWithCertificateSuccess | VerifyWithCertificateError;
+export type VerifyWithCertificateResult<T> =
+  | VerifyWithCertificateSuccess<T extends z.ZodTypeAny ? z.infer<T> : unknown>
+  | VerifyWithCertificateError;
 
-interface VerifyWithCertificateOptions {
+export interface VerifyWithCertificateOptions {
   readonly clockTolerance: number; // Clock skew tolerance in seconds
   readonly maxAge?: number; // Maximum JWT age in seconds
 }
 
 export class DeviceIdVerifyMsg {
-  readonly #base64: Base64EndeCoder;
+  readonly #base64: BaseXXEndeCoder;
   readonly #trustedCAs: CertificatePayload[];
   readonly #options: VerifyWithCertificateOptions;
 
-  constructor(base64: Base64EndeCoder, trustedCAs: CertificatePayload[], options: VerifyWithCertificateOptions) {
+  constructor(base64: BaseXXEndeCoder, trustedCAs: CertificatePayload[], options: VerifyWithCertificateOptions) {
     this.#base64 = base64;
     this.#trustedCAs = trustedCAs;
     this.#options = options;
@@ -87,7 +90,7 @@ export class DeviceIdVerifyMsg {
   /**
    * Verify JWT and validate certificate
    */
-  async verifyWithCertificate(jwt: string): Promise<VerifyWithCertificateResult> {
+  async verifyWithCertificate<S>(jwt: string, schema?: S): Promise<VerifyWithCertificateResult<S>> {
     let certInfo = undefined;
     // let publicKey = null;
     let jwtPayload = null;
@@ -162,10 +165,22 @@ export class DeviceIdVerifyMsg {
       });
     }
 
+    if (schema) {
+      const rPayloadParse = (schema as unknown as z.ZodTypeAny).safeParse(jwtPayload);
+      if (!rPayloadParse.success) {
+        return this.createVerifyWithCertificateError(Result.Err(rPayloadParse.error), {
+          certificateExtracted: true,
+          certificateInfo: certInfo,
+          jwtSignatureValid: true,
+        });
+      }
+      jwtPayload = rPayloadParse.data;
+    }
+
     // Success - return comprehensive result
     return {
       valid: true,
-      payload: jwtPayload,
+      payload: jwtPayload as S extends z.ZodTypeAny ? z.infer<S> : unknown,
       header: jwtHeader,
       certificate: {
         ...certInfo,

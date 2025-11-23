@@ -6,7 +6,9 @@ const compactStrategyRegistry = new Map<string, CompactStrategy>();
 export function registerCompactStrategy(compactStrategy: CompactStrategy): () => void {
   const key = compactStrategy.name.toLowerCase();
   if (compactStrategyRegistry.has(key)) {
-    throw new Error(`compactStrategy ${compactStrategy.name} already registered`);
+    return () => {
+      compactStrategyRegistry.delete(key);
+    };
   }
   compactStrategyRegistry.set(key, compactStrategy);
   return () => {

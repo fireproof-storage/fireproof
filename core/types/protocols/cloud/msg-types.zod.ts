@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { JWTPayloadSchema } from "@fireproof/core-types-base";
 
 // Role and ReadWrite enums
@@ -6,21 +6,27 @@ export const RoleSchema = z.enum(["admin", "owner", "member"]);
 export const ReadWriteSchema = z.enum(["read", "write"]);
 
 // Related interface schemas
-export const TenantClaimSchema = z.object({
-  id: z.string(),
-  role: RoleSchema,
-});
+export const TenantClaimSchema = z
+  .object({
+    id: z.string(),
+    role: RoleSchema,
+  })
+  .readonly();
 
-export const LedgerClaimSchema = z.object({
-  id: z.string(),
-  role: RoleSchema,
-  right: ReadWriteSchema,
-});
+export const LedgerClaimSchema = z
+  .object({
+    id: z.string(),
+    role: RoleSchema,
+    right: ReadWriteSchema,
+  })
+  .readonly();
 
-export const TenantLedgerSchema = z.object({
-  tenant: z.string(),
-  ledger: z.string(),
-});
+export const TenantLedgerSchema = z
+  .object({
+    tenant: z.string(),
+    ledger: z.string(),
+  })
+  .readonly();
 
 // Main FPCloudClaim schema
 export const FPCloudClaimSchema = JWTPayloadSchema.extend({
@@ -32,7 +38,7 @@ export const FPCloudClaimSchema = JWTPayloadSchema.extend({
   tenants: z.array(TenantClaimSchema),
   ledgers: z.array(LedgerClaimSchema),
   selected: TenantLedgerSchema,
-});
+}).readonly();
 
 // Type inference from schemas
 export type Role = z.infer<typeof RoleSchema>;
@@ -53,4 +59,4 @@ export const FPCloudClaimParseSchema = JWTPayloadSchema.extend({
   tenants: z.array(TenantClaimSchema),
   ledgers: z.array(LedgerClaimSchema),
   selected: TenantLedgerSchema,
-});
+}).readonly();

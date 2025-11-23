@@ -1,9 +1,21 @@
-import { runtimeFn, URI } from "@adviser/cement";
+import { Result, runtimeFn, URI } from "@adviser/cement";
 import { getFileName } from "@fireproof/core-gateways-base";
-import { ensureSuperThis, ensureSuperLog, getStore, inplaceFilter, makePartial } from "@fireproof/core-runtime";
+import {
+  ensureSuperThis,
+  ensureSuperLog,
+  getStore,
+  inplaceFilter,
+  makePartial,
+  mimeBlockParser,
+  sts,
+} from "@fireproof/core-runtime";
+import { importJWK, JWK } from "jose";
+import { SignJWT } from "jose/jwt/sign";
+import { exportJWK, exportSPKI } from "jose/key/export";
+import { JWKPublic, JWTPayloadSchema } from "use-fireproof";
 import { UUID } from "uuidv7";
-import { describe, beforeAll, it, expect, assert } from "vitest";
-import { z } from "zod";
+import { describe, beforeAll, it, expect, assert, vi } from "vitest";
+import { z } from "zod/v4";
 
 describe("utils", () => {
   const sthis = ensureSuperThis();
@@ -148,5 +160,363 @@ describe("runtime", () => {
 
     const parsed2 = partialSchema.safeParse({ a: "hello", b: "xx", z: 1 });
     expect(parsed2.success).toBeFalsy();
+  });
+});
+
+describe("verifyToken", () => {
+  function mockFetchFactory(presetKeys: (JWK | JWKPublic)[]) {
+    return vi.fn(async (): Promise<Response> => {
+      const body = JSON.stringify({
+        keys: presetKeys,
+      });
+      return new Response(body, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }) as typeof globalThis.fetch;
+  }
+
+  let token: string;
+  let pair: sts.KeysResult;
+  const sthis = ensureSuperThis();
+  const claimSchema = JWTPayloadSchema.extend({
+    test: z.string(),
+    test1: z.number(),
+  });
+
+  function parseSchema(payload: unknown): Result<z.infer<typeof claimSchema>> {
+    const r = claimSchema.safeParse(payload);
+    if (r.success) {
+      return Result.Ok(r.data);
+    } else {
+      return Result.Err(r.error);
+    }
+  }
+
+  beforeAll(async () => {
+    pair = await sts.SessionTokenService.generateKeyPair();
+    token = await new SignJWT({
+      test: "value",
+      test1: 123,
+    })
+      .setProtectedHeader({ alg: pair.alg }) // algorithm
+      .setIssuedAt()
+      .setIssuer("Test-Case") // issuer
+      .setAudience("http://test.com/") // audience
+      .setExpirationTime(~~((Date.now() + 60000) / 1000)) // expiration time
+      .sign(pair.material.privateKey);
+  });
+
+  it("test coerceJWKPublic", async () => {
+    const jwkKey = await exportJWK(pair.material.publicKey);
+
+    const jsonString = JSON.stringify(jwkKey);
+
+    for (const input of [
+      jwkKey,
+      ...[jsonString, sthis.txt.base64.encode(jsonString), sthis.txt.base58.encode(jsonString)].map((input) => [input]).flat(),
+    ]) {
+      const result = await sts.verifyToken(token, [input], [], { parseSchema });
+      expect(result.isOk()).toBe(true);
+    }
+  });
+
+  it("valid token no fetch", async () => {
+    const presetKeys = [await exportJWK(pair.material.publicKey)];
+    const wellKnownUrl = ["https://example.com/.well-known/jwks.json"];
+
+    const mockFetch = mockFetchFactory(presetKeys);
+    const result = await sts.verifyToken(token, presetKeys, wellKnownUrl, { fetch: mockFetch, parseSchema });
+    expect(mockFetch).toHaveBeenCalledTimes(0);
+    expect(result.isOk()).toBe(true);
+    expect(result.Ok()).toEqual({
+      iss: "Test-Case",
+      iat: result.Ok().iat,
+      exp: result.Ok().exp,
+      aud: "http://test.com/",
+      test: "value",
+      test1: 123,
+    });
+  });
+
+  it("valid token fetch", async () => {
+    const presetKeys: JWKPublic[] = [];
+    const wellKnownUrl = ["https://example.com/.well-known/jwks.json"];
+
+    const mockFetch = mockFetchFactory([await exportJWK(pair.material.publicKey)]);
+    const result = await sts.verifyToken(token, presetKeys, wellKnownUrl, { fetch: mockFetch, parseSchema });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(result.isOk()).toBe(true);
+    expect(result.Ok()).toEqual({
+      iss: "Test-Case",
+      iat: result.Ok().iat,
+      exp: result.Ok().exp,
+      aud: "http://test.com/",
+      test: "value",
+      test1: 123,
+    });
+  });
+
+  it("invalid claim", async () => {
+    const presetKeys = [await exportJWK(pair.material.publicKey)];
+    const token = await new SignJWT({
+      test: 111,
+      test1: 123,
+    })
+      .setProtectedHeader({ alg: pair.alg }) // algorithm
+      .setIssuedAt()
+      .setIssuer("Test-Case") // issuer
+      .setAudience("http://test.com/") // audience
+      .setExpirationTime(~~((Date.now() + 60000) / 1000)) // expiration time
+      .sign(pair.material.privateKey);
+
+    const result = await sts.verifyToken(token, presetKeys, [], { parseSchema });
+    expect(result.isErr()).toBe(true);
+  });
+
+  it("invalid key", async () => {
+    const defectKey = await sts.SessionTokenService.generateKeyPair();
+    const presetKeys = [await exportJWK(defectKey.material.publicKey)];
+
+    const result = await sts.verifyToken(token, presetKeys, [], { parseSchema });
+    expect(result.isErr()).toBe(true);
+  });
+});
+
+describe("mimeBlockParser", () => {
+  it("parses standard PEM block", () => {
+    const input = ["-----BEGIN PUBLIC KEY-----", "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA", "-----END PUBLIC KEY-----"].join(
+      "\n",
+    );
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("-----BEGIN PUBLIC KEY-----");
+    expect(blocks[0].end).toBe("-----END PUBLIC KEY-----");
+    expect(blocks[0].content).toBe("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA");
+    expect(blocks[0].preBegin).toBeUndefined();
+    expect(blocks[0].postEnd).toBeUndefined();
+  });
+
+  it("parses PEM block with minimum 3 dashes", () => {
+    const input = ["---BEGIN CERTIFICATE---", "content line 1", "content line 2", "---END CERTIFICATE---"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("---BEGIN CERTIFICATE---");
+    expect(blocks[0].end).toBe("---END CERTIFICATE---");
+    expect(blocks[0].content).toBe("content line 1\ncontent line 2");
+  });
+
+  it("parses case-insensitive BEGIN/END", () => {
+    const input = ["-----begin public key-----", "content here", "-----end public key-----"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("-----begin public key-----");
+    expect(blocks[0].end).toBe("-----end public key-----");
+    expect(blocks[0].content).toBe("content here");
+  });
+
+  it("parses PEM block with whitespace around dashes", () => {
+    const input = ["-----  BEGIN KEY  -----", "key content", "-----  END KEY  -----"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("-----  BEGIN KEY  -----");
+    expect(blocks[0].end).toBe("-----  END KEY  -----");
+    expect(blocks[0].content).toBe("key content");
+  });
+
+  it("requires matching dash count between BEGIN and END", () => {
+    const input = ["-----BEGIN CERTIFICATE-----", "content", "---END CERTIFICATE---"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    // Should not find matching END due to different dash count
+    expect(blocks[0].end).toBeUndefined();
+    expect(blocks[0].content).toBe("-----BEGIN CERTIFICATE-----\ncontent\n---END CERTIFICATE---");
+  });
+
+  it("parses plain content without markers", () => {
+    const input = ["line 1", "line 2", "line 3"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBeUndefined();
+    expect(blocks[0].end).toBeUndefined();
+    expect(blocks[0].content).toBe("line 1\nline 2\nline 3");
+    expect(blocks[0].preBegin).toBeUndefined();
+    expect(blocks[0].postEnd).toBeUndefined();
+  });
+
+  it("parses multiple PEM blocks", () => {
+    const input = [
+      "-----BEGIN CERTIFICATE-----",
+      "cert content",
+      "-----END CERTIFICATE-----",
+      "-----BEGIN PRIVATE KEY-----",
+      "key content",
+      "-----END PRIVATE KEY-----",
+    ].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(2);
+
+    expect(blocks[0].begin).toBe("-----BEGIN CERTIFICATE-----");
+    expect(blocks[0].end).toBe("-----END CERTIFICATE-----");
+    expect(blocks[0].content).toBe("cert content");
+
+    expect(blocks[1].begin).toBe("-----BEGIN PRIVATE KEY-----");
+    expect(blocks[1].end).toBe("-----END PRIVATE KEY-----");
+    expect(blocks[1].content).toBe("key content");
+  });
+
+  it("parses PEM block with preBegin and postEnd content", () => {
+    const input = [
+      "header text",
+      "some info",
+      "-----BEGIN KEY-----",
+      "key data",
+      "-----END KEY-----",
+      "footer text",
+      "more info",
+    ].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].preBegin).toBe("header text\nsome info");
+    expect(blocks[0].begin).toBe("-----BEGIN KEY-----");
+    expect(blocks[0].content).toBe("key data");
+    expect(blocks[0].end).toBe("-----END KEY-----");
+    expect(blocks[0].postEnd).toBe("footer text\nmore info");
+  });
+
+  it("parses mixed plain and PEM content", () => {
+    const input = ["plain text before", "-----BEGIN DATA-----", "encoded data", "-----END DATA-----", "plain text after"].join(
+      "\n",
+    );
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].preBegin).toBe("plain text before");
+    expect(blocks[0].begin).toBe("-----BEGIN DATA-----");
+    expect(blocks[0].content).toBe("encoded data");
+    expect(blocks[0].end).toBe("-----END DATA-----");
+    expect(blocks[0].postEnd).toBe("plain text after");
+  });
+
+  it("handles multiline content in PEM block", () => {
+    const input = [
+      "-----BEGIN CERTIFICATE-----",
+      "MIIDXTCCAkWgAwIBAgIJAKL0UG+mRkmqMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV",
+      "BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX",
+      "aWRnaXRzIFB0eSBMdGQwHhcNMTcwODIzMDg0NjU3WhcNMTgwODIzMDg0NjU3WjBF",
+      "-----END CERTIFICATE-----",
+    ].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].content.split("\n")).toEqual([
+      "MIIDXTCCAkWgAwIBAgIJAKL0UG+mRkmqMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV",
+      "BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX",
+      "aWRnaXRzIFB0eSBMdGQwHhcNMTcwODIzMDg0NjU3WhcNMTgwODIzMDg0NjU3WjBF",
+    ]);
+  });
+
+  it("handles empty content between markers", () => {
+    const input = ["-----BEGIN EMPTY-----", "-----END EMPTY-----"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].content).toBe("");
+  });
+
+  it("handles PEM block without matching END", () => {
+    const input = ["-----BEGIN INCOMPLETE-----", "content without end", "more content"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    // Should be treated as plain content since no matching END
+    expect(blocks[0].begin).toBeUndefined();
+    expect(blocks[0].end).toBeUndefined();
+    expect(blocks[0].content).toBe("-----BEGIN INCOMPLETE-----\ncontent without end\nmore content");
+    expect(blocks[0].preBegin).toBeUndefined();
+    expect(blocks[0].postEnd).toBeUndefined();
+  });
+
+  it("rejects blocks with fewer than 3 dashes", () => {
+    const input = ["--BEGIN KEY--", "content", "--END KEY--"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    // Should be treated as plain content since dashes < 3
+    expect(blocks[0].begin).toBeUndefined();
+    expect(blocks[0].end).toBeUndefined();
+    expect(blocks[0].content).toBe("--BEGIN KEY--\ncontent\n--END KEY--");
+  });
+
+  it("handles extra dashes (more than 5)", () => {
+    const input = ["-------BEGIN TEST-------", "test content", "-------END TEST-------"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("-------BEGIN TEST-------");
+    expect(blocks[0].end).toBe("-------END TEST-------");
+    expect(blocks[0].content).toBe("test content");
+  });
+
+  it("handles different leading and trailing dash counts", () => {
+    const input = ["-----BEGIN KEY-------", "content", "-----END KEY-------"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("-----BEGIN KEY-------");
+    expect(blocks[0].end).toBe("-----END KEY-------");
+    expect(blocks[0].content).toBe("content");
+  });
+
+  it("handles block types with special regex characters", () => {
+    const input = ["-----BEGIN TEST (SPECIAL)-----", "content", "-----END TEST (SPECIAL)-----"].join("\n");
+
+    const blocks = mimeBlockParser(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].begin).toBe("-----BEGIN TEST (SPECIAL)-----");
+    expect(blocks[0].end).toBe("-----END TEST (SPECIAL)-----");
+    expect(blocks[0].content).toBe("content");
+  });
+});
+
+describe("coerceJWKPublic", () => {
+  const sthis = ensureSuperThis();
+  const jwk: JWK = {
+    kty: "RSA",
+    e: "AQAB",
+    n: "zuYkKADAu6UJeBq-G6MUerFLKEQVRUrQ8eJCFMWbh-JlCfr9uoEoxutWO3lpVAaFhq2vhRaYif8xoxCmvM74gCoNqE7DDUUrUTBt5kYSJyxAoLUpmVVg7pecJngcaqtPUekE_UGGJ2E2jHMRQ9thzF64BTaJFpddM45M4VEQs-PNEMnmo0NKWggikFXKCBWhakMsuygyBDtY7q73VLdG-jAG6YsVxDt_27DZ6Lv-iH2SMqM0-Xf4aYvCV_JxS75Emf1srsMC2C6_IJcIYSkxyfS6j_DE_dIzXPJ-quXhNrUgpzo2zvvMF44tDXrkeMQ5CQd06kTWe9_BxqkrVT3wLw",
+    alg: "RS256",
+  };
+  const jwkpub = {
+    ...jwk,
+    use: "sig",
+    kid: "ins_2olzJ4rRwcQ5lPbKNCYdwJ4GrFQ",
+  };
+
+  it("accepts JWK object", async () => {
+    expect(await sts.coerceJWKPublic(sthis, jwkpub)).toEqual([jwkpub]);
+  });
+  it("accepts JSON string", async () => {
+    expect(await sts.coerceJWKPublic(sthis, JSON.stringify(jwkpub))).toEqual([jwkpub]);
+  });
+  it("accepts base64 encoded JSON string", async () => {
+    expect(await sts.coerceJWKPublic(sthis, sthis.txt.base64.encode(JSON.stringify(jwkpub)))).toEqual([jwkpub]);
+  });
+  it("accepts base58 encoded JSON string", async () => {
+    expect(await sts.coerceJWKPublic(sthis, sthis.txt.base58.encode(JSON.stringify(jwkpub)))).toEqual([jwkpub]);
+  });
+  it("accepts PEM enclosed JSON string", async () => {
+    const pemWrapped = await exportSPKI((await importJWK(jwkpub, "RS256")) as CryptoKey);
+    expect(await sts.coerceJWKPublic(sthis, pemWrapped)).toEqual([jwk]);
   });
 });

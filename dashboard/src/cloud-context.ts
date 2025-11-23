@@ -1,54 +1,21 @@
-import { Result, exception2Result } from "@adviser/cement";
+import { Result } from "@adviser/cement";
 import { useSession } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type {
-  ReqCloudSessionToken,
-  ReqCreateLedger,
-  ReqCreateTenant,
-  ReqDeleteInvite,
-  ReqDeleteLedger,
-  ReqDeleteTenant,
-  ReqEnsureUser,
-  ReqFindUser,
-  ReqInviteUser,
-  ReqListInvites,
-  ReqListLedgersByUser,
-  ReqListTenantsByUser,
-  ReqRedeemInvite,
-  ReqUpdateLedger,
-  ReqUpdateTenant,
-  ReqUpdateUserTenant,
+import {
   ResCloudSessionToken,
   ResCreateLedger,
   ResCreateTenant,
-  ResDeleteInvite,
-  ResDeleteLedger,
-  ResDeleteTenant,
   ResEnsureUser,
-  ResFindUser,
-  ResInviteUser,
   ResListInvites,
   ResListLedgersByUser,
   ResListTenantsByUser,
-  ResRedeemInvite,
   ResUpdateLedger,
   ResUpdateTenant,
-  ResUpdateUserTenant,
-  AuthType,
   InviteTicket,
+  DashboardApi,
   // UserTenant,
 } from "@fireproof/core-protocols-dashboard";
-import { API_URL } from "./helpers.js";
-
-interface TypeString {
-  type: string;
-}
-
-interface WithType<T extends TypeString> {
-  type: T["type"];
-}
-
-export type WithoutTypeAndAuth<T> = Omit<T, "type" | "auth">;
+import { DASHAPI_URL } from "./helpers.js";
 
 // const emptyListTenantsByUser: ResListTenantsByUser = {
 //   type: "resListTenantsByUser",
@@ -93,12 +60,24 @@ export interface ListTenantsLedgersByUser {
 }
 
 export class CloudContext {
-  readonly api: CloudApi;
+  readonly api: DashboardApi;
   // readonly betterAuthClient: ReturnType<typeof createAuthClient>;
 
   constructor() {
     // this.betterAuthClient = _betterAuthClient;
-    this.api = new CloudApi(this);
+    this.api = new DashboardApi({
+      apiUrl: DASHAPI_URL,
+      fetch: window.fetch.bind(window),
+      // apiUrl: API_URL,
+      getToken: async () => {
+        // console.log("CloudContext getToken");
+        const token = await this._clerkSession?.session?.getToken({ template: "with-email" });
+        return {
+          type: "clerk",
+          token: token || "",
+        };
+      },
+    });
   }
 
   _clerkSession?: ReturnType<typeof useSession>;
@@ -343,97 +322,5 @@ export class CloudContext {
         listLedgers.refetch();
       },
     });
-  }
-}
-
-class CloudApi {
-  private readonly cloud: CloudContext;
-  constructor(cloud: CloudContext) {
-    this.cloud = cloud;
-  }
-
-  private async getAuth() {
-    return exception2Result(() => {
-      return this.cloud.getToken()?.then((token) => {
-        if (!token) throw new Error("No token available");
-        return token as AuthType;
-      });
-    });
-  }
-
-  private async request<T extends TypeString, S>(req: WithType<T>): Promise<Result<S>> {
-    const rAuth = await this.getAuth();
-    if (rAuth.isErr()) {
-      return Result.Err(rAuth.Err());
-    }
-    const reqBody = JSON.stringify({
-      ...req,
-      auth: rAuth.Ok(),
-    });
-    // console.log(API_URL, API_URL, reqBody);
-    const res = await fetch(API_URL, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: reqBody,
-    });
-    if (res.ok) {
-      const jso = await res.json();
-      // console.log("jso", jso);
-      return Result.Ok(jso as S);
-    }
-    const body = await res.text();
-    return Result.Err(`HTTP: ${res.status} ${res.statusText}: ${body}`);
-  }
-
-  ensureUser(req: WithoutTypeAndAuth<ReqEnsureUser>): Promise<Result<ResEnsureUser>> {
-    return this.request<ReqEnsureUser, ResEnsureUser>({ ...req, type: "reqEnsureUser" });
-  }
-  findUser(req: WithoutTypeAndAuth<ReqFindUser>): Promise<Result<ResFindUser>> {
-    return this.request<ReqFindUser, ResFindUser>({ ...req, type: "reqFindUser" });
-  }
-  createTenant(req: WithoutTypeAndAuth<ReqCreateTenant>): Promise<Result<ResCreateTenant>> {
-    return this.request<ReqCreateTenant, ResCreateTenant>({ ...req, type: "reqCreateTenant" });
-  }
-  updateTenant(req: WithoutTypeAndAuth<ReqUpdateTenant>): Promise<Result<ResUpdateTenant>> {
-    return this.request<ReqUpdateTenant, ResUpdateTenant>({ ...req, type: "reqUpdateTenant" });
-  }
-  deleteTenant(req: WithoutTypeAndAuth<ReqDeleteTenant>): Promise<Result<ResDeleteTenant>> {
-    return this.request<ReqDeleteTenant, ResDeleteTenant>({ ...req, type: "reqDeleteTenant" });
-  }
-  connectUserToTenant(req: WithoutTypeAndAuth<ReqRedeemInvite>): Promise<Result<ResRedeemInvite>> {
-    return this.request<ReqRedeemInvite, ResRedeemInvite>({ ...req, type: "reqRedeemInvite" });
-  }
-  listTenantsByUser(req: WithoutTypeAndAuth<ReqListTenantsByUser>): Promise<Result<ResListTenantsByUser>> {
-    return this.request<ReqListTenantsByUser, ResListTenantsByUser>({ ...req, type: "reqListTenantsByUser" });
-  }
-  inviteUser(req: WithoutTypeAndAuth<ReqInviteUser>): Promise<Result<ResInviteUser>> {
-    return this.request<ReqInviteUser, ResInviteUser>({ ...req, type: "reqInviteUser" });
-  }
-  listInvites(req: WithoutTypeAndAuth<ReqListInvites>): Promise<Result<ResListInvites>> {
-    return this.request<ReqListInvites, ResListInvites>({ ...req, type: "reqListInvites" });
-  }
-  deleteInvite(req: WithoutTypeAndAuth<ReqDeleteInvite>): Promise<Result<ResDeleteInvite>> {
-    return this.request<ReqDeleteInvite, ResDeleteInvite>({ ...req, type: "reqDeleteInvite" });
-  }
-  updateUserTenant(req: WithoutTypeAndAuth<ReqUpdateUserTenant>): Promise<Result<ResUpdateUserTenant>> {
-    return this.request<ReqUpdateUserTenant, ResUpdateUserTenant>({ ...req, type: "reqUpdateUserTenant" });
-  }
-  createLedger(req: WithoutTypeAndAuth<ReqCreateLedger>): Promise<Result<ResCreateLedger>> {
-    return this.request<ReqCreateLedger, ResCreateLedger>({ ...req, type: "reqCreateLedger" });
-  }
-  updateLedger(req: WithoutTypeAndAuth<ReqUpdateLedger>): Promise<Result<ResUpdateLedger>> {
-    return this.request<ReqUpdateLedger, ResUpdateLedger>({ ...req, type: "reqUpdateLedger" });
-  }
-  deleteLedger(req: WithoutTypeAndAuth<ReqDeleteLedger>): Promise<Result<ResDeleteLedger>> {
-    return this.request<ReqDeleteLedger, ResDeleteLedger>({ ...req, type: "reqDeleteLedger" });
-  }
-  listLedgersByUser(req: WithoutTypeAndAuth<ReqListLedgersByUser>): Promise<Result<ResListLedgersByUser>> {
-    return this.request<ReqListLedgersByUser, ResListLedgersByUser>({ ...req, type: "reqListLedgersByUser" });
-  }
-  getCloudSessionToken(req: WithoutTypeAndAuth<ReqCloudSessionToken>): Promise<Result<ResCloudSessionToken>> {
-    return this.request<ReqCloudSessionToken, ResCloudSessionToken>({ ...req, type: "reqCloudSessionToken" });
   }
 }

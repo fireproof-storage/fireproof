@@ -16,7 +16,7 @@ import { coerceFingerPrint, coerceMaterial, InternalKeyWithFingerPrint, toKeyWit
 import { KeyBag } from "./key-bag.js";
 import { base58btc } from "multiformats/bases/base58";
 import { coerceKeyedItem as coerceKeyedItemWithVersionUpdate } from "./coerce-keyed-item.js";
-import z from "zod";
+import { z } from "zod/v4";
 
 // export type InternalKeysItem = Omit<KeyedV2StorageKeyItem["item"], "keys"> & {
 //   readonly keys: Record<string, InternalKeyWithFingerPrint>;

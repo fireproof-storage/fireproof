@@ -36,7 +36,7 @@ async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<De
 
 export interface DeviceIdProtocol {
   issueCertificate(msg: string): Promise<Result<IssueCertificateResult>>;
-  verifyMsg(message: string): Promise<VerifyWithCertificateResult>;
+  verifyMsg<S>(message: string, schema?: S): Promise<VerifyWithCertificateResult<S>>;
 }
 
 export interface DeviceIdProtocolSrvOpts {
@@ -74,7 +74,7 @@ export class DeviceIdProtocolSrv implements DeviceIdProtocol {
   }
   // sign a message
   // @param msg: string // JWT String
-  verifyMsg(message: string): Promise<VerifyWithCertificateResult> {
-    return this.#verifyMsg.verifyWithCertificate(message);
+  verifyMsg<S>(message: string, schema?: S): Promise<VerifyWithCertificateResult<S>> {
+    return this.#verifyMsg.verifyWithCertificate<S>(message, schema);
   }
 }

@@ -1,5 +1,5 @@
 import { isUint8Array, Logger, OnFunc, Result } from "@adviser/cement";
-import { MsgType } from "./database-protocol.js";
+import { MsgType } from "./database-protocol.zod.js";
 import { SuperThis } from "@fireproof/core-types-base";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { decode, encode } from "cborg";
@@ -38,7 +38,7 @@ export class FPApiPostMessageTransport implements FPTransport {
   readonly webWindow: FPWebWindow;
 
   readonly onSend = OnFunc<(msg: MsgType, ctx: FPTransportTargetCTX) => Promise<void>>();
-  readonly onRecv = OnFunc<(msg: MsgType, ctx: FPTransportOriginCTX) => Promise<void>>();
+  readonly onRecv = OnFunc<(msg: MsgType, ctx: FPTransportOriginCTX) => void>();
 
   constructor(sthis: SuperThis, fpWindow: FPWebWindow) {
     this.logger = ensureLogger(sthis, "FPApiTransport");

@@ -1,4 +1,4 @@
-import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext, Lazy } from "@adviser/cement";
+import { BuildURI, KeyedResolvOnce, Logger, ResolveOnce, URI, AppContext, Lazy, toSortedArray } from "@adviser/cement";
 
 import { writeQueue } from "./write-queue.js";
 import {
@@ -24,7 +24,6 @@ import { decodeFile, encodeFile, ensureLogger, ensureSuperThis, ensureURIDefault
 
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
-import { toSortedArray } from "@adviser/cement/utils";
 import { getDefaultURI } from "@fireproof/core-blockstore";
 import { defaultKeyBagOpts } from "@fireproof/core-keybag";
 

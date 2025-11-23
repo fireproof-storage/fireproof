@@ -1,9 +1,7 @@
 import { Result, URI } from "@adviser/cement";
 import {
-  ReqSignedUrl,
   NextId,
   MsgBase,
-  ResSignedUrl,
   MsgWithError,
   buildRes,
   ReqSignedUrlParam,
@@ -13,11 +11,9 @@ import {
   MsgTypesCtx,
   PreSignedMsg,
   MsgWithConn,
+  ResSignedUrlSchema,
 } from "./msg-types.js";
-
-export interface ReqGetData extends ReqSignedUrl {
-  readonly type: "reqGetData";
-}
+import { z } from "zod/v4";
 
 export function buildReqGetData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqGetData {
   return buildReqSignedUrl<ReqGetData>(sthis, "reqGetData", sup, ctx);
@@ -25,11 +21,6 @@ export function buildReqGetData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCt
 
 export function MsgIsReqGetData(msg: MsgBase): msg is ReqGetData {
   return msg.type === "reqGetData";
-}
-
-export interface ResGetData extends ResSignedUrl {
-  readonly type: "resGetData";
-  // readonly payload: Uint8Array; // transfered via JSON base64
 }
 
 export function MsgIsResGetData(msg: MsgBase): msg is ResGetData {
@@ -54,21 +45,12 @@ export function buildResGetData(
   );
 }
 
-export interface ReqPutData extends ReqSignedUrl {
-  readonly type: "reqPutData";
-  // readonly payload: Uint8Array; // transfered via JSON base64
-}
-
 export function MsgIsReqPutData(msg: MsgBase): msg is ReqPutData {
   return msg.type === "reqPutData";
 }
 
 export function buildReqPutData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqPutData {
   return buildReqSignedUrl<ReqPutData>(sthis, "reqPutData", sup, ctx);
-}
-
-export interface ResPutData extends ResSignedUrl {
-  readonly type: "resPutData";
 }
 
 export function MsgIsResPutData(msg: MsgBase): msg is ResPutData {
@@ -89,20 +71,12 @@ export function buildResPutData(
   );
 }
 
-export interface ReqDelData extends ReqSignedUrl {
-  readonly type: "reqDelData";
-}
-
 export function MsgIsReqDelData(msg: MsgBase): msg is ReqDelData {
   return msg.type === "reqDelData";
 }
 
 export function buildReqDelData(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqDelData {
   return buildReqSignedUrl<ReqDelData>(sthis, "reqDelData", sup, ctx);
-}
-
-export interface ResDelData extends ResSignedUrl {
-  readonly type: "resDelData";
 }
 
 export function MsgIsResDelData(msg: MsgBase): msg is ResDelData {
@@ -122,3 +96,46 @@ export function buildResDelData(
     ctx,
   );
 }
+
+// ============================================================================
+// Zod Schemas for Data Messages
+// ============================================================================
+
+// ReqGetData and ResGetData
+export const ReqGetDataSchema = ResSignedUrlSchema.extend({
+  type: z.literal("reqGetData"),
+});
+
+export type ReqGetData = z.infer<typeof ReqGetDataSchema>;
+
+export const ResGetDataSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resGetData"),
+});
+
+export type ResGetData = z.infer<typeof ResGetDataSchema>;
+
+// ReqPutData and ResPutData
+export const ReqPutDataSchema = ResSignedUrlSchema.extend({
+  type: z.literal("reqPutData"),
+});
+
+export type ReqPutData = z.infer<typeof ReqPutDataSchema>;
+
+export const ResPutDataSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resPutData"),
+});
+
+export type ResPutData = z.infer<typeof ResPutDataSchema>;
+
+// ReqDelData and ResDelData
+export const ReqDelDataSchema = ResSignedUrlSchema.extend({
+  type: z.literal("reqDelData"),
+});
+
+export type ReqDelData = z.infer<typeof ReqDelDataSchema>;
+
+export const ResDelDataSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resDelData"),
+});
+
+export type ResDelData = z.infer<typeof ResDelDataSchema>;

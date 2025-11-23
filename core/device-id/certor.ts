@@ -1,5 +1,5 @@
-import { toSortedObject } from "@adviser/cement/utils";
-import { Base64EndeCoder } from "@fireproof/core-types-base";
+import { toSortedObject } from "@adviser/cement";
+import { BaseXXEndeCoder } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import { base58btc } from "multiformats/bases/base58";
 import { sha1 } from "multiformats/hashes/sha1";
@@ -9,23 +9,23 @@ import { CertificatePayload, CertificatePayloadSchema } from "@fireproof/core-ty
 
 export class Certor {
   readonly #cert: CertificatePayload;
-  readonly base64: Base64EndeCoder;
+  readonly base64: BaseXXEndeCoder;
   #strCert?: string;
   #uint8Cert?: Uint8Array;
 
-  static fromString(base64: Base64EndeCoder, cert: string) {
+  static fromString(base64: BaseXXEndeCoder, cert: string) {
     const certObj = CertificatePayloadSchema.parse(JSON.parse(base64.decode(cert)));
     return new Certor(base64, certObj);
   }
 
-  static fromUnverifiedJWT(base64: Base64EndeCoder, jwtString: string) {
+  static fromUnverifiedJWT(base64: BaseXXEndeCoder, jwtString: string) {
     // const header = decodeProtectedHeader(jwtString);
     const payload = decodeJwt(jwtString);
     const certObj = CertificatePayloadSchema.parse(payload);
     return new Certor(base64, certObj);
   }
 
-  constructor(base64: Base64EndeCoder, cert: CertificatePayload) {
+  constructor(base64: BaseXXEndeCoder, cert: CertificatePayload) {
     // this.#cert = cert;
     this.#cert = deepFreeze(toSortedObject(cert)) as CertificatePayload;
     this.base64 = base64;
