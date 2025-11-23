@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeAll, afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
-import { fireproof, useFireproof } from "../index.js";
-import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "../index.js";
+import { fireproof, useFireproof } from "use-fireproof";
+import type { Database, DocResponse, LiveQueryResult, UseDocumentResult } from "use-fireproof";
 import { hashStringSync } from "@fireproof/core-runtime";
 
 const TEST_TIMEOUT = 5000;

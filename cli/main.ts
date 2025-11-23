@@ -10,6 +10,8 @@ import { keyCmd } from "./cloud-token-key-cmd.js";
 import { preSignedUrlCmd } from "./pre-signed-url.js";
 import { dependabotCmd } from "./dependabot-cmd.js";
 import { testContainerCmd } from "./test-container-cmd.js";
+import { deviceIdCmd } from "./device-id-cmd.js";
+import { wellKnownCmd } from "./well-known-cmd.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -34,6 +36,8 @@ import { testContainerCmd } from "./test-container-cmd.js";
       setDependencies: setDependenciesCmd(sthis),
       dependabot: dependabotCmd(sthis),
       testContainer: testContainerCmd(sthis),
+      deviceId: deviceIdCmd(sthis),
+      wellKnown: wellKnownCmd(sthis),
     },
   });
 

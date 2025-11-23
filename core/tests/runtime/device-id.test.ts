@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, assert } from "vitest";
+import { describe, it, expect, beforeEach, assert, expectTypeOf } from "vitest";
 import { decodeProtectedHeader, importJWK, jwtVerify } from "jose";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import {
@@ -15,8 +15,10 @@ import {
   Extensions,
   JWKPrivate,
   JWTPayload,
+  JWTPayloadSchema,
   Subject,
 } from "@fireproof/core-types-base";
+import z from "zod/v4";
 
 const sthis = ensureSuperThis();
 
@@ -400,6 +402,58 @@ describe("DeviceIdSignMsg", () => {
 
     const ret = await deviceVerifyMsg.verifyWithCertificate(jwt);
     expect(ret.valid).toBe(true);
+  });
+
+  it("should verify JWT with valid certificate schema", async () => {
+    const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
+    const schema = JWTPayloadSchema.extend({
+      message: z.string(),
+      id: z.number(),
+    });
+    const payload = { ...jwtPayload, message: "verification test", id: 123 };
+    const jwt = await signMsg.sign(payload);
+    expect(jwt).toBeDefined();
+    expect(typeof jwt).toBe("string");
+
+    const caCert = await ca.caCertificate();
+
+    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [caCert.Ok()], {
+      clockTolerance: 60,
+      maxAge: 3600,
+    });
+
+    const ret = await deviceVerifyMsg.verifyWithCertificate(jwt, schema);
+    expect(ret.valid).toBe(true);
+    if (ret.valid) {
+      expectTypeOf(ret.payload).toEqualTypeOf<z.infer<typeof schema>>();
+      expect(ret.payload.message).toBe(payload.message);
+      expect(ret.payload.id).toBe(payload.id);
+    }
+  });
+
+  it("should verify JWT with valid certificate fail schema", async () => {
+    const signMsg = new DeviceIdSignMsg(base64, deviceKey, certificate);
+    const schema = JWTPayloadSchema.extend({
+      message: z.string(),
+      id: z.number(),
+    });
+    const payload = { ...jwtPayload, message: "verification test", id: "123" };
+    const jwt = await signMsg.sign(payload);
+    expect(jwt).toBeDefined();
+    expect(typeof jwt).toBe("string");
+
+    const caCert = await ca.caCertificate();
+
+    const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [caCert.Ok()], {
+      clockTolerance: 60,
+      maxAge: 3600,
+    });
+
+    const ret = await deviceVerifyMsg.verifyWithCertificate(jwt, schema);
+    expect(ret.valid).toBe(false);
+    if (!ret.valid) {
+      expect(ret.error.message).toContain("Invalid input: expected number, received string");
+    }
   });
 
   it.skip("change the caKey", async () => {

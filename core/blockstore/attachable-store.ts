@@ -1,5 +1,4 @@
-import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI, AppContext } from "@adviser/cement";
-import { toSortedArray } from "@adviser/cement/utils";
+import { KeyedResolvOnce, CoerceURI, isCoerceURI, URI, AppContext, toSortedArray } from "@adviser/cement";
 import { toStoreRuntime } from "./store-factory.js";
 import {
   AttachedStores,

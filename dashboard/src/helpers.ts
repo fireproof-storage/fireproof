@@ -25,4 +25,4 @@ export const DEFAULT_ENDPOINT = BuildURI.from("fireproof://cloud.fireproof.direc
   .URI();
 export const SYNC_DB_NAME = "fp_sync";
 
-export const API_URL = import.meta.env.VITE_API_URL ?? "/api";
+export const DASHAPI_URL = import.meta.env.VITE_DASHAPI_URL ?? "/api";

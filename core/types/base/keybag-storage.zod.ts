@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { DeviceIdKeyBagItemSchema } from "./device-id-keybag-item.zod.js";
 
 export const V1StorageKeyItemSchema = z

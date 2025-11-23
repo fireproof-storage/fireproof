@@ -518,7 +518,9 @@ export function buildCmd(sthis: SuperThis) {
         },
       });
       if (!args.noBuild) {
-        await $`pnpm run build`;
+        await $`pnpm run build`.catch((err) => {
+          process.exit(err.exitCode);
+        });
       }
       for (const f of ["package.json", "README.md", "LICENSE.md"]) {
         await fs.copyFile(f, path.join("../npm", f));
@@ -528,7 +530,10 @@ export function buildCmd(sthis: SuperThis) {
         const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
         await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
         if (!isPrivate(packageJson.originalPackageJson)) {
-          await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
+          const res = await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
+          if (res.exitCode !== 0) {
+            throw new Error(`Failed to pack the package.`);
+          }
         }
       }
 
@@ -542,7 +547,10 @@ export function buildCmd(sthis: SuperThis) {
         if (args.packDestDir) {
           await fs.copyFile(path.join(path.dirname(args.packDestDir), ".gitignore"), ".gitignore");
           await fs.copyFile(path.join(path.dirname(args.packDestDir), ".npmignore"), ".npmignore");
-          await $`pnpm pack --out "${args.packDestDir}/%s.tgz"`;
+          const res = await $`pnpm pack --out "${args.packDestDir}/%s.tgz"`;
+          if (res.exitCode !== 0) {
+            throw new Error(`Failed to pack the package.`);
+          }
         }
       } else {
         if (!args.registry) {
@@ -571,7 +579,10 @@ export function buildCmd(sthis: SuperThis) {
 
         const registry = ["--registry", args.registry];
         const tagsOpts = tags.map((tag) => ["--tag", tag]).flat();
-        await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`;
+        const res = await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`;
+        if (res.exitCode !== 0) {
+          throw new Error(`Failed to publish the package.`);
+        }
         // pnpm publish --access public --no-git-checks ${tagsOpts}
       }
     },

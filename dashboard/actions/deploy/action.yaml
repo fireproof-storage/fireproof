@@ -23,11 +23,11 @@ inputs:
     description: "Clerk publishable key"
     required: true
   CLERK_PUB_JWT_URL:
-    description: "Clerk public JWT URL"
+    description: "Clerk public JWT URL could be comma seperated for multiple"
     required: true
   CLERK_PUB_JWT_KEY:
-    description: "Clerk public JWT key"
-    required: true
+    description: "Clerk public JWT key if your key is not fetchable singleline PEM,JSON, its totally fine to have multiple keys"
+    required: false
   CLOUDFLARE_ENV:
     description: "Cloudflare environment (e.g., production, staging)"
     required: true
@@ -70,15 +70,18 @@ runs:
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
         pnpm run drizzle:d1-remote
+        pnpm exec core-cli wellKnown --jsons --presetKey "$CLERK_PUB_JWT_KEY" "$CLERK_PUB_JWT_URL" > key
+        CLERK_PUB_JWT_KEY="$(cat key)"
+        echo "PubKeys:" $CLERK_PUB_JWT_KEY
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
           --fromEnv CLERK_PUBLISHABLE_KEY \
           --fromEnv CLERK_PUB_JWT_URL \
           --fromEnv CLERK_PUB_JWT_KEY \
-          --fromEnv MAX_TENANTS \
           --fromEnv MAX_ADMIN_USERS \
-          --fromEnv MAX_MEMBER_USERS \
           --fromEnv MAX_INVITES \
           --fromEnv MAX_LEDGERS \
+          --fromEnv MAX_MEMBER_USERS \
+          --fromEnv MAX_TENANTS \
           --fromEnv CLOUD_SESSION_TOKEN_SECRET \
           --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
           pnpm exec wrangler -c ./wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk

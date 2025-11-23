@@ -1,5 +1,5 @@
 import { CTJsonWebKey } from "@adviser/cement";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // JWK Schema
 

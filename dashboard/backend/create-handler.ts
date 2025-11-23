@@ -1,17 +1,16 @@
 // import { auth } from "./better-auth.js";
 import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
-import { verifyToken } from "@clerk/backend";
-import { verifyJwt } from "@clerk/backend/jwt";
-import { SuperThis, SuperThisOpts } from "@fireproof/core";
+import { FPDeviceIDSessionSchema, SuperThis, SuperThisOpts } from "@fireproof/core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
-import { VerifiedAuth } from "@fireproof/core-protocols-dashboard";
-import { ensureSuperThis, ensureLogger, coerceInt } from "@fireproof/core-runtime";
+import { FPClerkClaim, FPClerkClaimSchema, VerifiedAuth } from "@fireproof/core-protocols-dashboard";
+import { ensureSuperThis, ensureLogger, coerceInt, sts } from "@fireproof/core-runtime";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
 import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
-// import { jwtVerify } from "jose/jwt/verify";
-// import { JWK } from "jose";
+import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fireproof/core-device-id";
+import { verifyToken as ClerkVerifyToken } from "@clerk/backend";
+import { exportSPKI, importJWK } from "jose";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
@@ -28,106 +27,71 @@ export function DefaultHttpHeaders(...h: CoercedHeadersInit[]): HeadersInit {
     .AsHeaderInit();
 }
 
-interface ClerkTemplate {
-  readonly app_metadata: unknown;
-  readonly azp: string;
-  readonly exp: number;
-  readonly iat: number;
-  readonly iss: string;
-  readonly jti: string;
-  readonly nbf: number;
-  readonly role: string;
-  readonly sub: string;
-  readonly params: {
-    readonly email: string;
-    readonly first: string;
-    readonly last: string;
-    readonly name: null;
-  };
-}
-
 class ClerkApiToken implements FPApiToken {
   readonly sthis: SuperThis;
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
   }
   async verify(token: string): Promise<Result<VerifiedAuth>> {
-    const rEnvVal = this.sthis.env.gets({
-      CLERK_PUB_JWT_KEY: param.OPTIONAL,
-      CLERK_PUB_JWT_URL: param.OPTIONAL,
-    });
-    if (rEnvVal.isErr()) {
-      return Result.Err(rEnvVal.Err());
+    const keyAndUrls: {
+      readonly key: string;
+      readonly url?: string;
+    }[] = [];
+    // eslint-disable-next-line no-constant-condition
+    for (let idx = 0; true; idx++) {
+      const suffix = !idx ? "" : `_${idx}`;
+      const key = `CLERK_PUB_JWT_KEY${suffix}`;
+      const url = `CLERK_PUB_JWT_URL${suffix}`;
+      const rEnvVal = this.sthis.env.gets({
+        [key]: param.OPTIONAL,
+        [url]: param.OPTIONAL,
+      });
+      if (rEnvVal.isErr()) {
+        return Result.Err(rEnvVal.Err());
+      }
+      const { [key]: keyVal, [url]: urlVal } = rEnvVal.Ok();
+      if (!keyVal) {
+        break;
+      }
+      keyAndUrls.push({
+        key: keyVal,
+        url: urlVal,
+      });
     }
-    const { CLERK_PUB_JWT_URL, CLERK_PUB_JWT_KEY } = rEnvVal.Ok();
-
-    const rt = await exception2Result(async () => {
-      // Try static JWT key first if provided
-      if (CLERK_PUB_JWT_KEY) {
-        const rCt = await exception2Result(
-          async () => (await verifyToken(token, { jwtKey: CLERK_PUB_JWT_KEY })) as unknown as ClerkTemplate,
-        );
-        if (rCt.isOk()) {
-          return rCt.Ok();
-        }
-      }
-
-      // Extract issuer from JWT and use it if present, otherwise fall back to config
-      const [, payloadB64] = token.split(".");
-      if (!payloadB64) {
-        throw new Error("Invalid JWT format - missing payload");
-      }
-
-      const payload = JSON.parse(atob(payloadB64));
-      const issuer = payload.iss;
-
-      let jwksUrl: string;
-      if (issuer && issuer.startsWith("https://")) {
-        // Use issuer from JWT (preferred)
-        jwksUrl = `${issuer}/.well-known/jwks.json`;
-      } else if (CLERK_PUB_JWT_URL) {
-        // Fall back to configured URL
-        jwksUrl = CLERK_PUB_JWT_URL;
-      } else {
-        throw new Error("No valid JWKS URL: JWT missing issuer and CLERK_PUB_JWT_URL not set");
-      }
-
-      // Validate URL format and security
-      if (!jwksUrl.startsWith("https://")) {
-        throw new Error(`JWKS URL must use HTTPS: ${jwksUrl}`);
-      }
-
-      const rJwtKey = await exception2Result(
-        async () =>
-          await fetch(jwksUrl, {
-            method: "GET",
-            signal: AbortSignal.timeout(5000), // 5 second timeout
-          }),
-      );
-
-      if (rJwtKey.isOk() && rJwtKey.Ok().ok) {
-        const rCt = await exception2Result(async () => {
-          // Parse JWKS response
-          const jwksResponse = await rJwtKey.Ok().json<{ keys: JsonWebKey[] }>();
-
-          if (!jwksResponse.keys || jwksResponse.keys.length === 0) {
-            throw new Error(`No keys found in JWKS from ${jwksUrl}`);
+    const rt = await sts.verifyToken(
+      token,
+      keyAndUrls.map((k) => k.key),
+      keyAndUrls.map((k) => k.url).filter((u): u is string => !!u),
+      {
+        parseSchema: (payload: unknown): Result<FPClerkClaim> => {
+          const r = FPClerkClaimSchema.safeParse(payload);
+          if (r.success) {
+            return Result.Ok(r.data);
+          } else {
+            return Result.Err(r.error);
           }
-
-          // Use the first key (standard practice for JWKS endpoints)
-          const jwsPubKey = jwksResponse.keys[0];
-
-          return (await verifyJwt(token, { key: jwsPubKey })) as unknown as ClerkTemplate;
-        });
-        if (rCt.isOk()) {
-          return rCt.Ok();
-        } else {
-          throw new Error(`verifyJwt failed ${rCt.Err()} from ${jwksUrl}`);
-        }
-      }
-
-      throw new Error(`Failed to fetch JWKS from ${jwksUrl}`);
-    });
+        },
+        verifyToken: async (token, key) => {
+          const publicKey = await importJWK(key, "RS256");
+          const pem = await exportSPKI(publicKey as CryptoKey);
+          const r = await exception2Result(() =>
+            ClerkVerifyToken(token, {
+              jwtKey: pem,
+              authorizedParties: ["http://localhost:7370"],
+            }),
+          );
+          if (r.isErr()) {
+            return Result.Err(r);
+          }
+          if (!r.Ok()) {
+            return Result.Err("ClerkVerifyToken: failed");
+          }
+          return Result.Ok({
+            payload: r.Ok(),
+          });
+        },
+      },
+    );
     if (rt.isErr()) {
       return Result.Err(rt.Err());
     }
@@ -141,6 +105,58 @@ class ClerkApiToken implements FPApiToken {
         ...t.params,
       },
     });
+  }
+}
+
+const rDeviceIdCA = Lazy((sthis: SuperThis) => {
+  const rEnv = sthis.env.gets({
+    DEVICE_ID_CA_PRIV_KEY: param.REQUIRED,
+    DEVICE_ID_CA_CERT: param.REQUIRED,
+  });
+  if (rEnv.isErr()) {
+    throw rEnv.Err();
+  }
+  const envVals = rEnv.Ok();
+  return DeviceIdCA.from(
+    sthis,
+    {
+      privateKey: envVals.DEVICE_ID_CA_PRIV_KEY,
+      signedCert: envVals.DEVICE_ID_CA_CERT,
+    },
+    {
+      generateSerialNumber: async () => sthis.nextId(32).str,
+    },
+  );
+});
+
+class DeviceIdApiToken implements FPApiToken {
+  readonly sthis: SuperThis;
+  readonly opts: VerifyWithCertificateOptions;
+  constructor(sthis: SuperThis, opts: VerifyWithCertificateOptions) {
+    this.sthis = sthis;
+    this.opts = opts;
+  }
+  async verify(token: string): Promise<Result<VerifiedAuth>> {
+    const rCA = await rDeviceIdCA(this.sthis);
+    if (rCA.isErr()) {
+      return Result.Err(rCA.Err());
+    }
+    const verify = new DeviceIdVerifyMsg(this.sthis.txt.base64, [(await rCA.Ok().caCertificate()).Ok()], {
+      maxAge: 3600,
+      ...this.opts,
+    });
+
+    const res = await verify.verifyWithCertificate(token, FPDeviceIDSessionSchema);
+    if (res.valid) {
+      return Result.Ok({
+        type: "device-id",
+        token,
+        userId: res.payload.deviceId,
+        provider: "device-id",
+        params: {},
+      });
+    }
+    return Result.Err(res.error);
   }
 }
 
@@ -177,6 +193,21 @@ class ClerkApiToken implements FPApiToken {
 
 export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
 
+const tokenApi = Lazy(async (sthis: SuperThis) => {
+  // const rDeviceIdCA = await DeviceIdCA.from(sthis, {
+  //   privateKeyEnv: "DEVICE_ID_CA_PRIV_KEY",
+  //   signedCertEnv: "DEVICE_ID_CA_CERT",
+  // }, {
+  //   generateSerialNumber: async () => sthis.nextId(32).str,
+  // });
+  return {
+    "device-id": new DeviceIdApiToken(sthis, {
+      clockTolerance: 60,
+    }),
+    clerk: new ClerkApiToken(sthis),
+  };
+});
+
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
 export async function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
@@ -191,34 +222,49 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
   //   sthis.logger.Error().Err(e).Msg("Error setting import.meta.env");
   // }
   sthis.env.sets(env as unknown as Record<string, string>);
-  const rClerkCloud = sthis.env.gets({
+  const rEnvVals = sthis.env.gets({
     CLOUD_SESSION_TOKEN_PUBLIC: param.REQUIRED,
     CLERK_PUBLISHABLE_KEY: param.REQUIRED,
+    DEVICE_ID_CA_PRIV_KEY: param.REQUIRED,
+    DEVICE_ID_CA_CERT: param.REQUIRED,
   });
-  if (rClerkCloud.isErr()) {
-    throw rClerkCloud.Err();
+  if (rEnvVals.isErr()) {
+    throw rEnvVals.Err();
   }
-  const rCloudPublicKey = await getCloudPubkeyFromEnv(rClerkCloud.Ok().CLOUD_SESSION_TOKEN_PUBLIC, sthis);
+  const envVals = rEnvVals.Ok();
+
+  const rCloudPublicKey = await getCloudPubkeyFromEnv(envVals.CLOUD_SESSION_TOKEN_PUBLIC, sthis);
   if (rCloudPublicKey.isErr()) {
     throw rCloudPublicKey.Err();
   }
-  const logger = ensureLogger(sthis, "createHandler");
-  const fpApi = new FPApiSQL(
+
+  // Create DeviceIdCA from environment variables
+  const rDeviceIdCA = await DeviceIdCA.from(
     sthis,
-    db,
     {
-      clerk: new ClerkApiToken(sthis),
+      privateKey: envVals.DEVICE_ID_CA_PRIV_KEY,
+      signedCert: envVals.DEVICE_ID_CA_CERT,
     },
     {
-      cloudPublicKeys: [rCloudPublicKey.Ok()],
-      clerkPublishableKey: rClerkCloud.Ok().CLERK_PUBLISHABLE_KEY,
-      maxTenants: coerceInt(env.MAX_TENANTS, 10),
-      maxAdminUsers: coerceInt(env.MAX_ADMIN_USERS, 5),
-      maxMemberUsers: coerceInt(env.MAX_MEMBER_USERS, 5),
-      maxInvites: coerceInt(env.MAX_INVITES, 10),
-      maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
+      generateSerialNumber: async () => sthis.nextId(32).str,
     },
   );
+
+  if (rDeviceIdCA.isErr()) {
+    throw rDeviceIdCA.Err();
+  }
+
+  const logger = ensureLogger(sthis, "createHandler");
+  const fpApi = new FPApiSQL(sthis, db, await tokenApi(sthis), {
+    cloudPublicKeys: [rCloudPublicKey.Ok()],
+    clerkPublishableKey: envVals.CLERK_PUBLISHABLE_KEY,
+    maxTenants: coerceInt(env.MAX_TENANTS, 10),
+    maxAdminUsers: coerceInt(env.MAX_ADMIN_USERS, 5),
+    maxMemberUsers: coerceInt(env.MAX_MEMBER_USERS, 5),
+    maxInvites: coerceInt(env.MAX_INVITES, 10),
+    maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
+    deviceCA: rDeviceIdCA.Ok(),
+  });
   return async (req: Request): Promise<Response> => {
     const startTime = performance.now();
     if (req.method === "OPTIONS") {
@@ -299,6 +345,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
 
       case FPAPIMsg.isReqExtendToken(jso):
         res = fpApi.extendToken(jso);
+        break;
+
+      case FPAPIMsg.isReqCertFromCsr(jso):
+        res = fpApi.getCertFromCsr(jso);
         break;
 
       default:
