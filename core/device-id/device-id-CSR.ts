@@ -1,6 +1,6 @@
 import { calculateJwkThumbprint, SignJWT } from "jose";
 import { DeviceIdKey } from "./device-id-key.js";
-import { Subject, Extensions, FPDeviceIDPayload, FPDeviceIDPayloadSchema, SuperThis } from "@fireproof/core-types-base";
+import { Subject, Extensions, FPDeviceIDCSRPayload, FPDeviceIDCSRPayloadSchema, SuperThis } from "@fireproof/core-types-base";
 import { exception2Result, Result } from "@adviser/cement";
 
 export class DeviceIdCSR {
@@ -11,9 +11,9 @@ export class DeviceIdCSR {
     this.#sthis = sthis;
   }
   // Create CSR payload
-  async createCSRPayload(subject: Subject, extensions: Extensions = {}): Promise<FPDeviceIDPayload> {
+  async createCSRPayload(subject: Subject, extensions: Extensions = {}): Promise<FPDeviceIDCSRPayload> {
     const now = Math.floor(Date.now() / 1000);
-    return FPDeviceIDPayloadSchema.parse({
+    return FPDeviceIDCSRPayloadSchema.parse({
       sub: subject.commonName,
       iss: "csr-client",
       aud: "certificate-authority",
@@ -33,7 +33,7 @@ export class DeviceIdCSR {
   }
 
   // Sign the CSR
-  async signCSR(payload: FPDeviceIDPayload): Promise<Result<string>> {
+  async signCSR(payload: FPDeviceIDCSRPayload): Promise<Result<string>> {
     return exception2Result(async () => {
       const publicJWK = await this.#key.publicKey();
       // Create JWS

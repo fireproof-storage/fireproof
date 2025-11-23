@@ -3,8 +3,6 @@ import {
   MsgWithError,
   buildRes,
   NextId,
-  ReqSignedUrl,
-  ResSignedUrl,
   ReqSignedUrlParam,
   buildReqSignedUrl,
   GwCtx,
@@ -12,12 +10,10 @@ import {
   MsgWithTenantLedger,
   MsgTypesCtx,
   MsgWithConn,
+  ResSignedUrlSchema,
 } from "./msg-types.js";
 import { CalculatePreSignedUrl } from "./msg-types-data.js";
-
-export interface ReqGetWAL extends ReqSignedUrl {
-  readonly type: "reqGetWAL";
-}
+import { z } from "zod";
 
 export function MsgIsReqGetWAL(msg: MsgBase): msg is ReqGetWAL {
   return msg.type === "reqGetWAL";
@@ -25,11 +21,6 @@ export function MsgIsReqGetWAL(msg: MsgBase): msg is ReqGetWAL {
 
 export function buildReqGetWAL(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqGetWAL {
   return buildReqSignedUrl<ReqGetWAL>(sthis, "reqGetWAL", sup, ctx);
-}
-
-export interface ResGetWAL extends ResSignedUrl {
-  readonly type: "resGetWAL";
-  // readonly payload: Uint8Array; // transfered via JSON base64
 }
 
 export function MsgIsResGetWAL(msg: MsgBase): msg is ResGetWAL {
@@ -50,21 +41,12 @@ export function buildResGetWAL(
   );
 }
 
-export interface ReqPutWAL extends Omit<ReqSignedUrl, "type"> {
-  readonly type: "reqPutWAL";
-  // readonly payload: Uint8Array; // transfered via JSON base64
-}
-
 export function MsgIsReqPutWAL(msg: MsgBase): msg is ReqPutWAL {
   return msg.type === "reqPutWAL";
 }
 
 export function buildReqPutWAL(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqPutWAL {
   return buildReqSignedUrl<ReqPutWAL>(sthis, "reqPutWAL", sup, ctx);
-}
-
-export interface ResPutWAL extends Omit<ResSignedUrl, "type"> {
-  readonly type: "resPutWAL";
 }
 
 export function MsgIsResPutWAL(msg: MsgBase): msg is ResPutWAL {
@@ -85,20 +67,12 @@ export function buildResPutWAL(
   );
 }
 
-export interface ReqDelWAL extends Omit<ReqSignedUrl, "type"> {
-  readonly type: "reqDelWAL";
-}
-
 export function MsgIsReqDelWAL(msg: MsgBase): msg is ReqDelWAL {
   return msg.type === "reqDelWAL";
 }
 
 export function buildReqDelWAL(sthis: NextId, sup: ReqSignedUrlParam, ctx: GwCtx): ReqDelWAL {
   return buildReqSignedUrl<ReqDelWAL>(sthis, "reqDelWAL", sup, ctx);
-}
-
-export interface ResDelWAL extends Omit<ResSignedUrl, "type"> {
-  readonly type: "resDelWAL";
 }
 
 export function MsgIsResDelWAL(msg: MsgBase): msg is ResDelWAL {
@@ -118,3 +92,46 @@ export function buildResDelWAL(
     ctx,
   );
 }
+
+// ============================================================================
+// Zod Schemas for WAL Messages
+// ============================================================================
+
+// ReqGetWAL and ResGetWAL
+export const ReqGetWALSchema = ResSignedUrlSchema.extend({
+  type: z.literal("reqGetWAL"),
+});
+
+export type ReqGetWAL = z.infer<typeof ReqGetWALSchema>;
+
+export const ResGetWALSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resGetWAL"),
+});
+
+export type ResGetWAL = z.infer<typeof ResGetWALSchema>;
+
+// ReqPutWAL and ResPutWAL
+export const ReqPutWALSchema = ResSignedUrlSchema.extend({
+  type: z.literal("reqPutWAL"),
+});
+
+export type ReqPutWAL = z.infer<typeof ReqPutWALSchema>;
+
+export const ResPutWALSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resPutWAL"),
+});
+
+export type ResPutWAL = z.infer<typeof ResPutWALSchema>;
+
+// ReqDelWAL and ResDelWAL
+export const ReqDelWALSchema = ResSignedUrlSchema.extend({
+  type: z.literal("reqDelWAL"),
+});
+
+export type ReqDelWAL = z.infer<typeof ReqDelWALSchema>;
+
+export const ResDelWALSchema = ResSignedUrlSchema.extend({
+  type: z.literal("resDelWAL"),
+});
+
+export type ResDelWAL = z.infer<typeof ResDelWALSchema>;
