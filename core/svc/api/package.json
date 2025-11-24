@@ -40,6 +40,6 @@
     "@fireproof/core-svc-protocol": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   }
 }
