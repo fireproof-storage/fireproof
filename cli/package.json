@@ -41,7 +41,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20251119.1",
+    "@typescript/native-preview": "7.0.0-dev.20251123.1",
     "aws4fetch": "^1.0.20",
     "cmd-ts": "^0.14.3",
     "find-up": "^8.0.0",
