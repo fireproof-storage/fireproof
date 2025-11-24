@@ -6,6 +6,10 @@ import { getKeyBag } from "@fireproof/core-keybag";
 import { decodeJwt } from "jose";
 import fs from "fs-extra";
 import { base58btc } from "multiformats/bases/base58";
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import open from "open";
+import { Future, timeouted, isSuccess, isTimeout, BuildURI } from "@adviser/cement";
 
 function getStdin(): Promise<string> {
   return new Promise<string>((resolve) => {
@@ -472,6 +476,182 @@ export function deviceIdCmd(sthis: SuperThis) {
     },
   });
 
+  const registerCmd = command({
+    name: "register",
+    description: "Register device by creating key pair, generating CSR, and obtaining certificate from CA.",
+    args: {
+      ...subjectOptions(),
+      caUrl: option({
+        long: "ca-url",
+        description: "CA URL to open in browser for certificate signing",
+        type: string,
+        defaultValue: () => "http://localhost:7370/fp/cloud/csr2cert",
+      }),
+      port: option({
+        long: "port",
+        description: "Local port for callback server (random port if not specified)",
+        type: string,
+        defaultValue: () => "",
+      }),
+      timeout: option({
+        long: "timeout",
+        description: "Timeout in seconds to wait for certificate from CA",
+        type: string,
+        defaultValue: () => "60",
+      }),
+      forceRenew: flag({
+        long: "force-renew",
+        description: "Force certificate renewal even if one already exists",
+      }),
+    },
+    handler: async function (args) {
+      try {
+        const keyBag = await getKeyBag(sthis);
+        const existingDeviceIdResult = await keyBag.getDeviceId();
+
+        // Check if certificate already exists
+        if (existingDeviceIdResult.cert.IsSome() && !args.forceRenew) {
+          console.log("Device already has a certificate. Registration not needed.");
+          console.log("Use --force-renew to renew the certificate.");
+          const jwk = existingDeviceIdResult.deviceId.unwrap();
+          const deviceIdKey = (await DeviceIdKey.createFromJWK(jwk)).unwrap();
+          const fingerprint = await deviceIdKey.fingerPrint();
+          console.log(`Existing Device ID Fingerprint: ${fingerprint}`);
+          process.exit(0);
+          return;
+        }
+
+        if (args.forceRenew && existingDeviceIdResult.cert.IsSome()) {
+          console.log("Force renewing certificate...");
+        }
+
+        // Step 1: Create or get device ID key
+        let deviceIdKey: DeviceIdKey;
+        if (existingDeviceIdResult.deviceId.IsNone()) {
+          console.log("Creating new device ID key pair...");
+          deviceIdKey = await DeviceIdKey.create();
+          const jwkPrivate = await deviceIdKey.exportPrivateJWK();
+          await keyBag.setDeviceId(jwkPrivate);
+          const fingerprint = await deviceIdKey.fingerPrint();
+          console.log(`Created Device ID Fingerprint: ${fingerprint}`);
+        } else {
+          console.log("Using existing device ID key...");
+          const jwkPrivate = existingDeviceIdResult.deviceId.unwrap();
+          const createResult = await DeviceIdKey.createFromJWK(jwkPrivate);
+          if (createResult.isErr()) {
+            console.error("Error loading existing device ID:", createResult.Err());
+            process.exit(1);
+            return;
+          }
+          deviceIdKey = createResult.Ok();
+          const fingerprint = await deviceIdKey.fingerPrint();
+          console.log(`Device ID Fingerprint: ${fingerprint}`);
+        }
+
+        // Step 2: Generate CSR
+        console.log("Generating Certificate Signing Request (CSR)...");
+        const deviceIdCSR = new DeviceIdCSR(sthis, deviceIdKey);
+        const subject = buildSubject(args);
+        const csrResult = await deviceIdCSR.createCSR(subject);
+
+        if (csrResult.isErr()) {
+          console.error("Failed to generate CSR:", csrResult.Err());
+          process.exit(1);
+          return;
+        }
+
+        const csrJWS = csrResult.Ok();
+        console.log("CSR generated successfully.");
+
+        // Step 3: Start local server on specified or random port with Future for cert
+        const certFuture = new Future<string>();
+        const app = new Hono();
+        let serverInstance: ReturnType<typeof serve> | null = null;
+
+        app.get("/cert", (c) => {
+          const cert = c.req.query("cert");
+          if (!cert) {
+            certFuture.reject(new Error("Missing cert parameter"));
+            return c.text("Missing cert parameter", 400);
+          }
+          console.log("\nCertificate received from CA!");
+          certFuture.resolve(cert);
+          return c.text("Certificate received successfully. You can close this window.");
+        });
+
+        // Determine port: use specified port or generate random one
+        const port = args.port ? parseInt(args.port, 10) : Math.floor(Math.random() * (65535 - 49152) + 49152);
+        const callbackUrl = `http://localhost:${port}/cert`;
+
+        console.log(`Starting local server on port ${port}...`);
+        serverInstance = serve({
+          fetch: app.fetch,
+          port,
+        });
+
+        // Step 4: Encode CSR as base64 and construct CA URL using BuildURI
+        // const csrBase64 = sthis.txt.base64.encode(sthis.txt.encode(csrPEM));
+        const caUri = BuildURI.from(args.caUrl).setParam("csr", csrJWS).setParam("returnUrl", callbackUrl);
+        const caUrlWithParams = caUri.toString();
+
+        console.log(`\nOpening browser to CA for certificate signing...`);
+        console.log(`URL: ${caUrlWithParams}\n`);
+
+        // Step 5: Open browser
+        try {
+          await open(caUrlWithParams);
+        } catch (error) {
+          console.log("Could not automatically open browser. Please open this URL manually:");
+          console.log(caUrlWithParams);
+        }
+
+        // Step 6: Wait for certificate with timeout
+        console.log("Waiting for certificate from CA...");
+        console.log("(The browser should redirect back to this application after signing)\n");
+
+        const timeoutMs = parseInt(args.timeout, 10) * 1000;
+        const result = await timeouted(certFuture.asPromise(), { timeout: timeoutMs });
+
+        // Close server
+        if (serverInstance) {
+          serverInstance.close();
+        }
+
+        if (!isSuccess(result)) {
+          if (isTimeout(result)) {
+            console.error(`Timeout waiting for certificate from CA (${args.timeout}s).`);
+          } else {
+            console.error("Failed to receive certificate:", result.state === "error" ? result.error : result);
+          }
+          process.exit(1);
+          return;
+        }
+
+        const receivedCert = result.value;
+
+        // Step 7: Store certificate (cert is a base64 string, not PEM)
+        console.log("Storing certificate...");
+        const decoded = decodeJwt(receivedCert);
+        const certPayload = CertificatePayloadSchema.parse(decoded);
+
+        const jwkPrivate = await deviceIdKey.exportPrivateJWK();
+        const certToStore = {
+          certificateJWT: receivedCert,
+          certificatePayload: certPayload,
+        };
+
+        await keyBag.setDeviceId(jwkPrivate, certToStore);
+        console.log("\n✓ Registration complete! Certificate successfully stored with Device ID.");
+
+        const fingerprint = await deviceIdKey.fingerPrint();
+        console.log(`Device ID Fingerprint: ${fingerprint}`);
+      } catch (error) {
+        console.error("An error occurred during registration:", error);
+        process.exit(1);
+      }
+    },
+  });
+
   return subcommands({
     name: "device-id",
     description: "Manage device identities.",
@@ -481,6 +661,7 @@ export function deviceIdCmd(sthis: SuperThis) {
       export: exportCmd,
       cert: certCmd,
       "ca-cert": caCertCmd,
+      register: registerCmd,
     },
   });
 }
