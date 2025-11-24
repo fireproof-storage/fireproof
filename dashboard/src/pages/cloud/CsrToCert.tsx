@@ -1,5 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
+import { BuildURI } from "@adviser/cement";
 import { AppContext } from "../../app-context.js";
 
 interface CsrFormInputs {
@@ -7,14 +9,45 @@ interface CsrFormInputs {
 }
 
 export function CsrToCert() {
-  const ctx = useContext(AppContext);
+  const { cloud } = useContext(AppContext);
+  const [searchParams] = useSearchParams();
+  const csrParam = searchParams.get("csr");
+  const returnUrl = searchParams.get("returnUrl");
+
   const {
     register,
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm<CsrFormInputs>();
+  } = useForm<CsrFormInputs>({
+    defaultValues: {
+      csrContent: csrParam || "",
+    },
+  });
   const [certificate, setCertificate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hasAutoSubmitted = useRef(false);
+
+  // Auto-submit when CSR param is provided and session is ready
+  useEffect(() => {
+    if (csrParam && !hasAutoSubmitted.current && cloud.sessionReady(true)) {
+      hasAutoSubmitted.current = true;
+      // Directly call onSubmit instead of simulating click
+      onSubmit({ csrContent: csrParam });
+    }
+  }, [csrParam, cloud.sessionReady(true)]);
+
+  // Navigate back to returnUrl with cert param after certificate is received
+  useEffect(() => {
+    if (certificate && returnUrl) {
+      const timer = setTimeout(() => {
+        const urlWithCert = BuildURI.from(returnUrl).setParam("cert", certificate).toString();
+        console.log(">>>>>", urlWithCert);
+        window.location.href = urlWithCert;
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [certificate, returnUrl]);
 
   const onSubmit = async (data: CsrFormInputs) => {
     try {
@@ -22,7 +55,7 @@ export function CsrToCert() {
       setCertificate(null);
       console.log("Submitting CSR:", data.csrContent);
 
-      const result = await ctx.cloud.api.getCertFromCsr({ csr: data.csrContent });
+      const result = await cloud.api.getCertFromCsr({ csr: data.csrContent });
 
       if (result.isOk()) {
         const response = result.Ok();
@@ -75,6 +108,11 @@ export function CsrToCert() {
       {certificate && (
         <div className="mt-4">
           <h3 className="text-lg font-semibold mb-2">Signed Certificate</h3>
+          {returnUrl && (
+            <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+              Redirecting back in 3 seconds...
+            </div>
+          )}
           <div className="bg-green-50 border border-green-200 rounded-md p-4">
             <textarea
               readOnly
