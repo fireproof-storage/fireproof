@@ -25,7 +25,11 @@
     "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "^0.4.72",    "@fireproof/core": "workspace:0.0.0",
+    "@adviser/cement": "^0.4.72",
+    "@clerk/backend": "^2.23.2",
+    "@clerk/clerk-js": "^5.109.2",
+    "@clerk/clerk-react": "^5.56.2",
+    "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-device-id": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
     "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
@@ -48,11 +52,11 @@
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
     "use-fireproof": "workspace:0.0.0",
-    "zod": "^4.1.13"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@adviser/cement": "^0.4.72",    "@cloudflare/vite-plugin": "^1.15.0",
-    "@cloudflare/workers-types": "^4.20251121.0",
+    "@cloudflare/vite-plugin": "^1.15.0",
+    "@cloudflare/workers-types": "^4.20251125.0",
     "@eslint/js": "^9.39.1",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@libsql/client": "^0.15.15",
@@ -77,7 +81,7 @@
     "typescript": "^5.9.3",
     "vite": "^7.2.2",
     "vitest": "^4.0.8",
-    "wrangler": "^4.50.0",
+    "wrangler": "^4.49.0",
     "zx": "^8.8.5"
   }
 }
