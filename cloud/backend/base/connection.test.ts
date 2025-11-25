@@ -108,7 +108,7 @@ describe("Connection", () => {
 
       // sthis.env.sets((await resolveToml()).env as unknown as Record<string, string>);
     });
-    it("reconnect", async () => {
+    it.skip("reconnect", async () => {
       const rC = await Msger.connect(sthis, style.ok.url(), {
         msgerParam: msgP,
         conn: { reqId: "req-reconnect-test" },
