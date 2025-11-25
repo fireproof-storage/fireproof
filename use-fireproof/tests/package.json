@@ -1,0 +1,42 @@
+{
+  "name": "@fireproof/use-fireproof-test",
+  "version": "0.0.0",
+  "description": "Fireproof live ledger, JavaScript API and React hooks",
+  "type": "module",
+  "main": "./index.js",
+  "homepage": "https://use-fireproof.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "scripts": {
+    "build": "core-cli tsc",
+    "test": "vitest --run",
+    "pack": "echo core-cli build --doPack",
+    "publish": "echo core-cli build"
+  },
+  "author": "J Chris Anderson",
+  "license": "AFL-2.0",
+  "gptdoc": "Fireproof/React/Usage: import { useFireproof } from 'use-fireproof'; function WordCounterApp() { const { useLiveQuery, useDocument } = useFireproof('my-word-app'); const { doc: wordInput, merge: updateWordInput, save: saveWordInput, reset: clearWordInput } = useDocument({ word: '', timestamp: Date.now() }); const recentWords = useLiveQuery('timestamp', { descending: true, limit: 10 }); const { doc: { totalSubmitted }, merge: updateTotalSubmitted, save: saveTotalSubmitted } = useDocument({ _id: 'word-counter', totalSubmitted: 0 }); const handleWordSubmission = (e) => { e.preventDefault(); updateTotalSubmitted({ totalSubmitted: totalSubmitted + 1 }); saveTotalSubmitted(); saveWordInput(); clearWordInput();}; return (<><p>{totalSubmitted} words submitted</p><form onSubmit={handleWordSubmission}><input type='text' value={wordInput.word} onChange={e => updateWordInput({ word: e.target.value })} placeholder='Enter a word' /></form><ul>{recentWords.docs.map(entry => (<li key={entry._id}>{entry.word}</li>))} </ul></>) } export default WordCounterApp;",
+  "dependencies": {
+    "use-fireproof": "workspace:0.0.0"
+  },
+  "peerDependencies": {
+    "@adviser/cement": ">=0.4.20",
+    "react": ">=18.0.0"
+  },
+  "keywords": [
+    "react",
+    "ledger",
+    "json",
+    "live",
+    "sync"
+  ],
+  "devDependencies": {
+    "playwright": "^1.56.1",
+    "playwright-chromium": "^1.56.1"
+  }
+}

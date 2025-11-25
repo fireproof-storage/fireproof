@@ -12,4 +12,4 @@ fi
 
 rm -f $projectRoot/dist/fp-version.txt
 
-exec pnpm run publish --registry ${FP_NPM_REGISTRY:-http://localhost:4873}
+exec pnpm run publish --registry ${FP_NPM_REGISTRY:-http://localhost:4873} --pubTags smoke

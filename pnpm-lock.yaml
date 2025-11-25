@@ -181,7 +181,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof
+        version: link:../../use-fireproof/base
     devDependencies:
       '@types/react':
         specifier: ^19.2.6
@@ -441,7 +441,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof
+        version: link:../../use-fireproof/base
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -1062,7 +1062,7 @@ importers:
         version: 19.1.1
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof
+        version: link:../../use-fireproof/base
       uuidv7:
         specifier: ^1.0.2
         version: 1.0.2
@@ -1263,7 +1263,7 @@ importers:
         version: 2.3.3(react@19.2.0)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../use-fireproof
+        version: link:../use-fireproof/base
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1353,38 +1353,38 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
-  use-fireproof:
+  use-fireproof/base:
     dependencies:
       '@adviser/cement':
         specifier: ^0.4.72
         version: 0.4.72(typescript@5.9.3)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
-        version: link:../core/base
+        version: link:../../core/base
       '@fireproof/core-gateways-cloud':
         specifier: workspace:0.0.0
-        version: link:../core/gateways/cloud
+        version: link:../../core/gateways/cloud
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
-        version: link:../core/keybag
+        version: link:../../core/keybag
       '@fireproof/core-protocols-dashboard':
         specifier: workspace:0.0.0
-        version: link:../core/protocols/dashboard
+        version: link:../../core/protocols/dashboard
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
-        version: link:../core/runtime
+        version: link:../../core/runtime
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../core/types/base
+        version: link:../../core/types/base
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
-        version: link:../core/types/blockstore
+        version: link:../../core/types/blockstore
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:0.0.0
-        version: link:../core/types/protocols/cloud
+        version: link:../../core/types/protocols/cloud
       '@fireproof/vendor':
         specifier: workspace:0.0.0
-        version: link:../vendor
+        version: link:../../vendor
       dompurify:
         specifier: ^3.3.0
         version: 3.3.0
@@ -1392,7 +1392,7 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2
       react:
-        specifier: '>=18.0.0'
+        specifier: ^19.2.0
         version: 19.2.0
       ts-essentials:
         specifier: ^10.1.1
@@ -1400,28 +1400,26 @@ importers:
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
-        version: link:../cli
-      '@testing-library/react':
-        specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@types/deno':
-        specifier: ^2.5.0
-        version: 2.5.0
-      '@types/react':
-        specifier: ^19.2.6
-        version: 19.2.6
-      '@vitest/browser':
-        specifier: ^4.0.8
-        version: 4.0.8(vite@7.2.2(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
+        version: link:../../cli
+
+  use-fireproof/tests:
+    dependencies:
+      '@adviser/cement':
+        specifier: '>=0.4.20'
+        version: 0.4.72(typescript@5.9.3)
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.0
+      use-fireproof:
+        specifier: workspace:0.0.0
+        version: link:../base
+    devDependencies:
       playwright:
         specifier: ^1.56.1
         version: 1.56.1
       playwright-chromium:
         specifier: ^1.56.1
         version: 1.56.1
-      vitest:
-        specifier: ^4.0.8
-        version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
 
   vendor:
     dependencies:
