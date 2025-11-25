@@ -49,6 +49,7 @@
     "sync"
   ],
   "devDependencies": {
-    "@fireproof/core-cli": "workspace:0.0.0"
+    "@fireproof/core-cli": "workspace:0.0.0",
+    "@types/react": "^19.2.6"
   }
 }
