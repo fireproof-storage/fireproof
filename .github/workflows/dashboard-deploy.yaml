@@ -37,5 +37,9 @@ jobs:
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
           CLERK_PUB_JWT_URL: ${{ vars.CLERK_PUB_JWT_URL }}
           CLERK_PUB_JWT_KEY: ${{ vars.CLERK_PUB_JWT_KEY }}
+          CLERK_PUB_JWT_URL_1: ${{ vars.CLERK_PUB_JWT_URL_1 }}
+          CLERK_PUB_JWT_KEY_1: ${{ vars.CLERK_PUB_JWT_KEY_1 }}
+          CLERK_PUB_JWT_URL_2: ${{ vars.CLERK_PUB_JWT_URL_2 }}
+          CLERK_PUB_JWT_KEY_2: ${{ vars.CLERK_PUB_JWT_KEY_2 }}
           # need during build
           CLOUDFLARE_ENV: ${{vars.CLOUDFLARE_ENV }}
