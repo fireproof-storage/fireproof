@@ -847,8 +847,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       cborg:
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^4.3.1
+        version: 4.3.1
       jose:
         specifier: ^6.1.2
         version: 6.1.2
@@ -923,8 +923,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../types/blockstore
       cborg:
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^4.3.1
+        version: 4.3.1
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1007,8 +1007,8 @@ importers:
         specifier: ^24.10.1
         version: 24.10.1
       cborg:
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^4.3.1
+        version: 4.3.1
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -3835,6 +3835,10 @@ packages:
 
   cborg@4.3.0:
     resolution: {integrity: sha512-vOXo1pB4mdeBw3LbpoynQlZNw/H3kZVHLtPYlp8kFMreL/2YfT54F70BM1s3iDoCtQ+3C9QmiRF4rfCSSTlhBw==}
+    hasBin: true
+
+  cborg@4.3.1:
+    resolution: {integrity: sha512-zLyEPKHqdX08yiyMzm3A/QdurLDB1XVGB3RWJa8PykCXNpLxhlyWToM4g+0Vo+6Q6txrdvAOfdC0ZBaxG0qw2g==}
     hasBin: true
 
   chai@6.2.0:
@@ -8546,6 +8550,8 @@ snapshots:
       uint8arraylist: 2.4.8
 
   cborg@4.3.0: {}
+
+  cborg@4.3.1: {}
 
   chai@6.2.0: {}
 
