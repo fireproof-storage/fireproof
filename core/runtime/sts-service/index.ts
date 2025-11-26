@@ -140,11 +140,12 @@ const keysFromWellKnownJwksCache = new KeyedResolvOnce<JWKPublic[]>({
   resetAfter: 30 * 60 * 1000, // 30 minutes
 });
 
-export interface VerifyTokenOptions {
-  readonly fetchTimeoutMs?: number;
-  readonly sthis?: SuperThis;
-  readonly fetch?: typeof globalThis.fetch;
-  readonly verifyToken?: (token: string, pubKey: JWK) => Promise<Result<{ payload: unknown }>>;
+export interface VerifyTokenOptions<T> {
+  readonly fetchTimeoutMs: number;
+  readonly sthis: SuperThis;
+  readonly parseSchema: (payload: unknown) => Result<T>;
+  readonly fetch: typeof globalThis.fetch;
+  readonly verifyToken: (token: string, pubKey: JWK) => Promise<Result<{ payload: unknown }>>;
 }
 
 type CoerceJWKType = string | JWK | JWKPublic;
@@ -188,15 +189,17 @@ export function coerceJWKPublic(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJ
     .flat();
 }
 
-export async function verifyToken<S extends z.ZodTypeAny>(
+export async function verifyToken<R>(
   token: string,
   presetPubKey: (string | JWK | JWKPublic)[],
   wellKnownUrls: CoerceURI[],
-  schema: S,
-  iopts: VerifyTokenOptions = {},
-): Promise<Result<z.infer<S>>> {
-  const opts: Required<VerifyTokenOptions> = {
+  iopts: Partial<VerifyTokenOptions<R>> = {},
+): Promise<Result<R>> {
+  const opts: VerifyTokenOptions<R> = {
     fetchTimeoutMs: 1000,
+    parseSchema: (payload: unknown): Result<R> => {
+      return Result.Ok(payload as R);
+    },
     fetch: globalThis.fetch,
     verifyToken: async (token: string, pubKey: JWK): Promise<Result<{ payload: unknown }>> => {
       const rRes = await exception2Result(() => jwtVerify(token, pubKey));
@@ -216,7 +219,7 @@ export async function verifyToken<S extends z.ZodTypeAny>(
   for (const pubKey of presetPubKey) {
     const coercedKeys = coerceJWKPublic(opts.sthis, pubKey);
     for (const key of coercedKeys) {
-      const rVerify = await internVerifyToken(token, key, schema, opts);
+      const rVerify = await internVerifyToken(token, key, opts);
       if (rVerify.isOk()) {
         return rVerify;
       }
@@ -235,7 +238,7 @@ export async function verifyToken<S extends z.ZodTypeAny>(
       continue;
     }
     for (const pubKey of rPubKeys.Ok()) {
-      const rVerify = await internVerifyToken(token, pubKey, schema, opts);
+      const rVerify = await internVerifyToken(token, pubKey, opts);
       if (rVerify.isOk()) {
         return rVerify;
       }
@@ -245,7 +248,7 @@ export async function verifyToken<S extends z.ZodTypeAny>(
   return Result.Err(`No well-known JWKS URL could verify the token: ${errors.map((e) => e.message).join("; ")}`);
 }
 
-async function fetchWellKnownJwks(url: string, opts: VerifyTokenOptions): Promise<Result<JWKPublic[]>> {
+async function fetchWellKnownJwks(url: string, opts: VerifyTokenOptions<unknown>): Promise<Result<JWKPublic[]>> {
   return keysFromWellKnownJwksCache.get(url).once(async () => {
     const timeout = await timeouted(
       (opts.fetch ?? fetch)(url, {
@@ -279,20 +282,11 @@ async function fetchWellKnownJwks(url: string, opts: VerifyTokenOptions): Promis
   });
 }
 
-async function internVerifyToken<S extends z.ZodTypeAny>(
-  token: string,
-  presetPubKey: JWK | JWKPublic,
-  schema: S,
-  opts: Required<VerifyTokenOptions>,
-): Promise<Result<z.infer<S>>> {
+async function internVerifyToken<R>(token: string, presetPubKey: JWK | JWKPublic, opts: VerifyTokenOptions<R>): Promise<Result<R>> {
   // console.log("internVerifyToken", token, presetPubKey);
   const rVerify = await opts.verifyToken(token, presetPubKey);
   if (rVerify.isErr()) {
     return Result.Err(rVerify);
   }
-  const parsed = schema.safeParse(rVerify.Ok().payload);
-  if (!parsed.success) {
-    return Result.Err(parsed.error);
-  }
-  return Result.Ok(parsed.data);
+  return opts.parseSchema(rVerify.Ok().payload);
 }

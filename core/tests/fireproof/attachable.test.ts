@@ -1,5 +1,4 @@
-import { AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
-import { stripper } from "@adviser/cement/utils";
+import { stripper, AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, Attached, TraceFn } from "@fireproof/core";
 import { CarReader } from "@ipld/car/reader";
 import * as dagCbor from "@ipld/dag-cbor";

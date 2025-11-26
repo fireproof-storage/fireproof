@@ -1,4 +1,4 @@
-import { toSortedObject } from "@adviser/cement/utils";
+import { toSortedObject } from "@adviser/cement";
 import { BaseXXEndeCoder } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import { base58btc } from "multiformats/bases/base58";

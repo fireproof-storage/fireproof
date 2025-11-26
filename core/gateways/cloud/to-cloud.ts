@@ -1,4 +1,4 @@
-import { BuildURI, CoerceURI, Logger, ResolveOnce, URI, AppContext, KeyedResolvOnce, Lazy } from "@adviser/cement";
+import { BuildURI, CoerceURI, Logger, ResolveOnce, stripper, URI, AppContext, KeyedResolvOnce, Lazy } from "@adviser/cement";
 import { Ledger } from "@fireproof/core-types-base";
 import {
   FPCloudClaim,
@@ -17,7 +17,6 @@ import {
 import { ensureLogger, ensureSuperThis, hashObjectSync } from "@fireproof/core-runtime";
 import { decodeJwt } from "jose/jwt/decode";
 import { URIInterceptor } from "@fireproof/core-gateways-base";
-import { stripper } from "@adviser/cement/utils";
 
 function addTenantAndLedger(opts: ToCloudOptionalOpts, uri: CoerceURI): URI {
   const buri = BuildURI.from(uri);

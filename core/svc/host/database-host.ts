@@ -1,9 +1,17 @@
-import { Database, DatabaseConfig, SuperThis } from "@fireproof/core-types-base";
-import { MsgType, MsgTypeSchema, ReqApplyDatabaseConfig, ResApplyDatabaseConfig } from "../protocol/database-protocol.js";
+import { Database, DatabaseConfigWithName, SuperThis } from "@fireproof/core-types-base";
 import { Result, Logger, KeyedResolvOnce } from "@adviser/cement";
 import { hashObjectSync } from "@fireproof/core-runtime";
 import { fireproof } from "@fireproof/core-base";
-import { FPApiPostMessageTransport, FPTransport, FPTransportOriginCTX, FPWebWindow } from "@fireproof/core-svc-protocol";
+import {
+  FPApiPostMessageTransport,
+  FPTransport,
+  FPTransportOriginCTX,
+  FPWebWindow,
+  MsgType,
+  MsgTypeSchema,
+  ReqApplyDatabaseConfig,
+  ResApplyDatabaseConfig,
+} from "@fireproof/core-svc-protocol";
 
 export interface FPDBContext {
   send<T extends MsgType>(msg: T): Promise<Result<T>>;
@@ -20,8 +28,8 @@ export interface FPDBActions {
 export class FPActionService implements FPDBActions {
   readonly sthis: SuperThis;
   readonly id: string;
-  readonly fpInstances = new KeyedResolvOnce<Database, DatabaseConfig>({
-    key2string: (config: DatabaseConfig) => {
+  readonly fpInstances = new KeyedResolvOnce<Database, DatabaseConfigWithName>({
+    key2string: (config: DatabaseConfigWithName) => {
       return hashObjectSync(config);
     },
   });

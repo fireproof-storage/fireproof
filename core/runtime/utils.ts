@@ -15,6 +15,8 @@ import {
   CoerceURI,
   param,
   AppContext,
+  toSortedArray,
+  toSorted,
 } from "@adviser/cement";
 import {
   PARAM,
@@ -31,7 +33,6 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
 import * as json from "multiformats/codecs/json";
-import { toSortedArray, toSorted } from "@adviser/cement/utils";
 import { XXH, XXH64 } from "@adviser/ts-xxhash";
 import { z } from "zod";
 
