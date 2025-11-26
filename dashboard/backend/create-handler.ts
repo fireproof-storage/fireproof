@@ -3,7 +3,7 @@ import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Res
 import { FPDeviceIDSessionSchema, SuperThis, SuperThisOpts } from "@fireproof/core";
 import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
 import type { Env } from "./cf-serve.js";
-import { FPClerkClaimSchema, VerifiedAuth } from "@fireproof/core-protocols-dashboard";
+import { FPClerkClaim, FPClerkClaimSchema, VerifiedAuth } from "@fireproof/core-protocols-dashboard";
 import { ensureSuperThis, ensureLogger, coerceInt, sts } from "@fireproof/core-runtime";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
@@ -62,8 +62,15 @@ class ClerkApiToken implements FPApiToken {
       token,
       keyAndUrls.map((k) => k.key),
       keyAndUrls.map((k) => k.url).filter((u): u is string => !!u),
-      FPClerkClaimSchema,
       {
+        parseSchema: (payload: unknown): Result<FPClerkClaim> => {
+          const r = FPClerkClaimSchema.safeParse(payload);
+          if (r.success) {
+            return Result.Ok(r.data);
+          } else {
+            return Result.Err(r.error);
+          }
+        },
         verifyToken: async (token, key) => {
           const publicKey = await importJWK(key, "RS256");
           const pem = await exportSPKI(publicKey as CryptoKey);

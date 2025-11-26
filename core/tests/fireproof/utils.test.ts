@@ -1,4 +1,4 @@
-import { runtimeFn, URI } from "@adviser/cement";
+import { Result, runtimeFn, URI } from "@adviser/cement";
 import { getFileName } from "@fireproof/core-gateways-base";
 import {
   ensureSuperThis,
@@ -186,6 +186,15 @@ describe("verifyToken", () => {
     test1: z.number(),
   });
 
+  function parseSchema(payload: unknown): Result<z.infer<typeof claimSchema>> {
+    const r = claimSchema.safeParse(payload);
+    if (r.success) {
+      return Result.Ok(r.data);
+    } else {
+      return Result.Err(r.error);
+    }
+  }
+
   beforeAll(async () => {
     pair = await sts.SessionTokenService.generateKeyPair();
     token = await new SignJWT({
@@ -225,7 +234,7 @@ describe("verifyToken", () => {
         .map((input) => [input, encloseInPemBlock(input)])
         .flat(),
     ]) {
-      const result = await sts.verifyToken(token, [input], [], claimSchema);
+      const result = await sts.verifyToken(token, [input], [], { parseSchema });
       expect(result.isOk()).toBe(true);
     }
   });
@@ -235,7 +244,7 @@ describe("verifyToken", () => {
     const wellKnownUrl = ["https://example.com/.well-known/jwks.json"];
 
     const mockFetch = mockFetchFactory(presetKeys);
-    const result = await sts.verifyToken(token, presetKeys, wellKnownUrl, claimSchema, { fetch: mockFetch });
+    const result = await sts.verifyToken(token, presetKeys, wellKnownUrl, { fetch: mockFetch, parseSchema });
     expect(mockFetch).toHaveBeenCalledTimes(0);
     expect(result.isOk()).toBe(true);
     expect(result.Ok()).toEqual({
@@ -253,7 +262,7 @@ describe("verifyToken", () => {
     const wellKnownUrl = ["https://example.com/.well-known/jwks.json"];
 
     const mockFetch = mockFetchFactory([await exportJWK(pair.material.publicKey)]);
-    const result = await sts.verifyToken(token, presetKeys, wellKnownUrl, claimSchema, { fetch: mockFetch });
+    const result = await sts.verifyToken(token, presetKeys, wellKnownUrl, { fetch: mockFetch, parseSchema });
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(result.isOk()).toBe(true);
     expect(result.Ok()).toEqual({
@@ -279,7 +288,7 @@ describe("verifyToken", () => {
       .setExpirationTime(~~((Date.now() + 60000) / 1000)) // expiration time
       .sign(pair.material.privateKey);
 
-    const result = await sts.verifyToken(token, presetKeys, [], claimSchema);
+    const result = await sts.verifyToken(token, presetKeys, [], { parseSchema });
     expect(result.isErr()).toBe(true);
   });
 
@@ -287,7 +296,7 @@ describe("verifyToken", () => {
     const defectKey = await sts.SessionTokenService.generateKeyPair();
     const presetKeys = [await exportJWK(defectKey.material.publicKey)];
 
-    const result = await sts.verifyToken(token, presetKeys, [], claimSchema);
+    const result = await sts.verifyToken(token, presetKeys, [], { parseSchema });
     expect(result.isErr()).toBe(true);
   });
 });

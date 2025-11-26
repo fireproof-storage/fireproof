@@ -23,16 +23,16 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
   // console.log("args[", cmd, "]");
 
   // eslint-disable-next-line no-console
-  console.log(`Using typescript: ${cmd} on ${isPowerShell() ? "PowerShell" : "Unix shell"}`);
+  console.log(`Using typescript: ${cmd} on ${isPowerShell() ? "PowerShell" : "UnixShell"}`);
   if (isPowerShell()) {
     $.quote = quotePowerShell;
   }
 
   $.verbose = false;
   const p = $({ stdio: ["inherit", "inherit", "inherit"] })`${cmd}`;
-  await p;
-  // $.verbose = true;
-  // await $`${cmd}`
+  await p.catch((err) => {
+    process.exit(err.exitCode);
+  });
 }
 
 export function tscCmd(sthis: SuperThis) {
