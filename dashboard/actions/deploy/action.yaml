@@ -23,11 +23,11 @@ inputs:
     description: "Clerk publishable key"
     required: true
   CLERK_PUB_JWT_URL:
-    description: "Clerk public JWT URL"
+    description: "Clerk public JWT URL could be comma seperated for multiple"
     required: true
   CLERK_PUB_JWT_KEY:
-    description: "Clerk public JWT key"
-    required: true
+    description: "Clerk public JWT key if your key is not fetchable singleline PEM,JSON, its totally fine to have multiple keys"
+    required: false
   CLOUDFLARE_ENV:
     description: "Cloudflare environment (e.g., production, staging)"
     required: true
@@ -70,6 +70,8 @@ runs:
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
         pnpm run drizzle:d1-remote
+        CLERK_PUB_JWT_KEY="$(npx core-cli wellKnown --jsons --presetKey \"$CLERK_PUB_JWT_KEY\" \"$CLERK_PUB_JWT_URL\")" 
+        echo $CLERK_PUB_JWT_KEY
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
           --fromEnv CLERK_PUBLISHABLE_KEY \
           --fromEnv CLERK_PUB_JWT_URL \

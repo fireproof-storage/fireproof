@@ -15,6 +15,11 @@ export function wellKnownCmd(_sthis: SuperThis) {
         description: "Output as JSON (default)",
         defaultValue: () => false,
       }),
+      jsons: flag({
+        long: "jsons",
+        description: "Output as single-line quoted JSON string",
+        defaultValue: () => false,
+      }),
       pem: flag({
         long: "pem",
         description: "Output as PEM format per key",
@@ -24,6 +29,12 @@ export function wellKnownCmd(_sthis: SuperThis) {
         long: "env",
         description: "Output as environment variables with single-lined PEM",
         defaultValue: () => false,
+      }),
+      presetKey: option({
+        type: string,
+        long: "presetKey",
+        defaultValue: () => "",
+        description: "Preset key to include (will be processed with coerceJWKPublic)",
       }),
       envPrefix: option({
         type: string,
@@ -41,62 +52,75 @@ export function wellKnownCmd(_sthis: SuperThis) {
       // Split comma-separated URLs
       const urls = args.urls.flatMap((url) => url.split(",").map((u) => u.trim())).filter((u) => u.length > 0);
 
-      if (urls.length === 0) {
-        console.error("Error: At least one URL must be provided");
+      // Process presetKey if provided
+      const presetKeys = args.presetKey ? await rt.sts.coerceJWKPublic(_sthis, args.presetKey) : [];
+
+      // Fetch from URLs if provided
+      const results =
+        urls.length > 0
+          ? await rt.sts.fetchWellKnownJwks(urls, {
+              fetch: globalThis.fetch,
+              fetchTimeoutMs: 5000,
+            })
+          : [];
+
+      if (urls.length === 0 && presetKeys.length === 0) {
+        console.error("Error: At least one URL or presetKey must be provided");
         process.exit(1);
       }
 
-      const results = await rt.sts.fetchWellKnownJwks(urls, {
-        fetch: globalThis.fetch,
-        fetchTimeoutMs: 5000,
-      });
-
       // Determine format - default to json if no flag specified
-      // If env-prefix is set to non-default value, use env format
+      // If combine is set, default to jsons; if env-prefix is set to non-default value, use env format
       const hasCustomEnvPrefix = args.envPrefix !== "CLERK_PUB_JWT_KEY";
-      const format = args.pem ? "pem" : args.env || hasCustomEnvPrefix ? "env" : "json";
+      const format = args.pem ? "pem" : args.env || hasCustomEnvPrefix ? "env" : args.jsons ? "jsons" : "json";
 
-      if (format === "json") {
-        console.log(JSON.stringify(results, null, 2));
-      } else if (format === "pem") {
-        for (const result of results) {
-          if (result.type === "ok") {
-            console.log(`# Keys from ${result.url}`);
-            for (const key of result.keys) {
-              try {
-                const cryptoKey = await rt.sts.coerceJWKPublic(_sthis, key)[0];
-                const importedKey = await importJWK(cryptoKey);
-                const pem = await exportSPKI(importedKey as CryptoKey);
-                console.log(pem);
-              } catch (error) {
-                console.error(`Error converting key to PEM: ${error}`);
-              }
+      // Combine all keys from preset and URLs, removing duplicates by kid
+      const keyMap = new Map();
+
+      // Add preset keys first
+      for (const key of presetKeys) {
+        if (key.kid) {
+          keyMap.set(key.kid, key);
+        } else {
+          // If no kid, add it anyway (won't dedupe)
+          keyMap.set(JSON.stringify(key), key);
+        }
+      }
+
+      // Add keys from URLs
+      for (const result of results) {
+        if (result.type === "ok") {
+          for (const key of result.keys) {
+            if (key.kid) {
+              keyMap.set(key.kid, key);
+            } else {
+              // If no kid, add it anyway (won't dedupe)
+              keyMap.set(JSON.stringify(key), key);
             }
-          } else {
-            console.error(`Error fetching ${result.url}: ${result.type === "timeout" ? "timeout" : result.error}`);
           }
         }
-      } else if (format === "env") {
-        let keyIndex = 0;
-        for (const result of results) {
-          if (result.type === "ok") {
-            for (const key of result.keys) {
-              try {
-                const cryptoKey = await rt.sts.coerceJWKPublic(_sthis, key)[0];
-                const importedKey = await importJWK(cryptoKey);
-                const pem = await exportSPKI(importedKey as CryptoKey);
-                const singleLinePem = JSON.stringify(pem);
-                const envVarName = keyIndex === 0 ? args.envPrefix : `${args.envPrefix}_${keyIndex}`;
-                console.log(`${envVarName}=${singleLinePem}`);
-                keyIndex++;
-              } catch (error) {
-                console.error(`# Error converting key to PEM: ${error}`);
-              }
+      }
+
+      const combinedOutput = { keys: Array.from(keyMap.values()) };
+      switch (format) {
+        case "json":
+          console.log(JSON.stringify(combinedOutput, null, 2));
+          break;
+        case "pem":
+          {
+            for (const jwk of combinedOutput.keys) {
+              const publicKey = await importJWK(jwk, "RS256");
+              console.log(await exportSPKI(publicKey as CryptoKey));
             }
-          } else {
-            console.error(`# Error fetching ${result.url}: ${result.type === "timeout" ? "timeout" : result.error}`);
           }
-        }
+          break;
+        case "env":
+          console.log(`${args.envPrefix}=${JSON.stringify(JSON.stringify(combinedOutput))}`);
+          break;
+        case "jsons":
+        default:
+          console.log(JSON.stringify(combinedOutput));
+          break;
       }
     },
   });

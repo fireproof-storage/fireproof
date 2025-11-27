@@ -9,9 +9,9 @@ import {
   mimeBlockParser,
   sts,
 } from "@fireproof/core-runtime";
-import { JWK } from "jose";
+import { importJWK, JWK } from "jose";
 import { SignJWT } from "jose/jwt/sign";
-import { exportJWK } from "jose/key/export";
+import { exportJWK, exportSPKI } from "jose/key/export";
 import { JWKPublic, JWTPayloadSchema } from "use-fireproof";
 import { UUID } from "uuidv7";
 import { describe, beforeAll, it, expect, assert, vi } from "vitest";
@@ -210,29 +210,13 @@ describe("verifyToken", () => {
   });
 
   it("test coerceJWKPublic", async () => {
-    const pemKey = await exportJWK(pair.material.publicKey);
+    const jwkKey = await exportJWK(pair.material.publicKey);
 
-    function encloseInPemBlock(jwkString: string): string {
-      const lines = [];
-      const type = "PUBLIC KEY";
-      lines.push(`-----BEGIN ${type}-----`);
-      if (jwkString.startsWith("{")) {
-        lines.push(JSON.stringify(JSON.parse(jwkString), null, 2));
-      } else {
-        for (let i = 0; i < jwkString.length; i += 64) {
-          lines.push(jwkString.slice(i, i + 64));
-        }
-      }
-      lines.push(`-----END ${type}-----`);
-      return lines.join("\n");
-    }
-    const jsonString = JSON.stringify(pemKey);
+    const jsonString = JSON.stringify(jwkKey);
 
     for (const input of [
-      pemKey,
-      ...[jsonString, sthis.txt.base64.encode(jsonString), sthis.txt.base58.encode(jsonString)]
-        .map((input) => [input, encloseInPemBlock(input)])
-        .flat(),
+      jwkKey,
+      ...[jsonString, sthis.txt.base64.encode(jsonString), sthis.txt.base58.encode(jsonString)].map((input) => [input]).flat(),
     ]) {
       const result = await sts.verifyToken(token, [input], [], { parseSchema });
       expect(result.isOk()).toBe(true);
@@ -502,5 +486,37 @@ describe("mimeBlockParser", () => {
     expect(blocks[0].begin).toBe("-----BEGIN TEST (SPECIAL)-----");
     expect(blocks[0].end).toBe("-----END TEST (SPECIAL)-----");
     expect(blocks[0].content).toBe("content");
+  });
+});
+
+describe("coerceJWKPublic", () => {
+  const sthis = ensureSuperThis();
+  const jwk: JWK = {
+    kty: "RSA",
+    e: "AQAB",
+    n: "zuYkKADAu6UJeBq-G6MUerFLKEQVRUrQ8eJCFMWbh-JlCfr9uoEoxutWO3lpVAaFhq2vhRaYif8xoxCmvM74gCoNqE7DDUUrUTBt5kYSJyxAoLUpmVVg7pecJngcaqtPUekE_UGGJ2E2jHMRQ9thzF64BTaJFpddM45M4VEQs-PNEMnmo0NKWggikFXKCBWhakMsuygyBDtY7q73VLdG-jAG6YsVxDt_27DZ6Lv-iH2SMqM0-Xf4aYvCV_JxS75Emf1srsMC2C6_IJcIYSkxyfS6j_DE_dIzXPJ-quXhNrUgpzo2zvvMF44tDXrkeMQ5CQd06kTWe9_BxqkrVT3wLw",
+    alg: "RS256",
+  };
+  const jwkpub = {
+    ...jwk,
+    use: "sig",
+    kid: "ins_2olzJ4rRwcQ5lPbKNCYdwJ4GrFQ",
+  };
+
+  it("accepts JWK object", async () => {
+    expect(await sts.coerceJWKPublic(sthis, jwkpub)).toEqual([jwkpub]);
+  });
+  it("accepts JSON string", async () => {
+    expect(await sts.coerceJWKPublic(sthis, JSON.stringify(jwkpub))).toEqual([jwkpub]);
+  });
+  it("accepts base64 encoded JSON string", async () => {
+    expect(await sts.coerceJWKPublic(sthis, sthis.txt.base64.encode(JSON.stringify(jwkpub)))).toEqual([jwkpub]);
+  });
+  it("accepts base58 encoded JSON string", async () => {
+    expect(await sts.coerceJWKPublic(sthis, sthis.txt.base58.encode(JSON.stringify(jwkpub)))).toEqual([jwkpub]);
+  });
+  it("accepts PEM enclosed JSON string", async () => {
+    const pemWrapped = await exportSPKI((await importJWK(jwkpub, "RS256")) as CryptoKey);
+    expect(await sts.coerceJWKPublic(sthis, pemWrapped)).toEqual([jwk]);
   });
 });

@@ -1,5 +1,5 @@
 import { BuildURI, CoerceURI, KeyedResolvOnce, Result, exception2Result, timeouted } from "@adviser/cement";
-import { exportJWK, importJWK, JWTVerifyResult, jwtVerify, SignJWT, JWK } from "jose";
+import { exportJWK, importJWK, JWTVerifyResult, jwtVerify, SignJWT, JWK, importSPKI } from "jose";
 import { generateKeyPair, GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { base58btc } from "multiformats/bases/base58";
 import { ensureSuperThis, mimeBlockParser } from "../utils.js";
@@ -168,12 +168,21 @@ function testEncodeJWK(k: string, decodeFn: (input: string) => string): Result<J
   return key;
 }
 
-export function coerceJWKPublic(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJWKType[])[]): JWK[] {
-  return i
-    .flat()
-    .map((k) => {
+export async function coerceJWKPublic(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJWKType[])[]): Promise<JWK[]> {
+  return Promise.all(
+    i.flat().map(async (k) => {
       if (typeof k === "string") {
-        for (const { content } of mimeBlockParser(k)) {
+        for (const { content, begin, end } of mimeBlockParser(k)) {
+          if (begin && end) {
+            const pem = `${begin}\n${content}\n${end}\n`;
+            const key = await importSPKI(pem, "RS256");
+            const jwk = await exportJWK(key);
+            const parsed = JWKPublicSchema.safeParse({ ...jwk, alg: "RS256" });
+            if (parsed.success) {
+              return [parsed.data];
+            }
+            break;
+          }
           for (const decodeFn of [(a: string) => a, sthis.txt.base64.decode, sthis.txt.base58.decode]) {
             const rKey = testEncodeJWK(content, decodeFn);
             if (rKey.isOk()) {
@@ -185,8 +194,8 @@ export function coerceJWKPublic(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJ
       } else {
         return [k];
       }
-    })
-    .flat();
+    }),
+  ).then((arr) => arr.flat());
 }
 
 export async function verifyToken<R>(
@@ -217,7 +226,7 @@ export async function verifyToken<R>(
   };
 
   for (const pubKey of presetPubKey) {
-    const coercedKeys = coerceJWKPublic(opts.sthis, pubKey);
+    const coercedKeys = await coerceJWKPublic(opts.sthis, pubKey);
     for (const key of coercedKeys) {
       const rVerify = await internVerifyToken(token, key, opts);
       if (rVerify.isOk()) {
