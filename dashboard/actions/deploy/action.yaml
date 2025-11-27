@@ -77,11 +77,11 @@ runs:
           --fromEnv CLERK_PUBLISHABLE_KEY \
           --fromEnv CLERK_PUB_JWT_URL \
           --fromEnv CLERK_PUB_JWT_KEY \
-          --fromEnv MAX_TENANTS \
           --fromEnv MAX_ADMIN_USERS \
-          --fromEnv MAX_MEMBER_USERS \
           --fromEnv MAX_INVITES \
           --fromEnv MAX_LEDGERS \
+          --fromEnv MAX_MEMBER_USERS \
+          --fromEnv MAX_TENANTS \
           --fromEnv CLOUD_SESSION_TOKEN_SECRET \
           --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
           pnpm exec wrangler -c ./wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk

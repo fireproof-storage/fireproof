@@ -38,4 +38,9 @@ jobs:
           CLERK_PUB_JWT_URL: ${{ vars.CLERK_PUB_JWT_URL }}
           CLERK_PUB_JWT_KEY: ${{ vars.CLERK_PUB_JWT_KEY }}
           # need during build
-          CLOUDFLARE_ENV: ${{vars.CLOUDFLARE_ENV }}
+          CLOUDFLARE_ENV: ${{ vars.CLOUDFLARE_ENV }}
+          MAX_ADMIN_USERS: ${{ vars.MAX_ADMIN_USERS }}
+          MAX_INVITES: ${{ vars.MAX_INVITES }}
+          MAX_LEDGERS: ${{ vars.MAX_LEDGERS }}
+          MAX_MEMBER_USERS: ${{ vars.MAX_MEMBER_USERS}}
+          MAX_TENANT: ${{ vars.MAX_TENANT }}
