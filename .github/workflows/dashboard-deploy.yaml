@@ -43,4 +43,4 @@ jobs:
           MAX_INVITES: ${{ vars.MAX_INVITES }}
           MAX_LEDGERS: ${{ vars.MAX_LEDGERS }}
           MAX_MEMBER_USERS: ${{ vars.MAX_MEMBER_USERS}}
-          MAX_TENANT: ${{ vars.MAX_TENANT }}
+          MAX_TENANTS: ${{ vars.MAX_TENANTS }}

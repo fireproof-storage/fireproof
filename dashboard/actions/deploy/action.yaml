@@ -72,7 +72,7 @@ runs:
         pnpm run drizzle:d1-remote
         pnpm exec core-cli wellKnown --jsons --presetKey "$CLERK_PUB_JWT_KEY" "$CLERK_PUB_JWT_URL" > key
         CLERK_PUB_JWT_KEY="$(cat key)"
-        echo $CLERK_PUB_JWT_KEY
+        echo "PubKeys:" $CLERK_PUB_JWT_KEY
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
           --fromEnv CLERK_PUBLISHABLE_KEY \
           --fromEnv CLERK_PUB_JWT_URL \
