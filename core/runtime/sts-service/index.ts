@@ -225,61 +225,37 @@ export async function verifyToken<R>(
       }
     }
   }
-  const errors: Error[] = [];
-  for (const cUrl of wellKnownUrls) {
-    const url = BuildURI.from(cUrl);
-    const p = url.URI();
-    if (p.pathname === "" || p.pathname === "/") {
-      url.pathname("/.well-known/jwks.json");
-    }
-    const rPubKeys = await fetchWellKnownJwks(url.toString(), opts);
-    if (rPubKeys.isErr()) {
-      errors.push(rPubKeys.Err());
-      continue;
-    }
-    for (const pubKey of rPubKeys.Ok()) {
-      const rVerify = await internVerifyToken(token, pubKey, opts);
-      if (rVerify.isOk()) {
-        return rVerify;
+  const errors: FetchWellKnownJwksResult[] = [];
+  for (const url of wellKnownUrls) {
+    const rPubKeys = await fetchWellKnownJwks([url], opts);
+    for (const pubKey of rPubKeys) {
+      switch (true) {
+        case isFetchWellKnownJwksResultErr(pubKey):
+        case isFetchWellKnownJwksResultTimeout(pubKey):
+          errors.push(pubKey);
+          continue;
+        case isFetchWellKnownJwksResultOk(pubKey):
+          {
+            for (const key of pubKey.keys) {
+              const rVerify = await internVerifyToken(token, key, opts);
+              if (rVerify.isOk()) {
+                return rVerify;
+              } else {
+                errors.push({
+                  type: "error",
+                  error: rVerify.Err(),
+                  url: pubKey.url,
+                });
+              }
+            }
+          }
+          break;
+        default:
+          throw new Error("unreachable");
       }
-      // console.log("xxx", pubKey, rVerify.Err());
     }
   }
-  return Result.Err(`No well-known JWKS URL could verify the token: ${errors.map((e) => e.message).join("; ")}`);
-}
-
-async function fetchWellKnownJwks(url: string, opts: VerifyTokenOptions<unknown>): Promise<Result<JWKPublic[]>> {
-  return keysFromWellKnownJwksCache.get(url).once(async () => {
-    const timeout = await timeouted(
-      (opts.fetch ?? fetch)(url, {
-        method: "GET",
-      }).then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to fetch well-known JWKS from ${url}: ${res.status} ${res.statusText}`);
-        }
-        return res.json();
-      }),
-      {
-        timeout: opts.fetchTimeoutMs ?? 1000,
-      },
-    );
-    // console.log(">>>>>>", JSON.stringify(timeout));
-    switch (timeout.state) {
-      case "timeout":
-        return Result.Err(`Timeout fetching well-known JWKS from ${url}`);
-      case "error":
-        return Result.Err(`Error fetching well-known JWKS from ${url}: ${timeout.error.message}`);
-      case "success": {
-        const parsed = z.object({ keys: JWKPublicSchema.array() }).safeParse(timeout.value);
-        if (!parsed.success) {
-          return Result.Err(parsed.error);
-        }
-        return Result.Ok(parsed.data.keys);
-      }
-      default:
-        return Result.Err("Unknown error fetching well-known JWKS");
-    }
-  });
+  return Result.Err(`No well-known JWKS URL could verify the token:\n${JSON.stringify(errors, null, 2)}`);
 }
 
 async function internVerifyToken<R>(token: string, presetPubKey: JWK | JWKPublic, opts: VerifyTokenOptions<R>): Promise<Result<R>> {
@@ -289,4 +265,115 @@ async function internVerifyToken<R>(token: string, presetPubKey: JWK | JWKPublic
     return Result.Err(rVerify);
   }
   return opts.parseSchema(rVerify.Ok().payload);
+}
+
+export interface FetchWellKnownJwksResultOk {
+  readonly type: "ok";
+  readonly keys: JWKPublic[];
+  readonly url: string;
+}
+
+export function isFetchWellKnownJwksResultOk(r: FetchWellKnownJwksResult): r is FetchWellKnownJwksResultOk {
+  return r.type === "ok";
+}
+
+export interface FetchWellKnownJwksResultErr {
+  readonly type: "error";
+  readonly error: Error;
+  readonly url: string;
+}
+
+export function isFetchWellKnownJwksResultErr(r: FetchWellKnownJwksResult): r is FetchWellKnownJwksResultErr {
+  return r.type === "error";
+}
+
+export interface FetchWellKnownJwksResultTimeout {
+  readonly type: "timeout";
+  readonly url: string;
+}
+
+export function isFetchWellKnownJwksResultTimeout(r: FetchWellKnownJwksResult): r is FetchWellKnownJwksResultTimeout {
+  return r.type === "timeout";
+}
+
+export type FetchWellKnownJwksResult = FetchWellKnownJwksResultOk | FetchWellKnownJwksResultErr | FetchWellKnownJwksResultTimeout;
+
+export async function fetchWellKnownJwks(
+  urls: CoerceURI | CoerceURI[],
+  iopts: {
+    readonly fetch?: typeof globalThis.fetch;
+    readonly fetchTimeoutMs?: number;
+  },
+): Promise<FetchWellKnownJwksResult[]> {
+  const opts = {
+    fetchTimeoutMs: 1000,
+    fetch: globalThis.fetch,
+    ...iopts,
+  };
+  return Promise.all(
+    (Array.isArray(urls) ? urls : [urls])
+      .flat()
+      .map((u) => {
+        if (!u) {
+          return undefined;
+        }
+        const buri = BuildURI.from(u);
+        const url = buri.URI();
+        if (url.pathname === "" || url.pathname === "/") {
+          buri.pathname("/.well-known/jwks.json");
+        }
+        return buri.toString();
+      })
+      .filter((u): u is string => !!u)
+      .map(async (url) =>
+        keysFromWellKnownJwksCache.get(url).once(async () => {
+          const timeout = await timeouted(
+            opts
+              .fetch(url, {
+                method: "GET",
+              })
+              .then((res) => {
+                if (!res.ok) {
+                  throw new Error(`Failed to fetch well-known JWKS from ${url}: ${res.status} ${res.statusText}`);
+                }
+                return res.json();
+              }),
+            {
+              timeout: opts.fetchTimeoutMs || 1000,
+            },
+          );
+          // console.log(">>>>>>", JSON.stringify(timeout));
+          switch (timeout.state) {
+            case "timeout":
+              return {
+                type: "timeout" as const,
+                url,
+              };
+            case "error":
+              return {
+                type: "error" as const,
+                error: timeout.error,
+                url,
+              };
+            case "success": {
+              const parsed = z.object({ keys: JWKPublicSchema.array() }).safeParse(timeout.value);
+              if (!parsed.success) {
+                return {
+                  type: "error" as const,
+                  error: new Error(`Invalid JWKS format from ${url}: ${parsed.error.message}`),
+                  url,
+                };
+              }
+              return {
+                type: "ok" as const,
+                keys: parsed.data.keys,
+                url,
+              };
+            }
+            default:
+              throw new Error("unreachable");
+          }
+        }),
+      ),
+  );
 }
