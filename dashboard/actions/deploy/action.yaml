@@ -70,7 +70,7 @@ runs:
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
         pnpm run drizzle:d1-remote
-        CLERK_PUB_JWT_KEY="$(npx core-cli wellKnown --jsons --presetKey \"$CLERK_PUB_JWT_KEY\" \"$CLERK_PUB_JWT_URL\")" 
+        CLERK_PUB_JWT_KEY="$(pnpm exec core-cli wellKnown --jsons --presetKey \"$CLERK_PUB_JWT_KEY\" \"$CLERK_PUB_JWT_URL\")" 
         echo $CLERK_PUB_JWT_KEY
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
           --fromEnv CLERK_PUBLISHABLE_KEY \
