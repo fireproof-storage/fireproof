@@ -12,6 +12,7 @@ import { dependabotCmd } from "./dependabot-cmd.js";
 import { testContainerCmd } from "./test-container-cmd.js";
 import { deviceIdCmd } from "./device-id-cmd.js";
 import { wellKnownCmd } from "./well-known-cmd.js";
+import { retryCmd } from "./retry-cmd.js";
 
 (async () => {
   dotenv.config(process.env.FP_ENV ?? ".env");
@@ -38,6 +39,7 @@ import { wellKnownCmd } from "./well-known-cmd.js";
       testContainer: testContainerCmd(sthis),
       deviceId: deviceIdCmd(sthis),
       wellKnown: wellKnownCmd(sthis),
+      retry: retryCmd(sthis),
     },
   });
 

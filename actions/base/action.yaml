@@ -50,36 +50,17 @@ runs:
         pnpm exec playwright --version
         git config --global --add safe.directory $(pwd)
 
-    - name: test Attempt 1
+    - name: test
       shell: bash
       env:
         FP_CI: fp_ci
-      id: attempt1
-      continue-on-error: true
-      run: pnpm run test
+      run: pnpm exec core-cli retry -- pnpm run test
 
-    - name: test Attempt 2
+    - name: test:deno
       shell: bash
       env:
         FP_CI: fp_ci
-      if: steps.attempt1.outcome == 'failure'
-      run: pnpm run test
-
-    - name: test:deno 1
-      shell: bash
-      env:
-        FP_CI: fp_ci
-      id: denoattempt1
-      run: pnpm run test:deno
-      continue-on-error: true
-
-    - name: test:deno 2
-      shell: bash
-      env:
-        FP_CI: fp_ci
-      id: denoattempt2
-      if: steps.denoattempt1.outcome == 'failure'
-      run: pnpm run test:deno
+      run: pnpm exec core-cli retry -- pnpm run test:deno
 
     - name: start-esm + npm
       shell: bash
@@ -89,17 +70,8 @@ runs:
         bash smoke/setup-local-esm-npm.sh
         #cp ./dist/npmrc-smoke .npmrc
 
-    - name: smoke Attempt 1
+    - name: smoke
       shell: bash
       env:
         FP_CI: fp_ci
-      id: smoke_attempt1
-      continue-on-error: true
-      run: pnpm run smoke
-
-    - name: smoke Attempt 2
-      shell: bash
-      env:
-        FP_CI: fp_ci
-      if: steps.smoke_attempt1.outcome == 'failure'
-      run: pnpm run smoke-retry
+      run: pnpm exec core-cli retry -- pnpm run smoke

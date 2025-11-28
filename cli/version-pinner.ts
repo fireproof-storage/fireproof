@@ -1,7 +1,6 @@
 import { readWantedLockfile } from "@pnpm/lockfile-file";
 import { PackageJson } from "./build-cmd.js";
 import { findUp } from "find-up";
-import path from "node:path";
 
 interface PinVersionOptions {
   readonly includeDevDeps?: boolean;
