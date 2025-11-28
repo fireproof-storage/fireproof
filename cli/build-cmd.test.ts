@@ -33,18 +33,20 @@ it("getVersion emptyString", async () => {
   expect(await getVersion("", { xenv: {} })).toContain("0.0.0-smoke");
 });
 
-it("should only use prefix version in dependencies", async () => {
+it("should set package version but leave workspace dependencies as-is", async () => {
   const version = new Version("0.0.0-smoke", "^");
   const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
   expect(patchedPackageJson.version).toBe("0.0.0-smoke");
-  expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "^0.0.0-smoke");
+  // Workspace dependencies are no longer replaced by patchPackageJson - use VersionPinner for that
+  expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "workspace:0.0.0");
 });
 
-it("should only use prefix version in dependencies", async () => {
+it("should set package version (duplicate test)", async () => {
   const version = new Version("0.0.0-smoke", "^");
   const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
   expect(patchedPackageJson.version).toBe("0.0.0-smoke");
-  expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "^0.0.0-smoke");
+  // Workspace dependencies are no longer replaced by patchPackageJson - use VersionPinner for that
+  expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "workspace:0.0.0");
 });
 
 it("should only use prefix version in dependencies", async () => {

@@ -1,7 +1,21 @@
-import { SuperThis } from "@fireproof/core-types-base";
+import { JWKPublic, SuperThis } from "@fireproof/core-types-base";
 import * as rt from "@fireproof/core-runtime";
 import { command, flag, option, string } from "cmd-ts";
 import { exportJWK } from "jose/key/export";
+import { Result, exception2Result } from "@adviser/cement";
+
+async function ourToJWK(env: string, sthis: SuperThis): Promise<Result<{ keys: JWKPublic[] }>> {
+  const rCryptoKeys = await exception2Result(() => rt.sts.env2jwk(env, undefined, sthis));
+  if (rCryptoKeys.isErr()) {
+    return Result.Err(rCryptoKeys);
+  }
+  const cryptoKeys = rCryptoKeys.Ok();
+  const rKeys = await exception2Result(() => Promise.all(cryptoKeys.map((key) => exportJWK(key))));
+  if (rKeys.isErr()) {
+    return Result.Err(rKeys);
+  }
+  return Result.Ok({ keys: rKeys.Ok() as JWKPublic[] });
+}
 
 export function keyCmd(sthis: SuperThis) {
   return command({
@@ -30,9 +44,14 @@ export function keyCmd(sthis: SuperThis) {
       switch (true) {
         case !!args.ourToJWK:
           {
-            const key = await rt.sts.env2jwk(args.ourToJWK, "ES256", sthis).then((jwk) => jwk);
+            const r = await ourToJWK(args.ourToJWK, sthis);
+            if (r.isErr()) {
+              // eslint-disable-next-line no-console
+              console.error(`Error: ${r.Err()}`);
+              process.exit(1);
+            }
             // eslint-disable-next-line no-console
-            console.log(`${JSON.stringify(await exportJWK(key))}`);
+            console.log(JSON.stringify(r.Ok(), null, 2));
           }
           break;
         case args.generatePair:

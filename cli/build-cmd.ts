@@ -7,6 +7,7 @@ import { cd, $ } from "zx";
 import { SuperThis } from "@fireproof/core-types-base";
 import { SemVer } from "semver";
 import { exception2Result } from "@adviser/cement";
+import { VersionPinner } from "./version-pinner.js";
 
 const reVersionAlphaStart = /^[a-z](\d+\.\d+\.\d+.*)$/;
 // const reVersionOptionalAlphaStart = /^[a-z]?(\d+\.\d+\.\d+.*)$/;
@@ -90,19 +91,6 @@ export class Version {
   }
 }
 
-function patchDeps(dep: Record<string, string>, version: string) {
-  if (typeof dep !== "object" || !dep) {
-    return;
-  }
-  for (const i of Object.keys(dep)) {
-    const val = dep[i];
-    if (val.startsWith("workspace:")) {
-      dep[i] = version;
-    }
-  }
-  return dep;
-}
-
 export interface PackageJson {
   name: string;
   private?: "true" | string | boolean;
@@ -140,8 +128,6 @@ export async function patchPackageJson(
   patchedPackageJson.version = version.version;
   delete patchedPackageJson.scripts["pack"];
   delete patchedPackageJson.scripts["publish"];
-  patchedPackageJson.dependencies = patchDeps(patchedPackageJson.dependencies, version.prefixedVersion);
-  patchedPackageJson.devDependencies = patchDeps(patchedPackageJson.devDependencies, version.prefixedVersion);
 
   return { patchedPackageJson, originalPackageJson };
 }
@@ -159,7 +145,7 @@ async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
   tsconfig.exclude = tsconfig.exclude || [];
   tsconfig.exclude.push("node_modules", "dist", ".git", ".vscode");
 
-  console.log("tsconfig", tsconfig);
+  // console.log("tsconfig", tsconfig);
   await fs.writeJSONSync(dstTsConfig, tsconfig, { spaces: 2 });
   // {
   // "extends": "../../tsconfig.json",
@@ -363,6 +349,17 @@ export function buildCmd(sthis: SuperThis) {
         short: "t",
         description: "Do not update tsconfig.json in the destination directory.",
       }),
+      noPinned: flag({
+        long: "no-pinned",
+        description: "Do not pin dependencies in package.json (pinning is enabled by default).",
+      }),
+      lockfile: option({
+        long: "lockfile",
+        short: "L",
+        type: string,
+        defaultValue: () => "",
+        description: "Path to the pnpm-lock.yaml file to use for pinning versions, defaults to auto-discovery.",
+      }),
       noBuild: flag({
         long: "noBuild",
         short: "b",
@@ -505,7 +502,23 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      const packageJson = await patchPackageJson("package.json", version, args.changeScope);
+      let packageJson = await patchPackageJson("package.json", version, args.changeScope);
+      if (!args.noPinned) {
+        console.log(
+          "Prepared package.json with pinning for",
+          packageJson.patchedPackageJson.name,
+          "version",
+          packageJson.patchedPackageJson.version,
+        );
+        const lockfilePath = args.lockfile || path.join(path.dirname(top), "pnpm-lock.yaml");
+        const pinner = await VersionPinner.create({ lockfilePath });
+        packageJson = {
+          ...packageJson,
+          patchedPackageJson: pinner.pinVersions(packageJson.patchedPackageJson, {
+            workspaceVersion: version.prefixedVersion,
+          }),
+        };
+      }
       await fs.writeJSON("package.json", packageJson.patchedPackageJson, { spaces: 2 });
       // await $`pnpm version ${args.version}`;
 
@@ -530,7 +543,7 @@ export function buildCmd(sthis: SuperThis) {
         const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
         await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
         if (!isPrivate(packageJson.originalPackageJson)) {
-          const res = await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`;
+          const res = await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`.nothrow();
           if (res.exitCode !== 0) {
             throw new Error(`Failed to pack the package.`);
           }
@@ -579,7 +592,7 @@ export function buildCmd(sthis: SuperThis) {
 
         const registry = ["--registry", args.registry];
         const tagsOpts = tags.map((tag) => ["--tag", tag]).flat();
-        const res = await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`;
+        const res = await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
         if (res.exitCode !== 0) {
           throw new Error(`Failed to publish the package.`);
         }

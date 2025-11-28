@@ -1,6 +1,7 @@
 import { Result } from "@adviser/cement";
 import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema } from "@fireproof/core-types-base";
-import { GenerateKeyPairOptions, generateKeyPair, importJWK, exportJWK, calculateJwkThumbprint } from "jose";
+import { GenerateKeyPairOptions, generateKeyPair, exportJWK, calculateJwkThumbprint } from "jose";
+import { sts } from "@fireproof/core-runtime";
 
 export class DeviceIdKey {
   #privateKey: CryptoKey;
@@ -22,14 +23,14 @@ export class DeviceIdKey {
   ): Promise<Result<DeviceIdKey>> {
     const parsed = JWKPrivateSchema.safeParse(jwk);
     if (!parsed.success) {
-      return Result.Err(new Error(`Invalid JWK: ${parsed.error.message}`));
+      return Result.Err(`Invalid JWK: ${parsed.error.message}`);
     }
     const j = parsed.data;
-    if (j.kty !== "EC" || j.crv !== "P-256" || !("d" in j)) {
-      return Result.Err(new Error("Invalid JWK for ES256"));
+    const rKey = await sts.importJWK(j, undefined, opts);
+    if (rKey.isErr()) {
+      return Result.Err(rKey);
     }
-    const key = await importJWK(j, "ES256", opts);
-    return Result.Ok(new DeviceIdKey(key as CryptoKey));
+    return Result.Ok(new DeviceIdKey(rKey.Ok().key));
   }
 
   private constructor(pair: CryptoKey) {

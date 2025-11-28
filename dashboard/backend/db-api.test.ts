@@ -1010,7 +1010,8 @@ describe("db-api", () => {
       "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
       "ES256",
     );
-    const v = await jwtVerify(resSt.Ok().token, pub);
+    expect(pub.length).toBe(1);
+    const v = await jwtVerify(resSt.Ok().token, pub[0]);
     expect(v.payload.exp).toBeLessThanOrEqual(new Date().getTime() + 3700000);
 
     const res2 = await fpApi.getTokenByResultId({

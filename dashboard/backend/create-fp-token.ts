@@ -14,7 +14,11 @@ export interface FPTokenContext {
 }
 
 export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
-  const privKey = await sts.env2jwk(ctx.secretToken, "ES256");
+  const privKeys = await sts.env2jwk(ctx.secretToken);
+  if (privKeys.length !== 1) {
+    throw new Error(`Expected exactly one private JWK, found ${privKeys.length}`);
+  }
+  const privKey = privKeys[0];
   let validFor = ctx.validFor;
   if (validFor <= 0) {
     validFor = 60 * 60; // 1 hour

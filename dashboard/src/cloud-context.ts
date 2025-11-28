@@ -69,14 +69,7 @@ export class CloudContext {
       apiUrl: DASHAPI_URL,
       fetch: window.fetch.bind(window),
       // apiUrl: API_URL,
-      getToken: async () => {
-        // console.log("CloudContext getToken");
-        const token = await this._clerkSession?.session?.getToken({ template: "with-email" });
-        return {
-          type: "clerk",
-          token: token || "",
-        };
-      },
+      getToken: () => this.getToken(),
     });
   }
 

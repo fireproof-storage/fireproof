@@ -18,7 +18,9 @@ export interface FPTransport {
   recv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => Promise<Result<void>>): () => void;
 
   onSend(fn: (msg: MsgType, ctx: FPTransportTargetCTX) => Promise<void>): () => void;
-  onRecv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => Promise<void>): () => void;
+  // Handlers are invoked synchronously and not awaited. If async work is needed,
+  // handlers must perform it independently and handle their own errors.
+  onRecv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => void): () => void;
 }
 
 export interface FPWebWindow {
