@@ -526,6 +526,7 @@ describe("DeviceIdSignMsg", () => {
     });
 
     const ret = await deviceVerifyMsg.verifyWithCertificate(jwt);
+    console.log("Verify:", ret);
     expect(ret.valid).toBe(false);
   });
 });

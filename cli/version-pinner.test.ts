@@ -3,18 +3,57 @@ import { VersionPinner } from "./version-pinner.js";
 import { PackageJson } from "./build-cmd.js";
 import { findUp } from "find-up";
 import { $ } from "zx";
+import { Lazy } from "@adviser/cement";
 
-// Helper to get installed version from pnpm list
-async function getInstalledVersion(packageName: string): Promise<string> {
-  // eslint-disable-next-line no-restricted-globals
-  const curFileDirectory = new URL(".", import.meta.url).pathname;
-  const result = await $`cd ${curFileDirectory} && pnpm list ${packageName} --depth 1 --json`.quiet();
-  const json = JSON.parse(result.stdout);
-  const version = json[0]?.dependencies?.[packageName]?.version || json[0]?.devDependencies?.[packageName]?.version;
-  if (!version) {
-    throw new Error(`Could not find installed version for ${packageName}`);
+/**
+ * Service class to query installed package versions from pnpm.
+ * Runs 'pnpm list' once and caches the results to avoid timeouts in CI.
+ */
+class PnpmService {
+  private readonly workingDirectory: string;
+
+  constructor(workingDirectory?: string) {
+    // eslint-disable-next-line no-restricted-globals
+    this.workingDirectory = workingDirectory ?? new URL(".", import.meta.url).pathname;
   }
-  return version;
+
+  // Use Lazy to ensure pnpm list is only called once
+  private readonly getDependencies = Lazy(async () => {
+    const result = await $`cd ${this.workingDirectory} && pnpm list --depth 1 --json`.quiet();
+    const json = JSON.parse(result.stdout);
+
+    const deps: Record<string, string> = {};
+    const packages = json[0];
+
+    if (packages?.dependencies) {
+      for (const [name, info] of Object.entries(packages.dependencies)) {
+        deps[name] = (info as { version: string }).version;
+      }
+    }
+
+    if (packages?.devDependencies) {
+      for (const [name, info] of Object.entries(packages.devDependencies)) {
+        deps[name] = (info as { version: string }).version;
+      }
+    }
+
+    return deps;
+  });
+
+  /**
+   * Get the installed version of a specific package.
+   * Uses cached results from 'pnpm list' to avoid repeated shell executions.
+   */
+  async getInstalledVersion(packageName: string): Promise<string> {
+    const deps = await this.getDependencies();
+    const version = deps[packageName];
+
+    if (!version) {
+      throw new Error(`Could not find installed version for ${packageName}`);
+    }
+
+    return version;
+  }
 }
 
 // Template for test package.json
@@ -30,6 +69,7 @@ const pkgTemplate: PackageJson = {
 
 describe("VersionPinner", () => {
   let pinner: VersionPinner;
+  let pnpmService: PnpmService;
   let cmdTsVersion: string;
   let semverVersion: string;
   let multiformatsVersion: string;
@@ -41,11 +81,12 @@ describe("VersionPinner", () => {
     }
 
     pinner = await VersionPinner.create({ lockfilePath });
+    pnpmService = new PnpmService();
 
     // Get actual installed versions from pnpm
-    cmdTsVersion = await getInstalledVersion("cmd-ts");
-    semverVersion = await getInstalledVersion("semver");
-    multiformatsVersion = await getInstalledVersion("multiformats");
+    cmdTsVersion = await pnpmService.getInstalledVersion("cmd-ts");
+    semverVersion = await pnpmService.getInstalledVersion("semver");
+    multiformatsVersion = await pnpmService.getInstalledVersion("multiformats");
   });
 
   describe("pinVersions", () => {
@@ -155,7 +196,7 @@ describe("VersionPinner", () => {
     });
 
     it("should sort dependencies alphabetically", async () => {
-      const zxVersion = await getInstalledVersion("zx");
+      const zxVersion = await pnpmService.getInstalledVersion("zx");
 
       const pkg: PackageJson = {
         ...pkgTemplate,
@@ -211,7 +252,7 @@ describe("VersionPinner", () => {
     });
 
     it("should pin devDependencies when includeDevDeps option is true", async () => {
-      const vitestVersion = await getInstalledVersion("vitest");
+      const vitestVersion = await pnpmService.getInstalledVersion("vitest");
 
       const pkg: PackageJson = {
         ...pkgTemplate,
