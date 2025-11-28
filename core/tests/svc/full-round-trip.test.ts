@@ -24,7 +24,7 @@ class DirectSide implements FPWebWindow {
   postMessage(msg: Event, target: string): void {
     this.targetSides.find((side) => target === side.mySide)?.recvHandlers.forEach((h) => h({ ...msg, origin: this.mySide }));
   }
-  addEventListener<T>(type: string, listener: (msg: T) => void, _options?: boolean | AddEventListenerOptions): void {
+  addEventListener<T>(_type: string, listener: (msg: T) => void, _options?: boolean | AddEventListenerOptions): void {
     this.recvHandlers.push((msg: unknown) => {
       return listener(msg as T);
     });
@@ -62,7 +62,7 @@ describe("Full Round Trip Tests", () => {
       const transport = proxy.ledger.ctx.get("transport") as FPTransport;
       const sendMock = vi.fn((..._args: unknown[]) => Promise.resolve());
       transport.onSend(sendMock);
-      const recvMock = vi.fn((..._args: unknown[]) => Promise.resolve());
+      const recvMock = vi.fn((..._args: unknown[]) => undefined);
       transport.onRecv(recvMock);
       return {
         webWindow,

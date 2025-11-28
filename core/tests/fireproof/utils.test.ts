@@ -520,3 +520,181 @@ describe("coerceJWKPublic", () => {
     expect(await sts.coerceJWKPublic(sthis, pemWrapped)).toEqual([jwk]);
   });
 });
+
+describe("coerceJWK", () => {
+  const sthis = ensureSuperThis();
+  let jwkPublic: JWK;
+  let jwkPrivate: JWK;
+  let pair: sts.KeysResult;
+
+  beforeAll(async () => {
+    pair = await sts.SessionTokenService.generateKeyPair("ES256", { extractable: true });
+    jwkPrivate = await exportJWK(pair.material.privateKey);
+    jwkPublic = await exportJWK(pair.material.publicKey);
+  });
+
+  describe("with public key", () => {
+    it("accepts public JWK object", async () => {
+      const result = await sts.coerceJWK(sthis, jwkPublic);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        kty: jwkPublic.kty,
+        crv: jwkPublic.crv,
+        x: jwkPublic.x,
+      });
+      expect(result[0]).not.toHaveProperty("d");
+    });
+
+    it("accepts public JWK as JSON string", async () => {
+      const result = await sts.coerceJWK(sthis, JSON.stringify(jwkPublic));
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty("d");
+    });
+
+    it("accepts public JWK as base64 encoded JSON", async () => {
+      const result = await sts.coerceJWK(sthis, sthis.txt.base64.encode(JSON.stringify(jwkPublic)));
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty("d");
+    });
+
+    it("accepts public JWK as base58 encoded JSON", async () => {
+      const result = await sts.coerceJWK(sthis, sthis.txt.base58.encode(JSON.stringify(jwkPublic)));
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty("d");
+    });
+
+    it("accepts public JWK via jwk2env", async () => {
+      const encoded = await sts.jwk2env(pair.material.publicKey, sthis);
+      const result = await sts.coerceJWK(sthis, encoded);
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty("d");
+    });
+  });
+
+  describe("with private key", () => {
+    it("accepts private JWK object", async () => {
+      const result = await sts.coerceJWK(sthis, jwkPrivate);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        kty: jwkPrivate.kty,
+        crv: jwkPrivate.crv,
+        x: jwkPrivate.x,
+        d: jwkPrivate.d, // Should preserve private key component
+      });
+    });
+
+    it("accepts private JWK as JSON string", async () => {
+      const result = await sts.coerceJWK(sthis, JSON.stringify(jwkPrivate));
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty("d"); // Should preserve private key component
+    });
+
+    it("accepts private JWK as base64 encoded JSON", async () => {
+      const result = await sts.coerceJWK(sthis, sthis.txt.base64.encode(JSON.stringify(jwkPrivate)));
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty("d");
+    });
+
+    it("accepts private JWK as base58 encoded JSON", async () => {
+      const result = await sts.coerceJWK(sthis, sthis.txt.base58.encode(JSON.stringify(jwkPrivate)));
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty("d");
+    });
+
+    it("accepts private JWK via jwk2env", async () => {
+      const encoded = await sts.jwk2env(pair.material.privateKey, sthis);
+      const result = await sts.coerceJWK(sthis, encoded);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty("d");
+    });
+
+    it("preserves private key through env2jwk", async () => {
+      const encoded = await sts.jwk2env(pair.material.privateKey, sthis);
+      const cryptoKeys = await sts.env2jwk(encoded, undefined, sthis);
+      expect(cryptoKeys).toHaveLength(1);
+
+      // Export and verify private key is preserved
+      const exported = await exportJWK(cryptoKeys[0]);
+      expect(exported).toHaveProperty("d");
+    });
+  });
+
+  describe("with multiple keys", () => {
+    it("accepts array of mixed public and private keys", async () => {
+      const result = await sts.coerceJWK(sthis, [jwkPrivate, jwkPublic]);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toHaveProperty("d"); // Private key
+      expect(result[1]).not.toHaveProperty("d"); // Public key
+    });
+  });
+});
+
+describe("coerceJWKPrivate", () => {
+  const sthis = ensureSuperThis();
+  let jwkPrivate: JWK;
+  let jwkPublic: JWK;
+  let pair: sts.KeysResult;
+
+  beforeAll(async () => {
+    pair = await sts.SessionTokenService.generateKeyPair("ES256", { extractable: true });
+    jwkPrivate = await exportJWK(pair.material.privateKey);
+    jwkPublic = await exportJWK(pair.material.publicKey);
+  });
+
+  it("accepts private JWK object", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, jwkPrivate);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      kty: jwkPrivate.kty,
+      crv: jwkPrivate.crv,
+      d: jwkPrivate.d,
+    });
+  });
+
+  it("accepts private JWK as JSON string", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, JSON.stringify(jwkPrivate));
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveProperty("d");
+  });
+
+  it("accepts private JWK as base64 encoded JSON", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, sthis.txt.base64.encode(JSON.stringify(jwkPrivate)));
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveProperty("d");
+  });
+
+  it("accepts private JWK as base58 encoded JSON", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, sthis.txt.base58.encode(JSON.stringify(jwkPrivate)));
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveProperty("d");
+  });
+
+  it("accepts private JWK via jwk2env", async () => {
+    const encoded = await sts.jwk2env(pair.material.privateKey, sthis);
+    const result = await sts.coerceJWKPrivate(sthis, encoded);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toHaveProperty("d");
+  });
+
+  it("rejects public JWK (missing private key component)", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, jwkPublic);
+    expect(result).toHaveLength(0); // Should return empty array when validation fails
+  });
+
+  it("rejects public JWK as JSON string", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, JSON.stringify(jwkPublic));
+    expect(result).toHaveLength(0);
+  });
+
+  it("rejects public JWK via jwk2env", async () => {
+    const encoded = await sts.jwk2env(pair.material.publicKey, sthis);
+    const result = await sts.coerceJWKPrivate(sthis, encoded);
+    expect(result).toHaveLength(0);
+  });
+
+  it("filters out public keys from mixed array", async () => {
+    const result = await sts.coerceJWKPrivate(sthis, [jwkPrivate, jwkPublic]);
+    expect(result).toHaveLength(1); // Only the private key should be accepted
+    expect(result[0]).toHaveProperty("d");
+  });
+});

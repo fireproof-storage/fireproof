@@ -1,5 +1,6 @@
 import { FPDeviceIDCSRPayload, JWKPublic, JWKPublicSchema, FPDeviceIDCSRPayloadSchema } from "@fireproof/core-types-base";
-import { jwtVerify, decodeProtectedHeader, importJWK, calculateJwkThumbprint } from "jose";
+import { jwtVerify, decodeProtectedHeader, calculateJwkThumbprint } from "jose";
+import { sts } from "@fireproof/core-runtime";
 
 interface ValidateCSRError {
   readonly valid: false;
@@ -13,24 +14,6 @@ interface ValidateCSRSuccess {
 }
 
 type ValidateCSRResult = ValidateCSRError | ValidateCSRSuccess;
-
-function deriveAlgFromJwk(jwk: JWKPublic): string {
-  if (jwk.kty === "EC") {
-    switch (jwk.crv) {
-      case "P-256":
-        return "ES256";
-      case "P-384":
-        return "ES384";
-      case "P-521":
-        return "ES512";
-      // case "secp256k1":
-      //   return "ES256K";
-    }
-  }
-  if (jwk.kty === "OKP") return "EdDSA";
-  if (jwk.kty === "RSA") return "RS256"; // tighten if you only support PS* or specific algs
-  throw new Error("Unsupported JWK kty/crv for CSR verification");
-}
 
 export class DeviceIdValidator {
   async validateCSR(csrJWS: string): Promise<ValidateCSRResult> {
@@ -50,8 +33,14 @@ export class DeviceIdValidator {
       }
 
       // Verify the JWS
-      const alg = typeof header.alg === "string" ? header.alg : deriveAlgFromJwk(publicKey);
-      const keyLike = await importJWK(publicKey, alg);
+      const rKeyLike = await sts.importJWK(publicKey, header.alg);
+      if (rKeyLike.isErr()) {
+        return {
+          valid: false,
+          error: `Failed to import public key: ${rKeyLike.Err()}`,
+        };
+      }
+      const { key: keyLike, alg } = rKeyLike.Ok();
       const { payload: fromPayload } = await jwtVerify(csrJWS, keyLike, {
         typ: "CSR+JWT",
         algorithms: [alg],

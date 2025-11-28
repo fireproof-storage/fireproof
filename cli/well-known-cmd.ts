@@ -2,7 +2,7 @@
 import { SuperThis } from "@fireproof/core-types-base";
 import * as rt from "@fireproof/core-runtime";
 import { command, restPositionals, string, option, flag } from "cmd-ts";
-import { exportSPKI, importJWK } from "jose";
+import { exportSPKI } from "jose";
 
 export function wellKnownCmd(_sthis: SuperThis) {
   return command({
@@ -109,8 +109,12 @@ export function wellKnownCmd(_sthis: SuperThis) {
         case "pem":
           {
             for (const jwk of combinedOutput.keys) {
-              const publicKey = await importJWK(jwk, "RS256");
-              console.log(await exportSPKI(publicKey as CryptoKey));
+              const rKey = await rt.sts.importJWK(jwk);
+              if (rKey.isErr()) {
+                console.error(`Error importing JWK: ${rKey.Err()}`);
+                process.exit(1);
+              }
+              console.log(await exportSPKI(rKey.Ok().key));
             }
           }
           break;

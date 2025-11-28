@@ -149,9 +149,6 @@ importers:
       vitest:
         specifier: ^4.0.8
         version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
-      why-is-node-running:
-        specifier: ^3.2.2
-        version: 3.2.2
 
   cloud/3rd-party:
     dependencies:
@@ -868,8 +865,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       zod:
-        specifier: ^4.1.12
-        version: 4.1.12
+        specifier: ^4.1.13
+        version: 4.1.13
 
   core/runtime:
     dependencies:
@@ -6524,11 +6521,6 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
-  why-is-node-running@3.2.2:
-    resolution: {integrity: sha512-NKUzAelcoCXhXL4dJzKIwXeR8iEVqsA0Lq6Vnd0UXvgaKbzVo4ZTHROF2Jidrv+SgxOQ03fMinnNhzZATxOD3A==}
-    engines: {node: '>=20.11'}
-    hasBin: true
-
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
@@ -6645,9 +6637,6 @@ packages:
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
-
-  zod@4.1.12:
-    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
   zod@4.1.13:
     resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
@@ -11841,8 +11830,6 @@ snapshots:
       siginfo: 2.0.0
       stackback: 0.0.2
 
-  why-is-node-running@3.2.2: {}
-
   word-wrap@1.2.5: {}
 
   workerd@1.20251118.0:
@@ -11944,8 +11931,6 @@ snapshots:
       zod: 4.1.13
 
   zod@3.22.3: {}
-
-  zod@4.1.12: {}
 
   zod@4.1.13: {}
 

@@ -1,4 +1,4 @@
-import { CTJsonWebKey } from "@adviser/cement";
+import { Result } from "@adviser/cement";
 import { z } from "zod/v4";
 
 // JWK Schema
@@ -10,13 +10,58 @@ export function ktyFromAlg(alg: string | undefined): "RSA" | "EC" | "OKP" {
   return "EC";
 }
 
-export function toJwksAlg(alg: string | undefined, jwk: CTJsonWebKey): string | undefined {
-  if (jwk.kty === "RSA") return "RS256";
-  if (jwk.kty === "EC") {
-    if (jwk.crv === "P-256") return "ES256";
-    if (jwk.crv === "P-384") return "ES384";
-    if (jwk.crv === "P-521") return "ES512";
-    return undefined;
+/**
+ * Infers the algorithm from a JWK based on key type and curve.
+ * If the JWK already has an 'alg' field set, it returns that.
+ * Otherwise, it infers the algorithm from 'kty' (key type) and 'crv' (curve for EC/OKP keys).
+ *
+ * This is the new comprehensive version that returns Result for proper error handling.
+ * Use this for algorithm inference in all new code.
+ */
+export function toJwksAlg(jwk: { kty?: string; crv?: string; alg?: string }): Result<string> {
+  // If alg is already set, use it
+  if (jwk.alg) {
+    return Result.Ok(jwk.alg);
+  }
+
+  // Infer from key type
+  switch (jwk.kty) {
+    case "EC": {
+      // Elliptic Curve keys - infer from curve
+      switch (jwk.crv) {
+        case "P-256":
+          return Result.Ok("ES256");
+        case "P-384":
+          return Result.Ok("ES384");
+        case "P-521":
+          return Result.Ok("ES512");
+        case "secp256k1":
+          return Result.Ok("ES256K");
+        default:
+          return Result.Err(`Unsupported EC curve: ${jwk.crv}`);
+      }
+    }
+    case "RSA": {
+      // RSA keys - default to RS256 (most common)
+      return Result.Ok("RS256");
+    }
+    case "OKP": {
+      // Octet Key Pair (EdDSA)
+      switch (jwk.crv) {
+        case "Ed25519":
+          return Result.Ok("EdDSA");
+        case "Ed448":
+          return Result.Ok("EdDSA");
+        default:
+          return Result.Err(`Unsupported OKP curve: ${jwk.crv}`);
+      }
+    }
+    case "oct": {
+      // Symmetric keys - default to HS256
+      return Result.Ok("HS256");
+    }
+    default:
+      return Result.Err(`Unsupported key type: ${jwk.kty}`);
   }
 }
 

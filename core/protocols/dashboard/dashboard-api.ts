@@ -80,7 +80,7 @@ export class DashboardApi {
 
   private async getAuth() {
     return exception2Result(() => {
-      return this.cfg.getToken()?.then((token) => {
+      return this.cfg.getToken().then((token) => {
         if (!token) throw new Error("No token available");
         return token as DashAuthType;
       });

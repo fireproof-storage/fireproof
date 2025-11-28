@@ -10,7 +10,7 @@ import { ResultSet } from "@libsql/client";
 import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fireproof/core-device-id";
 import { verifyToken as ClerkVerifyToken } from "@clerk/backend";
-import { exportSPKI, importJWK } from "jose";
+import { exportSPKI } from "jose";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
@@ -72,12 +72,15 @@ class ClerkApiToken implements FPApiToken {
           }
         },
         verifyToken: async (token, key) => {
-          const publicKey = await importJWK(key, "RS256");
-          const pem = await exportSPKI(publicKey as CryptoKey);
+          const rPublicKey = await sts.importJWK(key, "RS256");
+          if (rPublicKey.isErr()) {
+            return Result.Err(rPublicKey);
+          }
+          const pem = await exportSPKI(rPublicKey.Ok().key);
           const r = await exception2Result(() =>
             ClerkVerifyToken(token, {
               jwtKey: pem,
-              authorizedParties: ["http://localhost:7370"],
+              // authorizedParties: ["http://localhost:7370"],
             }),
           );
           if (r.isErr()) {
@@ -256,7 +259,7 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
 
   const logger = ensureLogger(sthis, "createHandler");
   const fpApi = new FPApiSQL(sthis, db, await tokenApi(sthis), {
-    cloudPublicKeys: [rCloudPublicKey.Ok()],
+    cloudPublicKeys: rCloudPublicKey.Ok().keys,
     clerkPublishableKey: envVals.CLERK_PUBLISHABLE_KEY,
     maxTenants: coerceInt(env.MAX_TENANTS, 10),
     maxAdminUsers: coerceInt(env.MAX_ADMIN_USERS, 5),

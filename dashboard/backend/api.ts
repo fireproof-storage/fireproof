@@ -1978,10 +1978,13 @@ export class FPApiSQL implements FPApiInterface {
     const ctx = rCtx.Ok();
     try {
       // Get the public key for verification
-      const pubKey = await sts.env2jwk(ctx.publicToken, "ES256");
+      const pubKey = await sts.env2jwk(ctx.publicToken);
+      if (pubKey.length !== 1) {
+        return Result.Err("just one public key supported");
+      }
 
       // Verify the token
-      const verifyResult = await jwtVerify(req.token, pubKey, {
+      const verifyResult = await jwtVerify(req.token, pubKey[0], {
         issuer: ctx.issuer,
         audience: ctx.audience,
       });

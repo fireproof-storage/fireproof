@@ -123,7 +123,7 @@ export function CsrToCert() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(certificate);
-                alert("Certificate copied to clipboard!");
+                // alert("Certificate copied to clipboard!");
               }}
               className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >

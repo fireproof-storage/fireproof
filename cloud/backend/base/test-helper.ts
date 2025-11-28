@@ -212,11 +212,19 @@ export async function mockJWK(sthis: SuperThis, claim: Partial<TokenForParam> = 
     sthis.env.get(sts.envKeyDefaults.PUBLIC) ??
     "zeWndr5LEoaySgKSo2aZniYqaZvsKKu1RhfpL2R3hjarNgfXfN7CvR1cAiT74TMB9MQtMvh4acC759Xf8rTwCgxXvGHCBjHngThNtYpK2CoysiAMRJFUi9irMY9H7WApJkfxB15n8ss8iaEojcGB7voQVyk2T6aFPRnNdkoB6v5zk";
   // that could be solved better now with globalSetup.v2-cloud.ts
-  const publicJWK = await sts.env2jwk(publicJWKStr, "ES256", sthis);
+  const publicJWKs = await sts.env2jwk(publicJWKStr, undefined, sthis);
+  if (publicJWKs.length !== 1) {
+    throw new Error(`Expected exactly one public JWK, found ${publicJWKs.length}`);
+  }
+  const publicJWK = publicJWKs[0];
   const privateJWKStr =
     sthis.env.get(sts.envKeyDefaults.SECRET) ??
     "z33KxHvFS3jLz72v9DeyGBqo79qkbpv5KNP43VKUKSh1fcLb629pFTFyiJEosZ9jCrr8r9TE44KXCPZ2z1FeWGsV1N5gKjGWmZvubUwNHPynxNjCYy4GeYoQ8ukBiKjcPG22pniWCnRMwZvueUBkVk6NdtNY1uwyPk2HAGTsfrw5CBJvTcYsaFeG11SKZ9Q55Xk1W2p4gtZQHzkYHdfQQhgZ73Ttq7zmFoms73kh7MsudYzErx";
-  const privateJWK = await sts.env2jwk(privateJWKStr, "ES256", sthis);
+  const privateJWKs = await sts.env2jwk(privateJWKStr, undefined, sthis);
+  if (privateJWKs.length !== 1) {
+    throw new Error(`Expected exactly one private JWK, found ${privateJWKs.length}`);
+  }
+  const privateJWK = privateJWKs[0];
   // console.log(">>>>>", publicJWKStr, privateJWKStr);
 
   sthis.env.set(sts.envKeyDefaults.PUBLIC, publicJWKStr);
