@@ -41,7 +41,7 @@ export function CsrToCert() {
     if (certificate && returnUrl) {
       const timer = setTimeout(() => {
         const urlWithCert = BuildURI.from(returnUrl).setParam("cert", certificate).toString();
-        console.log(">>>>>", urlWithCert);
+        // console.log(">>>>>", urlWithCert);
         window.location.href = urlWithCert;
       }, 3000);
 
@@ -53,23 +53,23 @@ export function CsrToCert() {
     try {
       setError(null);
       setCertificate(null);
-      console.log("Submitting CSR:", data.csrContent);
+      // console.log("Submitting CSR:", data.csrContent);
 
       const result = await cloud.api.getCertFromCsr({ csr: data.csrContent });
 
       if (result.isOk()) {
         const response = result.Ok();
         setCertificate(response.certificate);
-        console.log("Certificate received:", response.certificate);
+        // console.log("Certificate received:", response.certificate);
       } else {
         const errorMsg = result.Err();
         setError(typeof errorMsg === "string" ? errorMsg : "Failed to get certificate");
-        console.error("Error getting certificate:", errorMsg);
+        // console.error("Error getting certificate:", errorMsg);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMsg);
-      console.error("Exception during CSR submission:", err);
+      // console.error("Exception during CSR submission:", err);
     }
   };
 
@@ -123,7 +123,7 @@ export function CsrToCert() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(certificate);
-                // alert("Certificate copied to clipboard!");
+                alert("Certificate copied to clipboard!");
               }}
               className="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >

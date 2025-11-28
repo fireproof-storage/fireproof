@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { command, option, string, restPositionals } from "cmd-ts";
+import { command, option, number, restPositionals } from "cmd-ts";
 import { SuperThis } from "@fireproof/core-types-base";
 import { $ } from "zx";
 import { timeouted, isSuccess, isTimeout, isAborted, isError } from "@adviser/cement";
@@ -13,15 +13,15 @@ export function retryCmd(_sthis: SuperThis) {
         long: "retry",
         short: "r",
         description: "Number of retry attempts (default: 2)",
-        type: string,
-        defaultValue: () => "2",
+        type: number,
+        defaultValue: () => 2,
       }),
       timeout: option({
         long: "timeout",
         short: "t",
         description: "Timeout in seconds for each attempt (0 = no timeout)",
-        type: string,
-        defaultValue: () => "0",
+        type: number,
+        defaultValue: () => 0,
       }),
       command: restPositionals({
         description: "Command and arguments to execute",
@@ -29,8 +29,8 @@ export function retryCmd(_sthis: SuperThis) {
       }),
     },
     handler: async function (args) {
-      const retryCount = parseInt(args.retry, 10);
-      const timeoutSec = parseInt(args.timeout, 10);
+      const retryCount = args.retry;
+      const timeoutSec = args.timeout;
 
       if (isNaN(retryCount) || retryCount < 1) {
         console.error("Error: --retry must be a positive number");

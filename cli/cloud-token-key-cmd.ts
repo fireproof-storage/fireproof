@@ -1,20 +1,32 @@
-import { JWKPublic, SuperThis } from "@fireproof/core-types-base";
+import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema, SuperThis } from "@fireproof/core-types-base";
 import * as rt from "@fireproof/core-runtime";
 import { command, flag, option, string } from "cmd-ts";
 import { exportJWK } from "jose/key/export";
 import { Result, exception2Result } from "@adviser/cement";
+import { z } from "zod/v4";
 
-async function ourToJWK(env: string, sthis: SuperThis): Promise<Result<{ keys: JWKPublic[] }>> {
+async function ourToJWK(env: string, sthis: SuperThis): Promise<Result<{ keys: (JWKPublic | JWKPrivate)[] }>> {
   const rCryptoKeys = await exception2Result(() => rt.sts.env2jwk(env, undefined, sthis));
   if (rCryptoKeys.isErr()) {
     return Result.Err(rCryptoKeys);
   }
   const cryptoKeys = rCryptoKeys.Ok();
-  const rKeys = await exception2Result(() => Promise.all(cryptoKeys.map((key) => exportJWK(key))));
-  if (rKeys.isErr()) {
-    return Result.Err(rKeys);
+
+  // Convert each key individually for better error reporting
+  const keys: (JWKPrivate | JWKPublic)[] = [];
+  for (const key of cryptoKeys) {
+    const rKey = await exception2Result(() => exportJWK(key));
+    if (rKey.isErr()) {
+      return Result.Err(rKey);
+    }
+    const parsed = z.union([JWKPublicSchema, JWKPrivateSchema]).safeParse(rKey.Ok());
+    if (!parsed.success) {
+      return Result.Err(`Invalid JWK public key: ${parsed.error.message}`);
+    }
+    keys.push(parsed.data);
   }
-  return Result.Ok({ keys: rKeys.Ok() as JWKPublic[] });
+
+  return Result.Ok({ keys });
 }
 
 export function keyCmd(sthis: SuperThis) {

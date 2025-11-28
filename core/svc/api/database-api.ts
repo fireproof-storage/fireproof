@@ -320,11 +320,8 @@ class DatabaseProxy implements Database {
           const parsed = MsgTypeSchema.safeParse(msg);
           console.log("DatabaseProxy received message", this.id, this.name, msg, parsed.success);
           if (!parsed.success) {
-            return this.logger
-              .Error()
-              .Any({ msg, origin: ctx.origin })
-              .Msg("Received invalid message in DatabaseProxy")
-              .ResultError();
+            this.logger.Error().Any({ msg, origin: ctx.origin }).Msg("Received invalid message in DatabaseProxy");
+            return;
           }
           switch (true) {
             case isResApplyDatabaseConfig(parsed.data):
@@ -334,13 +331,9 @@ class DatabaseProxy implements Database {
               this.onResDBGet.invoke(parsed.data, ctx);
               break;
             default:
-              return this.logger
-                .Warn()
-                .Any({ msg, origin: ctx.origin })
-                .Msg("Received unhandled message type in DatabaseProxy")
-                .ResultError();
+              this.logger.Warn().Any({ msg, origin: ctx.origin }).Msg("Received unhandled message type in DatabaseProxy");
+              break;
           }
-          return Promise.resolve(Result.Ok());
         });
         return this.appliedDatabaseConfig().then((res) => {
           if (res.isErr()) {
