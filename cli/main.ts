@@ -5,7 +5,7 @@ import { dotenv } from "zx";
 import { buildCmd } from "./build-cmd.js";
 import { setDependenciesCmd, setScriptsCmd } from "./set-scripts-cmd.js";
 import { handleTsc, tscCmd } from "./tsc-cmd.js";
-import { writeEnvCmd } from "./write-env.js";
+import { writeEnvCmd } from "./write-env-cmd.js";
 import { keyCmd } from "./cloud-token-key-cmd.js";
 import { preSignedUrlCmd } from "./pre-signed-url.js";
 import { dependabotCmd } from "./dependabot-cmd.js";

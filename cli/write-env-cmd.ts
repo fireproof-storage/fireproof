@@ -13,10 +13,26 @@ export async function writeEnvFile(
   doNotOverwrite: boolean,
   json: boolean,
 ) {
-  if (outFname === "-") {
-    outFname = "/dev/stdout";
+  // Prepare output content
+  let render: string;
+  if (json) {
+    render = JSON.stringify(vals, null, 2);
+  } else {
+    render = Object.entries(vals)
+      .map(([k, v]) => `${k}=${v}`)
+      .join("\n");
   }
+
+  // Handle stdout output (portable approach)
+  if (outFname === "-") {
+    process.stdout.write(render + "\n");
+    return "-";
+  }
+
+  // Determine output file path
   const fname = outFname ?? sthis.pathOps.join(sthis.pathOps.dirname(envFname), `.dev.vars.${env}`);
+
+  // Check if we should skip writing due to doNotOverwrite flag
   if (
     doNotOverwrite &&
     (await fs
@@ -26,16 +42,9 @@ export async function writeEnvFile(
   ) {
     return fname;
   }
-  let render: string;
-  if (json) {
-    render = JSON.stringify(vals, null, 2);
-  } else {
-    // console.log("Writing to", fname);
-    render = Object.entries(vals)
-      .map(([k, v]) => `${k}=${v}`)
-      .join("\n");
-  }
-  await fs.writeFile(outFname ?? fname, render);
+
+  // Write to file
+  await fs.writeFile(fname, render);
   return fname;
 }
 
