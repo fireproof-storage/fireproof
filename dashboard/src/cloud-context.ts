@@ -17,18 +17,6 @@ import {
 } from "@fireproof/core-protocols-dashboard";
 import { DASHAPI_URL } from "./helpers.js";
 
-// const emptyListTenantsByUser: ResListTenantsByUser = {
-//   type: "resListTenantsByUser",
-//   userId: "unk",
-//   authUserId: "unk",
-//   tenants: [] as UserTenant[],
-// };
-
-// const emptyListInvites: ResListInvites = {
-//   type: "resListInvites",
-//   tickets: [],
-// };
-
 export interface InviteItem {
   tenantId: string;
   invites: InviteTicket[];
@@ -46,10 +34,6 @@ function wrapResultToPromise<T>(pro: () => Promise<Result<T>>) {
   };
 }
 
-// const _betterAuthClient = createAuthClient({
-//   baseURL: API_URL,
-// });
-
 interface TokenType {
   readonly type: "clerk" | "better";
   readonly token: string;
@@ -61,51 +45,18 @@ export interface ListTenantsLedgersByUser {
 
 export class CloudContext {
   readonly api: DashboardApi;
-  // readonly betterAuthClient: ReturnType<typeof createAuthClient>;
 
   constructor() {
-    // this.betterAuthClient = _betterAuthClient;
     this.api = new DashboardApi({
       apiUrl: DASHAPI_URL,
       fetch: window.fetch.bind(window),
-      // apiUrl: API_URL,
       getToken: () => this.getToken(),
     });
   }
 
   _clerkSession?: ReturnType<typeof useSession>;
-  // private _betterAuthSession?: ReturnType<typeof _betterAuthClient.useSession>;
-  // private _queryClient?: QueryClient;
 
-  readonly betterToken = {
-    expires: -1,
-    token: undefined,
-  } as {
-    expires: number;
-    token?: string;
-  };
   async getToken(): Promise<TokenType | undefined> {
-    // console.log("getToken", this._betterAuthSession?.data);
-    // if (this._betterAuthSession?.data) {
-    //   if (this.betterToken.expires < Date.now()) {
-    //     const res = (await this.betterAuthClient.$fetch("/token")) as {
-    //       data: {
-    //         token: string;
-    //       };
-    //     };
-    //     this.betterToken.token = res.data.token;
-    //     console.log("betterToken", this.betterToken.token);
-    //     // jwt.verify(this.betterToken.token
-    //     // this.betterToken.expires = Date.now() + this._betterAuthSession.data.expiresIn;
-    //   }
-    //   if (!this.betterToken.token) {
-    //     return undefined;
-    //   }
-    //   return {
-    //     type: "better",
-    //     token: this.betterToken.token,
-    //   };
-    // }
     const token = await this._clerkSession?.session?.getToken({ template: "with-email" });
     return token
       ? {
@@ -128,7 +79,7 @@ export class CloudContext {
   }
 
   initContext() {
-    console.log("initContext");
+    // console.log("initContext");
 
     this._clerkSession = useSession();
     // this._betterAuthSession = _betterAuthClient.useSession();
@@ -184,7 +135,7 @@ export class CloudContext {
     });
 
     this.addTenantToListLedgerByUser(tenantId, () => {
-      console.log("ledger - refetch", tenantId, this.activeApi(this._tenantIdForLedgers.size > 0));
+      // console.log("ledger - refetch", tenantId, this.activeApi(this._tenantIdForLedgers.size > 0));
       if (this.activeApi(this._tenantIdForLedgers.size > 0)) {
         listLedgers.refetch();
       }
@@ -196,7 +147,7 @@ export class CloudContext {
     return useQuery({
       queryKey: ["listTenantsLedgersByUser", this._ensureUser.data?.user.userId],
       queryFn: async () => {
-        console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
+        // console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
         const listTenantsByUser = await this.api.listTenantsByUser({});
         const listLedgersByUser = await this.api.listLedgersByUser({
           tenantIds: listTenantsByUser.Ok().tenants.map((t) => t.tenantId),
@@ -220,7 +171,7 @@ export class CloudContext {
     return useQuery({
       queryKey: ["listTenantsByUser", this._ensureUser.data?.user.userId],
       queryFn: () => {
-        console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
+        // console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
         return wrapResultToPromise(() => this.api.listTenantsByUser({}))();
       },
       enabled: this.activeApi(),
@@ -252,8 +203,8 @@ export class CloudContext {
       mutationFn: ({ name }: { name: string }) => {
         return wrapResultToPromise(() => this.api.createTenant({ tenant: { name } }))();
       },
-      onSuccess: async (data, variables, context) => {
-        console.log("onSuccess", data, variables, context);
+      onSuccess: async () => {
+        // console.log("onSuccess", data, variables, context);
         listTenantsByUser.refetch();
       },
     });
@@ -272,10 +223,8 @@ export class CloudContext {
           }),
         )();
       },
-      onSuccess: async (data, variables, context) => {
-        console.log("onSuccess", data, variables, context);
+      onSuccess: async (_data, variables, _context) => {
         this.addTenantToListLedgerByUser(variables.tenantId, () => {
-          console.log("refetch");
           listLedgers.refetch();
         });
         listLedgers.refetch();

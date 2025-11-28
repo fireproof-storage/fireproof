@@ -128,9 +128,10 @@ export class FPDatabaseSvc {
 
   start(): Promise<Result<void>> {
     const action = new FPActionService(this.sthis);
+    // eslint-disable-next-line no-console
     console.log("FPDatabaseSvc started");
     this.stopRecv = this.transport.recv((msg: unknown, ctx: FPTransportOriginCTX) => {
-      return databaseMsgHandler(this.sthis, this.logger, action, msg, this.transport, ctx);
+      void databaseMsgHandler(this.sthis, this.logger, action, msg, this.transport, ctx);
     });
     return Promise.resolve(Result.Ok());
   }

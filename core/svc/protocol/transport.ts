@@ -15,7 +15,7 @@ export interface FPTransportTargetCTX extends FPTransportOriginCTX {
 export interface FPTransport {
   start(): Promise<Result<void>>;
   send<R extends MsgType>(msg: R, ctx: FPTransportTargetCTX): Promise<Result<R>>;
-  recv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => Promise<Result<void>>): () => void;
+  recv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => void): () => void;
 
   onSend(fn: (msg: MsgType, ctx: FPTransportTargetCTX) => Promise<void>): () => void;
   // Handlers are invoked synchronously and not awaited. If async work is needed,
@@ -51,7 +51,7 @@ export class FPApiPostMessageTransport implements FPTransport {
     return Promise.resolve(Result.Ok());
   }
 
-  recv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => Promise<Result<void>>): () => void {
+  recv(fn: (msg: MsgType, ctx: FPTransportOriginCTX) => void): () => void {
     const handleMessage = (event: MessageEvent) => {
       const msgCbor = event.data;
       if (!isUint8Array(msgCbor)) {

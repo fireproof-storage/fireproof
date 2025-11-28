@@ -90,7 +90,7 @@ describe("VersionPinner", () => {
   });
 
   describe("pinVersions", () => {
-    it("should pin unpinned dependencies with caret (^)", async () => {
+    it("should pin unpinned dependencies with caret (^)", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {
@@ -104,7 +104,7 @@ describe("VersionPinner", () => {
       expect(result.dependencies["cmd-ts"]).toBe(cmdTsVersion);
     });
 
-    it("should pin unpinned dependencies with tilde (~)", async () => {
+    it("should pin unpinned dependencies with tilde (~)", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {
@@ -118,7 +118,7 @@ describe("VersionPinner", () => {
       expect(result.dependencies["semver"]).toBe(semverVersion);
     });
 
-    it("should pin unpinned dependencies with asterisk (*)", async () => {
+    it("should pin unpinned dependencies with asterisk (*)", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {
@@ -132,7 +132,7 @@ describe("VersionPinner", () => {
       expect(result.dependencies["multiformats"]).toBe(multiformatsVersion);
     });
 
-    it("should keep already pinned versions as-is", async () => {
+    it("should keep already pinned versions as-is", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {
@@ -148,7 +148,7 @@ describe("VersionPinner", () => {
       expect(result.dependencies["semver"]).toBe(semverVersion);
     });
 
-    it("should keep pinned versions as-is without looking in lockfile", async () => {
+    it("should keep pinned versions as-is without looking in lockfile", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {
@@ -164,7 +164,7 @@ describe("VersionPinner", () => {
       expect(result.dependencies["another-fake"]).toBe("4.5.6");
     });
 
-    it("should replace workspace: dependencies with package version", async () => {
+    it("should replace workspace: dependencies with package version", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {
@@ -215,7 +215,7 @@ describe("VersionPinner", () => {
       expect(keys).toEqual(["cmd-ts", "multiformats", "semver", "zx"]);
     });
 
-    it("should handle mixed pinned and unpinned dependencies", async () => {
+    it("should handle mixed pinned and unpinned dependencies", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         version: "2.0.0",
@@ -235,7 +235,7 @@ describe("VersionPinner", () => {
       expect(result.dependencies["multiformats"]).toBe(multiformatsVersion); // pinned
     });
 
-    it("should remove devDependencies by default", async () => {
+    it("should remove devDependencies by default", () => {
       const pkg: PackageJson = {
         ...pkgTemplate,
         dependencies: {

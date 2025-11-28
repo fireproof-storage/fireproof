@@ -38,6 +38,7 @@ export class VersionPinner {
 
     for (const [name, version] of Object.entries(deps)) {
       // Check if version is not pinned (starts with ^ or ~ or *)
+      // Note: Also catch malformed versions like "1-beta" that should be resolved from lockfile
       if (version.match(/^[\^~*]/) || version.match(/^[0-9]+-/)) {
         // Look up the exact version in lockfile
         if (this.allDeps[name]) {
@@ -165,7 +166,7 @@ export async function getPackageDependencies(packageName: string, lockfilePath: 
   // - "/@adviser/cement@0.5.2"
   // - "/@adviser/cement@0.5.2(typescript@5.9.3)"
   for (const [key, pkgInfo] of Object.entries(lockfile.packages)) {
-    const match = key.match(/^\/(@?[^@]+)@(.+?)(?:\(|$)/);
+    const match = key.match(/^\/?(@?[^@]+)@(.+?)(?:\(|$)/);
     if (match) {
       const [, name, version] = match;
       if (name === packageName) {
