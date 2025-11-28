@@ -6,7 +6,8 @@
   "type": "module",
   "files": [],
   "engines": {
-    "node": ">=22"
+    "node": ">=22",
+    "pnpm": ">=9.0.0"
   },
   "scripts": {
     "prepack": "core-cli build --prepare-version",
