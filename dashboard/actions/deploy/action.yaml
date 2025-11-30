@@ -41,6 +41,12 @@ inputs:
     description: "default how many invitest could be created per tenant"
   MAX_LEDGERS:
     description: "default how many ledgers per tenant are allowed"
+  DEVICE_ID_CA_PRIV_KEY:
+    description: "Device ID Certificate Authority private key"
+    required: false
+  DEVICE_ID_CA_CERT:
+    description: "Device ID Certificate Authority certificate"
+    required: false
 
 runs:
   using: "composite"
@@ -66,6 +72,8 @@ runs:
         MAX_MEMBER_USERS: ${{ inputs.MAX_MEMBER_USERS }}
         MAX_INVITES: ${{ inputs.MAX_INVITES }}
         MAX_LEDGERS: ${{ inputs.MAX_LEDGERS }}
+        DEVICE_ID_CA_PRIV_KEY: ${{ inputs.DEVICE_ID_CA_PRIV_KEY }}
+        DEVICE_ID_CA_CERT: ${{ inputs.DEVICE_ID_CA_CERT }}
         # need during build
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
@@ -82,7 +90,9 @@ runs:
           --fromEnv MAX_MEMBER_USERS \
           --fromEnv MAX_TENANTS \
           --fromEnv CLOUD_SESSION_TOKEN_SECRET \
-          --fromEnv CLOUD_SESSION_TOKEN_PUBLIC | \
+          --fromEnv CLOUD_SESSION_TOKEN_PUBLIC \
+          --fromEnv DEVICE_ID_CA_PRIV_KEY \
+          --fromEnv DEVICE_ID_CA_CERT | \
           pnpm exec wrangler -c ./wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk
         pnpm run deploy:cf --env ${{inputs.CLOUDFLARE_ENV}}
 
