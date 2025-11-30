@@ -251,9 +251,11 @@ async function coerceJWKWithSchema<T extends JWK>(
       console.log("🟠 coerceJWKWithSchema.map: processing k, type:", typeof k);
       if (typeof k === "string") {
         console.log("🟠 coerceJWKWithSchema.map: k is string, trying JSON parse for JWKS");
+        console.log("🟠 coerceJWKWithSchema.map: k string length:", k.length, "first 100 chars:", k.substring(0, 100));
         // First try parsing as JSON - might be a JWKS object string
         try {
           const parsed = JSON.parse(k);
+          console.log("🟠 coerceJWKWithSchema.map: JSON.parse succeeded, typeof:", typeof parsed, "has keys:", "keys" in parsed);
           if (typeof parsed === "object" && parsed !== null && "keys" in parsed && Array.isArray(parsed.keys)) {
             console.log("🟠 coerceJWKWithSchema.map: parsed as JWKS, extracting", parsed.keys.length, "keys");
             const validatedKeys: T[] = [];
@@ -267,7 +269,8 @@ async function coerceJWKWithSchema<T extends JWK>(
               return validatedKeys;
             }
           }
-        } catch {
+        } catch (err) {
+          console.log("🟠 coerceJWKWithSchema.map: JSON.parse failed:", err);
           // Not JSON, continue with other parsing methods
         }
         console.log("🟠 coerceJWKWithSchema.map: k is string, calling mimeBlockParser");
