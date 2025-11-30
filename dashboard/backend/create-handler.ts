@@ -53,9 +53,11 @@ class ClerkApiToken implements FPApiToken {
       if (!keyVal) {
         break;
       }
+      // Split comma-separated URLs if present
+      const urls = urlVal ? urlVal.split(",").map((u) => u.trim()) : [];
       keyAndUrls.push({
         key: keyVal,
-        url: urlVal,
+        url: urls.length > 0 ? urls[0] : urlVal, // Use first URL for this key
       });
     }
     const rt = await sts.verifyToken(
