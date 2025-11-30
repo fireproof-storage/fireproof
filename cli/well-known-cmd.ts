@@ -59,7 +59,7 @@ export function wellKnownCmd(_sthis: SuperThis) {
       const results =
         urls.length > 0
           ? await rt.sts.fetchWellKnownJwks(urls, {
-              fetch: globalThis.fetch,
+              fetch: (url, init) => globalThis.fetch(url, init),
               fetchTimeoutMs: 5000,
             })
           : [];
