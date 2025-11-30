@@ -255,7 +255,11 @@ async function coerceJWKWithSchema<T extends JWK>(
             }
             break;
           }
-          for (const decodeFn of [(a: string) => a, sthis.txt.base64.decode, sthis.txt.base58.decode]) {
+          for (const decodeFn of [
+            (a: string) => a,
+            (a: string) => sthis.txt.base64.decode(a),
+            (a: string) => sthis.txt.base58.decode(a),
+          ]) {
             const rKey = testEncodeJWKWithSchema(content, decodeFn, validator);
             if (rKey.isOk()) {
               return [rKey.Ok()];
