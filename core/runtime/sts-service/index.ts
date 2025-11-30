@@ -241,11 +241,22 @@ async function coerceJWKWithSchema<T extends JWK>(
   validator: z.ZodType<T>,
   ...inputs: (CoerceJWKType | CoerceJWKType[])[]
 ): Promise<T[]> {
+  console.log("🟠 coerceJWKWithSchema: START, inputs.length:", inputs.length);
+  console.log("🟠 coerceJWKWithSchema: flattening inputs");
+  const flatInputs = [...inputs].flat();
+  console.log("🟠 coerceJWKWithSchema: flatInputs.length:", flatInputs.length);
+  console.log("🟠 coerceJWKWithSchema: calling Promise.all with map");
   return Promise.all(
-    inputs.flat().map(async (k) => {
+    flatInputs.map(async (k) => {
+      console.log("🟠 coerceJWKWithSchema.map: processing k, type:", typeof k);
       if (typeof k === "string") {
-        for (const { content, begin, end } of mimeBlockParser(k)) {
+        console.log("🟠 coerceJWKWithSchema.map: k is string, calling mimeBlockParser");
+        const mimeBlocks = mimeBlockParser(k);
+        console.log("🟠 coerceJWKWithSchema.map: mimeBlockParser returned");
+        for (const { content, begin, end } of mimeBlocks) {
+          console.log("🟠 coerceJWKWithSchema.map: mimeBlock, begin:", !!begin, "end:", !!end);
           if (begin && end) {
+            console.log("🟠 coerceJWKWithSchema.map: has PEM block, importing");
             const pem = `${begin}\n${content}\n${end}\n`;
             const key = await importSPKI(pem, "RS256");
             const jwk = await exportJWK(key);
@@ -255,12 +266,15 @@ async function coerceJWKWithSchema<T extends JWK>(
             }
             break;
           }
+          console.log("🟠 coerceJWKWithSchema.map: trying decode functions");
           for (const decodeFn of [
             (a: string) => a,
             (a: string) => sthis.txt.base64.decode(a),
             (a: string) => sthis.txt.base58.decode(a),
           ]) {
+            console.log("🟠 coerceJWKWithSchema.map: calling testEncodeJWKWithSchema");
             const rKey = testEncodeJWKWithSchema(content, decodeFn, validator);
+            console.log("🟠 coerceJWKWithSchema.map: testEncodeJWKWithSchema returned, isOk:", rKey.isOk());
             if (rKey.isOk()) {
               return [rKey.Ok()];
             }
@@ -275,7 +289,7 @@ async function coerceJWKWithSchema<T extends JWK>(
         return [];
       }
     }),
-  ).then((arr) => arr.flat());
+  ).then((arr) => [...arr].flat());
 }
 
 /**
@@ -310,12 +324,13 @@ export async function verifyToken<R>(
   wellKnownUrls: CoerceURI[],
   iopts: Partial<VerifyTokenOptions<R>> = {},
 ): Promise<Result<R>> {
+  console.log("🟣 sts.verifyToken: START, presetPubKey.length:", presetPubKey.length);
   const opts: VerifyTokenOptions<R> = {
     fetchTimeoutMs: 1000,
     parseSchema: (payload: unknown): Result<R> => {
       return Result.Ok(payload as R);
     },
-    fetch: globalThis.fetch,
+    fetch: (url, init) => globalThis.fetch(url, init),
     verifyToken: async (token: string, pubKey: JWK): Promise<Result<{ payload: unknown }>> => {
       const rKey = await importJWK(pubKey);
       if (rKey.isErr()) {
@@ -335,8 +350,11 @@ export async function verifyToken<R>(
     sthis: iopts.sthis ?? ensureSuperThis(),
   };
 
+  console.log("🟣 sts.verifyToken: looping through presetPubKey");
   for (const pubKey of presetPubKey) {
+    console.log("🟣 sts.verifyToken: calling coerceJWKPublic for pubKey:", typeof pubKey);
     const coercedKeys = await coerceJWKPublic(opts.sthis, pubKey);
+    console.log("🟣 sts.verifyToken: coerceJWKPublic returned", coercedKeys.length, "keys");
     for (const key of coercedKeys) {
       const rVerify = await internVerifyToken(token, key, opts);
       if (rVerify.isOk()) {
