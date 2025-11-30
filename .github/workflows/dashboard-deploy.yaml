@@ -44,3 +44,5 @@ jobs:
           MAX_LEDGERS: ${{ vars.MAX_LEDGERS }}
           MAX_MEMBER_USERS: ${{ vars.MAX_MEMBER_USERS}}
           MAX_TENANTS: ${{ vars.MAX_TENANTS }}
+          DEVICE_ID_CA_PRIV_KEY: ${{ secrets.DEVICE_ID_CA_PRIV_KEY }}
+          DEVICE_ID_CA_CERT: ${{ secrets.DEVICE_ID_CA_CERT }}
