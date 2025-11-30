@@ -52,6 +52,11 @@ database_id = "88b9e2e8-8ad6-4820-9ff8-e11c8208a5e5"
 vars = { ENVIRONMENT = "production" }
 routes = [{pattern = "connect.fireproof.direct", custom_domain = true}]
 
+[env.production.observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
 
 [[env.production.d1_databases]]
 binding = "DB"
