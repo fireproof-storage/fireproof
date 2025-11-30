@@ -160,20 +160,20 @@ const txtOps = ((txtEncoder, txtDecoder) => ({
     encode: (input: ToUInt8 | string) => {
       if (typeof input === "string") {
         const data = txtEncoder.encode(input);
-        return btoa(String.fromCharCode(...data));
+        return globalThis.btoa(String.fromCharCode(...data));
       }
       let charStr = "";
       for (const i of coerceIntoUint8(input).Ok()) {
         charStr += String.fromCharCode(i);
       }
-      return btoa(charStr);
+      return globalThis.btoa(charStr);
     },
     decodeUint8: (input: string) => {
-      const data = atob(input.replace(/\s+/g, ""));
+      const data = globalThis.atob(input.replace(/\s+/g, ""));
       return new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
     },
     decode: (input: string) => {
-      const data = atob(input.replace(/\s+/g, ""));
+      const data = globalThis.atob(input.replace(/\s+/g, ""));
       const uint8 = new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
       return txtDecoder.decode(uint8);
     },
