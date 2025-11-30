@@ -153,8 +153,8 @@ class pathOpsImpl implements PathOps {
 const pathOps = new pathOpsImpl();
 const txtOps = ((txtEncoder, txtDecoder) => ({
   id: () => "fp-txtOps",
-  encode: (input: string) => txtEncoder.encode(input),
-  decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
+  encode: (input: string) => txtEncoder.encode.call(txtEncoder, input),
+  decode: (input: ToUInt8) => txtDecoder.decode.call(txtDecoder, coerceIntoUint8(input).Ok()),
 
   base64: {
     encode: (input: ToUInt8 | string) => {
@@ -195,7 +195,7 @@ const txtOps = ((txtEncoder, txtDecoder) => ({
     },
   },
   // eslint-disable-next-line no-restricted-globals
-}))(new TextEncoder(), new TextDecoder());
+}))(new globalThis.TextEncoder(), new globalThis.TextDecoder());
 
 const _onSuperThis = new Map<string, (sthis: SuperThis) => void>();
 export function onSuperThis(fn: (sthis: SuperThis) => void): () => void {
