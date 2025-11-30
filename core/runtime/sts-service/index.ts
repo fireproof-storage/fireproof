@@ -250,6 +250,26 @@ async function coerceJWKWithSchema<T extends JWK>(
     flatInputs.map(async (k) => {
       console.log("🟠 coerceJWKWithSchema.map: processing k, type:", typeof k);
       if (typeof k === "string") {
+        console.log("🟠 coerceJWKWithSchema.map: k is string, trying JSON parse for JWKS");
+        // First try parsing as JSON - might be a JWKS object string
+        try {
+          const parsed = JSON.parse(k);
+          if (typeof parsed === "object" && parsed !== null && "keys" in parsed && Array.isArray(parsed.keys)) {
+            console.log("🟠 coerceJWKWithSchema.map: parsed as JWKS, extracting", parsed.keys.length, "keys");
+            const validatedKeys: T[] = [];
+            for (const key of parsed.keys) {
+              const result = validator.safeParse(key);
+              if (result.success) {
+                validatedKeys.push(result.data as T);
+              }
+            }
+            if (validatedKeys.length > 0) {
+              return validatedKeys;
+            }
+          }
+        } catch {
+          // Not JSON, continue with other parsing methods
+        }
         console.log("🟠 coerceJWKWithSchema.map: k is string, calling mimeBlockParser");
         const mimeBlocks = mimeBlockParser(k);
         console.log("🟠 coerceJWKWithSchema.map: mimeBlockParser returned");
@@ -282,6 +302,21 @@ async function coerceJWKWithSchema<T extends JWK>(
         }
         return [];
       } else {
+        // Check if it's a JWKS object with a "keys" property
+        if (typeof k === "object" && k !== null && "keys" in k && Array.isArray((k as { keys: unknown }).keys)) {
+          console.log("🟠 coerceJWKWithSchema: detected JWKS format with keys array");
+          const jwks = k as { keys: unknown[] };
+          const validatedKeys: T[] = [];
+          for (const key of jwks.keys) {
+            const parsed = validator.safeParse(key);
+            if (parsed.success) {
+              validatedKeys.push(parsed.data as T);
+            }
+          }
+          console.log("🟠 coerceJWKWithSchema: extracted", validatedKeys.length, "keys from JWKS");
+          return validatedKeys;
+        }
+        // Try parsing as single JWK
         const parsed = validator.safeParse(k);
         if (parsed.success) {
           return [parsed.data as T];
