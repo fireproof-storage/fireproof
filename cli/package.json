@@ -63,6 +63,6 @@
     "@types/fs-extra": "^11.0.4",
     "@types/semver": "^7.7.1",
     "tsx": "^4.21.0",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.14"
   }
 }
