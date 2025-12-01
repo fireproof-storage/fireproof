@@ -54,3 +54,9 @@ export const JWKPrivateSchema = z
   );
 
 export type JWKPrivate = z.infer<typeof JWKPrivateSchema>;
+
+export const KeyesJWKPrivateSchema = z.object({
+  keys: z.array(JWKPrivateSchema),
+});
+
+export type KeyesJWKPrivate = z.infer<typeof KeyesJWKPrivateSchema>;

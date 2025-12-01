@@ -54,7 +54,7 @@ class ClerkApiToken implements FPApiToken {
         break;
       }
       // Split comma-separated URLs and add one entry per URL
-      const urls = urlVal ? urlVal.split(",").map((u) => u.trim()) : [urlVal];
+      const urls = urlVal.split(",").map((u) => u.trim());
       for (const singleUrl of urls.filter((u) => u)) {
         keyAndUrls.push({
           key: keyVal,
