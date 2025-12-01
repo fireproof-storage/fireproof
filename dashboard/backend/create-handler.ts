@@ -33,6 +33,7 @@ class ClerkApiToken implements FPApiToken {
     this.sthis = sthis;
   }
   async verify(token: string): Promise<Result<VerifiedAuth>> {
+    const sthis = this.sthis;
     const keys: string[] = [];
     const urls: string[] = [];
     // eslint-disable-next-line no-constant-condition
