@@ -244,7 +244,12 @@ export async function coerceJWKWithSchema<
         for (const { content, begin, end } of mimeBlockParser(keys)) {
           if (begin && end) {
             const pem = `${begin}\n${content}\n${end}\n`;
-            const key = await importSPKI(pem, "RS256");
+            const rKey = await exception2Result(() => importSPKI(pem, "RS256"));
+            if (rKey.isErr()) {
+              jwkKeys.push(Result.Err(rKey.Err()));
+              continue;
+            }
+            const key = rKey.Ok();
             const jwk = await exportJWK(key);
             const parsed = validator.safeParse({ ...jwk, alg: "RS256" });
             if (parsed.success) {
