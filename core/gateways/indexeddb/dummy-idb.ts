@@ -60,8 +60,7 @@ export class ReadDummyIDBPObjectStore<
   TxStores extends ArrayLike<StoreNames<DBTypes>> = ArrayLike<StoreNames<DBTypes>>,
   StoreName extends StoreNames<DBTypes> = StoreNames<DBTypes>,
   Mode extends IDBTransactionMode = "readonly",
-> implements IDBPObjectStore<DBTypes, TxStores, StoreName, Mode>
-{
+> implements IDBPObjectStore<DBTypes, TxStores, StoreName, Mode> {
   //   readonly indexNames: TypedDOMStringList<string> = undefined as unknown as TypedDOMStringList<string>;
   //   readonly transaction: IDBPTransaction<unknown, ArrayLike<string>, "readonly">;
 

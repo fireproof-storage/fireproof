@@ -310,8 +310,11 @@ export interface IndexRowsWithoutDocs<T extends DocObject, K extends IndexKeyTyp
   readonly rows: FPIndexRow<K, T, R>[];
 }
 
-export interface IndexRowsWithDocs<T extends DocObject, K extends IndexKeyType = string, R extends DocFragment = T>
-  extends IndexRowsWithoutDocs<T, K, R> {
+export interface IndexRowsWithDocs<
+  T extends DocObject,
+  K extends IndexKeyType = string,
+  R extends DocFragment = T,
+> extends IndexRowsWithoutDocs<T, K, R> {
   readonly docs: DocWithId<T>[];
 }
 
