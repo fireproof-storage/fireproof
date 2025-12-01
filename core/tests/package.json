@@ -74,10 +74,10 @@
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@vitest/browser": "^4.0.8",
+    "@vitest/browser": "^4.0.14",
     "playwright": "^1.57.0",
     "playwright-chromium": "^1.57.0",
-    "vitest": "^4.0.8",
+    "vitest": "^4.0.14",
     "zx": "^8.8.5"
   }
 }

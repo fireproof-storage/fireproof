@@ -56,7 +56,7 @@
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "drizzle-kit": "0.30.6",
-    "vitest": "^4.0.8",
+    "vitest": "^4.0.14",
     "zx": "^8.8.5"
   }
 }
