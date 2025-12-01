@@ -360,7 +360,14 @@ export async function verifyToken<R>(
       console.log("[DEBUG] JWT verify attempt - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
       const rRes = await exception2Result(() => jwtVerify(token, rKey.Ok().key));
       if (rRes.isErr()) {
-        console.log("[DEBUG] JWT verify FAILED - token kid:", tokenHeader.kid, "key kid:", pubKey.kid, "error:", rRes.Err().message);
+        console.log(
+          "[DEBUG] JWT verify FAILED - token kid:",
+          tokenHeader.kid,
+          "key kid:",
+          pubKey.kid,
+          "error:",
+          rRes.Err().message,
+        );
         return Result.Err(rRes);
       }
       const res = rRes.Ok();
