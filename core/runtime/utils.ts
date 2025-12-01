@@ -153,27 +153,27 @@ class pathOpsImpl implements PathOps {
 const pathOps = new pathOpsImpl();
 const txtOps = ((txtEncoder, txtDecoder) => ({
   id: () => "fp-txtOps",
-  encode: (input: string) => txtEncoder.encode.call(txtEncoder, input),
-  decode: (input: ToUInt8) => txtDecoder.decode.call(txtDecoder, coerceIntoUint8(input).Ok()),
+  encode: (input: string) => txtEncoder.encode(input),
+  decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
 
   base64: {
     encode: (input: ToUInt8 | string) => {
       if (typeof input === "string") {
         const data = txtEncoder.encode(input);
-        return globalThis.btoa(String.fromCharCode(...data));
+        return btoa(String.fromCharCode(...data));
       }
       let charStr = "";
       for (const i of coerceIntoUint8(input).Ok()) {
         charStr += String.fromCharCode(i);
       }
-      return globalThis.btoa(charStr);
+      return btoa(charStr);
     },
     decodeUint8: (input: string) => {
-      const data = globalThis.atob(input.replace(/\s+/g, ""));
+      const data = atob(input.replace(/\s+/g, ""));
       return new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
     },
     decode: (input: string) => {
-      const data = globalThis.atob(input.replace(/\s+/g, ""));
+      const data = atob(input.replace(/\s+/g, ""));
       const uint8 = new Uint8Array(data.split("").map((c) => c.charCodeAt(0)));
       return txtDecoder.decode(uint8);
     },
@@ -195,7 +195,7 @@ const txtOps = ((txtEncoder, txtDecoder) => ({
     },
   },
   // eslint-disable-next-line no-restricted-globals
-}))(new globalThis.TextEncoder(), new globalThis.TextDecoder());
+}))(new TextEncoder(), new TextDecoder());
 
 const _onSuperThis = new Map<string, (sthis: SuperThis) => void>();
 export function onSuperThis(fn: (sthis: SuperThis) => void): () => void {

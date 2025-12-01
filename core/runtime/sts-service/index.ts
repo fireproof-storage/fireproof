@@ -460,7 +460,7 @@ export async function fetchWellKnownJwks(
 ): Promise<FetchWellKnownJwksResult[]> {
   const opts = {
     fetchTimeoutMs: 1000,
-    fetch: globalThis.fetch,
+    fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args),
     ...iopts,
   };
   return Promise.all(
