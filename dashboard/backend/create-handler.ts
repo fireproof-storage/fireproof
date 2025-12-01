@@ -33,10 +33,8 @@ class ClerkApiToken implements FPApiToken {
     this.sthis = sthis;
   }
   async verify(token: string): Promise<Result<VerifiedAuth>> {
-    const keyAndUrls: {
-      readonly key: string;
-      readonly url?: string;
-    }[] = [];
+    const keys: string[] = [];
+    const urls: string[] = [];
     // eslint-disable-next-line no-constant-condition
     for (let idx = 0; true; idx++) {
       const suffix = !idx ? "" : `_${idx}`;
@@ -50,55 +48,54 @@ class ClerkApiToken implements FPApiToken {
         return Result.Err(rEnvVal.Err());
       }
       const { [key]: keyVal, [url]: urlVal } = rEnvVal.Ok();
-      if (!keyVal) {
+      if (!keyVal && !urlVal) {
+        // end loop of CLERK_PUB_JWT_KEYn and CLERK_PUB_JWT_URLn
         break;
       }
-      // Split comma-separated URLs and add one entry per URL
-      const urls = urlVal.split(",").map((u) => u.trim());
-      for (const singleUrl of urls.filter((u) => u)) {
-        keyAndUrls.push({
-          key: keyVal,
-          url: singleUrl,
-        });
+      if (keyVal) {
+        keys.push(keyVal);
+      }
+      if (urlVal) {
+        urls.push(
+          ...urlVal
+            .split(",")
+            .map((u) => u.trim())
+            .filter((u) => u),
+        );
       }
     }
-    const rt = await sts.verifyToken(
-      token,
-      keyAndUrls.map((k) => k.key),
-      keyAndUrls.map((k) => k.url).filter((u): u is string => !!u),
-      {
-        parseSchema: (payload: unknown): Result<FPClerkClaim> => {
-          const r = FPClerkClaimSchema.safeParse(payload);
-          if (r.success) {
-            return Result.Ok(r.data);
-          } else {
-            return Result.Err(r.error);
-          }
-        },
-        verifyToken: async (token, key) => {
-          const rPublicKey = await sts.importJWK(key, "RS256");
-          if (rPublicKey.isErr()) {
-            return Result.Err(rPublicKey);
-          }
-          const pem = await exportSPKI(rPublicKey.Ok().key);
-          const r = await exception2Result(() =>
-            ClerkVerifyToken(token, {
-              jwtKey: pem,
-              // authorizedParties: ["http://localhost:7370"],
-            }),
-          );
-          if (r.isErr()) {
-            return Result.Err(r);
-          }
-          if (!r.Ok()) {
-            return Result.Err("ClerkVerifyToken: failed");
-          }
-          return Result.Ok({
-            payload: r.Ok(),
-          });
-        },
+    const rt = await sts.verifyToken(token, keys, urls, {
+      parseSchema: (payload: unknown): Result<FPClerkClaim> => {
+        const r = FPClerkClaimSchema.safeParse(payload);
+        if (r.success) {
+          return Result.Ok(r.data);
+        } else {
+          return Result.Err(r.error);
+        }
       },
-    );
+      verifyToken: async (token, key) => {
+        const rPublicKey = await sts.importJWK(key, "RS256");
+        if (rPublicKey.isErr()) {
+          return Result.Err(rPublicKey);
+        }
+        const pem = await exportSPKI(rPublicKey.Ok().key);
+        const r = await exception2Result(() =>
+          ClerkVerifyToken(token, {
+            jwtKey: pem,
+            // authorizedParties: ["http://localhost:7370"],
+          }),
+        );
+        if (r.isErr()) {
+          return Result.Err(r);
+        }
+        if (!r.Ok()) {
+          return Result.Err("ClerkVerifyToken: failed");
+        }
+        return Result.Ok({
+          payload: r.Ok(),
+        });
+      },
+    });
     if (rt.isErr()) {
       return Result.Err(rt.Err());
     }
