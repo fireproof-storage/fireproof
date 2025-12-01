@@ -76,8 +76,12 @@ class ClerkApiToken implements FPApiToken {
         }
       },
       verifyToken: async (token, key) => {
+        const tokenParts = token.split(".");
+        const tokenHeader = JSON.parse(sthis.txt.base64.decode(tokenParts[0]));
+        console.log("[DEBUG CLERK] JWT verify attempt - token kid:", tokenHeader.kid, "key kid:", key.kid);
         const rPublicKey = await sts.importJWK(key, "RS256");
         if (rPublicKey.isErr()) {
+          console.log("[DEBUG CLERK] importJWK FAILED for kid:", key.kid, "error:", rPublicKey.Err());
           return Result.Err(rPublicKey);
         }
         const pem = await exportSPKI(rPublicKey.Ok().key);
@@ -88,11 +92,14 @@ class ClerkApiToken implements FPApiToken {
           }),
         );
         if (r.isErr()) {
+          console.log("[DEBUG CLERK] ClerkVerifyToken FAILED - token kid:", tokenHeader.kid, "key kid:", key.kid, "error:", r.Err().message);
           return Result.Err(r);
         }
         if (!r.Ok()) {
+          console.log("[DEBUG CLERK] ClerkVerifyToken returned falsy - token kid:", tokenHeader.kid, "key kid:", key.kid);
           return Result.Err("ClerkVerifyToken: failed");
         }
+        console.log("[DEBUG CLERK] ClerkVerifyToken SUCCESS - token kid:", tokenHeader.kid, "key kid:", key.kid);
         return Result.Ok({
           payload: r.Ok(),
         });
