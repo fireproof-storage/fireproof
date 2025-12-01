@@ -92,7 +92,14 @@ class ClerkApiToken implements FPApiToken {
           }),
         );
         if (r.isErr()) {
-          console.log("[DEBUG CLERK] ClerkVerifyToken FAILED - token kid:", tokenHeader.kid, "key kid:", key.kid, "error:", r.Err().message);
+          console.log(
+            "[DEBUG CLERK] ClerkVerifyToken FAILED - token kid:",
+            tokenHeader.kid,
+            "key kid:",
+            key.kid,
+            "error:",
+            r.Err().message,
+          );
           return Result.Err(r);
         }
         if (!r.Ok()) {
