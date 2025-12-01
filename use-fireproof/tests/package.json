@@ -36,7 +36,7 @@
   ],
   "devDependencies": {
     "@types/react": "^19.2.7",
-    "playwright": "^1.56.1",
+    "playwright": "^1.57.0",
     "playwright-chromium": "^1.57.0"
   }
 }

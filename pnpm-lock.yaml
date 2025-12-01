@@ -1111,8 +1111,8 @@ importers:
         specifier: ^4.0.8
         version: 4.0.8(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.1))(vitest@4.0.8)
       playwright:
-        specifier: ^1.56.1
-        version: 1.56.1
+        specifier: ^1.57.0
+        version: 1.57.0
       playwright-chromium:
         specifier: ^1.57.0
         version: 1.57.0
@@ -1458,8 +1458,8 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7
       playwright:
-        specifier: ^1.56.1
-        version: 1.56.1
+        specifier: ^1.57.0
+        version: 1.57.0
       playwright-chromium:
         specifier: ^1.57.0
         version: 1.57.0
@@ -5670,18 +5670,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright-core@1.56.1:
-    resolution: {integrity: sha512-hutraynyn31F+Bifme+Ps9Vq59hKuUCz7H1kDOcBs+2oGguKkWTU50bBWrtz34OUWmIwpBTWDxaRPXrIXkgvmQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.57.0:
     resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.56.1:
-    resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -10934,15 +10924,7 @@ snapshots:
     dependencies:
       playwright-core: 1.57.0
 
-  playwright-core@1.56.1: {}
-
   playwright-core@1.57.0: {}
-
-  playwright@1.56.1:
-    dependencies:
-      playwright-core: 1.56.1
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.57.0:
     dependencies:
