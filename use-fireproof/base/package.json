@@ -50,6 +50,6 @@
   ],
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@types/react": "^19.2.6"
+    "@types/react": "^19.2.7"
   }
 }

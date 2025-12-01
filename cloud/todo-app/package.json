@@ -43,7 +43,7 @@
   "dependencies": {
     "@adviser/cement": "^0.5.2",
     "@fireproof/vendor": "workspace:0.0.0",
-    "@types/react": "^19.2.6",
+    "@types/react": "^19.2.7",
     "react-dom": "^19.2.0",
     "use-fireproof": "workspace:0.0.0"
   },
