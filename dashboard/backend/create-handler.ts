@@ -388,11 +388,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
       const duration = endTime - startTime;
       return new Response(JSON.stringify(rRes.Ok()), {
         status: 200,
-        headers: {
-          ...DefaultHttpHeaders,
+        headers: DefaultHttpHeaders({
           "Content-Type": "application/json",
           "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-        },
+        }),
       });
     } catch (e) {
       logger.Error().Any({ request: jso.type }).Err(e).Msg("global-Error");
@@ -405,11 +404,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
         }),
         {
           status: 500,
-          headers: {
-            ...DefaultHttpHeaders,
+          headers: DefaultHttpHeaders({
             "Content-Type": "application/json",
             "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-          },
+          }),
         },
       );
     }
