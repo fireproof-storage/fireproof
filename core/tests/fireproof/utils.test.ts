@@ -12,7 +12,7 @@ import {
 import { importJWK, JWK } from "jose";
 import { SignJWT } from "jose/jwt/sign";
 import { exportJWK, exportSPKI } from "jose/key/export";
-import { JWKPublic, JWTPayloadSchema } from "use-fireproof";
+import { JWKPublic, JWKPrivateSchema, JWKPublicSchema, JWTPayloadSchema } from "use-fireproof";
 import { UUID } from "uuidv7";
 import { describe, beforeAll, it, expect, assert, vi } from "vitest";
 import { z } from "zod/v4";
@@ -696,5 +696,679 @@ describe("coerceJWKPrivate", () => {
     const result = await sts.coerceJWKPrivate(sthis, [jwkPrivate, jwkPublic]);
     expect(result).toHaveLength(1); // Only the private key should be accepted
     expect(result[0]).toHaveProperty("d");
+  });
+});
+
+describe("coerceJWKWithSchema - mixed Private/Public keys in { keys: [...] } arrays", () => {
+  const sthis = ensureSuperThis();
+  let rsaPrivateKey: JWK;
+  let rsaPublicKey: JWK;
+  let ecPrivateKey: JWK;
+  let ecPublicKey: JWK;
+  let rsaPair: sts.KeysResult;
+  let ecPair: sts.KeysResult;
+
+  beforeAll(async () => {
+    // Generate RSA key pair
+    rsaPair = await sts.SessionTokenService.generateKeyPair("RS256", { extractable: true });
+    rsaPrivateKey = await exportJWK(rsaPair.material.privateKey);
+    rsaPublicKey = await exportJWK(rsaPair.material.publicKey);
+
+    // Generate EC key pair
+    ecPair = await sts.SessionTokenService.generateKeyPair("ES256", { extractable: true });
+    ecPrivateKey = await exportJWK(ecPair.material.privateKey);
+    ecPublicKey = await exportJWK(ecPair.material.publicKey);
+  });
+
+  // Encoding functions for test parameterization
+  const encodings = [
+    {
+      name: "plain object",
+      encode: (obj: { keys: JWK[] }) => obj as { keys: JWK[] },
+    },
+    {
+      name: "JSON string",
+      encode: (obj: { keys: JWK[] }) => JSON.stringify(obj),
+    },
+    {
+      name: "base64",
+      encode: (obj: { keys: JWK[] }) => sthis.txt.base64.encode(JSON.stringify(obj)),
+    },
+    {
+      name: "base58",
+      encode: (obj: { keys: JWK[] }) => sthis.txt.base58.encode(JSON.stringify(obj)),
+    },
+  ];
+
+  describe.each(encodings)("with encoding: $name", ({ encode }) => {
+    describe("JWKPrivateSchema validation", () => {
+      it("accepts { keys: [private] }", async () => {
+        const input = encode({ keys: [rsaPrivateKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+        }
+      });
+
+      it("rejects { keys: [public] }", async () => {
+        const input = encode({ keys: [rsaPublicKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isErr()).toBe(true);
+      });
+
+      it("handles { keys: [private, public] } - accepts only private", async () => {
+        const input = encode({ keys: [rsaPrivateKey, rsaPublicKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(2);
+        expect(results[0].isOk()).toBe(true);
+        expect(results[1].isErr()).toBe(true);
+
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).toHaveProperty("d");
+        }
+      });
+
+      it("handles { keys: [public, private] } - reversed order", async () => {
+        const input = encode({ keys: [ecPublicKey, ecPrivateKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(2);
+        expect(results[0].isErr()).toBe(true);
+        expect(results[1].isOk()).toBe(true);
+
+        if (results[1].isOk()) {
+          expect(results[1].Ok()).toHaveProperty("d");
+          expect(results[1].Ok().kty).toBe("EC");
+        }
+      });
+
+      it("handles { keys: [rsaPrivate, ecPrivate] } - multiple private keys", async () => {
+        const input = encode({ keys: [rsaPrivateKey, ecPrivateKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(2);
+        expect(results[0].isOk()).toBe(true);
+        expect(results[1].isOk()).toBe(true);
+
+        if (results[0].isOk() && results[1].isOk()) {
+          expect(results[0].Ok()).toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+          expect(results[1].Ok()).toHaveProperty("d");
+          expect(results[1].Ok().kty).toBe("EC");
+        }
+      });
+
+      it("handles { keys: [rsaPrivate, ecPublic, ecPrivate, rsaPublic] } - complex mix", async () => {
+        const input = encode({ keys: [rsaPrivateKey, ecPublicKey, ecPrivateKey, rsaPublicKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(4);
+        expect(results[0].isOk()).toBe(true); // RSA private
+        expect(results[1].isErr()).toBe(true); // EC public should fail
+        expect(results[2].isOk()).toBe(true); // EC private
+        expect(results[3].isErr()).toBe(true); // RSA public should fail
+      });
+    });
+
+    describe("JWKPublicSchema validation", () => {
+      it("accepts { keys: [public] }", async () => {
+        const input = encode({ keys: [rsaPublicKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+        }
+      });
+
+      it("strips private component from { keys: [private] }", async () => {
+        const input = encode({ keys: [rsaPrivateKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+        }
+      });
+
+      it("handles { keys: [private, public] } - accepts both, strips private from first", async () => {
+        const input = encode({ keys: [rsaPrivateKey, rsaPublicKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(2);
+        expect(results[0].isOk()).toBe(true);
+        expect(results[1].isOk()).toBe(true);
+
+        if (results[0].isOk() && results[1].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[1].Ok()).not.toHaveProperty("d");
+        }
+      });
+
+      it("handles { keys: [public, private, public] }", async () => {
+        const input = encode({ keys: [ecPublicKey, ecPrivateKey, rsaPublicKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(3);
+        expect(results[0].isOk()).toBe(true);
+        expect(results[1].isOk()).toBe(true);
+        expect(results[2].isOk()).toBe(true);
+
+        if (results[0].isOk() && results[1].isOk() && results[2].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[1].Ok()).not.toHaveProperty("d");
+          expect(results[2].Ok()).not.toHaveProperty("d");
+        }
+      });
+
+      it("handles { keys: [rsaPrivate, ecPublic, rsaPublic, ecPrivate] } - complex mix", async () => {
+        const input = encode({ keys: [rsaPrivateKey, ecPublicKey, rsaPublicKey, ecPrivateKey] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(4);
+        results.forEach((result) => {
+          expect(result.isOk()).toBe(true);
+          if (result.isOk()) {
+            expect(result.Ok()).not.toHaveProperty("d");
+          }
+        });
+      });
+    });
+
+    describe("edge cases", () => {
+      it("handles empty { keys: [] }", async () => {
+        const input = encode({ keys: [] });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(0);
+      });
+
+      it("handles many mixed keys", async () => {
+        const input = encode({
+          keys: [
+            rsaPrivateKey,
+            rsaPublicKey,
+            ecPrivateKey,
+            ecPublicKey,
+            rsaPrivateKey, // duplicate
+            ecPublicKey, // duplicate
+          ],
+        });
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(6);
+        results.forEach((result) => {
+          expect(result.isOk()).toBe(true);
+          if (result.isOk()) {
+            expect(result.Ok()).not.toHaveProperty("d");
+          }
+        });
+      });
+    });
+  });
+
+  describe("multiple inputs (not encoding-specific)", () => {
+    it("handles multiple { keys: [...] } objects as separate arguments", async () => {
+      const input1 = { keys: [rsaPrivateKey, rsaPublicKey] };
+      const input2 = { keys: [ecPrivateKey] };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input1, input2);
+
+      expect(results).toHaveLength(3);
+      expect(results[0].isOk()).toBe(true); // RSA private
+      expect(results[1].isErr()).toBe(true); // RSA public
+      expect(results[2].isOk()).toBe(true); // EC private
+    });
+
+    it("handles array of { keys: [...] } objects", async () => {
+      const inputs = [{ keys: [rsaPrivateKey, rsaPublicKey] }, { keys: [ecPrivateKey, ecPublicKey] }];
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, inputs);
+
+      expect(results).toHaveLength(4);
+      results.forEach((result) => {
+        expect(result.isOk()).toBe(true);
+      });
+    });
+
+    it("handles mix of plain keys and { keys: [...] }", async () => {
+      const inputs = [rsaPrivateKey, { keys: [ecPrivateKey, ecPublicKey] }, rsaPublicKey];
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, inputs);
+
+      expect(results).toHaveLength(4);
+      expect(results[0].isOk()).toBe(true); // RSA private (plain)
+      expect(results[1].isOk()).toBe(true); // EC private (from keys)
+      expect(results[2].isErr()).toBe(true); // EC public (from keys)
+      expect(results[3].isErr()).toBe(true); // RSA public (plain)
+    });
+  });
+});
+
+describe("coerceJWKWithSchema - single key objects (not { keys: [...] } wrapped)", () => {
+  const sthis = ensureSuperThis();
+  let rsaPrivateKey: JWK;
+  let rsaPublicKey: JWK;
+  let ecPrivateKey: JWK;
+  let ecPublicKey: JWK;
+  let rsaPair: sts.KeysResult;
+  let ecPair: sts.KeysResult;
+
+  beforeAll(async () => {
+    rsaPair = await sts.SessionTokenService.generateKeyPair("RS256", { extractable: true });
+    rsaPrivateKey = await exportJWK(rsaPair.material.privateKey);
+    rsaPublicKey = await exportJWK(rsaPair.material.publicKey);
+
+    ecPair = await sts.SessionTokenService.generateKeyPair("ES256", { extractable: true });
+    ecPrivateKey = await exportJWK(ecPair.material.privateKey);
+    ecPublicKey = await exportJWK(ecPair.material.publicKey);
+  });
+
+  // Encoding functions for single JWK objects
+  const encodings = [
+    {
+      name: "plain JWK object",
+      encode: (jwk: JWK) => jwk,
+    },
+    {
+      name: "JSON string",
+      encode: (jwk: JWK) => JSON.stringify(jwk),
+    },
+    {
+      name: "base64",
+      encode: (jwk: JWK) => sthis.txt.base64.encode(JSON.stringify(jwk)),
+    },
+    {
+      name: "base58",
+      encode: (jwk: JWK) => sthis.txt.base58.encode(JSON.stringify(jwk)),
+    },
+  ];
+
+  describe.each(encodings)("with encoding: $name", ({ encode }) => {
+    describe("JWKPrivateSchema validation", () => {
+      it("accepts private key", async () => {
+        const input = encode(rsaPrivateKey);
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+        }
+      });
+
+      it("rejects public key", async () => {
+        const input = encode(rsaPublicKey);
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isErr()).toBe(true);
+      });
+
+      it("accepts EC private key", async () => {
+        const input = encode(ecPrivateKey);
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("EC");
+        }
+      });
+    });
+
+    describe("JWKPublicSchema validation", () => {
+      it("accepts public key", async () => {
+        const input = encode(rsaPublicKey);
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+        }
+      });
+
+      it("strips private component from private key", async () => {
+        const input = encode(rsaPrivateKey);
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("RSA");
+        }
+      });
+
+      it("accepts and processes EC public key", async () => {
+        const input = encode(ecPublicKey);
+        const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, input);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isOk()).toBe(true);
+        if (results[0].isOk()) {
+          expect(results[0].Ok()).not.toHaveProperty("d");
+          expect(results[0].Ok().kty).toBe("EC");
+        }
+      });
+    });
+  });
+
+  describe("multiple single key inputs", () => {
+    it("handles array of plain JWK objects with private schema", async () => {
+      const inputs = [rsaPrivateKey, ecPrivateKey];
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, inputs);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].isOk()).toBe(true);
+      expect(results[1].isOk()).toBe(true);
+    });
+
+    it("handles array of mixed plain JWK objects with private schema", async () => {
+      const inputs = [rsaPrivateKey, rsaPublicKey, ecPrivateKey];
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, inputs);
+
+      expect(results).toHaveLength(3);
+      expect(results[0].isOk()).toBe(true); // Private
+      expect(results[1].isErr()).toBe(true); // Public should fail
+      expect(results[2].isOk()).toBe(true); // Private
+    });
+
+    it("handles array of mixed plain JWK objects with public schema", async () => {
+      const inputs = [rsaPrivateKey, rsaPublicKey, ecPublicKey];
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, inputs);
+
+      expect(results).toHaveLength(3);
+      results.forEach((result) => {
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          expect(result.Ok()).not.toHaveProperty("d");
+        }
+      });
+    });
+
+    it("handles separate arguments (not array)", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPrivateSchema, rsaPrivateKey, ecPrivateKey);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].isOk()).toBe(true);
+      expect(results[1].isOk()).toBe(true);
+    });
+  });
+});
+
+describe("coerceJWKWithSchema - error cases and invalid inputs", () => {
+  const sthis = ensureSuperThis();
+  let rsaPrivateKey: JWK;
+  let rsaPublicKey: JWK;
+
+  beforeAll(async () => {
+    const rsaPair = await sts.SessionTokenService.generateKeyPair("RS256", { extractable: true });
+    rsaPrivateKey = await exportJWK(rsaPair.material.privateKey);
+    rsaPublicKey = await exportJWK(rsaPair.material.publicKey);
+  });
+
+  describe("invalid JSON strings", () => {
+    it("handles invalid JSON string", async () => {
+      const invalidJson = "{ this is not valid json }";
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJson);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles base64 encoded invalid JSON", async () => {
+      const invalidJson = "{ not valid json either }";
+      const encoded = sthis.txt.base64.encode(invalidJson);
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, encoded);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles base58 encoded invalid JSON", async () => {
+      const invalidJson = "{ malformed: json }";
+      const encoded = sthis.txt.base58.encode(invalidJson);
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, encoded);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles truncated JSON string", async () => {
+      const truncated = JSON.stringify(rsaPublicKey).slice(0, -10); // Cut off the end
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, truncated);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+  });
+
+  describe("invalid JWK structures", () => {
+    it("rejects JWK missing required 'kty' field", async () => {
+      const invalidJwk = { e: "AQAB", n: "somevalue" }; // Missing kty
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects JWK with invalid 'kty' value", async () => {
+      const invalidJwk = { kty: "INVALID", e: "AQAB", n: "somevalue" };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects RSA key missing required 'n' field", async () => {
+      const invalidJwk = { kty: "RSA", e: "AQAB" }; // Missing n
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects RSA key missing required 'e' field", async () => {
+      const invalidJwk = { kty: "RSA", n: "somevalue" }; // Missing e
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects EC key missing required 'x' field", async () => {
+      const invalidJwk = { kty: "EC", crv: "P-256", y: "somevalue" }; // Missing x
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects EC key missing required 'crv' field", async () => {
+      const invalidJwk = { kty: "EC", x: "somevalue", y: "anothervalue" }; // Missing crv
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects EC key with invalid curve", async () => {
+      const invalidJwk = { kty: "EC", crv: "INVALID-CURVE", x: "somevalue", y: "anothervalue" };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalidJwk);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+  });
+
+  describe("invalid { keys: [...] } structures", () => {
+    it("rejects { keys: 'not-an-array' }", async () => {
+      const invalid = { keys: "not an array" } as unknown as { keys: JWK[] };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalid);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects { keys: null }", async () => {
+      const invalid = { keys: null } as unknown as { keys: JWK[] };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalid);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects { keys: {} }", async () => {
+      const invalid = { keys: {} } as { keys: JWK[] };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, invalid);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles { keys: [...] } with mix of valid and invalid JWKs", async () => {
+      const mixed = {
+        keys: [
+          rsaPublicKey, // valid
+          { kty: "INVALID" }, // invalid
+          rsaPrivateKey, // valid
+        ],
+      };
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, mixed);
+
+      expect(results).toHaveLength(3);
+      expect(results[0].isOk()).toBe(true);
+      expect(results[1].isErr()).toBe(true);
+      expect(results[2].isOk()).toBe(true);
+    });
+
+    it("handles JSON stringified { keys: [...] } with invalid entries", async () => {
+      const mixed = JSON.stringify({
+        keys: [rsaPublicKey, { invalid: "structure" }],
+      });
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, mixed);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].isOk()).toBe(true);
+      expect(results[1].isErr()).toBe(true);
+    });
+  });
+
+  describe("completely invalid data types", () => {
+    it("rejects number input", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, 12345 as never);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects boolean input", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, true as never);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects array of invalid types", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, [123, true, "invalid"] as never);
+
+      expect(results).toHaveLength(3);
+      expect(results[0].isErr()).toBe(true);
+      expect(results[1].isErr()).toBe(true);
+      expect(results[2].isErr()).toBe(true);
+    });
+
+    it("rejects empty object", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, {});
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects null", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, null as never);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("rejects undefined", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, undefined as never);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+  });
+
+  describe("edge cases with encoding", () => {
+    it("handles corrupted base64 string", async () => {
+      const corrupted = "!!!invalid-base64!!!";
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, corrupted);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles empty string", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, "");
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles whitespace-only string", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, "   \n\t  ");
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+
+    it("handles string that looks like JSON but isn't", async () => {
+      const fakeJson = "{looks like json but missing quotes and commas}";
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, fakeJson);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].isErr()).toBe(true);
+    });
+  });
+
+  describe("mixed valid and invalid inputs", () => {
+    it("processes array with mix of valid keys and invalid data", async () => {
+      const mixed = [
+        rsaPublicKey, // valid
+        "invalid string", // invalid
+        rsaPrivateKey, // valid
+        { invalid: "object" }, // invalid
+      ] as never[];
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, mixed);
+
+      expect(results).toHaveLength(4);
+      expect(results[0].isOk()).toBe(true);
+      expect(results[1].isErr()).toBe(true);
+      expect(results[2].isOk()).toBe(true);
+      expect(results[3].isErr()).toBe(true);
+    });
+
+    it("processes multiple arguments with some invalid", async () => {
+      const results = await sts.coerceJWKWithSchema(sthis, JWKPublicSchema, rsaPublicKey, "invalid", rsaPrivateKey);
+
+      expect(results).toHaveLength(3);
+      expect(results[0].isOk()).toBe(true);
+      expect(results[1].isErr()).toBe(true);
+      expect(results[2].isOk()).toBe(true);
+    });
   });
 });

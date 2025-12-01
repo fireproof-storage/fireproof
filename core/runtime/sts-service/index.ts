@@ -1,8 +1,8 @@
-import { BuildURI, CoerceURI, KeyedResolvOnce, Result, exception2Result, timeouted } from "@adviser/cement";
+import { BuildURI, CoerceURI, KeyedResolvOnce, Option, Result, exception2Result, timeouted } from "@adviser/cement";
 import { exportJWK, importJWK as joseImportJWK, JWTVerifyResult, jwtVerify, SignJWT, JWK, importSPKI } from "jose";
 import { generateKeyPair, GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { base58btc } from "multiformats/bases/base58";
-import { ensureSuperThis, mimeBlockParser } from "../utils.js";
+import { ensureSuperThis, mimeBlockParser, filterOk } from "../utils.js";
 import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema, SuperThis, toJwksAlg } from "@fireproof/core-types-base";
 import { BaseTokenParam, FPCloudClaim, TokenForParam } from "@fireproof/core-types-protocols-cloud";
 import { z } from "zod/v4";
@@ -16,6 +16,19 @@ export interface ImportJWKResult {
   readonly key: CryptoKey;
   readonly alg: string;
 }
+
+export interface KeysResult {
+  readonly alg: string;
+  readonly material: CryptoKeyPair;
+  readonly strings: { readonly publicKey: string; readonly privateKey: string };
+}
+// the string could be a json encoded jwk, a
+// base64/base58 encoded jwk,
+// a pem block
+// or a jwks object string
+// and the result of encoding could be plain key or keys object
+// or other says string -> encoded -> JWKPublic | JWKPrivate | KeyesJWKPublic | KeyesJWKPrivate
+type CoerceJWKType = string | JWK | { keys: JWK[] };
 
 /**
  * Wrapper around jose's importJWK that automatically infers the algorithm if not provided.
@@ -76,12 +89,6 @@ export async function env2jwk(env: string, alg?: string, sthis = ensureSuperThis
     keys.push(rKey.Ok().key);
   }
   return keys;
-}
-
-export interface KeysResult {
-  readonly alg: string;
-  readonly material: CryptoKeyPair;
-  readonly strings: { readonly publicKey: string; readonly privateKey: string };
 }
 
 export class SessionTokenService {
@@ -198,35 +205,25 @@ export interface VerifyTokenOptions<T> {
   readonly verifyToken: (token: string, pubKey: JWK) => Promise<Result<{ payload: unknown }>>;
 }
 
-type CoerceJWKType = string | JWK | JWKPublic;
-
-/**
- * Generic function to decode and parse JWK with a given schema validator.
- * @param k - The encoded string to decode
- * @param decodeFn - Function to decode the string (identity, base64, base58)
- * @param validator - Zod schema to validate the JWK
- * @returns Result containing the validated JWK or an error
- */
-function testEncodeJWKWithSchema<T extends JWK>(
-  k: string,
-  decodeFn: (input: string) => string,
-  validator: z.ZodType<T>,
-): Result<T> {
-  const res = exception2Result(() => decodeFn(k));
-  if (res.isErr()) {
-    return Result.Err(res);
+function coercesJWKplainOrkeysObject<
+  V extends typeof JWKPublicSchema | typeof JWKPrivateSchema,
+  R extends V extends typeof JWKPublicSchema ? JWKPublic : JWKPrivate,
+>(keyOrkeys: { keys: unknown[] } | unknown, validator: V): Result<R>[] {
+  const keys: unknown[] = [];
+  const isKeys = z.object({ keys: z.array(z.any()) }).safeParse(keyOrkeys);
+  if (isKeys.success) {
+    keys.push(...isKeys.data.keys);
+  } else {
+    keys.push(keyOrkeys);
   }
-  const resStr = res.Ok();
-  const key = exception2Result(() => JSON.parse(resStr)) as Result<JWK>;
-  if (key.isOk()) {
-    const parsed = validator.safeParse(key.Ok());
+  return keys.map((key) => {
+    const parsed = validator.safeParse(key);
     if (parsed.success) {
-      return Result.Ok(parsed.data as T);
+      return Result.Ok(parsed.data as R);
     } else {
-      return Result.Err(`Invalid JWK format: ${parsed.error.message}`);
+      return Result.Err(parsed.error);
     }
-  }
-  return key as Result<T>;
+  });
 }
 
 /**
@@ -236,79 +233,58 @@ function testEncodeJWKWithSchema<T extends JWK>(
  * @param inputs - One or more inputs to coerce (string, JWK, or arrays)
  * @returns Promise resolving to array of validated JWKs
  */
-async function coerceJWKWithSchema<T extends JWK>(
-  sthis: SuperThis,
-  validator: z.ZodType<T>,
-  ...inputs: (CoerceJWKType | CoerceJWKType[])[]
-): Promise<T[]> {
-  const flatInputs = [...inputs].flat();
+export async function coerceJWKWithSchema<
+  V extends typeof JWKPublicSchema | typeof JWKPrivateSchema,
+  R extends V extends typeof JWKPublicSchema ? JWKPublic : JWKPrivate,
+>(sthis: SuperThis, validator: V, ...inputs: (CoerceJWKType | CoerceJWKType[])[]): Promise<Result<R>[]> {
   return Promise.all(
-    flatInputs.map(async (k) => {
-      if (typeof k === "string") {
-        // First try parsing as JSON - might be a JWKS object string
-        try {
-          const parsed = JSON.parse(k);
-          if (typeof parsed === "object" && parsed !== null && "keys" in parsed && Array.isArray(parsed.keys)) {
-            const validatedKeys: T[] = [];
-            for (const key of parsed.keys) {
-              const result = validator.safeParse(key);
-              if (result.success) {
-                validatedKeys.push(result.data as T);
-              }
-            }
-            if (validatedKeys.length > 0) {
-              return validatedKeys;
-            }
-          }
-        } catch (err) {
-          // Not JSON, continue with other parsing methods
-        }
-        const mimeBlocks = mimeBlockParser(k);
-        for (const { content, begin, end } of mimeBlocks) {
+    inputs.flat().map(async (keys) => {
+      if (typeof keys === "string") {
+        const jwkKeys: Result<R>[] = [];
+        for (const { content, begin, end } of mimeBlockParser(keys)) {
           if (begin && end) {
             const pem = `${begin}\n${content}\n${end}\n`;
             const key = await importSPKI(pem, "RS256");
             const jwk = await exportJWK(key);
             const parsed = validator.safeParse({ ...jwk, alg: "RS256" });
             if (parsed.success) {
-              return [parsed.data as T];
+              jwkKeys.push(Result.Ok(parsed.data as R));
+            } else {
+              jwkKeys.push(Result.Err(parsed.error));
             }
-            break;
+            continue;
           }
+          let encodingFailed: Option<Result<R>> = Option.Some(Result.Err("Failed to decode JWK string with any known encoding"));
           for (const decodeFn of [
             (a: string) => a,
             (a: string) => sthis.txt.base64.decode(a),
             (a: string) => sthis.txt.base58.decode(a),
           ]) {
-            const rKey = testEncodeJWKWithSchema(content, decodeFn, validator);
-            if (rKey.isOk()) {
-              return [rKey.Ok()];
+            const res = exception2Result(() => decodeFn(content));
+            if (res.isErr()) {
+              continue;
+            }
+            const resStr = res.Ok();
+            const keyOrkeys = exception2Result(() => JSON.parse(resStr)) as Result<unknown>;
+            if (keyOrkeys.isErr()) {
+              continue;
+            }
+            encodingFailed = Option.None();
+            for (const rKey of coercesJWKplainOrkeysObject<V, R>(keyOrkeys.Ok(), validator)) {
+              jwkKeys.push(rKey);
             }
           }
+          if (encodingFailed.IsSome()) {
+            jwkKeys.push(encodingFailed.Unwrap());
+          }
         }
-        return [];
+        return jwkKeys;
       } else {
         // Check if it's a JWKS object with a "keys" property
-        if (typeof k === "object" && k !== null && "keys" in k && Array.isArray((k as { keys: unknown }).keys)) {
-          const jwks = k as { keys: unknown[] };
-          const validatedKeys: T[] = [];
-          for (const key of jwks.keys) {
-            const parsed = validator.safeParse(key);
-            if (parsed.success) {
-              validatedKeys.push(parsed.data as T);
-            }
-          }
-          return validatedKeys;
-        }
-        // Try parsing as single JWK
-        const parsed = validator.safeParse(k);
-        if (parsed.success) {
-          return [parsed.data as T];
-        }
-        return [];
+        return coercesJWKplainOrkeysObject<V, R>(keys, validator);
       }
     }),
-  ).then((arr) => [...arr].flat());
+  ).then((a) => a.flat());
 }
 
 /**
@@ -319,22 +295,42 @@ export async function coerceJWK(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJ
   // Accept any valid JWK (public or private)
   // IMPORTANT: Try JWKPrivateSchema first! If we try JWKPublicSchema first,
   // it will match private keys (which have all public fields) and strip the 'd' field.
-  const schema = z.union([JWKPrivateSchema, JWKPublicSchema]);
-  return coerceJWKWithSchema(sthis, schema as z.ZodType<JWK>, ...i);
+  const priv = await coerceJWKWithSchema(sthis, JWKPrivateSchema, ...i);
+  const pub = await coerceJWKWithSchema(sthis, JWKPublicSchema, ...i);
+  if (priv.length !== pub.length) {
+    throw new Error("Mismatched number of private and public keys");
+  }
+  const ret: Result<JWKPrivate | JWKPublic>[] = [];
+  for (let idx = 0; idx < priv.length; idx++) {
+    const rPriv = priv[idx];
+    const rPub = pub[idx];
+    if (rPriv.isOk()) {
+      ret.push(rPriv);
+    } else if (rPub.isOk()) {
+      ret.push(rPub);
+    } else {
+      if (rPriv.Err()) {
+        ret.push(Result.Err(rPriv.Err()));
+      } else {
+        ret.push(Result.Err(rPub.Err()));
+      }
+    }
+  }
+  return filterOk(ret);
 }
 
 /**
  * Coerces inputs to JWKPublic format, stripping private key components.
  */
 export async function coerceJWKPublic(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJWKType[])[]): Promise<JWKPublic[]> {
-  return coerceJWKWithSchema(sthis, JWKPublicSchema, ...i);
+  return filterOk(await coerceJWKWithSchema(sthis, JWKPublicSchema, ...i));
 }
 
 /**
  * Coerces inputs to JWKPrivate format, validating that private key components are present.
  */
 export async function coerceJWKPrivate(sthis: SuperThis, ...i: (CoerceJWKType | CoerceJWKType[])[]): Promise<JWKPrivate[]> {
-  return coerceJWKWithSchema(sthis, JWKPrivateSchema, ...i);
+  return filterOk(await coerceJWKWithSchema<typeof JWKPrivateSchema, JWKPrivate>(sthis, JWKPrivateSchema, ...i));
 }
 
 export async function verifyToken<R>(

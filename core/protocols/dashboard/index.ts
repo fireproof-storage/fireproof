@@ -43,11 +43,11 @@ export const FPClerkClaimSchema = z.object({
   params: z
     .object({
       last: z.string(),
-      name: z.string().nullable(),
+      name: z.string().nullable().optional(),
       email: z.string(),
       first: z.string(),
       image_url: z.string(),
-      external_id: z.string().nullable(),
+      external_id: z.string().nullable().optional(),
       public_meta: z.unknown(),
       email_verified: z.boolean().optional(),
     })

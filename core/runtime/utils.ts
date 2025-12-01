@@ -848,3 +848,13 @@ export function mimeBlockParser(mime: string): MimeBlock[] {
 
   return blocks;
 }
+
+export function filterOk<T, E>(results: Result<T, E>[]): T[] {
+  const okValues: T[] = [];
+  for (const res of results) {
+    if (res.isOk()) {
+      okValues.push(res.Ok());
+    }
+  }
+  return okValues;
+}
