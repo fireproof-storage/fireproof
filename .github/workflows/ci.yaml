@@ -23,7 +23,7 @@ jobs:
         image: docker:dind
         options: --privileged
     container:
-      image: mcr.microsoft.com/playwright:v1.56.0-noble
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
       options: --privileged --add-host=host.docker.internal:host-gateway --env STORAGE_URL=http://host.docker.internal:9000/testbucket --env FP_ESM=http://host.docker.internal:4874 --env FP_NPM_REGISTRY=http://host.docker.internal:4873
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
