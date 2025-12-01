@@ -411,7 +411,9 @@ export async function verifyToken<R>(
       }
     }
   }
-  return Result.Err(`Verification failed. Tried ${presetPubKey.length} preset keys, ${wellKnownUrls.length} JWKS URLs. URL errors:\n${JSON.stringify(errors, null, 2)}`);
+  return Result.Err(
+    `Verification failed. Tried ${presetPubKey.length} preset keys, ${wellKnownUrls.length} JWKS URLs. URL errors:\n${JSON.stringify(errors, null, 2)}`,
+  );
 }
 
 async function internVerifyToken<R>(token: string, presetPubKey: JWK | JWKPublic, opts: VerifyTokenOptions<R>): Promise<Result<R>> {
