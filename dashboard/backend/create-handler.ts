@@ -64,6 +64,8 @@ class ClerkApiToken implements FPApiToken {
         );
       }
     }
+    console.log("[DEBUG] CLERK keys loaded:", keys.length, "URLs:", urls.length);
+    console.log("[DEBUG] First key preview:", keys[0]?.substring(0, 100));
     const rt = await sts.verifyToken(token, keys, urls, {
       parseSchema: (payload: unknown): Result<FPClerkClaim> => {
         const r = FPClerkClaimSchema.safeParse(payload);

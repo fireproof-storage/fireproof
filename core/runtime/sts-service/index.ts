@@ -369,10 +369,13 @@ export async function verifyToken<R>(
     sthis: iopts.sthis ?? ensureSuperThis(),
   };
 
+  console.log("[DEBUG] verifyToken: trying", presetPubKey.length, "preset keys");
   for (const pubKey of presetPubKey) {
     const coercedKeys = await coerceJWKPublic(opts.sthis, pubKey);
+    console.log("[DEBUG] Coerced", coercedKeys.length, "keys from preset");
     for (const key of coercedKeys) {
       const rVerify = await internVerifyToken(token, key, opts);
+      console.log("[DEBUG] Preset key verification:", rVerify.isOk() ? "SUCCESS" : "FAILED", key.kid);
       if (rVerify.isOk()) {
         return rVerify;
       }
@@ -408,7 +411,7 @@ export async function verifyToken<R>(
       }
     }
   }
-  return Result.Err(`No well-known JWKS URL could verify the token:\n${JSON.stringify(errors, null, 2)}`);
+  return Result.Err(`Verification failed. Tried ${presetPubKey.length} preset keys, ${wellKnownUrls.length} JWKS URLs. URL errors:\n${JSON.stringify(errors, null, 2)}`);
 }
 
 async function internVerifyToken<R>(token: string, presetPubKey: JWK | JWKPublic, opts: VerifyTokenOptions<R>): Promise<Result<R>> {
