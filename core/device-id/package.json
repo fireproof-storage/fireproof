@@ -42,6 +42,7 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "jose": "^6.1.2",
     "multiformats": "^13.4.0",
+    "playwright": "1.57.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {

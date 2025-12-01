@@ -127,6 +127,9 @@ importers:
       open:
         specifier: ^11.0.0
         version: 11.0.0
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       semver:
         specifier: ^7.7.3
         version: 7.7.3
@@ -179,6 +182,9 @@ importers:
       jose:
         specifier: ^6.1.2
         version: 6.1.2
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -243,6 +249,9 @@ importers:
       jose:
         specifier: ^6.1.2
         version: 6.1.2
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -307,6 +316,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -371,6 +383,9 @@ importers:
       hono:
         specifier: ^4.10.7
         version: 4.10.7
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       vitest:
         specifier: ^4.0.8
         version: 4.0.8(@types/node@24.10.1)(@vitest/browser-playwright@4.0.8)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1)
@@ -414,6 +429,9 @@ importers:
       jose:
         specifier: ^6.1.2
         version: 6.1.2
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -439,6 +457,9 @@ importers:
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       react:
         specifier: '>=18.0.0'
         version: 19.2.0
@@ -494,6 +515,9 @@ importers:
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
@@ -564,6 +588,9 @@ importers:
       p-retry:
         specifier: ^7.1.0
         version: 7.1.0
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   core/core:
     dependencies:
@@ -582,6 +609,9 @@ importers:
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       react:
         specifier: '>=18.0.0'
         version: 19.1.1
@@ -606,6 +636,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -640,6 +673,9 @@ importers:
       '@web3-storage/pail':
         specifier: ^0.6.2
         version: 0.6.2
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   core/gateways/cloud:
     dependencies:
@@ -670,6 +706,9 @@ importers:
       jose:
         specifier: ^6.1.2
         version: 6.1.2
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   core/gateways/file:
     dependencies:
@@ -697,6 +736,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -725,6 +767,9 @@ importers:
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   core/gateways/file-node:
     dependencies:
@@ -737,6 +782,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   core/gateways/indexeddb:
     dependencies:
@@ -761,6 +809,9 @@ importers:
       idb:
         specifier: ^8.0.3
         version: 8.0.3
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   core/gateways/memory:
     dependencies:
@@ -782,6 +833,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -819,6 +873,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -843,6 +900,9 @@ importers:
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       ws:
         specifier: ^8.18.3
         version: 8.18.3
@@ -867,6 +927,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -903,6 +966,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -928,6 +994,9 @@ importers:
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../../types/blockstore
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -952,6 +1021,9 @@ importers:
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../../types/blockstore
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -973,6 +1045,9 @@ importers:
       cborg:
         specifier: ^4.3.1
         version: 4.3.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1083,7 +1158,7 @@ importers:
         specifier: ^4.0.8
         version: 4.0.8(vite@7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.20.5)(yaml@2.8.1))(vitest@4.0.8)
       playwright:
-        specifier: ^1.57.0
+        specifier: 1.57.0
         version: 1.57.0
       playwright-chromium:
         specifier: ^1.56.1
@@ -1115,6 +1190,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
@@ -1142,6 +1220,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -1167,6 +1248,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1186,6 +1270,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
 
   dashboard:
     dependencies:
@@ -1249,6 +1336,9 @@ importers:
       multiformats:
         specifier: ^13.4.0
         version: 13.4.1
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -1397,6 +1487,9 @@ importers:
       jose:
         specifier: ^6.1.2
         version: 6.1.2
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -1430,7 +1523,7 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7
       playwright:
-        specifier: ^1.57.0
+        specifier: 1.57.0
         version: 1.57.0
       playwright-chromium:
         specifier: ^1.56.1
@@ -1441,6 +1534,9 @@ importers:
       '@adviser/cement':
         specifier: ^0.5.2
         version: 0.5.2(typescript@5.9.3)
+      playwright:
+        specifier: 1.57.0
+        version: 1.57.0
       yocto-queue:
         specifier: ^1.2.2
         version: 1.2.2

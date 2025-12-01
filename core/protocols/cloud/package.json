@@ -42,6 +42,7 @@
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
     "@types/ws": "^8.18.1",
+    "playwright": "1.57.0",
     "ws": "^8.18.3"
   }
 }

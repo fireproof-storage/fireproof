@@ -54,6 +54,7 @@
     "@web3-storage/pail": "^0.6.2",
     "multiformats": "^13.4.0",
     "p-map": "^7.0.4",
-    "p-retry": "^7.1.0"
+    "p-retry": "^7.1.0",
+    "playwright": "1.57.0"
   }
 }

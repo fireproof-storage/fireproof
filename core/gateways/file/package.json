@@ -48,6 +48,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "@fireproof/vendor": "workspace:0.0.0"
+    "@fireproof/vendor": "workspace:0.0.0",
+    "playwright": "1.57.0"
   }
 }

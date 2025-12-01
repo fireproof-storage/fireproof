@@ -47,6 +47,7 @@
     "@ipld/dag-cbor": "^9.2.5",
     "@web3-storage/pail": "^0.6.2",
     "charwise": "^3.0.1",
+    "playwright": "1.57.0",
     "prolly-trees": "^1.0.4"
   },
   "devDependencies": {

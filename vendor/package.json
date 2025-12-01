@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.5.2",
+    "playwright": "1.57.0",
     "yocto-queue": "^1.2.2"
   }
 }
