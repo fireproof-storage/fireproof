@@ -355,14 +355,19 @@ export async function verifyToken<R>(
       if (rKey.isErr()) {
         return Result.Err(rKey);
       }
+      const tokenParts = token.split(".");
+      const tokenHeader = JSON.parse(opts.sthis.txt.base64.decode(tokenParts[0]));
+      console.log("[DEBUG] JWT verify attempt - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
       const rRes = await exception2Result(() => jwtVerify(token, rKey.Ok().key));
       if (rRes.isErr()) {
+        console.log("[DEBUG] JWT verify FAILED - token kid:", tokenHeader.kid, "key kid:", pubKey.kid, "error:", rRes.Err().message);
         return Result.Err(rRes);
       }
       const res = rRes.Ok();
       if (!res) {
         return Result.Err("JWT verification failed");
       }
+      console.log("[DEBUG] JWT verify SUCCESS - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
       return Result.Ok(res);
     },
     ...iopts,
