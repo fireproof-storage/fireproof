@@ -95,4 +95,3 @@ runs:
           --fromEnv DEVICE_ID_CA_CERT | \
           pnpm exec wrangler -c ../backend/wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk
         pnpm run deploy:cf --env ${{inputs.CLOUDFLARE_ENV}}
-
