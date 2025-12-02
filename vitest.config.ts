@@ -12,7 +12,7 @@ export default defineConfig({
       "cloud/backend/node/vitest.config.ts",
       "cloud/backend/base/vitest.config.ts",
       "cli/vitest.config.ts",
-      "dashboard/vitest.config.ts",
+      "dashboard/backend/vitest.config.ts",
     ],
   },
 });

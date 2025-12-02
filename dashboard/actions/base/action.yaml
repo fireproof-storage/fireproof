@@ -9,30 +9,60 @@ runs:
   steps:
     - uses: ./actions/runtime
 
-    - name: install
+    - name: FRONTEND install
       shell: bash
-      working-directory: dashboard
+      working-directory: dashboard/frontend
       run: pnpm install
 
-    - name: format-check
-      working-directory: dashboard
+    - name: FRONTEND format-check
+      working-directory: dashboard/frontend
       shell: bash
       run: pnpm run format --check
 
-    - name: lint
+    - name: FRONTEND lint
       shell: bash
-      working-directory: dashboard
+      working-directory: dashboard/frontend
       run: pnpm run lint
 
-    - name: build
+    - name: FRONTEND build
       shell: bash
-      working-directory: dashboard
+      working-directory: dashboard/frontend
       env:
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: pnpm run build
 
-    - name: test
+    - name: FRONTEND test
       shell: bash
-      working-directory: dashboard
+      working-directory: dashboard/frontend
       run: |
         pnpm run test
+
+
+    - name: BACKEND install
+      shell: bash
+      working-directory: dashboard/backend
+      run: pnpm install
+
+    - name: BACKEND format-check
+      working-directory: dashboard/backend
+      shell: bash
+      run: pnpm run format --check
+
+    - name: BACKEND lint
+      shell: bash
+      working-directory: dashboard/backend
+      run: pnpm run lint
+
+    - name: BACKEND build
+      shell: bash
+      working-directory: dashboard/backend
+      env:
+        VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
+      run: pnpm run build
+
+    - name: BACKEND test
+      shell: bash
+      working-directory: dashboard/backend
+      run: |
+        pnpm run test
+

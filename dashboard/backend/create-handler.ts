@@ -32,11 +32,12 @@ class ClerkApiToken implements FPApiToken {
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
   }
-  async verify(token: string): Promise<Result<VerifiedAuth>> {
+
+  readonly keysAndUrls = Lazy((): Result<{ keys: string[]; urls: string[] }> => {
     const keys: string[] = [];
     const urls: string[] = [];
     // eslint-disable-next-line no-constant-condition
-    for (let idx = 0; true; idx++) {
+     for (let idx = 0; true; idx++) {
       const suffix = !idx ? "" : `_${idx}`;
       const key = `CLERK_PUB_JWT_KEY${suffix}`;
       const url = `CLERK_PUB_JWT_URL${suffix}`;
@@ -64,6 +65,12 @@ class ClerkApiToken implements FPApiToken {
         );
       }
     }
+    return Result.Ok({ keys, urls });
+  })
+
+  async verify(token: string): Promise<Result<VerifiedAuth>> {
+    const { keys, urls } = this.keysAndUrls().Ok();
+   
     const rt = await sts.verifyToken(token, keys, urls, {
       parseSchema: (payload: unknown): Result<FPClerkClaim> => {
         const r = FPClerkClaimSchema.safeParse(payload);
@@ -79,6 +86,7 @@ class ClerkApiToken implements FPApiToken {
           return Result.Err(rPublicKey);
         }
         const pem = await exportSPKI(rPublicKey.Ok().key);
+        console.log("ClerkApiToken-verify", pem);
         const r = await exception2Result(() =>
           ClerkVerifyToken(token, {
             jwtKey: pem,
@@ -212,6 +220,7 @@ const tokenApi = Lazy(async (sthis: SuperThis) => {
   };
 });
 
+export type BindPromise<T> = (promise: Promise<T>) => Promise<T>;
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
 export async function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
@@ -269,7 +278,7 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
     maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
     deviceCA: rDeviceIdCA.Ok(),
   });
-  return async (req: Request): Promise<Response> => {
+  return async (req: Request, bindPromise: BindPromise<Result<unknown>> = (p) => p): Promise<Response> => {
     const startTime = performance.now();
     if (req.method === "OPTIONS") {
       return new Response("ok", {
@@ -359,7 +368,7 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
         return new Response("Invalid request", { status: 400, headers: DefaultHttpHeaders() });
     }
     try {
-      const rRes = await res;
+      const rRes = await bindPromise(res);
       // console.log("Response", rRes);
       if (rRes.isErr()) {
         logger.Error().Any({ request: jso.type }).Err(rRes).Msg("Result-Error");

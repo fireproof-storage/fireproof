@@ -20,13 +20,26 @@ export interface Env {
 }
 
 export default {
-  async fetch(request: Request, env: Env) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const uri = URI.from(request.url);
     let ares: Promise<CFResponse>;
     switch (true) {
       case uri.pathname.startsWith("/api"):
         // console.log("cf-serve", request.url, env);
-        ares = createHandler(drizzle(env.DB), env).then((fn) => fn(request) as unknown as Promise<CFResponse>);
+        ares = createHandler(drizzle(env.DB), env).then((fn) => fn(request, (p) => {
+          ctx.waitUntil(p);
+          return p;
+          // console.log("cf-serve - queued promise for execution context", p);
+          // ctx.waitUntil(p);
+
+          // const { waitUntil } = ctx;
+          // waitUntil.apply(ctx, [p]);
+          // waitUntil.call(ctx, p);
+          // const reboundWaitUntil = waitUntil.bind(ctx);
+          // reboundWaitUntil(p);
+
+          // return p;
+        }) as unknown as Promise<CFResponse>);
         break;
 
       case uri.pathname.startsWith("/.well-known/jwks.json"):
@@ -39,6 +52,8 @@ export default {
       default:
         ares = env.ASSETS.fetch(uri.build().pathname("/").asURL(), request as unknown as CFRequest);
     }
+    console.log("cf-serve - awaiting response for", request.url);
+    ctx.waitUntil(ares);
     const res = await ares;
     return new Response(res.body as ReadableStream<Uint8Array>, {
       status: res.status,

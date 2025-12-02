@@ -27,7 +27,9 @@ export default defineConfig({
     // multilines
     // tsconfigPaths(),
     react(),
-    cloudflare(),
+    cloudflare({
+      configPath: '../backend/wrangler.toml'
+    }),
     // visualizer(),
   ],
   define: {

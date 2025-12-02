@@ -349,7 +349,7 @@ export async function verifyToken<R>(
     parseSchema: (payload: unknown): Result<R> => {
       return Result.Ok(payload as R);
     },
-    fetch: (url, init) => globalThis.fetch(url, init),
+    fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args),
     verifyToken: async (token: string, pubKey: JWK): Promise<Result<{ payload: unknown }>> => {
       const rKey = await importJWK(pubKey);
       if (rKey.isErr()) {
@@ -390,6 +390,7 @@ export async function verifyToken<R>(
         case isFetchWellKnownJwksResultOk(pubKey):
           {
             for (const key of pubKey.keys) {
+              console.log("Trying well-known JWKS key from", token, wellKnownUrls, key);
               const rVerify = await internVerifyToken(token, key, opts);
               if (rVerify.isOk()) {
                 return rVerify;

@@ -52,7 +52,7 @@ runs:
   using: "composite"
   steps:
     - name: Deploy Dashboard
-      working-directory: dashboard
+      working-directory: dashboard/frontend
       shell: bash
       env:
         # need for drizzle
@@ -77,7 +77,7 @@ runs:
         # need during build
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
       run: |
-        pnpm run drizzle:d1-remote
+        (cd ../backend && pnpm run drizzle:d1-remote)
         pnpm exec core-cli wellKnown --jsons --presetKey "$CLERK_PUB_JWT_KEY" "$CLERK_PUB_JWT_URL" > key
         CLERK_PUB_JWT_KEY="$(cat key)"
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
@@ -93,16 +93,6 @@ runs:
           --fromEnv CLOUD_SESSION_TOKEN_PUBLIC \
           --fromEnv DEVICE_ID_CA_PRIV_KEY \
           --fromEnv DEVICE_ID_CA_CERT | \
-          pnpm exec wrangler -c ./wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk
+          pnpm exec wrangler -c ../backend/wrangler.toml secret --env ${{inputs.CLOUDFLARE_ENV}} bulk
         pnpm run deploy:cf --env ${{inputs.CLOUDFLARE_ENV}}
 
-      # - name: deploy to production
-      #   if: github.ref == 'refs/heads/main'
-      #   env:
-      #     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      #     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      #     CLOUDFLARE_DATABASE_ID: ${{ secrets.CLOUDFLARE_DATABASE_ID }}
-      #   run: |
-      #     pnpm run build
-      #     pnpm run drizzle:d1-remote
-      #     pnpm run deploy:cf --env production

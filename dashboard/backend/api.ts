@@ -242,13 +242,12 @@ export class FPApiSQL implements FPApiInterface {
   }
 
   private async _authVerifyAuth(req: { readonly auth: DashAuthType }): Promise<Result<ClerkVerifyAuth>> {
-    // console.log("_authVerify-1", req);
     const tokenApi = this.tokenApi[req.auth.type];
-    // console.log("_authVerify-2", req);
     if (!tokenApi) {
       return Result.Err(`invalid auth type:[${req.auth.type}]`);
     }
     const rAuth = await tokenApi.verify(req.auth.token);
+    // console.log("_authVerify-3", rAuth);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
     }
@@ -261,7 +260,6 @@ export class FPApiSQL implements FPApiInterface {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async activeUser(req: WithAuth, status: UserStatus[] = ["active"]): Promise<Result<ActiveUser>> {
-    // console.log("activeUser-1", req);
     const rAuth = await this._authVerifyAuth(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
@@ -283,9 +281,7 @@ export class FPApiSQL implements FPApiInterface {
   }
 
   async ensureUser(req: ReqEnsureUser): Promise<Result<ResEnsureUser>> {
-    // console.log("ensureUser-1", req);
     const activeUser = await this.activeUser(req);
-    // console.log("ensureUser-2", req);
     if (activeUser.isErr()) {
       return Result.Err(activeUser.Err());
     }
