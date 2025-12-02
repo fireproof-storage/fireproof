@@ -36,6 +36,7 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-protocols-cloud": "workspace:0.0.0",
     "@fireproof/vendor": "^3.0.0",
+    "jose": "^6.1.2",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -49,6 +50,7 @@
     "eslint": "^9.39.1",
     "prettier": "^3.7.3",
     "vitest": "^4.0.8",
-    "wrangler": "^4.51.0"
+    "wrangler": "^4.51.0",
+    "zx": "^8.8.5"
   }
 }
