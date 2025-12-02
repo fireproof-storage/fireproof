@@ -1,6 +1,7 @@
 packages:
   - "core/*"
   - "cloud/3rd-party"
+  - "cloud/todo-app"
   - "cloud/base"
   - "cloud/backend/*"
   - "cli"

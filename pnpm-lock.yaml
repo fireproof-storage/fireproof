@@ -428,6 +428,37 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
+  cloud/todo-app:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.5.2
+        version: 0.5.2(typescript@5.9.3)
+      '@fireproof/vendor':
+        specifier: workspace:0.0.0
+        version: link:../../vendor
+      '@types/react':
+        specifier: ^19.2.7
+        version: 19.2.7
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.0
+      react-dom:
+        specifier: ^19.2.0
+        version: 19.2.0(react@19.2.0)
+      use-fireproof:
+        specifier: workspace:0.0.0
+        version: link:../../use-fireproof/base
+    devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      vite:
+        specifier: ^7.2.4
+        version: 7.2.6(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.1)
+
   core/base:
     dependencies:
       '@adviser/cement':
