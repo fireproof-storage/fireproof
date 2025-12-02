@@ -44,6 +44,9 @@ export function createUseDocument(database: Database) {
       }
     }, [initialDocId]);
 
+    // Memoize doc._id as a string to prevent infinite loops
+    const docIdString = useMemo(() => String(doc._id ?? ""), [doc._id]);
+
     const refresh = useCallback(async () => {
       const myReq = ++requestIdRef.current;
       const currentDocId = doc._id;
@@ -70,21 +73,27 @@ export function createUseDocument(database: Database) {
           setHydrated(true);
         }
       }
-    }, [doc._id]);
+    }, [docIdString]);
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
         updateHappenedRef.current = false;
-        const toSave = existingDoc ?? doc;
-        const res = await database.put(toSave);
+        // Use callback form to get latest doc without causing dependency
+        let toSaveDoc: DocSet<T>;
+        if (existingDoc) {
+          toSaveDoc = existingDoc;
+        } else {
+          toSaveDoc = doc;
+        }
+        const res = await database.put(toSaveDoc);
 
-        if (!updateHappenedRef.current && !doc._id && !existingDoc) {
+        if (!updateHappenedRef.current && !toSaveDoc._id && !existingDoc) {
           setDoc((d) => ({ ...d, _id: res.id }));
         }
 
         return res;
       },
-      [doc],
+      [docIdString],
     );
 
     const remove: DeleteDocFn<T> = useCallback(
@@ -97,7 +106,7 @@ export function createUseDocument(database: Database) {
         setDoc(initialDoc);
         return res;
       },
-      [doc, initialDoc],
+      [docIdString],
     );
 
     // New granular update methods
@@ -137,7 +146,7 @@ export function createUseDocument(database: Database) {
           void refresh();
         }
       }, true);
-    }, [doc._id, refresh]);
+    }, [docIdString, refresh]);
 
     useEffect(() => {
       void refresh();

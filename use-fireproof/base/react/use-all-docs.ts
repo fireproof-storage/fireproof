@@ -35,7 +35,7 @@ export function createUseAllDocs(database: Database) {
         });
         setHydrated(true);
       }
-    }, [database, query, queryString]);
+    }, [database, queryString]);
 
     useEffect(() => {
       refreshRows();

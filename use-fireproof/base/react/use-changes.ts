@@ -33,7 +33,7 @@ export function createUseChanges(database: Database) {
         setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
         setHydrated(true);
       }
-    }, [database, since, opts, sinceString, queryString]);
+    }, [database, sinceString, queryString]);
 
     useEffect(() => {
       refreshRows(); // Initial data fetch

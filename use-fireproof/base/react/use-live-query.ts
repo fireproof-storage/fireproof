@@ -38,7 +38,7 @@ export function createUseLiveQuery(database: Database) {
         setResult(res);
         setHydrated(true);
       }
-    }, [database, mapFn, query, mapFnString, queryString]);
+    }, [database, mapFnString, queryString]);
 
     useEffect(() => {
       refreshRows();
