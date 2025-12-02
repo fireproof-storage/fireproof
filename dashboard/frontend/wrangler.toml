@@ -1,5 +1,5 @@
 name = "fireproof-dashboard"
-main = "cf-serve.ts"
+main = "../backend/cf-serve.ts"
 compatibility_date = "2025-02-24"
 compatibility_flags = ["nodejs_compat"]
 

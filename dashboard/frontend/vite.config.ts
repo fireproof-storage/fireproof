@@ -28,7 +28,7 @@ export default defineConfig({
     // tsconfigPaths(),
     react(),
     cloudflare({
-      configPath: "../backend/wrangler.toml",
+      configPath: "wrangler.toml",
     }),
     // visualizer(),
   ],
