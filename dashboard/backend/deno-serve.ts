@@ -12,7 +12,7 @@ function getClient() {
 async function main() {
   Deno.serve({
     port: 7370,
-    handler: await createHandler(getClient(), Deno.env.toObject()),
+    handler: (await createHandler(getClient(), Deno.env.toObject())) as (req: Request) => Promise<Response>,
   });
 }
 

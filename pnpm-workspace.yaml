@@ -1,6 +1,7 @@
 packages:
   - "core/*"
-  - "cloud/*"
+  - "cloud/3rd-party"
+  - "cloud/base"
   - "cloud/backend/*"
   - "cli"
   - "core/types/*"
@@ -9,7 +10,7 @@ packages:
   - "core/protocols/*"
   - "core/svc/*"
   - "use-fireproof/*"
-  - "dashboard"
+  - "dashboard/*"
   - "vendor"
 #catalog:
 #  adviserCement: ^0.4.20

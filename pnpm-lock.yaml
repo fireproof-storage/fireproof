@@ -428,37 +428,6 @@ importers:
         specifier: ^8.8.5
         version: 8.8.5
 
-  cloud/todo-app:
-    dependencies:
-      '@adviser/cement':
-        specifier: ^0.5.2
-        version: 0.5.2(typescript@5.9.3)
-      '@fireproof/vendor':
-        specifier: workspace:0.0.0
-        version: link:../../vendor
-      '@types/react':
-        specifier: ^19.2.7
-        version: 19.2.7
-      react:
-        specifier: '>=18.0.0'
-        version: 19.2.0
-      react-dom:
-        specifier: ^19.2.0
-        version: 19.2.0(react@19.2.0)
-      use-fireproof:
-        specifier: workspace:0.0.0
-        version: link:../../use-fireproof/base
-    devDependencies:
-      '@fireproof/core-cli':
-        specifier: workspace:0.0.0
-        version: link:../../cli
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.7)
-      vite:
-        specifier: ^7.2.4
-        version: 7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.1)
-
   core/base:
     dependencies:
       '@adviser/cement':
@@ -1187,7 +1156,80 @@ importers:
         specifier: ^13.4.0
         version: 13.4.1
 
-  dashboard:
+  dashboard/backend:
+    dependencies:
+      '@adviser/cement':
+        specifier: ^0.5.2
+        version: 0.5.2(typescript@5.9.3)
+      '@clerk/backend':
+        specifier: ^2.24.0
+        version: 2.24.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/clerk-js':
+        specifier: ^5.111.0
+        version: 5.111.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.13)
+      '@fireproof/core':
+        specifier: workspace:0.0.0
+        version: link:../../core/core
+      '@fireproof/core-device-id':
+        specifier: workspace:0.0.0
+        version: link:../../core/device-id
+      '@fireproof/core-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../core/protocols/cloud
+      '@fireproof/core-protocols-dashboard':
+        specifier: workspace:0.0.0
+        version: link:../../core/protocols/dashboard
+      '@fireproof/core-runtime':
+        specifier: workspace:0.0.0
+        version: link:../../core/runtime
+      '@fireproof/core-types-base':
+        specifier: workspace:0.0.0
+        version: link:../../core/types/base
+      '@fireproof/core-types-protocols-cloud':
+        specifier: workspace:0.0.0
+        version: link:../../core/types/protocols/cloud
+      '@fireproof/vendor':
+        specifier: ^3.0.0
+        version: 3.0.0
+      zod:
+        specifier: ^4.1.13
+        version: 4.1.13
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20251128.0
+        version: 4.20251128.0
+      '@eslint/js':
+        specifier: ^9.39.1
+        version: 9.39.1
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
+      '@libsql/client':
+        specifier: ^0.15.15
+        version: 0.15.15
+      '@libsql/kysely-libsql':
+        specifier: ^0.4.1
+        version: 0.4.1(kysely@0.28.7)
+      drizzle-kit:
+        specifier: 0.30.6
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+      drizzle-orm:
+        specifier: ^0.44.7
+        version: 0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@1.21.7)
+      prettier:
+        specifier: ^3.7.3
+        version: 3.7.3
+      vitest:
+        specifier: ^4.0.8
+        version: 4.0.14(@types/node@24.10.1)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.1)
+      wrangler:
+        specifier: ^4.51.0
+        version: 4.51.0(@cloudflare/workers-types@4.20251128.0)
+
+  dashboard/frontend:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.2
@@ -1203,25 +1245,25 @@ importers:
         version: 5.57.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@fireproof/core':
         specifier: workspace:0.0.0
-        version: link:../core/core
+        version: link:../../core/core
       '@fireproof/core-device-id':
         specifier: workspace:0.0.0
-        version: link:../core/device-id
+        version: link:../../core/device-id
       '@fireproof/core-protocols-cloud':
         specifier: workspace:0.0.0
-        version: link:../core/protocols/cloud
+        version: link:../../core/protocols/cloud
       '@fireproof/core-protocols-dashboard':
         specifier: workspace:0.0.0
-        version: link:../core/protocols/dashboard
+        version: link:../../core/protocols/dashboard
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
-        version: link:../core/runtime
+        version: link:../../core/runtime
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
-        version: link:../core/types/base
+        version: link:../../core/types/base
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:0.0.0
-        version: link:../core/types/protocols/cloud
+        version: link:../../core/types/protocols/cloud
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
@@ -1269,7 +1311,7 @@ importers:
         version: 2.3.3(react@19.2.0)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../use-fireproof/base
+        version: link:../../use-fireproof/base
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1285,7 +1327,7 @@ importers:
         version: 9.39.1
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
-        version: link:../cli
+        version: link:../../cli
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
@@ -1350,7 +1392,7 @@ importers:
         specifier: ^7.2.4
         version: 7.2.4(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.1)
       vitest:
-        specifier: ^4.0.14
+        specifier: ^4.0.8
         version: 4.0.14(@types/node@24.10.1)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.1)
       wrangler:
         specifier: ^4.51.0
@@ -6538,10 +6580,6 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yocto-queue@1.2.1:
-    resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
-    engines: {node: '>=12.20'}
-
   yocto-queue@1.2.2:
     resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
     engines: {node: '>=12.20'}
@@ -7602,7 +7640,7 @@ snapshots:
 
   '@fireproof/vendor@3.0.0':
     dependencies:
-      yocto-queue: 1.2.1
+      yocto-queue: 1.2.2
 
   '@floating-ui/core@1.7.3':
     dependencies:
@@ -9419,7 +9457,7 @@ snapshots:
     dependencies:
       debug: 3.2.7
       is-core-module: 2.16.1
-      resolve: 1.22.10
+      resolve: 1.22.11
     transitivePeerDependencies:
       - supports-color
 
@@ -10689,7 +10727,7 @@ snapshots:
       postcss: 8.5.6
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
-      resolve: 1.22.10
+      resolve: 1.22.11
 
   postcss-js@4.1.0(postcss@8.5.6):
     dependencies:
@@ -10793,7 +10831,7 @@ snapshots:
 
   react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
-      cookie: 1.0.2
+      cookie: 1.1.1
       react: 19.2.0
       set-cookie-parser: 2.7.2
     optionalDependencies:
@@ -11299,7 +11337,7 @@ snapshots:
       postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.6)(tsx@4.21.0)(yaml@2.8.1)
       postcss-nested: 6.2.0(postcss@8.5.6)
       postcss-selector-parser: 6.1.2
-      resolve: 1.22.10
+      resolve: 1.22.11
       sucrase: 3.35.0
     transitivePeerDependencies:
       - tsx
@@ -11728,8 +11766,6 @@ snapshots:
       yargs-parser: 21.1.1
 
   yocto-queue@0.1.0: {}
-
-  yocto-queue@1.2.1: {}
 
   yocto-queue@1.2.2: {}
 
