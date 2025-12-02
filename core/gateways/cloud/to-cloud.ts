@@ -131,6 +131,10 @@ class TokenObserver {
   private readonly opts: ToCloudOpts;
 
   currentTokenAndClaim?: TokenAndClaims;
+  private failureCount = 0;
+  private readonly maxFailures = 3;
+  private lastFailureTime?: number;
+  private readonly failureResetMs = 10000; // Reset failure count after 10 seconds
 
   constructor(opts: ToCloudOpts) {
     this.opts = opts;
@@ -146,17 +150,40 @@ class TokenObserver {
   }
 
   async refreshToken(logger: Logger, ledger: Ledger) {
-    let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
-    // console.log("refreshToken", token);
-    if (this.isExpired(token)) {
-      logger.Debug().Msg("waiting for token");
-      this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
-      token = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
-      if (!token) {
-        throw new Error("Token not found");
+    // Circuit breaker: if we've failed too many times recently, fail fast
+    if (this.failureCount >= this.maxFailures) {
+      const now = Date.now();
+      if (this.lastFailureTime && now - this.lastFailureTime < this.failureResetMs) {
+        logger.Debug().Int("failures", this.failureCount).Msg("circuit breaker open - failing fast");
+        throw new Error("Token refresh circuit breaker open - too many failures");
       }
+      // Reset after timeout
+      this.failureCount = 0;
+      this.lastFailureTime = undefined;
     }
-    return token;
+
+    try {
+      let token = await this.opts.strategy.tryToken(ledger.sthis, logger, this.opts);
+      // console.log("refreshToken", token);
+      if (this.isExpired(token)) {
+        logger.Debug().Msg("waiting for token");
+        this.opts.strategy.open(ledger.sthis, logger, ledger.name, this.opts);
+        token = await this.opts.strategy.waitForToken(ledger.sthis, logger, ledger.name, this.opts);
+        if (!token) {
+          throw new Error("Token not found");
+        }
+      }
+      // Success - reset failure count
+      this.failureCount = 0;
+      this.lastFailureTime = undefined;
+      return token;
+    } catch (error) {
+      // Increment failure count
+      this.failureCount++;
+      this.lastFailureTime = Date.now();
+      logger.Debug().Int("failures", this.failureCount).Err(error).Msg("token refresh failed");
+      throw error;
+    }
   }
 
   isExpired(token?: TokenAndClaims): boolean {
