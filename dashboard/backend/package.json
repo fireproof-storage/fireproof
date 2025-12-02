@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "vite dev",
     "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.js",
-    "backend:d1": "wrangler dev -c wrangler.toml --port 7370",
-    "deploy:cf": "wrangler deploy -c wrangler.toml",
     "build": "core-cli tsc",
     "lint": "eslint .",
     "test": "vitest --run",
