@@ -344,40 +344,45 @@ export async function verifyToken<R>(
   wellKnownUrls: CoerceURI[],
   iopts: Partial<VerifyTokenOptions<R>> = {},
 ): Promise<Result<R>> {
+  const fetchFn = iopts.fetch || globalThis.fetch;
   const opts: VerifyTokenOptions<R> = {
-    fetchTimeoutMs: 1000,
-    parseSchema: (payload: unknown): Result<R> => {
-      return Result.Ok(payload as R);
-    },
-    fetch: (url, init) => globalThis.fetch(url, init),
-    verifyToken: async (token: string, pubKey: JWK): Promise<Result<{ payload: unknown }>> => {
-      const rKey = await importJWK(pubKey);
-      if (rKey.isErr()) {
-        return Result.Err(rKey);
-      }
-      const tokenParts = token.split(".");
-      const tokenHeader = JSON.parse(opts.sthis.txt.base64.decode(tokenParts[0]));
-      console.log("[DEBUG] JWT verify attempt - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
-      const rRes = await exception2Result(() => jwtVerify(token, rKey.Ok().key));
-      if (rRes.isErr()) {
-        console.log(
-          "[DEBUG] JWT verify FAILED - token kid:",
-          tokenHeader.kid,
-          "key kid:",
-          pubKey.kid,
-          "error:",
-          rRes.Err().message,
-        );
-        return Result.Err(rRes);
-      }
-      const res = rRes.Ok();
-      if (!res) {
-        return Result.Err("JWT verification failed");
-      }
-      console.log("[DEBUG] JWT verify SUCCESS - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
-      return Result.Ok(res);
-    },
-    ...iopts,
+    fetchTimeoutMs: iopts.fetchTimeoutMs || 1000,
+    parseSchema:
+      iopts.parseSchema ||
+      ((payload: unknown): Result<R> => {
+        return Result.Ok(payload as R);
+      }),
+    // Always wrap fetch to preserve 'this' binding in Cloudflare Workers
+    fetch: (url, init) => fetchFn.call(globalThis, url, init),
+    verifyToken:
+      iopts.verifyToken ||
+      (async (token: string, pubKey: JWK): Promise<Result<{ payload: unknown }>> => {
+        const rKey = await importJWK(pubKey);
+        if (rKey.isErr()) {
+          return Result.Err(rKey);
+        }
+        const tokenParts = token.split(".");
+        const tokenHeader = JSON.parse(opts.sthis.txt.base64.decode(tokenParts[0]));
+        console.log("[DEBUG] JWT verify attempt - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
+        const rRes = await exception2Result(() => jwtVerify(token, rKey.Ok().key));
+        if (rRes.isErr()) {
+          console.log(
+            "[DEBUG] JWT verify FAILED - token kid:",
+            tokenHeader.kid,
+            "key kid:",
+            pubKey.kid,
+            "error:",
+            rRes.Err().message,
+          );
+          return Result.Err(rRes);
+        }
+        const res = rRes.Ok();
+        if (!res) {
+          return Result.Err("JWT verification failed");
+        }
+        console.log("[DEBUG] JWT verify SUCCESS - token kid:", tokenHeader.kid, "key kid:", pubKey.kid);
+        return Result.Ok(res);
+      }),
     sthis: iopts.sthis ?? ensureSuperThis(),
   };
 
@@ -475,10 +480,11 @@ export async function fetchWellKnownJwks(
     readonly fetchTimeoutMs?: number;
   },
 ): Promise<FetchWellKnownJwksResult[]> {
+  const fetchFn = iopts.fetch || globalThis.fetch;
   const opts = {
-    fetchTimeoutMs: 1000,
-    fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args),
-    ...iopts,
+    fetchTimeoutMs: iopts.fetchTimeoutMs || 1000,
+    // Always wrap fetch to preserve 'this' binding in Cloudflare Workers
+    fetch: (...args: Parameters<typeof globalThis.fetch>) => fetchFn.call(globalThis, ...args),
   };
   return Promise.all(
     (Array.isArray(urls) ? urls : [urls])
