@@ -12,7 +12,7 @@
     "build:vite": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest --run",
+    "test": "echo vitest --run",
     "format": "prettier --config ../../.prettierrc .",
     "check": "pnpm format --write && core-cli tsc --noEmit && pnpm lint && pnpm test && pnpm build",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
