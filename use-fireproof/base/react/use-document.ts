@@ -47,9 +47,15 @@ export function createUseDocument(database: Database) {
     // Memoize doc._id as a string to prevent infinite loops
     const docIdString = useMemo(() => String(doc._id ?? ""), [doc._id]);
 
+    // Use ref to track current doc for callbacks without causing re-renders
+    const docRef = useRef(doc);
+    useEffect(() => {
+      docRef.current = doc;
+    }, [doc]);
+
     const refresh = useCallback(async () => {
       const myReq = ++requestIdRef.current;
-      const currentDocId = doc._id;
+      const currentDocId = docRef.current._id;
 
       if (currentDocId) {
         try {
@@ -78,13 +84,8 @@ export function createUseDocument(database: Database) {
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
         updateHappenedRef.current = false;
-        // Use callback form to get latest doc without causing dependency
-        let toSaveDoc: DocSet<T>;
-        if (existingDoc) {
-          toSaveDoc = existingDoc;
-        } else {
-          toSaveDoc = doc;
-        }
+        // Use docRef to get latest doc without causing dependency
+        const toSaveDoc = existingDoc ?? docRef.current;
         const res = await database.put(toSaveDoc);
 
         if (!updateHappenedRef.current && !toSaveDoc._id && !existingDoc) {
@@ -98,7 +99,7 @@ export function createUseDocument(database: Database) {
 
     const remove: DeleteDocFn<T> = useCallback(
       async (existingDoc) => {
-        const id = existingDoc?._id ?? doc._id;
+        const id = existingDoc?._id ?? docRef.current._id;
         if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
         const gotDoc = await database.get<T>(id).catch(() => undefined);
         if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
@@ -137,12 +138,12 @@ export function createUseDocument(database: Database) {
     );
 
     useEffect(() => {
-      if (!doc._id) return;
+      if (!docRef.current._id) return;
       return database.subscribe((changes) => {
         if (updateHappenedRef.current) {
           return;
         }
-        if (changes.find((c) => c._id === doc._id)) {
+        if (changes.find((c) => c._id === docRef.current._id)) {
           void refresh();
         }
       }, true);
