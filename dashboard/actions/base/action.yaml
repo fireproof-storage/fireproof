@@ -37,7 +37,6 @@ runs:
       run: |
         pnpm run test
 
-
     - name: BACKEND install
       shell: bash
       working-directory: dashboard/backend
@@ -65,4 +64,3 @@ runs:
       working-directory: dashboard/backend
       run: |
         pnpm run test
-

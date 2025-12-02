@@ -26,20 +26,23 @@ export default {
     switch (true) {
       case uri.pathname.startsWith("/api"):
         // console.log("cf-serve", request.url, env);
-        ares = createHandler(drizzle(env.DB), env).then((fn) => fn(request, (p) => {
-          ctx.waitUntil(p);
-          return p;
-          // console.log("cf-serve - queued promise for execution context", p);
-          // ctx.waitUntil(p);
+        ares = createHandler(drizzle(env.DB), env).then(
+          (fn) =>
+            fn(request, (p) => {
+              ctx.waitUntil(p);
+              return p;
+              // console.log("cf-serve - queued promise for execution context", p);
+              // ctx.waitUntil(p);
 
-          // const { waitUntil } = ctx;
-          // waitUntil.apply(ctx, [p]);
-          // waitUntil.call(ctx, p);
-          // const reboundWaitUntil = waitUntil.bind(ctx);
-          // reboundWaitUntil(p);
+              // const { waitUntil } = ctx;
+              // waitUntil.apply(ctx, [p]);
+              // waitUntil.call(ctx, p);
+              // const reboundWaitUntil = waitUntil.bind(ctx);
+              // reboundWaitUntil(p);
 
-          // return p;
-        }) as unknown as Promise<CFResponse>);
+              // return p;
+            }) as unknown as Promise<CFResponse>,
+        );
         break;
 
       case uri.pathname.startsWith("/.well-known/jwks.json"):

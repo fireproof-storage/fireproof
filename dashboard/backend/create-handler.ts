@@ -37,7 +37,7 @@ class ClerkApiToken implements FPApiToken {
     const keys: string[] = [];
     const urls: string[] = [];
     // eslint-disable-next-line no-constant-condition
-     for (let idx = 0; true; idx++) {
+    for (let idx = 0; true; idx++) {
       const suffix = !idx ? "" : `_${idx}`;
       const key = `CLERK_PUB_JWT_KEY${suffix}`;
       const url = `CLERK_PUB_JWT_URL${suffix}`;
@@ -66,11 +66,11 @@ class ClerkApiToken implements FPApiToken {
       }
     }
     return Result.Ok({ keys, urls });
-  })
+  });
 
   async verify(token: string): Promise<Result<VerifiedAuth>> {
     const { keys, urls } = this.keysAndUrls().Ok();
-   
+
     const rt = await sts.verifyToken(token, keys, urls, {
       parseSchema: (payload: unknown): Result<FPClerkClaim> => {
         const r = FPClerkClaimSchema.safeParse(payload);
