@@ -1,4 +1,7 @@
 import { defineConfig } from "drizzle-kit";
+import fs from "fs";
+
+fs.mkdirSync("./dist", { recursive: true });
 
 export default defineConfig({
   dialect: "sqlite",

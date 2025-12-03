@@ -279,6 +279,7 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
     maxMemberUsers: coerceInt(env.MAX_MEMBER_USERS, 5),
     maxInvites: coerceInt(env.MAX_INVITES, 10),
     maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
+    maxAppIdBindings: coerceInt(env.MAX_APPID_BINDINGS, 10),
     deviceCA: rDeviceIdCA.Ok(),
   });
   return async (req: Request, bindPromise: BindPromise<Result<unknown>> = (p) => p): Promise<Response> => {

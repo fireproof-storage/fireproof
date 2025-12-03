@@ -56,6 +56,9 @@ import {
   VerifiedAuth,
   FAPIMsgImpl,
   FPApiParameters,
+  FPApiInterface,
+  ReqEnsureCloudToken,
+  ResEnsureCloudToken,
 } from "@fireproof/core-protocols-dashboard";
 import { prepareInviteTicket, sqlInviteTickets, sqlToInviteTickets } from "./invites.js";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "./ledgers.js";
@@ -69,6 +72,8 @@ import { sts } from "@fireproof/core-runtime";
 import { DashSqlite } from "./create-handler.js";
 import { getTableColumns } from "drizzle-orm/utils";
 import { DeviceIdCA } from "@fireproof/core-device-id";
+import { sqlAppIdBinding } from "./app-id-bind.js";
+import { count } from "drizzle-orm/sql/functions";
 
 function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {
   return {
@@ -91,38 +96,6 @@ export interface TokenByResultIdParam {
   readonly resultId: string;
   readonly token?: string; // JWT
   readonly now: Date;
-}
-
-export interface FPApiInterface {
-  ensureUser(req: ReqEnsureUser): Promise<Result<ResEnsureUser>>;
-  findUser(req: ReqFindUser): Promise<Result<ResFindUser>>;
-
-  createTenant(req: ReqCreateTenant): Promise<Result<ResCreateTenant>>;
-  updateTenant(req: ReqUpdateTenant): Promise<Result<ResUpdateTenant>>;
-  deleteTenant(req: ReqDeleteTenant): Promise<Result<ResDeleteTenant>>;
-
-  redeemInvite(req: ReqRedeemInvite): Promise<Result<ResRedeemInvite>>;
-
-  listTenantsByUser(req: ReqListTenantsByUser): Promise<Result<ResListTenantsByUser>>;
-  updateUserTenant(req: ReqUpdateUserTenant): Promise<Result<ResUpdateUserTenant>>;
-
-  // creates / update invite
-  inviteUser(req: ReqInviteUser): Promise<Result<ResInviteUser>>;
-  listInvites(req: ReqListInvites): Promise<Result<ResListInvites>>;
-  deleteInvite(req: ReqDeleteInvite): Promise<Result<ResDeleteInvite>>;
-
-  createLedger(req: ReqCreateLedger): Promise<Result<ResCreateLedger>>;
-  listLedgersByUser(req: ReqListLedgersByUser): Promise<Result<ResListLedgersByUser>>;
-  updateLedger(req: ReqUpdateLedger): Promise<Result<ResUpdateLedger>>;
-  deleteLedger(req: ReqDeleteLedger): Promise<Result<ResDeleteLedger>>;
-
-  // listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant>
-
-  // attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger>
-  getCloudSessionToken(req: ReqCloudSessionToken): Promise<Result<ResCloudSessionToken>>;
-  getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>>;
-  extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>>;
-  getCertFromCsr(req: ReqCertFromCsr): Promise<Result<ResCertFromCsr>>;
 }
 
 export const FPAPIMsg = new FAPIMsgImpl();
@@ -2036,6 +2009,140 @@ export class FPApiSQL implements FPApiInterface {
     return Result.Ok({
       type: "resCertFromCsr",
       certificate: certResult.certificateJWT,
+    });
+  }
+
+  async ensureCloudToken(req: ReqEnsureCloudToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResEnsureCloudToken>> {
+    // Verify user authentication
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    const filters = [];
+    if (req.ledger) {
+      filters.push(eq(sqlLedgers.ledgerId, req.ledger));
+    }
+    if (req.tenant) {
+      filters.push(eq(sqlLedgers.tenantId, req.tenant));
+    }
+    // test if binding exists
+    const binding = await this.db
+      .select()
+      .from(sqlAppIdBinding)
+      .innerJoin(sqlLedgers, and(eq(sqlLedgers.ledgerId, sqlAppIdBinding.ledgerId), ...filters))
+      .innerJoin(
+        sqlLedgerUsers,
+        and(
+          eq(sqlLedgerUsers.userId, auth.user.userId),
+          eq(sqlLedgerUsers.ledgerId, sqlAppIdBinding.ledgerId),
+          eq(sqlLedgerUsers.status, "active"),
+        ),
+      )
+      .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
+      .get();
+
+    let ledgerId: string | undefined = undefined;
+    let tenantId: string | undefined = undefined;
+    if (!binding) {
+      const rLedgerByUser = await this.listLedgersByUser({
+        type: "reqListLedgersByUser",
+        auth: req.auth,
+      });
+      if (rLedgerByUser.isErr()) {
+        return Result.Err(rLedgerByUser);
+      }
+      const existingLedger = req.ledger ? rLedgerByUser.Ok().ledgers.find((l) => req.ledger === l.ledgerId) : undefined;
+      if (existingLedger) {
+        ledgerId = existingLedger.ledgerId;
+        tenantId = existingLedger.tenantId;
+      } else {
+        if (req.ledger) {
+          return Result.Err(`ledger ${req.ledger} not found for user`);
+        }
+        const rEnsureUser = await this.ensureUser({
+          type: "reqEnsureUser",
+          auth: req.auth,
+        });
+        if (rEnsureUser.isErr()) {
+          return Result.Err(rEnsureUser);
+        }
+        if (req.tenant) {
+          tenantId = rEnsureUser.Ok().tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
+        } else {
+          tenantId = rEnsureUser.Ok().tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
+        }
+      }
+      if (!tenantId) {
+        return Result.Err(`no tenant found for binding of ${req.appId}${auth.user.userId}`);
+      }
+      if (!ledgerId) {
+        // create ledger
+        const rCreateLedger = await this.createLedger({
+          type: "reqCreateLedger",
+          auth: req.auth,
+          ledger: {
+            tenantId,
+            name: `${req.appId}-${auth.user.userId}`,
+          },
+        });
+        if (rCreateLedger.isErr()) {
+          return Result.Err(rCreateLedger.Err());
+        }
+        ledgerId = rCreateLedger.Ok().ledger.ledgerId;
+      }
+      const maxBindings = await this.db
+        .select({
+          total: count(sqlAppIdBinding.appId),
+        })
+        .from(sqlAppIdBinding)
+        .where(eq(sqlAppIdBinding.appId, req.appId))
+        .get();
+      if (maxBindings && maxBindings.total >= this.params.maxAppIdBindings) {
+        return Result.Err(`max appId bindings reached for appId:${req.appId}`);
+      }
+      await this.db
+        .insert(sqlAppIdBinding)
+        .values({
+          appId: req.appId,
+          env: req.env ?? "prod",
+          ledgerId,
+          tenantId,
+          createdAt: new Date().toISOString(),
+        })
+        .run();
+    } else {
+      ledgerId = binding.Ledgers.ledgerId;
+      tenantId = binding.Ledgers.tenantId;
+    }
+    const rCtx = await getFPTokenContext(this.sthis, ictx);
+    if (rCtx.isErr()) {
+      return Result.Err(rCtx.Err());
+    }
+    const ctx = rCtx.Ok();
+    const cloudToken = await createFPToken(ctx, {
+      userId: auth.user.userId,
+      tenants: [],
+      ledgers: [],
+      email: auth.verifiedAuth.params.email,
+      nickname: auth.verifiedAuth.params.nick,
+      provider: toProvider(auth.verifiedAuth),
+      created: auth.user.createdAt,
+      selected: {
+        appId: req.appId,
+        tenant: tenantId,
+        ledger: ledgerId,
+      },
+    } satisfies FPCloudClaim);
+    return Result.Ok({
+      type: "resEnsureCloudToken",
+      cloudToken,
+      appId: req.appId,
+      tenant: tenantId,
+      ledger: ledgerId,
     });
   }
 }
