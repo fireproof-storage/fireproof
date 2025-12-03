@@ -404,6 +404,9 @@ export async function verifyToken<R>(
   const errors: FetchWellKnownJwksResult[] = [];
   for (let urlIdx = 0; urlIdx < wellKnownUrls.length; urlIdx++) {
     const url = wellKnownUrls[urlIdx];
+    if (!url) {
+      continue;
+    }
     opts.sthis.logger
       .Debug()
       .Str("url-index", urlIdx.toString())
