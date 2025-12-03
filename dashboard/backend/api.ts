@@ -1,8 +1,6 @@
 import { Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
 import { gte, and, eq, gt, inArray, lt, ne, or } from "drizzle-orm/sql/expressions";
-// import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { jwtVerify } from "jose";
 import {
   DashAuthType,
   ClerkClaim,
@@ -68,7 +66,6 @@ import { sqlTokenByResultId } from "./token-by-result-id.js";
 import { UserNotFoundError, getUser, isUserNotFound, queryUser, sqlUsers, upsetUserByProvider } from "./users.js";
 import { createFPToken, FPTokenContext, getFPTokenContext } from "./create-fp-token.js";
 import { Role, ReadWrite, toRole, toReadWrite, FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
-import { sts } from "@fireproof/core-runtime";
 import { DashSqlite } from "./create-handler.js";
 import { getTableColumns } from "drizzle-orm/utils";
 import { DeviceIdCA } from "@fireproof/core-device-id";
@@ -1871,7 +1868,7 @@ export class FPApiSQL implements FPApiInterface {
       await this.addTokenByResultId({
         status: "found",
         resultId: req.resultId,
-        token,
+        token: token.token,
         now: new Date(),
       });
     } else if (req.resultId) {
@@ -1879,7 +1876,7 @@ export class FPApiSQL implements FPApiInterface {
     }
     return Result.Ok({
       type: "resCloudSessionToken",
-      token,
+      token: token.token,
     });
   }
 
@@ -1939,47 +1936,48 @@ export class FPApiSQL implements FPApiInterface {
   /**
    * Extract token from request, validate it, and extend expiry by 1 day
    */
-  async extendToken(req: ReqExtendToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResExtendToken>> {
-    const rCtx = await getFPTokenContext(this.sthis, ictx);
-    if (rCtx.isErr()) {
-      return Result.Err(rCtx.Err());
-    }
-    const ctx = rCtx.Ok();
-    try {
-      // Get the public key for verification
-      const pubKey = await sts.env2jwk(ctx.publicToken);
-      if (pubKey.length !== 1) {
-        return Result.Err("just one public key supported");
-      }
+  async extendToken(req: ReqExtendToken, _ictx: Partial<FPTokenContext> = {}): Promise<Result<ResExtendToken>> {
+    return Result.Err("extendToken is not supported anymore");
+    // const rCtx = await getFPTokenContext(this.sthis, ictx);
+    // if (rCtx.isErr()) {
+    //   return Result.Err(rCtx.Err());
+    // }
+    // const ctx = rCtx.Ok();
+    // try {
+    //   // Get the public key for verification
+    //   const pubKey = await sts.env2jwk(ctx.publicToken);
+    //   if (pubKey.length !== 1) {
+    //     return Result.Err("just one public key supported");
+    //   }
 
-      // Verify the token
-      const verifyResult = await jwtVerify(req.token, pubKey[0], {
-        issuer: ctx.issuer,
-        audience: ctx.audience,
-      });
-      const payload = verifyResult.payload as FPCloudClaim;
+    //   // Verify the token
+    //   const verifyResult = await jwtVerify(req.token, pubKey[0], {
+    //     issuer: ctx.issuer,
+    //     audience: ctx.audience,
+    //   });
+    //   const payload = verifyResult.payload as FPCloudClaim;
 
-      // Check if token is expired
-      const now = Date.now();
-      if (!payload.exp || payload.exp * 1000 <= now) {
-        return Result.Err("Token is expired");
-      }
-      // Create new token with extended expiry using the private key
-      // JWT expects expiration time in seconds, not milliseconds
-      const newToken = await createFPToken(
-        {
-          ...ctx,
-          validFor: ctx.extendValidFor,
-        },
-        payload,
-      );
-      return Result.Ok({
-        type: "resExtendToken",
-        token: newToken,
-      });
-    } catch (error) {
-      return Result.Err(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    //   // Check if token is expired
+    //   const now = Date.now();
+    //   if (!payload.exp || payload.exp * 1000 <= now) {
+    //     return Result.Err("Token is expired");
+    //   }
+    //   // Create new token with extended expiry using the private key
+    //   // JWT expects expiration time in seconds, not milliseconds
+    //   const newToken = await createFPToken(
+    //     {
+    //       ...ctx,
+    //       validFor: ctx.extendValidFor,
+    //     },
+    //     payload,
+    //   );
+    //   return Result.Ok({
+    //     type: "resExtendToken",
+    //     token: newToken.token,
+    //   });
+    // } catch (error) {
+    // return Result.Err(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
+    // }
   }
 
   /**
@@ -2139,10 +2137,12 @@ export class FPApiSQL implements FPApiInterface {
     } satisfies FPCloudClaim);
     return Result.Ok({
       type: "resEnsureCloudToken",
-      cloudToken,
+      cloudToken: cloudToken.token,
       appId: req.appId,
       tenant: tenantId,
       ledger: ledgerId,
+      expiresInSec: cloudToken.expiresInSec,
+      expiresDate: cloudToken.expiresDate.toISOString(),
     });
   }
 }

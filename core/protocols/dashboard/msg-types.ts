@@ -538,4 +538,6 @@ export interface ResEnsureCloudToken {
   readonly appId: string;
   readonly tenant: string;
   readonly ledger: string;
+  readonly expiresInSec: number;
+  readonly expiresDate: string; // ISO string
 }

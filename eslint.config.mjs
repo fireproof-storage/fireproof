@@ -16,7 +16,7 @@ const opts = tseslint.config(
   },
   {
     ignores: [
-      "x/**",
+      "xx/**",
       "babel.config.cjs",
       "jest.config.js",
       "**/dist/",

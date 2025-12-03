@@ -23,13 +23,20 @@ export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
   if (validFor <= 0) {
     validFor = 60 * 60; // 1 hour
   }
-  return new SignJWT(claim)
-    .setProtectedHeader({ alg: "ES256" }) // algorithm
-    .setIssuedAt()
-    .setIssuer(ctx.issuer) // issuer
-    .setAudience(ctx.audience) // audience
-    .setExpirationTime(Math.floor((Date.now() + validFor * 1000) / 1000)) // expiration time
-    .sign(privKey);
+  const expiresDate = new Date(Date.now() + validFor * 1000); // epoch sec
+  const expiresInSec = Math.floor((Math.floor(expiresDate.getTime() / 1000) + validFor) / 1000);
+  const epochExp = Math.floor(expiresDate.getTime() / 1000);
+  return {
+    expiresDate,
+    expiresInSec,
+    token: await new SignJWT(claim)
+      .setProtectedHeader({ alg: "ES256" }) // algorithm
+      .setIssuedAt()
+      .setIssuer(ctx.issuer) // issuer
+      .setAudience(ctx.audience) // audience
+      .setExpirationTime(epochExp) // expiration time
+      .sign(privKey),
+  };
 }
 
 export async function getFPTokenContext(sthis: SuperThis, ictx: Partial<FPTokenContext> = {}): Promise<Result<FPTokenContext>> {
