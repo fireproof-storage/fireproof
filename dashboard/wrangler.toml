@@ -32,6 +32,12 @@ routes = [
   { pattern = "dev.connect.fireproof.direct", custom_domain = true }
 ]
 
+[env.dev.observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
 [[env.dev.d1_databases]]
 binding = "DB"
 database_name = "fp-connect-dev"
