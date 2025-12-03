@@ -1034,7 +1034,7 @@ describe("db-api", () => {
         jwkPack.opts,
       );
       expect(initial.isOk()).toBeTruthy();
-      const initToken = jwtVerify(initial.Ok().cloudToken, jwkPack.pub);
+      const initToken = await jwtVerify(initial.Ok().cloudToken, jwkPack.pub);
       const reEnsure = await fpApi.ensureCloudToken(
         {
           type: "reqEnsureCloudToken",
@@ -1044,8 +1044,8 @@ describe("db-api", () => {
         jwkPack.opts,
       );
       expect(reEnsure.isOk()).toBeTruthy();
-      const reEnsureToken = jwtVerify(reEnsure.Ok().cloudToken, jwkPack.pub);
-      expect(reEnsureToken).toEqual(initToken);
+      const reEnsureToken = await jwtVerify(reEnsure.Ok().cloudToken, jwkPack.pub);
+      expect(reEnsureToken.payload).toEqual(initToken.payload);
     });
 
     it("ensurCloudToken appId but non accessable tenant", async () => {
