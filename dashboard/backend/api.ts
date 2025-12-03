@@ -2077,7 +2077,7 @@ export class FPApiSQL implements FPApiInterface {
         }
       }
       if (!tenantId) {
-        return Result.Err(`no tenant found for binding of ${req.appId}${auth.user.userId}`);
+        return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${auth.user.userId}`);
       }
       if (!ledgerId) {
         // create ledger
