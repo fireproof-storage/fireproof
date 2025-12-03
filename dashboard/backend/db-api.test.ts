@@ -126,7 +126,6 @@ describe("db-api", () => {
   }
   beforeAll(async () => {
     const url = inject("DASH_FP_TEST_SQL_URL" as never) as string;
-    console.log("DASH_FP_TEST_SQL_URL Using test db url:", url);
     const client = createClient({ url });
     db = drizzle(client);
 
@@ -1048,7 +1047,7 @@ describe("db-api", () => {
       expect(reEnsureToken.payload).toEqual(initToken.payload);
     });
 
-    it("ensurCloudToken appId but non accessable tenant", async () => {
+    it("ensureCloudToken appId but non accessable tenant", async () => {
       const id = sthis.nextId().str;
       const appId = `TEST_APP-${id}`;
       const outerTenant = await fpApi.ensureCloudToken({
@@ -1060,7 +1059,7 @@ describe("db-api", () => {
       expect(outerTenant.isErr()).toBeTruthy();
     });
 
-    it("ensurCloudToken appId but non accessable ledger", async () => {
+    it("ensureCloudToken appId but non accessable ledger", async () => {
       const id = sthis.nextId().str;
       const appId = `TEST_APP-${id}`;
       const outerTenant = await fpApi.ensureCloudToken(
@@ -1075,7 +1074,7 @@ describe("db-api", () => {
       expect(outerTenant.isErr()).toBeTruthy();
     });
 
-    it("ensurCloudToken appId valid tenantId", async () => {
+    it("ensureCloudToken appId valid tenantId", async () => {
       const id = sthis.nextId().str;
       const appId = `TEST_APP-${id}`;
       const validTenant = await fpApi.ensureCloudToken(
@@ -1095,7 +1094,7 @@ describe("db-api", () => {
       expect(token.payload.selected.tenant).toBe(validTenant.Ok().tenant);
     });
 
-    it("ensurCloudToken appId invalid tenantId", async () => {
+    it("ensureCloudToken appId invalid tenantId", async () => {
       const id = sthis.nextId().str;
       const appId = `TEST_APP-${id}`;
       const validTenant = await fpApi.ensureCloudToken(
@@ -1110,7 +1109,7 @@ describe("db-api", () => {
       expect(validTenant.isErr()).toBeTruthy();
     });
 
-    it("ensurCloudToken appId valid tenantId, ledgerId", async () => {
+    it("ensureCloudToken appId valid tenantId, ledgerId", async () => {
       const id = sthis.nextId().str;
       const appId = `TEST_APP-${id}`;
       const validTenant = await fpApi.ensureCloudToken(
@@ -1130,7 +1129,7 @@ describe("db-api", () => {
       expect(token.payload.selected.ledger).toBe(ledger.ledger.ledgerId);
     });
 
-    it("ensurCloudToken appId valid tenantId, invalid ledgerId", async () => {
+    it("ensureCloudToken appId valid tenantId, invalid ledgerId", async () => {
       const id = sthis.nextId().str;
       const appId = `TEST_APP-${id}`;
       const validTenant = await fpApi.ensureCloudToken(
