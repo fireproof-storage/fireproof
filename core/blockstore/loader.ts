@@ -18,6 +18,7 @@ import {
   CarLog,
   FroozenCarLog,
   CarStore,
+  FileStore,
   FPBlock,
   CarBlockItem,
   BlockFetcher,
@@ -825,7 +826,8 @@ export class Loader implements Loadable {
   private async makeDecoderAndCarReader(carCid: AnyLink, store: CIDActiveStore): Promise<FPBlock<CarBlockItem>> {
     const carCidStr = carCid.toString();
     let loadedCar: AnyBlock | undefined;
-    const activeStore = store.active as CarStore;
+    // store.active can be CarStore or FileStore, both have load() method
+    let activeStore = store.active as CarStore | FileStore;
     try {
       //loadedCar now is an array of AnyBlocks
       this.logger.Debug().Any("cid", carCidStr).Msg("loading car");
@@ -836,24 +838,23 @@ export class Loader implements Loadable {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
       }
-      // for (const remote of store.remotes() as CarStore[]) {
-      //   // console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
-      //   try {
-      //     const remoteCar = await remote.load(carCid);
-      //     if (remoteCar) {
-      //       // todo test for this
-      //       this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
-      //       await store.local().save(remoteCar);
-      //       loadedCar = remoteCar;
-      //       activeStore = remote;
-      //       break;
-      //     } else {
-      //       this.logger.Error().Str("cid", carCidStr).Err(e).Msg("loading car");
-      //     }
-      //   } catch (e) {
-      //     this.logger.Warn().Str("cid", carCidStr).Url(remote.url()).Err(e).Msg("loading car");
-      //   }
-      // }
+      // Try remote stores if local load failed
+      for (const remote of store.remotes()) {
+        // console.log("makeDecoderAndCarReader:remote:", remote.url().toString());
+        try {
+          const remoteCar = await remote.load(carCid);
+          if (remoteCar) {
+            // todo test for this
+            this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
+            await store.local().save(remoteCar);
+            loadedCar = remoteCar;
+            activeStore = remote;
+            break;
+          }
+        } catch (e) {
+          this.logger.Warn().Str("cid", carCidStr).Url(remote.url()).Err(e).Msg("loading car from remote");
+        }
+      }
     }
     if (!loadedCar) {
       return {
@@ -876,7 +877,7 @@ export class Loader implements Loadable {
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
     const bytes = await asyncBlockDecode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
-    const rawReader = await CarReader.fromBytes(bytes.value.data);
+    const rawReader = await CarReader.fromBytes((bytes.value as { data: Uint8Array }).data);
     // const readerP = Promise.resolve(rawReader);
     // const kc = await activeStore.keyedCrypto()
     // const readerP = !(kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader));
@@ -898,7 +899,7 @@ export class Loader implements Loadable {
     }
     return {
       cid: carCid,
-      bytes: bytes.value.data,
+      bytes: (bytes.value as { data: Uint8Array }).data,
       item: {
         type: "car",
         status: "ready",
