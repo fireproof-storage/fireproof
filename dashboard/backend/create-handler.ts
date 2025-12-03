@@ -64,9 +64,16 @@ class ClerkApiToken implements FPApiToken {
         );
       }
     }
-    this.sthis.logger.Debug().Str("keys-count", keys.length.toString()).Str("urls-count", urls.length.toString()).Msg("ClerkApiToken.verify: attempting token verification");
+    this.sthis.logger
+      .Debug()
+      .Str("keys-count", keys.length.toString())
+      .Str("urls-count", urls.length.toString())
+      .Msg("ClerkApiToken.verify: attempting token verification");
     if (keys.length > 0) {
-      this.sthis.logger.Debug().Str("first-key-preview", keys[0].substring(0, 50) + "...").Msg("ClerkApiToken.verify: using keys");
+      this.sthis.logger
+        .Debug()
+        .Str("first-key-preview", keys[0].substring(0, 50) + "...")
+        .Msg("ClerkApiToken.verify: using keys");
     }
     if (urls.length > 0) {
       this.sthis.logger.Debug().Str("urls", JSON.stringify(urls)).Msg("ClerkApiToken.verify: using URLs");

@@ -369,21 +369,33 @@ export async function verifyToken<R>(
     sthis: iopts.sthis ?? ensureSuperThis(),
   };
 
-  opts.sthis.logger.Debug().Str("preset-keys-count", presetPubKey.length.toString()).Str("urls-count", wellKnownUrls.length.toString()).Msg("verifyToken: starting token verification");
+  opts.sthis.logger
+    .Debug()
+    .Str("preset-keys-count", presetPubKey.length.toString())
+    .Str("urls-count", wellKnownUrls.length.toString())
+    .Msg("verifyToken: starting token verification");
 
   // Try preset public keys first
   for (let idx = 0; idx < presetPubKey.length; idx++) {
     const pubKey = presetPubKey[idx];
     opts.sthis.logger.Debug().Str("key-index", idx.toString()).Msg("verifyToken: trying preset public key");
     const coercedKeys = await coerceJWKPublic(opts.sthis, pubKey);
-    opts.sthis.logger.Debug().Str("key-index", idx.toString()).Str("coerced-count", coercedKeys.length.toString()).Msg("verifyToken: coerced preset key");
+    opts.sthis.logger
+      .Debug()
+      .Str("key-index", idx.toString())
+      .Str("coerced-count", coercedKeys.length.toString())
+      .Msg("verifyToken: coerced preset key");
     for (const key of coercedKeys) {
       const rVerify = await internVerifyToken(token, key, opts);
       if (rVerify.isOk()) {
         opts.sthis.logger.Debug().Str("key-index", idx.toString()).Msg("verifyToken: preset key verification succeeded");
         return rVerify;
       } else {
-        opts.sthis.logger.Debug().Str("key-index", idx.toString()).Str("error", rVerify.Err().toString()).Msg("verifyToken: preset key verification failed");
+        opts.sthis.logger
+          .Debug()
+          .Str("key-index", idx.toString())
+          .Str("error", rVerify.Err().toString())
+          .Msg("verifyToken: preset key verification failed");
       }
     }
   }
@@ -392,14 +404,26 @@ export async function verifyToken<R>(
   const errors: FetchWellKnownJwksResult[] = [];
   for (let urlIdx = 0; urlIdx < wellKnownUrls.length; urlIdx++) {
     const url = wellKnownUrls[urlIdx];
-    opts.sthis.logger.Debug().Str("url-index", urlIdx.toString()).Str("url", url.toString()).Msg("verifyToken: fetching JWKS from URL");
+    opts.sthis.logger
+      .Debug()
+      .Str("url-index", urlIdx.toString())
+      .Str("url", url.toString())
+      .Msg("verifyToken: fetching JWKS from URL");
     const rPubKeys = await fetchWellKnownJwks([url], { ...opts, sthis: opts.sthis });
-    opts.sthis.logger.Debug().Str("url-index", urlIdx.toString()).Str("results-count", rPubKeys.length.toString()).Msg("verifyToken: received JWKS fetch results");
+    opts.sthis.logger
+      .Debug()
+      .Str("url-index", urlIdx.toString())
+      .Str("results-count", rPubKeys.length.toString())
+      .Msg("verifyToken: received JWKS fetch results");
 
     for (const pubKey of rPubKeys) {
       switch (true) {
         case isFetchWellKnownJwksResultErr(pubKey):
-          opts.sthis.logger.Debug().Str("url", pubKey.url).Str("error", pubKey.error.toString()).Msg("verifyToken: JWKS fetch error");
+          opts.sthis.logger
+            .Debug()
+            .Str("url", pubKey.url)
+            .Str("error", pubKey.error.toString())
+            .Msg("verifyToken: JWKS fetch error");
           errors.push(pubKey);
           continue;
         case isFetchWellKnownJwksResultTimeout(pubKey):
@@ -408,17 +432,35 @@ export async function verifyToken<R>(
           continue;
         case isFetchWellKnownJwksResultOk(pubKey):
           {
-            opts.sthis.logger.Debug().Str("url", pubKey.url).Str("keys-count", pubKey.keys.length.toString()).Msg("verifyToken: JWKS fetch success, trying keys");
+            opts.sthis.logger
+              .Debug()
+              .Str("url", pubKey.url)
+              .Str("keys-count", pubKey.keys.length.toString())
+              .Msg("verifyToken: JWKS fetch success, trying keys");
             for (let keyIdx = 0; keyIdx < pubKey.keys.length; keyIdx++) {
               const key = pubKey.keys[keyIdx];
-              opts.sthis.logger.Debug().Str("url", pubKey.url).Str("key-index", keyIdx.toString()).Str("kid", key.kid ?? "none").Msg("verifyToken: trying JWKS key");
+              opts.sthis.logger
+                .Debug()
+                .Str("url", pubKey.url)
+                .Str("key-index", keyIdx.toString())
+                .Str("kid", key.kid ?? "none")
+                .Msg("verifyToken: trying JWKS key");
               const rVerify = await internVerifyToken(token, key, opts);
               if (rVerify.isOk()) {
-                opts.sthis.logger.Debug().Str("url", pubKey.url).Str("key-index", keyIdx.toString()).Msg("verifyToken: JWKS key verification succeeded");
+                opts.sthis.logger
+                  .Debug()
+                  .Str("url", pubKey.url)
+                  .Str("key-index", keyIdx.toString())
+                  .Msg("verifyToken: JWKS key verification succeeded");
                 return rVerify;
               } else {
                 const errStr = rVerify.Err().toString();
-                opts.sthis.logger.Debug().Str("url", pubKey.url).Str("key-index", keyIdx.toString()).Str("error", errStr).Msg("verifyToken: JWKS key verification failed");
+                opts.sthis.logger
+                  .Debug()
+                  .Str("url", pubKey.url)
+                  .Str("key-index", keyIdx.toString())
+                  .Str("error", errStr)
+                  .Msg("verifyToken: JWKS key verification failed");
                 errors.push({
                   type: "error",
                   error: rVerify.Err(),
@@ -507,7 +549,11 @@ export async function fetchWellKnownJwks(
     })
     .filter((u): u is string => !!u);
 
-  opts.sthis.logger.Debug().Str("urls-count", normalizedUrls.length.toString()).Str("urls", JSON.stringify(normalizedUrls)).Msg("fetchWellKnownJwks: normalized URLs");
+  opts.sthis.logger
+    .Debug()
+    .Str("urls-count", normalizedUrls.length.toString())
+    .Str("urls", JSON.stringify(normalizedUrls))
+    .Msg("fetchWellKnownJwks: normalized URLs");
 
   return Promise.all(
     normalizedUrls.map(async (url) => {
@@ -520,14 +566,23 @@ export async function fetchWellKnownJwks(
               method: "GET",
             })
             .then(async (res) => {
-              opts.sthis.logger.Debug().Str("url", url).Str("status", res.status.toString()).Str("statusText", res.statusText).Msg("fetchWellKnownJwks: received response");
+              opts.sthis.logger
+                .Debug()
+                .Str("url", url)
+                .Str("status", res.status.toString())
+                .Str("statusText", res.statusText)
+                .Msg("fetchWellKnownJwks: received response");
               if (!res.ok) {
                 const errorMsg = `Failed to fetch well-known JWKS from ${url}: ${res.status} ${res.statusText}`;
                 opts.sthis.logger.Debug().Str("url", url).Str("error", errorMsg).Msg("fetchWellKnownJwks: response not ok");
                 throw new Error(errorMsg);
               }
               const json = await res.json();
-              opts.sthis.logger.Debug().Str("url", url).Str("json", JSON.stringify(json)).Msg("fetchWellKnownJwks: parsed JSON response");
+              opts.sthis.logger
+                .Debug()
+                .Str("url", url)
+                .Str("json", JSON.stringify(json))
+                .Msg("fetchWellKnownJwks: parsed JSON response");
               return json;
             }),
           {
@@ -544,7 +599,11 @@ export async function fetchWellKnownJwks(
               url,
             };
           case "error":
-            opts.sthis.logger.Debug().Str("url", url).Str("error", timeout.error.toString()).Msg("fetchWellKnownJwks: request failed");
+            opts.sthis.logger
+              .Debug()
+              .Str("url", url)
+              .Str("error", timeout.error.toString())
+              .Msg("fetchWellKnownJwks: request failed");
             onceFn.reset();
             return {
               type: "error" as const,
@@ -562,7 +621,11 @@ export async function fetchWellKnownJwks(
                 url,
               };
             }
-            opts.sthis.logger.Debug().Str("url", url).Str("keys-count", parsed.data.keys.length.toString()).Msg("fetchWellKnownJwks: successfully parsed JWKS");
+            opts.sthis.logger
+              .Debug()
+              .Str("url", url)
+              .Str("keys-count", parsed.data.keys.length.toString())
+              .Msg("fetchWellKnownJwks: successfully parsed JWKS");
             return {
               type: "ok" as const,
               keys: parsed.data.keys,
