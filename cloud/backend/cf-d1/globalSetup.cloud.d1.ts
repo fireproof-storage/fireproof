@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { cd, $, dotenv } from "zx";
+import { cd, $, dotenv, path } from "zx";
 import { setupBackendD1 } from "./setup-backend-d1.js";
 import type { TestProject } from "vitest/node";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
@@ -10,7 +10,6 @@ export async function setup(project: TestProject) {
   const root = project.toJSON().serializedConfig.root;
 
   $.verbose = true;
-  cd(root);
 
   if (typeof process.env.FP_ENV === "string") {
     dotenv.config(process.env.FP_ENV ?? ".env");
@@ -34,15 +33,15 @@ export async function setup(project: TestProject) {
   if (FP_ENDPOINT) {
     params = { port: 0 };
   } else {
-    await fs.mkdir("dist", { recursive: true });
+    await fs.mkdir(path.join(root, "dist"), { recursive: true });
 
     $.verbose = !!sthis.env.get("FP_DEBUG");
     // create db
-    await $`wrangler -c ./wrangler.toml -e test d1 execute test-meta-merge --local --command "select 'meno'"`;
+    await $`cd ${root} && wrangler -c ./wrangler.toml -e test d1 execute test-meta-merge --local --command "select 'meno'"`;
     // setup sql
-    await $`npx drizzle-kit push --config ./drizzle.cloud.d1-local.config.ts --force`;
+    await $`cd ${root} && npx drizzle-kit push --config ./drizzle.cloud.d1-local.config.ts --force`;
 
-    params = await setupBackendD1(sthis, "./wrangler.toml", "test");
+    params = await setupBackendD1(sthis, root, "./wrangler.toml", "test");
     FP_ENDPOINT = `http://localhost:${params.port}`;
   }
 

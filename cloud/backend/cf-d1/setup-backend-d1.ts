@@ -5,6 +5,7 @@ import { Future } from "@adviser/cement";
 
 export async function setupBackendD1(
   sthis: SuperThis,
+  root: string,
   wranglerToml: string,
   env: string,
   port = portRandom(sthis),
@@ -16,9 +17,10 @@ export async function setupBackendD1(
 
   $.verbose = !!sthis.env.get("FP_DEBUG");
   // process.env["FP_STORAGE_URL"] = `fpcloud://localhost:${port}/?tenant=${sthis.nextId().str}&ledger=test-l&protocol=ws`;
-  await $`core-cli writeEnv --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
+  await $`cd ${root} && core-cli writeEnv --wranglerToml ${wranglerToml} --env ${env} --doNotOverwrite`;
 
   const runningWrangler = $`
+                   cd ${root}
                    wrangler dev -c ${wranglerToml} --port ${port} --env ${envName} --no-show-interactive-dev-session --no-live-reload &
                    waitPid=$!
                    echo "PID:$waitPid"

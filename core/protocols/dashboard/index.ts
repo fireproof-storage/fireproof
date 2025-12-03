@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export * from "./msg-types.js";
 export * from "./msg-is.js";
 export * from "./msg-api.js";
+export * from "./fp-api-interface.js";
 export * from "./dashboard-api.js";
 
 // export interface FPClerkClaim extends JWTPayload {

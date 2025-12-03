@@ -23,6 +23,7 @@ export const LedgerClaimSchema = z
 
 export const TenantLedgerSchema = z
   .object({
+    appId: z.string().optional(),
     tenant: z.string(),
     ledger: z.string(),
   })

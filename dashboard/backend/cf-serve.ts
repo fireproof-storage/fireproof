@@ -14,6 +14,7 @@ export interface Env {
   MAX_MEMBER_USERS?: number;
   MAX_INVITES?: number;
   MAX_LEDGERS?: number;
+  MAX_APPID_BINDINGS?: number;
 
   CLERK_PUBLISHABLE_KEY: string;
   CLOUD_SESSION_TOKEN_PUBLIC: string;

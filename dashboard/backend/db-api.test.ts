@@ -6,13 +6,15 @@
 // import { eq } from 'drizzle-orm';
 // import { userRef } from "./db-api-schema";
 
-import { Result } from "@adviser/cement";
+import { Result, WithoutPromise } from "@adviser/cement";
 import { SuperThis, Subject, CertificatePayloadSchema } from "@fireproof/core-types-base";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
 import { FPApiSQL, type FPApiToken } from "./api.js";
 import {
+  ResCreateLedger,
+  UserTenant,
   type AdminTenant,
   type DashAuthType,
   type QueryUser,
@@ -22,9 +24,10 @@ import {
 } from "@fireproof/core-protocols-dashboard";
 import { queryEmail, queryNick } from "./sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
-import { describe, beforeAll, expect, it } from "vitest";
+import { describe, beforeAll, expect, it, inject } from "vitest";
 import { resWellKnownJwks } from "./well-known-jwks.js";
 import { DeviceIdCA, DeviceIdKey, DeviceIdCSR } from "@fireproof/core-device-id";
+import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -102,8 +105,29 @@ describe("db-api", () => {
   }[];
   // const logger = ensureLogger(sthis, "dashboard-backend-db-api-test");
   let deviceCA: DeviceIdCA;
+
+  async function jwkPackage() {
+    // const pair = await SessionTokenService.generateKeyPair();
+    const jwtTestOpts = {
+      secretToken:
+        "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+      publicToken:
+        "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
+      issuer: "TEST_I",
+      audience: "TEST_A",
+      validFor: 40000000,
+    };
+    const jwkTestPub = (await sts.env2jwk(jwtTestOpts.publicToken, "ES256"))[0];
+    // let jwkTestPub: CryptoKey;
+    return {
+      opts: jwtTestOpts,
+      pub: jwkTestPub,
+    };
+  }
   beforeAll(async () => {
-    const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
+    const url = inject("DASH_FP_TEST_SQL_URL" as never) as string;
+    console.log("DASH_FP_TEST_SQL_URL Using test db url:", url);
+    const client = createClient({ url });
     db = drizzle(client);
 
     deviceCA = await createTestDeviceCA(sthis);
@@ -120,6 +144,7 @@ describe("db-api", () => {
         maxMemberUsers: 5,
         maxInvites: 10,
         maxLedgers: 5,
+        maxAppIdBindings: 5,
         deviceCA,
       },
     );
@@ -950,6 +975,178 @@ describe("db-api", () => {
     expect(claims.certificate.issuer.commonName).toBe("Test Device CA");
   });
 
+  describe("Cloud Token Tests", () => {
+    const auth: DashAuthType = {
+      token: `test-${sthis.nextId().str}`,
+      type: "clerk",
+    };
+    let jwkPack: WithoutPromise<ReturnType<typeof jwkPackage>>;
+    let ledger: ResCreateLedger;
+    let tenant: UserTenant;
+    let notMyLedger: ResCreateLedger;
+    beforeAll(async () => {
+      jwkPack = await jwkPackage();
+      const rUser = await fpApi.ensureUser({
+        type: "reqEnsureUser",
+        auth,
+      });
+      tenant = rUser.Ok().tenants[0];
+      ledger = (
+        await fpApi.createLedger({
+          type: "reqCreateLedger",
+          auth,
+          ledger: {
+            tenantId: rUser.Ok().tenants[0].tenantId,
+            name: `appid-test[${datas[0].ress.tenants[0].tenantId}]`,
+          },
+        })
+      ).Ok();
+
+      const notMyAuth: DashAuthType = {
+        token: `test-${sthis.nextId().str}`,
+        type: "clerk",
+      };
+      const rNotMyUser = await fpApi.ensureUser({
+        type: "reqEnsureUser",
+        auth: notMyAuth,
+      });
+      notMyLedger = (
+        await fpApi.createLedger({
+          type: "reqCreateLedger",
+          auth: notMyAuth,
+          ledger: {
+            tenantId: rNotMyUser.Ok().tenants[0].tenantId,
+            name: `notMyLedger[${tenant.tenantId}]`,
+          },
+        })
+      ).Ok();
+    });
+
+    it("ensureCloudToken just appid", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const initial = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(initial.isOk()).toBeTruthy();
+      const initToken = jwtVerify(initial.Ok().cloudToken, jwkPack.pub);
+      const reEnsure = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(reEnsure.isOk()).toBeTruthy();
+      const reEnsureToken = jwtVerify(reEnsure.Ok().cloudToken, jwkPack.pub);
+      expect(reEnsureToken).toEqual(initToken);
+    });
+
+    it("ensurCloudToken appId but non accessable tenant", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const outerTenant = await fpApi.ensureCloudToken({
+        type: "reqEnsureCloudToken",
+        auth,
+        appId,
+        tenant: datas[0].ress.tenants[0].tenantId,
+      });
+      expect(outerTenant.isErr()).toBeTruthy();
+    });
+
+    it("ensurCloudToken appId but non accessable ledger", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const outerTenant = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+          ledger: notMyLedger.ledger.ledgerId,
+        },
+        jwkPack.opts,
+      );
+      expect(outerTenant.isErr()).toBeTruthy();
+    });
+
+    it("ensurCloudToken appId valid tenantId", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const validTenant = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+          tenant: ledger.ledger.tenantId,
+        },
+        jwkPack.opts,
+      );
+      expect(validTenant.isOk()).toBeTruthy();
+      const token = await jwtVerify<FPCloudClaim>(validTenant.Ok().cloudToken, jwkPack.pub);
+      expect(token.payload.selected.tenant).toBe(ledger.ledger.tenantId);
+      expect(token.payload.selected.appId).toBe(appId);
+      expect(token.payload.selected.ledger).not.toBe(ledger.ledger.ledgerId);
+      expect(token.payload.selected.tenant).toBe(validTenant.Ok().tenant);
+    });
+
+    it("ensurCloudToken appId invalid tenantId", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const validTenant = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+          tenant: "invalid-tenant-id",
+        },
+        jwkPack.opts,
+      );
+      expect(validTenant.isErr()).toBeTruthy();
+    });
+
+    it("ensurCloudToken appId valid tenantId, ledgerId", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const validTenant = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+          ledger: ledger.ledger.ledgerId,
+          tenant: ledger.ledger.tenantId,
+        },
+        jwkPack.opts,
+      );
+      expect(validTenant.isOk()).toBe(true);
+      const token = await jwtVerify<FPCloudClaim>(validTenant.Ok().cloudToken, jwkPack.pub);
+      expect(token.payload.selected.tenant).toBe(ledger.ledger.tenantId);
+      expect(token.payload.selected.appId).toBe(appId);
+      expect(token.payload.selected.ledger).toBe(ledger.ledger.ledgerId);
+    });
+
+    it("ensurCloudToken appId valid tenantId, invalid ledgerId", async () => {
+      const id = sthis.nextId().str;
+      const appId = `TEST_APP-${id}`;
+      const validTenant = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth,
+          appId,
+          tenant: tenant.tenantId,
+          ledger: "invalid-ledger-id",
+        },
+        jwkPack.opts,
+      );
+      expect(validTenant.isErr()).toBeTruthy();
+    });
+  });
+
   it("create session with claim", async () => {
     const auth: DashAuthType = datas[0].reqs.auth;
     // fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "
@@ -985,6 +1182,7 @@ describe("db-api", () => {
       status: "not-found",
     });
 
+    const jwkPack = await jwkPackage();
     const resSt = await fpApi.getCloudSessionToken(
       {
         type: "reqCloudSessionToken",
@@ -995,23 +1193,10 @@ describe("db-api", () => {
           tenant: datas[0].ress.tenants[0].tenantId,
         },
       },
-      {
-        secretToken:
-          "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
-        publicToken:
-          "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
-        issuer: "TEST_I",
-        audience: "TEST_A",
-        validFor: 40000000,
-      },
+      jwkPack.opts,
     );
     expect(resSt.isOk()).toBeTruthy();
-    const pub = await sts.env2jwk(
-      "zeWndr5LEoaySgKSo2aZniYqcrEJBPswFRe3bwyxY7Nmr3bznXkHhFm77VxHprvCskpKVHEwVzgQpM6SAYkUZpZcEdEunwKmLUYd1yJ4SSteExyZw4GC1SvJPLDpGxKBKb6jkkCsaQ3MJ5YFMKuGUkqpKH31Dw7cFfjdQr5XUiXue",
-      "ES256",
-    );
-    expect(pub.length).toBe(1);
-    const v = await jwtVerify(resSt.Ok().token, pub[0]);
+    const v = await jwtVerify(resSt.Ok().token, jwkPack.pub);
     expect(v.payload.exp).toBeLessThanOrEqual(new Date().getTime() + 3700000);
 
     const res2 = await fpApi.getTokenByResultId({
@@ -1091,6 +1276,7 @@ describe("db-api", () => {
         maxMemberUsers: 5,
         maxInvites: 10,
         maxLedgers: 5,
+        maxAppIdBindings: 5,
         deviceCA,
       },
     );
@@ -1123,6 +1309,7 @@ describe("db-api", () => {
         maxMemberUsers: 50,
         maxInvites: 100,
         maxLedgers: 50,
+        maxAppIdBindings: 50,
         deviceCA: deviceCA,
       },
     );
@@ -1147,6 +1334,7 @@ describe("db-api", () => {
         maxMemberUsers: 17,
         maxInvites: 17,
         maxLedgers: 17,
+        maxAppIdBindings: 17,
         deviceCA,
       },
     );

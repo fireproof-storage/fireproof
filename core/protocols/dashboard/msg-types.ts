@@ -134,6 +134,7 @@ export interface FPApiParameters {
   readonly maxMemberUsers: number;
   readonly maxInvites: number;
   readonly maxLedgers: number;
+  readonly maxAppIdBindings: number;
   readonly deviceCA: DeviceIdCA;
 }
 
@@ -517,4 +518,24 @@ export interface ReqCertFromCsr {
 export interface ResCertFromCsr {
   readonly type: "resCertFromCsr";
   readonly certificate: string;
+}
+
+export interface ReqEnsureCloudToken {
+  readonly type: "reqEnsureCloudToken";
+  readonly auth: DashAuthType;
+  readonly appId: string; // identifier for the client app should be hashed from
+  // localDbName + domain + firstpart of the pathname
+  readonly env?: string; // if the app wants to have seperate binding for prod/staging etc
+  // if not set, "prod" is used
+  readonly tenant?: string;
+  readonly ledger?: string;
+  readonly prevCloudToken?: string; // existing token for cheaper renewal
+}
+
+export interface ResEnsureCloudToken {
+  readonly type: "resEnsureCloudToken";
+  readonly cloudToken: string;
+  readonly appId: string;
+  readonly tenant: string;
+  readonly ledger: string;
 }

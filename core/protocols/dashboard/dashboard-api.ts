@@ -35,7 +35,14 @@ import {
   ResCloudSessionToken,
   ReqCertFromCsr,
   ResCertFromCsr,
+  ReqExtendToken,
+  ReqTokenByResultId,
+  ResExtendToken,
+  ResTokenByResultId,
+  ReqEnsureCloudToken,
+  ResEnsureCloudToken,
 } from "./msg-types.js";
+import { FPApiInterface } from "./fp-api-interface.js";
 import { Falsy } from "@fireproof/core-types-base";
 
 interface TypeString {
@@ -72,7 +79,7 @@ export interface DashboardApiConfig {
  * });
  * ```
  */
-export class DashboardApi {
+export class DashboardApi implements FPApiInterface {
   private readonly cfg: DashboardApiConfig;
   constructor(cfg: DashboardApiConfig) {
     this.cfg = cfg;
@@ -164,5 +171,19 @@ export class DashboardApi {
   }
   getCertFromCsr(req: WithoutTypeAndAuth<ReqCertFromCsr>): Promise<Result<ResCertFromCsr>> {
     return this.request<ReqCertFromCsr, ResCertFromCsr>({ ...req, type: "reqCertFromCsr" });
+  }
+
+  redeemInvite(req: ReqRedeemInvite): Promise<Result<ResRedeemInvite>> {
+    return this.request<ReqRedeemInvite, ResRedeemInvite>({ ...req, type: "reqRedeemInvite" });
+  }
+  getTokenByResultId(req: ReqTokenByResultId): Promise<Result<ResTokenByResultId>> {
+    return this.request<ReqTokenByResultId, ResTokenByResultId>({ ...req, type: "reqTokenByResultId" });
+  }
+  extendToken(req: ReqExtendToken): Promise<Result<ResExtendToken>> {
+    return this.request<ReqExtendToken, ResExtendToken>({ ...req, type: "reqExtendToken" });
+  }
+
+  ensureCloudToken(req: WithoutTypeAndAuth<ReqEnsureCloudToken>): Promise<Result<ResEnsureCloudToken>> {
+    return this.request<ReqEnsureCloudToken, ResEnsureCloudToken>({ ...req, type: "reqEnsureCloudToken" });
   }
 }
