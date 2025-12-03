@@ -10,7 +10,6 @@ import { ResultSet } from "@libsql/client";
 import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fireproof/core-device-id";
 import { verifyToken as ClerkVerifyToken } from "@clerk/backend";
-import { exportSPKI } from "jose";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
@@ -53,7 +52,20 @@ class ClerkApiToken implements FPApiToken {
         break;
       }
       if (keyVal) {
-        keys.push(keyVal);
+        // Parse the key value - it might be a JSON string containing {"keys": [...]}
+        try {
+          const parsed = JSON.parse(keyVal);
+          if (parsed.keys && Array.isArray(parsed.keys)) {
+            // Extract individual keys from the wrapper object
+            keys.push(...parsed.keys.map((k: unknown) => JSON.stringify(k)));
+          } else {
+            // Single key object
+            keys.push(keyVal);
+          }
+        } catch {
+          // Not JSON, treat as raw key string
+          keys.push(keyVal);
+        }
       }
       if (urlVal) {
         urls.push(
@@ -88,14 +100,11 @@ class ClerkApiToken implements FPApiToken {
         }
       },
       verifyToken: async (token, key) => {
-        const rPublicKey = await sts.importJWK(key, "RS256");
-        if (rPublicKey.isErr()) {
-          return Result.Err(rPublicKey);
-        }
-        const pem = await exportSPKI(rPublicKey.Ok().key);
+        // Pass the JWK directly to ClerkVerifyToken to preserve the kid metadata
+        // Converting to PEM loses the kid, which prevents Clerk from matching the key
         const r = await exception2Result(() =>
           ClerkVerifyToken(token, {
-            jwtKey: pem,
+            jwtKey: key as unknown as string,
             // authorizedParties: ["http://localhost:7370"],
           }),
         );
