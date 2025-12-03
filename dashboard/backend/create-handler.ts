@@ -64,6 +64,13 @@ class ClerkApiToken implements FPApiToken {
         );
       }
     }
+    this.sthis.logger.Debug().Str("keys-count", keys.length.toString()).Str("urls-count", urls.length.toString()).Msg("ClerkApiToken.verify: attempting token verification");
+    if (keys.length > 0) {
+      this.sthis.logger.Debug().Str("first-key-preview", keys[0].substring(0, 50) + "...").Msg("ClerkApiToken.verify: using keys");
+    }
+    if (urls.length > 0) {
+      this.sthis.logger.Debug().Str("urls", JSON.stringify(urls)).Msg("ClerkApiToken.verify: using URLs");
+    }
     const rt = await sts.verifyToken(token, keys, urls, {
       parseSchema: (payload: unknown): Result<FPClerkClaim> => {
         const r = FPClerkClaimSchema.safeParse(payload);
@@ -97,6 +104,7 @@ class ClerkApiToken implements FPApiToken {
       },
     });
     if (rt.isErr()) {
+      this.sthis.logger.Error().Str("error", rt.Err().toString()).Msg("ClerkApiToken.verify: verification failed");
       return Result.Err(rt.Err());
     }
     const t = rt.Ok();
