@@ -25,31 +25,41 @@ export * from "./dashboard-api.js";
 // }
 
 export const FPClerkClaimSchema = z.object({
-  // ...JWTPayloadSchema.shape,
+  payload: z.object({
+    // ...JWTPayloadSchema.shape,
 
-  azp: z.string().optional(), // authorized party
-  iss: z.string().optional(), // issuer
-  // sub: z.string().optional(), // subject
-  aud: z.union([z.string(), z.array(z.string())]).optional(), // audience
-  exp: z.number().int().optional(), // expiration time
-  nbf: z.number().int().optional(), // not before
-  iat: z.number().int().optional(), // issued at
-  jti: z.string().optional(), // JWT ID
+    azp: z.string().optional(), // authorized party
+    exp: z.number().int().optional(), // expiration time
+    iat: z.number().int().optional(), // issued at
+    iss: z.string().optional(), // issuer
+    jti: z.string().optional(), // JWT ID
+    nbf: z.number().int().optional(), // not before
 
-  app_metadata: z.unknown(),
-  role: z.string(),
-  userId: z.string(),
-  sub: z.string(),
-  params: z
+    params: z
+      .object({
+        email: z.string(),
+        email_verified: z.boolean(),
+        first: z.string(),
+        image_url: z.string(),
+        last: z.string(),
+        name: z.string().nullable(),
+        public_meta: z.unknown(),
+      })
+      .partial(),
+
+    role: z.string(),
+    sub: z.string(),
+    userId: z.string(),
+
+    aud: z.union([z.string(), z.array(z.string())]).optional(), // audience
+    app_metadata: z.unknown().optional(),
+  }),
+  protectedHeader: z
     .object({
-      last: z.string(),
-      name: z.string().nullable().optional(),
-      email: z.string(),
-      first: z.string(),
-      image_url: z.string(),
-      external_id: z.string().nullable().optional(),
-      public_meta: z.unknown(),
-      email_verified: z.boolean().optional(),
+      alg: z.string(),
+      cat: z.string(),
+      kid: z.string(),
+      typ: z.string(),
     })
     .partial(),
 });

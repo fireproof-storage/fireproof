@@ -9,8 +9,7 @@ import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
 import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fireproof/core-device-id";
-import { verifyToken as ClerkVerifyToken } from "@clerk/backend";
-import { exportSPKI } from "jose";
+import { jwtVerify } from "jose";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
@@ -77,6 +76,7 @@ class ClerkApiToken implements FPApiToken {
         if (r.success) {
           return Result.Ok(r.data);
         } else {
+          console.log("FPClerkClaimSchema parse error", payload, r.error);
           return Result.Err(r.error);
         }
       },
@@ -85,14 +85,17 @@ class ClerkApiToken implements FPApiToken {
         if (rPublicKey.isErr()) {
           return Result.Err(rPublicKey);
         }
-        const pem = await exportSPKI(rPublicKey.Ok().key);
-        console.log("ClerkApiToken-verify", pem);
-        const r = await exception2Result(() =>
-          ClerkVerifyToken(token, {
-            jwtKey: pem,
-            // authorizedParties: ["http://localhost:7370"],
-          }),
+        // const pem = await exportSPKI(rPublicKey.Ok().key);
+        // console.log("ClerkApiToken-verify", pem);
+
+        const r = await exception2Result(
+          () => jwtVerify(token, rPublicKey.Ok().key),
+          // ClerkVerifyToken(token, {
+          //   jwtKey: pem,
+          //   // authorizedParties: ["http://localhost:7370"],
+          // }),
         );
+        // console.log("ClerkApiToken-verify-jwtVerify", r);
         if (r.isErr()) {
           return Result.Err(r);
         }
@@ -111,10 +114,10 @@ class ClerkApiToken implements FPApiToken {
     return Result.Ok({
       type: "clerk",
       token,
-      userId: t.sub,
+      userId: t.payload.sub,
       provider: "TBD",
       params: {
-        ...t.params,
+        ...t.payload.params,
       },
     });
   }
