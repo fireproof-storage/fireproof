@@ -1,4 +1,3 @@
-import { $ } from "zx";
 import type { TestProject } from "vitest/node";
 
 export async function setup(_project: TestProject) {

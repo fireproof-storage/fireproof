@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { cd, $, dotenv, path } from "zx";
+import { $, dotenv, path } from "zx";
 import { setupBackendD1 } from "./setup-backend-d1.js";
 import type { TestProject } from "vitest/node";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
