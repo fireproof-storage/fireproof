@@ -390,7 +390,6 @@ export async function verifyToken<R>(
         case isFetchWellKnownJwksResultOk(pubKey):
           {
             for (const key of pubKey.keys) {
-              console.log("Trying well-known JWKS key from", token, wellKnownUrls, key);
               const rVerify = await internVerifyToken(token, key, opts);
               if (rVerify.isOk()) {
                 return rVerify;
