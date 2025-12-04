@@ -180,11 +180,11 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2
       react:
-        specifier: ^19.2.0
-        version: 19.2.0
+        specifier: ^19.2.1
+        version: 19.2.1
       react-dom:
-        specifier: ^19.2.0
-        version: 19.2.0(react@19.2.0)
+        specifier: ^19.2.1
+        version: 19.2.1(react@19.2.1)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/base
@@ -440,11 +440,11 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7
       react:
-        specifier: '>=18.0.0'
-        version: 19.2.0
+        specifier: ^19.2.1
+        version: 19.2.1
       react-dom:
-        specifier: ^19.2.0
-        version: 19.2.0(react@19.2.0)
+        specifier: ^19.2.1
+        version: 19.2.1(react@19.2.1)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/base
@@ -1194,10 +1194,10 @@ importers:
         version: 0.5.2(typescript@5.9.3)
       '@clerk/backend':
         specifier: ^2.24.0
-        version: 2.24.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 2.24.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@clerk/clerk-js':
         specifier: ^5.111.0
-        version: 5.111.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.13)
+        version: 5.111.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -1273,13 +1273,13 @@ importers:
         version: 0.5.2(typescript@5.9.3)
       '@clerk/backend':
         specifier: ^2.24.0
-        version: 2.24.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 2.24.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@clerk/clerk-js':
         specifier: ^5.111.0
-        version: 5.111.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.13)
+        version: 5.111.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)
       '@clerk/clerk-react':
         specifier: ^5.57.0
-        version: 5.57.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 5.57.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -1306,13 +1306,13 @@ importers:
         version: 3.0.0
       '@monaco-editor/react':
         specifier: ^4.7.0
-        version: 4.7.0(monaco-editor@0.53.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 4.7.0(monaco-editor@0.53.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.18(tsx@4.21.0)(yaml@2.8.1))
       '@tanstack/react-query':
         specifier: ^5.90.11
-        version: 5.90.11(react@19.2.0)
+        version: 5.90.11(react@19.2.1)
       highlight.js:
         specifier: ^11.10.0
         version: 11.11.1
@@ -1329,23 +1329,23 @@ importers:
         specifier: ^13.4.0
         version: 13.4.1
       react:
-        specifier: ^19.2.0
-        version: 19.2.0
+        specifier: ^19.2.1
+        version: 19.2.1
       react-dom:
-        specifier: ^19.2.0
-        version: 19.2.0(react@19.2.0)
+        specifier: ^19.2.1
+        version: 19.2.1(react@19.2.1)
       react-hook-form:
         specifier: ^7.67.0
-        version: 7.67.0(react@19.2.0)
+        version: 7.67.0(react@19.2.1)
       react-router-dom:
         specifier: ^7.9.6
-        version: 7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 7.9.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react-simple-code-editor:
         specifier: ^0.14.1
-        version: 0.14.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 0.14.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       use-editable:
         specifier: ^2.3.3
-        version: 2.3.3(react@19.2.0)
+        version: 2.3.3(react@19.2.1)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/base
@@ -1376,7 +1376,7 @@ importers:
         version: 6.0.3(rollup@4.53.3)
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
@@ -1477,8 +1477,8 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2
       react:
-        specifier: ^19.2.0
-        version: 19.2.0
+        specifier: ^19.2.1
+        version: 19.2.1
       ts-essentials:
         specifier: ^10.1.1
         version: 10.1.1(typescript@5.9.3)
@@ -1497,10 +1497,10 @@ importers:
         version: link:../../core/runtime
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       react:
-        specifier: ^19.2.0
-        version: 19.2.0
+        specifier: ^19.2.1
+        version: 19.2.1
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../base
@@ -5192,12 +5192,10 @@ packages:
 
   libsql@0.3.19:
     resolution: {integrity: sha512-Aj5cQ5uk/6fHdmeW0TiXK42FqUlwx7ytmMLPSaUQPin5HKKKuUPD62MAbN4OEweGBBI7q1BekoEN4gPUEL6MZA==}
-    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   libsql@0.5.22:
     resolution: {integrity: sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA==}
-    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   lilconfig@3.1.3:
@@ -5730,10 +5728,10 @@ packages:
     resolution: {integrity: sha512-ARhCpm70fzdcvNQfPoy49IaanKkTlRWF2JMzqhcJbhSFRZv7nPTvZJdcY7301IPmvW+/p0RgIWnQDLJxifsQ7g==}
     engines: {node: '>=8'}
 
-  react-dom@19.2.0:
-    resolution: {integrity: sha512-UlbRu4cAiGaIewkPyiRGJk0imDN2T3JjieT6spoL2UeSf5od4n5LB/mQ4ejmxhCFT1tYe8IvaFulzynWovsEFQ==}
+  react-dom@19.2.1:
+    resolution: {integrity: sha512-ibrK8llX2a4eOskq1mXKu/TGZj9qzomO+sNfO98M6d9zIPOEhlBkMkBUBLd1vgS0gQsLDBzA+8jJBVXDnfHmJg==}
     peerDependencies:
-      react: ^19.2.0
+      react: ^19.2.1
 
   react-hook-form@7.67.0:
     resolution: {integrity: sha512-E55EOwKJHHIT/I6J9DmQbCWToAYSw9nN5R57MZw9rMtjh+YQreMDxRLfdjfxQbiJ3/qbg3Z02wGzBX4M+5fMtQ==}
@@ -5781,8 +5779,8 @@ packages:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
     engines: {node: '>=0.10.0'}
 
-  react@19.2.0:
-    resolution: {integrity: sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ==}
+  react@19.2.1:
+    resolution: {integrity: sha512-DGrYcCWK7tvYMnWh79yrPHt+vdx9tY+1gPZa7nJQtO/p8bLTDaHp4dzwEhQB7pZ4Xe3ok4XKuEPrVuc+wlpkmw==}
     engines: {node: '>=0.10.0'}
 
   read-cache@1.0.0:
@@ -6991,7 +6989,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@base-org/account@2.0.1(@types/react@19.2.7)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.13)':
+  '@base-org/account@2.0.1(@types/react@19.2.7)(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)':
     dependencies:
       '@noble/hashes': 1.4.0
       clsx: 1.2.1
@@ -7000,7 +6998,7 @@ snapshots:
       ox: 0.6.9(typescript@5.9.3)(zod@4.1.13)
       preact: 10.24.2
       viem: 2.39.3(typescript@5.9.3)(zod@4.1.13)
-      zustand: 5.0.3(@types/react@19.2.7)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+      zustand: 5.0.3(@types/react@19.2.7)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1))
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
@@ -7011,10 +7009,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/backend@2.24.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@clerk/backend@2.24.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@clerk/shared': 3.36.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@clerk/types': 4.101.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/shared': 3.36.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@clerk/types': 4.101.3(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       cookie: 1.0.2
       standardwebhooks: 1.0.0
       tslib: 2.8.1
@@ -7022,16 +7020,16 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-js@5.111.0(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.13)':
+  '@clerk/clerk-js@5.111.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)':
     dependencies:
-      '@base-org/account': 2.0.1(@types/react@19.2.7)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@4.1.13)
-      '@clerk/localizations': 3.28.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@clerk/shared': 3.36.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@base-org/account': 2.0.1(@types/react@19.2.7)(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)
+      '@clerk/localizations': 3.28.5(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@clerk/shared': 3.36.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@coinbase/wallet-sdk': 4.3.0
       '@emotion/cache': 11.11.0
-      '@emotion/react': 11.11.1(@types/react@19.2.7)(react@19.2.0)
-      '@floating-ui/react': 0.27.12(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@emotion/react': 11.11.1(@types/react@19.2.7)(react@19.2.1)
+      '@floating-ui/react': 0.27.12(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@formkit/auto-animate': 0.8.4
       '@stripe/stripe-js': 5.6.0
       '@swc/helpers': 0.5.17
@@ -7044,10 +7042,10 @@ snapshots:
       core-js: 3.41.0
       crypto-js: 4.2.0
       dequal: 2.0.3
-      input-otp: 1.4.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      qrcode.react: 4.2.0(react@19.2.0)
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      input-otp: 1.4.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      qrcode.react: 4.2.0(react@19.2.1)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
       regenerator-runtime: 0.14.1
     transitivePeerDependencies:
       - '@types/react'
@@ -7059,35 +7057,35 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/clerk-react@5.57.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@clerk/clerk-react@5.57.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@clerk/shared': 3.36.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      '@clerk/shared': 3.36.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
       tslib: 2.8.1
 
-  '@clerk/localizations@3.28.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@clerk/localizations@3.28.5(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@clerk/types': 4.101.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/types': 4.101.3(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@clerk/shared@3.36.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@clerk/shared@3.36.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       csstype: 3.1.3
       dequal: 2.0.3
       glob-to-regexp: 0.4.1
       js-cookie: 3.0.5
       std-env: 3.10.0
-      swr: 2.3.4(react@19.2.0)
+      swr: 2.3.4(react@19.2.1)
     optionalDependencies:
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
 
-  '@clerk/types@4.101.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@clerk/types@4.101.3(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@clerk/shared': 3.36.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/shared': 3.36.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -7217,17 +7215,17 @@ snapshots:
 
   '@emotion/memoize@0.9.0': {}
 
-  '@emotion/react@11.11.1(@types/react@19.2.7)(react@19.2.0)':
+  '@emotion/react@11.11.1(@types/react@19.2.7)(react@19.2.1)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@emotion/babel-plugin': 11.13.5
       '@emotion/cache': 11.11.0
       '@emotion/serialize': 1.3.3
-      '@emotion/use-insertion-effect-with-fallbacks': 1.2.0(react@19.2.0)
+      '@emotion/use-insertion-effect-with-fallbacks': 1.2.0(react@19.2.1)
       '@emotion/utils': 1.4.2
       '@emotion/weak-memoize': 0.3.1
       hoist-non-react-statics: 3.3.2
-      react: 19.2.0
+      react: 19.2.1
     optionalDependencies:
       '@types/react': 19.2.7
     transitivePeerDependencies:
@@ -7245,9 +7243,9 @@ snapshots:
 
   '@emotion/unitless@0.10.0': {}
 
-  '@emotion/use-insertion-effect-with-fallbacks@1.2.0(react@19.2.0)':
+  '@emotion/use-insertion-effect-with-fallbacks@1.2.0(react@19.2.1)':
     dependencies:
-      react: 19.2.0
+      react: 19.2.1
 
   '@emotion/utils@1.4.2': {}
 
@@ -7688,18 +7686,18 @@ snapshots:
       '@floating-ui/core': 1.7.3
       '@floating-ui/utils': 0.2.10
 
-  '@floating-ui/react-dom@2.1.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@floating-ui/react-dom@2.1.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@floating-ui/dom': 1.7.4
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
 
-  '@floating-ui/react@0.27.12(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@floating-ui/react@0.27.12(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@floating-ui/utils': 0.2.10
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
       tabbable: 6.3.0
 
   '@floating-ui/utils@0.2.10': {}
@@ -7987,12 +7985,12 @@ snapshots:
     dependencies:
       state-local: 1.0.7
 
-  '@monaco-editor/react@4.7.0(monaco-editor@0.53.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@monaco-editor/react@4.7.0(monaco-editor@0.53.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@monaco-editor/loader': 1.5.0
       monaco-editor: 0.53.0
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
 
   '@neon-rs/load@0.0.4': {}
 
@@ -8329,10 +8327,10 @@ snapshots:
 
   '@tanstack/query-core@5.90.11': {}
 
-  '@tanstack/react-query@5.90.11(react@19.2.0)':
+  '@tanstack/react-query@5.90.11(react@19.2.1)':
     dependencies:
       '@tanstack/query-core': 5.90.11
-      react: 19.2.0
+      react: 19.2.1
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -8345,12 +8343,12 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@testing-library/dom': 10.4.1
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
     optionalDependencies:
       '@types/react': 19.2.7
       '@types/react-dom': 19.2.3(@types/react@19.2.7)
@@ -9991,10 +9989,10 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  input-otp@1.4.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  input-otp@1.4.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
 
   internal-slot@1.1.0:
     dependencies:
@@ -10835,22 +10833,22 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  qrcode.react@4.2.0(react@19.2.0):
+  qrcode.react@4.2.0(react@19.2.1):
     dependencies:
-      react: 19.2.0
+      react: 19.2.1
 
   queue-microtask@1.2.3: {}
 
   quick-lru@4.0.1: {}
 
-  react-dom@19.2.0(react@19.2.0):
+  react-dom@19.2.1(react@19.2.1):
     dependencies:
-      react: 19.2.0
+      react: 19.2.1
       scheduler: 0.27.0
 
-  react-hook-form@7.67.0(react@19.2.0):
+  react-hook-form@7.67.0(react@19.2.1):
     dependencies:
-      react: 19.2.0
+      react: 19.2.1
 
   react-is@16.13.1: {}
 
@@ -10860,28 +10858,28 @@ snapshots:
 
   react-refresh@0.18.0: {}
 
-  react-router-dom@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  react-router-dom@7.9.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
-      react-router: 7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
+      react-router: 7.9.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
 
-  react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  react-router@7.9.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       cookie: 1.1.1
-      react: 19.2.0
+      react: 19.2.1
       set-cookie-parser: 2.7.2
     optionalDependencies:
-      react-dom: 19.2.0(react@19.2.0)
+      react-dom: 19.2.1(react@19.2.1)
 
-  react-simple-code-editor@0.14.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  react-simple-code-editor@0.14.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
 
   react@19.1.1: {}
 
-  react@19.2.0: {}
+  react@19.2.1: {}
 
   read-cache@1.0.0:
     dependencies:
@@ -11344,11 +11342,11 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  swr@2.3.4(react@19.2.0):
+  swr@2.3.4(react@19.2.1):
     dependencies:
       dequal: 2.0.3
-      react: 19.2.0
-      use-sync-external-store: 1.6.0(react@19.2.0)
+      react: 19.2.1
+      use-sync-external-store: 1.6.0(react@19.2.1)
 
   tabbable@6.3.0: {}
 
@@ -11557,13 +11555,13 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  use-editable@2.3.3(react@19.2.0):
+  use-editable@2.3.3(react@19.2.1):
     dependencies:
-      react: 19.2.0
+      react: 19.2.1
 
-  use-sync-external-store@1.6.0(react@19.2.0):
+  use-sync-external-store@1.6.0(react@19.2.1):
     dependencies:
-      react: 19.2.0
+      react: 19.2.1
 
   util-deprecate@1.0.2: {}
 
@@ -11827,10 +11825,10 @@ snapshots:
 
   zod@4.1.13: {}
 
-  zustand@5.0.3(@types/react@19.2.7)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0)):
+  zustand@5.0.3(@types/react@19.2.7)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1)):
     optionalDependencies:
       '@types/react': 19.2.7
-      react: 19.2.0
-      use-sync-external-store: 1.6.0(react@19.2.0)
+      react: 19.2.1
+      use-sync-external-store: 1.6.0(react@19.2.1)
 
   zx@8.8.5: {}
