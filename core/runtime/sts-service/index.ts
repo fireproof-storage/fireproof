@@ -193,7 +193,7 @@ export class SessionTokenService {
   }
 }
 
-const keysFromWellKnownJwksCache = new KeyedResolvOnce<JWKPublic[]>({
+const keysFromWellKnownJwksCache = new KeyedResolvOnce<FetchWellKnownJwksResult>({
   resetAfter: 30 * 60 * 1000, // 30 minutes
 });
 

@@ -29,7 +29,7 @@
     "zx": "^8.8.5"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.2",
+    "@adviser/cement": "^0.5.5",
     "yocto-queue": "^1.2.2"
   }
 }

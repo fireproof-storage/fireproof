@@ -61,7 +61,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
 
   async function queryExistingUserOrNick(e: React.ChangeEvent<HTMLInputElement>) {
     setQueryValue(e.target.value);
-    const res = await cloud.api.findUser({
+    const res = await cloud.dashApi.findUser({
       query: {
         byString: e.target.value,
       },
@@ -86,7 +86,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
           existingUserId: user.userId,
         };
       }
-      const res = await cloud.api.inviteUser({
+      const res = await cloud.dashApi.inviteUser({
         ticket: {
           invitedParams: {
             tenant: {
@@ -181,7 +181,7 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
   function handleRemoveInvite(inviteId: string) {
     return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       e.preventDefault();
-      const res = await cloud.api.deleteInvite({ inviteId });
+      const res = await cloud.dashApi.deleteInvite({ inviteId });
       if (res.isErr()) {
         console.error(res.Err());
         return;
