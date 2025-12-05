@@ -17,7 +17,7 @@ export function CloudTenantDelete() {
 
   async function deleteCloudTenantAction(ctx: CloudContext, tenantId: string | undefined) {
     if (tenantId) {
-      await ctx.api.deleteTenant({ tenantId });
+      await ctx.dashApi.deleteTenant({ tenantId });
       console.log("deleted", tenantId);
       refetch();
       navigate(`/fp/cloud`);

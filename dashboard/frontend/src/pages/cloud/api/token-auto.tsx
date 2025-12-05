@@ -57,7 +57,7 @@ export function ApiTokenAuto() {
   // Create ledger mutation
   const createLedgerMutation = useMutation({
     mutationFn: async ({ tenantId, name }: { tenantId: string; name: string }) => {
-      const res = await cloud.api.createLedger({
+      const res = await cloud.dashApi.createLedger({
         ledger: {
           tenantId,
           name,
@@ -140,7 +140,7 @@ export function ApiTokenAuto() {
         throw new Error("No ledger selected or result_id missing");
       }
 
-      const rToken = await cloud.api.getCloudSessionToken({
+      const rToken = await cloud.dashApi.getCloudSessionToken({
         resultId: resultId,
         selected: {
           tenant: ledgerInfo.tenant,
