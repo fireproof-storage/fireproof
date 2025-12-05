@@ -55,7 +55,7 @@ export function CsrToCert() {
       setCertificate(null);
       // console.log("Submitting CSR:", data.csrContent);
 
-      const result = await cloud.api.getCertFromCsr({ csr: data.csrContent });
+      const result = await cloud.dashApi.getCertFromCsr({ csr: data.csrContent });
 
       if (result.isOk()) {
         const response = result.Ok();

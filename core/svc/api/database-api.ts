@@ -383,11 +383,11 @@ export function fireproofProxy(name: string, cfg: DatabaseProxyConfig): Database
     })
     .once((x) => {
       const sthis = ensureSuperThis();
-      console.log("Creating DatabaseProxy for", name, "with config", cfg, x.refKey);
+      console.log("Creating DatabaseProxy for", name, "with config", cfg, x.ctx.refKey);
       return new DatabaseProxy({
-        ...x.givenKey,
+        ...x.ctx.givenKey,
         name,
-        refId: x.refKey,
+        refId: x.ctx.refKey,
         transport: cfg.transport ?? new FPApiPostMessageTransport(sthis, cfg.webWindow ?? window),
         webWindow: cfg.webWindow ?? window,
         target: cfg.target,
