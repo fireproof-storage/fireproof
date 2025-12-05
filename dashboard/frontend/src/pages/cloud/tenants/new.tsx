@@ -12,7 +12,7 @@ export function newCloudAction(ctx: AppContextType) {
     if (!tenantName || tenantName.trim() === "") {
       return new Response("Tenant name is required", { status: 400 });
     }
-    const rTenant = await ctx.cloud.api.createTenant({
+    const rTenant = await ctx.cloud.dashApi.createTenant({
       tenant: {
         name: tenantName,
       },

@@ -6,7 +6,7 @@ import { Lazy, Result } from "@adviser/cement";
 import { hashObjectSync } from "@fireproof/core-runtime";
 import { getKeyBag } from "@fireproof/core-keybag";
 import { DeviceIdKey, DeviceIdSignMsg } from "@fireproof/core-device-id";
-import { DashAuthType, DashboardApi } from "@fireproof/core-protocols-dashboard";
+import { DashAuthType, DashboardApiImpl } from "@fireproof/core-protocols-dashboard";
 
 export class CliTokenStrategy implements TokenStrategie {
   readonly tc: TokenAndClaims;
@@ -95,12 +95,16 @@ async function main() {
     },
     { resetAfter: 60 },
   );
-  const dashApi = new DashboardApi({
-    apiUrl: "http://localhost:7370/api",
-    getToken: () => {
-      return getDashBoardToken();
+  const dashApi = new DashboardApiImpl({
+    gracePeriodMs: 5000,
+    getTokenCtx: {
+      template: "with-email",
     },
+    apiUrl: "http://localhost:7370/api",
     fetch: fetch.bind(globalThis),
+    getToken: async () => {
+      return Result.Ok(await getDashBoardToken());
+    },
   });
 
   const user = await dashApi.ensureUser({});

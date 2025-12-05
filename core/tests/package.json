@@ -40,7 +40,7 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.2",
+    "@adviser/cement": "^0.5.5",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-blockstore": "workspace:0.0.0",
@@ -52,6 +52,7 @@
     "@fireproof/core-gateways-memory": "workspace:0.0.0",
     "@fireproof/core-keybag": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",
+    "@fireproof/core-protocols-dashboard": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-svc-api": "workspace:0.0.0",
     "@fireproof/core-svc-host": "workspace:0.0.0",
@@ -73,6 +74,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@clerk/clerk-js": "^5.111.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@vitest/browser": "^4.0.14",
     "playwright": "^1.57.0",
