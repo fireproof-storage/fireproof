@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { useSession } from "@clerk/clerk-react";
+import { useClerk, useSession } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ResCloudSessionToken,
@@ -12,10 +12,10 @@ import {
   ResUpdateLedger,
   ResUpdateTenant,
   InviteTicket,
-  DashboardApi,
-  // UserTenant,
+  clerkDashApi,
 } from "@fireproof/core-protocols-dashboard";
 import { DASHAPI_URL } from "./helpers.js";
+import { Clerk } from "@clerk/clerk-js";
 
 export interface InviteItem {
   tenantId: string;
@@ -34,37 +34,15 @@ function wrapResultToPromise<T>(pro: () => Promise<Result<T>>) {
   };
 }
 
-interface TokenType {
-  readonly type: "clerk" | "better";
-  readonly token: string;
-}
 export interface ListTenantsLedgersByUser {
   readonly tenant: ResListTenantsByUser["tenants"][number];
   readonly ledgers: ResListLedgersByUser["ledgers"];
 }
 
 export class CloudContext {
-  readonly api: DashboardApi;
-
-  constructor() {
-    this.api = new DashboardApi({
-      apiUrl: DASHAPI_URL,
-      fetch: window.fetch.bind(window),
-      getToken: () => this.getToken(),
-    });
-  }
+  dashApi!: ReturnType<typeof clerkDashApi>;
 
   _clerkSession?: ReturnType<typeof useSession>;
-
-  async getToken(): Promise<TokenType | undefined> {
-    const token = await this._clerkSession?.session?.getToken({ template: "with-email" });
-    return token
-      ? {
-          type: "clerk",
-          token,
-        }
-      : undefined;
-  }
 
   sessionReady(condition: boolean) {
     const ret = this._clerkSession?.isLoaded && this._clerkSession?.isSignedIn /*|| !!this._betterAuthSession?.data*/ && condition;
@@ -79,19 +57,14 @@ export class CloudContext {
   }
 
   initContext() {
-    // console.log("initContext");
-
+    const clerk = useClerk() as Clerk;
+    this.dashApi = clerkDashApi(clerk, { apiUrl: DASHAPI_URL });
     this._clerkSession = useSession();
-    // this._betterAuthSession = _betterAuthClient.useSession();
-
     this._ensureUser = useQuery({
       queryKey: ["ensureUser"],
-      queryFn: wrapResultToPromise(() => this.api.ensureUser({})),
+      queryFn: wrapResultToPromise(() => this.dashApi.ensureUser({})),
       enabled: this.sessionReady(true),
     });
-    // this._tenantIdForLedgers.clear();
-
-    // this._queryClient = useQueryClient();
   }
 
   _ensureUser!: ReturnType<typeof useQuery<ResEnsureUser, []>>;
@@ -101,7 +74,7 @@ export class CloudContext {
     const listInvites = useQuery({
       queryKey: ["listInvitesTenants", this._ensureUser.data?.user.userId],
       queryFn: wrapResultToPromise(() =>
-        this.api.listInvites({
+        this.dashApi.listInvites({
           tenantIds: Array.from(this._tenantsForInvites),
         }),
       ),
@@ -130,7 +103,7 @@ export class CloudContext {
     // this.activeApi(this._tenantIdForLedgers.size > 0) && console.log("active getListLedgersByUser", tenantId);
     const listLedgers = useQuery({
       queryKey: ["listLedgersByUser", this._ensureUser.data?.user.userId],
-      queryFn: wrapResultToPromise(() => this.api.listLedgersByUser({ tenantIds: Array.from(this._tenantIdForLedgers) })),
+      queryFn: wrapResultToPromise(() => this.dashApi.listLedgersByUser({ tenantIds: Array.from(this._tenantIdForLedgers) })),
       enabled: this.activeApi(this._tenantIdForLedgers.size > 0),
     });
 
@@ -148,8 +121,8 @@ export class CloudContext {
       queryKey: ["listTenantsLedgersByUser", this._ensureUser.data?.user.userId],
       queryFn: async () => {
         // console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
-        const listTenantsByUser = await this.api.listTenantsByUser({});
-        const listLedgersByUser = await this.api.listLedgersByUser({
+        const listTenantsByUser = await this.dashApi.listTenantsByUser({});
+        const listLedgersByUser = await this.dashApi.listLedgersByUser({
           tenantIds: listTenantsByUser.Ok().tenants.map((t) => t.tenantId),
         });
         return listTenantsByUser
@@ -172,7 +145,7 @@ export class CloudContext {
       queryKey: ["listTenantsByUser", this._ensureUser.data?.user.userId],
       queryFn: () => {
         // console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
-        return wrapResultToPromise(() => this.api.listTenantsByUser({}))();
+        return wrapResultToPromise(() => this.dashApi.listTenantsByUser({}))();
       },
       enabled: this.activeApi(),
     });
@@ -183,7 +156,7 @@ export class CloudContext {
       queryKey: [this._ensureUser.data?.user.userId],
       queryFn: () => {
         // console.log("getCloudSessionToken", this._ensureUser.data?.user.userId);
-        return wrapResultToPromise(() => this.api.getCloudSessionToken({}))();
+        return wrapResultToPromise(() => this.dashApi.getCloudSessionToken({}))();
       },
       enabled: this.activeApi(),
     });
@@ -192,7 +165,7 @@ export class CloudContext {
   // getListLedgersByTenant(tenantId: string): ReturnType<typeof useQuery<ResListLedgers>> {
   //   return useQuery({
   //     queryKey: ["listLedgersByTenant", tenantId, this._ensureUser.data?.user.userId],
-  //     queryFn: wrapResultToPromise(this.api.listLedgersByUser({ tenantIds: [tenantId] })),
+  //     queryFn: wrapResultToPromise(this.dashApi.listLedgersByUser({ tenantIds: [tenantId] })),
   //     enabled: this.activeApi(),
   //   });
   // }
@@ -201,7 +174,7 @@ export class CloudContext {
     const listTenantsByUser = this.getListTenantsByUser();
     return useMutation({
       mutationFn: ({ name }: { name: string }) => {
-        return wrapResultToPromise(() => this.api.createTenant({ tenant: { name } }))();
+        return wrapResultToPromise(() => this.dashApi.createTenant({ tenant: { name } }))();
       },
       onSuccess: async () => {
         // console.log("onSuccess", data, variables, context);
@@ -215,7 +188,7 @@ export class CloudContext {
     return useMutation({
       mutationFn: ({ name, tenantId }: { name: string; tenantId: string }) => {
         return wrapResultToPromise(() =>
-          this.api.createLedger({
+          this.dashApi.createLedger({
             ledger: {
               name,
               tenantId,
@@ -237,7 +210,7 @@ export class CloudContext {
     return useMutation({
       mutationFn: ({ tenantId, name }: { tenantId: string; name: string }) => {
         return wrapResultToPromise(() =>
-          this.api.updateTenant({
+          this.dashApi.updateTenant({
             tenant: { tenantId, name },
           }),
         )();
@@ -255,7 +228,7 @@ export class CloudContext {
     return useMutation({
       mutationFn: ({ tenantId, ledgerId, name }: { tenantId: string; ledgerId: string; name: string }) => {
         return wrapResultToPromise(() =>
-          this.api.updateLedger({
+          this.dashApi.updateLedger({
             ledger: { ledgerId, tenantId, name },
           }),
         )();

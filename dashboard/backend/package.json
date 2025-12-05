@@ -20,7 +20,7 @@
     "publish": "echo skip"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.2",
+    "@adviser/cement": "^0.5.5",
     "@clerk/backend": "^2.24.0",
     "@clerk/clerk-js": "^5.111.0",
     "@fireproof/core": "workspace:0.0.0",

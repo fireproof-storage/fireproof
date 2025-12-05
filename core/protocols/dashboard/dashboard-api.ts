@@ -1,6 +1,5 @@
-import { exception2Result, Result } from "@adviser/cement";
+import { Result, KeyedResolvOnce, WaitingForValue, Option, exception2Result } from "@adviser/cement";
 import {
-  DashAuthType,
   ReqEnsureUser,
   ResEnsureUser,
   ReqFindUser,
@@ -41,9 +40,10 @@ import {
   ResTokenByResultId,
   ReqEnsureCloudToken,
   ResEnsureCloudToken,
+  DashAuthType,
 } from "./msg-types.js";
 import { FPApiInterface } from "./fp-api-interface.js";
-import { Falsy } from "@fireproof/core-types-base";
+import type { Clerk } from "@clerk/clerk-js";
 
 interface TypeString {
   readonly type: string;
@@ -55,11 +55,28 @@ interface WithType<T extends TypeString> {
 
 export type WithoutTypeAndAuth<T> = Omit<T, "type" | "auth">;
 
-export interface DashboardApiConfig {
+export interface ClerkDashboardApiConfig<T> {
   readonly apiUrl: string;
-  getToken(): Promise<DashAuthType | Falsy>;
-  fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  readonly getTokenCtx?: T;
+  readonly template?: string; // if not provided default to "with-email"
+  readonly gracePeriodMs?: number; // if not provided default to 5 seconds
+  fetch?(input: RequestInfo, init?: RequestInit): Promise<Response>;
 }
+export interface DashboardApiConfig<T> {
+  readonly apiUrl: string;
+  readonly getTokenCtx?: T;
+  readonly gracePeriodMs: number; // if not provided default to 5 seconds
+  fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
+  getToken: (ctx: never) => Promise<Result<DashAuthType>>;
+}
+
+// type NullOrUndefined<T> = T | undefined | null;
+
+// export type ClerkCallback = (resources: { session: NullOrUndefined<{ getToken: () => Promise<string|null>  }> }) => void;
+// export interface ClerkIf {
+//   addListener: (callback: ClerkCallback) => () => void;
+// }
+// type ClerkIf = Loaded
 
 /**
  * DashboardApi provides a client for interacting with the dashboard backend.
@@ -79,23 +96,16 @@ export interface DashboardApiConfig {
  * });
  * ```
  */
-export class DashboardApi implements FPApiInterface {
-  private readonly cfg: DashboardApiConfig;
-  constructor(cfg: DashboardApiConfig) {
-    this.cfg = cfg;
-  }
-
-  private async getAuth() {
-    return exception2Result(() => {
-      return this.cfg.getToken().then((token) => {
-        if (!token) throw new Error("No token available");
-        return token as DashAuthType;
-      });
-    });
+export class DashboardApiImpl<T> implements FPApiInterface {
+  readonly cfg: DashboardApiConfig<T>;
+  constructor(cfg: DashboardApiConfig<T>) {
+    this.cfg = {
+      ...cfg,
+    };
   }
 
   private async request<T extends TypeString, S>(req: WithType<T>): Promise<Result<S>> {
-    const rAuth = await this.getAuth();
+    const rAuth = await this.cfg.getToken(this.cfg.getTokenCtx as never);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
     }
@@ -183,7 +193,65 @@ export class DashboardApi implements FPApiInterface {
     return this.request<ReqExtendToken, ResExtendToken>({ ...req, type: "reqExtendToken" });
   }
 
+  readonly #ensureCloudToken = new KeyedResolvOnce<Result<ResEnsureCloudToken>>();
   ensureCloudToken(req: WithoutTypeAndAuth<ReqEnsureCloudToken>): Promise<Result<ResEnsureCloudToken>> {
-    return this.request<ReqEnsureCloudToken, ResEnsureCloudToken>({ ...req, type: "reqEnsureCloudToken" });
+    return this.#ensureCloudToken
+      .get(
+        JSON.stringify({
+          appId: req.appId,
+          env: req.env ?? "prod",
+          tenant: req.tenant ?? undefined,
+          ledger: req.ledger ?? undefined,
+        }),
+      )
+      .once(async (my) => {
+        const rRes = await this.request<ReqEnsureCloudToken, ResEnsureCloudToken>({ ...req, type: "reqEnsureCloudToken" });
+        if (rRes.isErr()) {
+          return Result.Err(rRes);
+        }
+        const res = rRes.Ok();
+        const resetAfter = res.expiresInSec * 1000 - this.cfg.gracePeriodMs;
+        my.self.setResetAfter(resetAfter < 0 ? 60000 : resetAfter);
+        return rRes;
+      });
   }
+}
+
+const keyedDashApis = new KeyedResolvOnce<DashboardApiImpl<unknown>>();
+export function clerkDashApi<T>(clerk: Clerk, iopts: ClerkDashboardApiConfig<T>): DashboardApiImpl<T> {
+  return keyedDashApis.get(iopts.apiUrl).once(() => {
+    const waitForToken = new WaitingForValue<string>();
+    const dashApi = new DashboardApiImpl({
+      ...iopts,
+      getTokenCtx: iopts.getTokenCtx ?? ({ template: iopts.template ?? "with-email" } as unknown as T),
+      gracePeriodMs: iopts.gracePeriodMs && iopts.gracePeriodMs > 0 ? iopts.gracePeriodMs : 5000,
+      getToken: () =>
+        waitForToken
+          .waitValue()
+          .then((token) => Result.Ok<DashAuthType>({ type: "clerk", token }))
+          .catch((err) => Result.Err<DashAuthType>(err)),
+
+      fetch: iopts.fetch ?? fetch.bind(globalThis),
+    });
+
+    clerk.addListener(({ session }) => {
+      const preValue = waitForToken.value();
+      waitForToken.setValue(Option.None());
+      // console.log("clerkDashApi: clerk session changed", session);
+      if (!(session && typeof session.getToken == "function")) {
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      exception2Result(() => session!.getToken(dashApi.cfg.getTokenCtx as never)).then((rGetToken) => {
+        if (rGetToken.isErr()) {
+          waitForToken.setError(rGetToken.Err());
+          waitForToken.setValue(preValue);
+          return;
+        }
+        const token = rGetToken.Ok();
+        waitForToken.setValue(Option.From(token));
+      });
+    });
+    return dashApi;
+  });
 }

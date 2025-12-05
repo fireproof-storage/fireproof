@@ -70,7 +70,7 @@ export function ApiToken() {
         throw new Error("No result_id");
       }
       console.log("call getCloudSession", redirectCountdown.state, resultId);
-      const rToken = await cloud.api.getCloudSessionToken({
+      const rToken = await cloud.dashApi.getCloudSessionToken({
         resultId,
         selected: createApiToken,
       });
@@ -317,7 +317,7 @@ function AddIfNotSelectedLedger({
   const { cloud } = useContext(AppContext);
   const mutation = useMutation({
     mutationFn: async ({ tenant, ledgerName }: { tenant: UserTenant; ledgerName: string }) => {
-      const res = await cloud.api.createLedger({
+      const res = await cloud.dashApi.createLedger({
         ledger: {
           tenantId: tenant.tenantId,
           name: ledgerName,
