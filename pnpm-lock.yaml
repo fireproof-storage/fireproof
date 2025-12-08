@@ -235,8 +235,8 @@ importers:
         specifier: ^1.0.20
         version: 1.0.20
       drizzle-orm:
-        specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.0
+        version: 0.45.0(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.10.7
         version: 4.10.7
@@ -299,8 +299,8 @@ importers:
         specifier: ^0.14.3
         version: 0.14.3
       drizzle-orm:
-        specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.0
+        version: 0.45.0(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.10.7
         version: 4.10.7
@@ -366,8 +366,8 @@ importers:
         specifier: ^0.15.15
         version: 0.15.15
       drizzle-orm:
-        specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.0
+        version: 0.45.0(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.10.7
         version: 4.10.7
@@ -1248,8 +1248,8 @@ importers:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
-        specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.0
+        version: 0.45.0(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@1.21.7)
@@ -1393,8 +1393,8 @@ importers:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
-        specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.0
+        version: 0.45.0(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@1.21.7)
@@ -4079,8 +4079,8 @@ packages:
     resolution: {integrity: sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g==}
     hasBin: true
 
-  drizzle-orm@0.44.7:
-    resolution: {integrity: sha512-quIpnYznjU9lHshEOAYLoZ9s3jweleHlZIAWR/jX9gAWNg/JhQ1wj0KGRf7/Zm+obRrYd9GjPVJg790QY9N5AQ==}
+  drizzle-orm@0.45.0:
+    resolution: {integrity: sha512-lyd9VRk3SXKRjV/gQckQzmJgkoYMvVG3A2JAV0vh3L+Lwk+v9+rK5Gj0H22y+ZBmxsrRBgJ5/RbQCN7DWd1dtQ==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -8959,7 +8959,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.7(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7):
+  drizzle-orm@0.45.0(@cloudflare/workers-types@4.20251128.0)(@libsql/client@0.15.15)(gel@2.1.1)(kysely@0.28.7):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20251128.0
       '@libsql/client': 0.15.15
