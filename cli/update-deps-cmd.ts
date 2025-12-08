@@ -19,16 +19,28 @@ async function findPackageJsonFiles(dir: string): Promise<string[]> {
 
 // Find packages matching the regex patterns in a package.json
 async function findMatchingPackages(packageJsonPath: string, patterns: string[]): Promise<string[]> {
-  const content = await readFile(packageJsonPath, "utf-8");
-  const pkg: PackageJson = JSON.parse(content);
+  let pkg: PackageJson;
+  try {
+    const content = await readFile(packageJsonPath, "utf-8");
+    pkg = JSON.parse(content) as PackageJson;
+  } catch (e) {
+    console.warn(`⚠️  Skipping unreadable/invalid JSON: ${packageJsonPath}`);
+    return [];
+  }
 
   const allDeps = {
-    ...pkg.dependencies,
-    ...pkg.devDependencies,
+    ...(pkg.dependencies ?? {}),
+    ...(pkg.devDependencies ?? {}),
   };
 
   const matchingPackages = new Set<string>();
-  const regexes = patterns.map((p) => new RegExp(p));
+  const regexes = patterns.map((p) => {
+    try {
+      return new RegExp(p);
+    } catch {
+      throw new Error(`Invalid --pkg regex: ${p}`);
+    }
+  });
 
   for (const pkgName of Object.keys(allDeps)) {
     for (const regex of regexes) {
@@ -122,14 +134,29 @@ export function updateDepsCmd(sthis: SuperThis) {
         }
 
         // Update each package using pnpm update with -r flag for recursive workspace update
+        const failures: { pkg: string; error: string }[] = [];
+
         for (const pkg of packagesToUpdate) {
           console.log(`\n📦 Updating ${pkg} to ${ver}...`);
           try {
-            await $`cd ${currentDir} && pnpm update -r ${pkg}@${ver}`;
+            await $({ cwd: currentDir })`pnpm update -r ${pkg}@${ver}`;
             console.log(`   ✅ Updated ${pkg}`);
           } catch (error) {
-            console.log(`   ⚠️  Failed to update ${pkg} (it may not be installed everywhere)`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            failures.push({ pkg, error: errorMessage });
+            console.log(`   ❌ Failed to update ${pkg}`);
+            console.log(`      Error: ${errorMessage}`);
           }
+        }
+
+        if (failures.length > 0) {
+          console.log("\n❌ Update failed!\n");
+          console.log(`Failed to update ${failures.length} package(s):\n`);
+          failures.forEach(({ pkg, error }) => {
+            console.log(`   - ${pkg}`);
+            console.log(`     ${error}\n`);
+          });
+          process.exit(1);
         }
 
         console.log("\n✨ Update complete!\n");
