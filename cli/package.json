@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "bin": "./run.js",
+  "bin": {
+    "core-cli": "run.js"
+  },
   "scripts": {
     "build": "node ./run.js tsc",
     "test": "vitest --run",
-    "pack": "FP_TSC=tsc tsx ./main.ts build --doPack",
-    "publish": "FP_TSC=tsc tsx ./main.ts build"
+    "pack": "FP_TSC=tsgo tsx ./main.ts build --doPack",
+    "publish": "FP_TSC=tsgo tsx ./main.ts build"
   },
   "keywords": [
     "ledger",
