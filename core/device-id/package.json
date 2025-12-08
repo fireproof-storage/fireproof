@@ -40,7 +40,7 @@
     "@fireproof/core-keybag": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
-    "jose": "^6.1.2",
+    "jose": "^6.1.3",
     "multiformats": "^13.4.0",
     "zod": "^4.1.13"
   },
