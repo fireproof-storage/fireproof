@@ -18,4 +18,4 @@ runs:
         git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
         echo "GITHUB_REF->"$GITHUB_REF
         git tag -v $(git describe --tags --abbrev=0)
-        pnpm run publish --registry https://registry.npmjs.org/
+        pnpm run publish --registry https://registry.npmjs.org/ --npm npm
