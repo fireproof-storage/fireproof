@@ -1,7 +1,5 @@
 name: "@fireproof/core-publish"
 description: "setup  runtime"
-inputs:
-# your inputs here
 runs:
   using: "composite"
   steps:
