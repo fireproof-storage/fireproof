@@ -1,9 +1,6 @@
 name: "@fireproof/core-publish"
 description: "setup  runtime"
 inputs:
-  NPM_TOKEN:
-    description: "NPM token for publishing packages"
-    required: true
 # your inputs here
 runs:
   using: "composite"
@@ -14,7 +11,7 @@ runs:
         rm -f ~/.npmrc $(find . -name .npmrc -o -name npmrc-smoke -print)
         npm install -g npm@11
         npm --version
-        git fetch --tags --force > /dev/null
+        git fetch --tags --force > /dev/null 2>&1
         git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
         echo "GITHUB_REF->"$GITHUB_REF
         git tag -v $(git describe --tags --abbrev=0)
