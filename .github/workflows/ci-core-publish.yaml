@@ -4,6 +4,11 @@ on:
     tags:
       - 'core@*'
 
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
 jobs:
   ci_core_publish:
     name: CI Core Publish
