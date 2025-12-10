@@ -62,10 +62,12 @@ export async function getVersion(
     }
   }
   const gitHeadRes = await $`git rev-parse --short HEAD`.nothrow();
+  let gitHead = "";
   if (gitHeadRes.exitCode !== 0) {
-    process.exit(gitHeadRes.exitCode);
+    gitHead = "unknown";
+  } else {
+    gitHead = gitHeadRes.stdout.trim();
   }
-  const gitHead = gitHeadRes.stdout.trim();
   const dateTickRes = await $`date +%s`.nothrow();
   if (dateTickRes.exitCode !== 0) {
     process.exit(dateTickRes.exitCode);
@@ -613,7 +615,7 @@ export function buildCmd(sthis: SuperThis) {
         $.verbose = true;
         const res = await $`${[args.npm, "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
         if (res.exitCode !== 0) {
-          console.error(`Failed to publish the package.`, JSON.stringify(process.env, null, 2));
+          console.error(`Failed to publish the package.`); //, JSON.stringify(process.env, null, 2));
           process.exit(res.exitCode);
         }
       }

@@ -28,6 +28,25 @@ runs:
     - name: playwright
       shell: bash
       run: |
+        docker version || true
+        docker compose version || true
+        #sudo apt-get update
+        #sudo apt-get install -y ca-certificates curl gnupg lsb-release jq rsync
+        # Add Docker's official GPG key
+        #sudo install -m 0755 -d /etc/apt/keyrings
+        #curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        #sudo chmod a+r /etc/apt/keyrings/docker.gpg
+        # Set up Docker repository
+        #echo \
+        #  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+        #  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+        #  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        # Install Docker Compose plugin
+        #sudo apt-get update
+        #sudo apt-get install -y docker-ce-cli docker-compose-plugin
+        #docker ps
+        #docker compose version
+
         pnpm exec playwright install --with-deps chromium
         pnpm exec playwright --version
 

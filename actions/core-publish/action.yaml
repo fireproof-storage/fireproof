@@ -9,8 +9,13 @@ runs:
         rm -f ~/.npmrc $(find . -name .npmrc -o -name npmrc-smoke -print)
         npm install -g npm@11
         npm --version
+        echo "X1 $(pwd):$(ls)"
         git fetch --tags --force > /dev/null 2>&1
+        echo "X2"
+        git checkout origin/main ./allowed_signers
+        echo "X3"
         git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
+        echo "X4"
         echo "GITHUB_REF->"$GITHUB_REF
         git tag -v $(git describe --tags --abbrev=0)
         pnpm run publish --registry https://registry.npmjs.org/ --npm npm

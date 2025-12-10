@@ -11,12 +11,12 @@ permissions:
 
 jobs:
   ci_core_publish:
+    name: CI Core Publish
+    runs-on: ubuntu-latest
     services:
       docker:
         image: docker:dind
         options: --privileged
-    name: CI Core Publish
-    runs-on: ubuntu-latest
     environment: ${{ startsWith(github.ref, 'refs/tags/core@s') && 'staging' || startsWith(github.ref, 'refs/tags/core@p') && 'production' || 'dev' }}
     steps:
       - uses: actions/checkout@v4
