@@ -21,6 +21,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./actions/base
+      #     - uses: ./actions/base
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 10
 
-      - uses: ./actions/core-publish
+      #    - uses: useblacksmith/setup-node@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: quick/hack
+        run: |
+          pnpm install
+          pnpm run build
+
+      #     - uses: ./actions/core-publish
+      - name: publish
+        shell: bash
+        run: |
+          rm -f ~/.npmrc $(find . -name .npmrc -o -name npmrc-smoke -print)
+          npm install -g npm@11
+          npm --version
+          git fetch --tags --force > /dev/null 2>&1
+          git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
+          echo "GITHUB_REF->"$GITHUB_REF
+          git tag -v $(git describe --tags --abbrev=0)
+          cd cli 
+          pnpm run publish --registry https://registry.npmjs.org/ --npm npm

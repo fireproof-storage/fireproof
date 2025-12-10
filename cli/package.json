@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "bin": "./run.js",
+  "bin": {
+    "core-cli": "run.js"
+  },
   "scripts": {
     "build": "node ./run.js tsc",
     "test": "vitest --run",

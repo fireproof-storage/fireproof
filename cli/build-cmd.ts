@@ -613,7 +613,7 @@ export function buildCmd(sthis: SuperThis) {
         $.verbose = true;
         const res = await $`${[args.npm, "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
         if (res.exitCode !== 0) {
-          console.error(`Failed to publish the package.`, JSON.stringify(process.env, null, 2));
+          console.error(`Failed to publish the package.`); //, JSON.stringify(process.env, null, 2));
           process.exit(res.exitCode);
         }
       }
