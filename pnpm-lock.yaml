@@ -187,7 +187,7 @@ importers:
         version: 19.2.1(react@19.2.1)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof/base
+        version: link:../../use-fireproof/pkg
     devDependencies:
       '@types/react':
         specifier: ^19.2.7
@@ -447,7 +447,7 @@ importers:
         version: 19.2.1(react@19.2.1)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof/base
+        version: link:../../use-fireproof/pkg
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -1074,7 +1074,7 @@ importers:
         version: 19.2.1
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof/base
+        version: link:../../use-fireproof/pkg
       uuidv7:
         specifier: ^1.1.0
         version: 1.1.0
@@ -1357,7 +1357,7 @@ importers:
         version: 2.3.3(react@19.2.1)
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../../use-fireproof/base
+        version: link:../../use-fireproof/pkg
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1499,6 +1499,16 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7
 
+  use-fireproof/pkg:
+    dependencies:
+      '@fireproof/use-fireproof':
+        specifier: workspace:0.0.0
+        version: link:../base
+    devDependencies:
+      '@fireproof/core-cli':
+        specifier: workspace:0.0.0
+        version: link:../../cli
+
   use-fireproof/tests:
     dependencies:
       '@fireproof/core-runtime':
@@ -1512,7 +1522,7 @@ importers:
         version: 19.2.1
       use-fireproof:
         specifier: workspace:0.0.0
-        version: link:../base
+        version: link:../pkg
     devDependencies:
       '@types/react':
         specifier: ^19.2.7
