@@ -10,6 +10,10 @@
     "pack": "core-cli build --doPack",
     "publish": "core-cli build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
   "exports": {
     "./p-limit": {
       "types": "./p-limit/index.d.ts",
