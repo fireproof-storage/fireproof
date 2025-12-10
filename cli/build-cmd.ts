@@ -61,8 +61,16 @@ export async function getVersion(
       return getEnvVersion((await xfs.readFile(fpVersionFile, "utf-8")).trim(), {});
     }
   }
-  const gitHead = (await $`git rev-parse --short HEAD`).stdout.trim();
-  const dateTick = (await $`date +%s`).stdout.trim();
+  const gitHeadRes = await $`git rev-parse --short HEAD`.nothrow();
+  if (gitHeadRes.exitCode !== 0) {
+    process.exit(gitHeadRes.exitCode);
+  }
+  const gitHead = gitHeadRes.stdout.trim();
+  const dateTickRes = await $`date +%s`.nothrow();
+  if (dateTickRes.exitCode !== 0) {
+    process.exit(dateTickRes.exitCode);
+  }
+  const dateTick = dateTickRes.stdout.trim();
   return getEnvVersion(`refs/tags/v0.0.0-smoke-${gitHead}-${dateTick}`, xenv);
 }
 
@@ -432,6 +440,13 @@ export function buildCmd(sthis: SuperThis) {
         defaultValueIsSerializable: true,
         description: "Tags to use for publishing the package, defaults to ['latest'].",
       }),
+      npm: option({
+        long: "npm",
+        type: string,
+        defaultValue: () => "pnpm",
+        defaultValueIsSerializable: true,
+        description: "Package manager to use (pnpm, npm, yarn, bun), defaults to 'pnpm'.",
+      }),
     },
     handler: async (args) => {
       const top = await findUp("tsconfig.dist.json");
@@ -531,9 +546,10 @@ export function buildCmd(sthis: SuperThis) {
         },
       });
       if (!args.noBuild) {
-        await $`pnpm run build`.catch((err) => {
-          process.exit(err.exitCode);
-        });
+        const res = await $`${args.npm} run build`.nothrow();
+        if (res.exitCode !== 0) {
+          process.exit(res.exitCode);
+        }
       }
       for (const f of ["package.json", "README.md", "LICENSE.md"]) {
         await fs.copyFile(f, path.join("../npm", f));
@@ -543,9 +559,10 @@ export function buildCmd(sthis: SuperThis) {
         const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
         await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
         if (!isPrivate(packageJson.originalPackageJson)) {
-          const res = await $`pnpm exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`.nothrow();
+          const res = await $`${args.npm} exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`.nothrow();
           if (res.exitCode !== 0) {
-            throw new Error(`Failed to pack the package.`);
+            console.log(`Failed to pack the package.`);
+            process.exit(res.exitCode);
           }
         }
       }
@@ -560,9 +577,10 @@ export function buildCmd(sthis: SuperThis) {
         if (args.packDestDir) {
           await fs.copyFile(path.join(path.dirname(args.packDestDir), ".gitignore"), ".gitignore");
           await fs.copyFile(path.join(path.dirname(args.packDestDir), ".npmignore"), ".npmignore");
-          const res = await $`pnpm pack --out "${args.packDestDir}/%s.tgz"`;
+          const res = await $`${args.npm} pack --out "${args.packDestDir}/%s.tgz"`.nothrow();
           if (res.exitCode !== 0) {
-            throw new Error(`Failed to pack the package.`);
+            console.error(`Failed to pack the package.`);
+            process.exit(res.exitCode);
           }
         }
       } else {
@@ -592,11 +610,11 @@ export function buildCmd(sthis: SuperThis) {
 
         const registry = ["--registry", args.registry];
         const tagsOpts = tags.map((tag) => ["--tag", tag]).flat();
-        const res = await $`${["pnpm", "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
+        const res = await $`${[args.npm, "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
         if (res.exitCode !== 0) {
-          throw new Error(`Failed to publish the package.`);
+          console.error(`Failed to publish the package.`);
+          process.exit(res.exitCode);
         }
-        // pnpm publish --access public --no-git-checks ${tagsOpts}
       }
     },
   });
