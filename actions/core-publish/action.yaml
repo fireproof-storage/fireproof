@@ -6,7 +6,8 @@ runs:
     - name: publish
       shell: bash
       run: |
-        rm -f ~/.npmrc $(find . -name .npmrc -o -name npmrc-smoke -print)
+        rm -f ~/.npmrc
+        find . \( -name .npmrc -o -name npmrc-smoke \) -print0 | xargs -0 rm -f --
         npm install -g npm@11
         npm --version
         git fetch --tags --force > /dev/null 2>&1
