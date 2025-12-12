@@ -12,6 +12,7 @@ jobs:
         image: docker:dind
         options: --privileged
     runs-on: ubuntu-latest
+    environment: ${{ startsWith(github.ref, 'refs/tags/dashboard@s') && 'staging' || startsWith(github.ref, 'refs/tags/dashboard@p') && 'production' || 'dev' }}
     steps:
       - uses: actions/checkout@v4
 
