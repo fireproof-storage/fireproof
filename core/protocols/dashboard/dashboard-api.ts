@@ -43,7 +43,7 @@ import {
   DashAuthType,
 } from "./msg-types.js";
 import { FPApiInterface } from "./fp-api-interface.js";
-import type { Clerk } from "@clerk/clerk-js";
+import type { Clerk } from "@clerk/shared/types";
 
 interface TypeString {
   readonly type: string;
