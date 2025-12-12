@@ -1156,9 +1156,9 @@ export class FPApiSQL implements FPApiInterface {
     if (!(req.inviteId || req.query)) {
       throw new Error("inviteId or query is required");
     }
-    if (req.tenantId && req.ledgerId) {
-      throw new Error("invite only possible to ledger or tenant");
-    }
+    // Allow both tenantId and ledgerId - this is needed when inviting to a ledger
+    // (the tenant is extracted from the ledger for quota checking)
+    // Removed validation that incorrectly rejected: if (req.tenantId && req.ledgerId)
     // housekeeping
     await this.db
       .update(sqlInviteTickets)
