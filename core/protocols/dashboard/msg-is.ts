@@ -19,6 +19,7 @@ import {
   ResTokenByResultId,
   ReqExtendToken,
   ReqCertFromCsr,
+  ReqEnsureCloudToken,
 } from "./msg-types.js";
 
 interface FPApiMsgInterface {
@@ -42,6 +43,7 @@ interface FPApiMsgInterface {
   isDeleteLedger(jso: unknown): jso is ReqDeleteLedger;
   isReqExtendToken(jso: unknown): jso is ReqExtendToken;
   isReqCertFromCsr(jso: unknown): jso is ReqCertFromCsr;
+  isEnsureCloudToken(jso: unknown): jso is ReqEnsureCloudToken;
 }
 
 function hasType(jso: unknown, t: string): jso is { type: string } {
@@ -107,5 +109,8 @@ export class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isReqCertFromCsr(jso: unknown): jso is ReqCertFromCsr {
     return hasType(jso, "reqCertFromCsr");
+  }
+  isEnsureCloudToken(jso: unknown): jso is ReqEnsureCloudToken {
+    return hasType(jso, "reqEnsureCloudToken");
   }
 }

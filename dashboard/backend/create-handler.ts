@@ -364,6 +364,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
         res = fpApi.extendToken(jso);
         break;
 
+      case FPAPIMsg.isEnsureCloudToken(jso):
+        res = fpApi.ensureCloudToken(jso);
+        break;
+
       case FPAPIMsg.isReqCertFromCsr(jso):
         res = fpApi.getCertFromCsr(jso);
         break;
