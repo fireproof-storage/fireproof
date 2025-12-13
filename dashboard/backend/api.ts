@@ -2055,49 +2055,41 @@ export class FPApiSQL implements FPApiInterface {
         .get();
 
       if (existingAppBinding) {
-        // Binding exists - verify user has access to this ledger
-        const userAccess = await this.db
-          .select()
-          .from(sqlLedgerUsers)
-          .where(
-            and(
-              eq(sqlLedgerUsers.ledgerId, existingAppBinding.AppIdBinding.ledgerId),
-              eq(sqlLedgerUsers.userId, auth.user.userId),
-              eq(sqlLedgerUsers.status, "active"),
-            ),
-          )
-          .get();
+        // Helper to check user's ledger access
+        const userId = auth.user.userId;
+        const checkLedgerAccess = () =>
+          this.db
+            .select()
+            .from(sqlLedgerUsers)
+            .where(
+              and(
+                eq(sqlLedgerUsers.ledgerId, existingAppBinding.AppIdBinding.ledgerId),
+                eq(sqlLedgerUsers.userId, userId),
+                eq(sqlLedgerUsers.status, "active"),
+              ),
+            )
+            .get();
 
-        if (userAccess) {
-          // User has access - use the existing binding's ledger/tenant
-          ledgerId = existingAppBinding.Ledgers.ledgerId;
-          tenantId = existingAppBinding.Ledgers.tenantId;
-        } else {
+        // Binding exists - verify user has access to this ledger
+        let userAccess = await checkLedgerAccess();
+
+        if (!userAccess) {
           // No direct access - try to auto-redeem any pending invites for this user
+          // Note: redeemInvite may fail if no invites exist, which is expected
           await this.redeemInvite({
             type: "reqRedeemInvite",
             auth: req.auth,
           });
 
           // Re-check access after redeeming invites
-          const userAccessAfterRedeem = await this.db
-            .select()
-            .from(sqlLedgerUsers)
-            .where(
-              and(
-                eq(sqlLedgerUsers.ledgerId, existingAppBinding.AppIdBinding.ledgerId),
-                eq(sqlLedgerUsers.userId, auth.user.userId),
-                eq(sqlLedgerUsers.status, "active"),
-              ),
-            )
-            .get();
+          userAccess = await checkLedgerAccess();
+        }
 
-          if (userAccessAfterRedeem) {
-            ledgerId = existingAppBinding.Ledgers.ledgerId;
-            tenantId = existingAppBinding.Ledgers.tenantId;
-          } else {
-            return Result.Err(`user does not have access to ledger for appId:${req.appId}`);
-          }
+        if (userAccess) {
+          ledgerId = existingAppBinding.Ledgers.ledgerId;
+          tenantId = existingAppBinding.Ledgers.tenantId;
+        } else {
+          return Result.Err(`user does not have access to ledger for appId:${req.appId}`);
         }
       } else {
         // No existing binding - proceed with original logic to create one
@@ -2106,7 +2098,7 @@ export class FPApiSQL implements FPApiInterface {
           auth: req.auth,
         });
         if (rLedgerByUser.isErr()) {
-          return Result.Err(rLedgerByUser);
+          return Result.Err(rLedgerByUser.Err());
         }
         const existingLedger = req.ledger ? rLedgerByUser.Ok().ledgers.find((l) => req.ledger === l.ledgerId) : undefined;
         if (existingLedger) {
