@@ -359,6 +359,11 @@ export class FPApiSQL implements FPApiInterface {
           .run();
       }
     }
+    // Auto-redeem any pending invites for this user
+    await this.redeemInvite({
+      type: "reqRedeemInvite",
+      auth: req.auth,
+    });
     return Result.Ok({
       type: "resEnsureUser",
       user: user,
@@ -2074,14 +2079,13 @@ export class FPApiSQL implements FPApiInterface {
         let userAccess = await checkLedgerAccess();
 
         if (!userAccess) {
-          // No direct access - try to auto-redeem any pending invites for this user
-          // Note: redeemInvite may fail if no invites exist, which is expected
-          await this.redeemInvite({
-            type: "reqRedeemInvite",
+          // No direct access - ensureUser will redeem any pending invites
+          await this.ensureUser({
+            type: "reqEnsureUser",
             auth: req.auth,
           });
 
-          // Re-check access after redeeming invites
+          // Re-check access after ensureUser (which redeems invites)
           userAccess = await checkLedgerAccess();
         }
 
