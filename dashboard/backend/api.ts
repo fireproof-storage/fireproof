@@ -2073,7 +2073,31 @@ export class FPApiSQL implements FPApiInterface {
           ledgerId = existingAppBinding.Ledgers.ledgerId;
           tenantId = existingAppBinding.Ledgers.tenantId;
         } else {
-          return Result.Err(`user does not have access to ledger for appId:${req.appId}`);
+          // No direct access - try to auto-redeem any pending invites for this user
+          await this.redeemInvite({
+            type: "reqRedeemInvite",
+            auth: req.auth,
+          });
+
+          // Re-check access after redeeming invites
+          const userAccessAfterRedeem = await this.db
+            .select()
+            .from(sqlLedgerUsers)
+            .where(
+              and(
+                eq(sqlLedgerUsers.ledgerId, existingAppBinding.AppIdBinding.ledgerId),
+                eq(sqlLedgerUsers.userId, auth.user.userId),
+                eq(sqlLedgerUsers.status, "active"),
+              ),
+            )
+            .get();
+
+          if (userAccessAfterRedeem) {
+            ledgerId = existingAppBinding.Ledgers.ledgerId;
+            tenantId = existingAppBinding.Ledgers.tenantId;
+          } else {
+            return Result.Err(`user does not have access to ledger for appId:${req.appId}`);
+          }
         }
       } else {
         // No existing binding - proceed with original logic to create one
