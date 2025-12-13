@@ -2046,32 +2046,64 @@ export class FPApiSQL implements FPApiInterface {
     let ledgerId: string | undefined = undefined;
     let tenantId: string | undefined = undefined;
     if (!binding) {
-      const rLedgerByUser = await this.listLedgersByUser({
-        type: "reqListLedgersByUser",
-        auth: req.auth,
-      });
-      if (rLedgerByUser.isErr()) {
-        return Result.Err(rLedgerByUser);
-      }
-      const existingLedger = req.ledger ? rLedgerByUser.Ok().ledgers.find((l) => req.ledger === l.ledgerId) : undefined;
-      if (existingLedger) {
-        ledgerId = existingLedger.ledgerId;
-        tenantId = existingLedger.tenantId;
-      } else {
-        if (req.ledger) {
-          return Result.Err(`ledger ${req.ledger} not found for user`);
+      // First, check if ANY binding exists for this appId (another user may have created it)
+      const existingAppBinding = await this.db
+        .select()
+        .from(sqlAppIdBinding)
+        .innerJoin(sqlLedgers, eq(sqlLedgers.ledgerId, sqlAppIdBinding.ledgerId))
+        .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
+        .get();
+
+      if (existingAppBinding) {
+        // Binding exists - verify user has access to this ledger
+        const userAccess = await this.db
+          .select()
+          .from(sqlLedgerUsers)
+          .where(
+            and(
+              eq(sqlLedgerUsers.ledgerId, existingAppBinding.AppIdBinding.ledgerId),
+              eq(sqlLedgerUsers.userId, auth.user.userId),
+              eq(sqlLedgerUsers.status, "active"),
+            ),
+          )
+          .get();
+
+        if (userAccess) {
+          // User has access - use the existing binding's ledger/tenant
+          ledgerId = existingAppBinding.Ledgers.ledgerId;
+          tenantId = existingAppBinding.Ledgers.tenantId;
+        } else {
+          return Result.Err(`user does not have access to ledger for appId:${req.appId}`);
         }
-        const rEnsureUser = await this.ensureUser({
-          type: "reqEnsureUser",
+      } else {
+        // No existing binding - proceed with original logic to create one
+        const rLedgerByUser = await this.listLedgersByUser({
+          type: "reqListLedgersByUser",
           auth: req.auth,
         });
-        if (rEnsureUser.isErr()) {
-          return Result.Err(rEnsureUser);
+        if (rLedgerByUser.isErr()) {
+          return Result.Err(rLedgerByUser);
         }
-        if (req.tenant) {
-          tenantId = rEnsureUser.Ok().tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
+        const existingLedger = req.ledger ? rLedgerByUser.Ok().ledgers.find((l) => req.ledger === l.ledgerId) : undefined;
+        if (existingLedger) {
+          ledgerId = existingLedger.ledgerId;
+          tenantId = existingLedger.tenantId;
         } else {
-          tenantId = rEnsureUser.Ok().tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
+          if (req.ledger) {
+            return Result.Err(`ledger ${req.ledger} not found for user`);
+          }
+          const rEnsureUser = await this.ensureUser({
+            type: "reqEnsureUser",
+            auth: req.auth,
+          });
+          if (rEnsureUser.isErr()) {
+            return Result.Err(rEnsureUser);
+          }
+          if (req.tenant) {
+            tenantId = rEnsureUser.Ok().tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
+          } else {
+            tenantId = rEnsureUser.Ok().tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
+          }
         }
       }
       if (!tenantId) {
