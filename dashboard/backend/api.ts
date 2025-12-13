@@ -2078,19 +2078,32 @@ export class FPApiSQL implements FPApiInterface {
         return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${auth.user.userId}`);
       }
       if (!ledgerId) {
-        // create ledger
-        const rCreateLedger = await this.createLedger({
-          type: "reqCreateLedger",
-          auth: req.auth,
-          ledger: {
-            tenantId,
-            name: `${req.appId}-${auth.user.userId}`,
-          },
-        });
-        if (rCreateLedger.isErr()) {
-          return Result.Err(rCreateLedger.Err());
+        const ledgerName = `${req.appId}-${auth.user.userId}`;
+
+        // Check if ledger with this name already exists for this tenant
+        const existingLedger = await this.db
+          .select()
+          .from(sqlLedgers)
+          .where(and(eq(sqlLedgers.tenantId, tenantId), eq(sqlLedgers.name, ledgerName)))
+          .get();
+
+        if (existingLedger) {
+          ledgerId = existingLedger.ledgerId;
+        } else {
+          // create ledger
+          const rCreateLedger = await this.createLedger({
+            type: "reqCreateLedger",
+            auth: req.auth,
+            ledger: {
+              tenantId,
+              name: ledgerName,
+            },
+          });
+          if (rCreateLedger.isErr()) {
+            return Result.Err(rCreateLedger.Err());
+          }
+          ledgerId = rCreateLedger.Ok().ledger.ledgerId;
         }
-        ledgerId = rCreateLedger.Ok().ledger.ledgerId;
       }
       const maxBindings = await this.db
         .select({
