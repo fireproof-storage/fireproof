@@ -2167,10 +2167,44 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(rCtx.Err());
     }
     const ctx = rCtx.Ok();
+
+    // Get user's tenant access for JWT claim
+    const tenantAccess = await this.db
+      .select()
+      .from(sqlTenantUsers)
+      .where(
+        and(
+          eq(sqlTenantUsers.tenantId, tenantId),
+          eq(sqlTenantUsers.userId, auth.user.userId),
+          eq(sqlTenantUsers.status, "active"),
+        ),
+      )
+      .get();
+
+    // Get user's ledger access for JWT claim
+    const ledgerAccess = await this.db
+      .select()
+      .from(sqlLedgerUsers)
+      .where(
+        and(
+          eq(sqlLedgerUsers.ledgerId, ledgerId),
+          eq(sqlLedgerUsers.userId, auth.user.userId),
+          eq(sqlLedgerUsers.status, "active"),
+        ),
+      )
+      .get();
+
+    // Build tenants and ledgers arrays for JWT claim
+    // These are required by the cloud service to validate access
+    const tenants = tenantAccess ? [{ id: tenantId, role: tenantAccess.role as "admin" | "owner" | "member" }] : [];
+    const ledgers = ledgerAccess
+      ? [{ id: ledgerId, role: ledgerAccess.role as "admin" | "owner" | "member", right: ledgerAccess.right as "read" | "write" }]
+      : [];
+
     const cloudToken = await createFPToken(ctx, {
       userId: auth.user.userId,
-      tenants: [],
-      ledgers: [],
+      tenants,
+      ledgers,
       email: auth.verifiedAuth.params.email,
       nickname: auth.verifiedAuth.params.nick,
       provider: toProvider(auth.verifiedAuth),
