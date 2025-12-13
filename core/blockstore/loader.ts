@@ -98,6 +98,7 @@ class CommitAction implements CommitParams {
   readonly opts: CommitOpts;
   readonly commitQueue: CommitQueueIf<CarGroup>;
   readonly logger: Logger;
+  readonly pendingRemoteCarUploads: Promise<CarGroup>[] = [];
 
   constructor(
     logger: Logger,
@@ -120,13 +121,14 @@ class CommitAction implements CommitParams {
 
   async writeCar(block: AnyBlock): Promise<void> {
     await this.attached.local().active.car.save(block);
-    // detached remote stores
+    // detached remote stores - capture promises for awaiting before meta send
     this.attached.remotes().forEach((r) => {
-      this.commitQueue.enqueue(async () => {
+      const uploadPromise = this.commitQueue.enqueue(async () => {
         this.logger.Debug().Url(r.active.car.url()).Msg("remote-writeCar");
         await r.active.car.save(block);
         return [];
       });
+      this.pendingRemoteCarUploads.push(uploadPromise);
     });
     // console.log("writeCar", block.cid.toString(), this.attached.remotes().map((r) => r.carStore().active.url().toString()));
   }
@@ -134,6 +136,13 @@ class CommitAction implements CommitParams {
   async writeMeta(cids: AnyLink[]): Promise<void> {
     const meta = { cars: cids };
     await this.attached.local().active.meta.save(meta);
+
+    // Wait for all remote CAR uploads to complete before sending meta
+    // This prevents race conditions where other clients receive meta
+    // before the CAR file is available in R2
+    await Promise.all(this.pendingRemoteCarUploads);
+    this.pendingRemoteCarUploads.length = 0;
+
     // detached remote stores
     this.attached.remotes().forEach((r) => {
       this.commitQueue.enqueue(async () => {
