@@ -1144,6 +1144,59 @@ describe("db-api", () => {
       );
       expect(validTenant.isErr()).toBeTruthy();
     });
+
+    it("ensureCloudToken auto-redeems pending invite for ledger access", async () => {
+      // User A (datas[5]) creates a ledger and binds it to an appId
+      const userA = datas[5];
+      const userB = datas[6];
+      const id = sthis.nextId().str;
+      const appId = `INVITE_TEST_APP-${id}`;
+
+      // User A creates a ledger via ensureCloudToken (creates binding)
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+
+      // User A invites User B to that ledger
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userB.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: userAToken.Ok().ledger,
+              role: "member",
+              right: "read",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+      expect(invite.Ok().invite.status).toBe("pending");
+
+      // User B calls ensureCloudToken with the same appId (before explicitly redeeming)
+      // This should auto-redeem the invite and grant access
+      const userBToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userB.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userBToken.isOk()).toBeTruthy();
+      expect(userBToken.Ok().ledger).toBe(userAToken.Ok().ledger);
+      expect(userBToken.Ok().tenant).toBe(userAToken.Ok().tenant);
+    });
   });
 
   it("create session with claim", async () => {

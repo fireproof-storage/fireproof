@@ -359,6 +359,11 @@ export class FPApiSQL implements FPApiInterface {
           .run();
       }
     }
+    // Auto-redeem any pending invites for this user
+    await this.redeemInvite({
+      type: "reqRedeemInvite",
+      auth: req.auth,
+    });
     return Result.Ok({
       type: "resEnsureUser",
       user: user,
@@ -1156,9 +1161,9 @@ export class FPApiSQL implements FPApiInterface {
     if (!(req.inviteId || req.query)) {
       throw new Error("inviteId or query is required");
     }
-    if (req.tenantId && req.ledgerId) {
-      throw new Error("invite only possible to ledger or tenant");
-    }
+    // Allow both tenantId and ledgerId - this is needed when inviting to a ledger
+    // (the tenant is extracted from the ledger for quota checking)
+    // Removed validation that incorrectly rejected: if (req.tenantId && req.ledgerId)
     // housekeeping
     await this.db
       .update(sqlInviteTickets)
@@ -2046,51 +2051,111 @@ export class FPApiSQL implements FPApiInterface {
     let ledgerId: string | undefined = undefined;
     let tenantId: string | undefined = undefined;
     if (!binding) {
-      const rLedgerByUser = await this.listLedgersByUser({
-        type: "reqListLedgersByUser",
-        auth: req.auth,
-      });
-      if (rLedgerByUser.isErr()) {
-        return Result.Err(rLedgerByUser);
-      }
-      const existingLedger = req.ledger ? rLedgerByUser.Ok().ledgers.find((l) => req.ledger === l.ledgerId) : undefined;
-      if (existingLedger) {
-        ledgerId = existingLedger.ledgerId;
-        tenantId = existingLedger.tenantId;
-      } else {
-        if (req.ledger) {
-          return Result.Err(`ledger ${req.ledger} not found for user`);
+      // First, check if ANY binding exists for this appId (another user may have created it)
+      const existingAppBinding = await this.db
+        .select()
+        .from(sqlAppIdBinding)
+        .innerJoin(sqlLedgers, eq(sqlLedgers.ledgerId, sqlAppIdBinding.ledgerId))
+        .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
+        .get();
+
+      if (existingAppBinding) {
+        // Helper to check user's ledger access
+        const userId = auth.user.userId;
+        const checkLedgerAccess = () =>
+          this.db
+            .select()
+            .from(sqlLedgerUsers)
+            .where(
+              and(
+                eq(sqlLedgerUsers.ledgerId, existingAppBinding.AppIdBinding.ledgerId),
+                eq(sqlLedgerUsers.userId, userId),
+                eq(sqlLedgerUsers.status, "active"),
+              ),
+            )
+            .get();
+
+        // Binding exists - verify user has access to this ledger
+        let userAccess = await checkLedgerAccess();
+
+        if (!userAccess) {
+          // No direct access - ensureUser will redeem any pending invites
+          await this.ensureUser({
+            type: "reqEnsureUser",
+            auth: req.auth,
+          });
+
+          // Re-check access after ensureUser (which redeems invites)
+          userAccess = await checkLedgerAccess();
         }
-        const rEnsureUser = await this.ensureUser({
-          type: "reqEnsureUser",
+
+        if (userAccess) {
+          ledgerId = existingAppBinding.Ledgers.ledgerId;
+          tenantId = existingAppBinding.Ledgers.tenantId;
+        } else {
+          return Result.Err(`user does not have access to ledger for appId:${req.appId}`);
+        }
+      } else {
+        // No existing binding - proceed with original logic to create one
+        const rLedgerByUser = await this.listLedgersByUser({
+          type: "reqListLedgersByUser",
           auth: req.auth,
         });
-        if (rEnsureUser.isErr()) {
-          return Result.Err(rEnsureUser);
+        if (rLedgerByUser.isErr()) {
+          return Result.Err(rLedgerByUser.Err());
         }
-        if (req.tenant) {
-          tenantId = rEnsureUser.Ok().tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
+        const existingLedger = req.ledger ? rLedgerByUser.Ok().ledgers.find((l) => req.ledger === l.ledgerId) : undefined;
+        if (existingLedger) {
+          ledgerId = existingLedger.ledgerId;
+          tenantId = existingLedger.tenantId;
         } else {
-          tenantId = rEnsureUser.Ok().tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
+          if (req.ledger) {
+            return Result.Err(`ledger ${req.ledger} not found for user`);
+          }
+          const rEnsureUser = await this.ensureUser({
+            type: "reqEnsureUser",
+            auth: req.auth,
+          });
+          if (rEnsureUser.isErr()) {
+            return Result.Err(rEnsureUser);
+          }
+          if (req.tenant) {
+            tenantId = rEnsureUser.Ok().tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
+          } else {
+            tenantId = rEnsureUser.Ok().tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
+          }
         }
       }
       if (!tenantId) {
         return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${auth.user.userId}`);
       }
       if (!ledgerId) {
-        // create ledger
-        const rCreateLedger = await this.createLedger({
-          type: "reqCreateLedger",
-          auth: req.auth,
-          ledger: {
-            tenantId,
-            name: `${req.appId}-${auth.user.userId}`,
-          },
-        });
-        if (rCreateLedger.isErr()) {
-          return Result.Err(rCreateLedger.Err());
+        const ledgerName = `${req.appId}-${auth.user.userId}`;
+
+        // Check if ledger with this name already exists for this tenant
+        const existingLedger = await this.db
+          .select()
+          .from(sqlLedgers)
+          .where(and(eq(sqlLedgers.tenantId, tenantId), eq(sqlLedgers.name, ledgerName)))
+          .get();
+
+        if (existingLedger) {
+          ledgerId = existingLedger.ledgerId;
+        } else {
+          // create ledger
+          const rCreateLedger = await this.createLedger({
+            type: "reqCreateLedger",
+            auth: req.auth,
+            ledger: {
+              tenantId,
+              name: ledgerName,
+            },
+          });
+          if (rCreateLedger.isErr()) {
+            return Result.Err(rCreateLedger.Err());
+          }
+          ledgerId = rCreateLedger.Ok().ledger.ledgerId;
         }
-        ledgerId = rCreateLedger.Ok().ledger.ledgerId;
       }
       const maxBindings = await this.db
         .select({
@@ -2111,6 +2176,7 @@ export class FPApiSQL implements FPApiInterface {
           tenantId,
           createdAt: new Date().toISOString(),
         })
+        .onConflictDoNothing()
         .run();
     } else {
       ledgerId = binding.Ledgers.ledgerId;
@@ -2121,10 +2187,44 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(rCtx.Err());
     }
     const ctx = rCtx.Ok();
+
+    // Get user's tenant access for JWT claim
+    const tenantAccess = await this.db
+      .select()
+      .from(sqlTenantUsers)
+      .where(
+        and(
+          eq(sqlTenantUsers.tenantId, tenantId),
+          eq(sqlTenantUsers.userId, auth.user.userId),
+          eq(sqlTenantUsers.status, "active"),
+        ),
+      )
+      .get();
+
+    // Get user's ledger access for JWT claim
+    const ledgerAccess = await this.db
+      .select()
+      .from(sqlLedgerUsers)
+      .where(
+        and(
+          eq(sqlLedgerUsers.ledgerId, ledgerId),
+          eq(sqlLedgerUsers.userId, auth.user.userId),
+          eq(sqlLedgerUsers.status, "active"),
+        ),
+      )
+      .get();
+
+    // Build tenants and ledgers arrays for JWT claim
+    // These are required by the cloud service to validate access
+    const tenants = tenantAccess ? [{ id: tenantId, role: tenantAccess.role as "admin" | "owner" | "member" }] : [];
+    const ledgers = ledgerAccess
+      ? [{ id: ledgerId, role: ledgerAccess.role as "admin" | "owner" | "member", right: ledgerAccess.right as "read" | "write" }]
+      : [];
+
     const cloudToken = await createFPToken(ctx, {
       userId: auth.user.userId,
-      tenants: [],
-      ledgers: [],
+      tenants,
+      ledgers,
       email: auth.verifiedAuth.params.email,
       nickname: auth.verifiedAuth.params.nick,
       provider: toProvider(auth.verifiedAuth),
