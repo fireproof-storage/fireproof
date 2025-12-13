@@ -2124,6 +2124,7 @@ export class FPApiSQL implements FPApiInterface {
           tenantId,
           createdAt: new Date().toISOString(),
         })
+        .onConflictDoNothing()
         .run();
     } else {
       ledgerId = binding.Ledgers.ledgerId;
