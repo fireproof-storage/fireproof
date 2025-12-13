@@ -1,7 +1,7 @@
 // import { auth } from "./better-auth.js";
 import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
 import { FPDeviceIDSessionSchema, SuperThis, SuperThisOpts } from "@fireproof/core";
-import { FPAPIMsg, FPApiSQL, FPApiToken } from "./api.js";
+import { FPApiSQL } from "./api.js";
 import type { Env } from "./cf-serve.js";
 import { FPClerkClaim, FPClerkClaimSchema, VerifiedAuth } from "@fireproof/core-protocols-dashboard";
 import { ensureSuperThis, ensureLogger, coerceInt, sts } from "@fireproof/core-runtime";
@@ -10,6 +10,7 @@ import { ResultSet } from "@libsql/client";
 import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fireproof/core-device-id";
 import { jwtVerify } from "jose";
+import { FPApiToken, FPAPIMsg } from "./types.js";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
