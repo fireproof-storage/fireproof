@@ -11,7 +11,7 @@ import { SuperThis, Subject, CertificatePayloadSchema } from "@fireproof/core-ty
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
-import { FPApiSQL, type FPApiToken } from "./api.js";
+import { FPApiSQL } from "../api.js";
 import {
   ResCreateLedger,
   UserTenant,
@@ -22,12 +22,13 @@ import {
   type ResEnsureUser,
   type VerifiedAuth,
 } from "@fireproof/core-protocols-dashboard";
-import { queryEmail, queryNick } from "./sql-helper.js";
+import { queryEmail, queryNick } from "../sql/sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
 import { describe, beforeAll, expect, it, inject } from "vitest";
-import { resWellKnownJwks } from "./well-known-jwks.js";
+import { resWellKnownJwks } from "../well-known-jwks.js";
 import { DeviceIdCA, DeviceIdKey, DeviceIdCSR } from "@fireproof/core-device-id";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
+import { FPApiToken } from "../types.js";
 
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';

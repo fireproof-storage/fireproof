@@ -1,17 +1,10 @@
+import { ClerkClaim, ClerkVerifyAuth } from "@fireproof/core-protocols-dashboard";
+import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { param, Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
 import { sts } from "@fireproof/core-runtime";
-import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { SignJWT } from "jose/jwt/sign";
-
-export interface FPTokenContext {
-  readonly secretToken: string;
-  readonly publicToken: string;
-  readonly issuer: string;
-  readonly audience: string;
-  readonly validFor: number; // seconds
-  readonly extendValidFor: number; // seconds
-}
+import { ActiveUserWithUserId, FPTokenContext } from "../types.js";
 
 export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
   const privKeys = await sts.env2jwk(ctx.secretToken);
@@ -61,4 +54,19 @@ export async function getFPTokenContext(sthis: SuperThis, ictx: Partial<FPTokenC
     extendValidFor: parseInt(ctx.CLOUD_SESSION_TOKEN_EXTEND_VALID_FOR, 10),
     ...ictx,
   } satisfies FPTokenContext);
+}
+
+export function nameFromAuth(name: string | undefined, auth: ActiveUserWithUserId): string {
+  return name ?? `${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}`;
+}
+
+export function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
+  return auth.nick ?? auth.name;
+}
+
+export function toProvider(i: ClerkVerifyAuth): FPCloudClaim["provider"] {
+  if (i.params.nick) {
+    return "github";
+  }
+  return "google";
 }

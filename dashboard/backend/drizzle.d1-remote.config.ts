@@ -25,7 +25,7 @@ if (!process.env.CLOUDFLARE_D1_TOKEN && !process.env.CLOUDFLARE_API_TOKEN) {
 
 export default defineConfig({
   dialect: "sqlite",
-  schema: "../backend/db-api-schema.ts",
+  schema: "../backend/sql/db-api-schema.ts",
   out: "./dist",
   driver: "d1-http",
   dbCredentials: {

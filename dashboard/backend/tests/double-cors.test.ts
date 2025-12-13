@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { DefaultHttpHeaders } from "./create-handler.js";
+import { DefaultHttpHeaders } from "../create-handler.js";
 
 it("adds CORS headers only once", async () => {
   const CORS = {

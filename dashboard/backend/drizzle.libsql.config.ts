@@ -15,7 +15,7 @@ fs.mkdirSync(path.dirname(url), { recursive: true });
 
 export default defineConfig({
   dialect: "sqlite",
-  schema: "../backend/db-api-schema.ts",
+  schema: "../backend/sql/db-api-schema.ts",
   out: "./dist",
   dbCredentials: { url },
 });
