@@ -1198,6 +1198,41 @@ describe("db-api", () => {
       expect(userBToken.Ok().ledger).toBe(userAToken.Ok().ledger);
       expect(userBToken.Ok().tenant).toBe(userAToken.Ok().tenant);
     });
+
+    it("ensureCloudToken rejects uninvited user trying to access another user's appId", async () => {
+      // User A (datas[7]) creates a ledger and binds it to an appId
+      const userA = datas[7];
+      const userC = datas[8]; // User C is NOT invited
+      const id = sthis.nextId().str;
+      const appId = `UNINVITED_TEST_APP-${id}`;
+
+      // User A creates a ledger via ensureCloudToken (creates binding)
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+
+      // User C tries to access the same appId WITHOUT being invited
+      // This should fail - uninvited users cannot access other users' ledgers
+      const userCToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userC.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      // SECURITY CHECK: uninvited user should NOT get access
+      expect(userCToken.isErr()).toBeTruthy();
+      // Verify error message mentions access denial
+      const errMsg = String(userCToken.Err());
+      expect(errMsg).toContain("ask the owner for an invite");
+    });
   });
 
   it("create session with claim", async () => {
