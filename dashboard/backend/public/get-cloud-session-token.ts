@@ -1,17 +1,15 @@
 import { Result } from "@adviser/cement";
 import { ReqCloudSessionToken, ResCloudSessionToken } from "@fireproof/core-protocols-dashboard";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
-import { UserNotFoundError } from "../sql/users.js";
 import { getFPTokenContext, createFPToken, toProvider } from "../utils/index.js";
-import { FPApiSQLCtx, FPTokenContext } from "../types.js";
+import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser } from "../types.js";
 import { listTenantsByUser } from "./list-tenants-by-user.js";
-import { activeUser } from "../internal/auth.js";
 import { listLedgersByUser } from "./list-ledgers-by-user.js";
 import { addTokenByResultId } from "../internal/add-token-by-result-id.js";
 
 export async function getCloudSessionToken(
   ctx: FPApiSQLCtx,
-  req: ReqCloudSessionToken,
+  req: ReqWithVerifiedAuthUser<ReqCloudSessionToken>,
   ictx: Partial<FPTokenContext> = {},
 ): Promise<Result<ResCloudSessionToken>> {
   const resListTenants = await listTenantsByUser(ctx, {
@@ -35,15 +33,6 @@ export async function getCloudSessionToken(
     return Result.Err(rCtx.Err());
   }
   const fpCtx = rCtx.Ok();
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
-
   // verify if tenant and ledger are valid
   const selected = {
     tenant: resListTenants.Ok().tenants[0]?.tenantId,
@@ -68,7 +57,7 @@ export async function getCloudSessionToken(
     selected.ledger = req.selected?.ledger;
   }
   const token = await createFPToken(fpCtx, {
-    userId: auth.user.userId,
+    userId: req.auth.user.userId,
     tenants: resListTenants.Ok().tenants.map((i) => ({
       id: i.tenantId,
       role: i.role,
@@ -76,7 +65,7 @@ export async function getCloudSessionToken(
     ledgers: resListLedgers
       .Ok()
       .ledgers.map((i) => {
-        const rights = i.users.find((u) => u.userId === auth.user?.userId);
+        const rights = i.users.find((u) => u.userId === req.auth.user?.userId);
         if (!rights) {
           return undefined;
         }
@@ -87,10 +76,10 @@ export async function getCloudSessionToken(
         };
       })
       .filter((i) => i) as FPCloudClaim["ledgers"],
-    email: auth.verifiedAuth.params.email,
-    nickname: auth.verifiedAuth.params.nick,
-    provider: toProvider(auth.verifiedAuth),
-    created: auth.user.createdAt,
+    email: req.auth.verifiedAuth.params.email,
+    nickname: req.auth.verifiedAuth.params.nick,
+    provider: toProvider(req.auth.verifiedAuth),
+    created: req.auth.user.createdAt,
     selected: {
       tenant: req.selected?.tenant ?? resListTenants.Ok().tenants[0]?.tenantId,
       ledger: req.selected?.ledger ?? resListLedgers.Ok().ledgers[0]?.ledgerId,

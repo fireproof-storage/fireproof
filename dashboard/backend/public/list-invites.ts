@@ -4,26 +4,15 @@ import { and, eq, inArray, or } from "drizzle-orm";
 import { sqlInviteTickets, sqlToInviteTickets } from "../sql/invites.js";
 import { sqlLedgerUsers, sqlLedgers } from "../sql/ledgers.js";
 import { sqlTenantUsers, sqlTenants } from "../sql/tenants.js";
-import { UserNotFoundError } from "../sql/users.js";
-import { activeUser } from "../internal/auth.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { getRoles } from "../internal/get-roles.js";
 
 /**
  *
  * @description list invites for a user if user is owner of tenant or admin of tenant
  */
-export async function listInvites(ctx: FPApiSQLCtx, req: ReqListInvites): Promise<Result<ResListInvites>> {
-  // console.log(`xxxxx`)
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
-  let tenantCond = and(eq(sqlTenantUsers.userId, auth.user.userId), eq(sqlTenantUsers.status, "active"));
+export async function listInvites(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqListInvites>): Promise<Result<ResListInvites>> {
+  let tenantCond = and(eq(sqlTenantUsers.userId, req.auth.user.userId), eq(sqlTenantUsers.status, "active"));
   if (req.tenantIds?.length) {
     tenantCond = and(inArray(sqlTenantUsers.tenantId, req.tenantIds), tenantCond);
   }
@@ -34,7 +23,7 @@ export async function listInvites(ctx: FPApiSQLCtx, req: ReqListInvites): Promis
     .where(tenantCond)
     .all();
 
-  let ledgerCond = and(eq(sqlLedgerUsers.userId, auth.user.userId), eq(sqlLedgerUsers.status, "active"));
+  let ledgerCond = and(eq(sqlLedgerUsers.userId, req.auth.user.userId), eq(sqlLedgerUsers.status, "active"));
   if (req.ledgerIds?.length) {
     ledgerCond = and(inArray(sqlLedgerUsers.ledgerId, req.ledgerIds), ledgerCond);
   }
@@ -54,7 +43,7 @@ export async function listInvites(ctx: FPApiSQLCtx, req: ReqListInvites): Promis
 
   const roles = await getRoles(
     ctx,
-    auth.user.userId,
+    req.auth.user.userId,
     tenants.map((i) => i.Tenants),
     ledgers.map((i) => i.Ledgers),
   );

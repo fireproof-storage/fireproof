@@ -4,21 +4,14 @@ import { toRole } from "@fireproof/core-types-protocols-cloud";
 import { and, eq } from "drizzle-orm";
 import { toUndef } from "../sql/sql-helper.js";
 import { sqlTenantUsers } from "../sql/tenants.js";
-import { UserNotFoundError } from "../sql/users.js";
-import { activeUser } from "../internal/auth.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfTenant } from "../internal/is-admin-of-tenant.js";
 
-export async function updateUserTenant(ctx: FPApiSQLCtx, req: ReqUpdateUserTenant): Promise<Result<ResUpdateUserTenant>> {
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
-  const userId = req.userId ?? auth.user.userId;
+export async function updateUserTenant(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqUpdateUserTenant>,
+): Promise<Result<ResUpdateUserTenant>> {
+  const userId = req.userId ?? req.auth.user.userId;
   if (req.role && (await isAdminOfTenant(ctx, userId, req.tenantId))) {
     await ctx.db
       .update(sqlTenantUsers)

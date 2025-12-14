@@ -3,23 +3,16 @@ import { ReqUpdateLedger, ResUpdateLedger } from "@fireproof/core-protocols-dash
 import { Role, ReadWrite } from "@fireproof/core-types-protocols-cloud";
 import { and, eq, ne } from "drizzle-orm";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "../sql/ledgers.js";
-import { UserNotFoundError } from "../sql/users.js";
-import { FPApiSQLCtx } from "../types.js";
-import { activeUser } from "../internal/auth.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfLedger } from "../internal/is-admin-of-ledger.js";
 
-export async function updateLedger(ctx: FPApiSQLCtx, req: ReqUpdateLedger): Promise<Result<ResUpdateLedger>> {
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
+export async function updateLedger(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqUpdateLedger>,
+): Promise<Result<ResUpdateLedger>> {
   const now = new Date().toISOString();
   // check if owner or admin of tenant
-  if (!(await isAdminOfLedger(ctx, auth.user.userId, req.ledger.ledgerId))) {
+  if (!(await isAdminOfLedger(ctx, req.auth.user.userId, req.ledger.ledgerId))) {
     if (req.ledger.name) {
       await ctx.db
         .update(sqlLedgerUsers)
@@ -27,7 +20,7 @@ export async function updateLedger(ctx: FPApiSQLCtx, req: ReqUpdateLedger): Prom
           name: req.ledger.name,
           updatedAt: now,
         })
-        .where(and(eq(sqlLedgerUsers.userId, auth.user.userId), eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId)))
+        .where(and(eq(sqlLedgerUsers.userId, req.auth.user.userId), eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId)))
         .run();
     }
     const rows = await ctx.db
@@ -36,7 +29,7 @@ export async function updateLedger(ctx: FPApiSQLCtx, req: ReqUpdateLedger): Prom
       .innerJoin(sqlLedgerUsers, and(eq(sqlLedgers.ledgerId, sqlLedgerUsers.ledgerId)))
       .where(
         and(
-          eq(sqlLedgerUsers.userId, auth.user.userId),
+          eq(sqlLedgerUsers.userId, req.auth.user.userId),
           eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId),
           ne(sqlLedgerUsers.role, "admin"),
         ),
@@ -66,7 +59,7 @@ export async function updateLedger(ctx: FPApiSQLCtx, req: ReqUpdateLedger): Prom
           default: 0,
           updatedAt: now,
         })
-        .where(and(eq(sqlLedgerUsers.userId, auth.user.userId), ne(sqlLedgerUsers.default, 0)))
+        .where(and(eq(sqlLedgerUsers.userId, req.auth.user.userId), ne(sqlLedgerUsers.default, 0)))
         .run();
     }
   }

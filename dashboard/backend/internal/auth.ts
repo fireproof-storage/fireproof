@@ -1,7 +1,7 @@
 import { Result } from "@adviser/cement";
 import { DashAuthType, ClerkVerifyAuth, UserStatus } from "@fireproof/core-protocols-dashboard";
 import { getUser, isUserNotFound } from "../sql/users.js";
-import { WithAuth, ActiveUser, FPApiSQLCtx } from "../types.js";
+import { WithAuth, FPApiSQLCtx, ActiveUser } from "../types.js";
 
 export async function authVerifyAuth(ctx: FPApiSQLCtx, req: { readonly auth: DashAuthType }): Promise<Result<ClerkVerifyAuth>> {
   const tokenApi = ctx.tokenApi[req.auth.type];

@@ -2,7 +2,7 @@ import { Result } from "@adviser/cement";
 import { ReqInviteUser, InviteTicket, InvitedParams } from "@fireproof/core-protocols-dashboard";
 import { eq } from "drizzle-orm";
 import { prepareInviteTicket, sqlToInviteTickets, sqlInviteTickets } from "../sql/invites.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { findInvite } from "./find-invite.js";
 
 export async function updateInviteTicket(
@@ -10,7 +10,7 @@ export async function updateInviteTicket(
   userId: string,
   tenantId: string,
   ledgerId: string | undefined,
-  req: ReqInviteUser,
+  req: ReqWithVerifiedAuthUser<ReqInviteUser>,
 ): Promise<Result<InviteTicket>> {
   const found = await findInvite(ctx, { inviteId: req.ticket.inviteId });
   if (!found.length) {

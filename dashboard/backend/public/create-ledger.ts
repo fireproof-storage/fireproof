@@ -3,22 +3,15 @@ import { ReqCreateLedger, ResCreateLedger } from "@fireproof/core-protocols-dash
 import { and, eq, gt } from "drizzle-orm";
 import { sqlLedgers, sqlLedgerUsers, sqlToLedgers } from "../sql/ledgers.js";
 import { sqlTenants } from "../sql/tenants.js";
-import { UserNotFoundError } from "../sql/users.js";
-import { FPApiSQLCtx } from "../types.js";
-import { activeUser } from "../internal/auth.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfTenant } from "../internal/is-admin-of-tenant.js";
 
-export async function createLedger(ctx: FPApiSQLCtx, req: ReqCreateLedger): Promise<Result<ResCreateLedger>> {
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
+export async function createLedger(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqCreateLedger>,
+): Promise<Result<ResCreateLedger>> {
   // check if owner or admin of tenant
-  if (!(await isAdminOfTenant(ctx, auth.user.userId, req.ledger.tenantId))) {
+  if (!(await isAdminOfTenant(ctx, req.auth.user.userId, req.ledger.tenantId))) {
     return Result.Err("not owner or admin of tenant");
   }
 
@@ -43,7 +36,7 @@ export async function createLedger(ctx: FPApiSQLCtx, req: ReqCreateLedger): Prom
     .values({
       ledgerId,
       tenantId: req.ledger.tenantId,
-      ownerId: auth.user.userId,
+      ownerId: req.auth.user.userId,
       name: req.ledger.name,
       createdAt: now,
       updatedAt: now,
@@ -53,7 +46,7 @@ export async function createLedger(ctx: FPApiSQLCtx, req: ReqCreateLedger): Prom
     .insert(sqlLedgerUsers)
     .values({
       ledgerId: ledgerId,
-      userId: auth.user.userId,
+      userId: req.auth.user.userId,
       role: "admin",
       name: req.ledger.name,
       default: 0,
