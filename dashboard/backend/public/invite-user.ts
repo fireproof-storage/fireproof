@@ -4,18 +4,12 @@ import { eq } from "drizzle-orm";
 import { sqlLedgers } from "../sql/ledgers.js";
 import { sqlTenants } from "../sql/tenants.js";
 import { UserNotFoundError, queryUser } from "../sql/users.js";
-import { activeUser } from "../internal/auth.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, isVerifiedUserActive, ReqWithVerifiedAuthUser } from "../types.js";
 import { createInviteTicket } from "../internal/create-invite-ticket.js";
 import { updateInviteTicket } from "../internal/update-invite.ticket.js";
 
-export async function inviteUser(ctx: FPApiSQLCtx, req: ReqInviteUser): Promise<Result<ResInviteUser>> {
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
+export async function inviteUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqInviteUser>): Promise<Result<ResInviteUser>> {
+  if (!isVerifiedUserActive(req.auth)) {
     return Result.Err(new UserNotFoundError());
   }
   const findUser = await queryUser(ctx.db, req.ticket.query);
@@ -25,7 +19,7 @@ export async function inviteUser(ctx: FPApiSQLCtx, req: ReqInviteUser): Promise<
   if (req.ticket.query.existingUserId && findUser.Ok().length !== 1) {
     return Result.Err("existingUserId not found");
   }
-  if (req.ticket.query.existingUserId === auth.user.userId) {
+  if (req.ticket.query.existingUserId === req.auth.user.userId) {
     return Result.Err("cannot invite self");
   }
 
@@ -60,13 +54,13 @@ export async function inviteUser(ctx: FPApiSQLCtx, req: ReqInviteUser): Promise<
 
   let inviteTicket: InviteTicket;
   if (!req.ticket.inviteId) {
-    const rInviteTicket = await createInviteTicket(ctx, auth.user.userId, tenantId, ledgerId, req);
+    const rInviteTicket = await createInviteTicket(ctx, req.auth.user.userId, tenantId, ledgerId, req);
     if (rInviteTicket.isErr()) {
       return Result.Err(rInviteTicket.Err());
     }
     inviteTicket = rInviteTicket.Ok();
   } else {
-    const rInviteTicket = await updateInviteTicket(ctx, auth.user.userId, tenantId, ledgerId, req);
+    const rInviteTicket = await updateInviteTicket(ctx, req.auth.user.userId, tenantId, ledgerId, req);
     if (rInviteTicket.isErr()) {
       return Result.Err(rInviteTicket.Err());
     }

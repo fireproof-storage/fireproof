@@ -54,10 +54,26 @@ export interface WithAuth {
   readonly auth: DashAuthType;
 }
 
-export interface ActiveUser<T extends DashAuthType = ClerkVerifyAuth> {
+export interface WithVerifiedAuth<T extends DashAuthType> {
   readonly verifiedAuth: T;
-  readonly user?: User;
 }
+
+export interface VerifiedAuthUser<T extends DashAuthType> extends WithVerifiedAuth<T> {
+  readonly user: User;
+}
+
+export function isVerifiedUserActive<T extends DashAuthType>(obj: ActiveUser<T>): obj is VerifiedAuthUser<T> {
+  return (obj as VerifiedAuthUser<T>).user !== undefined;
+}
+
+export type ActiveUser<T extends DashAuthType = ClerkVerifyAuth> = WithVerifiedAuth<T> | VerifiedAuthUser<T>;
+
+export type ReqWithVerifiedAuthUser<
+  REQ extends { type: string; auth: DashAuthType },
+  T extends DashAuthType = ClerkVerifyAuth,
+> = Omit<REQ, "auth"> & {
+  readonly auth: VerifiedAuthUser<T>;
+};
 
 export type ActiveUserWithUserId<T extends DashAuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
   user: {

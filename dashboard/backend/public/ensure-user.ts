@@ -7,7 +7,7 @@ import { upsetUserByProvider, sqlUsers } from "../sql/users.js";
 import { nickFromClarkClaim, nameFromAuth } from "../utils/index.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
 import { insertTenant } from "../internal/insert-tenant.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, isVerifiedUserActive } from "../types.js";
 import { listTenantsByUser } from "./list-tenants-by-user.js";
 import { redeemInvite } from "./redeem-invite.js";
 import { activeUser } from "../internal/auth.js";
@@ -17,8 +17,8 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
   if (rAuth.isErr()) {
     return Result.Err(rAuth.Err());
   }
-  const user = rAuth.Ok().user;
-  if (!user) {
+  const auth = rAuth.Ok();
+  if (!isVerifiedUserActive(auth)) {
     const auth = rAuth.Ok().verifiedAuth;
     const userId = ctx.sthis.nextId(12).str;
     const now = new Date();
@@ -62,13 +62,12 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
       role: "admin",
       default: true,
     });
-
-    // });
     return ensureUser(ctx, req);
   }
+  const user = auth.user;
   const rTenants = await listTenantsByUser(ctx, {
     type: "reqListTenantsByUser",
-    auth: req.auth,
+    auth,
   });
   if (rTenants.isErr()) {
     return Result.Err(rTenants);
@@ -124,7 +123,7 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
   // Auto-redeem any pending invites for this user
   await redeemInvite(ctx, {
     type: "reqRedeemInvite",
-    auth: req.auth,
+    auth,
   });
   return Result.Ok({
     type: "resEnsureUser",

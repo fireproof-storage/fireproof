@@ -3,7 +3,7 @@ import { ReqInviteUser, InviteTicket, InvitedParams } from "@fireproof/core-prot
 import { and, eq, gt } from "drizzle-orm";
 import { sqlInviteTickets, sqlToInviteTickets, prepareInviteTicket } from "../sql/invites.js";
 import { sqlTenants } from "../sql/tenants.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { findInvite } from "./find-invite.js";
 
 export async function createInviteTicket(
@@ -11,7 +11,7 @@ export async function createInviteTicket(
   userId: string,
   tenantId: string,
   ledgerId: string | undefined,
-  req: ReqInviteUser,
+  req: ReqWithVerifiedAuthUser<ReqInviteUser>,
 ): Promise<Result<InviteTicket>> {
   // check maxInvites
   const allowed = await ctx.db

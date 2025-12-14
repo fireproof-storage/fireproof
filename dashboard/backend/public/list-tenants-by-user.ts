@@ -3,33 +3,26 @@ import { ReqListTenantsByUser, ResListTenantsByUser, UserStatus } from "@firepro
 import { and, eq } from "drizzle-orm";
 import { toUndef, toBoolean } from "../sql/sql-helper.js";
 import { sqlTenantUsers, sqlTenants } from "../sql/tenants.js";
-import { UserNotFoundError, sqlUsers } from "../sql/users.js";
-import { FPApiSQLCtx } from "../types.js";
-import { activeUser } from "../internal/auth.js";
+import { sqlUsers } from "../sql/users.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { getRoles } from "../internal/get-roles.js";
 
-export async function listTenantsByUser(ctx: FPApiSQLCtx, req: ReqListTenantsByUser): Promise<Result<ResListTenantsByUser>> {
-  const rAUR = await activeUser(ctx, req);
-  if (rAUR.isErr()) {
-    return Result.Err(rAUR.Err());
-  }
-  const aur = rAUR.Ok();
-  if (!aur.user) {
-    return Result.Err(new UserNotFoundError());
-  }
+export async function listTenantsByUser(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqListTenantsByUser>,
+): Promise<Result<ResListTenantsByUser>> {
   const tenantUsers = await ctx.db
     .select()
     .from(sqlTenantUsers)
     .innerJoin(sqlTenants, and(eq(sqlTenantUsers.tenantId, sqlTenants.tenantId)))
     .innerJoin(sqlUsers, and(eq(sqlTenantUsers.userId, sqlUsers.userId)))
-    .where(eq(sqlTenantUsers.userId, aur.user.userId))
+    .where(eq(sqlTenantUsers.userId, req.auth.user.userId))
     .all();
-  // console.log(">>>>>", tenantUser);
 
   return Result.Ok({
     type: "resListTenantsByUser",
-    userId: aur.user.userId,
-    authUserId: aur.verifiedAuth.userId,
+    userId: req.auth.user.userId,
+    authUserId: req.auth.verifiedAuth.userId,
     tenants: (
       await Promise.all(
         tenantUsers.map(async (t) => {

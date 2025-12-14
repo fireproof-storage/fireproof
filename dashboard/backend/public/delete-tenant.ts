@@ -3,22 +3,15 @@ import { ReqDeleteTenant, ResDeleteTenant } from "@fireproof/core-protocols-dash
 import { eq } from "drizzle-orm";
 import { sqlInviteTickets } from "../sql/invites.js";
 import { sqlTenantUsers, sqlTenants } from "../sql/tenants.js";
-import { UserNotFoundError } from "../sql/users.js";
-import { activeUser } from "../internal/auth.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfTenant } from "../internal/is-admin-of-tenant.js";
 
-export async function deleteTenant(ctx: FPApiSQLCtx, req: ReqDeleteTenant): Promise<Result<ResDeleteTenant>> {
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
+export async function deleteTenant(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqDeleteTenant>,
+): Promise<Result<ResDeleteTenant>> {
   // check if owner or admin of tenant
-  if (!(await isAdminOfTenant(ctx, auth.user.userId, req.tenantId))) {
+  if (!(await isAdminOfTenant(ctx, req.auth.user.userId, req.tenantId))) {
     return Result.Err("not owner or admin of tenant");
   }
   // TODO remove ledgers

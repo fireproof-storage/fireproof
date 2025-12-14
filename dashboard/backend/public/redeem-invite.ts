@@ -4,22 +4,15 @@ import { and, eq } from "drizzle-orm";
 import { sqlToInviteTickets, sqlInviteTickets } from "../sql/invites.js";
 import { sqlLedgers } from "../sql/ledgers.js";
 import { sqlTenants } from "../sql/tenants.js";
-import { UserNotFoundError } from "../sql/users.js";
-import { activeUser } from "../internal/auth.js";
-import { FPApiSQLCtx } from "../types.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { findInvite } from "../internal/find-invite.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
 import { addUserToLedger } from "../internal/add-user-to-ledger.js";
 
-export async function redeemInvite(ctx: FPApiSQLCtx, req: ReqRedeemInvite): Promise<Result<ResRedeemInvite>> {
-  const rAuth = await activeUser(ctx, req);
-  if (rAuth.isErr()) {
-    return Result.Err(rAuth.Err());
-  }
-  const auth = rAuth.Ok();
-  if (!auth.user) {
-    return Result.Err(new UserNotFoundError());
-  }
+export async function redeemInvite(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqRedeemInvite>,
+): Promise<Result<ResRedeemInvite>> {
   return Result.Ok({
     type: "resRedeemInvite",
     invites: sqlToInviteTickets(
@@ -27,11 +20,11 @@ export async function redeemInvite(ctx: FPApiSQLCtx, req: ReqRedeemInvite): Prom
         (
           await findInvite(ctx, {
             query: {
-              byString: auth.verifiedAuth.params.email,
-              byNick: auth.verifiedAuth.params.nick,
-              existingUserId: auth.user.userId,
+              byString: req.auth.verifiedAuth.params.email,
+              byNick: req.auth.verifiedAuth.params.nick,
+              existingUserId: req.auth.user.userId,
               // TODO
-              // andProvider: auth.verifiedAuth.provider,
+              // andProvider: req.auth.verifiedAuth.provider,
             },
           })
         )
@@ -46,13 +39,10 @@ export async function redeemInvite(ctx: FPApiSQLCtx, req: ReqRedeemInvite): Prom
               if (!tenant) {
                 throw new Error("tenant not found");
               }
-              if (!auth.user) {
-                throw new UserNotFoundError();
-              }
               await addUserToTenant(ctx, {
                 userName: `invited from [${tenant.name}]`,
                 tenantId: tenant.tenantId,
-                userId: auth.user?.userId,
+                userId: req.auth.user.userId,
                 role: invite.invitedParams.tenant.role,
               });
             }
@@ -65,14 +55,11 @@ export async function redeemInvite(ctx: FPApiSQLCtx, req: ReqRedeemInvite): Prom
               if (!ledger) {
                 throw new Error("ledger not found");
               }
-              if (!auth.user) {
-                throw new UserNotFoundError();
-              }
               await addUserToLedger(ctx, {
                 userName: `invited-${ledger.name}`,
                 ledgerId: ledger.ledgerId,
                 tenantId: ledger.tenantId,
-                userId: auth.user?.userId,
+                userId: req.auth.user.userId,
                 role: invite.invitedParams.ledger.role,
                 right: invite.invitedParams.ledger.right,
               });
@@ -81,9 +68,9 @@ export async function redeemInvite(ctx: FPApiSQLCtx, req: ReqRedeemInvite): Prom
               await ctx.db
                 .update(sqlInviteTickets)
                 .set({
-                  invitedUserId: auth.user?.userId,
+                  invitedUserId: req.auth.user.userId,
                   status: "accepted",
-                  statusReason: `accepted: ${auth.user?.userId}`,
+                  statusReason: `accepted: ${req.auth.user.userId}`,
                   updatedAt: new Date().toISOString(),
                 })
                 .where(eq(sqlInviteTickets.inviteId, invite.inviteId))
