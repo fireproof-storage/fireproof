@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { DashAuthType, ReqEnsureCloudToken, ResEnsureCloudToken } from "@fireproof/core-protocols-dashboard";
+import { DashAuthType, ReqEnsureCloudToken, ResEnsureCloudToken, ResEnsureUser } from "@fireproof/core-protocols-dashboard";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
@@ -32,6 +32,19 @@ function getAppIdBinding<T extends DashAuthType>(
     .get();
 }
 
+function getExistingAppIdBinding(
+  ctx: FPApiSQLCtx,
+  req: ReqWithVerifiedAuthUser<ReqEnsureCloudToken>,
+  filters: ReturnType<typeof eq>[],
+) {
+  return ctx.db
+    .select()
+    .from(sqlAppIdBinding)
+    .innerJoin(sqlLedgers, and(eq(sqlLedgers.ledgerId, sqlAppIdBinding.ledgerId), ...filters))
+    .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
+    .get();
+}
+
 export async function ensureCloudToken(
   ctx: FPApiSQLCtx,
   req: ReqWithVerifiedAuthUser<ReqEnsureCloudToken>,
@@ -45,8 +58,23 @@ export async function ensureCloudToken(
   if (req.tenant) {
     filters.push(eq(sqlLedgers.tenantId, req.tenant));
   }
+  let ensureUserInfo: ResEnsureUser | undefined;
+  const ensureUserOnce = async (): Promise<Result<ResEnsureUser>> => {
+    if (ensureUserInfo) {
+      return Result.Ok(ensureUserInfo);
+    }
+    const rEnsureUser = await ensureUser(ctx, {
+      type: "reqEnsureUser",
+      auth: req.auth.verifiedAuth,
+    });
+    if (rEnsureUser.isErr()) {
+      return Result.Err(rEnsureUser);
+    }
+    ensureUserInfo = rEnsureUser.Ok();
+    return Result.Ok(ensureUserInfo);
+  };
   // test if binding exists
-  const binding = await getAppIdBinding(ctx, req.auth, req, filters);
+  let binding = await getAppIdBinding(ctx, req.auth, req, filters);
   let ledgerId: string | undefined = undefined;
   let tenantId: string | undefined = undefined;
   if (!binding) {
@@ -65,22 +93,27 @@ export async function ensureCloudToken(
       if (req.ledger) {
         return Result.Err(`ledger ${req.ledger} not found for user`);
       }
-      const rEnsureUser = await ensureUser(ctx, {
-        type: "reqEnsureUser",
-        auth: req.auth.verifiedAuth,
-      });
+      const rEnsureUser = await ensureUserOnce();
       if (rEnsureUser.isErr()) {
         return Result.Err(rEnsureUser);
       }
+      const ensuredUser = rEnsureUser.Ok();
       if (req.tenant) {
-        tenantId = rEnsureUser.Ok().tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
+        tenantId = ensuredUser.tenants.find((t) => t.tenantId === req.tenant && t.role === "admin")?.tenantId;
       } else {
-        tenantId = rEnsureUser.Ok().tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
+        tenantId = ensuredUser.tenants.find((t) => t.role === "admin" && t.default)?.tenantId;
       }
-      const binding = await getAppIdBinding(ctx, req.auth, req, filters);
+      binding = await getAppIdBinding(ctx, req.auth, req, filters);
       if (binding) {
         ledgerId = binding.Ledgers.ledgerId;
         tenantId = binding.Ledgers.tenantId;
+      } else {
+        const existingBinding = await getExistingAppIdBinding(ctx, req, filters);
+        if (existingBinding) {
+          return Result.Err(
+            `appId ${req.appId} is already registered. Please ask the owner for an invite to access this appId.`,
+          );
+        }
       }
     }
     if (!tenantId) {
