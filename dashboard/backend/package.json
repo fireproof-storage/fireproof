@@ -41,7 +41,7 @@
     "@libsql/client": "^0.15.15",
     "@libsql/kysely-libsql": "^0.4.1",
     "drizzle-kit": "0.30.6",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",
     "vitest": "^4.0.8",

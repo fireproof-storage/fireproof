@@ -48,7 +48,7 @@
     "@hono/node-server": "^1.19.7",
     "@hono/node-ws": "^1.2.0",
     "@libsql/client": "^0.15.15",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.11.1",
     "vitest": "^4.0.14"
   },
