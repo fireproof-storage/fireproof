@@ -7,13 +7,21 @@ export interface ToCloudAttachable extends Attachable {
   readonly opts: ToCloudOpts;
 }
 
+export interface ResEnsureCloudToken {
+  readonly type: "resEnsureCloudToken";
+  readonly cloudToken: string;
+  readonly appId: string;
+  readonly tenant: string;
+  readonly ledger: string;
+  readonly expiresInSec: number;
+  readonly expiresDate: string; // ISO string
+  readonly claims: FPCloudClaim;
+}
+
 export interface TokenAndClaims {
   readonly token: string;
-  readonly claims?: FPCloudClaim;
-  //   readonly exp: number;
-  //   readonly tenant?: string;
-  //   readonly ledger?: string;
-  // };
+  readonly claims: FPCloudClaim;
+  readonly res?: ResEnsureCloudToken;
 }
 
 export interface TokenStrategie {
