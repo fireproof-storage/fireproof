@@ -97,7 +97,21 @@ export async function ensureCloudToken(
         .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
         .get();
       if (existingBinding) {
-        // Use the existing ledger - the user should have been added via invite redemption
+        // Verify the user is actually in LedgerUsers before granting access (strict policy)
+        const userInLedger = await ctx.db
+          .select()
+          .from(sqlLedgerUsers)
+          .where(
+            and(
+              eq(sqlLedgerUsers.ledgerId, existingBinding.Ledgers.ledgerId),
+              eq(sqlLedgerUsers.userId, req.auth.user.userId),
+              eq(sqlLedgerUsers.status, "active"),
+            ),
+          )
+          .get();
+        if (!userInLedger) {
+          return Result.Err(`user not authorized for ledger - please accept the invite first`);
+        }
         ledgerId = existingBinding.Ledgers.ledgerId;
         tenantId = existingBinding.Ledgers.tenantId;
       } else {
