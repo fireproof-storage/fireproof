@@ -70,7 +70,7 @@
     "autoprefixer": "^10.4.22",
     "drizzle-kit": "0.30.6",
     "drizzle-orm": "^0.45.0",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
