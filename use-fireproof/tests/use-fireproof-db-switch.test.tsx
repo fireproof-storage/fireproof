@@ -12,14 +12,12 @@ describe("HOOK: useFireproof database switching", () => {
   let db1: Database, db2: Database;
 
   beforeAll(async () => {
-    // Setup two databases with different data
-    db1 = fireproof(db1Name);
-    db2 = fireproof(db2Name);
-
     // Add data to db1
+    db1 = fireproof(db1Name);
     await db1.put({ foo: "db1-data" });
 
     // Add different data to db2
+    db2 = fireproof(db2Name);
     await db2.put({ foo: "db2-data" });
   });
 
