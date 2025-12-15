@@ -1,7 +1,7 @@
 import { Result } from "@adviser/cement";
 import { DashAuthType, ReqEnsureCloudToken, ResEnsureCloudToken } from "@fireproof/core-protocols-dashboard";
 import { FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
-import { eq, and, count, like } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
 import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser, VerifiedAuthUser } from "../types.js";
@@ -88,32 +88,13 @@ export async function ensureCloudToken(
       return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${req.auth.user.userId}`);
     }
     if (!ledgerId) {
-      // Check if user has access to a ledger with name starting with appId (for shared/invited users)
-      const sharedLedger = await ctx.db
-        .select()
-        .from(sqlLedgerUsers)
-        .innerJoin(sqlLedgers, eq(sqlLedgers.ledgerId, sqlLedgerUsers.ledgerId))
-        .where(
-          and(
-            eq(sqlLedgerUsers.userId, req.auth.user.userId),
-            eq(sqlLedgerUsers.status, "active"),
-            like(sqlLedgers.name, `${req.appId}%`),
-          ),
-        )
-        .get();
-      if (sharedLedger) {
-        ledgerId = sharedLedger.Ledgers.ledgerId;
-        tenantId = sharedLedger.Ledgers.tenantId;
-      }
-    }
-    if (!ledgerId) {
       // create ledger
       const rCreateLedger = await createLedger(ctx, {
         type: "reqCreateLedger",
         auth: req.auth,
         ledger: {
           tenantId,
-          name: `${req.appId}-${req.auth.user.userId}`,
+          name: req.appId,
         },
       });
       if (rCreateLedger.isErr()) {
