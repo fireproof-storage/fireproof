@@ -3,16 +3,6 @@ import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { createElement, useEffect, useState } from "react";
 import { useFireproof } from "use-fireproof";
 
-// Extend HTMLElement for TypeScript compatibility
-declare global {
-  interface HTMLElement {
-    querySelector(selectors: string): HTMLElement | null;
-    getAttribute(name: string): string | null;
-    textContent: string | null;
-    click(): void;
-  }
-}
-
 // Test component that triggers state updates and verifies database stability
 function TestComponent() {
   const { database } = useFireproof("test-stability-db");
