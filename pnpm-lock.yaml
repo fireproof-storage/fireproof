@@ -1514,6 +1514,9 @@ importers:
       '@fireproof/core-runtime':
         specifier: workspace:*
         version: link:../../core/runtime
+      '@fireproof/core-types-blockstore':
+        specifier: workspace:*
+        version: link:../../core/types/blockstore
       '@testing-library/react':
         specifier: ^16.3.0
         version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
