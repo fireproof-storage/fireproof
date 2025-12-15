@@ -1202,8 +1202,8 @@ importers:
         specifier: ^0.5.5
         version: 0.5.5(typescript@5.9.3)
       '@clerk/backend':
-        specifier: ^2.25.1
-        version: 2.25.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^2.27.0
+        version: 2.27.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@clerk/clerk-js':
         specifier: ^5.113.0
         version: 5.113.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)
@@ -1281,8 +1281,8 @@ importers:
         specifier: ^0.5.5
         version: 0.5.5(typescript@5.9.3)
       '@clerk/backend':
-        specifier: ^2.25.1
-        version: 2.25.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^2.27.0
+        version: 2.27.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@clerk/clerk-js':
         specifier: ^5.113.0
         version: 5.113.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.1))(zod@4.1.13)
@@ -1803,8 +1803,8 @@ packages:
   '@base-org/account@2.0.1':
     resolution: {integrity: sha512-tySVNx+vd6XEynZL0uvB10uKiwnAfThr8AbKTwILVG86mPbLAhEOInQIk+uDnvpTvfdUhC1Bi5T/46JvFoLZQQ==}
 
-  '@clerk/backend@2.25.1':
-    resolution: {integrity: sha512-L5JeWWuMAxBfxip6RKglBhKVywykJwMaSo2NkW8pfjM9INQ/JtpXTlVl5SKSv5v43vSkKxYeqKXkXyNgtxRPaQ==}
+  '@clerk/backend@2.27.0':
+    resolution: {integrity: sha512-e3xdLV/dAp40eFg2eo5tPs/wF942WfJoQA0NLlKHUPYiBD1K+DD8WcX5Fv/kvXUlpoTGiMalexHz42rpx9TJBQ==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/clerk-js@5.113.0':
@@ -1851,6 +1851,10 @@ packages:
 
   '@clerk/types@4.101.5':
     resolution: {integrity: sha512-LEfEizGRM0hN/8GHaia8EIf7kcTHKh2R/Ebj7n1zETB88HrCrM6mvTVv/fqpf5203F1GsCR/UU2l18EOClfWGA==}
+    engines: {node: '>=18.17.0'}
+
+  '@clerk/types@4.101.6':
+    resolution: {integrity: sha512-Ah6R65loy5Aq1jBpWo3x01IOlYJfgVn4LVAkSXKVQDtehn8w1bT2uJ7BTa2zH72A8F4K2HivkmMQa+v/37tLFA==}
     engines: {node: '>=18.17.0'}
 
   '@cloudflare/kv-asset-handler@0.4.1':
@@ -6850,10 +6854,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/backend@2.25.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@clerk/backend@2.27.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@clerk/shared': 3.38.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@clerk/types': 4.101.5(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@clerk/types': 4.101.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       cookie: 1.0.2
       standardwebhooks: 1.0.0
       tslib: 2.8.1
@@ -6938,7 +6942,14 @@ snapshots:
 
   '@clerk/types@4.101.5(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@clerk/shared': 3.38.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@clerk/types@4.101.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+    dependencies:
+      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
     transitivePeerDependencies:
       - react
       - react-dom
