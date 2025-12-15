@@ -1281,6 +1281,99 @@ describe("db-api", () => {
       expect(userBToken.Ok().ledger).toBe(userAToken.Ok().ledger);
       expect(userBToken.Ok().tenant).toBe(userAToken.Ok().tenant);
     });
+
+    it("ensureCloudToken rejects uninvited user trying to access existing ledger (strict policy)", async () => {
+      // User A creates a ledger via ensureCloudToken
+      const userA = datas[3];
+      const userC = datas[4]; // User C has NOT been invited
+      const id = sthis.nextId().str;
+      const appId = `STRICT_POLICY_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+
+      // User C tries to access the same appId WITHOUT being invited
+      // Under strict policy, this should fail
+      const userCToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userC.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // User C should be rejected - they're not in LedgerUsers for this ledger
+      expect(userCToken.isErr()).toBeTruthy();
+      expect(userCToken.Err().message).toContain("not authorized");
+    });
+
+    it("ensureCloudToken allows invited user after redemption", async () => {
+      // Same as above but User D IS invited
+      const userA = datas[3];
+      const userD = datas[9];
+      const id = sthis.nextId().str;
+      const appId = `INVITED_ACCESS_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // User A invites User D to the ledger
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userD.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User D redeems the invite
+      const redeem = await fpApi.redeemInvite({
+        type: "reqRedeemInvite",
+        auth: userD.reqs.auth,
+      });
+      expect(redeem.isOk()).toBeTruthy();
+
+      // Now User D should be able to access the ledger
+      const userDToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userD.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      expect(userDToken.isOk()).toBeTruthy();
+      expect(userDToken.Ok().ledger).toBe(ledgerId);
+    });
   });
 
   it("create session with claim", async () => {
