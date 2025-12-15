@@ -5,8 +5,7 @@ import { httpStyle, mockJWK, MockJWK, wsStyle } from "./test-helper.js";
 import { testSuperThis } from "@fireproof/cloud-base";
 import * as ps from "@fireproof/core-types-protocols-cloud";
 import { applyStart, defaultMsgParams, Msger, VirtualConnected } from "@fireproof/core-protocols-cloud";
-import assert from "assert";
-import { describe, beforeAll, it, expect, afterAll, beforeEach, afterEach } from "vitest";
+import { describe, beforeAll, it, expect, afterAll, beforeEach, afterEach, assert } from "vitest";
 import { sleep } from "zx";
 
 const {
