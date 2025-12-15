@@ -71,8 +71,8 @@ importers:
         specifier: ^4.0.14
         version: 4.0.14(@types/node@24.10.1)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
-        specifier: ^4.53.0
-        version: 4.53.0(@cloudflare/workers-types@4.20251213.0)
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251213.0)
 
   cli:
     dependencies:
@@ -183,8 +183,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3
       react-dom:
-        specifier: ^19.2.1
-        version: 19.2.1(react@19.2.3)
+        specifier: ^19.2.3
+        version: 19.2.3(react@19.2.3)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/pkg
@@ -321,8 +321,8 @@ importers:
         specifier: ^4.0.14
         version: 4.0.14(@types/node@24.10.1)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
-        specifier: ^4.53.0
-        version: 4.53.0(@cloudflare/workers-types@4.20251213.0)
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251213.0)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -443,8 +443,8 @@ importers:
         specifier: '>=18.0.0'
         version: 19.2.3
       react-dom:
-        specifier: ^19.2.1
-        version: 19.2.1(react@19.2.3)
+        specifier: ^19.2.3
+        version: 19.2.3(react@19.2.3)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/pkg
@@ -854,7 +854,7 @@ importers:
         version: 0.5.5(typescript@5.9.3)
       '@clerk/shared':
         specifier: ^3.39.0
-        version: 3.39.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 3.39.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@fireproof/core-device-id':
         specifier: workspace:0.0.0
         version: link:../../device-id
@@ -1084,7 +1084,7 @@ importers:
     devDependencies:
       '@clerk/clerk-js':
         specifier: ^5.114.1
-        version: 5.114.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
+        version: 5.114.1(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
         version: link:../../cli
@@ -1203,10 +1203,10 @@ importers:
         version: 0.5.5(typescript@5.9.3)
       '@clerk/backend':
         specifier: ^2.27.0
-        version: 2.27.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 2.27.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/clerk-js':
         specifier: ^5.114.1
-        version: 5.114.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
+        version: 5.114.1(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -1269,8 +1269,8 @@ importers:
         specifier: ^4.0.8
         version: 4.0.14(@types/node@24.10.1)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
-        specifier: ^4.53.0
-        version: 4.53.0(@cloudflare/workers-types@4.20251213.0)
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251213.0)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -1282,13 +1282,13 @@ importers:
         version: 0.5.5(typescript@5.9.3)
       '@clerk/backend':
         specifier: ^2.27.0
-        version: 2.27.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 2.27.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/clerk-js':
         specifier: ^5.114.1
-        version: 5.114.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
+        version: 5.114.1(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
       '@clerk/clerk-react':
         specifier: ^5.58.1
-        version: 5.58.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 5.58.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -1315,7 +1315,7 @@ importers:
         version: 3.0.0
       '@monaco-editor/react':
         specifier: ^4.7.0
-        version: 4.7.0(monaco-editor@0.53.0)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 4.7.0(monaco-editor@0.53.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
@@ -1341,17 +1341,17 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3
       react-dom:
-        specifier: ^19.2.1
-        version: 19.2.1(react@19.2.3)
+        specifier: ^19.2.3
+        version: 19.2.3(react@19.2.3)
       react-hook-form:
         specifier: ^7.68.0
         version: 7.68.0(react@19.2.3)
       react-router-dom:
         specifier: ^7.10.1
-        version: 7.10.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 7.10.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-simple-code-editor:
         specifier: ^0.14.1
-        version: 0.14.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 0.14.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       use-editable:
         specifier: ^2.3.3
         version: 2.3.3(react@19.2.3)
@@ -1364,7 +1364,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.17.1
-        version: 1.17.1(vite@7.2.7(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251210.0)(wrangler@4.53.0(@cloudflare/workers-types@4.20251213.0))
+        version: 1.17.1(vite@7.2.7(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251210.0)(wrangler@4.54.0(@cloudflare/workers-types@4.20251213.0))
       '@cloudflare/workers-types':
         specifier: ^4.20251213.0
         version: 4.20251213.0
@@ -1385,7 +1385,7 @@ importers:
         version: 6.0.3(rollup@4.53.3)
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
@@ -1441,8 +1441,8 @@ importers:
         specifier: ^4.0.8
         version: 4.0.14(@types/node@24.10.1)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
-        specifier: ^4.53.0
-        version: 4.53.0(@cloudflare/workers-types@4.20251213.0)
+        specifier: ^4.54.0
+        version: 4.54.0(@cloudflare/workers-types@4.20251213.0)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -1516,7 +1516,7 @@ importers:
         version: link:../../core/runtime
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react:
         specifier: ^19.2.3
         version: 19.2.3
@@ -1860,22 +1860,10 @@ packages:
       vite: ^6.1.0 || ^7.0.0
       wrangler: ^4.54.0
 
-  '@cloudflare/workerd-darwin-64@1.20251202.0':
-    resolution: {integrity: sha512-/uvEAWEukTWb1geHhbjGUeZqcSSSyYzp0mvoPUBl+l0ont4NVGao3fgwM0q8wtKvgoKCHSG6zcG23wj9Opj3Nw==}
-    engines: {node: '>=16'}
-    cpu: [x64]
-    os: [darwin]
-
   '@cloudflare/workerd-darwin-64@1.20251210.0':
     resolution: {integrity: sha512-Nn9X1moUDERA9xtFdCQ2XpQXgAS9pOjiCxvOT8sVx9UJLAiBLkfSCGbpsYdarODGybXCpjRlc77Yppuolvt7oQ==}
     engines: {node: '>=16'}
     cpu: [x64]
-    os: [darwin]
-
-  '@cloudflare/workerd-darwin-arm64@1.20251202.0':
-    resolution: {integrity: sha512-f52xRvcI9cWRd6400EZStRtXiRC5XKEud7K5aFIbbUv0VeINltujFQQ9nHWtsF6g1quIXWkjhh5u01gPAYNNXA==}
-    engines: {node: '>=16'}
-    cpu: [arm64]
     os: [darwin]
 
   '@cloudflare/workerd-darwin-arm64@1.20251210.0':
@@ -1884,22 +1872,10 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@cloudflare/workerd-linux-64@1.20251202.0':
-    resolution: {integrity: sha512-HYXinF5RBH7oXbsFUMmwKCj+WltpYbf5mRKUBG5v3EuPhUjSIFB84U+58pDyfBJjcynHdy3EtvTWcvh/+lcgow==}
-    engines: {node: '>=16'}
-    cpu: [x64]
-    os: [linux]
-
   '@cloudflare/workerd-linux-64@1.20251210.0':
     resolution: {integrity: sha512-kjC2fCZhZ2Gkm1biwk2qByAYpGguK5Gf5ic8owzSCUw0FOUfQxTZUT9Lp3gApxsfTLbbnLBrX/xzWjywH9QR4g==}
     engines: {node: '>=16'}
     cpu: [x64]
-    os: [linux]
-
-  '@cloudflare/workerd-linux-arm64@1.20251202.0':
-    resolution: {integrity: sha512-++L02Jdoxz7hEA9qDaQjbVU1RzQS+S+eqIi22DkPe2Tgiq2M3UfNpeu+75k5L9DGRIkZPYvwMBMbcmKvQqdIIg==}
-    engines: {node: '>=16'}
-    cpu: [arm64]
     os: [linux]
 
   '@cloudflare/workerd-linux-arm64@1.20251210.0':
@@ -1907,12 +1883,6 @@ packages:
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
-
-  '@cloudflare/workerd-windows-64@1.20251202.0':
-    resolution: {integrity: sha512-gzeU6eDydTi7ib+Q9DD/c0hpXtqPucnHk2tfGU03mljPObYxzMkkPGgB5qxpksFvub3y4K0ChjqYxGJB4F+j3g==}
-    engines: {node: '>=16'}
-    cpu: [x64]
-    os: [win32]
 
   '@cloudflare/workerd-windows-64@1.20251210.0':
     resolution: {integrity: sha512-Uaz6/9XE+D6E7pCY4OvkCuJHu7HcSDzeGcCGY1HLhojXhHd7yL52c3yfiyJdS8hPatiAa0nn5qSI/42+aTdDSw==}
@@ -3120,14 +3090,14 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
-  '@poppinss/colors@4.1.5':
-    resolution: {integrity: sha512-FvdDqtcRCtz6hThExcFOgW0cWX+xwSMWcRuQe5ZEb2m7cVQOAVZOIMt+/v9RxGiD9/OY16qJBXK4CVKWAPalBw==}
+  '@poppinss/colors@4.1.6':
+    resolution: {integrity: sha512-H9xkIdFswbS8n1d6vmRd8+c10t2Qe+rZITbbDHHkQixH5+2x1FDGmi/0K+WgWiqQFKPSlIYB7jlH6Kpfn6Fleg==}
 
   '@poppinss/dumper@0.6.5':
     resolution: {integrity: sha512-NBdYIb90J7LfOI32dOewKI1r7wnkiH6m920puQ3qHUeZkxNkQiFnXVWoE6YtFSv6QOiPPf7ys6i+HWWecDz7sw==}
 
-  '@poppinss/exception@1.2.2':
-    resolution: {integrity: sha512-m7bpKCD4QMlFCjA/nKTs23fuvoVFoA83brRKmObCUNmi/9tVu8Ve3w4YQAnJu4q3Tjf5fr685HYIC/IA2zHRSg==}
+  '@poppinss/exception@1.2.3':
+    resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
 
   '@remix-run/node-fetch-server@0.8.1':
     resolution: {integrity: sha512-J1dev372wtJqmqn9U/qbpbZxbJSQrogNN2+Qv1lKlpATpe/WQ9aCZfl/xSb9d2Rgh1IyLSvNxZAXPZxruO6Xig==}
@@ -5141,11 +5111,6 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
 
-  miniflare@4.20251202.1:
-    resolution: {integrity: sha512-cRp2QNgnt9wpLMoNs4MOzzomyfe9UTS9sPRxIpUvxMl+mweCZ0FHpWWQvCnU7wWlfAP8VGZrHwqSsV5ERA6ahQ==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-
   miniflare@4.20251210.0:
     resolution: {integrity: sha512-k6kIoXwGVqlPZb0hcn+X7BmnK+8BjIIkusQPY22kCo2RaQJ/LzAjtxHQdGXerlHSnJyQivDQsL6BJHMpQfUFyw==}
     engines: {node: '>=18.0.0'}
@@ -5547,10 +5512,10 @@ packages:
     resolution: {integrity: sha512-ARhCpm70fzdcvNQfPoy49IaanKkTlRWF2JMzqhcJbhSFRZv7nPTvZJdcY7301IPmvW+/p0RgIWnQDLJxifsQ7g==}
     engines: {node: '>=8'}
 
-  react-dom@19.2.1:
-    resolution: {integrity: sha512-ibrK8llX2a4eOskq1mXKu/TGZj9qzomO+sNfO98M6d9zIPOEhlBkMkBUBLd1vgS0gQsLDBzA+8jJBVXDnfHmJg==}
+  react-dom@19.2.3:
+    resolution: {integrity: sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==}
     peerDependencies:
-      react: ^19.2.1
+      react: ^19.2.3
 
   react-hook-form@7.68.0:
     resolution: {integrity: sha512-oNN3fjrZ/Xo40SWlHf1yCjlMK417JxoSJVUXQjGdvdRCU07NTFei1i1f8ApUAts+IVh14e4EdakeLEA+BEAs/Q==}
@@ -6330,22 +6295,17 @@ packages:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
 
-  workerd@1.20251202.0:
-    resolution: {integrity: sha512-p08YfrUMHkjCECNdT36r+6DpJIZX4kixbZ4n6GMUcLR5Gh18fakSCsiQrh72iOm4M9QHv/rM7P8YvCrUPWT5sg==}
-    engines: {node: '>=16'}
-    hasBin: true
-
   workerd@1.20251210.0:
     resolution: {integrity: sha512-9MUUneP1BnRE9XAYi94FXxHmiLGbO75EHQZsgWqSiOXjoXSqJCw8aQbIEPxCy19TclEl/kHUFYce8ST2W+Qpjw==}
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@4.53.0:
-    resolution: {integrity: sha512-/wvnHlRnlHsqaeIgGbmcEJE5NFYdTUWHCKow+U5Tv2XwQXI9vXUqBwCLAGy/BwqyS5nnycRt2kppqCzgHgyb7Q==}
+  wrangler@4.54.0:
+    resolution: {integrity: sha512-bANFsjDwJLbprYoBK+hUDZsVbUv2SqJd8QvArLIcZk+fPq4h/Ohtj5vkKXD3k0s2bD1DXLk08D+hYmeNH+xC6A==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
-      '@cloudflare/workers-types': ^4.20251202.0
+      '@cloudflare/workers-types': ^4.20251210.0
     peerDependenciesMeta:
       '@cloudflare/workers-types':
         optional: true
@@ -6815,10 +6775,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/backend@2.27.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@clerk/backend@2.27.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
-      '@clerk/types': 4.101.6(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 3.39.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/types': 4.101.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       cookie: 1.0.2
       standardwebhooks: 1.0.0
       tslib: 2.8.1
@@ -6826,16 +6786,16 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/clerk-js@5.114.1(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)':
+  '@clerk/clerk-js@5.114.1(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)':
     dependencies:
       '@base-org/account': 2.0.1(@types/react@19.2.7)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(zod@4.1.13)
-      '@clerk/localizations': 3.30.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
-      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@clerk/localizations': 3.30.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 3.39.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@coinbase/wallet-sdk': 4.3.0
       '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.1(@types/react@19.2.7)(react@19.2.3)
-      '@floating-ui/react': 0.27.12(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
-      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@floating-ui/react': 0.27.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@formkit/auto-animate': 0.8.4
       '@stripe/stripe-js': 5.6.0
       '@swc/helpers': 0.5.17
@@ -6848,10 +6808,10 @@ snapshots:
       core-js: 3.41.0
       crypto-js: 4.2.0
       dequal: 2.0.3
-      input-otp: 1.4.2(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      input-otp: 1.4.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       qrcode.react: 4.2.0(react@19.2.3)
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
       regenerator-runtime: 0.14.1
     transitivePeerDependencies:
       - '@types/react'
@@ -6863,21 +6823,21 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/clerk-react@5.58.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@clerk/clerk-react@5.58.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 3.39.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
       tslib: 2.8.1
 
-  '@clerk/localizations@3.30.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@clerk/localizations@3.30.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/types': 4.101.6(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@clerk/types': 4.101.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@clerk/shared@3.39.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@clerk/shared@3.39.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       csstype: 3.1.3
       dequal: 2.0.3
@@ -6887,11 +6847,11 @@ snapshots:
       swr: 2.3.4(react@19.2.3)
     optionalDependencies:
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
 
-  '@clerk/types@4.101.6(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@clerk/types@4.101.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/shared': 3.39.0(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 3.39.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -6900,19 +6860,13 @@ snapshots:
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/unenv-preset@2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251202.0)':
-    dependencies:
-      unenv: 2.0.0-rc.24
-    optionalDependencies:
-      workerd: 1.20251202.0
-
   '@cloudflare/unenv-preset@2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251210.0)':
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
       workerd: 1.20251210.0
 
-  '@cloudflare/vite-plugin@1.17.1(vite@7.2.7(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251210.0)(wrangler@4.53.0(@cloudflare/workers-types@4.20251213.0))':
+  '@cloudflare/vite-plugin@1.17.1(vite@7.2.7(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251210.0)(wrangler@4.54.0(@cloudflare/workers-types@4.20251213.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251210.0)
       '@remix-run/node-fetch-server': 0.8.1
@@ -6923,38 +6877,23 @@ snapshots:
       tinyglobby: 0.2.15
       unenv: 2.0.0-rc.24
       vite: 7.2.7(@types/node@24.10.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
-      wrangler: 4.53.0(@cloudflare/workers-types@4.20251213.0)
+      wrangler: 4.54.0(@cloudflare/workers-types@4.20251213.0)
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - workerd
 
-  '@cloudflare/workerd-darwin-64@1.20251202.0':
-    optional: true
-
   '@cloudflare/workerd-darwin-64@1.20251210.0':
-    optional: true
-
-  '@cloudflare/workerd-darwin-arm64@1.20251202.0':
     optional: true
 
   '@cloudflare/workerd-darwin-arm64@1.20251210.0':
     optional: true
 
-  '@cloudflare/workerd-linux-64@1.20251202.0':
-    optional: true
-
   '@cloudflare/workerd-linux-64@1.20251210.0':
     optional: true
 
-  '@cloudflare/workerd-linux-arm64@1.20251202.0':
-    optional: true
-
   '@cloudflare/workerd-linux-arm64@1.20251210.0':
-    optional: true
-
-  '@cloudflare/workerd-windows-64@1.20251202.0':
     optional: true
 
   '@cloudflare/workerd-windows-64@1.20251210.0':
@@ -7424,18 +7363,18 @@ snapshots:
       '@floating-ui/core': 1.7.3
       '@floating-ui/utils': 0.2.10
 
-  '@floating-ui/react-dom@2.1.6(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@floating-ui/react-dom@2.1.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@floating-ui/dom': 1.7.4
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
 
-  '@floating-ui/react@0.27.12(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@floating-ui/react@0.27.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      '@floating-ui/react-dom': 2.1.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@floating-ui/utils': 0.2.10
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
       tabbable: 6.3.0
 
   '@floating-ui/utils@0.2.10': {}
@@ -7714,12 +7653,12 @@ snapshots:
     dependencies:
       state-local: 1.0.7
 
-  '@monaco-editor/react@4.7.0(monaco-editor@0.53.0)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@monaco-editor/react@4.7.0(monaco-editor@0.53.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@monaco-editor/loader': 1.5.0
       monaco-editor: 0.53.0
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
 
   '@neon-rs/load@0.0.4': {}
 
@@ -7917,17 +7856,17 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@poppinss/colors@4.1.5':
+  '@poppinss/colors@4.1.6':
     dependencies:
       kleur: 4.1.5
 
   '@poppinss/dumper@0.6.5':
     dependencies:
-      '@poppinss/colors': 4.1.5
+      '@poppinss/colors': 4.1.6
       '@sindresorhus/is': 7.1.1
       supports-color: 10.2.2
 
-  '@poppinss/exception@1.2.2': {}
+  '@poppinss/exception@1.2.3': {}
 
   '@remix-run/node-fetch-server@0.8.1': {}
 
@@ -8069,12 +8008,12 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.3))(react@19.2.3)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@testing-library/dom': 10.4.1
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
     optionalDependencies:
       '@types/react': 19.2.7
       '@types/react-dom': 19.2.3(@types/react@19.2.7)
@@ -9705,10 +9644,10 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  input-otp@1.4.2(react-dom@19.2.1(react@19.2.3))(react@19.2.3):
+  input-otp@1.4.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
 
   internal-slot@1.1.0:
     dependencies:
@@ -10118,24 +10057,6 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  miniflare@4.20251202.1:
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      acorn: 8.14.0
-      acorn-walk: 8.3.2
-      exit-hook: 2.2.1
-      glob-to-regexp: 0.4.1
-      sharp: 0.33.5
-      stoppable: 1.1.0
-      undici: 7.14.0
-      workerd: 1.20251202.0
-      ws: 8.18.0
-      youch: 4.1.0-beta.10
-      zod: 3.22.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   miniflare@4.20251210.0:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -10538,7 +10459,7 @@ snapshots:
 
   quick-lru@4.0.1: {}
 
-  react-dom@19.2.1(react@19.2.3):
+  react-dom@19.2.3(react@19.2.3):
     dependencies:
       react: 19.2.3
       scheduler: 0.27.0
@@ -10555,24 +10476,24 @@ snapshots:
 
   react-refresh@0.18.0: {}
 
-  react-router-dom@7.10.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3):
+  react-router-dom@7.10.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
-      react-router: 7.10.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
+      react-router: 7.10.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
-  react-router@7.10.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3):
+  react-router@7.10.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       cookie: 1.1.1
       react: 19.2.3
       set-cookie-parser: 2.7.2
     optionalDependencies:
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
 
-  react-simple-code-editor@0.14.1(react-dom@19.2.1(react@19.2.3))(react@19.2.3):
+  react-simple-code-editor@0.14.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
-      react-dom: 19.2.1(react@19.2.3)
+      react-dom: 19.2.3(react@19.2.3)
 
   react@19.1.1: {}
 
@@ -11402,14 +11323,6 @@ snapshots:
 
   word-wrap@1.2.5: {}
 
-  workerd@1.20251202.0:
-    optionalDependencies:
-      '@cloudflare/workerd-darwin-64': 1.20251202.0
-      '@cloudflare/workerd-darwin-arm64': 1.20251202.0
-      '@cloudflare/workerd-linux-64': 1.20251202.0
-      '@cloudflare/workerd-linux-arm64': 1.20251202.0
-      '@cloudflare/workerd-windows-64': 1.20251202.0
-
   workerd@1.20251210.0:
     optionalDependencies:
       '@cloudflare/workerd-darwin-64': 1.20251210.0
@@ -11418,16 +11331,16 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20251210.0
       '@cloudflare/workerd-windows-64': 1.20251210.0
 
-  wrangler@4.53.0(@cloudflare/workers-types@4.20251213.0):
+  wrangler@4.54.0(@cloudflare/workers-types@4.20251213.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.1
-      '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251202.0)
+      '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251210.0)
       blake3-wasm: 2.1.5
       esbuild: 0.27.0
-      miniflare: 4.20251202.1
+      miniflare: 4.20251210.0
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
-      workerd: 1.20251202.0
+      workerd: 1.20251210.0
     optionalDependencies:
       '@cloudflare/workers-types': 4.20251213.0
       fsevents: 2.3.3
@@ -11485,12 +11398,12 @@ snapshots:
 
   youch-core@0.3.3:
     dependencies:
-      '@poppinss/exception': 1.2.2
+      '@poppinss/exception': 1.2.3
       error-stack-parser-es: 1.0.5
 
   youch@4.1.0-beta.10:
     dependencies:
-      '@poppinss/colors': 4.1.5
+      '@poppinss/colors': 4.1.6
       '@poppinss/dumper': 0.6.5
       '@speed-highlight/core': 1.2.12
       cookie: 1.1.1
