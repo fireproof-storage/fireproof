@@ -1,6 +1,6 @@
 import { Result } from "@adviser/cement";
 import { DashAuthType, ReqEnsureCloudToken, ResEnsureCloudToken } from "@fireproof/core-protocols-dashboard";
-import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
+import { FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
@@ -9,6 +9,7 @@ import { getFPTokenContext, createFPToken, toProvider } from "../utils/index.js"
 import { createLedger } from "./create-ledger.js";
 import { ensureUser } from "./ensure-user.js";
 import { listLedgersByUser } from "./list-ledgers-by-user.js";
+import { decodeJwt } from "jose";
 
 function getAppIdBinding<T extends DashAuthType>(
   ctx: FPApiSQLCtx,
@@ -143,7 +144,8 @@ export async function ensureCloudToken(
       tenant: tenantId,
       ledger: ledgerId,
     },
-  } satisfies FPCloudClaim);
+  });
+  const claims = FPCloudClaimSchema.parse(decodeJwt(cloudToken.token));
   return Result.Ok({
     type: "resEnsureCloudToken",
     cloudToken: cloudToken.token,
@@ -152,5 +154,6 @@ export async function ensureCloudToken(
     ledger: ledgerId,
     expiresInSec: cloudToken.expiresInSec,
     expiresDate: cloudToken.expiresDate.toISOString(),
+    claims,
   });
 }

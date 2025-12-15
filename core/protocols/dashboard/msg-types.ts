@@ -1,5 +1,5 @@
 import { JWKPublic } from "@fireproof/core-types-base";
-import { ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
+import { FPCloudClaim, ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
 import type { DeviceIdCA } from "@fireproof/core-device-id";
 
 export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
@@ -540,4 +540,5 @@ export interface ResEnsureCloudToken {
   readonly ledger: string;
   readonly expiresInSec: number;
   readonly expiresDate: string; // ISO string
+  readonly claims: FPCloudClaim;
 }

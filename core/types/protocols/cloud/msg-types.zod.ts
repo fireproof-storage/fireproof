@@ -35,7 +35,7 @@ export const FPCloudClaimSchema = JWTPayloadSchema.extend({
   email: z.email(),
   nickname: z.string().optional(),
   provider: z.enum(["github", "google"]).optional(),
-  created: z.date(),
+  created: z.coerce.date(),
   tenants: z.array(TenantClaimSchema),
   ledgers: z.array(LedgerClaimSchema),
   selected: TenantLedgerSchema,
