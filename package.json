@@ -67,7 +67,7 @@
     "@vitest/browser-playwright": "^4.0.14",
     "deno": "^2.6.0",
     "drizzle-kit": "0.30.6",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.2",
     "eslint-plugin-import": "^2.32.0",
     "multiformats": "^13.4.2",
     "playwright": "^1.57.0",
