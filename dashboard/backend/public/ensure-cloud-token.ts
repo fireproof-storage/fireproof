@@ -88,39 +88,53 @@ export async function ensureCloudToken(
       return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${req.auth.user.userId}`);
     }
     if (!ledgerId) {
-      // create ledger
-      const rCreateLedger = await createLedger(ctx, {
-        type: "reqCreateLedger",
-        auth: req.auth,
-        ledger: {
-          tenantId,
-          name: req.appId,
-        },
-      });
-      if (rCreateLedger.isErr()) {
-        return Result.Err(rCreateLedger.Err());
-      }
-      ledgerId = rCreateLedger.Ok().ledger.ledgerId;
-      const maxBindings = await ctx.db
-        .select({
-          total: count(sqlAppIdBinding.appId),
-        })
+      // Check if there's already an AppIdBinding for this appId (without user join)
+      // This handles the case where an invited user visits before being added to the ledger
+      const existingBinding = await ctx.db
+        .select()
         .from(sqlAppIdBinding)
-        .where(eq(sqlAppIdBinding.appId, req.appId))
+        .innerJoin(sqlLedgers, eq(sqlLedgers.ledgerId, sqlAppIdBinding.ledgerId))
+        .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
         .get();
-      if (maxBindings && maxBindings.total >= ctx.params.maxAppIdBindings) {
-        return Result.Err(`max appId bindings reached for appId:${req.appId}`);
+      if (existingBinding) {
+        // Use the existing ledger - the user should have been added via invite redemption
+        ledgerId = existingBinding.Ledgers.ledgerId;
+        tenantId = existingBinding.Ledgers.tenantId;
+      } else {
+        // create ledger
+        const rCreateLedger = await createLedger(ctx, {
+          type: "reqCreateLedger",
+          auth: req.auth,
+          ledger: {
+            tenantId,
+            name: req.appId,
+          },
+        });
+        if (rCreateLedger.isErr()) {
+          return Result.Err(rCreateLedger.Err());
+        }
+        ledgerId = rCreateLedger.Ok().ledger.ledgerId;
+        const maxBindings = await ctx.db
+          .select({
+            total: count(sqlAppIdBinding.appId),
+          })
+          .from(sqlAppIdBinding)
+          .where(eq(sqlAppIdBinding.appId, req.appId))
+          .get();
+        if (maxBindings && maxBindings.total >= ctx.params.maxAppIdBindings) {
+          return Result.Err(`max appId bindings reached for appId:${req.appId}`);
+        }
+        await ctx.db
+          .insert(sqlAppIdBinding)
+          .values({
+            appId: req.appId,
+            env: req.env ?? "prod",
+            ledgerId,
+            tenantId,
+            createdAt: new Date().toISOString(),
+          })
+          .run();
       }
-      await ctx.db
-        .insert(sqlAppIdBinding)
-        .values({
-          appId: req.appId,
-          env: req.env ?? "prod",
-          ledgerId,
-          tenantId,
-          createdAt: new Date().toISOString(),
-        })
-        .run();
     }
   } else {
     ledgerId = binding.Ledgers.ledgerId;
