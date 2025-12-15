@@ -1146,6 +1146,89 @@ describe("db-api", () => {
       expect(validTenant.isErr()).toBeTruthy();
     });
 
+    /**
+     * Policy: Shared Ledger Access via Prefix Matching
+     *
+     * When a user is invited to a ledger and later calls ensureCloudToken with the same appId,
+     * they should be granted access to the existing shared ledger rather than creating a new one.
+     *
+     * The ledger name format is: `{appId}-{ownerUserId}`
+     * When an invited user calls ensureCloudToken with appId, the system should:
+     * 1. First check for an exact appId binding (existing behavior)
+     * 2. If not found, check if user has access to any ledger whose name starts with appId (prefix match)
+     * 3. Only create a new ledger if no matching ledger is found
+     *
+     * This enables collaborative apps where multiple users share the same database:
+     * - User A creates app with appId "vf-my-app-install1-todos"
+     * - System creates ledger "vf-my-app-install1-todos-{userA_id}"
+     * - User A invites User B to the ledger
+     * - User B visits app with same appId → gets access to User A's ledger (not a new one)
+     */
+    it("ensureCloudToken grants invited user access to shared ledger via prefix match", async () => {
+      const userA = datas[7];
+      const userB = datas[8];
+      const id = sthis.nextId().str;
+      const appId = `SHARED_LEDGER_TEST-${id}`;
+
+      // User A creates a ledger via ensureCloudToken
+      // This creates a ledger named "{appId}-{userA_id}" and binds it to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const userALedgerId = userAToken.Ok().ledger;
+
+      // User A invites User B to the ledger (not just the tenant)
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userB.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: userALedgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User B redeems the invite (adds them to LedgerUsers)
+      const redeem = await fpApi.redeemInvite({
+        type: "reqRedeemInvite",
+        auth: userB.reqs.auth,
+      });
+      expect(redeem.isOk()).toBeTruthy();
+
+      // User B calls ensureCloudToken with the same appId
+      // Without prefix matching, this would create a NEW ledger "{appId}-{userB_id}"
+      // With prefix matching, User B should get access to User A's existing ledger
+      const userBToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userB.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userBToken.isOk()).toBeTruthy();
+
+      // Critical assertion: User B should get the SAME ledger as User A
+      expect(userBToken.Ok().ledger).toBe(userALedgerId);
+
+      // Verify they're using the same tenant too
+      expect(userBToken.Ok().tenant).toBe(userAToken.Ok().tenant);
+    });
+
     it("ensureCloudToken auto-redeems pending invite for ledger access", async () => {
       // User A (datas[5]) creates a ledger and binds it to an appId
       const userA = datas[5];
