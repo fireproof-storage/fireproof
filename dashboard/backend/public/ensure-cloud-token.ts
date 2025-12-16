@@ -133,8 +133,19 @@ export async function ensureCloudToken(
   const fpCtx = rCtx.Ok();
   const cloudToken = await createFPToken(fpCtx, {
     userId: req.auth.user.userId,
-    tenants: [],
-    ledgers: [],
+    tenants: [
+      {
+        id: tenantId,
+        role: "admin",
+      },
+    ],
+    ledgers: [
+      {
+        id: ledgerId,
+        role: "admin",
+        right: "write",
+      },
+    ],
     email: req.auth.verifiedAuth.params.email,
     nickname: req.auth.verifiedAuth.params.nick,
     provider: toProvider(req.auth.verifiedAuth),

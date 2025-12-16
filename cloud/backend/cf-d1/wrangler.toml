@@ -56,6 +56,9 @@ database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
 
 [env.dev.vars]
 VERSION = "FP-MSG-1.0"
+
+[env.production.vars]
+VERSION = "FP-MSG-1.0"
 #CLOUD_SESSION_TOKEN_PUBLIC = "should-be-set-by-dot-dev"
 #STORAGE_URL = "should-be-set-by-dot-dev"
 
@@ -65,16 +68,28 @@ VERSION = "FP-MSG-1.0"
 
 [[env.dev.migrations]]
 tag = "v1" # Should be unique for each entry
-#new_sqlite_classes = ["FPBackendDurableObject"]
+new_classes = ["FPRoomDurableObject"]
+
+[[env.production.migrations]]
+tag = "v1" # Should be unique for each entry
 new_classes = ["FPRoomDurableObject"]
 
 [env.dev.durable_objects]
 bindings = [
-  # { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+]
+
+[env.production.durable_objects]
+bindings = [
   { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
 ]
 
 [[env.dev.d1_databases]]
+binding = "FP_BACKEND_D1"
+database_name = "fp-cloud-dev"
+database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
+
+[[env.production.d1_databases]]
 binding = "FP_BACKEND_D1"
 database_name = "fp-cloud-dev"
 database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
