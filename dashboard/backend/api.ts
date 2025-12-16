@@ -155,12 +155,15 @@ export class FPApiSQL implements FPApiInterface {
     return this.#checkAuth(req, (req) => getCertFromCsr(this.ctx, req));
   }
   async ensureCloudToken(req: ReqEnsureCloudToken, ictx: Partial<FPTokenContext> = {}): Promise<Result<ResEnsureCloudToken>> {
-    // For new users, ensureUser must be called first to create them
+    // p0.46 - For new users, ensureUser must be called first to create them
     // This allows invited users to access shared ledgers on first visit
+    console.log("[ensureCloudToken p0.46] starting for appId:", req.appId);
     const rUser = await ensureUser(this.ctx, { type: "reqEnsureUser", auth: req.auth });
     if (rUser.isErr()) {
+      console.log("[ensureCloudToken p0.46] ensureUser failed:", rUser.Err());
       return Result.Err(rUser.Err());
     }
+    console.log("[ensureCloudToken p0.46] ensureUser succeeded, userId:", rUser.Ok().user.userId);
     return this.#checkAuth(req, (req) => ensureCloudToken(this.ctx, req, ictx));
   }
 
