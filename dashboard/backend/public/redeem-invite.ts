@@ -13,21 +13,37 @@ export async function redeemInvite(
   ctx: FPApiSQLCtx,
   req: ReqWithVerifiedAuthUser<ReqRedeemInvite>,
 ): Promise<Result<ResRedeemInvite>> {
+  const query = {
+    byString: req.auth.verifiedAuth.params.email,
+    byNick: req.auth.verifiedAuth.params.nick,
+    existingUserId: req.auth.user.userId,
+  };
+  console.log("[redeemInvite p0.47] searching with query:", JSON.stringify(query));
+  const foundInvites = await findInvite(ctx, { query });
+  console.log(
+    "[redeemInvite p0.47] found invites:",
+    foundInvites.length,
+    "pending:",
+    foundInvites.filter((i) => i.status === "pending").length,
+  );
+  if (foundInvites.length > 0) {
+    console.log(
+      "[redeemInvite p0.47] invite details:",
+      JSON.stringify(
+        foundInvites.map((i) => ({
+          id: i.inviteId,
+          status: i.status,
+          queryEmail: i.query.byEmail,
+          ledger: i.invitedParams.ledger?.id,
+        })),
+      ),
+    );
+  }
   return Result.Ok({
     type: "resRedeemInvite",
     invites: sqlToInviteTickets(
       await Promise.all(
-        (
-          await findInvite(ctx, {
-            query: {
-              byString: req.auth.verifiedAuth.params.email,
-              byNick: req.auth.verifiedAuth.params.nick,
-              existingUserId: req.auth.user.userId,
-              // TODO
-              // andProvider: req.auth.verifiedAuth.provider,
-            },
-          })
-        )
+        foundInvites
           .filter((i) => i.status === "pending")
           .map(async (invite) => {
             if (invite.invitedParams.tenant) {

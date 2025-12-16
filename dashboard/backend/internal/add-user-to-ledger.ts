@@ -63,23 +63,46 @@ export async function addUserToLedger(ctx: FPApiSQLCtx, req: AddUserToLedger): P
       .where(and(eq(sqlLedgerUsers.userId, req.userId), ne(sqlLedgerUsers.default, 0)))
       .run();
   }
-  const ret = (
-    await ctx.db
-      .insert(sqlLedgerUsers)
-      .values({
-        ledgerId: ledger.Ledgers.ledgerId,
-        userId: req.userId,
-        name: req.userName,
-        role: req.role,
-        right: req.right,
-        default: req.default ? 1 : 0,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning()
-  )[0];
+  const inserted = await ctx.db
+    .insert(sqlLedgerUsers)
+    .values({
+      ledgerId: ledger.Ledgers.ledgerId,
+      userId: req.userId,
+      name: req.userName,
+      role: req.role,
+      right: req.right,
+      default: req.default ? 1 : 0,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoNothing()
+    .returning();
+  if (inserted.length === 0) {
+    // User already exists in ledger, fetch existing record
+    const existing = await ctx.db
+      .select()
+      .from(sqlLedgerUsers)
+      .where(and(eq(sqlLedgerUsers.ledgerId, ledger.Ledgers.ledgerId), eq(sqlLedgerUsers.userId, req.userId)))
+      .get();
+    if (!existing) {
+      return Result.Err("failed to insert or find ledger user");
+    }
+    return Result.Ok({
+      ledgerName: toUndef(ledger.Ledgers.name),
+      userName: toUndef(existing.name),
+      ledgerId: ledger.Ledgers.ledgerId,
+      tenantId: ledger.Ledgers.tenantId,
+      status: existing.status as UserStatus,
+      statusReason: existing.statusReason,
+      userId: req.userId,
+      default: !!existing.default,
+      role: toRole(existing.role),
+      right: toReadWrite(existing.right),
+    });
+  }
+  const ret = inserted[0];
   return Result.Ok({
-    ledgerName: ledger.Ledgers.name,
+    ledgerName: toUndef(ledger.Ledgers.name),
     userName: req.userName,
     ledgerId: ledger.Ledgers.ledgerId,
     tenantId: ledger.Ledgers.tenantId,

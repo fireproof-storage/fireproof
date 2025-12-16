@@ -1,5 +1,5 @@
 import { Queryable, QueryUser } from "@fireproof/core-protocols-dashboard";
-import { and, eq, or } from "drizzle-orm/sql/expressions";
+import { eq, or } from "drizzle-orm/sql/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export function toUndef(v: string | null | undefined): string | undefined {
@@ -28,15 +28,18 @@ export function queryCondition(
     readonly queryProvider: SQLiteColumn;
   },
 ) {
+  // Build conditions for matching by userId, email, or nick
+  // We OR together all possible matches so invites can be found by email even when userId is provided
+  const conditions = [] as ReturnType<typeof or>[];
+
   if (query.existingUserId) {
-    return eq(table.userId, query.existingUserId);
+    conditions.push(eq(table.userId, query.existingUserId));
   }
 
   const str = query.byString?.trim();
   if (str) {
     const byEmail = queryEmail(str);
     const byNick = queryNick(str);
-    const conditions = [] as ReturnType<typeof or>[];
     if (byEmail) {
       conditions.push(eq(table.queryEmail, byEmail));
     }
@@ -44,26 +47,23 @@ export function queryCondition(
       conditions.push(eq(table.queryNick, byNick));
     }
     conditions.push(eq(table.userId, str));
-    return or(...conditions);
   }
 
   const byEmail = queryEmail(query.byEmail);
   const byNick = queryNick(query.byNick);
-  let where: ReturnType<typeof and> = eq(table.userId, Math.random() + "");
-  if (byEmail && byNick && query.andProvider) {
-    where = and(eq(table.queryEmail, byEmail), eq(table.queryNick, byNick), eq(table.queryProvider, query.andProvider));
-  } else if (byEmail && byNick) {
-    where = and(eq(table.queryEmail, byEmail), eq(table.queryNick, byNick));
-  } else if (byEmail && query.andProvider) {
-    where = and(eq(table.queryEmail, byEmail), eq(table.queryProvider, query.andProvider));
-  } else if (byNick && query.andProvider) {
-    where = and(eq(table.queryNick, byNick), eq(table.queryProvider, query.andProvider));
-  } else if (byEmail) {
-    where = eq(table.queryEmail, byEmail);
-  } else if (byNick) {
-    where = eq(table.queryNick, byNick);
+  if (byEmail) {
+    conditions.push(eq(table.queryEmail, byEmail));
   }
-  return where;
+  if (byNick) {
+    conditions.push(eq(table.queryNick, byNick));
+  }
+
+  if (conditions.length === 0) {
+    // No valid conditions - return a condition that matches nothing
+    return eq(table.userId, Math.random() + "");
+  }
+
+  return or(...conditions);
 }
 
 export function queryNick(nick?: string): string | undefined {
