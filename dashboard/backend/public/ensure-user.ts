@@ -121,10 +121,12 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
     }
   }
   // Auto-redeem any pending invites for this user
-  await redeemInvite(ctx, {
+  console.log("[ensureUser p0.47] calling redeemInvite for email:", auth.verifiedAuth.params.email);
+  const redeemResult = await redeemInvite(ctx, {
     type: "reqRedeemInvite",
     auth,
   });
+  console.log("[ensureUser p0.47] redeemInvite result:", JSON.stringify(redeemResult));
   return Result.Ok({
     type: "resEnsureUser",
     user: user,
