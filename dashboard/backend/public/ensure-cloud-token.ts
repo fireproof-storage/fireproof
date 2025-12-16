@@ -97,6 +97,7 @@ export async function ensureCloudToken(
         .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
         .get();
       if (existingBinding) {
+        console.log("[ensureCloudToken p0.49] existingBinding found for appId:", req.appId, "ledgerId:", existingBinding.Ledgers.ledgerId);
         // Auto-redeem any pending invites for this user (ensureUser calls redeemInvite)
         await ensureUser(ctx, {
           type: "reqEnsureUser",
@@ -114,6 +115,7 @@ export async function ensureCloudToken(
             ),
           )
           .get();
+        console.log("[ensureCloudToken p0.49] userInLedger check for ledgerId:", existingBinding.Ledgers.ledgerId, "userId:", req.auth.user.userId, "found:", !!userInLedger);
         if (!userInLedger) {
           return Result.Err(`user not authorized for ledger - please accept the invite first`);
         }
