@@ -20,9 +20,24 @@ export async function redeemInvite(
   };
   console.log("[redeemInvite p0.47] searching with query:", JSON.stringify(query));
   const foundInvites = await findInvite(ctx, { query });
-  console.log("[redeemInvite p0.47] found invites:", foundInvites.length, "pending:", foundInvites.filter((i) => i.status === "pending").length);
+  console.log(
+    "[redeemInvite p0.47] found invites:",
+    foundInvites.length,
+    "pending:",
+    foundInvites.filter((i) => i.status === "pending").length,
+  );
   if (foundInvites.length > 0) {
-    console.log("[redeemInvite p0.47] invite details:", JSON.stringify(foundInvites.map((i) => ({ id: i.inviteId, status: i.status, queryEmail: i.query.byEmail, ledger: i.invitedParams.ledger?.id }))));
+    console.log(
+      "[redeemInvite p0.47] invite details:",
+      JSON.stringify(
+        foundInvites.map((i) => ({
+          id: i.inviteId,
+          status: i.status,
+          queryEmail: i.query.byEmail,
+          ledger: i.invitedParams.ledger?.id,
+        })),
+      ),
+    );
   }
   return Result.Ok({
     type: "resRedeemInvite",
