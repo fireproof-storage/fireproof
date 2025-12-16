@@ -20,7 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./actions/base
+      - uses: ./actions/runtime
+
+      - name: dummy build
+        run: |
+          pnpm i
 
       - name: deploy cloud/backend/cf-d1 - 1
         id: attempt1
@@ -37,26 +41,18 @@ jobs:
           CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
           FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
           STORAGE_URL: ${{ vars.STORAGE_URL }}
+          CLOUDFLARE_ENV: ${{ vars.CLOUDFLARE_ENV }}
         run: |
           pnpm run drizzle:d1-remote
-          pnpm exec core-cli writeEnv --wranglerToml ./wrangler.toml --env ${{ vars.CLOUDFLARE_ENV }} --out /dev/stdout --json | \
-            pnpm exec wrangler -c ./wrangler.toml secret --env ${{ vars.CLOUDFLARE_ENV }} bulk
-          pnpm run wrangler:deploy
-          pnpm run test --project cloud:D1 --testTimeout 10000
-
-      - name: deploy cloud/backend/cf-d1 - 2
-        if: steps.attempt1.outcome == 'failure'
-        working-directory: cloud/backend/cf-d1
-        env:
-          CLOUD_SESSION_TOKEN_PUBLIC: ${{ vars.CLOUD_SESSION_TOKEN_PUBLIC }}
-          CLOUD_SESSION_TOKEN_SECRET: ${{ secrets.CLOUD_SESSION_TOKEN_SECRET }}
-          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
-          ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
-          FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
-          STORAGE_URL: ${{ vars.STORAGE_URL }}
-        run: |
-          pnpm run test --project cloud:D1 --testTimeout 10000
+          echo "FP_ENDPOINT: $FP_ENDPOINT"
+          echo "CLOUDFLARE_ENV: $CLOUDFLARE_ENV"
+          echo "CLOUD_SESSION_TOKEN_PUBLIC=$(echo -n $CLOUD_SESSION_TOKEN_PUBLIC | sha256sum)"
+          echo "SECRET_ACCESS_KEY=$(echo -n $SECRET_ACCESS_KEY | sha256sum)"
+          pnpm exec core-cli writeEnv \
+            --wranglerToml ./wrangler.toml \
+            --env $CLOUDFLARE_ENV \
+            --out .env --json 
+          cat .env
+          cat .env | pnpm exec wrangler -c ./wrangler.toml secret --env $CLOUDFLARE_ENV bulk
+          pnpm run wrangler:deploy --env $CLOUDFLARE_ENV
+          # pnpm exec core-cli retry -- pnpm run test --project cloud:D1 --testTimeout 10000

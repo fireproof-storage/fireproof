@@ -18,6 +18,7 @@ export interface Env {
 
   CLERK_PUBLISHABLE_KEY: string;
   CLOUD_SESSION_TOKEN_PUBLIC: string;
+  STORAGE_URL: string;
 }
 
 export default {

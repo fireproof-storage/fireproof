@@ -44,6 +44,7 @@ function cfWebSocketPair() {
 }
 
 export function getRoomDurableObject(env: Env, _id: string) {
+  console.log("getRoomDurableObject called", env);
   const cfBackendKey = env.CF_BACKEND_KEY ?? "FP_WS_ROOM";
   // console.log("getRoomDurableObject", cfBackendKey, id);
   const rany = env as unknown as Record<string, DurableObjectNamespace<FPRoomDurableObject>>;

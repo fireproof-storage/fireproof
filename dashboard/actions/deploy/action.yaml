@@ -80,6 +80,9 @@ runs:
         (cd ../backend && pnpm run drizzle:d1-remote)
         pnpm exec core-cli wellKnown --jsons --presetKey "$CLERK_PUB_JWT_KEY" "$CLERK_PUB_JWT_URL" > key
         CLERK_PUB_JWT_KEY="$(cat key)"
+        echo "CLERK_PUB_JWT_KEY=$CLERK_PUB_JWT_KEY"
+        echo "CLOUD_SESSION_TOKEN_SECRET=$(echo -n $CLOUD_SESSION_TOKEN_SECRET | sha256sum)"
+        echo "CLOUD_SESSION_TOKEN_PUBLIC=$(echo -n $CLOUD_SESSION_TOKEN_PUBLIC | sha256sum)"
         pnpm exec core-cli writeEnv --env ${{inputs.CLOUDFLARE_ENV}} --out /dev/stdout --json \
           --fromEnv CLERK_PUBLISHABLE_KEY \
           --fromEnv CLERK_PUB_JWT_URL \

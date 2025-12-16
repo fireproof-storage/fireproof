@@ -244,6 +244,7 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
     CLERK_PUBLISHABLE_KEY: param.REQUIRED,
     DEVICE_ID_CA_PRIV_KEY: param.REQUIRED,
     DEVICE_ID_CA_CERT: param.REQUIRED,
+    STORAGE_URL: param.REQUIRED,
   });
   if (rEnvVals.isErr()) {
     throw rEnvVals.Err();

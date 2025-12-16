@@ -10,7 +10,7 @@
     "publish": "echo skip",
     "drizzle:d1-local": "drizzle-kit push --config ./drizzle.cloud.d1-local.config.ts",
     "drizzle:d1-remote": "drizzle-kit push --config ./drizzle.cloud.d1-remote.config.ts",
-    "wrangler:deploy": "wrangler deploy -c ./wrangler.toml --env dev"
+    "wrangler:deploy": "wrangler deploy -c ./wrangler.toml"
   },
   "keywords": [
     "ledger",
