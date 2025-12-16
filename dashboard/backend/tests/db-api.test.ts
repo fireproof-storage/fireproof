@@ -1431,6 +1431,133 @@ describe("db-api", () => {
       expect(userEToken.isOk()).toBeTruthy();
       expect(userEToken.Ok().ledger).toBe(ledgerId);
     });
+
+    it("ensureCloudToken auto-redeems invite by email (real UI flow)", async () => {
+      // This tests the actual flow: invite by email, user visits with matching email
+      const userA = datas[5];
+      const userF = datas[6]; // User F will be invited BY EMAIL
+      const id = sthis.nextId().str;
+      const appId = `EMAIL_INVITE_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // Get User F's email from their auth params (simulating what invite UI does)
+      // The TestApiToken generates email as `test${userId}@test.de`
+      const userFEmail = `testuserId-${userF.reqs.auth.token}@test.de`;
+
+      // User A invites User F BY EMAIL (like the real UI does)
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            byEmail: userFEmail,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User F does NOT explicitly call redeemInvite
+      // They just visit the vibe URL which calls ensureCloudToken
+      const userFToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userF.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // This should auto-redeem because ensureUser->redeemInvite finds by email
+      expect(userFToken.isOk()).toBeTruthy();
+      expect(userFToken.Ok().ledger).toBe(ledgerId);
+    });
+
+    it("ensureCloudToken auto-redeems for brand new user invited by email", async () => {
+      // This tests the exact production scenario:
+      // - User A creates a vibe and invites by email
+      // - User B has NEVER visited before (no user record exists)
+      // - User B clicks link, logs in, and ensureCloudToken is called
+      const userA = datas[7];
+      const id = sthis.nextId().str;
+      const appId = `NEW_USER_EMAIL_INVITE-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // Create a completely new user token that has NEVER been used
+      // This simulates a user who has never visited the system
+      const newUserToken = `brand-new-user-${id}`;
+      const newUserEmail = `testuserId-${newUserToken}@test.de`;
+
+      // User A invites the NEW user BY EMAIL
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            byEmail: newUserEmail,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // NEW user visits for the first time - they have no user record yet
+      // ensureCloudToken should:
+      // 1. Find existing binding for appId
+      // 2. Call ensureUser (which creates user + redeems invite)
+      // 3. Grant access to the ledger
+      const newUserAuth: DashAuthType = {
+        type: "clerk",
+        token: newUserToken,
+      };
+
+      const newUserCloudToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: newUserAuth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // Should succeed because ensureUser->redeemInvite finds invite by email
+      expect(newUserCloudToken.isOk()).toBeTruthy();
+      expect(newUserCloudToken.Ok().ledger).toBe(ledgerId);
+    });
   });
 
   it("create session with claim", async () => {
