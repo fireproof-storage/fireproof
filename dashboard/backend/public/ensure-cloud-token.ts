@@ -97,6 +97,11 @@ export async function ensureCloudToken(
         .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
         .get();
       if (existingBinding) {
+        // Auto-redeem any pending invites for this user (ensureUser calls redeemInvite)
+        await ensureUser(ctx, {
+          type: "reqEnsureUser",
+          auth: req.auth.verifiedAuth,
+        });
         // Verify the user is actually in LedgerUsers before granting access (strict policy)
         const userInLedger = await ctx.db
           .select()

@@ -1374,6 +1374,63 @@ describe("db-api", () => {
       expect(userDToken.isOk()).toBeTruthy();
       expect(userDToken.Ok().ledger).toBe(ledgerId);
     });
+
+    it("ensureCloudToken auto-redeems invite without explicit redeemInvite call", async () => {
+      // This tests that ensureCloudToken itself will redeem pending invites
+      // Before the fix, this would fail because the user wasn't in LedgerUsers
+      const userA = datas[2];
+      const userE = datas[1]; // User E will be invited but NOT explicitly call redeemInvite
+      const id = sthis.nextId().str;
+      const appId = `AUTO_REDEEM_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // User A invites User E to the ledger
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userE.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User E does NOT explicitly call redeemInvite
+      // Instead, they directly call ensureCloudToken
+      // This should auto-redeem the invite and grant access
+      const userEToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userE.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // Before the fix, this would fail with "user not authorized for ledger"
+      // After the fix, ensureCloudToken calls ensureUser which calls redeemInvite
+      expect(userEToken.isOk()).toBeTruthy();
+      expect(userEToken.Ok().ledger).toBe(ledgerId);
+    });
   });
 
   it("create session with claim", async () => {
