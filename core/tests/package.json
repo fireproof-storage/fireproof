@@ -71,7 +71,7 @@
     "jose": "^6.1.3",
     "use-fireproof": "workspace:0.0.0",
     "uuidv7": "^1.1.0",
-    "zod": "^4.1.13"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@clerk/clerk-js": "^5.114.1",

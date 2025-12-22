@@ -46,7 +46,7 @@
     "cborg": "^4.3.2",
     "jose": "^6.1.3",
     "multiformats": "^13.4.2",
-    "zod": "^4.1.13"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:^"
