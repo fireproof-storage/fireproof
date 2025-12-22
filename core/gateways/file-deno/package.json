@@ -40,6 +40,6 @@
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
     "@types/deno": "^2.5.0",
-    "@types/node": "^25.0.2"
+    "@types/node": "^25.0.3"
   }
 }
