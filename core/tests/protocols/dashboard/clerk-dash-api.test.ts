@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { clerkDashApi, ResEnsureUser } from "@fireproof/core-protocols-dashboard";
 import { Future, OnFunc } from "@adviser/cement";
-import type { Clerk } from "@clerk/clerk-js";
+import type { Clerk } from "@clerk/shared/types";
 
 describe("clerk-dash-api", () => {
   function testClerk(getToken: () => Promise<string>): Clerk & {

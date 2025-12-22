@@ -15,7 +15,7 @@ import {
   clerkDashApi,
 } from "@fireproof/core-protocols-dashboard";
 import { DASHAPI_URL } from "./helpers.js";
-import { Clerk } from "@clerk/clerk-js";
+import type { Clerk } from "@clerk/shared/types";
 
 export interface InviteItem {
   tenantId: string;
