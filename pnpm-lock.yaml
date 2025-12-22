@@ -35,8 +35,8 @@ importers:
         specifier: ^4.0.14
         version: 4.0.14(playwright@1.57.0)(vite@7.2.7(@types/node@25.0.2)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
       deno:
-        specifier: ^2.6.0
-        version: 2.6.0
+        specifier: ^2.6.3
+        version: 2.6.3
       drizzle-kit:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
@@ -1903,33 +1903,33 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@deno/darwin-arm64@2.6.0':
-    resolution: {integrity: sha512-9WHqeC4TYhyAogLE4mbFDDDnXPslKjVlbgQkreSdp7zXeUxopj0WB60mSNHaFFJk9vrRkwtT4SsIa9GM1wQjjQ==}
+  '@deno/darwin-arm64@2.6.3':
+    resolution: {integrity: sha512-HnmC8MR1ZN8nT7f74GpTHsjK2cH1nmTvAt3fqwuw8Vu7BNYJzk5C9Ba1d3y62Du4PtC8b8zhtGFuHeKyg8Xw3g==}
     cpu: [arm64]
     os: [darwin]
 
-  '@deno/darwin-x64@2.6.0':
-    resolution: {integrity: sha512-0qUO7PXerNrfKpReQ9Di3h2OQcOi+bS3dUkwOekLzN6LtFgKKhXGkT5JkqLciE92Y84OEatk/10Vt53KYBbAPw==}
+  '@deno/darwin-x64@2.6.3':
+    resolution: {integrity: sha512-vdtekIcP9H6gPE8+q4Rtbfvva66mC71Kf6ZMzxbhaThGYwrfhQUmw5lYafrxK64A1jdMpUN1QKuNveqMbj/PQQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@deno/linux-arm64-glibc@2.6.0':
-    resolution: {integrity: sha512-LZBoUwl1CShHDybrC88mvCV5n3EEOXuo94kYF4AgAJHA0W2twlOCwLBf3CreSD6v3SrAuEnnKSUDyXjQ2SkMhA==}
+  '@deno/linux-arm64-glibc@2.6.3':
+    resolution: {integrity: sha512-2H8s7GJOVEe8PDpL36ajwF5ev/g9nTa1w+JaBqhYsxt5bO6j2lLkzB3HTn4fGwoXVK6BX8TTo2iCymlmLfVWXg==}
     cpu: [arm64]
     os: [linux]
 
-  '@deno/linux-x64-glibc@2.6.0':
-    resolution: {integrity: sha512-QBFOLAZU4aFTDok6mNqz32V+Z6yvGlifPXeT5rm+AsmrFGLzXbn2dqJV/03yXaP7Fj1I2Lmp/ltPbVjsj1raqg==}
+  '@deno/linux-x64-glibc@2.6.3':
+    resolution: {integrity: sha512-pL+HFzKRMf1IOubB2Ikd/MY2xFQ+/UEh6BSgzf3zQGuIo0mkzAfs6V0pMi3KU6bNHsdqoKLto9S2gZoY2JfjVg==}
     cpu: [x64]
     os: [linux]
 
-  '@deno/win32-arm64@2.6.0':
-    resolution: {integrity: sha512-+ElZwl31OHlykQ+BMkc+8gzs9UWRjaOIcb6woSIcXflGGVuhNyUUv101q2G4AV7Wv/kMA2wNTPJNAOuXOMnu/w==}
+  '@deno/win32-arm64@2.6.3':
+    resolution: {integrity: sha512-pKzxQjbdpXHzONvrPj2rsccP45z11R7JIznYzzcCdAHCAAtttB6448m6Y8iYHbFPO8zB8HeYK9McPRCPxCTqKg==}
     cpu: [arm64]
     os: [win32]
 
-  '@deno/win32-x64@2.6.0':
-    resolution: {integrity: sha512-vB/6WoSklXx8EozFEeQQn+5MRnMGbM6srOolDmh2U5U0C5E6gzSmkPkt/+om+tnKR4GRzatfxkJHkxzRvYhFZw==}
+  '@deno/win32-x64@2.6.3':
+    resolution: {integrity: sha512-zTyL9qn3KZx5EUPnYFl2BzUhErtzWSvyzZcHzTOGYR7P39vLtWE0YlCeNIutGZmyomwAIvK+98KV4YMB7kggmw==}
     cpu: [x64]
     os: [win32]
 
@@ -4009,8 +4009,8 @@ packages:
   defu@6.1.4:
     resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
 
-  deno@2.6.0:
-    resolution: {integrity: sha512-vm+cRVxePdiOyPbaC30s3BrazMVQ2Q3lZu7TYjvBkyyUqXWaCC7eOfu2YLz4Yf8dvV5UuBJ8zugsHLLde4GpzQ==}
+  deno@2.6.3:
+    resolution: {integrity: sha512-5fNkOLa7wagUFgQaF6WEu5zJuxIdIogn7IvuYvjVaA2CHrW117p5l7Y6GS0ZYvBJZgeugf/l0VCWQ7TpYGcMPQ==}
     hasBin: true
 
   dequal@2.0.3:
@@ -6915,22 +6915,22 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@deno/darwin-arm64@2.6.0':
+  '@deno/darwin-arm64@2.6.3':
     optional: true
 
-  '@deno/darwin-x64@2.6.0':
+  '@deno/darwin-x64@2.6.3':
     optional: true
 
-  '@deno/linux-arm64-glibc@2.6.0':
+  '@deno/linux-arm64-glibc@2.6.3':
     optional: true
 
-  '@deno/linux-x64-glibc@2.6.0':
+  '@deno/linux-x64-glibc@2.6.3':
     optional: true
 
-  '@deno/win32-arm64@2.6.0':
+  '@deno/win32-arm64@2.6.3':
     optional: true
 
-  '@deno/win32-x64@2.6.0':
+  '@deno/win32-x64@2.6.3':
     optional: true
 
   '@drizzle-team/brocli@0.10.2': {}
@@ -8833,14 +8833,14 @@ snapshots:
 
   defu@6.1.4: {}
 
-  deno@2.6.0:
+  deno@2.6.3:
     optionalDependencies:
-      '@deno/darwin-arm64': 2.6.0
-      '@deno/darwin-x64': 2.6.0
-      '@deno/linux-arm64-glibc': 2.6.0
-      '@deno/linux-x64-glibc': 2.6.0
-      '@deno/win32-arm64': 2.6.0
-      '@deno/win32-x64': 2.6.0
+      '@deno/darwin-arm64': 2.6.3
+      '@deno/darwin-x64': 2.6.3
+      '@deno/linux-arm64-glibc': 2.6.3
+      '@deno/linux-x64-glibc': 2.6.3
+      '@deno/win32-arm64': 2.6.3
+      '@deno/win32-x64': 2.6.3
 
   dequal@2.0.3: {}
 
