@@ -47,7 +47,7 @@
     "multiformats": "^13.4.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-hook-form": "^7.68.0",
+    "react-hook-form": "^7.69.0",
     "react-router-dom": "^7.10.1",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
