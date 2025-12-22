@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.5.5",
-    "@clerk/shared": "^3.39.0",
+    "@clerk/shared": "^3.41.1",
     "@fireproof/core-device-id": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
