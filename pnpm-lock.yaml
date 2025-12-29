@@ -72,7 +72,7 @@ importers:
         version: 4.0.14(@types/node@25.0.3)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        version: 4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
 
   cli:
     dependencies:
@@ -208,8 +208,8 @@ importers:
         specifier: ^0.5.5
         version: 0.5.5(typescript@5.9.3)
       '@cloudflare/workers-types':
-        specifier: ^4.20251221.0
-        version: 4.20251221.0
+        specifier: ^4.20251229.0
+        version: 4.20251229.0
       '@fireproof/cloud-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -236,7 +236,7 @@ importers:
         version: 1.0.20
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20251221.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20251229.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.11.1
         version: 4.11.1
@@ -272,8 +272,8 @@ importers:
         specifier: ^0.5.5
         version: 0.5.5(typescript@5.9.3)
       '@cloudflare/workers-types':
-        specifier: ^4.20251221.0
-        version: 4.20251221.0
+        specifier: ^4.20251229.0
+        version: 4.20251229.0
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -300,7 +300,7 @@ importers:
         version: 0.14.3
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20251221.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20251229.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.11.1
         version: 4.11.1
@@ -322,7 +322,7 @@ importers:
         version: 4.0.14(@types/node@25.0.3)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        version: 4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -367,7 +367,7 @@ importers:
         version: 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20251221.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20251229.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.11.1
         version: 4.11.1
@@ -1242,8 +1242,8 @@ importers:
         version: 4.2.1
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20251221.0
-        version: 4.20251221.0
+        specifier: ^4.20251229.0
+        version: 4.20251229.0
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.2
@@ -1261,7 +1261,7 @@ importers:
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20251221.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20251229.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@1.21.7)
@@ -1273,7 +1273,7 @@ importers:
         version: 4.0.14(@types/node@25.0.3)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        version: 4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -1370,10 +1370,10 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.19.0
-        version: 1.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.3)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251217.0)(wrangler@4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))
+        version: 1.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.3)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251217.0)(wrangler@4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))
       '@cloudflare/workers-types':
-        specifier: ^4.20251221.0
-        version: 4.20251221.0
+        specifier: ^4.20251229.0
+        version: 4.20251229.0
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.2
@@ -1409,7 +1409,7 @@ importers:
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20251221.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20251229.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@1.21.7)
@@ -1448,7 +1448,7 @@ importers:
         version: 4.0.14(@types/node@25.0.3)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: ^4.56.0
-        version: 4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        version: 4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -1978,8 +1978,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20251221.0':
-    resolution: {integrity: sha512-VVTEhY29TtwIwjBjpRrdT51Oqu0JlXijc5TiEKFCjwouUSn+5VhzoTSaz7UBjVOu4vfvcQmjqt/dzwBUR7c95w==}
+  '@cloudflare/workers-types@4.20251229.0':
+    resolution: {integrity: sha512-LgzxDZaT9bQhycQInf7S/fcZCQRTvWWQPE9xnEyedI+CXxWsXAD7hg84kvVyr+KUz+W9Oblzo75g6XZ3HdI5Yg==}
 
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
@@ -3844,6 +3844,9 @@ packages:
 
   '@swc/helpers@0.5.17':
     resolution: {integrity: sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A==}
+
+  '@swc/helpers@0.5.18':
+    resolution: {integrity: sha512-TXTnIcNJQEKwThMMqBXsZ4VGAza6bvN4pa41Rkqoio6QBKMvo+5lexeTMScGCIxtzgQJzElcvIltani+adC5PQ==}
 
   '@tailwindcss/container-queries@0.1.1':
     resolution: {integrity: sha512-p18dswChx6WnTSaJCSGx6lTmrGzNNvm2FtXmiO6AuA1V4U5REyoqwmT6kgAsIMdjo07QdAfYXHJ4hnMtfHzWgA==}
@@ -7566,6 +7569,7 @@ packages:
   wrangler@4.56.0:
     resolution: {integrity: sha512-Nqi8duQeRbA+31QrD6QlWHW3IZVnuuRxMy7DEg46deUzywivmaRV/euBN5KKXDPtA24VyhYsK7I0tkb7P5DM2w==}
     engines: {node: '>=20.0.0'}
+    deprecated: Version 4.55.0 and 4.56.0 can incorrectly automatically delegate 'wrangler deploy' to 'opennextjs-cloudflare'. Use an older or newer version.
     hasBin: true
     peerDependencies:
       '@cloudflare/workers-types': ^4.20251217.0
@@ -8246,7 +8250,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20251217.0
 
-  '@cloudflare/vite-plugin@1.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.3)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251217.0)(wrangler@4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))':
+  '@cloudflare/vite-plugin@1.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.3)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20251217.0)(wrangler@4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10))':
     dependencies:
       '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251217.0)
       '@remix-run/node-fetch-server': 0.8.1
@@ -8257,7 +8261,7 @@ snapshots:
       tinyglobby: 0.2.15
       unenv: 2.0.0-rc.24
       vite: 7.3.0(@types/node@25.0.3)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      wrangler: 4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      wrangler: 4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       ws: 8.18.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
@@ -8279,7 +8283,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20251217.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20251221.0': {}
+  '@cloudflare/workers-types@4.20251229.0': {}
 
   '@coinbase/wallet-sdk@4.3.0':
     dependencies:
@@ -9873,6 +9877,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@swc/helpers@0.5.18':
+    dependencies:
+      tslib: 2.8.1
+
   '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       tailwindcss: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
@@ -10995,9 +11003,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20251221.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7):
+  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20251229.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251221.0
+      '@cloudflare/workers-types': 4.20251229.0
       '@libsql/client': 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       gel: 2.1.1
       kysely: 0.28.7
@@ -13343,7 +13351,7 @@ snapshots:
 
   rpc-websockets@9.3.2:
     dependencies:
-      '@swc/helpers': 0.5.17
+      '@swc/helpers': 0.5.18
       '@types/uuid': 8.3.4
       '@types/ws': 8.18.1
       buffer: 6.0.3
@@ -14181,7 +14189,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20251217.0
       '@cloudflare/workerd-windows-64': 1.20251217.0
 
-  wrangler@4.56.0(@cloudflare/workers-types@4.20251221.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10):
+  wrangler@4.56.0(@cloudflare/workers-types@4.20251229.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.1
       '@cloudflare/unenv-preset': 2.7.13(unenv@2.0.0-rc.24)(workerd@1.20251217.0)
@@ -14192,7 +14200,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20251217.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20251221.0
+      '@cloudflare/workers-types': 4.20251229.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
