@@ -26,3 +26,12 @@ export const DEFAULT_ENDPOINT = BuildURI.from("fireproof://cloud.fireproof.direc
 export const SYNC_DB_NAME = "fp_sync";
 
 export const DASHAPI_URL = import.meta.env.VITE_DASHAPI_URL ?? "/api";
+
+/**
+ * Default timeout for query execution in milliseconds.
+ * Configurable via VITE_QUERY_TIMEOUT environment variable.
+ * @default 30000 (30 seconds)
+ */
+export const QUERY_TIMEOUT_MS = import.meta.env.VITE_QUERY_TIMEOUT
+  ? parseInt(import.meta.env.VITE_QUERY_TIMEOUT as string, 10)
+  : 30000;
