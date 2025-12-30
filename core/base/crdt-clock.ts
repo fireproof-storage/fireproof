@@ -211,14 +211,24 @@ function sortClockHead(clockHead: ClockHead) {
   return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()));
 }
 
+/**
+ * Validates that all blocks in the clock head exist in the blockstore.
+ * Ensures validation completes before returning to prevent silent data corruption.
+ * @param logger - Logger instance for error reporting
+ * @param newHead - Array of CIDs representing the new clock head to validate
+ * @param blockstore - Blockstore to validate blocks against
+ * @throws Error if blockstore is missing or any block doesn't exist
+ */
 async function validateBlocks(logger: Logger, newHead: ClockHead, blockstore?: BaseBlockstore) {
   if (!blockstore) throw logger.Error().Msg("missing blockstore");
-  newHead.map(async (cid) => {
-    const got = await blockstore.get(cid);
-    if (!got) {
-      throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
-    }
-  });
+  await Promise.all(
+    newHead.map(async (cid) => {
+      const got = await blockstore.get(cid);
+      if (!got) {
+        throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
+      }
+    })
+  );
 }
 
 function compareClockHeads(head1: ClockHead, head2: ClockHead) {
