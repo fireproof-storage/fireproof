@@ -256,22 +256,17 @@ describe("KeyedCryptoStore", () => {
     kb = await getKeyBag(sthis, {});
     loader = mockLoader(sthis);
   });
-  it("no crypto", async () => {
+  it("rejects insecure storekey", async () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
-    for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
-      const store = await pstore;
-      // await store.start();
-      const kc = await store.keyedCrypto();
-      expect(kc.constructor.name).toBe("noCrypto");
-      // expect(kc.isEncrypting).toBe(false);
-      expect(kc.constructor.name).toBe("noCrypto");
-      // expect(kc.isEncrypting).toBe(false);
-    }
+    // Attempting to create stores with insecure storekey should throw
+    await expect(createAttachedStores(url, loader, "insecure")).rejects.toThrow(
+      /storekey=insecure is no longer supported/,
+    );
   });
 
   it("create key", async () => {
-    for (const pstore of (await createAttachedStores(baseUrl, loader, "insecure")).stores.baseStores) {
+    for (const pstore of (await createAttachedStores(baseUrl, loader, "test-create-key")).stores.baseStores) {
       const store = await pstore; // await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("cryptoAction");
@@ -286,7 +281,7 @@ describe("KeyedCryptoStore", () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const genKey = await kb.getNamedKey("@heute@", false, key);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "@heute@").URI();
-    for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
+    for (const pstore of (await createAttachedStores(url, loader, "test-key-ref")).stores.baseStores) {
       const store = await pstore;
       // await store.start();
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(`@heute@`);
@@ -307,7 +302,7 @@ describe("KeyedCryptoStore", () => {
   it("key", async () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, key).URI();
-    for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
+    for (const pstore of (await createAttachedStores(url, loader, "test-direct-key")).stores.baseStores) {
       // for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
       // await store.start();

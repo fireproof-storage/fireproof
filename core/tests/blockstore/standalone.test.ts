@@ -105,7 +105,6 @@ describe("standalone", () => {
         default:
           uri = BuildURI.from("file://dist/standalone")
             .setParam(PARAM.NAME, "peer-log")
-            .setParam(PARAM.STORE_KEY, "insecure")
             .URI();
           break;
       }
@@ -115,10 +114,10 @@ describe("standalone", () => {
         writeQueue: { chunkSize: 32 },
         storeUrls: {
           data: {
-            meta: uri.build().setParam(PARAM.STORE, "meta").setParam(PARAM.STORE_KEY, "insecure").URI(),
-            car: uri.build().setParam(PARAM.STORE, "car").setParam(PARAM.STORE_KEY, "insecure").URI(),
-            file: uri.build().setParam(PARAM.STORE, "file").setParam(PARAM.STORE_KEY, "insecure").URI(),
-            wal: uri.build().setParam(PARAM.STORE, "wal").setParam(PARAM.STORE_KEY, "insecure").URI(),
+            meta: uri.build().setParam(PARAM.STORE, "meta").URI(),
+            car: uri.build().setParam(PARAM.STORE, "car").URI(),
+            file: uri.build().setParam(PARAM.STORE, "file").URI(),
+            wal: uri.build().setParam(PARAM.STORE, "wal").URI(),
           },
         },
       } as LedgerOpts);

@@ -121,14 +121,16 @@ describe("KeyedCryptoStore", () => {
     baseUrl = baseUrl.build().defParam(PARAM.NAME, "test").URI();
     loader = mockLoader(sthis);
   });
-  it("no crypto", async () => {
+  /**
+   * Tests that creating stores with storekey=insecure is rejected.
+   * The insecure mode has been removed for security (see spec-03).
+   */
+  it("rejects insecure storekey", async () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
-    for (const pstore of (await createAttachedStores(url, loader, "insecure")).stores.baseStores) {
-      const store = await pstore;
-      // await store.start();
-      const kc = await store.keyedCrypto();
-      expect(kc.constructor.name).toBe("noCrypto");
-      // expect(kc.isEncrypting).toBe(false);
-    }
+
+    // Attempting to create stores with insecure storekey should throw
+    await expect(createAttachedStores(url, loader, "test-indexeddb-file")).rejects.toThrow(
+      /storekey=insecure is no longer supported/,
+    );
   });
 });

@@ -8,15 +8,16 @@ import { getKeyBag } from "@fireproof/core-keybag";
 import { CryptoAction, IvKeyIdData } from "@fireproof/core-types-blockstore";
 
 const sthis = ensureSuperThis();
+
+/**
+ * Tests regression of stable CID encoding with encrypted storage.
+ * Note: insecure storekey has been removed (see spec-03).
+ */
 describe.each([
   async () => {
     const kb = await getKeyBag(sthis, {});
     const keyStr = base58btc.encode(toCryptoRuntime().randomBytes(kb.rt.keyLength));
     return await keyedCryptoFactory(URI.from(`test://bla?storekey=${keyStr}`), kb, sthis);
-  },
-  async () => {
-    const kb = await getKeyBag(sthis, {});
-    return await keyedCryptoFactory(URI.from(`test://bla?storekey=insecure`), kb, sthis);
   },
 ])("regression of stable cid encoding", (factory) => {
   let kycr: CryptoAction;

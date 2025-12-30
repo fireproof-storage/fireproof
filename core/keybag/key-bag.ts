@@ -85,11 +85,29 @@ export class KeyBag implements KeyBagIf {
     );
   }
 
+  /**
+   * Ensures a store key is present in the URL, generating one if needed.
+   * Rejects attempts to use insecure (unencrypted) storage.
+   *
+   * @param url - The URI to ensure has a store key
+   * @param keyFactory - Factory function to generate a key name if none exists
+   * @returns Result containing the URI with store key, or error if insecure mode attempted
+   * @throws Error if storekey=insecure is attempted (removed for security)
+   */
   async ensureKeyFromUrl(url: URI, keyFactory: () => string): Promise<Result<URI>> {
     // add storekey to url
     const storeKey = url.getParam(PARAM.STORE_KEY);
     if (storeKey === "insecure") {
-      return Result.Ok(url);
+      return Result.Err(
+        this.logger
+          .Error()
+          .Msg(
+            "storekey=insecure is no longer supported. " +
+              "Data must be encrypted. Remove the storekey=insecure parameter " +
+              "to use automatic key generation, or provide a valid encryption key.",
+          )
+          .AsError(),
+      );
     }
     if (!storeKey) {
       const keyName = `@${keyFactory()}@`;

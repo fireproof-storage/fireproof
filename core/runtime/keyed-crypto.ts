@@ -153,96 +153,46 @@ class cryptoAction implements CryptoAction {
   }
 }
 
-class nullCodec implements AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
-  readonly code = 24;
-  readonly name = "Fireproof@unencrypted-block";
-  readonly empty = new Uint8Array();
-
-  async encode(data: Uint8Array): Promise<Uint8Array> {
-    return data;
-  }
-  async decode(data: Uint8Array): Promise<IvKeyIdData> {
-    return {
-      iv: this.empty,
-      keyId: this.empty,
-      data: data,
-    };
-  }
-}
-
-class noCrypto implements CryptoAction {
-  readonly ivLength = 0;
-  readonly code = 0x0;
-  readonly name = "Fireproof@unencrypted-block";
-  readonly logger: Logger;
-  readonly crypto: CryptoRuntime;
-  readonly key: KeysByFingerprint;
-  readonly isEncrypting = false;
-  readonly _fingerPrint = "noCrypto:" + Math.random();
-  readonly url: URI;
-  constructor(url: URI, cyrt: CryptoRuntime, sthis: SuperThis) {
-    this.logger = ensureLogger(sthis, "noCrypto");
-    this.crypto = cyrt;
-    this.key = {
-      id: sthis.nextId().str,
-      name: "noCrypto",
-      get: () => {
-        throw this.logger.Error().Msg("noCrypto.get not implemented").AsError();
-      },
-      upsert: () => {
-        throw this.logger.Error().Msg("noCrypto.upsert not implemented").AsError();
-      },
-      asV2StorageKeyItem: () => {
-        throw this.logger.Error().Msg("noCrypto.asV2KeysItem not implemented").AsError();
-      },
-    };
-    this.url = url;
-  }
-
-  fingerPrint(): Promise<string> {
-    return Promise.resolve(this._fingerPrint);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  codec(iv?: Uint8Array): AsyncBlockCodec<24, Uint8Array, IvKeyIdData> {
-    return new nullCodec();
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number } {
-    return {
-      name: "noCrypto",
-      iv: new Uint8Array(),
-      tagLength: 0,
-    };
-  }
-  _decrypt(): Promise<Uint8Array> {
-    throw this.logger.Error().Msg("noCrypto.decrypt not implemented").AsError();
-  }
-  _encrypt(): Promise<Uint8Array> {
-    throw this.logger.Error().Msg("noCrypto.decrypt not implemented").AsError();
-  }
-}
-
+/**
+ * Factory function to create a CryptoAction for encrypting/decrypting data.
+ * Encryption is mandatory - insecure mode is no longer supported.
+ *
+ * @param url - URI containing store configuration including store key
+ * @param kb - KeyBag interface for key management
+ * @param sthis - SuperThis context for logging and runtime access
+ * @returns CryptoAction instance configured for encryption
+ * @throws Error if storekey=insecure is attempted or if key retrieval fails
+ */
 export async function keyedCryptoFactory(url: URI, kb: KeyBagIf, sthis: SuperThis): Promise<CryptoAction> {
   const storekey = url.getParam(PARAM.STORE_KEY);
-  if (storekey && storekey !== "insecure") {
+  if (storekey === "insecure") {
+    throw sthis.logger
+      .Error()
+      .Str("url", url.toString())
+      .Msg(
+        "storekey=insecure is no longer supported. " +
+          "Data must be encrypted. Remove the storekey=insecure parameter " +
+          "to use automatic key generation, or provide a valid encryption key.",
+      )
+      .AsError();
+  }
+  if (storekey) {
     const rkey = await kb.getNamedKey(storekey, false);
     if (rkey.isErr()) {
-      // try {
-      //   rkey = await kb.toKeyWithFingerPrint(storekey);
-      // } catch (e) {
-      throw (
-        sthis.logger
-          .Error()
-          // .Err(e)
-          .Str("keybag", kb.rt.id())
-          // .Result("key", rkey)
-          .Str("name", storekey)
-          .Msg("getNamedKey failed")
-          .AsError()
-      );
-      // }
+      throw sthis.logger
+        .Error()
+        .Str("keybag", kb.rt.id())
+        .Str("name", storekey)
+        .Msg("getNamedKey failed")
+        .AsError();
     }
     return new cryptoAction(url, rkey.Ok(), kb.rt.crypto, sthis);
   }
-  return new noCrypto(url, kb.rt.crypto, sthis);
+  // No storekey specified - this should not happen in normal operation
+  // as ensureKeyFromUrl should always add one, but handle gracefully
+  throw sthis.logger
+    .Error()
+    .Str("url", url.toString())
+    .Msg("No store key specified. Use ensureKeyFromUrl to add encryption key to URL.")
+    .AsError();
 }

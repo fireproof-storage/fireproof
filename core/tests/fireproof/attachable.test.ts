@@ -1,7 +1,5 @@
 import { stripper, AppContext, BuildURI, URI, WithoutPromise } from "@adviser/cement";
 import { Attachable, Database, fireproof, GatewayUrlsParam, PARAM, Attached, TraceFn } from "@fireproof/core";
-import { CarReader } from "@ipld/car/reader";
-import * as dagCbor from "@ipld/dag-cbor";
 import { mockLoader } from "../helpers.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
@@ -107,9 +105,15 @@ describe("meta check", () => {
     await db1.close();
   });
 
+  /**
+   * Tests that a database with multiple records persists and reopens correctly.
+   * Verifies carLog structure, memory gateway entries, and data integrity.
+   * Note: Uses encryption (insecure mode removed per ROBUST-03).
+   */
   it("multiple record Database", async () => {
     const name = `remote-db-${sthis.nextId().str}`;
-    const base = `memory://${name}?storekey=insecure`;
+    // Use encrypted storage (insecure mode no longer supported)
+    const base = `memory://${name}`;
     const db = fireproof(name, {
       storeUrls: {
         base,
@@ -118,40 +122,38 @@ describe("meta check", () => {
     await db.ready();
     await db.put({ _id: `id-${0}`, value: `value-${0}` });
     const gws = db.ledger.crdt.blockstore.loader.attachedStores.local();
-    expect(db.ledger.crdt.blockstore.loader.carLog.asArray().map((i) => i.map((i) => i.toString()))).toEqual([
-      ["baembeieldbalgnyxqp7rmj4cbrot75gweavqy3aw22km43zsfufrihfn7e"],
-      ["baembeig2is4vdgz4gyiadfh5uutxxeiuqtacnesnytrnilpwcu7q5m5tmu"],
-    ]);
+
+    // Verify carLog has expected structure (genesis + one write)
+    const carLog = db.ledger.crdt.blockstore.loader.carLog.asArray();
+    expect(carLog.length).toBe(2);
+    expect(carLog[0].length).toBeGreaterThan(0);
+    expect(carLog[1].length).toBeGreaterThan(0);
+    // Each entry should be a valid CID string
+    carLog.forEach((entry) => {
+      entry.forEach((cid) => {
+        expect(cid.toString()).toMatch(/^baem/);
+      });
+    });
+
     await db.close();
-    expect(
-      Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries())
-        .filter(([k]) => k.startsWith(`memory://${name}`))
-        .map(([k]) =>
-          stripper(
-            ["name", "storekey", "version"],
-            Array.from(URI.from(k).getParams).reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
-          ),
+
+    // Verify memory gateway entries have expected structure
+    const memoryEntries = Array.from(
+      ((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries(),
+    )
+      .filter(([k]) => k.startsWith(`memory://${name}`))
+      .map(([k]) =>
+        stripper(
+          ["name", "storekey", "version", "key"],
+          Array.from(URI.from(k).getParams).reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {}),
         ),
-    ).toEqual([
-      {
-        key: "baembeig2is4vdgz4gyiadfh5uutxxeiuqtacnesnytrnilpwcu7q5m5tmu",
-        store: "car",
-        suffix: ".car",
-      },
-      {
-        key: "main",
-        store: "wal",
-      },
-      {
-        key: "main",
-        store: "meta",
-      },
-      {
-        key: "baembeieldbalgnyxqp7rmj4cbrot75gweavqy3aw22km43zsfufrihfn7e",
-        store: "car",
-        suffix: ".car",
-      },
-    ]);
+      );
+
+    // Should have car entries (with .car suffix), wal, and meta stores
+    const stores = memoryEntries.map((e) => e.store);
+    expect(stores.filter((s) => s === "car").length).toBe(2);
+    expect(stores).toContain("wal");
+    expect(stores).toContain("meta");
 
     const db1 = fireproof(name, {
       storeUrls: {
@@ -160,10 +162,12 @@ describe("meta check", () => {
     });
     expect(db1.ledger).not.equal(db.ledger);
     await db1.ready();
-    expect(db1.ledger.crdt.blockstore.loader.carLog.asArray().map((i) => i.map((i) => i.toString()))).toEqual([
-      ["baembeieldbalgnyxqp7rmj4cbrot75gweavqy3aw22km43zsfufrihfn7e"],
-      ["baembeig2is4vdgz4gyiadfh5uutxxeiuqtacnesnytrnilpwcu7q5m5tmu"],
-    ]);
+
+    // Verify reopened database has same carLog structure
+    const carLog1 = db1.ledger.crdt.blockstore.loader.carLog.asArray();
+    expect(carLog1.length).toBe(2);
+    expect(carLog1[0].length).toBeGreaterThan(0);
+    expect(carLog1[1].length).toBeGreaterThan(0);
 
     const gensis = await db1.get(PARAM.GENESIS_CID);
     expect(gensis).toEqual({ _id: PARAM.GENESIS_CID });
@@ -178,28 +182,19 @@ describe("meta check", () => {
         },
       },
     ]);
-    const car = Array.from(((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries())
-      .filter(([k]) => k.startsWith(`memory://${name}`))
-      .map(([k, v]) => [URI.from(k).getParam(PARAM.KEY), v])
-      .find(([k]) => k === "baembeig2is4vdgz4gyiadfh5uutxxeiuqtacnesnytrnilpwcu7q5m5tmu") as [string, Uint8Array];
-    const rawReader = await CarReader.fromBytes(car[1]);
-    const blocks = [];
-    for await (const block of rawReader.blocks()) {
-      blocks.push(block);
-    }
-    expect(dagCbor.decode(blocks[1].bytes)).toEqual({
-      doc: {
-        _id: "baembeiarootfireproofgenesisblockaaaafireproofgenesisblocka",
-      },
-    });
 
-    expect(blocks.map((i) => i.cid.toString())).toEqual([
-      "bafyreibxibqhi6wh5klrje7ne4htffeqyyqfd6y7x2no6wnhid4nixizau",
-      "bafyreidnvv4mwvweup5w52ddre2sl4syhvczm6ejqsmuekajowdl2cf2q4",
-      "bafyreihh6nbfbhgkf5lz7hhsscjgiquw426rxzr3fprbgonekzmyvirrhe",
-      "bafyreiejg3twlaxr7gfvvhtxrhvwaydytdv4guidmtvaz5dskm6gp73ryi",
-      "bafyreiblui55o25dopc5faol3umsnuohb5carto7tot4kicnkfc37he4h4",
-    ]);
+    // Verify car files exist in memory gateway (content is encrypted, so we can't decode directly)
+    const carEntries = Array.from(
+      ((gws.active.car.realGateway as DefSerdeGateway).gw as MemoryGateway).memories.entries(),
+    )
+      .filter(([k]) => k.startsWith(`memory://${name}`))
+      .filter(([k]) => URI.from(k).getParam(PARAM.STORE) === "car");
+
+    expect(carEntries.length).toBe(2);
+    // Verify each car entry has data (encrypted content)
+    carEntries.forEach(([, data]) => {
+      expect(data.length).toBeGreaterThan(0);
+    });
   });
 });
 
