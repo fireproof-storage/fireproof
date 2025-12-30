@@ -175,10 +175,14 @@ function QueryDynamicTable({ mapFn, name }: QueryDynamicTableProps) {
 
   // Execute map function in sandbox when docs or mapFn change
   useEffect(() => {
+    let cancelled = false;
+
     if (allDocs.length === 0) {
       setQueryResults([]);
       setIsLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     setIsLoading(true);
@@ -186,6 +190,7 @@ function QueryDynamicTable({ mapFn, name }: QueryDynamicTableProps) {
 
     executeMapFn(mapFn, allDocs)
       .then((results: MapResult[]) => {
+        if (cancelled) return;
         // Extract documents from results
         const docs = results
           .map((r: MapResult) => r.value)
@@ -194,10 +199,15 @@ function QueryDynamicTable({ mapFn, name }: QueryDynamicTableProps) {
         setIsLoading(false);
       })
       .catch((error: Error) => {
+        if (cancelled) return;
         setQueryError(error.message);
         setQueryResults([]);
         setIsLoading(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [mapFn, allDocs]);
 
   if (isLoading) {

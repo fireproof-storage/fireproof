@@ -44,6 +44,7 @@ export interface MapResult {
 /**
  * Patterns that are blocked before code reaches the sandbox.
  * These patterns indicate dangerous operations that should never execute.
+ * This is best-effort validation; the sandbox is the primary security boundary.
  */
 const BLOCKED_PATTERNS: { pattern: RegExp; description: string }[] = [
   { pattern: /\bfetch\s*\(/, description: "fetch() calls are not allowed" },
@@ -224,20 +225,38 @@ async function executeWithTimeout(
   code: string,
   timeoutMs: number
 ): Promise<{ value?: QuickJSHandle; error?: QuickJSHandle }> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error(`Query execution timed out after ${timeoutMs}ms`));
-    }, timeoutMs);
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return vm.evalCode(code);
+  }
 
-    try {
-      const result = vm.evalCode(code);
-      clearTimeout(timeout);
-      resolve(result);
-    } catch (error) {
-      clearTimeout(timeout);
-      reject(error);
+  const deadline = Date.now() + timeoutMs;
+  let timedOut = false;
+  const runtime = vm.runtime;
+
+  runtime.setInterruptHandler(() => {
+    if (Date.now() > deadline) {
+      timedOut = true;
+      return true;
     }
+    return false;
   });
+
+  try {
+    const result = vm.evalCode(code);
+    if (timedOut) {
+      result.error?.dispose();
+      result.value?.dispose();
+      throw new Error(`Query execution timed out after ${timeoutMs}ms`);
+    }
+    return result;
+  } catch (error) {
+    if (timedOut) {
+      throw new Error(`Query execution timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    runtime.removeInterruptHandler();
+  }
 }
 
 /**

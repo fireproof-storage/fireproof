@@ -45,11 +45,9 @@ export default defineConfig({
   server: {
     port: 7370,
     hmr: false,
-    proxy: {
-      "/*": {
-        rewrite: () => "/index.html",
-      },
-    },
+  },
+  optimizeDeps: {
+    exclude: ["quickjs-emscripten"],
   },
   resolve: process.env.USE_SOURCE
     ? {

@@ -2,7 +2,7 @@
  * Security test suite for the query sandbox.
  * Tests that malicious patterns are blocked and the sandbox provides proper isolation.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   initSandbox,
   isSandboxAvailable,
@@ -11,15 +11,12 @@ import {
   SandboxDocument,
 } from "../src/services/sandbox-service.js";
 
-describe("Sandbox Security", () => {
-  /**
-   * Initialize sandbox before running tests.
-   * Some tests may skip if WASM is unavailable in the test environment.
-   */
-  beforeAll(async () => {
-    await initSandbox();
-  });
+/** Whether the WASM sandbox is available in the test environment. */
+const sandboxReady = await initSandbox();
+/** Test helper that skips when the sandbox isn't available. */
+const runIfSandbox = sandboxReady ? it : it.skip;
 
+describe("Sandbox Security", () => {
   describe("validateCode - Blocked Patterns", () => {
     /** Verifies that fetch() calls are blocked. */
     it("blocks fetch() calls", () => {
@@ -156,25 +153,14 @@ describe("Sandbox Security", () => {
     ];
 
     /** Verifies that valid map functions execute correctly. */
-    it("executes valid map functions", async () => {
-      // Skip if sandbox unavailable
-      if (!isSandboxAvailable()) {
-        console.log("Skipping: WASM sandbox unavailable in test environment");
-        return;
-      }
-
+    runIfSandbox("executes valid map functions", async () => {
       const results = await executeMapFn("(doc, emit) => { emit(doc._id, doc); }", testDocs);
       expect(results).toHaveLength(3);
       expect(results[0].key).toBe("doc1");
     });
 
     /** Verifies that map functions can filter documents. */
-    it("filters documents based on map function", async () => {
-      if (!isSandboxAvailable()) {
-        console.log("Skipping: WASM sandbox unavailable in test environment");
-        return;
-      }
-
+    runIfSandbox("filters documents based on map function", async () => {
       const results = await executeMapFn(
         '(doc, emit) => { if (doc.type === "user") emit(doc._id, doc); }',
         testDocs
@@ -183,36 +169,21 @@ describe("Sandbox Security", () => {
     });
 
     /** Verifies that blocked patterns are rejected during execution. */
-    it("rejects blocked patterns during execution", async () => {
-      if (!isSandboxAvailable()) {
-        console.log("Skipping: WASM sandbox unavailable in test environment");
-        return;
-      }
-
+    runIfSandbox("rejects blocked patterns during execution", async () => {
       await expect(executeMapFn('(doc, emit) => { fetch("http://evil.com"); }', testDocs)).rejects.toThrow(
         "fetch() calls are not allowed"
       );
     });
 
     /** Verifies that syntax errors are caught during execution. */
-    it("rejects syntax errors during execution", async () => {
-      if (!isSandboxAvailable()) {
-        console.log("Skipping: WASM sandbox unavailable in test environment");
-        return;
-      }
-
+    runIfSandbox("rejects syntax errors during execution", async () => {
       await expect(executeMapFn("(doc, emit) => { emit(doc._id, doc)", testDocs)).rejects.toThrow("Syntax error");
     });
   });
 
   describe("executeMapFn - Timeout Protection", () => {
     /** Verifies that infinite loops are terminated by timeout. */
-    it("enforces execution timeout", async () => {
-      if (!isSandboxAvailable()) {
-        console.log("Skipping: WASM sandbox unavailable in test environment");
-        return;
-      }
-
+    runIfSandbox("enforces execution timeout", async () => {
       const testDocs: SandboxDocument[] = [{ _id: "doc1", name: "Test" }];
 
       // This should timeout - use a very short timeout for testing
