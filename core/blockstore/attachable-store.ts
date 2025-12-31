@@ -330,6 +330,17 @@ export class AttachedRemotesImpl implements AttachedStores {
     return new ActiveStoreImpl(this._local.stores as LocalDataAndMetaAndWalStore, this);
   }
 
+  /**
+   * Returns the local store if set, or undefined if already reset.
+   * Use this for safe access during teardown.
+   */
+  localOrUndefined(): LocalActiveStore | undefined {
+    if (!this._local) {
+      return undefined;
+    }
+    return new ActiveStoreImpl(this._local.stores as LocalDataAndMetaAndWalStore, this);
+  }
+
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore {
     // console.log(
     //   "activate",
@@ -467,11 +478,14 @@ export class AttachedRemotesImpl implements AttachedStores {
   }
 
   /**
-   * Reset local and remote attachments for teardown.
+   * Reset remote attachments for teardown.
+   * Note: _local is intentionally NOT cleared here because async operations
+   * (meta stream handler, write queue) may still reference it during shutdown.
+   * The local store is properly cleaned up via detach().
    */
   reset(): void {
     this._remotes = new KeyedResolvOnce<Attached>();
     this._keyedAttachable = new KeyedResolvOnce<Attached>();
-    this._local = undefined;
+    // Don't clear _local - async operations may still need it during shutdown
   }
 }

@@ -554,6 +554,11 @@ export interface AttachedStores {
   // metaStore(): Promise<MetaStore>;
 
   local(): LocalActiveStore;
+  /**
+   * Returns the local store if set, or undefined if already reset.
+   * Use this for safe access during teardown.
+   */
+  localOrUndefined(): LocalActiveStore | undefined;
   forRemotes(actionFn: (store: ActiveStore) => Promise<unknown>): Promise<void>;
   remotes(): ActiveStore[];
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore;

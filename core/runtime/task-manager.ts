@@ -66,10 +66,7 @@ export class TaskManager implements TaskManagerIf {
       this.logger.Warn().Err(err).Msg("retry to process event block");
     } finally {
       this.isProcessing = false;
-      if (this.isClosed) {
-        return;
-      }
-      if (this.queue.length > 0) {
+      if (!this.isClosed && this.queue.length > 0) {
         void this.processQueue();
       }
     }

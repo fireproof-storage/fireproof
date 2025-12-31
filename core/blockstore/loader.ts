@@ -355,7 +355,7 @@ export class Loader implements Loadable {
       );
       const local = this.attachedStores.local();
       // console.log("ready", this.id);
-    this.metaStreamReader = local.active.meta.stream().getReader();
+      this.metaStreamReader = local.active.meta.stream().getReader();
       // console.log("attach-local", local.active.car.url().pathname);
       await this.waitFirstMeta(this.metaStreamReader, local, { meta: this.ebOpts.meta, origin: local.active.car.url() });
     });
@@ -455,14 +455,17 @@ export class Loader implements Loadable {
     this.blockstoreParent = undefined;
   }
 
+  /**
+   * Destroys all local stores. Safe to call after close().
+   */
   async destroy() {
     // console.log("destroy", this.attachedStores.local().baseStores().map((store) => store.url().toString()));
-    await Promise.all(
-      this.attachedStores
-        .local()
-        .baseStores()
-        .map((store) => store.destroy()),
-    );
+    const local = this.attachedStores.localOrUndefined?.();
+    if (!local) {
+      // Already reset by close(), nothing to destroy
+      return;
+    }
+    await Promise.all(local.baseStores().map((store) => store.destroy()));
   }
 
   readonly id: string;
