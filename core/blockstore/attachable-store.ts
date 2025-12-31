@@ -289,7 +289,7 @@ export async function createAttachedStores(
 }
 
 export class AttachedRemotesImpl implements AttachedStores {
-  private readonly _remotes = new KeyedResolvOnce<Attached>();
+  private _remotes = new KeyedResolvOnce<Attached>();
 
   readonly loadable: Loadable;
   // readonly attactedFileStore: DataStore;
@@ -374,7 +374,7 @@ export class AttachedRemotesImpl implements AttachedStores {
   }
 
   // needed for React Statemanagement
-  readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
+  private _keyedAttachable = new KeyedResolvOnce<Attached>();
   async attach(attachable: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached> {
     const keyed = attachable.configHash(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
     // console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
@@ -464,5 +464,11 @@ export class AttachedRemotesImpl implements AttachedStores {
       return rex;
     });
     return ret;
+  }
+
+  reset(): void {
+    this._remotes = new KeyedResolvOnce<Attached>();
+    this._keyedAttachable = new KeyedResolvOnce<Attached>();
+    this._local = undefined;
   }
 }

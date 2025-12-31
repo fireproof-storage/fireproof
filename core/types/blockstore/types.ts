@@ -559,6 +559,7 @@ export interface AttachedStores {
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore;
   attach(attached: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached>;
   detach(): Promise<void>;
+  reset?(): void;
 }
 
 export interface BaseAttachedStores {
@@ -669,7 +670,7 @@ export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
   readonly logger: Logger;
-  readonly blockstoreParent?: BlockFetcher;
+  blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly carLog: CarLog;
 
