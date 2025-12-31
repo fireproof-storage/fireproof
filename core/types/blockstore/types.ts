@@ -559,7 +559,7 @@ export interface AttachedStores {
   activate(store: DataAndMetaStore | CoerceURI): ActiveStore;
   attach(attached: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached>;
   detach(): Promise<void>;
-  reset?(): void;
+  reset(): void;
 }
 
 export interface BaseAttachedStores {

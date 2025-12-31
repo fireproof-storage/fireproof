@@ -75,7 +75,10 @@ export class TaskManager implements TaskManagerIf {
     }
   }
 
-  close(): void {
+  /**
+   * Stop processing and clear queued tasks.
+   */
+  async close(): Promise<void> {
     this.isClosed = true;
     this.queue = [];
     this.eventsWeHandled.clear();

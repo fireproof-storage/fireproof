@@ -222,10 +222,9 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     return this.loader.ready();
   }
 
-  close(): Promise<void> {
-    return this.loader.close().finally(() => {
-      void super.close();
-    });
+  async close(): Promise<void> {
+    await this.loader.close();
+    await super.close();
   }
 
   destroy(): Promise<void> {

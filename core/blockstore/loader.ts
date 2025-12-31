@@ -311,6 +311,9 @@ export class Loader implements Loadable {
 
   private readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
 
+  /**
+   * Create a new CID cache for block lookups.
+   */
   private buildCidCache() {
     return new KeyedResolvOnce<FPBlock>({
       lru: {
@@ -319,12 +322,18 @@ export class Loader implements Loadable {
     });
   }
 
+  /**
+   * Create a new cache for seen metadata groups.
+   */
   private buildSeenMeta() {
     return new LRUSet<string>({
       maxEntries: this.cacheSizes.metaCacheSize,
     });
   }
 
+  /**
+   * Create a new cache for seen compaction events.
+   */
   private buildSeenCompacted() {
     return new LRUSet<string>({
       maxEntries: this.cacheSizes.compactCacheSize,
@@ -436,8 +445,8 @@ export class Loader implements Loadable {
     // console.log("close-4");
     // const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     // await Promise.all(toClose.map((store) => store.close()));
-    this.attachedStores.reset?.();
-    this.taskManager.close();
+    this.attachedStores.reset();
+    await this.taskManager.close();
     this.currentMeta = [];
     this.carLog.update([]);
     this.cidCache = this.buildCidCache();

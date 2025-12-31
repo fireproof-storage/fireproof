@@ -466,6 +466,9 @@ export class AttachedRemotesImpl implements AttachedStores {
     return ret;
   }
 
+  /**
+   * Reset local and remote attachments for teardown.
+   */
   reset(): void {
     this._remotes = new KeyedResolvOnce<Attached>();
     this._keyedAttachable = new KeyedResolvOnce<Attached>();
