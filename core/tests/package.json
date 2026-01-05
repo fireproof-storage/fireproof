@@ -40,7 +40,7 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.5",
+    "@adviser/cement": "^0.5.8",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-base": "workspace:0.0.0",
     "@fireproof/core-blockstore": "workspace:0.0.0",
@@ -71,7 +71,7 @@
     "jose": "^6.1.3",
     "use-fireproof": "workspace:0.0.0",
     "uuidv7": "^1.1.0",
-    "zod": "^4.2.1"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@clerk/clerk-js": "^5.117.0",
