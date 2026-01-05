@@ -57,7 +57,7 @@
     "multiformats": "^13.4.2",
     "open": "^11.0.0",
     "semver": "^7.7.3",
-    "zod": "^4.2.1",
+    "zod": "^4.3.5",
     "zx": "^8.8.5"
   },
   "devDependencies": {
