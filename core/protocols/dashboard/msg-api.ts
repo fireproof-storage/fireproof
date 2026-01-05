@@ -24,7 +24,7 @@ export class Api {
         return json as S;
       }
       throw new Error(`Request failed: ${res.status} ${res.statusText} ${this.apiUrl}`);
-    });
+    }) as Promise<Result<S>>;
   }
 
   async waitForToken(req: Omit<ReqTokenByResultId, "type">, logger: Logger): Promise<Result<ResTokenByResultId>> {

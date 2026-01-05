@@ -183,7 +183,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
           ),
         );
       }
-      return this.toMsg(ret.Ok());
+      return this.toMsg(ret.Ok() as S);
     }
     const data = new Uint8Array(await res.arrayBuffer());
     const ret = await exception2Result(async () => this.msgP.ende.decode(data) as S);
@@ -192,7 +192,7 @@ export class HttpConnection extends MsgRawConnectionBase implements MsgRawConnec
         buildErrorMsg(this, req, this.logger.Error().Err(ret.Err()).Msg("decode error").AsError(), this.sthis.txt.decode(data)),
       );
     }
-    return this.toMsg(ret.Ok());
+    return this.toMsg(ret.Ok() as S);
   }
 
   // toOnMessage<T extends MsgBase>(msg: WithErrorMsg<T>): Result<WithErrorMsg<T>> {
