@@ -227,7 +227,7 @@ async function validateBlocks(logger: Logger, newHead: ClockHead, blockstore?: B
       if (!got) {
         throw logger.Error().Str("cid", cid.toString()).Msg("int_applyHead missing block").AsError();
       }
-    })
+    }),
   );
 }
 
