@@ -1146,6 +1146,89 @@ describe("db-api", () => {
       expect(validTenant.isErr()).toBeTruthy();
     });
 
+    /**
+     * Policy: Shared Ledger Access via Prefix Matching
+     *
+     * When a user is invited to a ledger and later calls ensureCloudToken with the same appId,
+     * they should be granted access to the existing shared ledger rather than creating a new one.
+     *
+     * The ledger name format is: `{appId}-{ownerUserId}`
+     * When an invited user calls ensureCloudToken with appId, the system should:
+     * 1. First check for an exact appId binding (existing behavior)
+     * 2. If not found, check if user has access to any ledger whose name starts with appId (prefix match)
+     * 3. Only create a new ledger if no matching ledger is found
+     *
+     * This enables collaborative apps where multiple users share the same database:
+     * - User A creates app with appId "vf-my-app-install1-todos"
+     * - System creates ledger "vf-my-app-install1-todos-{userA_id}"
+     * - User A invites User B to the ledger
+     * - User B visits app with same appId → gets access to User A's ledger (not a new one)
+     */
+    it("ensureCloudToken grants invited user access to shared ledger via prefix match", async () => {
+      const userA = datas[7];
+      const userB = datas[8];
+      const id = sthis.nextId().str;
+      const appId = `SHARED_LEDGER_TEST-${id}`;
+
+      // User A creates a ledger via ensureCloudToken
+      // This creates a ledger named "{appId}-{userA_id}" and binds it to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const userALedgerId = userAToken.Ok().ledger;
+
+      // User A invites User B to the ledger (not just the tenant)
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userB.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: userALedgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User B redeems the invite (adds them to LedgerUsers)
+      const redeem = await fpApi.redeemInvite({
+        type: "reqRedeemInvite",
+        auth: userB.reqs.auth,
+      });
+      expect(redeem.isOk()).toBeTruthy();
+
+      // User B calls ensureCloudToken with the same appId
+      // Without prefix matching, this would create a NEW ledger "{appId}-{userB_id}"
+      // With prefix matching, User B should get access to User A's existing ledger
+      const userBToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userB.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userBToken.isOk()).toBeTruthy();
+
+      // Critical assertion: User B should get the SAME ledger as User A
+      expect(userBToken.Ok().ledger).toBe(userALedgerId);
+
+      // Verify they're using the same tenant too
+      expect(userBToken.Ok().tenant).toBe(userAToken.Ok().tenant);
+    });
+
     it("ensureCloudToken auto-redeems pending invite for ledger access", async () => {
       // User A (datas[5]) creates a ledger and binds it to an appId
       const userA = datas[5];
@@ -1197,6 +1280,283 @@ describe("db-api", () => {
       expect(userBToken.isOk()).toBeTruthy();
       expect(userBToken.Ok().ledger).toBe(userAToken.Ok().ledger);
       expect(userBToken.Ok().tenant).toBe(userAToken.Ok().tenant);
+    });
+
+    it("ensureCloudToken rejects uninvited user trying to access existing ledger (strict policy)", async () => {
+      // User A creates a ledger via ensureCloudToken
+      const userA = datas[3];
+      const userC = datas[4]; // User C has NOT been invited
+      const id = sthis.nextId().str;
+      const appId = `STRICT_POLICY_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+
+      // User C tries to access the same appId WITHOUT being invited
+      // Under strict policy, this should fail
+      const userCToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userC.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // User C should be rejected - they're not in LedgerUsers for this ledger
+      expect(userCToken.isErr()).toBeTruthy();
+      expect(userCToken.Err().message).toContain("not authorized");
+    });
+
+    it("ensureCloudToken allows invited user after redemption", async () => {
+      // Same as above but User D IS invited
+      const userA = datas[3];
+      const userD = datas[9];
+      const id = sthis.nextId().str;
+      const appId = `INVITED_ACCESS_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // User A invites User D to the ledger
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userD.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User D redeems the invite
+      const redeem = await fpApi.redeemInvite({
+        type: "reqRedeemInvite",
+        auth: userD.reqs.auth,
+      });
+      expect(redeem.isOk()).toBeTruthy();
+
+      // Now User D should be able to access the ledger
+      const userDToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userD.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      expect(userDToken.isOk()).toBeTruthy();
+      expect(userDToken.Ok().ledger).toBe(ledgerId);
+    });
+
+    it("ensureCloudToken auto-redeems invite without explicit redeemInvite call", async () => {
+      // This tests that ensureCloudToken itself will redeem pending invites
+      // Before the fix, this would fail because the user wasn't in LedgerUsers
+      const userA = datas[2];
+      const userE = datas[1]; // User E will be invited but NOT explicitly call redeemInvite
+      const id = sthis.nextId().str;
+      const appId = `AUTO_REDEEM_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // User A invites User E to the ledger
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            existingUserId: userE.ress.user.userId,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User E does NOT explicitly call redeemInvite
+      // Instead, they directly call ensureCloudToken
+      // This should auto-redeem the invite and grant access
+      const userEToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userE.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // Before the fix, this would fail with "user not authorized for ledger"
+      // After the fix, ensureCloudToken calls ensureUser which calls redeemInvite
+      expect(userEToken.isOk()).toBeTruthy();
+      expect(userEToken.Ok().ledger).toBe(ledgerId);
+    });
+
+    it("ensureCloudToken auto-redeems invite by email (real UI flow)", async () => {
+      // This tests the actual flow: invite by email, user visits with matching email
+      const userA = datas[5];
+      const userF = datas[6]; // User F will be invited BY EMAIL
+      const id = sthis.nextId().str;
+      const appId = `EMAIL_INVITE_TEST-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // Get User F's email from their auth params (simulating what invite UI does)
+      // The TestApiToken generates email as `test${userId}@test.de`
+      const userFEmail = `testuserId-${userF.reqs.auth.token}@test.de`;
+
+      // User A invites User F BY EMAIL (like the real UI does)
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            byEmail: userFEmail,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // User F does NOT explicitly call redeemInvite
+      // They just visit the vibe URL which calls ensureCloudToken
+      const userFToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userF.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // This should auto-redeem because ensureUser->redeemInvite finds by email
+      expect(userFToken.isOk()).toBeTruthy();
+      expect(userFToken.Ok().ledger).toBe(ledgerId);
+    });
+
+    it("ensureCloudToken auto-redeems for brand new user invited by email", async () => {
+      // This tests the exact production scenario:
+      // - User A creates a vibe and invites by email
+      // - User B has NEVER visited before (no user record exists)
+      // - User B clicks link, logs in, and ensureCloudToken is called
+      const userA = datas[7];
+      const id = sthis.nextId().str;
+      const appId = `NEW_USER_EMAIL_INVITE-${id}`;
+
+      // User A creates a ledger bound to appId
+      const userAToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: userA.reqs.auth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+      expect(userAToken.isOk()).toBeTruthy();
+      const ledgerId = userAToken.Ok().ledger;
+
+      // Create a completely new user token that has NEVER been used
+      // This simulates a user who has never visited the system
+      const newUserToken = `brand-new-user-${id}`;
+      const newUserEmail = `testuserId-${newUserToken}@test.de`;
+
+      // User A invites the NEW user BY EMAIL
+      const invite = await fpApi.inviteUser({
+        type: "reqInviteUser",
+        auth: userA.reqs.auth,
+        ticket: {
+          query: {
+            byEmail: newUserEmail,
+          },
+          invitedParams: {
+            ledger: {
+              id: ledgerId,
+              role: "member",
+              right: "write",
+            },
+          },
+        },
+      });
+      expect(invite.isOk()).toBeTruthy();
+
+      // NEW user visits for the first time - they have no user record yet
+      // ensureCloudToken should:
+      // 1. Find existing binding for appId
+      // 2. Call ensureUser (which creates user + redeems invite)
+      // 3. Grant access to the ledger
+      const newUserAuth: DashAuthType = {
+        type: "clerk",
+        token: newUserToken,
+      };
+
+      const newUserCloudToken = await fpApi.ensureCloudToken(
+        {
+          type: "reqEnsureCloudToken",
+          auth: newUserAuth,
+          appId,
+        },
+        jwkPack.opts,
+      );
+
+      // Should succeed because ensureUser->redeemInvite finds invite by email
+      expect(newUserCloudToken.isOk()).toBeTruthy();
+      expect(newUserCloudToken.Ok().ledger).toBe(ledgerId);
     });
   });
 
