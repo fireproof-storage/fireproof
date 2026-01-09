@@ -12,10 +12,10 @@ import {
   ResUpdateLedger,
   ResUpdateTenant,
   InviteTicket,
-  clerkDashApi,
-} from "@fireproof/core-protocols-dashboard";
+} from "@fireproof/core-types-protocols-dashboard";
 import { DASHAPI_URL } from "./helpers.js";
 import type { Clerk } from "@clerk/shared/types";
+import { clerkDashApi } from "@fireproof/core-protocols-dashboard";
 
 export interface InviteItem {
   tenantId: string;

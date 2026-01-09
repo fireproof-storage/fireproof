@@ -1,17 +1,9 @@
-import { Result } from "@adviser/cement";
-import { DeviceIdCA } from "@fireproof/core-device-id";
-import {
-  FAPIMsgImpl,
-  VerifiedAuth,
-  UserStatus,
-  DashAuthType,
-  ClerkVerifyAuth,
-  User,
-  FPApiParameters,
-} from "@fireproof/core-protocols-dashboard";
-import { SuperThis } from "@fireproof/core-types-base";
+import { Logger, Result } from "@adviser/cement";
+import { UserStatus, DashAuthType, User, FPApiParameters } from "@fireproof/core-types-protocols-dashboard";
+import { ClerkClaim, SuperThis } from "@fireproof/core-types-base";
 import { Role, ReadWrite } from "@fireproof/core-types-protocols-cloud";
 import { DashSqlite } from "./create-handler.js";
+import { DeviceIdCAIf } from "@fireproof/core-types-device-id";
 
 export interface TokenByResultIdParam {
   readonly status: "found" | "not-found";
@@ -20,10 +12,10 @@ export interface TokenByResultIdParam {
   readonly now: Date;
 }
 
-export const FPAPIMsg = new FAPIMsgImpl();
+// export const FPAPIMsg = new FAPIMsgImpl();
 
 export interface FPApiToken {
-  verify(token: string): Promise<Result<VerifiedAuth>>;
+  verify(token: string): Promise<Result<VerifiedClaimsResult>>;
 }
 
 export interface AddUserToTenant {
@@ -54,33 +46,56 @@ export interface WithAuth {
   readonly auth: DashAuthType;
 }
 
-export interface WithVerifiedAuth<T extends DashAuthType> {
-  readonly verifiedAuth: T;
+// export interface WithVerifiedAuth<T extends DashAuthType> {
+//   readonly verifiedAuth: T;
+// }
+export interface VerifiedClaimsResult {
+  readonly type: DashAuthType["type"];
+  readonly token: string;
+  readonly claims: unknown;
 }
 
-export interface VerifiedAuthUser<T extends DashAuthType> extends WithVerifiedAuth<T> {
+export interface ClerkVerifiedAuth {
+  readonly type: "clerk";
+  readonly claims: ClerkClaim;
+}
+
+export interface VerifiedAuthResult {
+  readonly type: "VerifiedAuthResult";
+  readonly inDashAuth: DashAuthType; // thats the original auth used to verify
+  readonly verifiedAuth: ClerkVerifiedAuth;
+}
+
+export interface VerifiedAuthUserResult extends Omit<VerifiedAuthResult, "type"> {
+  readonly type: "VerifiedAuthUserResult";
+  // This is the user record from our DB
   readonly user: User;
 }
 
-export function isVerifiedUserActive<T extends DashAuthType>(obj: ActiveUser<T>): obj is VerifiedAuthUser<T> {
-  return (obj as VerifiedAuthUser<T>).user !== undefined;
+export type VerifiedResult = VerifiedAuthResult | VerifiedAuthUserResult;
+
+export function isVerifiedAuth(obj: VerifiedResult): obj is VerifiedAuthResult {
+  return (obj as VerifiedAuthResult).type === "VerifiedAuthResult";
 }
 
-export type ActiveUser<T extends DashAuthType = ClerkVerifyAuth> = WithVerifiedAuth<T> | VerifiedAuthUser<T>;
+export function isVerifiedAuthUser(obj: VerifiedResult): obj is VerifiedAuthUserResult {
+  return (obj as VerifiedAuthUserResult).type === "VerifiedAuthUserResult";
+}
+//   return (obj as VerifiedAuthUser<T>).user !== undefined;
+// }
 
-export type ReqWithVerifiedAuthUser<
-  REQ extends { type: string; auth: DashAuthType },
-  T extends DashAuthType = ClerkVerifyAuth,
-> = Omit<REQ, "auth"> & {
-  readonly auth: VerifiedAuthUser<T>;
+// export type ActiveUser<T extends DashAuthType = ClerkVerifyAuth> = WithVerifiedAuth<T> | VerifiedAuthUser<T>;
+
+export type ReqWithVerifiedAuthUser<REQ extends { type: string; auth: DashAuthType }> = Omit<REQ, "auth"> & {
+  readonly auth: VerifiedAuthUserResult;
 };
 
-export type ActiveUserWithUserId<T extends DashAuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
-  user: {
-    userId: string;
-    maxTenants: number;
-  };
-};
+// export type ActiveUserWithUserId<T extends DashAuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
+//   user: {
+//     userId: string;
+//     maxTenants: number;
+//   };
+// };
 
 export interface FPTokenContext {
   readonly secretToken: string;
@@ -93,8 +108,9 @@ export interface FPTokenContext {
 
 export interface FPApiSQLCtx {
   readonly db: DashSqlite;
+  readonly logger: Logger;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
   readonly params: FPApiParameters;
-  readonly deviceCA: DeviceIdCA;
+  readonly deviceCA: DeviceIdCAIf;
 }

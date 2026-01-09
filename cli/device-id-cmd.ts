@@ -5,11 +5,11 @@ import { DeviceIdKey, DeviceIdCSR, DeviceIdCA } from "@fireproof/core-device-id"
 import { getKeyBag } from "@fireproof/core-keybag";
 import { decodeJwt } from "jose";
 import fs from "fs-extra";
-import { base58btc } from "multiformats/bases/base58";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import open from "open";
 import { Future, timeouted, isSuccess, isTimeout, BuildURI } from "@adviser/cement";
+import { sts } from "@fireproof/core-runtime";
 
 function getStdin(): Promise<string> {
   return new Promise<string>((resolve) => {
@@ -420,11 +420,7 @@ export function deviceIdCmd(sthis: SuperThis) {
 
         // Handle environment variable output format
         if (args.envVars) {
-          // Base58btc encode the private key JSON
-          const privateKeyJson = JSON.stringify(jwkPrivate);
-          const privateKeyBase58 = base58btc.encode(sthis.txt.encode(privateKeyJson));
-
-          console.log(`DEVICE_ID_CA_PRIV_KEY=${privateKeyBase58}`);
+          console.log(`DEVICE_ID_CA_PRIV_KEY=${await sts.jwk2env(jwkPrivate)}`);
           console.log(`DEVICE_ID_CA_CERT=${certificateJWT}`);
         } else if (args.json) {
           // Handle JSON output format

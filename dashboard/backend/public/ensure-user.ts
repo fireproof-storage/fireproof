@@ -1,27 +1,67 @@
-import { Result } from "@adviser/cement";
-import { ReqEnsureUser, ResEnsureUser } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqEnsureUser, ResEnsureUser, User, validateEnsureUser } from "@fireproof/core-types-protocols-dashboard";
 import { getTableColumns, eq } from "drizzle-orm";
 import { queryEmail, queryNick } from "../sql/sql-helper.js";
 import { sqlTenants } from "../sql/tenants.js";
-import { upsetUserByProvider, sqlUsers } from "../sql/users.js";
-import { nickFromClarkClaim, nameFromAuth } from "../utils/index.js";
+import { upsetUserByProvider, sqlUsers, UserByProviderWithoutDate } from "../sql/users.js";
+import { nickFromClarkClaim, nameFromAuth, wrapStop, verifyAuth } from "../utils/index.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
 import { insertTenant } from "../internal/insert-tenant.js";
-import { FPApiSQLCtx, isVerifiedUserActive } from "../types.js";
+import { FPApiSQLCtx, isVerifiedAuthUser, VerifiedAuthUserResult } from "../types.js";
 import { listTenantsByUser } from "./list-tenants-by-user.js";
 import { redeemInvite } from "./redeem-invite.js";
-import { activeUser } from "../internal/auth.js";
 
 export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<Result<ResEnsureUser>> {
-  const rAuth = await activeUser(ctx, req);
+  const rAuth = await verifyAuth(ctx, req);
   if (rAuth.isErr()) {
     return Result.Err(rAuth.Err());
   }
   const auth = rAuth.Ok();
-  if (!isVerifiedUserActive(auth)) {
-    const auth = rAuth.Ok().verifiedAuth;
+  if (!isVerifiedAuthUser(auth)) {
+    const auth = rAuth.Ok();
     const userId = ctx.sthis.nextId(12).str;
     const now = new Date();
+    let queryProvider: UserByProviderWithoutDate;
+    switch (auth.inDashAuth.type) {
+      case "device-id":
+        queryProvider = {
+          providerUserId: auth.verifiedAuth.claims.userId,
+          queryProvider: "device-id",
+          queryEmail: queryEmail(auth.verifiedAuth.claims.params.email),
+          cleanEmail: auth.verifiedAuth.claims.params.email,
+          queryNick: queryNick(nickFromClarkClaim(auth.verifiedAuth.claims.params)),
+          cleanNick: nickFromClarkClaim(auth.verifiedAuth.claims.params),
+          params: auth.verifiedAuth.claims.params,
+          used: now,
+        };
+        break;
+      case "clerk":
+        queryProvider = {
+          providerUserId: auth.verifiedAuth.claims.userId,
+          queryProvider: nickFromClarkClaim(auth.verifiedAuth.claims.params) ? "github" : "google",
+          queryEmail: queryEmail(auth.verifiedAuth.claims.params.email),
+          cleanEmail: auth.verifiedAuth.claims.params.email,
+          queryNick: queryNick(nickFromClarkClaim(auth.verifiedAuth.claims.params)),
+          cleanNick: nickFromClarkClaim(auth.verifiedAuth.claims.params),
+          params: auth.verifiedAuth.claims.params,
+          used: now,
+        };
+        break;
+      // case "device-id":
+      //         queryProvider = {
+      //   providerUserId: auth.userId,
+      //   queryProvider: "device-id",
+      //   queryEmail: queryEmail(auth.clerk.params.email),
+      //   cleanEmail: auth.clerk.params.email,
+      //   queryNick: queryNick(nickFromClarkClaim(auth.clerk.params)),
+      //   cleanNick: nickFromClarkClaim(auth.clerk.params),
+      //   params: auth.clerk.params,
+      //   used: now,
+      // };
+      // break;
+      default:
+        return Result.Err(`unsupported auth type for ensureUser: ${auth.type}`);
+    }
     await upsetUserByProvider(
       ctx.db,
       {
@@ -29,29 +69,19 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
         maxTenants: ctx.params.maxTenants,
         status: "active",
         statusReason: "just created",
-        byProviders: [
-          {
-            providerUserId: auth.userId,
-            queryProvider: nickFromClarkClaim(auth.params) ? "github" : "google",
-            queryEmail: queryEmail(auth.params.email),
-            cleanEmail: auth.params.email,
-            queryNick: queryNick(nickFromClarkClaim(auth.params)),
-            cleanNick: nickFromClarkClaim(auth.params),
-            params: auth.params,
-            used: now,
-          },
-        ],
+        byProviders: [queryProvider],
       },
       now,
     );
-    const authWithUserId = {
+    const authWithUserId: VerifiedAuthUserResult = {
       ...rAuth.Ok(),
+      type: "VerifiedAuthUserResult",
       user: {
         userId,
         maxTenants: ctx.params.maxTenants,
-      },
+      } as User,
     };
-    const rTenant = await insertTenant(ctx, authWithUserId, {
+    const rTenant = await insertTenant(ctx, authWithUserId.user, {
       ...ctx.params,
       ownerUserId: userId,
     });
@@ -64,6 +94,7 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
     });
     return ensureUser(ctx, req);
   }
+
   const user = auth.user;
   const rTenants = await listTenantsByUser(ctx, {
     type: "reqListTenantsByUser",
@@ -131,3 +162,15 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
     tenants,
   });
 }
+
+export const ensureUserItem: EventoHandler<Request, ReqEnsureUser, ResEnsureUser> = {
+  hash: "ensure-user",
+  validate: (ctx) => validateEnsureUser(ctx.enRequest),
+  handle: async (ctx: HandleTriggerCtx<Request, ReqEnsureUser, ResEnsureUser>): Promise<Result<EventoResultType>> => {
+    const res = await ensureUser(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+    if (res.isErr()) {
+      return Result.Err(res);
+    }
+    return wrapStop(ctx.send.send(ctx, res.Ok()));
+  },
+};

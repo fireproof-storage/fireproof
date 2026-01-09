@@ -1,9 +1,10 @@
 import { IssueCertificateResult, JWKPrivateSchema, SuperThis } from "@fireproof/core-types-base";
-import { CAActions, DeviceIdCA } from "./device-id-CA.js";
+import { DeviceIdCA } from "./device-id-CA.js";
 import { param, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { base58btc } from "multiformats/bases/base58";
-import { DeviceIdVerifyMsg, VerifyWithCertificateResult } from "./device-id-verify-msg.js";
+import { DeviceIdVerifyMsg } from "./device-id-verify-msg.js";
+import { CAActions, DeviceIdProtocol, DeviceIdProtocolSrvOpts, VerifyWithCertificateResult } from "@fireproof/core-types-device-id";
 
 async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<DeviceIdCA>> {
   const rEnv = sthis.env.gets({
@@ -34,17 +35,8 @@ async function ensureCA(sthis: SuperThis, actions: CAActions): Promise<Result<De
   );
 }
 
-export interface DeviceIdProtocol {
-  issueCertificate(msg: string): Promise<Result<IssueCertificateResult>>;
-  verifyMsg<S>(message: string, schema?: S): Promise<VerifyWithCertificateResult<S>>;
-}
-
-export interface DeviceIdProtocolSrvOpts {
-  readonly actions: CAActions;
-}
-
 export class DeviceIdProtocolSrv implements DeviceIdProtocol {
-  readonly #ca: DeviceIdCA;
+  // readonly #ca: DeviceIdCA;
   readonly #verifyMsg: DeviceIdVerifyMsg;
   static async create(sthis: SuperThis, opts: DeviceIdProtocolSrvOpts): Promise<Result<DeviceIdProtocol>> {
     const rCa = await ensureCA(sthis, opts.actions);
@@ -63,14 +55,15 @@ export class DeviceIdProtocolSrv implements DeviceIdProtocol {
   }
 
   private constructor(ca: DeviceIdCA, verifyMsg: DeviceIdVerifyMsg) {
-    this.#ca = ca;
+    // this.#ca = ca;
     this.#verifyMsg = verifyMsg;
   }
 
   // issue a certificate
   // @param msg: string // CSR as JWT String
-  issueCertificate(msg: string): Promise<Result<IssueCertificateResult>> {
-    return this.#ca.processCSR(msg);
+  issueCertificate(_msg: string): Promise<Result<IssueCertificateResult>> {
+    throw new Error("Method not implemented.");
+    // return this.#ca.processCSR(msg);
   }
   // sign a message
   // @param msg: string // JWT String

@@ -1,6 +1,5 @@
 import { exception2Result, Logger, Result } from "@adviser/cement";
-import { ReqTokenByResultId, ResTokenByResultId } from "./msg-types.js";
-import { FAPIMsgImpl } from "./msg-is.js";
+import { ReqTokenByResultId, ResTokenByResultId, FAPIMsgImpl } from "@fireproof/core-types-protocols-dashboard";
 
 export class Api {
   readonly apiUrl: string;

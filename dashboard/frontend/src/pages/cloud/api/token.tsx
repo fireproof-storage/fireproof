@@ -1,5 +1,5 @@
 import { URI } from "@adviser/cement";
-import { LedgerUser, UserTenant } from "@fireproof/core-protocols-dashboard";
+import { LedgerUser, UserTenant } from "@fireproof/core-types-protocols-dashboard";
 import { TenantLedger } from "@fireproof/core-types-protocols-cloud";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base64url } from "jose";

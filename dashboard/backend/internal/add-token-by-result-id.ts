@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { ResTokenByResultId } from "@fireproof/core-protocols-dashboard";
+import { ResTokenByResultId } from "@fireproof/core-types-protocols-dashboard";
 import { lt } from "drizzle-orm";
 import { sqlTokenByResultId } from "../sql/token-by-result-id.js";
 import { FPApiSQLCtx, TokenByResultIdParam } from "../types.js";

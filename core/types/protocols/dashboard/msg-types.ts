@@ -1,8 +1,8 @@
-import { JWKPublic } from "@fireproof/core-types-base";
+import { ClerkEmailTemplateClaim, JWKPublic } from "@fireproof/core-types-base";
 import { FPCloudClaim, ReadWrite, Role, TenantLedger } from "@fireproof/core-types-protocols-cloud";
-import type { DeviceIdCA } from "@fireproof/core-device-id";
+// import { DeviceIdCAIf } from "@fireproof/core-types-device-id";
 
-export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
+export type AuthProvider = "github" | "google" | "fp" | "invite-per-email" | "device-id";
 
 export interface Queryable {
   readonly userId?: string;
@@ -73,30 +73,20 @@ export interface InviteTicket {
 export type UserStatus = "active" | "inactive" | "banned" | "invited";
 
 export interface DashAuthType {
-  readonly type: "ucan" | "clerk" | "better" | "device-id";
+  readonly type: "ucan" | "clerk" | "device-id";
   readonly token: string;
 }
 
-export interface VerifiedAuth {
-  readonly type: "clerk" | "better" | "device-id";
-  readonly token: string;
-  readonly userId: string;
-  readonly provider: string;
-}
+// export interface VerifiedAuth {
+//   readonly type: "clerk" | "better" | "device-id";
+//   readonly token: string;
+//   readonly userId: string;
+//   readonly provider: string;
+// }
 
-export interface ClerkClaim {
-  readonly email: string;
-  readonly first: string;
-  readonly last: string;
-  // github handle
-  readonly nick?: string;
-  readonly name?: string;
-  readonly image_url?: string;
-}
-
-export interface ClerkVerifyAuth extends VerifiedAuth {
-  readonly params: ClerkClaim;
-}
+// export interface ClerkVerifyAuth extends VerifiedAuth {
+//   readonly params: ClerkClaim
+// }
 
 export interface User {
   readonly userId: string;
@@ -115,7 +105,7 @@ export interface UserByProvider extends Queryable {
   readonly queryProvider: AuthProvider;
   readonly queryEmail?: string;
   readonly queryNick?: string;
-  readonly params: ClerkClaim;
+  readonly params: ClerkEmailTemplateClaim;
   readonly used: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -127,15 +117,14 @@ export interface ResCreateTenant {
 }
 
 export interface FPApiParameters {
-  readonly cloudPublicKeys: JWKPublic[];
-  readonly clerkPublishableKey: string;
-  readonly maxTenants: number;
-  readonly maxAdminUsers: number;
-  readonly maxMemberUsers: number;
-  readonly maxInvites: number;
-  readonly maxLedgers: number;
-  readonly maxAppIdBindings: number;
-  readonly deviceCA: DeviceIdCA;
+  cloudPublicKeys: JWKPublic[];
+  clerkPublishableKey: string;
+  maxTenants: number;
+  maxAdminUsers: number;
+  maxMemberUsers: number;
+  maxInvites: number;
+  maxLedgers: number;
+  maxAppIdBindings: number;
 }
 
 export interface InCreateTenantParams {

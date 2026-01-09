@@ -43,7 +43,7 @@ export function CsrToCert() {
         const urlWithCert = BuildURI.from(returnUrl).setParam("cert", certificate).toString();
         // console.log(">>>>>", urlWithCert);
         window.location.href = urlWithCert;
-      }, 3000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     }

@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { ReqInviteUser, InviteTicket, InvitedParams } from "@fireproof/core-protocols-dashboard";
+import { ReqInviteUser, InviteTicket, InvitedParams } from "@fireproof/core-types-protocols-dashboard";
 import { eq } from "drizzle-orm";
 import { prepareInviteTicket, sqlToInviteTickets, sqlInviteTickets } from "../sql/invites.js";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";

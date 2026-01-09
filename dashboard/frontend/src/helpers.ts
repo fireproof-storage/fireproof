@@ -1,5 +1,5 @@
 import { BuildURI } from "@adviser/cement";
-import { LedgerUser, UserTenant } from "@fireproof/core-protocols-dashboard";
+import { LedgerUser, UserTenant } from "@fireproof/core-types-protocols-dashboard";
 
 export function truncateDbName(name: string, maxLength: number) {
   if (name.length <= maxLength) return name;

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { clerkDashApi, ResEnsureUser } from "@fireproof/core-protocols-dashboard";
+import { clerkDashApi } from "@fireproof/core-protocols-dashboard";
+import { ResEnsureUser } from "@fireproof/core-types-protocols-dashboard";
 import { Future, OnFunc } from "@adviser/cement";
 import type { Clerk } from "@clerk/shared/types";
 

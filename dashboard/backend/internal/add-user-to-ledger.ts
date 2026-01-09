@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { UserStatus } from "@fireproof/core-protocols-dashboard";
+import { UserStatus } from "@fireproof/core-types-protocols-dashboard";
 import { toRole, toReadWrite } from "@fireproof/core-types-protocols-cloud";
 import { and, eq, ne } from "drizzle-orm";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";

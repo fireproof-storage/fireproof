@@ -1,10 +1,9 @@
-import { ClerkClaim, ClerkVerifyAuth } from "@fireproof/core-protocols-dashboard";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
-import { param, Result } from "@adviser/cement";
-import { SuperThis } from "@fireproof/core";
+import { EventoResult, EventoResultType, param, Result } from "@adviser/cement";
+import { ClerkClaim, ClerkEmailTemplateClaim, SuperThis } from "@fireproof/core";
 import { sts } from "@fireproof/core-runtime";
 import { SignJWT } from "jose/jwt/sign";
-import { ActiveUserWithUserId, FPTokenContext } from "../types.js";
+import { FPTokenContext, VerifiedAuthUserResult } from "../types.js";
 
 export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
   const privKeys = await sts.env2jwk(ctx.secretToken);
@@ -56,17 +55,30 @@ export async function getFPTokenContext(sthis: SuperThis, ictx: Partial<FPTokenC
   } satisfies FPTokenContext);
 }
 
-export function nameFromAuth(name: string | undefined, auth: ActiveUserWithUserId): string {
-  return name ?? `${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}`;
+export function nameFromAuth(name: string | undefined, auth: VerifiedAuthUserResult): string {
+  return (
+    name ?? `${auth.verifiedAuth.claims.params.email ?? nickFromClarkClaim(auth.verifiedAuth.claims.params) ?? auth.user.userId}`
+  );
 }
 
-export function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
-  return auth.nick ?? auth.name;
+export function nickFromClarkClaim(auth: ClerkEmailTemplateClaim): string | undefined {
+  return auth.nick ?? auth.name ?? undefined;
 }
 
-export function toProvider(i: ClerkVerifyAuth): FPCloudClaim["provider"] {
+export function toProvider(i: ClerkClaim): FPCloudClaim["provider"] {
   if (i.params.nick) {
     return "github";
   }
   return "google";
 }
+
+export function wrapStop<T>(res: Promise<Result<T>>): Promise<Result<EventoResultType>> {
+  return res.then((r) => {
+    if (r.isErr()) {
+      return Result.Err(r);
+    }
+    return Result.Ok(EventoResult.Stop);
+  });
+}
+
+export * from "./auth.js";
