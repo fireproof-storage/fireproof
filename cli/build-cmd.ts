@@ -605,6 +605,8 @@ export function buildCmd(sthis: SuperThis) {
           const semVer = new SemVer(args.version);
           if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
             tags.push("dev");
+          } else {
+            tags.push("latest"); // override to latest in prod
           }
         } catch (e) {
           console.warn(`Warn parsing version ${args.version}:`, e);
