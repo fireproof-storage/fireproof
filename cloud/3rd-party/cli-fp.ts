@@ -100,15 +100,22 @@ async function main() {
     getTokenCtx: {
       template: "with-email",
     },
+    // apiUrl: "https://dev.connect.fireproof.direct/api",
     apiUrl: "http://localhost:7370/api",
     fetch: fetch.bind(globalThis),
     getToken: async () => {
-      return Result.Ok(await getDashBoardToken());
+      const token = await getDashBoardToken();
+      console.log("token:", token);
+      return Result.Ok(token);
     },
   });
 
   const user = await dashApi.ensureUser({});
-  console.log("CLI FP User:", user);
+  if (user.isErr()) {
+    console.log("CLI FP User:", user.Err());
+  } else {
+    console.log("CLI FP User:", JSON.stringify(user, null, 2));
+  }
 
   // const res = await db.attach(
   //   toCloud({

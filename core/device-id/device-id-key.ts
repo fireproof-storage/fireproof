@@ -2,8 +2,9 @@ import { Result } from "@adviser/cement";
 import { JWKPrivate, JWKPrivateSchema, JWKPublic, JWKPublicSchema } from "@fireproof/core-types-base";
 import { GenerateKeyPairOptions, generateKeyPair, exportJWK, calculateJwkThumbprint } from "jose";
 import { sts } from "@fireproof/core-runtime";
+import { DeviceIdKeyIf } from "@fireproof/core-types-device-id";
 
-export class DeviceIdKey {
+export class DeviceIdKey implements DeviceIdKeyIf {
   #privateKey: CryptoKey;
 
   static async create(

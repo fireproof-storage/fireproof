@@ -1,13 +1,14 @@
-import { Result } from "@adviser/cement";
-import { ReqUpdateUserTenant, ResUpdateUserTenant } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqUpdateUserTenant, ResUpdateUserTenant, validateUpdateUserTenant } from "@fireproof/core-types-protocols-dashboard";
 import { toRole } from "@fireproof/core-types-protocols-cloud";
 import { and, eq } from "drizzle-orm";
 import { toUndef } from "../sql/sql-helper.js";
 import { sqlTenantUsers } from "../sql/tenants.js";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfTenant } from "../internal/is-admin-of-tenant.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
-export async function updateUserTenant(
+async function updateUserTenant(
   ctx: FPApiSQLCtx,
   req: ReqWithVerifiedAuthUser<ReqUpdateUserTenant>,
 ): Promise<Result<ResUpdateUserTenant>> {
@@ -67,3 +68,19 @@ export async function updateUserTenant(
     name: toUndef(ret.TenantUsers.name),
   });
 }
+
+export const updateUserTenantItem: EventoHandler<Request, ReqUpdateUserTenant, ResUpdateUserTenant> = {
+  hash: "update-user-tenant",
+  validate: (ctx) => validateUpdateUserTenant(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqUpdateUserTenant>, ResUpdateUserTenant>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await updateUserTenant(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

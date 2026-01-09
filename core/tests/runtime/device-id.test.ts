@@ -12,6 +12,7 @@ import {
 import {
   CertificatePayload,
   CertificatePayloadSchema,
+  ClerkClaim,
   Extensions,
   JWKPrivate,
   JWTPayload,
@@ -196,7 +197,20 @@ describe("DeviceIdCA certificate generation and validation", () => {
     const csrJWS = rCsrJWS.Ok();
 
     // Process CSR and generate certificate
-    const rCertificate = await ca.processCSR(csrJWS);
+    const rCertificate = await ca.processCSR(csrJWS, {
+      role: "test-role",
+      sub: "test-sub",
+      userId: "test-user",
+      params: {
+        email: "test@example.com",
+        email_verified: true,
+        first: "Test-First",
+        image_url: "http://example.com/image.jpg",
+        last: "Test-Last",
+        name: "Test Name",
+        public_meta: {},
+      },
+    });
     if (rCertificate.isErr()) {
       assert.fail(rCertificate.Err().message);
     }
@@ -257,7 +271,7 @@ describe("DeviceIdCA certificate generation and validation", () => {
 
     const invalidCSR = "invalid.csr.string";
 
-    expect((await ca.processCSR(invalidCSR)).Err().message).toContain("Invalid Token");
+    expect((await ca.processCSR(invalidCSR, {} as ClerkClaim)).Err().message).toContain("Invalid Token");
   });
 });
 
@@ -313,7 +327,20 @@ describe("DeviceIdSignMsg", () => {
       assert.fail(rCsrJWS.Err().message);
     }
     const csrJWS = rCsrJWS.Ok();
-    const rCertResult = await ca.processCSR(csrJWS);
+    const rCertResult = await ca.processCSR(csrJWS, {
+      params: {
+        email: "DEV-EMAIL@dev.com",
+        email_verified: false,
+        first: "DEV-FIRST",
+        image_url: "http://dev.com/image.jpg",
+        last: "DEV-LAST",
+        name: "DEV-NAME",
+        public_meta: undefined,
+      },
+      role: "DEV",
+      sub: "DEV-SUB",
+      userId: "DEV-USER",
+    });
 
     // Extract certificate payload from JWS
     const caPublicKey = await caKey.publicKey();

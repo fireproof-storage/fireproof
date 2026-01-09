@@ -1,4 +1,4 @@
-import { QueryUser, InviteTicket } from "@fireproof/core-protocols-dashboard";
+import { QueryUser, InviteTicket } from "@fireproof/core-types-protocols-dashboard";
 import { and, eq, lt } from "drizzle-orm";
 import { sqlInviteTickets, sqlToInviteTickets } from "../sql/invites.js";
 import { queryCondition } from "../sql/sql-helper.js";

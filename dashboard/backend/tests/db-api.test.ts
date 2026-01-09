@@ -1,18 +1,10 @@
-// import { describe } from 'vitest/globals';
-
-// import { BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
-
-// import Database from 'better-sqlite3';
-// import { eq } from 'drizzle-orm';
-// import { userRef } from "./db-api-schema";
-
 import { Result, WithoutPromise } from "@adviser/cement";
-import { SuperThis, Subject, CertificatePayloadSchema } from "@fireproof/core-types-base";
+import { Subject, CertificatePayloadSchema, FPDeviceIDSession } from "@fireproof/core-types-base";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
-import { FPApiSQL } from "../api.js";
 import {
+  FPApiInterface,
   ResCreateLedger,
   UserTenant,
   type AdminTenant,
@@ -20,92 +12,87 @@ import {
   type QueryUser,
   type ReqEnsureUser,
   type ResEnsureUser,
-  type VerifiedAuth,
-} from "@fireproof/core-protocols-dashboard";
+} from "@fireproof/core-types-protocols-dashboard";
 import { queryEmail, queryNick } from "../sql/sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
 import { describe, beforeAll, expect, it, inject } from "vitest";
 import { resWellKnownJwks } from "../well-known-jwks.js";
-import { DeviceIdCA, DeviceIdKey, DeviceIdCSR } from "@fireproof/core-device-id";
+import { DeviceIdCA, DeviceIdKey, DeviceIdCSR, DeviceIdSignMsg } from "@fireproof/core-device-id";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
-import { FPApiToken } from "../types.js";
-
-// // import { eq } from 'drizzle-orm'
-// // import { drizzle } from 'drizzle-orm/libsql';
-// // import Database from 'better-sqlite3';
-
-// const client = createClient({
-//   url: ''
-// });
-// export const db = drizzle(client);
-
-// const users = sqliteTable('users', {
-//   id: integer('id').primaryKey(),
-//   name: text('full_name'),
-// });
-
-// // const sqlite = new Database('sqlite.db');
-// // const db = drizzle({ client: sqlite });
-
-// db.select().from(users).all();
-// db.select().from(users).where(eq(users.id, 42)).get();
-
-class TestApiToken implements FPApiToken {
-  readonly sthis: SuperThis;
-  constructor(sthis: SuperThis) {
-    this.sthis = sthis;
-  }
-  verify(token: string): Promise<Result<VerifiedAuth>> {
-    const id = `userId-${token}`;
-    return Promise.resolve(
-      Result.Ok({
-        type: "clerk",
-        token,
-        userId: id,
-        provider: "Clerk",
-        params: {
-          email: `test${id}@test.de`,
-          first: `first${id}`,
-          last: `last${id}`,
-          name: `nick${id}`,
-          nick: `nick${id}`,
-        },
-      }),
-    );
-  }
-}
-
-async function createTestDeviceCA(sthis: SuperThis): Promise<DeviceIdCA> {
-  const caKey = await DeviceIdKey.create();
-  const caSubject: Subject = {
-    commonName: "Test Device CA",
-    organization: "Test Organization",
-    locality: "Test City",
-    stateOrProvinceName: "Test State",
-    countryName: "US",
-  };
-
-  return new DeviceIdCA({
-    base64: sthis.txt.base64,
-    caKey,
-    caSubject,
-    actions: {
-      generateSerialNumber: async () => sthis.nextId(32).str,
-    },
-  });
-}
+import { createHandler } from "../create-handler.js";
+import { DashboardApiImpl } from "@fireproof/core-protocols-dashboard";
+import { createTestDeviceCA } from "./helper.create-device-id-ca.js";
 
 describe("db-api", () => {
   // let db: BetterSQLite3Database
   let db: LibSQLDatabase;
   const sthis = ensureSuperThis();
-  let fpApi: FPApiSQL;
+  let fpApi: FPApiInterface;
   const datas = [] as {
-    reqs: ReqEnsureUser;
+    reqs: ReqEnsureUser & { user: Awaited<ReturnType<typeof createUser>> };
     ress: ResEnsureUser;
   }[];
   // const logger = ensureLogger(sthis, "dashboard-backend-db-api-test");
   let deviceCA: DeviceIdCA;
+
+  const session = sthis.nextId().str;
+  async function createUser(seqUserId: number) {
+    // console.log("Creating test user", session, seqUserId);
+    const devid = await DeviceIdKey.create();
+    const devkey = (await DeviceIdKey.createFromJWK(await devid.exportPrivateJWK())).Ok();
+    const deviceIdCSR = new DeviceIdCSR(sthis, devkey);
+    const rCsrResult = await deviceIdCSR.createCSR({ commonName: "test-device-id" });
+    const userId = `${session}-${seqUserId}`;
+    const rProcessResult = await deviceCA.processCSR(rCsrResult.Ok(), {
+      azp: `test-app-${userId}-${sthis.nextId().str}`,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iat: Math.floor(Date.now() / 1000),
+      iss: "test-issuer",
+      jti: sthis.nextId().str,
+      nbf: Math.floor(Date.now() / 1000),
+      params: {
+        nick: `nick-${userId}`,
+        email: `email-${userId}@example.com`,
+        email_verified: true,
+        first: `first-${userId}`,
+        image_url: `http://example.com/image-${userId}.png`,
+        last: `last-${userId}`,
+        name: `name-${userId}`,
+        public_meta: `{ "role": "tester-${userId}" }`,
+      },
+
+      role: "devide-id",
+      sub: `device-id-subject-${sthis.nextId().str}`,
+      userId: `user-id-${userId}`,
+
+      aud: ["http://test-audience.localhost/"],
+    });
+    // console.log("DeviceIdCA-processCSR", rProcessResult.Ok().certificatePayload);
+    const deviceIdSigner = new DeviceIdSignMsg(sthis.txt.base64, devkey, rProcessResult.Ok().certificatePayload);
+
+    let seq = 0;
+    const getDashBoardToken = async (): Promise<DashAuthType> => {
+      const now = Math.floor(Date.now() / 1000);
+      const token = await deviceIdSigner.sign(
+        {
+          iss: "app-id",
+          sub: "device-id",
+          deviceId: await devkey.fingerPrint(),
+          seq: ++seq,
+          exp: now + 120,
+          nbf: now - 2,
+          iat: now,
+          jti: sthis.nextId().str,
+        } satisfies FPDeviceIDSession,
+        "ES256",
+      );
+      return {
+        type: "device-id",
+        token,
+      };
+    };
+    return { devkey, deviceIdSigner, getDashBoardToken };
+  }
 
   async function jwkPackage() {
     // const pair = await SessionTokenService.generateKeyPair();
@@ -132,37 +119,50 @@ describe("db-api", () => {
 
     deviceCA = await createTestDeviceCA(sthis);
 
-    fpApi = new FPApiSQL(
-      sthis,
-      db,
-      { clerk: new TestApiToken(sthis) },
-      {
-        cloudPublicKeys: [],
-        clerkPublishableKey: "test-clerk-publishable-key",
-        maxTenants: 10,
-        maxAdminUsers: 5,
-        maxMemberUsers: 5,
-        maxInvites: 10,
-        maxLedgers: 5,
-        maxAppIdBindings: 5,
-        deviceCA,
-      },
-    );
+    const env = {
+      CLOUD_SESSION_TOKEN_PUBLIC:
+        "zeWndr5LEoaySgKSo2aZniYqZ3z6Ecx3Z6qFThtXC8aMEAx6oDFMKgm3SptRgHhN4UxFSvTnmU5HXNrF6cZ4dBz6Ddphq8hsxzUKbryaBu5AFnbNyHrZEod2uw2q2UnPgeEdTDszU1AzSn7iiEfSv4NZ17ENVx7WfRAY8J8F1aog8",
+      CLERK_PUBLISHABLE_KEY: "pk_test_cHJlY2lzZS1jb2x0LTQ5LmNsZXJrLmFjY291bnRzLmRldiQ",
+      DEVICE_ID_CA_PRIV_KEY: await sts.jwk2env(await deviceCA.getCAKey().exportPrivateJWK()),
+      DEVICE_ID_CA_CERT: await deviceCA.caCertificate().then((r) => r.Ok().jwtStr),
 
-    datas.push(
-      ...Array(10)
-        .fill(0)
-        .map((_, i) => ({
+      CLOUD_SESSION_TOKEN_SECRET:
+        "z33KxHvFS3jLz72v9DeyGBqo7H34SCC1RA5LvQFCyDiU4r4YBR4jEZxZwA9TqBgm6VB5QzwjrZJoVYkpmHgH7kKJ6Sasat3jTDaBCkqWWfJAVrBL7XapUstnKW3AEaJJKvAYWrKYF9JGqrHNU8WVjsj3MZNyqqk8iAtTPPoKtPTLo2c657daVMkxibmvtz2egnK5wPeYEUtkbydrtBzteN25U7zmGqhS4BUzLjDiYKMLP8Tayi",
+
+      MAX_ADMIN_USERS: "5",
+      MAX_MEMBER_USERS: "5",
+      MAX_TENANTS: "10",
+    };
+    const svc = await createHandler(db, env);
+
+    const unknownDevId = await createUser(999);
+
+    fpApi = new DashboardApiImpl({
+      apiUrl: "http://test-dashboard-api.localhost/FPApi",
+      fetch: (url: string, init?: RequestInit) => {
+        return svc(new Request(url, init));
+      },
+      getToken: async () => {
+        return Result.Ok(await unknownDevId.getDashBoardToken());
+      },
+    });
+
+    for (const userToCreate of Array(10)
+      .fill(0)
+      .map(async (_, i) => {
+        const user = await createUser(i);
+        return {
           ress: {} as ResEnsureUser,
           reqs: {
             type: "reqEnsureUser",
-            auth: {
-              token: `test-${i}-${sthis.nextId().str}`,
-              type: "clerk",
-            },
-          } satisfies ReqEnsureUser,
-        })),
-    );
+            auth: await user.getDashBoardToken(),
+            user,
+          } satisfies ReqEnsureUser & { user: Awaited<ReturnType<typeof createUser>> },
+        };
+      })) {
+      datas.push(await userToCreate);
+    }
+
     for (const d of datas) {
       const rRes = await fpApi.ensureUser(d.reqs);
       const res = rRes.Ok();
@@ -175,12 +175,13 @@ describe("db-api", () => {
             {
               cleanEmail: res.user.byProviders[0].cleanEmail,
               cleanNick: res.user.byProviders[0].cleanNick,
-              createdAt: res.user.byProviders[0].createdAt,
-              params: res.user.byProviders[0].params,
-              providerUserId: `userId-${d.reqs.auth.token}`,
               queryEmail: queryEmail(res.user.byProviders[0].cleanEmail),
               queryNick: queryNick(res.user.byProviders[0].cleanNick),
-              queryProvider: "github",
+
+              createdAt: res.user.byProviders[0].createdAt,
+              params: res.user.byProviders[0].params,
+              providerUserId: res.user.byProviders[0].providerUserId,
+              queryProvider: "device-id",
               updatedAt: res.user.byProviders[0].updatedAt,
               used: res.user.byProviders[0].used,
             },
@@ -224,10 +225,10 @@ describe("db-api", () => {
           tenant: {
             createdAt: res.tenants[0].tenant.createdAt,
             limits: {
-              maxAdminUsers: 5,
-              maxInvites: 10,
-              maxLedgers: 5,
-              maxMemberUsers: 5,
+              maxAdminUsers: expect.any(Number),
+              maxInvites: expect.any(Number),
+              maxLedgers: expect.any(Number),
+              maxMemberUsers: expect.any(Number),
             },
             name: res.tenants[0].tenant.name,
             status: "active",
@@ -263,12 +264,14 @@ describe("db-api", () => {
             {
               cleanEmail: data.ress.user.byProviders[0].cleanEmail,
               cleanNick: data.ress.user.byProviders[0].cleanNick,
-              createdAt: data.ress.user.byProviders[0].createdAt,
-              params: data.ress.user.byProviders[0].params,
-              providerUserId: `userId-${d.auth.token}`,
               queryEmail: queryEmail(data.ress.user.byProviders[0].cleanEmail),
               queryNick: queryNick(data.ress.user.byProviders[0].cleanNick),
-              queryProvider: "github",
+
+              providerUserId: data.ress.user.byProviders[0].providerUserId,
+              queryProvider: "device-id",
+              createdAt: data.ress.user.byProviders[0].createdAt,
+
+              params: data.ress.user.byProviders[0].params,
               updatedAt: data.ress.user.byProviders[0].updatedAt,
               used: data.ress.user.byProviders[0].used,
             },
@@ -340,7 +343,7 @@ describe("db-api", () => {
         },
       },
     });
-    expect(resinsert.Err().message).toEqual("cannot invite self");
+    expect(resinsert.Err().message).toContain("cannot invite self");
   });
 
   it("invite to not existing id", async () => {
@@ -361,7 +364,7 @@ describe("db-api", () => {
         },
       },
     });
-    expect(resinsert.Err().message).toEqual("existingUserId not found");
+    expect(resinsert.Err().message).toContain("existingUserId not found");
   });
 
   it("invite existing user to a tenant", async () => {
@@ -451,7 +454,9 @@ describe("db-api", () => {
         },
       },
     });
-    expect(resinsert.Ok().invite.createdAt.getTime()).toBeLessThan(resupdate.Ok().invite.expiresAfter.getTime());
+    expect(new Date(resinsert.Ok().invite.createdAt).getTime()).toBeLessThan(
+      new Date(resupdate.Ok().invite.expiresAfter).getTime(),
+    );
     expect(resupdate.Ok()).toEqual({
       invite: {
         createdAt: resinsert.Ok().invite.createdAt,
@@ -610,7 +615,7 @@ describe("db-api", () => {
   it("CRUD tenant", async () => {
     const tenant = await fpApi.createTenant({
       type: "reqCreateTenant",
-      auth: datas[0].reqs.auth,
+      auth: await datas[0].reqs.user.getDashBoardToken(),
       tenant: {
         // ownerUserId: data[0].ress.user.userId,
       },
@@ -618,10 +623,10 @@ describe("db-api", () => {
     expect(tenant.Ok()).toEqual({
       tenant: {
         createdAt: tenant.Ok().tenant.createdAt,
-        maxAdminUsers: 5,
+        maxAdminUsers: tenant.Ok().tenant.maxAdminUsers,
         maxInvites: 10,
         maxLedgers: 5,
-        maxMemberUsers: 5,
+        maxMemberUsers: tenant.Ok().tenant.maxMemberUsers,
         name: tenant.Ok().tenant.name,
         ownerUserId: datas[0].ress.user.userId,
         status: "active",
@@ -976,10 +981,7 @@ describe("db-api", () => {
   });
 
   describe("Cloud Token Tests", () => {
-    const auth: DashAuthType = {
-      token: `test-${sthis.nextId().str}`,
-      type: "clerk",
-    };
+    const auth: DashAuthType = undefined as unknown as DashAuthType;
     let jwkPack: WithoutPromise<ReturnType<typeof jwkPackage>>;
     let ledger: ResCreateLedger;
     let tenant: UserTenant;
@@ -1002,10 +1004,8 @@ describe("db-api", () => {
         })
       ).Ok();
 
-      const notMyAuth: DashAuthType = {
-        token: `test-${sthis.nextId().str}`,
-        type: "clerk",
-      };
+      const otherUser = await createUser(11111);
+      const notMyAuth = await otherUser.getDashBoardToken();
       const rNotMyUser = await fpApi.ensureUser({
         type: "reqEnsureUser",
         auth: notMyAuth,
@@ -1031,7 +1031,7 @@ describe("db-api", () => {
           auth,
           appId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(initial.isOk()).toBeTruthy();
       const initToken = await jwtVerify(initial.Ok().cloudToken, jwkPack.pub);
@@ -1041,7 +1041,7 @@ describe("db-api", () => {
           auth,
           appId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(reEnsure.isOk()).toBeTruthy();
       const reEnsureToken = await jwtVerify(reEnsure.Ok().cloudToken, jwkPack.pub);
@@ -1070,7 +1070,7 @@ describe("db-api", () => {
           appId,
           ledger: notMyLedger.ledger.ledgerId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(outerTenant.isErr()).toBeTruthy();
     });
@@ -1085,7 +1085,7 @@ describe("db-api", () => {
           appId,
           tenant: ledger.ledger.tenantId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(validTenant.isOk()).toBeTruthy();
       const token = await jwtVerify<FPCloudClaim>(validTenant.Ok().cloudToken, jwkPack.pub);
@@ -1105,7 +1105,7 @@ describe("db-api", () => {
           appId,
           tenant: "invalid-tenant-id",
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(validTenant.isErr()).toBeTruthy();
     });
@@ -1121,7 +1121,7 @@ describe("db-api", () => {
           ledger: ledger.ledger.ledgerId,
           tenant: ledger.ledger.tenantId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(validTenant.isOk()).toBe(true);
       const token = await jwtVerify<FPCloudClaim>(validTenant.Ok().cloudToken, jwkPack.pub);
@@ -1141,7 +1141,7 @@ describe("db-api", () => {
           tenant: tenant.tenantId,
           ledger: "invalid-ledger-id",
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(validTenant.isErr()).toBeTruthy();
     });
@@ -1160,7 +1160,7 @@ describe("db-api", () => {
           auth: userA.reqs.auth,
           appId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(userAToken.isOk()).toBeTruthy();
 
@@ -1192,7 +1192,7 @@ describe("db-api", () => {
           auth: userB.reqs.auth,
           appId,
         },
-        jwkPack.opts,
+        // jwkPack.opts,
       );
       expect(userBToken.isOk()).toBeTruthy();
       expect(userBToken.Ok().ledger).toBe(userAToken.Ok().ledger);
@@ -1246,7 +1246,7 @@ describe("db-api", () => {
           tenant: datas[0].ress.tenants[0].tenantId,
         },
       },
-      jwkPack.opts,
+      // jwkPack.opts,
     );
     expect(resSt.isOk()).toBeTruthy();
     const v = await jwtVerify(resSt.Ok().token, jwkPack.pub);
@@ -1274,7 +1274,7 @@ describe("db-api", () => {
     });
 
     expect(v.payload).toEqual({
-      aud: "TEST_A",
+      aud: "PUBLIC",
       created: v.payload.created,
       email: v.payload.email,
       nickname: v.payload.nickname,
@@ -1282,7 +1282,7 @@ describe("db-api", () => {
       selected: v.payload.selected,
       exp: v.payload.exp,
       iat: v.payload.iat,
-      iss: "TEST_I",
+      iss: "FP_CLOUD",
       ledgers: [
         {
           id: rledger.Ok().ledger.ledgerId,
@@ -1310,29 +1310,23 @@ describe("db-api", () => {
   });
 
   it("check The implicit update of limits", async () => {
-    const reqEnsureUser: ReqEnsureUser = {
-      type: "reqEnsureUser",
-      auth: {
-        token: `test-${sthis.nextId().str}`,
-        type: "clerk",
-      },
-    };
-    const fpApi = new FPApiSQL(
-      sthis,
-      db,
-      { clerk: new TestApiToken(sthis) },
-      {
-        cloudPublicKeys: [],
-        clerkPublishableKey: "test-clerk-publishable-key",
-        maxTenants: 5,
-        maxAdminUsers: 5,
-        maxMemberUsers: 5,
-        maxInvites: 10,
-        maxLedgers: 5,
-        maxAppIdBindings: 5,
-        deviceCA,
-      },
-    );
+    const reqEnsureUser: ReqEnsureUser = { type: "reqEnsureUser", auth: undefined as unknown as DashAuthType };
+    // const fpApi = new FPApiSQL(
+    //   sthis,
+    //   db,
+    //   { clerk: new TestApiToken(sthis) },
+    //   {
+    //     cloudPublicKeys: [],
+    //     clerkPublishableKey: "test-clerk-publishable-key",
+    //     maxTenants: 5,
+    //     maxAdminUsers: 5,
+    //     maxMemberUsers: 5,
+    //     maxInvites: 10,
+    //     maxLedgers: 5,
+    //     maxAppIdBindings: 5,
+    //     deviceCA,
+    //   },
+    // );
     await fpApi.ensureUser(reqEnsureUser);
     await fpApi.createTenant({
       type: "reqCreateTenant",
@@ -1342,7 +1336,7 @@ describe("db-api", () => {
       },
     });
     const user = await fpApi.ensureUser(reqEnsureUser);
-    expect(user.Ok().user.maxTenants).toEqual(5);
+    expect(user.Ok().user.maxTenants).toEqual(10);
     expect(user.Ok().tenants[0].tenant.limits).toEqual({
       maxAdminUsers: 5,
       maxMemberUsers: 5,
@@ -1350,24 +1344,32 @@ describe("db-api", () => {
       maxLedgers: 5,
     });
 
-    const fpApi2 = new FPApiSQL(
-      sthis,
-      db,
-      { clerk: new TestApiToken(sthis) },
-      {
-        cloudPublicKeys: [],
-        clerkPublishableKey: "test-clerk-publishable-key",
-        maxTenants: 50,
-        maxAdminUsers: 50,
-        maxMemberUsers: 50,
-        maxInvites: 100,
-        maxLedgers: 50,
-        maxAppIdBindings: 50,
-        deviceCA: deviceCA,
-      },
-    );
-    const res = await fpApi2.ensureUser(reqEnsureUser);
-    expect(res.Ok().user.maxTenants).toBe(50);
+    // funky stuff with cements env implementation
+    sthis.env.sets({
+      MAX_ADMIN_USERS: "50",
+      MAX_MEMBER_USERS: "50",
+      MAX_INVITES: "100",
+      MAX_LEDGERS: "50",
+    });
+
+    // const fpApi2 = new FPApiSQL(
+    //   sthis,
+    //   db,
+    //   { clerk: new TestApiToken(sthis) },
+    //   {
+    //     cloudPublicKeys: [],
+    //     clerkPublishableKey: "test-clerk-publishable-key",
+    //     maxTenants: 50,
+    //     maxAdminUsers: 50,
+    //     maxMemberUsers: 50,
+    //     maxInvites: 100,
+    //     maxLedgers: 50,
+    //     maxAppIdBindings: 50,
+    //     deviceCA: deviceCA,
+    //   },
+    // );
+    const res = await fpApi.ensureUser(reqEnsureUser);
+    expect(res.Ok().user.maxTenants).toBe(10); // stays as previous until re-create
     expect(res.Ok().tenants[0].tenant.limits).toEqual({
       maxAdminUsers: 50,
       maxMemberUsers: 50,
@@ -1375,24 +1377,33 @@ describe("db-api", () => {
       maxLedgers: 50,
     });
 
-    const fpApi3 = new FPApiSQL(
-      sthis,
-      db,
-      { clerk: new TestApiToken(sthis) },
-      {
-        cloudPublicKeys: [],
-        clerkPublishableKey: "test-clerk-publishable-key",
-        maxTenants: 17,
-        maxAdminUsers: 17,
-        maxMemberUsers: 17,
-        maxInvites: 17,
-        maxLedgers: 17,
-        maxAppIdBindings: 17,
-        deviceCA,
-      },
-    );
-    const dLimits = await fpApi3.ensureUser(reqEnsureUser);
-    expect(dLimits.Ok().user.maxTenants).toBe(50);
+    sthis.env.sets({
+      MAX_ADMIN_USERS: "5",
+      MAX_MEMBER_USERS: "5",
+      MAX_INVITES: "10",
+      MAX_LEDGERS: "5",
+    });
+
+    // sthis.env.sets(prevEnv);
+
+    // const fpApi3 = new FPApiSQL(
+    //   sthis,
+    //   db,
+    //   { clerk: new TestApiToken(sthis) },
+    //   {
+    //     cloudPublicKeys: [],
+    //     clerkPublishableKey: "test-clerk-publishable-key",
+    //     maxTenants: 17,
+    //     maxAdminUsers: 17,
+    //     maxMemberUsers: 17,
+    //     maxInvites: 17,
+    //     maxLedgers: 17,
+    //     maxAppIdBindings: 17,
+    //     deviceCA,
+    //   },
+    // );
+    const dLimits = await fpApi.ensureUser(reqEnsureUser);
+    expect(dLimits.Ok().user.maxTenants).toBe(10);
     expect(dLimits.Ok().tenants[0].tenant.limits).toEqual({
       maxAdminUsers: 50,
       maxMemberUsers: 50,

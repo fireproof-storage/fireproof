@@ -2,7 +2,7 @@ import { Result } from "@adviser/cement";
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
 import { queryCondition, toUndef } from "./sql-helper.js";
 import { eq, and, inArray } from "drizzle-orm/sql/expressions";
-import { AuthProvider, QueryUser, User, UserByProvider, UserStatus } from "@fireproof/core-protocols-dashboard";
+import { AuthProvider, QueryUser, User, UserByProvider, UserStatus } from "@fireproof/core-types-protocols-dashboard";
 import { DashSqlite } from "../create-handler.js";
 
 export const sqlUsers = sqliteTable("Users", {

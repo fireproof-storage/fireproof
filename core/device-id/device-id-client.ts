@@ -1,13 +1,13 @@
 // can create a CSR
 // can sign Msg
 
-import { IssueCertificateResult, SuperThis } from "@fireproof/core-types-base";
+import { SuperThis } from "@fireproof/core-types-base";
 import { getKeyBag } from "@fireproof/core-keybag";
 import { ResolveOnce, Result } from "@adviser/cement";
 import { DeviceIdKey } from "./device-id-key.js";
 import { DeviceIdSignMsg } from "./device-id-signed-msg.js";
 import { DeviceIdCSR } from "./device-id-CSR.js";
-import { DeviceIdProtocol } from "./device-id-protocol.js";
+import { DeviceIdProtocol } from "@fireproof/core-types-device-id";
 
 class MsgSigner {
   #x: DeviceIdSignMsg;
@@ -22,10 +22,6 @@ class MsgSigner {
 }
 
 const onceDeviceId = new ResolveOnce<Result<MsgSigner>>();
-
-export interface DeviceIdTransport {
-  issueCertificate(csrJWT: string): Promise<Result<IssueCertificateResult>>;
-}
 
 export class DeviceIdClient {
   readonly #sthis: SuperThis;

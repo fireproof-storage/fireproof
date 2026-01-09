@@ -1,17 +1,15 @@
-import { Result } from "@adviser/cement";
-import { ReqInviteUser, ResInviteUser, InviteTicket } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqInviteUser, ResInviteUser, InviteTicket, validateInviteUser } from "@fireproof/core-types-protocols-dashboard";
 import { eq } from "drizzle-orm";
 import { sqlLedgers } from "../sql/ledgers.js";
 import { sqlTenants } from "../sql/tenants.js";
-import { UserNotFoundError, queryUser } from "../sql/users.js";
-import { FPApiSQLCtx, isVerifiedUserActive, ReqWithVerifiedAuthUser } from "../types.js";
+import { queryUser } from "../sql/users.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { createInviteTicket } from "../internal/create-invite-ticket.js";
 import { updateInviteTicket } from "../internal/update-invite.ticket.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
-export async function inviteUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqInviteUser>): Promise<Result<ResInviteUser>> {
-  if (!isVerifiedUserActive(req.auth)) {
-    return Result.Err(new UserNotFoundError());
-  }
+async function inviteUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqInviteUser>): Promise<Result<ResInviteUser>> {
   const findUser = await queryUser(ctx.db, req.ticket.query);
   if (findUser.isErr()) {
     return Result.Err(findUser.Err());
@@ -71,3 +69,19 @@ export async function inviteUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<
     invite: inviteTicket,
   });
 }
+
+export const inviteUserItem: EventoHandler<Request, ReqInviteUser, ResInviteUser> = {
+  hash: "invite-user",
+  validate: (ctx) => validateInviteUser(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqInviteUser>, ResInviteUser>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await inviteUser(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

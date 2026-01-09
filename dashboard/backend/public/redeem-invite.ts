@@ -1,5 +1,5 @@
-import { Result } from "@adviser/cement";
-import { ReqRedeemInvite, ResRedeemInvite } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqRedeemInvite, ResRedeemInvite, validateRedeemInvite } from "@fireproof/core-types-protocols-dashboard";
 import { and, eq } from "drizzle-orm";
 import { sqlToInviteTickets, sqlInviteTickets } from "../sql/invites.js";
 import { sqlLedgers } from "../sql/ledgers.js";
@@ -8,6 +8,7 @@ import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { findInvite } from "../internal/find-invite.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
 import { addUserToLedger } from "../internal/add-user-to-ledger.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
 export async function redeemInvite(
   ctx: FPApiSQLCtx,
@@ -20,8 +21,8 @@ export async function redeemInvite(
         (
           await findInvite(ctx, {
             query: {
-              byString: req.auth.verifiedAuth.params.email,
-              byNick: req.auth.verifiedAuth.params.nick,
+              byString: req.auth.verifiedAuth.claims.params.email,
+              byNick: req.auth.verifiedAuth.claims.params.nick,
               existingUserId: req.auth.user.userId,
               // TODO
               // andProvider: req.auth.verifiedAuth.provider,
@@ -81,3 +82,19 @@ export async function redeemInvite(
     ),
   });
 }
+
+export const redeemInviteItem: EventoHandler<Request, ReqRedeemInvite, ResRedeemInvite> = {
+  hash: "redeem-invite",
+  validate: (ctx) => validateRedeemInvite(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqRedeemInvite>, ResRedeemInvite>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await redeemInvite(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

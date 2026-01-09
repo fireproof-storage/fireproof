@@ -1,4 +1,4 @@
-import { OutTenantParams, UserStatus } from "@fireproof/core-protocols-dashboard";
+import { OutTenantParams, UserStatus } from "@fireproof/core-types-protocols-dashboard";
 import { sqlTenants } from "../sql/tenants.js";
 
 export function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantParams {

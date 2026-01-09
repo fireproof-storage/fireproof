@@ -1,10 +1,11 @@
-import { Result } from "@adviser/cement";
-import { ReqCreateLedger, ResCreateLedger } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqCreateLedger, ResCreateLedger, validateCreateLedger } from "@fireproof/core-types-protocols-dashboard";
 import { and, eq, gt } from "drizzle-orm";
 import { sqlLedgers, sqlLedgerUsers, sqlToLedgers } from "../sql/ledgers.js";
 import { sqlTenants } from "../sql/tenants.js";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfTenant } from "../internal/is-admin-of-tenant.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
 export async function createLedger(
   ctx: FPApiSQLCtx,
@@ -61,3 +62,19 @@ export async function createLedger(
     ledger: sqlToLedgers([{ Ledgers: ledger[0], LedgerUsers: roles[0] }])[0],
   });
 }
+
+export const createLedgerItem: EventoHandler<Request, ReqCreateLedger, ResCreateLedger> = {
+  hash: "create-ledger",
+  validate: (ctx) => validateCreateLedger(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqCreateLedger>, ResCreateLedger>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await createLedger(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

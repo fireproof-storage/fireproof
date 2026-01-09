@@ -1,19 +1,19 @@
-import { Result } from "@adviser/cement";
-import { DashAuthType, ReqEnsureCloudToken, ResEnsureCloudToken } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqEnsureCloudToken, ResEnsureCloudToken, validateEnsureCloudToken } from "@fireproof/core-types-protocols-dashboard";
 import { FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
-import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser, VerifiedAuthUser } from "../types.js";
-import { getFPTokenContext, createFPToken, toProvider } from "../utils/index.js";
+import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser, VerifiedAuthUserResult } from "../types.js";
+import { getFPTokenContext, createFPToken, toProvider, checkAuth, wrapStop } from "../utils/index.js";
 import { createLedger } from "./create-ledger.js";
 import { ensureUser } from "./ensure-user.js";
 import { listLedgersByUser } from "./list-ledgers-by-user.js";
 import { decodeJwt } from "jose";
 
-function getAppIdBinding<T extends DashAuthType>(
+function getAppIdBinding(
   ctx: FPApiSQLCtx,
-  auth: VerifiedAuthUser<T>,
+  auth: VerifiedAuthUserResult,
   req: ReqWithVerifiedAuthUser<ReqEnsureCloudToken>,
   filters: ReturnType<typeof eq>[],
 ) {
@@ -33,7 +33,7 @@ function getAppIdBinding<T extends DashAuthType>(
     .get();
 }
 
-export async function ensureCloudToken(
+async function ensureCloudToken(
   ctx: FPApiSQLCtx,
   req: ReqWithVerifiedAuthUser<ReqEnsureCloudToken>,
   ictx: Partial<FPTokenContext> = {},
@@ -68,7 +68,7 @@ export async function ensureCloudToken(
       }
       const rEnsureUser = await ensureUser(ctx, {
         type: "reqEnsureUser",
-        auth: req.auth.verifiedAuth,
+        auth: req.auth.inDashAuth,
       });
       if (rEnsureUser.isErr()) {
         return Result.Err(rEnsureUser);
@@ -135,9 +135,9 @@ export async function ensureCloudToken(
     userId: req.auth.user.userId,
     tenants: [],
     ledgers: [],
-    email: req.auth.verifiedAuth.params.email,
-    nickname: req.auth.verifiedAuth.params.nick,
-    provider: toProvider(req.auth.verifiedAuth),
+    email: req.auth.verifiedAuth.claims.params.email ?? `${req.auth.user.userId}@no-email.dummy`,
+    nickname: req.auth.verifiedAuth.claims.params.nick,
+    provider: toProvider(req.auth.verifiedAuth.claims),
     created: req.auth.user.createdAt,
     selected: {
       appId: req.appId,
@@ -157,3 +157,19 @@ export async function ensureCloudToken(
     claims,
   });
 }
+
+export const ensureCloudTokenItem: EventoHandler<Request, ReqEnsureCloudToken, ResEnsureCloudToken> = {
+  hash: "ensure-cloud-token",
+  validate: (ctx) => validateEnsureCloudToken(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqEnsureCloudToken>, ResEnsureCloudToken>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await ensureCloudToken(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

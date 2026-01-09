@@ -12,7 +12,7 @@ import {
   InviteTicketStatus,
   QueryUser,
   SqlInvitedParams,
-} from "@fireproof/core-protocols-dashboard";
+} from "@fireproof/core-types-protocols-dashboard";
 
 export const sqlInviteTickets = sqliteTable(
   "InviteTickets",
