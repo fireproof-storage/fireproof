@@ -1,0 +1,164 @@
+# Fireproof Cloud - Local Development Stack
+#
+# Quick Start:
+#   1. Copy .env.docker to .env: cp .env.docker .env
+#   2. Run: docker compose up --build
+#
+# Services:
+# - minio: S3-compatible storage (port 9000, console: 9001)
+# - cloud-backend: Main cloud backend service (port 8909)
+# - dashboard: Dashboard frontend + API (port 7370)
+# - todo-app: Example todo application (port 5174)
+#
+# Default credentials:
+# - MinIO: minioadmin / minioadmin
+# - S3 bucket: testbucket
+#
+# For a faster dev experience (infrastructure only):
+#   docker compose -f docker-compose.infra.yaml up
+
+services:
+  # S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: fireproof-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Initialize MinIO bucket
+  minio-init:
+    image: minio/mc:latest
+    container_name: fireproof-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      mc mb myminio/testbucket --ignore-existing;
+      mc anonymous set public myminio/testbucket;
+      echo 'Bucket testbucket created and configured';
+      "
+
+  # Cloud Backend (Node.js)
+  cloud-backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cloud-backend
+    container_name: fireproof-cloud-backend
+    ports:
+      - "8909:8909"
+    environment:
+      # Server config
+      ENDPOINT_PORT: "8909"
+      NODE_ENV: development
+
+      # S3 Storage (use localhost for browser-accessible pre-signed URLs)
+      STORAGE_URL: http://localhost:9000/testbucket
+      BUCKET_NAME: testbucket
+      ACCESS_KEY_ID: minioadmin
+      SECRET_ACCESS_KEY: minioadmin
+      REGION: us-east-1
+
+      # Session tokens (set in .env file)
+      CLOUD_SESSION_TOKEN_PUBLIC: ${CLOUD_SESSION_TOKEN_PUBLIC:-your-cloud-session-token-public}
+
+      # Protocol settings
+      VERSION: FP-MSG-1.0
+      FP_DEBUG: "true"
+      MAX_IDLE_TIME: "300"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8909/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Dashboard (Frontend + Backend API)
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: fireproof-dashboard
+    ports:
+      - "7370:7370"
+    environment:
+      # Server config
+      PORT: "7370"
+      NODE_ENV: development
+      ENVIRONMENT: dev
+
+      # Session tokens (must match cloud-backend, set in .env file)
+      CLOUD_SESSION_TOKEN_PUBLIC: ${CLOUD_SESSION_TOKEN_PUBLIC:-your-cloud-session-token-public}
+      CLOUD_SESSION_TOKEN_SECRET: ${CLOUD_SESSION_TOKEN_SECRET:-your-cloud-session-token-secret}
+
+      # Clerk authentication (set in .env file)
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-your-clerk-secret-key}
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-your-clerk-publishable-key}
+      VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-your-clerk-publishable-key}
+      CLERK_PUB_JWT_URL: ${CLERK_PUB_JWT_URL:-https://your-clerk-domain.clerk.accounts.dev}
+
+      # Device ID CA (set in .env file)
+      DEVICE_ID_CA_PRIV_KEY: ${DEVICE_ID_CA_PRIV_KEY:-your-device-id-ca-private-key}
+      DEVICE_ID_CA_CERT: ${DEVICE_ID_CA_CERT:-your-device-id-ca-cert}
+
+      # Limits
+      MAX_LEDGERS: "50"
+      MAX_TENANTS: "100"
+      MAX_ADMIN_USERS: "10"
+      MAX_MEMBER_USERS: "50"
+      MAX_INVITES: "100"
+      MAX_APPID_BINDINGS: "50"
+
+      # Cloud backend URL
+      FP_ENDPOINT: http://cloud-backend:8909
+    depends_on:
+      cloud-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:7370/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Todo App (Example Application)
+  todo-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.todo-app
+      args:
+        VITE_DASHBOARD_URI: http://localhost:7370/fp/cloud/api/token
+        VITE_TOKEN_API_URI: http://localhost:7370/api
+        VITE_CLOUD_BACKEND_URL: fpcloud://localhost:8909?protocol=ws
+    container_name: fireproof-todo-app
+    ports:
+      - "5174:80"
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  minio_data:
+
+networks:
+  default:
+    name: fireproof-network

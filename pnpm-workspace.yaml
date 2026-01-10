@@ -11,11 +11,14 @@ packages:
   - "core/protocols/*"
   - "core/svc/*"
   - "use-fireproof/base"
+  - "use-fireproof/clerk"
   - "use-fireproof/pkg"
   - "use-fireproof/tests"
   - "dashboard/frontend"
   - "dashboard/backend"
   - "vendor"
+  - "standalone/*"
+  - "standalone/bun-server/examples/*"
 #catalog:
 #  adviserCement: ^0.4.20
 #

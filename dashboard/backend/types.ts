@@ -23,7 +23,7 @@ export interface TokenByResultIdParam {
 export const FPAPIMsg = new FAPIMsgImpl();
 
 export interface FPApiToken {
-  verify(token: string): Promise<Result<VerifiedAuth>>;
+  verify(token: string, clerkId?: string): Promise<Result<VerifiedAuth>>;
 }
 
 export interface AddUserToTenant {

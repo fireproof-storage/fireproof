@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env --env-file=.env.local backend/deno-serve.js",
+    "backend:node": "node dist/node-serve.js",
     "build": "core-cli tsc",
     "lint": "eslint .",
     "test": "vitest --run",
@@ -23,6 +24,8 @@
     "@adviser/cement": "^0.5.8",
     "@clerk/backend": "^2.29.0",
     "@clerk/clerk-js": "^5.117.0",
+    "@libsql/client": "^0.15.15",
+    "drizzle-orm": "^0.45.1",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-device-id": "workspace:0.0.0",
     "@fireproof/core-protocols-cloud": "workspace:0.0.0",

@@ -12,6 +12,33 @@ import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fi
 import { jwtVerify } from "jose";
 import { FPApiToken, FPAPIMsg } from "./types.js";
 
+// In-memory registry for custom Clerk instances
+export interface RegisteredClerkInstance {
+  readonly clerkId: string;
+  readonly jwksUrl: string;
+  readonly registeredAt: Date;
+}
+
+const clerkRegistry = new Map<string, RegisteredClerkInstance>();
+
+export function registerClerkInstance(clerkId: string, jwksUrl: string): RegisteredClerkInstance {
+  const instance: RegisteredClerkInstance = {
+    clerkId,
+    jwksUrl,
+    registeredAt: new Date(),
+  };
+  clerkRegistry.set(clerkId, instance);
+  return instance;
+}
+
+export function getClerkInstance(clerkId: string): RegisteredClerkInstance | undefined {
+  return clerkRegistry.get(clerkId);
+}
+
+export function listClerkInstances(): RegisteredClerkInstance[] {
+  return Array.from(clerkRegistry.values());
+}
+
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
     "Access-Control-Allow-Origin": "*",
@@ -68,8 +95,24 @@ class ClerkApiToken implements FPApiToken {
     return Result.Ok({ keys, urls });
   });
 
-  async verify(token: string): Promise<Result<VerifiedAuth>> {
-    const { keys, urls } = this.keysAndUrls().Ok();
+  // Get keys/urls for a specific clerkId (custom instance) or fall back to default
+  getKeysAndUrlsForClerkId(clerkId?: string): { keys: string[]; urls: string[] } {
+    if (clerkId) {
+      const instance = getClerkInstance(clerkId);
+      if (instance) {
+        return { keys: [], urls: [instance.jwksUrl] };
+      }
+    }
+    // Fall back to default configured keys
+    return this.keysAndUrls().Ok();
+  }
+
+  async verify(token: string, clerkId?: string): Promise<Result<VerifiedAuth>> {
+    const { keys, urls } = this.getKeysAndUrlsForClerkId(clerkId);
+
+    if (keys.length === 0 && urls.length === 0) {
+      return Result.Err(`No Clerk keys configured${clerkId ? ` for clerkId: ${clerkId}` : ""}`);
+    }
 
     const rt = await sts.verifyToken(token, keys, urls, {
       parseSchema: (payload: unknown): Result<FPClerkClaim> => {
@@ -116,7 +159,7 @@ class ClerkApiToken implements FPApiToken {
       type: "clerk",
       token,
       userId: t.payload.sub,
-      provider: "TBD",
+      provider: clerkId || "default",
       params: {
         ...t.payload.params,
       },
@@ -152,7 +195,7 @@ class DeviceIdApiToken implements FPApiToken {
     this.sthis = sthis;
     this.opts = opts;
   }
-  async verify(token: string): Promise<Result<VerifiedAuth>> {
+  async verify(token: string, _clerkId?: string): Promise<Result<VerifiedAuth>> {
     const rCA = await rDeviceIdCA(this.sthis);
     if (rCA.isErr()) {
       return Result.Err(rCA.Err());
@@ -373,6 +416,43 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
         res = fpApi.getCertFromCsr(jso);
         break;
 
+      // Handle custom Clerk instance registration
+      case jso.type === "reqRegisterClerkKeys": {
+        const { clerkId, jwksUrl } = jso as { clerkId: string; jwksUrl: string };
+        if (!clerkId || !jwksUrl) {
+          return new Response(
+            JSON.stringify({ type: "error", message: "clerkId and jwksUrl are required" }),
+            { status: 400, headers: DefaultHttpHeaders({ "Content-Type": "application/json" }) },
+          );
+        }
+        const instance = registerClerkInstance(clerkId, jwksUrl);
+        res = Promise.resolve(
+          Result.Ok({
+            type: "resRegisterClerkKeys",
+            clerkId: instance.clerkId,
+            jwksUrl: instance.jwksUrl,
+            registeredAt: instance.registeredAt.toISOString(),
+          }),
+        );
+        break;
+      }
+
+      // List registered Clerk instances
+      case jso.type === "reqListClerkInstances": {
+        const instances = listClerkInstances();
+        res = Promise.resolve(
+          Result.Ok({
+            type: "resListClerkInstances",
+            instances: instances.map((i) => ({
+              clerkId: i.clerkId,
+              jwksUrl: i.jwksUrl,
+              registeredAt: i.registeredAt.toISOString(),
+            })),
+          }),
+        );
+        break;
+      }
+
       default:
         return new Response("Invalid request", { status: 400, headers: DefaultHttpHeaders() });
     }
@@ -404,11 +484,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
       const duration = endTime - startTime;
       return new Response(JSON.stringify(rRes.Ok()), {
         status: 200,
-        headers: {
-          ...DefaultHttpHeaders,
+        headers: DefaultHttpHeaders({
           "Content-Type": "application/json",
           "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-        },
+        }),
       });
     } catch (e) {
       logger.Error().Any({ request: jso.type }).Err(e).Msg("global-Error");
@@ -421,11 +500,10 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
         }),
         {
           status: 500,
-          headers: {
-            ...DefaultHttpHeaders,
+          headers: DefaultHttpHeaders({
             "Content-Type": "application/json",
             "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-          },
+          }),
         },
       );
     }

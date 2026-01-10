@@ -180,8 +180,7 @@ export class NodeHonoFactory implements HonoServerFactory {
     };
 
     const nhs = new NodeHonoServer(id, this);
-    // return nhs.start(ctx).then((nhs) => fn({ ...ctx, impl: nhs }));
-    return fn({ ...ctx, impl: nhs });
+    return nhs.start(ctx).then((nhs) => fn({ ...ctx, impl: nhs }));
   }
 
   async start(app: Hono): Promise<void> {

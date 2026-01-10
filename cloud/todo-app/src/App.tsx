@@ -6,15 +6,20 @@ import TodoForm from "./components/TodoForm.js";
 import TodoList from "./components/TodoList.js";
 import { FilterType, Todo } from "./types.js";
 
+// Cloud configuration from environment variables (with Docker defaults)
+const DASHBOARD_URI = import.meta.env.VITE_DASHBOARD_URI || "http://localhost:7370/fp/cloud/api/token";
+const TOKEN_API_URI = import.meta.env.VITE_TOKEN_API_URI || "http://localhost:7370/api";
+const CLOUD_BACKEND_URL = import.meta.env.VITE_CLOUD_BACKEND_URL || "fpcloud://localhost:8909?protocol=ws";
+
 /**
  * Main Todo App component with Fireproof cloud sync
  */
 function App() {
   const { database, attach, useLiveQuery } = useFireproof("fireproof-todo-app", {
     attach: toCloud({
-      dashboardURI: "http://localhost:3000/fp/cloud/api/token",
-      tokenApiURI: "http://localhost:3000/api",
-      urls: { base: "fpcloud://localhost:8787?protocol=ws" },
+      dashboardURI: DASHBOARD_URI,
+      tokenApiURI: TOKEN_API_URI,
+      urls: { base: CLOUD_BACKEND_URL },
     }),
   });
 

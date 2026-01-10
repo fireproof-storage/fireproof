@@ -1,0 +1,34 @@
+# Fireproof Cloud Backend - Docker Build
+# Uses tsx to run TypeScript directly
+
+FROM node:22-slim
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy entire project
+COPY . .
+
+# Install dependencies
+RUN pnpm install --no-frozen-lockfile
+
+# Install tsx globally for running TypeScript
+RUN npm install -g tsx
+
+# Create data directories and run database migrations
+RUN mkdir -p /app/dist
+ENV FP_SQLITE_URL=/app/dist/sqlite.db
+RUN cd /app/cloud/backend/node && pnpm exec drizzle-kit push --config ./drizzle.cloud.libsql.config.ts
+
+EXPOSE 8909
+
+# Run TypeScript directly with tsx
+CMD ["tsx", "cloud/backend/node/node-serve.ts"]

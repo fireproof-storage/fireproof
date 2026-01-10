@@ -1,9 +1,16 @@
 import { DocWithId, useFireproof, toCloud, RedirectStrategy } from "use-fireproof";
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { DeviceIdDemo } from "./DeviceIdDemo";
 // import { URI } from "@adviser/cement";
 
+// Set to true to show the Device ID demo instead of the regular app
+const SHOW_DEVICE_ID_DEMO = true;
+
 function App() {
+  if (SHOW_DEVICE_ID_DEMO) {
+    return <DeviceIdDemo />;
+  }
   const { database, attach } = useFireproof("fireproof-5-party", {
     attach: toCloud({
       strategy: new RedirectStrategy({

@@ -8,7 +8,8 @@ export async function authVerifyAuth(ctx: FPApiSQLCtx, req: { readonly auth: Das
   if (!tokenApi) {
     return Result.Err(`invalid auth type:[${req.auth.type}]`);
   }
-  const rAuth = await tokenApi.verify(req.auth.token);
+  // Pass clerkId for custom Clerk instance lookup
+  const rAuth = await tokenApi.verify(req.auth.token, req.auth.clerkId);
   // console.log("_authVerify-3", rAuth);
   if (rAuth.isErr()) {
     return Result.Err(rAuth.Err());

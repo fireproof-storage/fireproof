@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+
+# Build outputs (will be rebuilt in container)
+**/dist
+**/build
+**/.cache
+
+# Dependencies (will be reinstalled in container)
+**/node_modules
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (keep docker folder, ignore compose files at root)
+docker-compose*.yaml
+.dockerignore
+
+# Dev files
+*.log
+*.local
+.env
+.env.*
+!.env.docker
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+**/vitest.*.ts
+coverage
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Smoke tests
+smoke
+
+# Temporary files
+.cache-home
+*.sql
+*.mp4
+*.html
+secrets*.txt
+

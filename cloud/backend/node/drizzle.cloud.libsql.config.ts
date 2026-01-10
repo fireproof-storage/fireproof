@@ -5,6 +5,6 @@ export default defineConfig({
   schema: "../base/meta-merger/schema.ts",
   out: "./dist",
   dbCredentials: {
-    url: "./dist/cloud-backend-node.sqlite",
+    url: process.env.FP_SQLITE_URL || "./dist/sqlite.db",
   },
 });

@@ -88,39 +88,65 @@ export async function ensureCloudToken(
       return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${req.auth.user.userId}`);
     }
     if (!ledgerId) {
-      // create ledger
-      const rCreateLedger = await createLedger(ctx, {
-        type: "reqCreateLedger",
-        auth: req.auth,
-        ledger: {
-          tenantId,
-          name: `${req.appId}-${req.auth.user.userId}`,
-        },
-      });
-      if (rCreateLedger.isErr()) {
-        return Result.Err(rCreateLedger.Err());
-      }
-      ledgerId = rCreateLedger.Ok().ledger.ledgerId;
-      const maxBindings = await ctx.db
-        .select({
-          total: count(sqlAppIdBinding.appId),
-        })
-        .from(sqlAppIdBinding)
-        .where(eq(sqlAppIdBinding.appId, req.appId))
+      // Check if ledger with this name already exists for this tenant
+      const ledgerName = `${req.appId}-${req.auth.user.userId}`;
+      const existingLedgerByName = await ctx.db
+        .select()
+        .from(sqlLedgers)
+        .innerJoin(sqlLedgerUsers, and(
+          eq(sqlLedgerUsers.ledgerId, sqlLedgers.ledgerId),
+          eq(sqlLedgerUsers.userId, req.auth.user.userId),
+          eq(sqlLedgerUsers.status, "active"),
+        ))
+        .where(and(eq(sqlLedgers.tenantId, tenantId), eq(sqlLedgers.name, ledgerName)))
         .get();
-      if (maxBindings && maxBindings.total >= ctx.params.maxAppIdBindings) {
-        return Result.Err(`max appId bindings reached for appId:${req.appId}`);
+
+      if (existingLedgerByName) {
+        ledgerId = existingLedgerByName.Ledgers.ledgerId;
+      } else {
+        // create ledger
+        const rCreateLedger = await createLedger(ctx, {
+          type: "reqCreateLedger",
+          auth: req.auth,
+          ledger: {
+            tenantId,
+            name: ledgerName,
+          },
+        });
+        if (rCreateLedger.isErr()) {
+          return Result.Err(rCreateLedger.Err());
+        }
+        ledgerId = rCreateLedger.Ok().ledger.ledgerId;
       }
-      await ctx.db
-        .insert(sqlAppIdBinding)
-        .values({
-          appId: req.appId,
-          env: req.env ?? "prod",
-          ledgerId,
-          tenantId,
-          createdAt: new Date().toISOString(),
-        })
-        .run();
+      // Check if binding already exists before inserting
+      const existingBinding = await ctx.db
+        .select()
+        .from(sqlAppIdBinding)
+        .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
+        .get();
+
+      if (!existingBinding) {
+        const maxBindings = await ctx.db
+          .select({
+            total: count(sqlAppIdBinding.appId),
+          })
+          .from(sqlAppIdBinding)
+          .where(eq(sqlAppIdBinding.appId, req.appId))
+          .get();
+        if (maxBindings && maxBindings.total >= ctx.params.maxAppIdBindings) {
+          return Result.Err(`max appId bindings reached for appId:${req.appId}`);
+        }
+        await ctx.db
+          .insert(sqlAppIdBinding)
+          .values({
+            appId: req.appId,
+            env: req.env ?? "prod",
+            ledgerId,
+            tenantId,
+            createdAt: new Date().toISOString(),
+          })
+          .run();
+      }
     }
   } else {
     ledgerId = binding.Ledgers.ledgerId;
@@ -131,12 +157,16 @@ export async function ensureCloudToken(
     return Result.Err(rCtx.Err());
   }
   const fpCtx = rCtx.Ok();
+  // For device-id auth, use a generated email based on the device fingerprint
+  const email = req.auth.verifiedAuth.params?.email ||
+    `${req.auth.user.userId}@device.fireproof.local`;
+
   const cloudToken = await createFPToken(fpCtx, {
     userId: req.auth.user.userId,
-    tenants: [],
-    ledgers: [],
-    email: req.auth.verifiedAuth.params.email,
-    nickname: req.auth.verifiedAuth.params.nick,
+    tenants: [{ id: tenantId, role: "admin" }],
+    ledgers: [{ id: ledgerId, role: "admin", right: "write" }],
+    email,
+    nickname: req.auth.verifiedAuth.params?.nick,
     provider: toProvider(req.auth.verifiedAuth),
     created: req.auth.user.createdAt,
     selected: {

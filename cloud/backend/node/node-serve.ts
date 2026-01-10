@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { HonoServer } from "@fireproof/cloud-backend-base";
 import { NodeHonoFactory } from "./node-hono-server.js";
-import { serve } from "@hono/node-server";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
@@ -30,22 +29,24 @@ async function main() {
     id: "FP-Storage-Backend", // fpProtocol ? (fpProtocol === "http" ? "HTTP-server" : "WS-server") : "FP-CF-Server",
   });
 
-  const honoServer = new HonoServer(
-    new NodeHonoFactory(sthis, {
-      msgP,
-      gs: gestalt,
-      sql: drizzle(createClient({ url: `file://${process.cwd()}/dist/sqlite.db` })),
-      // new BetterSQLDatabase("./dist/node-meta.sqlite"),
-    }),
-  ).register(app);
+  // Health check endpoint
+  app.get("/", (c) => c.json({ status: "ok" }));
+  app.get("/health", (c) => c.json({ status: "ok" }));
 
-  await honoServer.start();
+  const sqliteUrl = process.env.FP_SQLITE_URL || `${process.cwd()}/dist/sqlite.db`;
+  const factory = new NodeHonoFactory(sthis, {
+    msgP,
+    gs: gestalt,
+    sql: drizzle(createClient({ url: `file://${sqliteUrl}` })),
+  });
+
+  // Register routes and start with the SAME app instance for WebSocket to work
+  new HonoServer(factory).register(app);
+  await factory.start(app);
+  await factory.serve(app, 8909);
+
   // eslint-disable-next-line no-console
   console.log("Listen on 8909");
-  serve({
-    fetch: app.fetch,
-    port: 8909,
-  });
 }
 
 main().catch((err) => {

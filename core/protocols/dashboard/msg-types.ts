@@ -75,6 +75,7 @@ export type UserStatus = "active" | "inactive" | "banned" | "invited";
 export interface DashAuthType {
   readonly type: "ucan" | "clerk" | "better" | "device-id";
   readonly token: string;
+  readonly clerkId?: string; // optional: identifies which Clerk instance to use for verification
 }
 
 export interface VerifiedAuth {
