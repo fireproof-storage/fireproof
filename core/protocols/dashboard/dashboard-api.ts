@@ -51,14 +51,6 @@ import {
 } from "@fireproof/core-types-protocols-dashboard";
 import type { Clerk } from "@clerk/shared/types";
 
-// type NullOrUndefined<T> = T | undefined | null;
-
-// export type ClerkCallback = (resources: { session: NullOrUndefined<{ getToken: () => Promise<string|null>  }> }) => void;
-// export interface ClerkIf {
-//   addListener: (callback: ClerkCallback) => () => void;
-// }
-// type ClerkIf = Loaded
-
 /**
  * DashboardApi provides a client for interacting with the dashboard backend.
  *
@@ -89,9 +81,12 @@ export class DashboardApiImpl<T> implements FPApiInterface {
   private async request<T extends TypeString, S>(req: WithType<T>): Promise<Result<S>> {
     let auth = req.auth;
     if (!req.auth) {
-      const rAuth = await this.cfg.getToken(this.cfg.getTokenCtx as never);
+      if (!this.cfg.getTokenCtx) {
+        return Result.Err("no getTokenCtx provided to DashboardApi");
+      }
+      const rAuth = await this.cfg.getToken(this.cfg.getTokenCtx);
       if (rAuth.isErr()) {
-        return Result.Err(rAuth.Err());
+        return Result.Err(rAuth);
       }
       auth = rAuth.Ok();
     }

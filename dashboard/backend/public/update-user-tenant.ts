@@ -50,10 +50,6 @@ async function updateUserTenant(
   const ret = await ctx.db
     .select()
     .from(sqlTenantUsers)
-    // .innerJoin(
-    //   sqlTenantUsers,
-    //   and(eq(sqlTenantUsers.userId, sqlTenantUsers.userId), eq(sqlTenantUsers.tenantId, sqlTenantUsers.tenantId)),
-    // )
     .where(and(eq(sqlTenantUsers.userId, userId), eq(sqlTenantUsers.tenantId, req.tenantId)))
     .get();
   if (!ret) {
