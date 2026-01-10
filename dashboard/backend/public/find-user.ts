@@ -13,18 +13,6 @@ async function findUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqFindUs
     type: "resFindUser",
     query: req.query,
     results: rRows.Ok(),
-    // .map(
-    //   (row) =>
-    //     ({
-    //       userId: row.userId,
-    //       authProvider: row.queryProvider as AuthProvider,
-    //       email: row.queryEmail as string,
-    //       nick: row.queryNick as string,
-    //       status: row.status as UserStatus,
-    //       createdAt: new Date(row.createdAt),
-    //       updatedAt: new Date(row.updatedAt),
-    //     }) satisfies QueryResultUser,
-    // ),
   });
 }
 
