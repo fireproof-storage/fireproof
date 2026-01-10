@@ -81,9 +81,6 @@ export class DashboardApiImpl<T> implements FPApiInterface {
   private async request<T extends TypeString, S>(req: WithType<T>): Promise<Result<S>> {
     let auth = req.auth;
     if (!req.auth) {
-      if (!this.cfg.getTokenCtx) {
-        return Result.Err("no getTokenCtx provided to DashboardApi");
-      }
       const rAuth = await this.cfg.getToken(this.cfg.getTokenCtx);
       if (rAuth.isErr()) {
         return Result.Err(rAuth);
