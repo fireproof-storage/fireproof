@@ -8,7 +8,7 @@
 # - minio: S3-compatible storage (port 9000, console: 9001)
 # - cloud-backend: Main cloud backend service (port 8909)
 # - dashboard: Dashboard frontend + API (port 7370)
-# - todo-app: Example todo application (port 5174)
+# - todo-app: 3rd-party example application (port 5174)
 #
 # Default credentials:
 # - MinIO: minioadmin / minioadmin
@@ -135,7 +135,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Todo App (Example Application)
+  # 3rd-Party App (Example Application)
   todo-app:
     build:
       context: .

@@ -1,4 +1,4 @@
-# Fireproof Todo App - Docker Build
+# Fireproof 3rd-Party App - Docker Build
 # Builds React app with Vite and serves with nginx
 
 FROM node:22-slim AS builder
@@ -23,15 +23,15 @@ COPY . .
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Build the todo app
-WORKDIR /app/cloud/todo-app
+# Build the 3rd-party app
+WORKDIR /app/cloud/3rd-party
 RUN pnpm exec vite build
 
 # Production stage with nginx
 FROM nginx:alpine
 
 # Copy built files to nginx
-COPY --from=builder /app/cloud/todo-app/dist /usr/share/nginx/html
+COPY --from=builder /app/cloud/3rd-party/dist /usr/share/nginx/html
 
 # Copy nginx config for SPA routing
 RUN echo 'server { \
