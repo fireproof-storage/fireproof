@@ -83,7 +83,7 @@ export class CRDTImpl implements CRDT {
   // self reference to fullfill HasCRDT
   readonly crdt: CRDT;
 
-  readonly ledgerParent?: Ledger;
+  ledgerParent?: Ledger;
 
   constructor(sthis: SuperThis, opts: CRDTOpts, parent?: Ledger) {
     this.sthis = sthis;
@@ -236,6 +236,7 @@ export class CRDTImpl implements CRDT {
       this.indexBlockstore ? this.indexBlockstore.close() : Promise.resolve(),
       this.clock.close(),
     ]);
+    this.ledgerParent = undefined;
   }
 
   async destroy(): Promise<void> {

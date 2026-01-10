@@ -4,7 +4,6 @@ import pLimit from "@fireproof/vendor/p-limit";
 import { ensureSuperThis, sleep } from "@fireproof/core-runtime";
 import { CRDT, PARAM, LedgerOpts } from "@fireproof/core-types-base";
 import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
-import { Loader } from "@fireproof/core-blockstore";
 import { CRDTImpl, fireproof } from "@fireproof/core-base";
 
 describe("standalone", () => {
@@ -44,12 +43,14 @@ describe("standalone", () => {
         },
       });
       const fn = vi.fn();
-      const loader = db.ledger.crdt.blockstore.loader as Loader;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const loader = db.ledger.crdt.blockstore.loader as any;
       loader.cidCache.onSet(fn);
       expect(fn).toHaveBeenCalledTimes(0);
       await db.ready();
       expect(
-        loader.cidCache.values().map((i) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        loader.cidCache.values().map((i: any) => {
           const v = i.value.Ok();
           return {
             type: v.item.type,

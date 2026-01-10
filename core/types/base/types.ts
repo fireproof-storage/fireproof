@@ -500,7 +500,7 @@ export interface BaseBlockstore {
 }
 
 export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRDT {
-  readonly ledgerParent?: Ledger;
+  ledgerParent?: Ledger;
   readonly logger: Logger;
   readonly sthis: SuperThis;
   // self reference to fullfill HasCRDT
