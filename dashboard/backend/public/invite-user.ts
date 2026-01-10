@@ -22,10 +22,8 @@ async function inviteUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqInvi
   }
 
   if (
-    req.ticket.invitedParams?.ledger &&
-    req.ticket.invitedParams?.tenant &&
-    !req.ticket.invitedParams?.ledger &&
-    !req.ticket.invitedParams?.tenant
+    (req.ticket.invitedParams?.ledger && req.ticket.invitedParams?.tenant) ||
+    (!req.ticket.invitedParams?.ledger && !req.ticket.invitedParams?.tenant)
   ) {
     return Result.Err("either ledger or tenant must be set");
   }

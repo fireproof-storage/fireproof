@@ -27,6 +27,9 @@ async function updateTenant(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqUp
     })
     .where(eq(sqlTenants.tenantId, req.tenant.tenantId))
     .returning();
+  if (!result[0]) {
+    return Result.Err("tenant was deleted during update");
+  }
   return Result.Ok({
     type: "resUpdateTenant",
     tenant: sqlToOutTenantParams(result[0]),

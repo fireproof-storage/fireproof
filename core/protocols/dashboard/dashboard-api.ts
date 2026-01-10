@@ -238,6 +238,6 @@ export function clerkDashApi<T>(clerk: Clerk, iopts: ClerkDashboardApiConfig<T>)
         waitForToken.setValue(Option.From(token));
       });
     });
-    return dashApi;
-  });
+    return dashApi as DashboardApiImpl<unknown>;
+  }) as DashboardApiImpl<T>;
 }
