@@ -50,10 +50,10 @@ async function updateUserTenant(
   const ret = await ctx.db
     .select()
     .from(sqlTenantUsers)
-    .innerJoin(
-      sqlTenantUsers,
-      and(eq(sqlTenantUsers.userId, sqlTenantUsers.userId), eq(sqlTenantUsers.tenantId, sqlTenantUsers.tenantId)),
-    )
+    // .innerJoin(
+    //   sqlTenantUsers,
+    //   and(eq(sqlTenantUsers.userId, sqlTenantUsers.userId), eq(sqlTenantUsers.tenantId, sqlTenantUsers.tenantId)),
+    // )
     .where(and(eq(sqlTenantUsers.userId, userId), eq(sqlTenantUsers.tenantId, req.tenantId)))
     .get();
   if (!ret) {
@@ -61,11 +61,11 @@ async function updateUserTenant(
   }
   return Result.Ok({
     type: "resUpdateUserTenant",
-    tenantId: ret.TenantUsers.tenantId,
-    userId: ret.TenantUsers.userId,
-    role: toRole(ret.TenantUsers.role),
-    default: !!ret.TenantUsers.default,
-    name: toUndef(ret.TenantUsers.name),
+    tenantId: ret.tenantId,
+    userId: ret.userId,
+    role: toRole(ret.role),
+    default: !!ret.default,
+    name: toUndef(ret.name),
   });
 }
 

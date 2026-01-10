@@ -8,6 +8,7 @@ interface CsrFormInputs {
   csrContent: string;
 }
 
+const waitUntilClose = 5;
 export function CsrToCert() {
   const { cloud } = useContext(AppContext);
   const [searchParams] = useSearchParams();
@@ -43,7 +44,7 @@ export function CsrToCert() {
         const urlWithCert = BuildURI.from(returnUrl).setParam("cert", certificate).toString();
         // console.log(">>>>>", urlWithCert);
         window.location.href = urlWithCert;
-      }, 5000);
+      }, waitUntilClose * 1000);
 
       return () => clearTimeout(timer);
     }
@@ -110,7 +111,7 @@ export function CsrToCert() {
           <h3 className="text-lg font-semibold mb-2">Signed Certificate</h3>
           {returnUrl && (
             <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-              Redirecting back in 3 seconds...
+              Redirecting back in {waitUntilClose} seconds...
             </div>
           )}
           <div className="bg-green-50 border border-green-200 rounded-md p-4">

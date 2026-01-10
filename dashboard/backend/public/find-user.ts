@@ -6,6 +6,9 @@ import { checkAuth, wrapStop } from "../utils/index.js";
 
 async function findUser(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqFindUser>): Promise<Result<ResFindUser>> {
   const rRows = await queryUser(ctx.db, req.query);
+  if (rRows.isErr()) {
+    return Result.Err(rRows);
+  }
   return Result.Ok({
     type: "resFindUser",
     query: req.query,
