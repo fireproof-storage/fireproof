@@ -24,7 +24,7 @@ export interface DashboardApiConfigIntern<T> {
   readonly getTokenCtx?: T;
   readonly gracePeriodMs: number; // if not provided default to 5 seconds
   fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
-  getToken: (ctx: T) => Promise<Result<DashAuthType>>;
+  getToken: (ctx?: T) => Promise<Result<DashAuthType>>;
 }
 
 export interface DashboardApiConfig<T> extends Omit<DashboardApiConfigIntern<T>, "gracePeriodMs"> {
