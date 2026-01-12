@@ -1,14 +1,14 @@
 import { EventoResultType, HandleTriggerCtx, Result } from "@adviser/cement";
-import { DashAuthType, UserStatus } from "@fireproof/core-types-protocols-dashboard";
-import { getUser, isUserNotFound } from "../sql/users.js";
 import {
-  WithAuth,
-  FPApiSQLCtx,
-  ReqWithVerifiedAuthUser,
+  DashAuthType,
+  UserStatus,
+  VerifiedAuthResult,
   VerifiedClaimsResult,
   VerifiedResult,
-  VerifiedAuthResult,
-} from "../types.js";
+  WithAuth,
+} from "@fireproof/core-types-protocols-dashboard";
+import { getUser, isUserNotFound } from "../sql/users.js";
+import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { ClerkClaimSchema } from "@fireproof/core-types-base";
 
 export async function verifyExtractClaims(
