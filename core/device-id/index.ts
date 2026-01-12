@@ -6,3 +6,6 @@ export * from "./device-id-signed-msg.js";
 export * from "./device-id-verify-msg.js";
 export * from "./device-id-validator.js";
 export * from "./device-id-protocol.js";
+
+export * from "./create-test-device-id.js";
+export * from "./create-test-user.js";
