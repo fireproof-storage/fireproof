@@ -423,6 +423,7 @@ describe("DeviceIdSignMsg", () => {
     const caCert = await ca.caCertificate();
 
     const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [caCert.Ok()], {
+      deviceIdCA: ca,
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -445,6 +446,7 @@ describe("DeviceIdSignMsg", () => {
     const caCert = await ca.caCertificate();
 
     const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [caCert.Ok()], {
+      deviceIdCA: ca,
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -472,6 +474,7 @@ describe("DeviceIdSignMsg", () => {
     const caCert = await ca.caCertificate();
 
     const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [caCert.Ok()], {
+      deviceIdCA: ca,
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -499,6 +502,7 @@ describe("DeviceIdSignMsg", () => {
     });
 
     const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [(await newCa.caCertificate()).Ok()], {
+      deviceIdCA: newCa,
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -524,6 +528,7 @@ describe("DeviceIdSignMsg", () => {
     });
 
     const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [(await newCa.caCertificate()).Ok()], {
+      deviceIdCA: newCa,
       clockTolerance: 60,
       maxAge: 3600,
     });
@@ -548,6 +553,7 @@ describe("DeviceIdSignMsg", () => {
     });
 
     const deviceVerifyMsg = new DeviceIdVerifyMsg(base64, [(await newCa.caCertificate()).Ok()], {
+      deviceIdCA: newCa,
       clockTolerance: 60,
       maxAge: 3600,
     });

@@ -873,6 +873,9 @@ importers:
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
+      '@fireproof/core-types-device-id':
+        specifier: workspace:0.0.0
+        version: link:../../types/device-id
       '@fireproof/core-types-protocols-cloud':
         specifier: workspace:0.0.0
         version: link:../../types/protocols/cloud
@@ -882,6 +885,9 @@ importers:
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
+      jose:
+        specifier: ^6.1.3
+        version: 6.1.3
       zod:
         specifier: ^4.3.5
         version: 4.3.5

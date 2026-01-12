@@ -1,8 +1,8 @@
 import { Result } from "@adviser/cement";
-import { ResTokenByResultId } from "@fireproof/core-types-protocols-dashboard";
+import { ResTokenByResultId, TokenByResultIdParam } from "@fireproof/core-types-protocols-dashboard";
 import { lt } from "drizzle-orm";
 import { sqlTokenByResultId } from "../sql/token-by-result-id.js";
-import { FPApiSQLCtx, TokenByResultIdParam } from "../types.js";
+import { FPApiSQLCtx } from "../types.js";
 
 export async function addTokenByResultId(ctx: FPApiSQLCtx, req: TokenByResultIdParam): Promise<Result<ResTokenByResultId>> {
   const now = (req.now ?? new Date()).toISOString();

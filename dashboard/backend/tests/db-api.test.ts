@@ -1,5 +1,5 @@
 import { Result, WithoutPromise } from "@adviser/cement";
-import { Subject, CertificatePayloadSchema, FPDeviceIDSession } from "@fireproof/core-types-base";
+import { Subject, CertificatePayloadSchema } from "@fireproof/core-types-base";
 import { createClient } from "@libsql/client/node";
 import { type LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { jwtVerify } from "jose/jwt/verify";
@@ -17,11 +17,10 @@ import { queryEmail, queryNick } from "../sql/sql-helper.js";
 import { ensureSuperThis, sts } from "@fireproof/core-runtime";
 import { describe, beforeAll, expect, it, inject } from "vitest";
 import { resWellKnownJwks } from "../well-known-jwks.js";
-import { DeviceIdCA, DeviceIdKey, DeviceIdCSR, DeviceIdSignMsg } from "@fireproof/core-device-id";
+import { DeviceIdCA, DeviceIdKey, DeviceIdCSR, createTestDeviceCA, createTestUser } from "@fireproof/core-device-id";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
 import { createHandler } from "../create-handler.js";
 import { DashboardApiImpl } from "@fireproof/core-protocols-dashboard";
-import { createTestDeviceCA } from "./helper.create-device-id-ca.js";
 
 describe("db-api", () => {
   // let db: BetterSQLite3Database
@@ -29,70 +28,11 @@ describe("db-api", () => {
   const sthis = ensureSuperThis();
   let fpApi: FPApiInterface;
   const datas = [] as {
-    reqs: ReqEnsureUser & { user: Awaited<ReturnType<typeof createUser>> };
+    reqs: ReqEnsureUser & { user: Awaited<ReturnType<typeof createTestUser>> };
     ress: ResEnsureUser;
   }[];
   // const logger = ensureLogger(sthis, "dashboard-backend-db-api-test");
   let deviceCA: DeviceIdCA;
-
-  const session = sthis.nextId().str;
-  async function createUser(seqUserId: number) {
-    // console.log("Creating test user", session, seqUserId);
-    const devid = await DeviceIdKey.create();
-    const devkey = (await DeviceIdKey.createFromJWK(await devid.exportPrivateJWK())).Ok();
-    const deviceIdCSR = new DeviceIdCSR(sthis, devkey);
-    const rCsrResult = await deviceIdCSR.createCSR({ commonName: "test-device-id" });
-    const userId = `${session}-${seqUserId}`;
-    const rProcessResult = await deviceCA.processCSR(rCsrResult.Ok(), {
-      azp: `test-app-${userId}-${sthis.nextId().str}`,
-      exp: Math.floor(Date.now() / 1000) + 3600,
-      iat: Math.floor(Date.now() / 1000),
-      iss: "test-issuer",
-      jti: sthis.nextId().str,
-      nbf: Math.floor(Date.now() / 1000),
-      params: {
-        nick: `nick-${userId}`,
-        email: `email-${userId}@example.com`,
-        email_verified: true,
-        first: `first-${userId}`,
-        image_url: `http://example.com/image-${userId}.png`,
-        last: `last-${userId}`,
-        name: `name-${userId}`,
-        public_meta: `{ "role": "tester-${userId}" }`,
-      },
-
-      role: "devide-id",
-      sub: `device-id-subject-${sthis.nextId().str}`,
-      userId: `user-id-${userId}`,
-
-      aud: ["http://test-audience.localhost/"],
-    });
-    // console.log("DeviceIdCA-processCSR", rProcessResult.Ok().certificatePayload);
-    const deviceIdSigner = new DeviceIdSignMsg(sthis.txt.base64, devkey, rProcessResult.Ok().certificatePayload);
-
-    let seq = 0;
-    const getDashBoardToken = async (): Promise<DashAuthType> => {
-      const now = Math.floor(Date.now() / 1000);
-      const token = await deviceIdSigner.sign(
-        {
-          iss: "app-id",
-          sub: "device-id",
-          deviceId: await devkey.fingerPrint(),
-          seq: ++seq,
-          exp: now + 120,
-          nbf: now - 2,
-          iat: now,
-          jti: sthis.nextId().str,
-        } satisfies FPDeviceIDSession,
-        "ES256",
-      );
-      return {
-        type: "device-id",
-        token,
-      };
-    };
-    return { devkey, deviceIdSigner, getDashBoardToken };
-  }
 
   async function jwkPackage() {
     // const pair = await SessionTokenService.generateKeyPair();
@@ -135,7 +75,11 @@ describe("db-api", () => {
     };
     const svc = await createHandler(db, env);
 
-    const unknownDevId = await createUser(999);
+    const unknownDevId = await createTestUser({
+      sthis,
+      seqUserId: 999,
+      deviceCA,
+    });
 
     fpApi = new DashboardApiImpl({
       apiUrl: "http://test-dashboard-api.localhost/FPApi",
@@ -150,14 +94,18 @@ describe("db-api", () => {
     for (const userToCreate of Array(10)
       .fill(0)
       .map(async (_, i) => {
-        const user = await createUser(i);
+        const user = await createTestUser({
+          sthis,
+          seqUserId: i,
+          deviceCA,
+        });
         return {
           ress: {} as ResEnsureUser,
           reqs: {
             type: "reqEnsureUser",
             auth: await user.getDashBoardToken(),
             user,
-          } satisfies ReqEnsureUser & { user: Awaited<ReturnType<typeof createUser>> },
+          } satisfies ReqEnsureUser & { user: Awaited<ReturnType<typeof createTestUser>> },
         };
       })) {
       datas.push(await userToCreate);
@@ -1004,7 +952,7 @@ describe("db-api", () => {
         })
       ).Ok();
 
-      const otherUser = await createUser(11111);
+      const otherUser = await createTestUser({ sthis, deviceCA });
       const notMyAuth = await otherUser.getDashBoardToken();
       const rNotMyUser = await fpApi.ensureUser({
         type: "reqEnsureUser",

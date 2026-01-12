@@ -1,10 +1,15 @@
 import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
-import { ReqEnsureCloudToken, ResEnsureCloudToken, validateEnsureCloudToken } from "@fireproof/core-types-protocols-dashboard";
+import {
+  ReqEnsureCloudToken,
+  ResEnsureCloudToken,
+  validateEnsureCloudToken,
+  VerifiedAuthUserResult,
+} from "@fireproof/core-types-protocols-dashboard";
 import { FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
-import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser, VerifiedAuthUserResult } from "../types.js";
+import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser } from "../types.js";
 import { getFPTokenContext, createFPToken, toProvider, checkAuth, wrapStop } from "../utils/index.js";
 import { createLedger } from "./create-ledger.js";
 import { ensureUser } from "./ensure-user.js";

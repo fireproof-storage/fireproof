@@ -1,6 +1,6 @@
 import { Lazy } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
+import { getCloudPubkeyFromEnv } from "@fireproof/core-protocols-dashboard";
 
 const getKey = Lazy(async (opts: Record<string, string>) => {
   const sthis = ensureSuperThis();

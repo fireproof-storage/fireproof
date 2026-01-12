@@ -48,6 +48,7 @@ export class DeviceIdProtocolSrv implements DeviceIdProtocol {
       return Result.Err(rCaCert);
     }
     const verifyMsg = new DeviceIdVerifyMsg(sthis.txt.base64, [rCaCert.Ok()], {
+      deviceIdCA: rCa.Ok(),
       clockTolerance: 60,
       maxAge: 3600,
     });

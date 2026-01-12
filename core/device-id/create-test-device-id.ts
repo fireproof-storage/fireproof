@@ -1,5 +1,6 @@
-import { DeviceIdCA, DeviceIdKey } from "@fireproof/core-device-id";
 import { SuperThis, Subject } from "@fireproof/core-types-base";
+import { DeviceIdCA } from "./device-id-CA.js";
+import { DeviceIdKey } from "./device-id-key.js";
 
 export async function createTestDeviceCA(sthis: SuperThis): Promise<DeviceIdCA> {
   const caKey = await DeviceIdKey.create();

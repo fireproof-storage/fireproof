@@ -3,7 +3,8 @@ import { EventoResult, EventoResultType, param, Result } from "@adviser/cement";
 import { ClerkClaim, ClerkEmailTemplateClaim, SuperThis } from "@fireproof/core";
 import { sts } from "@fireproof/core-runtime";
 import { SignJWT } from "jose/jwt/sign";
-import { FPTokenContext, VerifiedAuthUserResult } from "../types.js";
+import { FPTokenContext } from "../types.js";
+import { VerifiedAuthUserResult } from "@fireproof/core-types-protocols-dashboard";
 
 export async function createFPToken(ctx: FPTokenContext, claim: FPCloudClaim) {
   const privKeys = await sts.env2jwk(ctx.secretToken);
