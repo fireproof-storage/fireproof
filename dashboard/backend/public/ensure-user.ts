@@ -1,5 +1,12 @@
 import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
-import { ReqEnsureUser, ResEnsureUser, User, validateEnsureUser } from "@fireproof/core-types-protocols-dashboard";
+import {
+  isVerifiedAuthUser,
+  ReqEnsureUser,
+  ResEnsureUser,
+  User,
+  validateEnsureUser,
+  VerifiedAuthUserResult,
+} from "@fireproof/core-types-protocols-dashboard";
 import { getTableColumns, eq } from "drizzle-orm";
 import { queryEmail, queryNick } from "../sql/sql-helper.js";
 import { sqlTenants } from "../sql/tenants.js";
@@ -7,7 +14,7 @@ import { upsetUserByProvider, sqlUsers, UserByProviderWithoutDate } from "../sql
 import { nickFromClarkClaim, nameFromAuth, wrapStop, verifyAuth } from "../utils/index.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
 import { insertTenant } from "../internal/insert-tenant.js";
-import { FPApiSQLCtx, isVerifiedAuthUser, VerifiedAuthUserResult } from "../types.js";
+import { FPApiSQLCtx } from "../types.js";
 import { listTenantsByUser } from "./list-tenants-by-user.js";
 import { redeemInvite } from "./redeem-invite.js";
 
