@@ -232,14 +232,14 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       '@libsql/client':
-        specifier: ^0.15.15
-        version: 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        specifier: ^0.17.0
+        version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       aws4fetch:
         specifier: ^1.0.20
         version: 1.0.20
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.11.3
         version: 4.11.3
@@ -303,7 +303,7 @@ importers:
         version: 0.14.3
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.11.3
         version: 4.11.3
@@ -366,11 +366,11 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(@hono/node-server@1.19.7(hono@4.11.3))(bufferutil@4.1.0)(hono@4.11.3)(utf-8-validate@5.0.10)
       '@libsql/client':
-        specifier: ^0.15.15
-        version: 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        specifier: ^0.17.0
+        version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.11.3
         version: 4.11.3
@@ -1306,8 +1306,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../core/keybag
       '@libsql/client':
-        specifier: ^0.15.15
-        version: 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        specifier: ^0.17.0
+        version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       '@libsql/kysely-libsql':
         specifier: ^0.4.1
         version: 0.4.1(bufferutil@4.1.0)(kysely@0.28.7)(utf-8-validate@5.0.10)
@@ -1316,7 +1316,7 @@ importers:
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@1.21.7)
@@ -1439,8 +1439,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../cli
       '@libsql/client':
-        specifier: ^0.15.15
-        version: 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        specifier: ^0.17.0
+        version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       '@libsql/kysely-libsql':
         specifier: ^0.4.1
         version: 0.4.1(bufferutil@4.1.0)(kysely@0.28.7)(utf-8-validate@5.0.10)
@@ -1467,7 +1467,7 @@ importers:
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
+        version: 0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@1.21.7)
@@ -3015,14 +3015,14 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@libsql/client@0.15.15':
-    resolution: {integrity: sha512-twC0hQxPNHPKfeOv3sNT6u2pturQjLcI+CnpTM0SjRpocEGgfiZ7DWKXLNnsothjyJmDqEsBQJ5ztq9Wlu470w==}
+  '@libsql/client@0.17.0':
+    resolution: {integrity: sha512-TLjSU9Otdpq0SpKHl1tD1Nc9MKhrsZbCFGot3EbCxRa8m1E5R1mMwoOjKMMM31IyF7fr+hPNHLpYfwbMKNusmg==}
 
   '@libsql/client@0.8.1':
     resolution: {integrity: sha512-xGg0F4iTDFpeBZ0r4pA6icGsYa5rG6RAG+i/iLDnpCAnSuTqEWMDdPlVseiq4Z/91lWI9jvvKKiKpovqJ1kZWA==}
 
-  '@libsql/core@0.15.15':
-    resolution: {integrity: sha512-C88Z6UKl+OyuKKPwz224riz02ih/zHYI3Ho/LAcVOgjsunIRZoBw7fjRfaH9oPMmSNeQfhGklSG2il1URoOIsA==}
+  '@libsql/core@0.17.0':
+    resolution: {integrity: sha512-hnZRnJHiS+nrhHKLGYPoJbc78FE903MSDrFJTbftxo+e52X+E0Y0fHOCVYsKWcg6XgB7BbJYUrz/xEkVTSaipw==}
 
   '@libsql/core@0.8.1':
     resolution: {integrity: sha512-u6nrj6HZMTPsgJ9EBhLzO2uhqhlHQJQmVHV+0yFLvfGf3oSP8w7TjZCNUgu1G8jHISx6KFi7bmcrdXW9lRt++A==}
@@ -3050,15 +3050,11 @@ packages:
   '@libsql/hrana-client@0.6.2':
     resolution: {integrity: sha512-MWxgD7mXLNf9FXXiM0bc90wCjZSpErWKr5mGza7ERy2FJNNMXd7JIOv+DepBA1FQTIfI8TFO4/QDYgaQC0goNw==}
 
-  '@libsql/hrana-client@0.7.0':
-    resolution: {integrity: sha512-OF8fFQSkbL7vJY9rfuegK1R7sPgQ6kFMkDamiEccNUvieQ+3urzfDFI616oPl8V7T9zRmnTkSjMOImYCAVRVuw==}
+  '@libsql/hrana-client@0.9.0':
+    resolution: {integrity: sha512-pxQ1986AuWfPX4oXzBvLwBnfgKDE5OMhAdR/5cZmRaB4Ygz5MecQybvwZupnRz341r2CtFmbk/BhSu7k2Lm+Jw==}
 
   '@libsql/isomorphic-fetch@0.2.5':
     resolution: {integrity: sha512-8s/B2TClEHms2yb+JGpsVRTPBfy1ih/Pq6h6gvyaNcYnMVJvgQRY7wAa8U2nD0dppbCuDU5evTNMEhrQ17ZKKg==}
-    engines: {node: '>=18.0.0'}
-
-  '@libsql/isomorphic-fetch@0.3.1':
-    resolution: {integrity: sha512-6kK3SUK5Uu56zPq/Las620n5aS9xJq+jMBcNSOmjhNf/MUvdyji4vrMTqD7ptY7/4/CAVEAYDeotUz60LNQHtw==}
     engines: {node: '>=18.0.0'}
 
   '@libsql/isomorphic-ws@0.1.5':
@@ -4466,6 +4462,9 @@ packages:
   cosmiconfig@7.1.0:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
     engines: {node: '>=10'}
+
+  cross-fetch@4.1.0:
+    resolution: {integrity: sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -8779,15 +8778,16 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
+  '@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
     dependencies:
-      '@libsql/core': 0.15.15
-      '@libsql/hrana-client': 0.7.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@libsql/core': 0.17.0
+      '@libsql/hrana-client': 0.9.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       js-base64: 3.7.8
       libsql: 0.5.22
       promise-limit: 2.7.0
     transitivePeerDependencies:
       - bufferutil
+      - encoding
       - utf-8-validate
 
   '@libsql/client@0.8.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
@@ -8801,7 +8801,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@libsql/core@0.15.15':
+  '@libsql/core@0.17.0':
     dependencies:
       js-base64: 3.7.8
 
@@ -8831,24 +8831,23 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@libsql/hrana-client@0.7.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
+  '@libsql/hrana-client@0.9.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
     dependencies:
-      '@libsql/isomorphic-fetch': 0.3.1
       '@libsql/isomorphic-ws': 0.1.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      cross-fetch: 4.1.0
       js-base64: 3.7.8
       node-fetch: 3.3.2
     transitivePeerDependencies:
       - bufferutil
+      - encoding
       - utf-8-validate
 
   '@libsql/isomorphic-fetch@0.2.5': {}
 
-  '@libsql/isomorphic-fetch@0.3.1': {}
-
   '@libsql/isomorphic-ws@0.1.5(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
     dependencies:
       '@types/ws': 8.18.1
-      ws: 8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -10519,6 +10518,12 @@ snapshots:
       path-type: 4.0.0
       yaml: 1.10.2
 
+  cross-fetch@4.1.0:
+    dependencies:
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -10659,10 +10664,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7):
+  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260103.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20260103.0
-      '@libsql/client': 0.15.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@libsql/client': 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       gel: 2.1.1
       kysely: 0.28.7
 
