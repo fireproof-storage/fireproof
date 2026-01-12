@@ -23,7 +23,6 @@ import type { Env } from "./cf-serve.js";
 import { ensureSuperThis, coerceInt } from "@fireproof/core-runtime";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
-import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
 import { FPApiSQLCtx } from "./types.js";
 import { deleteTenantItem } from "./public/delete-tenant.js";
 import { updateTenantItem } from "./public/update-tenant.js";
@@ -45,7 +44,7 @@ import { getCertFromCsrItem } from "./public/get-cert-from-csr.js";
 import { ensureUserItem } from "./public/ensure-user.js";
 import { ensureCloudTokenItem } from "./public/ensure-cloud-token.js";
 import { FPApiParameters } from "@fireproof/core-types-protocols-dashboard";
-import { deviceIdCAFromEnv, tokenApi } from "@fireproof/core-protocols-dashboard";
+import { deviceIdCAFromEnv, tokenApi, getCloudPubkeyFromEnv } from "@fireproof/core-protocols-dashboard";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
