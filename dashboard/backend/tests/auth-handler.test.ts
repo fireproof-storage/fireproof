@@ -1,7 +1,6 @@
 import { ClerkClaim } from "@fireproof/core-types-base";
 import { beforeAll, describe, expect, inject, it } from "vitest";
 import { verifyAuth } from "../utils/auth.js";
-import { VerifiedClaimsResult } from "../types.js";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql/driver";
 import { ensureSuperThis } from "@fireproof/core-runtime";
@@ -9,6 +8,7 @@ import { createTestDeviceCA } from "./helper.create-device-id-ca.js";
 import { createFPApiSQLCtx } from "../api.js";
 import { Result } from "@adviser/cement";
 import { decodeJwt } from "jose";
+import { VerifiedClaimsResult } from "@fireproof/core-types-protocols-dashboard";
 
 const clerkToken =
   "eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDIyMkFBQSIsImtpZCI6Imluc18yb2x6SjRyUndjUTVsUGJLTkNZZHdKNEdyRlEiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwOi8vbG9jYWxob3N0OjczNzAiLCJleHAiOjE3Njc5NTgyNTUsImlhdCI6MTc2Nzk1ODE5NSwiaXNzIjoiaHR0cHM6Ly9wcmVjaXNlLWNvbHQtNDkuY2xlcmsuYWNjb3VudHMuZGV2IiwianRpIjoiNzkwMDY0Y2IzN2FlNWI5NzU0MTMiLCJuYmYiOjE3Njc5NTgxOTAsInBhcmFtcyI6eyJlbWFpbCI6Im1lbm8uYWJlbHNAYWR2aXNlci5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXh0ZXJuYWxfaWQiOm51bGwsImZpcnN0IjoiTWVubyIsImltYWdlX3VybCI6Imh0dHBzOi8vaW1nLmNsZXJrLmNvbS9leUowZVhCbElqb2ljSEp2ZUhraUxDSnpjbU1pT2lKb2RIUndjem92TDJsdFlXZGxjeTVqYkdWeWF5NWtaWFl2YjJGMWRHaGZaMmwwYUhWaUwybHRaMTh5ZGpWWk1GTkxNVFY1U25KQ1IydG9Na2hWWkVObmNGaEllVllpZlEiLCJsYXN0IjoiQWJlbHMiLCJuYW1lIjoibWFiZWxzIiwicHVibGljX21ldGEiOnt9fSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJzdWIiOiJ1c2VyXzJ2NVkwU0NtdTZvQ2NJT0lNQVhPeGV5VTVscyIsInVzZXJJZCI6InVzZXJfMnY1WTBTQ211Nm9DY0lPSU1BWE94ZXlVNWxzIn0.Ylo-1hqo7cNkrV5k8b4UZIE4ePHw235dFRAwFQ_G-JZ4BVZt0gXdJYK55jVWE7w4grd2ix9by347clIKABGAIgY1hAecbdqL3sStedCWw5zPyCVFWHmT6LBGC8r_m-lV0L1ZEk58fWOx_jJbw_p9I9pMu2jSdCpMIJIe9XVEvdYKxxyYWDPokbPDQG3cwhBZDaZBmZtTrrPZb6edm4UfcfacNc_mSidNO9qdrk6cEPZ8mD8x9TMoMKKCXtKvxuBeD6_-x9hEeNOSdh-MtihyR8DV0_t27Us671OpYw1hNz-bfNN6rgbOHu8i0ZIJPaCtsCDi1-y3TRRXYYvLtSXjHg";

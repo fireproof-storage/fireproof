@@ -94,6 +94,7 @@ export type VerifyWithCertificateResult<T> =
 export interface VerifyWithCertificateOptions {
   readonly clockTolerance: number; // Clock skew tolerance in seconds
   readonly maxAge?: number; // Maximum JWT age in seconds
+  readonly deviceIdCA: DeviceIdCAIf;
 }
 
 export interface DeviceIdKeyIf {

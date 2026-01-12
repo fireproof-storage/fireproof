@@ -1,7 +1,7 @@
 import { SuperThis } from "@fireproof/core-types-base";
-import { FPApiParameters } from "@fireproof/core-types-protocols-dashboard";
+import { FPApiParameters, FPApiToken } from "@fireproof/core-types-protocols-dashboard";
 import { DashSqlite } from "./create-handler.js";
-import { FPApiSQLCtx, FPApiToken } from "./types.js";
+import { FPApiSQLCtx } from "./types.js";
 import { ensureLogger } from "@fireproof/core-runtime";
 import { DeviceIdCAIf } from "@fireproof/core-types-device-id";
 
