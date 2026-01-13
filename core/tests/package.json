@@ -76,7 +76,7 @@
   },
   "devDependencies": {
     "@clerk/clerk-js": "^5.117.0",
-    "@clerk/shared": "^3.41.1",
+    "@clerk/shared": "^3.42.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@vitest/browser": "^4.0.14",
     "playwright": "^1.57.0",
