@@ -853,8 +853,8 @@ importers:
         specifier: ^8.18.1
         version: 8.18.1
       ws:
-        specifier: ^8.18.3
-        version: 8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        specifier: ^8.19.0
+        version: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
 
   core/protocols/dashboard:
     dependencies:
@@ -10245,7 +10245,7 @@ snapshots:
       sirv: 3.0.2
       tinyrainbow: 3.0.3
       vitest: 4.0.14(@types/node@25.0.7)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      ws: 8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -10263,7 +10263,7 @@ snapshots:
       sirv: 3.0.2
       tinyrainbow: 3.0.3
       vitest: 4.0.14(@types/node@25.0.3)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      ws: 8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - msw
