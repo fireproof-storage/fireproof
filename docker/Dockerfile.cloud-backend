@@ -1,5 +1,5 @@
 # Fireproof Cloud Backend - Docker Build
-# Uses tsx to run TypeScript directly
+# Uses wrangler dev with R2 storage
 
 FROM node:22-slim
 
@@ -20,15 +20,14 @@ COPY . .
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Install tsx globally for running TypeScript
-RUN npm install -g tsx
+# Create wrangler state directory for R2 persistence
+RUN mkdir -p /app/.wrangler/state
 
-# Create data directories and run database migrations
-RUN mkdir -p /app/dist
-ENV FP_SQLITE_URL=/app/dist/sqlite.db
-RUN cd /app/cloud/backend/node && pnpm exec drizzle-kit push --config ./drizzle.cloud.libsql.config.ts
+# Copy and make entrypoint executable
+COPY docker/cloud-backend-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8909
 
-# Run TypeScript directly with tsx
-CMD ["tsx", "cloud/backend/node/node-serve.ts"]
+# Run via entrypoint (initializes D1 schema then starts wrangler)
+CMD ["/entrypoint.sh"]

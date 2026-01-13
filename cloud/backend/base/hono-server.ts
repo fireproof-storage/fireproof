@@ -129,24 +129,38 @@ export abstract class HonoServerBase implements HonoServerImpl {
   }
 
   calculatePreSignedUrl(ctx: MsgTypesCtx, p: PreSignedMsg): Promise<Result<URI>> {
+    // Try S3 pre-signed URLs first (for MinIO/S3/R2 S3-compatible mode)
     const rRes = ctx.sthis.env.gets({
-      STORAGE_URL: param.REQUIRED,
-      ACCESS_KEY_ID: param.REQUIRED,
-      SECRET_ACCESS_KEY: param.REQUIRED,
+      STORAGE_URL: param.OPTIONAL,
+      ACCESS_KEY_ID: param.OPTIONAL,
+      SECRET_ACCESS_KEY: param.OPTIONAL,
       REGION: "us-east-1",
+      BLOB_PROXY_URL: param.OPTIONAL,
     });
-    if (rRes.isErr()) {
-      return Promise.resolve(Result.Err(rRes.Err()));
+    const envVars = rRes.isOk() ? rRes.Ok() : {};
+
+    // If S3 credentials are configured, use pre-signed URLs
+    if (envVars.STORAGE_URL && envVars.ACCESS_KEY_ID && envVars.SECRET_ACCESS_KEY) {
+      return calculatePreSignedUrl(p, {
+        storageUrl: URI.from(envVars.STORAGE_URL),
+        aws: {
+          accessKeyId: envVars.ACCESS_KEY_ID,
+          secretAccessKey: envVars.SECRET_ACCESS_KEY,
+          region: envVars.REGION || "us-east-1",
+        },
+      });
     }
-    const res = rRes.Ok();
-    return calculatePreSignedUrl(p, {
-      storageUrl: URI.from(res.STORAGE_URL),
-      aws: {
-        accessKeyId: res.ACCESS_KEY_ID,
-        secretAccessKey: res.SECRET_ACCESS_KEY,
-        region: res.REGION,
-      },
-    });
+
+    // Fall back to blob proxy URLs (for R2 binding mode)
+    let store: string = p.methodParam.store;
+    if (p.urlParam.index?.length) {
+      store = `${store}-${p.urlParam.index}`;
+    }
+    const blobPath = `${p.tenant.tenant}/${p.tenant.ledger}/${store}/${p.urlParam.key}`;
+    // Use BLOB_PROXY_URL env var or default to relative path
+    const baseUrl = envVars.BLOB_PROXY_URL || "";
+    const proxyUrl = URI.from(`${baseUrl}/blob/${blobPath}`);
+    return Promise.resolve(Result.Ok(proxyUrl));
   }
 }
 

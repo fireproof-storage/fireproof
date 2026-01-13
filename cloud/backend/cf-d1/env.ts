@@ -8,11 +8,11 @@ import { FPRoomDurableObject } from "./server.js";
 import { CFExposeCtx } from "./cf-hono-server.js";
 
 export interface Env {
-  // bucket: R2Bucket;
-  // kv_store: KVNamespace;
+  /** R2 bucket for blob storage */
+  FP_STORAGE: R2Bucket;
 
-  /** AWS/S3 access key ID for storage backend */
-  ACCESS_KEY_ID: string;
+  /** AWS/S3 access key ID for storage backend (optional, for S3 compatibility) */
+  ACCESS_KEY_ID?: string;
   ACCOUNT_ID: string;
   BUCKET_NAME: string;
   CLOUDFLARE_API_TOKEN: string;

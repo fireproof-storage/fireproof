@@ -5,19 +5,20 @@ compatibility_date = "2025-02-24"
 compatibility_flags = ["nodejs_compat"]
 # upload_source_maps = true
 
-# [durable_objects]
-# bindings = [
-#   { name = "FP_DO", class_name = "FPDurableObject"},
-# ]
+# R2 bucket for blob storage (replaces MinIO/S3 for local dev)
+[[r2_buckets]]
+binding = "FP_STORAGE"
+bucket_name = "fp-storage-local"
+preview_bucket_name = "fp-storage-preview"
 
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "test-meta-merge"
-# database_id = "b8b452ed-b1d9-478f-b56c-c5e4545f157a"
+# D1 database for meta storage
+[[d1_databases]]
+binding = "FP_BACKEND_D1"
+database_name = "fp-meta-local"
+database_id = "local-dev-database"
 
 [durable_objects]
 bindings = [
-  # { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
   { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
 ]
 
@@ -35,19 +36,15 @@ head_sampling_rate = 1
 
 [env.test.vars]
 VERSION = "FP-MSG-1.0"
-#ACCESS_KEY_ID = "minioadmin"
-#SECRET_ACCESS_KEY = "minioadmin"
-#FP_DEBUG = "FPMetaGroups"
-
-# [[env.test.migrations]]
-# tag = "v1" # Should be unique for each entry
-# new_sqlite_classes = ["FPBackendDurableObject"]
 
 [env.test.durable_objects]
 bindings = [
-  # { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
   { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
 ]
+
+[[env.test.r2_buckets]]
+binding = "FP_STORAGE"
+bucket_name = "fp-storage-test"
 
 [[env.test.d1_databases]]
 binding = "FP_BACKEND_D1"
@@ -56,23 +53,19 @@ database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
 
 [env.dev.vars]
 VERSION = "FP-MSG-1.0"
-#CLOUD_SESSION_TOKEN_PUBLIC = "should-be-set-by-dot-dev"
-#STORAGE_URL = "should-be-set-by-dot-dev"
-
-
-# STORAGE_URL = "https://f031392067b661e91963881fb76b4ea3.r2.cloudflarestorage.com"
-#FP_DEBUG = "FPMetaGroups"
 
 [[env.dev.migrations]]
-tag = "v1" # Should be unique for each entry
-#new_sqlite_classes = ["FPBackendDurableObject"]
+tag = "v1"
 new_classes = ["FPRoomDurableObject"]
 
 [env.dev.durable_objects]
 bindings = [
-  # { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
   { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
 ]
+
+[[env.dev.r2_buckets]]
+binding = "FP_STORAGE"
+bucket_name = "fp-storage-dev"
 
 [[env.dev.d1_databases]]
 binding = "FP_BACKEND_D1"

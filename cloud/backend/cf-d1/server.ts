@@ -10,8 +10,73 @@ import { BuildURI, LoggerImpl } from "@adviser/cement";
 import { HonoServer } from "@fireproof/cloud-backend-base";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, PUT, DELETE, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 export default {
   fetch: async (req, env): Promise<Response> => {
+    const url = new URL(req.url);
+
+    // Handle CORS preflight
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 200, headers: CORS_HEADERS });
+    }
+
+    // Health check endpoint
+    if (url.pathname === "/health" || url.pathname === "/") {
+      return new Response(JSON.stringify({ status: "ok" }), {
+        status: 200,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+
+    // Blob routes - direct R2 access (replaces MinIO/S3)
+    if (url.pathname.startsWith("/blob/")) {
+      const key = url.pathname.slice(6); // Remove "/blob/" prefix
+
+      if (!env.FP_STORAGE) {
+        return new Response("R2 storage not configured", { status: 501, headers: CORS_HEADERS });
+      }
+
+      switch (req.method) {
+        case "GET": {
+          const obj = await env.FP_STORAGE.get(key);
+          if (!obj) {
+            return new Response("Not found", { status: 404, headers: CORS_HEADERS });
+          }
+          return new Response(obj.body, {
+            status: 200,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/octet-stream" },
+          });
+        }
+        case "PUT": {
+          const body = await req.arrayBuffer();
+          await env.FP_STORAGE.put(key, body);
+          return new Response(null, { status: 200, headers: CORS_HEADERS });
+        }
+        case "DELETE": {
+          await env.FP_STORAGE.delete(key);
+          return new Response(null, { status: 200, headers: CORS_HEADERS });
+        }
+        case "HEAD": {
+          const obj = await env.FP_STORAGE.head(key);
+          if (!obj) {
+            return new Response(null, { status: 404, headers: CORS_HEADERS });
+          }
+          return new Response(null, {
+            status: 200,
+            headers: { ...CORS_HEADERS, "Content-Length": obj.size.toString(), ETag: obj.etag },
+          });
+        }
+        default:
+          return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
+      }
+    }
+
+    // All other requests go to the Durable Object
     return getRoomDurableObject(env, "V1").fetch(req);
   },
 } satisfies ExportedHandler<Env>;

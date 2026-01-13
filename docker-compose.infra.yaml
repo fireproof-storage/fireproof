@@ -1,14 +1,13 @@
 # Fireproof Cloud - Infrastructure Only
 #
-# Use this for local development when you want to run services natively
-# but need the infrastructure (MinIO for S3 storage).
+# NOTE: With wrangler dev, no separate infrastructure is needed.
+# R2 storage is provided by wrangler's local emulation.
 #
-# Usage:
-#   docker compose -f docker-compose.infra.yaml up -d
+# For local development, just run wrangler dev directly:
 #
-# Then run services locally:
-#   # Terminal 1 - Cloud Backend
-#   cd cloud/backend/node && pnpm run build && node dist/node-serve.js
+#   # Terminal 1 - Cloud Backend (with R2 storage)
+#   cd cloud/backend/cf-d1
+#   npx wrangler dev --local --persist-to .wrangler/state --port 8909
 #
 #   # Terminal 2 - Dashboard Backend
 #   cd dashboard/backend && pnpm run build && pnpm run backend:node
@@ -16,46 +15,31 @@
 #   # Terminal 3 - Dashboard Frontend (dev mode)
 #   cd dashboard/frontend && pnpm run dev
 #
-# Environment variables for local services:
-#   export STORAGE_URL=http://127.0.0.1:9000/testbucket
-#   export ACCESS_KEY_ID=minioadmin
-#   export SECRET_ACCESS_KEY=minioadmin
+# If you prefer Docker for infrastructure, this file runs just the
+# cloud backend with wrangler dev:
 
 services:
-  minio:
-    image: minio/minio:latest
-    container_name: fireproof-minio
+  cloud-backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cloud-backend
+    container_name: fireproof-cloud-backend
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8909:8909"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      NODE_ENV: development
+      VERSION: FP-MSG-1.0
+      FP_DEBUG: "true"
     volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
+      - wrangler_state:/app/.wrangler
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
+      test: ["CMD", "curl", "-sf", "http://localhost:8909/health"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  minio-init:
-    image: minio/mc:latest
-    container_name: fireproof-minio-init
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      mc mb myminio/testbucket --ignore-existing;
-      mc anonymous set public myminio/testbucket;
-      echo 'MinIO ready - bucket testbucket created';
-      "
-
 volumes:
-  minio_data:
+  wrangler_state:
 
 networks:
   default:
