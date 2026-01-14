@@ -9,17 +9,13 @@ import {
   useUser,
 } from "@fireproof/clerk";
 
-// Toggle between local and production
-const USE_LOCAL = true;
-
+// Configuration from environment variables (set at build time via Vite)
 const CONFIG = {
-  apiUrl: USE_LOCAL ? "http://localhost:7370/api" : "https://connect.fireproof.direct/api",
-  cloudUrl: USE_LOCAL ? "fpcloud://localhost:8909?protocol=ws" : "fpcloud://connect.fireproof.direct",
+  apiUrl: import.meta.env.VITE_TOKEN_API_URI || "http://localhost:7370/api",
+  cloudUrl: import.meta.env.VITE_CLOUD_BACKEND_URL || "fpcloud://localhost:8909?protocol=ws",
 };
 
-const CLERK_KEY = USE_LOCAL
-  ? "pk_test_c2luY2VyZS1jaGVldGFoLTMwLmNsZXJrLmFjY291bnRzLmRldiQ"
-  : "pk_live_Y2xlcmsuZmlyZXByb29mLmRpcmVjdCQ";
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_c2luY2VyZS1jaGVldGFoLTMwLmNsZXJrLmFjY291bnRzLmRldiQ";
 
 interface Doc {
   _id: string;
@@ -349,7 +345,7 @@ function CloudDemo() {
         </SignedIn>
 
         <div style={styles.footer}>
-          {USE_LOCAL ? "Development" : "Production"} &middot; {CONFIG.cloudUrl.replace("fpcloud://", "")}
+          {CONFIG.cloudUrl.replace("fpcloud://", "").replace("?protocol=ws", "")}
         </div>
       </div>
     </div>
