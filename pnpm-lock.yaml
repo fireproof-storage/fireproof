@@ -1408,8 +1408,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
       react-hook-form:
-        specifier: ^7.71.0
-        version: 7.71.0(react@19.2.3)
+        specifier: ^7.71.1
+        version: 7.71.1(react@19.2.3)
       react-router-dom:
         specifier: ^7.12.0
         version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -5336,6 +5336,9 @@ packages:
   eventemitter3@5.0.2:
     resolution: {integrity: sha512-RQ5d+HfzVjGO537vWau+KVFHUSj3sBOzd1nVQcnRMCak/OyXwwUTBh++rZrI3un9gtfSpg63jjOHUvhQnQBuAA==}
 
+  eventemitter3@5.0.3:
+    resolution: {integrity: sha512-PtkOSo5xZ4pjMIIUmYh5ewu/6CFDsyGTUkfz6tJ5wyHQtcgoStS0HwCLxvCaN3shgYHaCDkKxb3ykbhcP2jTTw==}
+
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
@@ -6787,8 +6790,8 @@ packages:
     peerDependencies:
       react: ^19.2.3
 
-  react-hook-form@7.71.0:
-    resolution: {integrity: sha512-oFDt/iIFMV9ZfV52waONXzg4xuSlbwKUPvXVH2jumL1me5qFhBMc4knZxuXiZ2+j6h546sYe3ZKJcg/900/iHw==}
+  react-hook-form@7.71.1:
+    resolution: {integrity: sha512-9SUJKCGKo8HUSsCO+y0CtqkqI5nNuaDqTxyqPsZPqIwudpj4rCrAz/jZV+jn57bx5gtZKOh3neQu94DXMc+w5w==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -11842,6 +11845,8 @@ snapshots:
 
   eventemitter3@5.0.2: {}
 
+  eventemitter3@5.0.3: {}
+
   execa@5.1.1:
     dependencies:
       cross-spawn: 7.0.6
@@ -13440,7 +13445,7 @@ snapshots:
       react: 19.2.3
       scheduler: 0.27.0
 
-  react-hook-form@7.71.0(react@19.2.3):
+  react-hook-form@7.71.1(react@19.2.3):
     dependencies:
       react: 19.2.3
 
@@ -13695,7 +13700,7 @@ snapshots:
       '@types/uuid': 8.3.4
       '@types/ws': 8.18.1
       buffer: 6.0.3
-      eventemitter3: 5.0.2
+      eventemitter3: 5.0.3
       uuid: 8.3.2
       ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     optionalDependencies:
