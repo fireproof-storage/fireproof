@@ -862,8 +862,8 @@ importers:
         specifier: ^0.5.15
         version: 0.5.15(typescript@5.9.3)
       '@clerk/shared':
-        specifier: ^3.42.0
-        version: 3.42.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^3.43.0
+        version: 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@fireproof/core-device-id':
         specifier: workspace:0.0.0
         version: link:../../device-id
@@ -1101,8 +1101,8 @@ importers:
         specifier: ^5.120.0
         version: 5.120.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.8)(bs58@5.0.0)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.2.3(react@19.2.3))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.8)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@5.0.10))(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(utf-8-validate@5.0.10)(zod@4.3.5)
       '@clerk/shared':
-        specifier: ^3.42.0
-        version: 3.42.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^3.43.0
+        version: 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
         version: link:../../cli
@@ -1348,8 +1348,8 @@ importers:
         specifier: ^5.59.3
         version: 5.59.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/shared':
-        specifier: ^3.42.0
-        version: 3.42.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^3.43.0
+        version: 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -2029,18 +2029,6 @@ packages:
   '@clerk/localizations@3.35.0':
     resolution: {integrity: sha512-ylF6IB+Z8jjpIdzb0zBRYUKcG3nPKYN1YF2QKIaeNYW9mjzSFktoQTPsDO8qs9+dYFgGuNJd2ZRxzyATE0nTSA==}
     engines: {node: '>=18.17.0'}
-
-  '@clerk/shared@3.42.0':
-    resolution: {integrity: sha512-sJUur/7jnHHlAsdoDosxpOmfV05VR7K5rvqlFskj3GaAMFEJrvdOztw0hmhBGVSWiCpjTZfdGITegton8mo7mQ==}
-    engines: {node: '>=18.17.0'}
-    peerDependencies:
-      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
 
   '@clerk/shared@3.43.0':
     resolution: {integrity: sha512-pj8jgV5TX7l0ClHMvDLG7Ensp1BwA63LNvOE2uLwRV4bx3j9s4oGHy5bZlLBoOxdvRPCMpQksHi/O0x1Y+obdw==}
@@ -5336,6 +5324,9 @@ packages:
   eventemitter3@5.0.2:
     resolution: {integrity: sha512-RQ5d+HfzVjGO537vWau+KVFHUSj3sBOzd1nVQcnRMCak/OyXwwUTBh++rZrI3un9gtfSpg63jjOHUvhQnQBuAA==}
 
+  eventemitter3@5.0.3:
+    resolution: {integrity: sha512-PtkOSo5xZ4pjMIIUmYh5ewu/6CFDsyGTUkfz6tJ5wyHQtcgoStS0HwCLxvCaN3shgYHaCDkKxb3ykbhcP2jTTw==}
+
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
@@ -8487,7 +8478,7 @@ snapshots:
 
   '@clerk/clerk-react@5.59.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/shared': 3.42.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
       tslib: 2.8.1
@@ -8498,18 +8489,6 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
-
-  '@clerk/shared@3.42.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      csstype: 3.1.3
-      dequal: 2.0.3
-      glob-to-regexp: 0.4.1
-      js-cookie: 3.0.5
-      std-env: 3.10.0
-      swr: 2.3.4(react@19.2.3)
-    optionalDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
 
   '@clerk/shared@3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
@@ -11842,6 +11821,8 @@ snapshots:
 
   eventemitter3@5.0.2: {}
 
+  eventemitter3@5.0.3: {}
+
   execa@5.1.1:
     dependencies:
       cross-spawn: 7.0.6
@@ -13695,7 +13676,7 @@ snapshots:
       '@types/uuid': 8.3.4
       '@types/ws': 8.18.1
       buffer: 6.0.3
-      eventemitter3: 5.0.2
+      eventemitter3: 5.0.3
       uuid: 8.3.2
       ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     optionalDependencies:
