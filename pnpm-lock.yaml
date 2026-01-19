@@ -96,7 +96,7 @@ importers:
         version: link:../vendor
       '@hono/node-server':
         specifier: ^1.19.8
-        version: 1.19.8(hono@4.11.3)
+        version: 1.19.8(hono@4.11.4)
       '@pnpm/lockfile-file':
         specifier: ^9.1.3
         version: 9.1.3(@pnpm/logger@5.2.0)
@@ -116,8 +116,8 @@ importers:
         specifier: ^11.3.3
         version: 11.3.3
       hono:
-        specifier: ^4.11.3
-        version: 4.11.3
+        specifier: ^4.11.4
+        version: 4.11.4
       jose:
         specifier: ^6.1.3
         version: 6.1.3
@@ -241,8 +241,8 @@ importers:
         specifier: ^0.45.1
         version: 0.45.1(@cloudflare/workers-types@4.20260113.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.11.3
-        version: 4.11.3
+        specifier: ^4.11.4
+        version: 4.11.4
       jose:
         specifier: ^6.1.3
         version: 6.1.3
@@ -305,8 +305,8 @@ importers:
         specifier: ^0.45.1
         version: 0.45.1(@cloudflare/workers-types@4.20260113.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.11.3
-        version: 4.11.3
+        specifier: ^4.11.4
+        version: 4.11.4
       multiformats:
         specifier: ^13.4.2
         version: 13.4.2
@@ -361,10 +361,10 @@ importers:
         version: link:../../../vendor
       '@hono/node-server':
         specifier: ^1.19.8
-        version: 1.19.8(hono@4.11.3)
+        version: 1.19.8(hono@4.11.4)
       '@hono/node-ws':
         specifier: ^1.3.0
-        version: 1.3.0(@hono/node-server@1.19.8(hono@4.11.3))(bufferutil@4.1.0)(hono@4.11.3)(utf-8-validate@5.0.10)
+        version: 1.3.0(@hono/node-server@1.19.8(hono@4.11.4))(bufferutil@4.1.0)(hono@4.11.4)(utf-8-validate@5.0.10)
       '@libsql/client':
         specifier: ^0.17.0
         version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -372,8 +372,8 @@ importers:
         specifier: ^0.45.1
         version: 0.45.1(@cloudflare/workers-types@4.20260113.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       hono:
-        specifier: ^4.11.3
-        version: 4.11.3
+        specifier: ^4.11.4
+        version: 4.11.4
       vitest:
         specifier: ^4.0.14
         version: 4.0.14(@types/node@25.0.7)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -5336,6 +5336,9 @@ packages:
   eventemitter3@5.0.2:
     resolution: {integrity: sha512-RQ5d+HfzVjGO537vWau+KVFHUSj3sBOzd1nVQcnRMCak/OyXwwUTBh++rZrI3un9gtfSpg63jjOHUvhQnQBuAA==}
 
+  eventemitter3@5.0.3:
+    resolution: {integrity: sha512-PtkOSo5xZ4pjMIIUmYh5ewu/6CFDsyGTUkfz6tJ5wyHQtcgoStS0HwCLxvCaN3shgYHaCDkKxb3ykbhcP2jTTw==}
+
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
@@ -5650,8 +5653,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.11.3:
-    resolution: {integrity: sha512-PmQi306+M/ct/m5s66Hrg+adPnkD5jiO6IjA7WhWw0gSBSo1EcRegwuI1deZ+wd5pzCGynCcn2DprnE4/yEV4w==}
+  hono@4.11.4:
+    resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@2.8.9:
@@ -9079,14 +9082,14 @@ snapshots:
 
   '@formkit/auto-animate@0.8.4': {}
 
-  '@hono/node-server@1.19.8(hono@4.11.3)':
+  '@hono/node-server@1.19.8(hono@4.11.4)':
     dependencies:
-      hono: 4.11.3
+      hono: 4.11.4
 
-  '@hono/node-ws@1.3.0(@hono/node-server@1.19.8(hono@4.11.3))(bufferutil@4.1.0)(hono@4.11.3)(utf-8-validate@5.0.10)':
+  '@hono/node-ws@1.3.0(@hono/node-server@1.19.8(hono@4.11.4))(bufferutil@4.1.0)(hono@4.11.4)(utf-8-validate@5.0.10)':
     dependencies:
-      '@hono/node-server': 1.19.8(hono@4.11.3)
-      hono: 4.11.3
+      '@hono/node-server': 1.19.8(hono@4.11.4)
+      hono: 4.11.4
       ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
@@ -11842,6 +11845,8 @@ snapshots:
 
   eventemitter3@5.0.2: {}
 
+  eventemitter3@5.0.3: {}
+
   execa@5.1.1:
     dependencies:
       cross-spawn: 7.0.6
@@ -12149,7 +12154,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.11.3: {}
+  hono@4.11.4: {}
 
   hosted-git-info@2.8.9: {}
 
@@ -13695,7 +13700,7 @@ snapshots:
       '@types/uuid': 8.3.4
       '@types/ws': 8.18.1
       buffer: 6.0.3
-      eventemitter3: 5.0.2
+      eventemitter3: 5.0.3
       uuid: 8.3.2
       ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     optionalDependencies:
