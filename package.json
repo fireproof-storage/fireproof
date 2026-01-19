@@ -72,7 +72,7 @@
     "multiformats": "^13.4.2",
     "playwright": "^1.57.0",
     "playwright-chromium": "^1.57.0",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.0",
