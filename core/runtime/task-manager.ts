@@ -21,6 +21,7 @@ export class TaskManager implements TaskManagerIf {
 
   private queue: TaskItem[] = [];
   private isProcessing = false;
+  private isClosed = false;
 
   readonly logger: Logger;
   readonly params: TaskManagerParams;
@@ -33,6 +34,7 @@ export class TaskManager implements TaskManagerIf {
   }
 
   async handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta, store: ActiveStore) {
+    if (this.isClosed) return;
     for (const parent of parents) {
       this.eventsWeHandled.add(parent.toString());
     }
@@ -43,6 +45,7 @@ export class TaskManager implements TaskManagerIf {
 
   private async processQueue() {
     if (this.isProcessing) return;
+    if (this.isClosed) return;
     this.isProcessing = true;
     const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     const first = filteredQueue[0];
@@ -63,9 +66,19 @@ export class TaskManager implements TaskManagerIf {
       this.logger.Warn().Err(err).Msg("retry to process event block");
     } finally {
       this.isProcessing = false;
-      if (this.queue.length > 0) {
+      if (!this.isClosed && this.queue.length > 0) {
         void this.processQueue();
       }
     }
+  }
+
+  /**
+   * Stop processing and clear queued tasks.
+   */
+  async close(): Promise<void> {
+    this.isClosed = true;
+    this.queue = [];
+    this.eventsWeHandled.clear();
+    this.isProcessing = false;
   }
 }

@@ -122,7 +122,7 @@ export class BaseBlockstoreImpl implements BlockFetcher {
   readonly ebOpts: BlockstoreRuntime;
   readonly sthis: SuperThis;
 
-  readonly crdtParent?: CRDT;
+  crdtParent?: CRDT;
 
   readonly loader: Loadable;
   // readonly name?: string;
@@ -133,7 +133,8 @@ export class BaseBlockstoreImpl implements BlockFetcher {
   }
 
   async close(): Promise<void> {
-    // no-op
+    this.transactions.clear();
+    this.crdtParent = undefined;
   }
 
   async destroy(): Promise<void> {
@@ -221,8 +222,9 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     return this.loader.ready();
   }
 
-  close(): Promise<void> {
-    return this.loader.close();
+  async close(): Promise<void> {
+    await this.loader.close();
+    await super.close();
   }
 
   destroy(): Promise<void> {

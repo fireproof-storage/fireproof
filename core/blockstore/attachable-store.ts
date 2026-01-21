@@ -289,7 +289,7 @@ export async function createAttachedStores(
 }
 
 export class AttachedRemotesImpl implements AttachedStores {
-  private readonly _remotes = new KeyedResolvOnce<Attached>();
+  private _remotes = new KeyedResolvOnce<Attached>();
 
   readonly loadable: Loadable;
   // readonly attactedFileStore: DataStore;
@@ -326,6 +326,17 @@ export class AttachedRemotesImpl implements AttachedStores {
   local(): LocalActiveStore {
     if (!this._local) {
       throw this.loadable.sthis.logger.Error().Msg("local store not set").AsError();
+    }
+    return new ActiveStoreImpl(this._local.stores as LocalDataAndMetaAndWalStore, this);
+  }
+
+  /**
+   * Returns the local store if set, or undefined if already reset.
+   * Use this for safe access during teardown.
+   */
+  localOrUndefined(): LocalActiveStore | undefined {
+    if (!this._local) {
+      return undefined;
     }
     return new ActiveStoreImpl(this._local.stores as LocalDataAndMetaAndWalStore, this);
   }
@@ -374,7 +385,7 @@ export class AttachedRemotesImpl implements AttachedStores {
   }
 
   // needed for React Statemanagement
-  readonly _keyedAttachable = new KeyedResolvOnce<Attached>();
+  private _keyedAttachable = new KeyedResolvOnce<Attached>();
   async attach(attachable: Attachable, onAttach: (at: Attached) => Promise<Attached>): Promise<Attached> {
     const keyed = attachable.configHash(this.loadable.blockstoreParent?.crdtParent?.ledgerParent);
     // console.log("attach-enter", keyed, this.loadable.blockstoreParent?.crdtParent?.ledgerParent?.name);
@@ -464,5 +475,17 @@ export class AttachedRemotesImpl implements AttachedStores {
       return rex;
     });
     return ret;
+  }
+
+  /**
+   * Reset remote attachments for teardown.
+   * Note: _local is intentionally NOT cleared here because async operations
+   * (meta stream handler, write queue) may still reference it during shutdown.
+   * The local store is properly cleaned up via detach().
+   */
+  reset(): void {
+    this._remotes = new KeyedResolvOnce<Attached>();
+    this._keyedAttachable = new KeyedResolvOnce<Attached>();
+    // Don't clear _local - async operations may still need it during shutdown
   }
 }
