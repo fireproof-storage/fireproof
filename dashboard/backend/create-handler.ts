@@ -266,19 +266,13 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),
   } as unknown as SuperThisOpts);
-  // try {
-  //   if (import.meta && import.meta.env) {
-  //     sthis.env.sets(import.meta.env as unknown as Record<string, string>);
-  //   }
-  // } catch (e) {
-  //   sthis.logger.Error().Err(e).Msg("Error setting import.meta.env");
-  // }
   sthis.env.sets(env as unknown as Record<string, string>);
   const rEnvVals = sthis.env.gets({
     CLOUD_SESSION_TOKEN_PUBLIC: param.REQUIRED,
     CLERK_PUBLISHABLE_KEY: param.REQUIRED,
     DEVICE_ID_CA_PRIV_KEY: param.REQUIRED,
     DEVICE_ID_CA_CERT: param.REQUIRED,
+    CA_CLOCK_TOLERANCE: param.OPTIONAL,
   });
   if (rEnvVals.isErr()) {
     throw rEnvVals.Err();
@@ -337,7 +331,7 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
       sthis,
       db,
       await tokenApi(sthis, {
-        clockTolerance: 60,
+        clockTolerance: coerceInt(envVals.CA_CLOCK_TOLERANCE, 60),
         deviceIdCA: rDeviceIdCA.Ok(),
       }),
       rDeviceIdCA.Ok(),

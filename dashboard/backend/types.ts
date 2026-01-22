@@ -35,21 +35,9 @@ export interface AddUserToLedger {
   readonly right: ReadWrite;
 }
 
-//   return (obj as VerifiedAuthUser<T>).user !== undefined;
-// }
-
-// export type ActiveUser<T extends DashAuthType = ClerkVerifyAuth> = WithVerifiedAuth<T> | VerifiedAuthUser<T>;
-
 export type ReqWithVerifiedAuthUser<REQ extends { type: string; auth: DashAuthType }> = Omit<REQ, "auth"> & {
   readonly auth: VerifiedAuthUserResult;
 };
-
-// export type ActiveUserWithUserId<T extends DashAuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
-//   user: {
-//     userId: string;
-//     maxTenants: number;
-//   };
-// };
 
 export interface FPTokenContext {
   readonly secretToken: string;

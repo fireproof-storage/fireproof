@@ -45,7 +45,7 @@ export async function createTestUser({ sthis, session, seqUserId, deviceCA }: Te
       public_meta: `{ "role": "tester-${userId}" }`,
     },
 
-    role: "devide-id",
+    role: "device-id",
     sub: `device-id-subject-${sthis.nextId().str}`,
     userId: `user-id-${userId}`,
 

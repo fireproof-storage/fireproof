@@ -48,7 +48,11 @@ export class ClerkApiToken implements FPApiToken {
   });
 
   async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
-    const { keys, urls } = this.keysAndUrls().Ok();
+    const rKaUs = this.keysAndUrls();
+    if (rKaUs.isErr()) {
+      return Result.Err(rKaUs);
+    }
+    const { keys, urls } = rKaUs.Ok();
 
     const rt = await sts.verifyToken(token, keys, urls, {
       parseSchema: (payload: unknown): Result<FPClerkClaim> => {
@@ -108,13 +112,17 @@ export class DeviceIdApiToken implements FPApiToken {
     this.opts = opts;
   }
   async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
-    const verify = new DeviceIdVerifyMsg(this.sthis.txt.base64, [(await this.opts.deviceIdCA.caCertificate()).Ok()], {
+    const rCa = await this.opts.deviceIdCA.caCertificate();
+    if (rCa.isErr()) {
+      return Result.Err(rCa);
+    }
+    const verify = new DeviceIdVerifyMsg(this.sthis.txt.base64, [rCa.Ok()], {
       maxAge: 3600,
       ...this.opts,
     });
     const res = await verify.verifyWithCertificate(token, FPDeviceIDSessionSchema);
     if (res.valid) {
-      const creatingUser = (res.certificate.certificate.asCert() as unknown as { creatingUser: ClerkVerifiedAuth }).creatingUser;
+      const creatingUser = (res.certificate.certificate.asCert() as { creatingUser: ClerkVerifiedAuth }).creatingUser;
       // console.log("DeviceIdApiToken-verify", Object.keys(res.certificate.certificate.asCert()))
       // console.log("DeviceIdApiToken-verify", creatingUser);
       if (!creatingUser || creatingUser.type !== "clerk") {

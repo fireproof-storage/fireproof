@@ -84,6 +84,4 @@ describe("verifyAuth", () => {
       },
     });
   });
-
-  // it("receives device-id auth", async () => {
 });
