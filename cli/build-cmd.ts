@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { array, command, flag, multioption, option, string } from "cmd-ts";
+import { array, command, flag, multioption, option, string, Type } from "cmd-ts";
 import fs from "fs-extra";
 import path from "node:path";
 import { findUp } from "find-up";
@@ -8,6 +8,18 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { SemVer } from "semver";
 import { exception2Result } from "@adviser/cement";
 import { VersionPinner } from "./version-pinner.js";
+
+export type VersionModifier = "~" | "^" | "";
+const allowedVersionModifiers: VersionModifier[] = ["~", "^", ""];
+
+const versionModifier: Type<string, VersionModifier> = {
+  async from(str) {
+    if (allowedVersionModifiers.includes(str as VersionModifier)) {
+      return str as VersionModifier;
+    }
+    throw new Error(`Invalid version modifier: "${str}". Must be one of: "~", "^", or ""`);
+  },
+};
 
 const reVersionAlphaStart = /^[a-z](\d+\.\d+\.\d+.*)$/;
 // const reVersionOptionalAlphaStart = /^[a-z]?(\d+\.\d+\.\d+.*)$/;
@@ -112,29 +124,34 @@ export interface PackageJson {
   devDependencies: Record<string, string>;
 }
 
+export interface PatchPackageJsonOptions {
+  changeScope?: string;
+  readonly mock?: {
+    readonly readJSON: typeof fs.readJson;
+  };
+}
+
 export async function patchPackageJson(
   packageJsonPath: string,
   version: Version,
-  changeScope?: string,
-  mock: {
-    readJSON: typeof fs.readJson;
-  } = { readJSON: fs.readJson },
+  opts: PatchPackageJsonOptions = {},
 ): Promise<{
   patchedPackageJson: PackageJson;
   originalPackageJson: PackageJson;
 }> {
-  const originalPackageJson = await mock.readJSON(packageJsonPath);
-  const patchedPackageJson = await mock.readJSON(packageJsonPath);
+  const mock = opts.mock ?? { readJSON: fs.readJson };
+
+  const originalPackageJson = (await mock.readJSON(packageJsonPath)) as PackageJson;
+  const patchedPackageJson = (await mock.readJSON(packageJsonPath)) as PackageJson;
   // ugly double read but this is easier than deep copying
-  if (changeScope) {
-    changeScope = changeScope.replace(/^@/, "");
+  if (opts.changeScope) {
+    opts.changeScope = opts.changeScope.replace(/^@/, "");
     if (originalPackageJson.name.startsWith(`@`)) {
-      patchedPackageJson.name = patchedPackageJson.name.replace(/^@[^/]+\//, `@${changeScope}/`);
+      patchedPackageJson.name = patchedPackageJson.name.replace(/^@[^/]+\//, `@${opts.changeScope}/`);
     } else {
-      patchedPackageJson.name = `@${changeScope}/${patchedPackageJson.name}`;
+      patchedPackageJson.name = `@${opts.changeScope}/${patchedPackageJson.name}`;
     }
   }
-  // patchedPackageJson.name = changeScope ? : patchedPackageJson.name;
   patchedPackageJson.version = version.version;
   delete patchedPackageJson.scripts["pack"];
   delete patchedPackageJson.scripts["publish"];
@@ -359,6 +376,16 @@ export function buildCmd(sthis: SuperThis) {
         short: "t",
         description: "Do not update tsconfig.json in the destination directory.",
       }),
+      patchVersionModify: option({
+        long: "patchVersionModify",
+        description: "Modify patch versions in package.json dependencies. Must be one of: ~, ^, or empty string.",
+        type: versionModifier,
+        defaultValue: () => "~" as VersionModifier,
+      }),
+      noPatchedVersionModify: flag({
+        long: "noPatchedVersionModify",
+        description: "Do not modify patch versions in package.json dependencies.",
+      }),
       noPinned: flag({
         long: "no-pinned",
         description: "Do not pin dependencies in package.json (pinning is enabled by default).",
@@ -519,7 +546,7 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      let packageJson = await patchPackageJson("package.json", version, args.changeScope);
+      let packageJson = await patchPackageJson("package.json", version, { changeScope: args.changeScope });
       if (!args.noPinned) {
         console.log(
           "Prepared package.json with pinning for",
@@ -533,6 +560,7 @@ export function buildCmd(sthis: SuperThis) {
           ...packageJson,
           patchedPackageJson: pinner.pinVersions(packageJson.patchedPackageJson, {
             workspaceVersion: version.prefixedVersion,
+            _3rdPartyVersionModifier: args.noPatchedVersionModify ? undefined : args.patchVersionModify,
           }),
         };
       }

@@ -90,18 +90,38 @@ describe("VersionPinner", () => {
   });
 
   describe("pinVersions", () => {
-    it("should pin unpinned dependencies with caret (^)", () => {
-      const pkg: PackageJson = {
-        ...pkgTemplate,
-        dependencies: {
-          "cmd-ts": `^${cmdTsVersion}`,
-        },
-      };
+    describe.each(["0.14.3"])("should pin unpinned dependencies (%s)", (version) => {
+      describe.each(["", "^", "~"])("and in-modifier '%s'", (inModifier) => {
+        it.each(["", "^", "~"])("and modifier '%s'", (modifier) => {
+          const pkg: PackageJson = {
+            ...pkgTemplate,
+            dependencies: {
+              "cmd-ts": `${inModifier}${version}`,
+              my: "workspace:*",
+            },
+          };
+          const result = pinner.pinVersions(pkg, {
+            workspaceVersion: "1.0.0",
+            _3rdPartyVersionModifier: modifier as "~" | "^" | "",
+          });
+          // Should pin the version
+          expect(result.dependencies["cmd-ts"]).toBe(`${modifier}0.14.3`);
+          expect(result.dependencies["my"]).toBe(`1.0.0`);
+        });
 
-      const result = pinner.pinVersions(pkg);
-
-      // Should pin the version
-      expect(result.dependencies["cmd-ts"]).toBe(cmdTsVersion);
+        it("and modifier undefined", () => {
+          const pkg: PackageJson = {
+            ...pkgTemplate,
+            dependencies: {
+              "cmd-ts": `${inModifier}${version}`,
+              my: "workspace:*",
+            },
+          };
+          const result = pinner.pinVersions(pkg, { workspaceVersion: "1.0.0" });
+          expect(result.dependencies["cmd-ts"]).toBe(`${inModifier}${version}`);
+          expect(result.dependencies["my"]).toBe(`1.0.0`);
+        });
+      });
     });
 
     it("should pin unpinned dependencies with tilde (~)", () => {
@@ -115,7 +135,7 @@ describe("VersionPinner", () => {
       const result = pinner.pinVersions(pkg);
 
       // Should pin the version
-      expect(result.dependencies["semver"]).toBe(semverVersion);
+      expect(result.dependencies["semver"]).toBe(`~${semverVersion}`);
     });
 
     it("should pin unpinned dependencies with asterisk (*)", () => {
@@ -192,7 +212,7 @@ describe("VersionPinner", () => {
 
       // Only cmd-ts should be in the result, not its transitive dependencies
       expect(Object.keys(result.dependencies)).toEqual(["cmd-ts"]);
-      expect(result.dependencies["cmd-ts"]).toBe(cmdTsVersion);
+      expect(result.dependencies["cmd-ts"]).toBe(`^${cmdTsVersion}`);
     });
 
     it("should sort dependencies alphabetically", async () => {
@@ -230,9 +250,9 @@ describe("VersionPinner", () => {
       const result = pinner.pinVersions(pkg);
 
       expect(result.dependencies["cmd-ts"]).toBe(cmdTsVersion); // kept as-is
-      expect(result.dependencies["semver"]).toBe(semverVersion); // pinned
+      expect(result.dependencies["semver"]).toBe(`^${semverVersion}`); // pinned
       expect(result.dependencies["@fireproof/vendor"]).toBe("2.0.0"); // workspace replaced
-      expect(result.dependencies["multiformats"]).toBe(multiformatsVersion); // pinned
+      expect(result.dependencies["multiformats"]).toBe(`~${multiformatsVersion}`); // pinned
     });
 
     it("should remove devDependencies by default", () => {
@@ -268,7 +288,7 @@ describe("VersionPinner", () => {
 
       expect(result.devDependencies).toBeDefined();
       // devDependencies should also be pinned
-      expect(result.devDependencies?.vitest).toBe(vitestVersion);
+      expect(result.devDependencies?.vitest).toBe(`^${vitestVersion}`);
     });
   });
 
