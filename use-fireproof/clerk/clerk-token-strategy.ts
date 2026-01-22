@@ -1,6 +1,7 @@
 import type { DashboardApiImpl } from "@fireproof/core-protocols-dashboard";
 import type { TokenStrategie, TokenAndClaims, ToCloudOpts } from "@fireproof/core-types-protocols-cloud";
-import type { SuperThis, Logger } from "@fireproof/core-types-base";
+import type { SuperThis } from "@fireproof/core-types-base";
+import type { Logger } from "@adviser/cement";
 
 /**
  * Token strategy that uses Clerk authentication with the Fireproof Dashboard API.
@@ -41,7 +42,7 @@ export class ClerkTokenStrategy implements TokenStrategie {
     }
 
     // Get cloud token with app ID from context or generate from deviceId
-    const appId = opts.context.get("appId") || `clerk-${deviceId}`;
+    const appId = (opts.context.get("appId") as string | undefined) || `clerk-${deviceId}`;
     const rRes = await this.dashApi.ensureCloudToken({ appId });
     if (rRes.isErr()) {
       logger.Error().Err(rRes).Msg("Failed to get cloud token");

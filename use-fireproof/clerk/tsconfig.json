@@ -4,5 +4,7 @@
     "jsx": "react-jsx",
     "outDir": "./dist",
     "noEmit": false
-  }
+  },
+  "include": ["./**/*"],
+  "exclude": ["dist/**"]
 }

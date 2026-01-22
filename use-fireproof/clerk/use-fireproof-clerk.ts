@@ -54,7 +54,6 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
 
       const cloud = toCloud({
         strategy,
-        dashboardURI: config.apiUrl,
         urls: { base: config.cloudUrl },
       });
 
