@@ -101,7 +101,6 @@
       "esbuild",
       "msw",
       "playwright-chromium",
-      "sharp",
       "workerd"
     ],
     "patchedDependencies": {

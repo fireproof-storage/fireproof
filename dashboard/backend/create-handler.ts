@@ -355,7 +355,7 @@ export const fpApiEvento = Lazy(() => {
         await ctx.send.send(ctx, {
           type: "Response",
           payload: {
-            status: 501,
+            status: 404,
             headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
             body: JSON.stringify({ type: "error", message: "Not Found", req: ctx.enRequest }),
           },

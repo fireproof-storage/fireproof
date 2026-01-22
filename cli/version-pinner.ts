@@ -3,6 +3,7 @@ import { PackageJson } from "./build-cmd.js";
 import { findUp } from "find-up";
 
 interface PinVersionOptions {
+  readonly _3rdPartyVersionModifier?: "~" | "^" | "";
   readonly includeDevDeps?: boolean;
   readonly workspaceVersion?: string;
 }
@@ -29,7 +30,11 @@ export class VersionPinner {
   /**
    * Helper function to pin dependencies
    */
-  private pinDependencies(deps: Record<string, string> | undefined, workspaceVersion: string): Record<string, string> {
+  private pinDependencies(
+    deps: Record<string, string> | undefined,
+    workspaceVersion: string,
+    _3rdPartyVersionModifier: "~" | "^" | "" | undefined,
+  ): Record<string, string> {
     const pinnedDeps: Record<string, string> = {};
 
     if (!deps) {
@@ -39,7 +44,10 @@ export class VersionPinner {
     for (const [name, version] of Object.entries(deps)) {
       // Check if version is not pinned (starts with ^ or ~ or *)
       // Note: Also catch malformed versions like "1-beta" that should be resolved from lockfile
-      if (version.match(/^[\^~*]/) || version.match(/^[0-9]+-/)) {
+      if (version.startsWith("workspace:")) {
+        // Replace workspace dependencies with the workspace version
+        pinnedDeps[name] = workspaceVersion;
+      } else {
         // Look up the exact version in lockfile
         if (this.allDeps[name]) {
           pinnedDeps[name] = this.allDeps[name];
@@ -47,12 +55,11 @@ export class VersionPinner {
           // Keep original version if not found in lockfile
           pinnedDeps[name] = version;
         }
-      } else if (version.startsWith("workspace:")) {
-        // Replace workspace dependencies with the workspace version
-        pinnedDeps[name] = workspaceVersion;
-      } else {
-        // Already pinned, keep as-is
-        pinnedDeps[name] = version;
+        if (typeof _3rdPartyVersionModifier === "string") {
+          pinnedDeps[name] = `${_3rdPartyVersionModifier}${pinnedDeps[name].replace(/^[\^~]/, "")}`;
+        } else {
+          pinnedDeps[name] = version === "*" ? pinnedDeps[name] : version;
+        }
       }
     }
 
@@ -112,7 +119,7 @@ export class VersionPinner {
     const workspaceVersion = options.workspaceVersion ?? pkg.version;
 
     // Pin dependencies
-    const pinnedDeps = this.pinDependencies(pkg.dependencies, workspaceVersion);
+    const pinnedDeps = this.pinDependencies(pkg.dependencies, workspaceVersion, options._3rdPartyVersionModifier);
 
     // Sort dependencies alphabetically
     const sortedDeps: Record<string, string> = {};
@@ -123,7 +130,7 @@ export class VersionPinner {
     // Pin devDependencies if includeDevDeps is true
     let sortedDevDeps: Record<string, string> | undefined;
     if (options.includeDevDeps && pkg.devDependencies) {
-      const pinnedDevDeps = this.pinDependencies(pkg.devDependencies, workspaceVersion);
+      const pinnedDevDeps = this.pinDependencies(pkg.devDependencies, workspaceVersion, options._3rdPartyVersionModifier);
       sortedDevDeps = {};
       for (const name of Object.keys(pinnedDevDeps).sort()) {
         sortedDevDeps[name] = pinnedDevDeps[name];
