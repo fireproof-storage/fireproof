@@ -30,7 +30,7 @@ export async function verifyExtractClaims(
   });
 }
 
-export function corercedVerifiedAuthUser(ver: VerifiedClaimsResult): Result<VerifiedAuthResult["verifiedAuth"]> {
+export function coercedVerifiedAuthUser(ver: VerifiedClaimsResult): Result<VerifiedAuthResult["verifiedAuth"]> {
   switch (ver.type) {
     case "device-id":
     case "clerk": {
@@ -58,7 +58,7 @@ export async function verifyAuth(
   if (rvec.isErr()) {
     return Result.Err(rvec.Err());
   }
-  const rVerifiedAuth = corercedVerifiedAuthUser(rvec.Ok());
+  const rVerifiedAuth = coercedVerifiedAuthUser(rvec.Ok());
   if (rVerifiedAuth.isErr()) {
     return Result.Err(rVerifiedAuth.Err());
   }
