@@ -10,10 +10,19 @@ import type { Logger } from "@adviser/cement";
 export class ClerkTokenStrategy implements TokenStrategie {
   private dashApi: DashboardApiImpl<unknown>;
   private apiUrl: string;
+  private lastExpiryMs: number | null = null;
 
   constructor(dashApi: DashboardApiImpl<unknown>, apiUrl: string) {
     this.dashApi = dashApi;
     this.apiUrl = apiUrl;
+  }
+
+  /**
+   * Get the expiry time (in ms since epoch) of the last token obtained.
+   * Returns null if no token has been obtained yet.
+   */
+  getLastTokenExpiry(): number | null {
+    return this.lastExpiryMs;
   }
 
   hash(): string {
@@ -50,6 +59,10 @@ export class ClerkTokenStrategy implements TokenStrategie {
     }
 
     const res = rRes.Ok();
+    // Store expiry time for proactive refresh scheduling
+    if (res.expiresDate) {
+      this.lastExpiryMs = new Date(res.expiresDate).getTime();
+    }
     return {
       token: res.cloudToken,
       ...res,

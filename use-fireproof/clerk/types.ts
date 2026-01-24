@@ -12,6 +12,16 @@ export interface ClerkCloudConfig {
 
 export type AttachStatus = "detached" | "attaching" | "attached" | "error";
 
+/**
+ * Sync status for the cloud connection.
+ * - idle: Not connected to cloud
+ * - connecting: Initial connection in progress
+ * - synced: Connected and syncing
+ * - reconnecting: Refreshing connection (token refresh or recovery)
+ * - error: Connection error
+ */
+export type SyncStatus = "idle" | "connecting" | "synced" | "reconnecting" | "error";
+
 export interface AttachState {
   status: AttachStatus;
   attached?: Attached;
@@ -27,6 +37,10 @@ export interface UseFireproofClerkResult extends UseFireproof {
   doDetach: () => Promise<void>;
   /** Whether currently syncing with cloud */
   isSyncing: boolean;
+  /** Current sync status (more granular than isSyncing) */
+  syncStatus: SyncStatus;
+  /** Last sync error if any */
+  lastSyncError?: Error;
 }
 
 export interface ClerkContextValue {

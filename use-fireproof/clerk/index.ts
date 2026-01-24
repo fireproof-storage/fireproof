@@ -16,6 +16,7 @@ export type {
   ClerkCloudConfig,
   AttachState,
   AttachStatus,
+  SyncStatus,
   UseFireproofClerkResult,
   ClerkContextValue,
 } from "./types.js";
