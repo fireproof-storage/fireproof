@@ -24,7 +24,7 @@
   "dependencies": {
     "@fireproof/core-runtime": "workspace:*",
     "@fireproof/core-types-blockstore": "workspace:*",
-    "@testing-library/react": "^16.3.1",
+    "@testing-library/react": "^16.3.2",
     "react": "^19.2.3",
     "use-fireproof": "workspace:0.0.0"
   },
