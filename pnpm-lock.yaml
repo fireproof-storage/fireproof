@@ -1417,8 +1417,8 @@ importers:
         specifier: ^7.71.1
         version: 7.71.1(react@19.2.3)
       react-router-dom:
-        specifier: ^7.12.0
-        version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^7.13.0
+        version: 7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-simple-code-editor:
         specifier: ^0.14.1
         version: 0.14.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -4431,8 +4431,8 @@ packages:
   bn.js@5.2.2:
     resolution: {integrity: sha512-v2YAxEmKaBLahNwE1mjp4WON6huMNeuDvagFZW+ASCuA/ku0bXR9hSMw0XpiqMoA3+rmnyck/tPRSFQkoC9Cuw==}
 
-  bole@5.0.26:
-    resolution: {integrity: sha512-Psr3ttHqgOTRs3n492Ps4fsw0435ISA2OUw6ihN7qoCwSwNNcbxp61gXnCVJkLKMNCSZoKrXI/ddWKSggv2ZXw==}
+  bole@5.0.27:
+    resolution: {integrity: sha512-Hv/NnQSWwgo0yZ1tSi8B8fd2qk9LFRNqtpms7P6dZI67A7HTCy7MP1fwfmZgCbMNURf9+tdHHbbsORp/r0NjJA==}
 
   borsh@0.7.0:
     resolution: {integrity: sha512-CLCsZGIBCFnPtkNnieW/a8wmreDmfUtjU2m9yHrzPXIlNbqVs0AQrSatSG6vdNYUqdc83tkQi2eHfF98ubzQLA==}
@@ -6459,8 +6459,18 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  playwright-core@1.58.0:
+    resolution: {integrity: sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   playwright@1.57.0:
     resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.58.0:
+    resolution: {integrity: sha512-2SVA0sbPktiIY/MCOPX8e86ehA/e+tDNq+e5Y8qjKYti2Z/JG7xnronT/TXTIkKbYGWlCbuucZ6dziEgkoEjQQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6636,15 +6646,15 @@ packages:
     resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
     engines: {node: '>=0.10.0'}
 
-  react-router-dom@7.12.0:
-    resolution: {integrity: sha512-pfO9fiBcpEfX4Tx+iTYKDtPbrSLLCbwJ5EqP+SPYQu1VYCXdy79GSj0wttR0U4cikVdlImZuEZ/9ZNCgoaxwBA==}
+  react-router-dom@7.13.0:
+    resolution: {integrity: sha512-5CO/l5Yahi2SKC6rGZ+HDEjpjkGaG/ncEP7eWFTvFxbHP8yeeI0PxTDjimtpXYlR3b3i9/WIL4VJttPrESIf2g==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
 
-  react-router@7.12.0:
-    resolution: {integrity: sha512-kTPDYPFzDVGIIGNLS5VJykK0HfHLY5MF3b+xj0/tTyNYL1gF1qs7u67Z9jEhQk2sQ98SUaHxlG31g1JtF7IfVw==}
+  react-router@7.13.0:
+    resolution: {integrity: sha512-PZgus8ETambRT17BUm/LL8lX3Of+oiLaPuVTRH3l1eLvSPpKO3AvhAEb5N7ihAFZQrYDqkvvWfFh9p0z9VsjLw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -9347,7 +9357,7 @@ snapshots:
 
   '@pnpm/logger@5.2.0':
     dependencies:
-      bole: 5.0.26
+      bole: 5.0.27
       ndjson: 2.0.0
 
   '@pnpm/merge-lockfile-changes@6.0.5':
@@ -10200,20 +10210,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
-    dependencies:
-      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
-      '@vitest/mocker': 4.0.14(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      playwright: 1.57.0
-      tinyrainbow: 3.0.3
-      vitest: 4.0.14(@types/node@25.0.10)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-    optional: true
-
   '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
     dependencies:
       '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
@@ -10226,6 +10222,34 @@ snapshots:
       - msw
       - utf-8-validate
       - vite
+
+  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
+    dependencies:
+      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/mocker': 4.0.14(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      playwright: 1.58.0
+      tinyrainbow: 3.0.3
+      vitest: 4.0.14(@types/node@25.0.10)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
+
+  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
+    dependencies:
+      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/mocker': 4.0.14(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      playwright: 1.58.0
+      tinyrainbow: 3.0.3
+      vitest: 4.0.14(@types/node@25.0.9)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
 
   '@vitest/browser@4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
     dependencies:
@@ -10631,7 +10655,7 @@ snapshots:
 
   bn.js@5.2.2: {}
 
-  bole@5.0.26:
+  bole@5.0.27:
     dependencies:
       fast-safe-stringify: 2.1.1
       individual: 3.0.0
@@ -12957,11 +12981,21 @@ snapshots:
 
   playwright-core@1.57.0: {}
 
+  playwright-core@1.58.0:
+    optional: true
+
   playwright@1.57.0:
     dependencies:
       playwright-core: 1.57.0
     optionalDependencies:
       fsevents: 2.3.2
+
+  playwright@1.58.0:
+    dependencies:
+      playwright-core: 1.58.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    optional: true
 
   plur@4.0.0:
     dependencies:
@@ -13148,13 +13182,13 @@ snapshots:
 
   react-refresh@0.18.0: {}
 
-  react-router-dom@7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-router-dom@7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
-      react-router: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react-router: 7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
-  react-router@7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-router@7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       cookie: 1.1.1
       react: 19.2.3
@@ -14110,7 +14144,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.0.10
-      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
     transitivePeerDependencies:
       - jiti
       - less
@@ -14148,7 +14182,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.0.9
-      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
     transitivePeerDependencies:
       - jiti
       - less
