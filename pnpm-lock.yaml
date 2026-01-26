@@ -35,8 +35,8 @@ importers:
         specifier: ^4.0.14
         version: 4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
       deno:
-        specifier: ^2.6.5
-        version: 2.6.5
+        specifier: ^2.6.6
+        version: 2.6.6
       drizzle-kit:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
@@ -2111,33 +2111,33 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@deno/darwin-arm64@2.6.5':
-    resolution: {integrity: sha512-jHO9d9XsB2YzVUsJr7U9DEj7QEw69yMYbyaLbK1bpHJ6IjYRJFU/Wi7I1b9jSXurezQQulKf75+9QbU27XkL2g==}
+  '@deno/darwin-arm64@2.6.6':
+    resolution: {integrity: sha512-zpqS8yKx4bI9zD592GVQiu/EuzCs9dSf8nh2H9mBBNZKfnZ8gxdTb2NVEK7JCKTSnCiA8flgWNzaAQ2kkMrpMw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@deno/darwin-x64@2.6.5':
-    resolution: {integrity: sha512-piyZbW02p4zlviz14UVvoUGhh2mu0OYQBBahdLIbnHaPC14Rj+fHu0vgG8+PTJNCIRkxA1zrm5/GBbjqU3GeZQ==}
+  '@deno/darwin-x64@2.6.6':
+    resolution: {integrity: sha512-Mg4wJujolRUZHqBXBy2aEl74Nd/AP/om+z30JRKlMCEnbbdrDLHiZkHBHcB+E4r84vSvX8U28qAIgqZDtmmrMw==}
     cpu: [x64]
     os: [darwin]
 
-  '@deno/linux-arm64-glibc@2.6.5':
-    resolution: {integrity: sha512-9VjtjIepMgSc6aHNOvjHAlHkG/Lmatoeb6k5vpCtVLpwJWJcteIrNX+Rc2u7HcfJctfPs6HwDYsCGI/jnwwzGw==}
+  '@deno/linux-arm64-glibc@2.6.6':
+    resolution: {integrity: sha512-tzFffUgxN40fvcYeZrbaGl6OpzJLTOlWKuhES80LThLh6Sf9LoCfnF25FDils+x1mg7EFHn18upKi76Uvkd02A==}
     cpu: [arm64]
     os: [linux]
 
-  '@deno/linux-x64-glibc@2.6.5':
-    resolution: {integrity: sha512-TZV2Ez3T1qaA7snLKvevwq2LyTGI+1lCQrULZgrytmcaa0Q/9aErA3c135CSscv5LDKSWUXtBCWOHHI6rGm9MA==}
+  '@deno/linux-x64-glibc@2.6.6':
+    resolution: {integrity: sha512-tiVjiKozBYjQEJu6gsQ01Ufc181YrgwJ+HTJKFJfuKVGGq3hZPYmWdiYZ4MKCyA/rdMIMBhVacm0MuAqy3duJQ==}
     cpu: [x64]
     os: [linux]
 
-  '@deno/win32-arm64@2.6.5':
-    resolution: {integrity: sha512-5zPTnSv0R72GwVxxP20cLN/K5VJd6mF5yaLd/4tnwpv4jExiiQWaoXrae/M8O16Ruz8R+AIpIJfs3oZ+2gwuzA==}
+  '@deno/win32-arm64@2.6.6':
+    resolution: {integrity: sha512-KPP0ZfpAgebFsTaBPINH6ltjEvX77xRIOEztSfXlG1rK6BWjKToKPf6jNISB9j9dL83yhmugoWzR+rXKtxtCNQ==}
     cpu: [arm64]
     os: [win32]
 
-  '@deno/win32-x64@2.6.5':
-    resolution: {integrity: sha512-vSr5ZjBvv5n80Bwa9P0WVLpUNLqnDtXMFIuR7H4mdo5zXU9Ay8ggPQ83yPMjmgqRZOBJNXQDFUA3ZWW+UmMjYQ==}
+  '@deno/win32-x64@2.6.6':
+    resolution: {integrity: sha512-O/utjq3jplQqOomlWxPL5VjZigAUxoYrQafaDqH0/4KPKSyxHHNEYGqUVnEGxt7Ez0doos6wgcNz6RemaFtXFQ==}
     cpu: [x64]
     os: [win32]
 
@@ -4431,8 +4431,8 @@ packages:
   bn.js@5.2.2:
     resolution: {integrity: sha512-v2YAxEmKaBLahNwE1mjp4WON6huMNeuDvagFZW+ASCuA/ku0bXR9hSMw0XpiqMoA3+rmnyck/tPRSFQkoC9Cuw==}
 
-  bole@5.0.26:
-    resolution: {integrity: sha512-Psr3ttHqgOTRs3n492Ps4fsw0435ISA2OUw6ihN7qoCwSwNNcbxp61gXnCVJkLKMNCSZoKrXI/ddWKSggv2ZXw==}
+  bole@5.0.27:
+    resolution: {integrity: sha512-Hv/NnQSWwgo0yZ1tSi8B8fd2qk9LFRNqtpms7P6dZI67A7HTCy7MP1fwfmZgCbMNURf9+tdHHbbsORp/r0NjJA==}
 
   borsh@0.7.0:
     resolution: {integrity: sha512-CLCsZGIBCFnPtkNnieW/a8wmreDmfUtjU2m9yHrzPXIlNbqVs0AQrSatSG6vdNYUqdc83tkQi2eHfF98ubzQLA==}
@@ -4756,8 +4756,8 @@ packages:
     resolution: {integrity: sha512-ReEBKkIfe4ya47wlPYf/gu5ib6yUG0/Aez0JQZQz94kiWtRQvZIQbTiehsnwHvLSWJnQdhVeqYue7Id1dKr0qw==}
     engines: {node: '>=10'}
 
-  deno@2.6.5:
-    resolution: {integrity: sha512-zAEGhAKPyKTA7HwtSVPAmdpj+WQfvw0tPemgkaRsqGLe7oi85iqUPCoCEkItiYp3ZellfQIbDHqQmKUY6fgxig==}
+  deno@2.6.6:
+    resolution: {integrity: sha512-5rmm42jnuLnFLdGRyF0GeHMr7kSv77FR+6RkRLJi0A5eAJHvTKstf6NySRleotM/66tNQscGK6FzdiDE8ZLrAA==}
     hasBin: true
 
   depd@2.0.0:
@@ -6459,8 +6459,18 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  playwright-core@1.58.0:
+    resolution: {integrity: sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   playwright@1.57.0:
     resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.58.0:
+    resolution: {integrity: sha512-2SVA0sbPktiIY/MCOPX8e86ehA/e+tDNq+e5Y8qjKYti2Z/JG7xnronT/TXTIkKbYGWlCbuucZ6dziEgkoEjQQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8366,22 +8376,22 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@deno/darwin-arm64@2.6.5':
+  '@deno/darwin-arm64@2.6.6':
     optional: true
 
-  '@deno/darwin-x64@2.6.5':
+  '@deno/darwin-x64@2.6.6':
     optional: true
 
-  '@deno/linux-arm64-glibc@2.6.5':
+  '@deno/linux-arm64-glibc@2.6.6':
     optional: true
 
-  '@deno/linux-x64-glibc@2.6.5':
+  '@deno/linux-x64-glibc@2.6.6':
     optional: true
 
-  '@deno/win32-arm64@2.6.5':
+  '@deno/win32-arm64@2.6.6':
     optional: true
 
-  '@deno/win32-x64@2.6.5':
+  '@deno/win32-x64@2.6.6':
     optional: true
 
   '@drizzle-team/brocli@0.10.2': {}
@@ -9347,7 +9357,7 @@ snapshots:
 
   '@pnpm/logger@5.2.0':
     dependencies:
-      bole: 5.0.26
+      bole: 5.0.27
       ndjson: 2.0.0
 
   '@pnpm/merge-lockfile-changes@6.0.5':
@@ -10200,20 +10210,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
-    dependencies:
-      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
-      '@vitest/mocker': 4.0.14(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      playwright: 1.57.0
-      tinyrainbow: 3.0.3
-      vitest: 4.0.14(@types/node@25.0.10)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-    optional: true
-
   '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
     dependencies:
       '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
@@ -10226,6 +10222,34 @@ snapshots:
       - msw
       - utf-8-validate
       - vite
+
+  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
+    dependencies:
+      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/mocker': 4.0.14(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      playwright: 1.58.0
+      tinyrainbow: 3.0.3
+      vitest: 4.0.14(@types/node@25.0.10)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
+
+  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
+    dependencies:
+      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/mocker': 4.0.14(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      playwright: 1.58.0
+      tinyrainbow: 3.0.3
+      vitest: 4.0.14(@types/node@25.0.9)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
 
   '@vitest/browser@4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
     dependencies:
@@ -10631,7 +10655,7 @@ snapshots:
 
   bn.js@5.2.2: {}
 
-  bole@5.0.26:
+  bole@5.0.27:
     dependencies:
       fast-safe-stringify: 2.1.1
       individual: 3.0.0
@@ -10973,14 +10997,14 @@ snapshots:
 
   delay@5.0.0: {}
 
-  deno@2.6.5:
+  deno@2.6.6:
     optionalDependencies:
-      '@deno/darwin-arm64': 2.6.5
-      '@deno/darwin-x64': 2.6.5
-      '@deno/linux-arm64-glibc': 2.6.5
-      '@deno/linux-x64-glibc': 2.6.5
-      '@deno/win32-arm64': 2.6.5
-      '@deno/win32-x64': 2.6.5
+      '@deno/darwin-arm64': 2.6.6
+      '@deno/darwin-x64': 2.6.6
+      '@deno/linux-arm64-glibc': 2.6.6
+      '@deno/linux-x64-glibc': 2.6.6
+      '@deno/win32-arm64': 2.6.6
+      '@deno/win32-x64': 2.6.6
 
   depd@2.0.0: {}
 
@@ -12957,11 +12981,21 @@ snapshots:
 
   playwright-core@1.57.0: {}
 
+  playwright-core@1.58.0:
+    optional: true
+
   playwright@1.57.0:
     dependencies:
       playwright-core: 1.57.0
     optionalDependencies:
       fsevents: 2.3.2
+
+  playwright@1.58.0:
+    dependencies:
+      playwright-core: 1.58.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    optional: true
 
   plur@4.0.0:
     dependencies:
@@ -14110,7 +14144,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.0.10
-      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.0(@types/node@25.0.10)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
     transitivePeerDependencies:
       - jiti
       - less
@@ -14148,7 +14182,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.0.9
-      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.57.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.58.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.0.9)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
     transitivePeerDependencies:
       - jiti
       - less
