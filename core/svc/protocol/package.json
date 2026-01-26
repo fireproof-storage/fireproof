@@ -39,7 +39,7 @@
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/core-types-blockstore": "workspace:0.0.0",
-    "cborg": "^4.4.1",
+    "cborg": "^4.5.8",
     "zod": "^4.3.5"
   }
 }
