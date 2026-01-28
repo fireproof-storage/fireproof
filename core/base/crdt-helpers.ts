@@ -261,14 +261,38 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
           const result = await blocks.ebOpts.storeRuntime.decodeFile(
             {
               get: async (cid: AnyLink) => {
-                return await blocks.getFile(throwFalsy(fileMeta.car), cid);
+                try {
+                  return await blocks.getFile(throwFalsy(fileMeta.car), cid);
+                } catch (error) {
+                  const err = error instanceof Error ? error : new Error(String(error));
+                  throw blocks.logger
+                    .Error()
+                    .Str("car", throwFalsy(fileMeta.car).toString())
+                    .Str("cid", cid.toString())
+                    .Str("errorMessage", err.message)
+                    .Str("errorStack", err.stack || "")
+                    .Msg("Error getting file block from CAR")
+                    .AsError();
+                }
               },
             },
             fileMeta.cid,
             fileMeta,
           );
           if (result.isErr()) {
-            throw blocks.logger.Error().Any("error", result.Err()).Any("cid", fileMeta.cid).Msg("Error decoding file").AsError();
+            const err = result.Err();
+            const errMessage = err instanceof Error ? err.message : String(err);
+            const errStack = err instanceof Error ? err.stack : "";
+            throw blocks.logger
+              .Error()
+              .Str("errorMessage", errMessage)
+              .Str("errorStack", errStack || "")
+              .Str("cid", fileMeta.cid.toString())
+              .Str("car", throwFalsy(fileMeta.car).toString())
+              .Str("fileName", fileMeta.type || "unknown")
+              .Any("error", err)
+              .Msg("Error decoding file")
+              .AsError();
           }
 
           return result.unwrap();

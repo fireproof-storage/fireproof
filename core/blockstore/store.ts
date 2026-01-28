@@ -519,9 +519,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         noLoaderOps,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            // if (!this.loader) {
-            //   return;
-            // }
+            if (!this.loader) {
+              return;
+            }
             for (const cid of dbMeta.cars) {
               const car = await this.loader.attachedStores.local().active.car.load(cid);
               // .carStore().then((i) => i.load(cid));
@@ -529,9 +529,11 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
                 if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
                 }
-                // } else {
-                //   await this.loader.attachedStores.forRemotes((x) => x.active.car.save(car));
-                // throwFalsy(this.loader.xremoteCarStore).save(car);
+              } else {
+                await this.loader.attachedStores.forRemotes(async (x) => {
+                  await x.active.car.save(car);
+                });
+                // await throwFalsy(this.loader.xremoteCarStore).save(car);
               }
             }
             // Remove from walState after successful upload
@@ -546,20 +548,20 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         operations,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            // if (!this.loader) {
-            //   return;
-            // }
+            if (!this.loader) {
+              return;
+            }
             for (const cid of dbMeta.cars) {
               const car = await this.loader.attachedStores.local().active.car.load(cid);
               if (!car) {
                 if (carLogIncludesGroup(this.loader.carLog.asArray(), dbMeta.cars)) {
                   throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
                 }
-                // } else {
-                //   // await throwFalsy(this.loader.xremoteCarStore).save(car);
-                //   await this.loader.attachedStores.forRemotes(async (x) => {
-                //     await x.active.car.save(car);
-                //   });
+              } else {
+                   // await throwFalsy(this.loader.xremoteCarStore).save(car);
+                await this.loader.attachedStores.forRemotes(async (x) => {
+                  await x.active.car.save(car);
+                });
               }
             }
             // Remove from walState after successful upload
@@ -572,15 +574,19 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       // Process fileOperations
       await pMap(
         fileOperations,
-        async ({ cid: fileCid }) => {
+        async ({ cid: fileCid, public: publicFile }) => {
           await retryableUpload(async () => {
-            // if (!this.loader) {
-            //   return;
-            // }
+            if (!this.loader) {
+              return;
+            }
             const fileBlock = await this.loader.attachedStores.local().active.file.load(fileCid);
             if (!fileBlock) {
               throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
             }
+
+            await this.loader.attachedStores.forRemotes(async (x) => {
+              await x.active.file.save(fileBlock, { public: publicFile });
+            });
             // await this.loader.attachedStores.forRemotes((x) => x.active.file.save(fileBlock, { public: publicFile }));
             // await this.loader.xremoteFileStore?.save(fileBlock, { public: publicFile });
             // Remove from walState after successful upload
@@ -597,6 +603,10 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
           if (!this.loader) {
             return;
           }
+
+          await this.loader.attachedStores.forRemotes(async (x) => {
+            await x.active.meta.save(lastOp);
+          });
           // await this.loader.xremoteMetaStore?.save(lastOp);
           // await this.loader.attachedStores.forRemotes((x) => x.active.meta.save(lastOp));
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
