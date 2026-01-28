@@ -54,7 +54,7 @@
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
     "use-fireproof": "workspace:0.0.0",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@clerk/clerk-react": "^5.59.4",
