@@ -70,7 +70,7 @@
     "eslint": "^9.39.2",
     "eslint-plugin-import": "^2.32.0",
     "multiformats": "^13.4.2",
-    "playwright": "^1.57.0",
+    "playwright": "^1.58.0",
     "playwright-chromium": "^1.57.0",
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
