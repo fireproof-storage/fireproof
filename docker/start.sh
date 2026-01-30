@@ -102,13 +102,25 @@ start_all() {
         sleep 2
     done
 
+    echo -n "Waiting for proxy"
+    for i in {1..30}; do
+        if curl -s http://localhost:8080/proxy/health > /dev/null 2>&1; then
+            echo " ready!"
+            break
+        fi
+        echo -n "."
+        sleep 2
+    done
+
     echo ""
     log_info "Fireproof Cloud is ready!"
     echo ""
-    echo "Services:"
-    echo "  Dashboard:      http://localhost:7370"
+    echo "Proxy (primary entry point):"
+    echo "  http://localhost:8080"
+    echo ""
+    echo "Direct access (debug):"
     echo "  Cloud Backend:  http://localhost:8909"
-    echo "  MinIO Console:  http://localhost:9001"
+    echo "  Dashboard:      http://localhost:7370"
     echo ""
     echo "Logs:"
     echo "  docker compose logs -f"

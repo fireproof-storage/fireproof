@@ -113,6 +113,25 @@ services:
       timeout: 5s
       retries: 3
 
+  # Nginx Reverse Proxy
+  proxy:
+    image: nginx:alpine
+    container_name: fireproof-proxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      cloud-backend:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/proxy/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 volumes:
   wrangler_state:
 
