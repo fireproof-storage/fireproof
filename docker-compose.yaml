@@ -98,9 +98,9 @@ services:
       context: .
       dockerfile: docker/Dockerfile.todo-app
       args:
-        VITE_DASHBOARD_URI: http://localhost:7370/fp/cloud/api/token
-        VITE_TOKEN_API_URI: http://localhost:7370/api
-        VITE_CLOUD_BACKEND_URL: fpcloud://localhost:8909?protocol=ws
+        VITE_DASHBOARD_URI: http://localhost:8080/fp/cloud/api/token
+        VITE_TOKEN_API_URI: http://localhost:8080/api
+        VITE_CLOUD_BACKEND_URL: fpcloud://localhost:8080?protocol=ws
     container_name: fireproof-todo-app
     ports:
       - "5174:80"

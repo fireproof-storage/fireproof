@@ -17,6 +17,9 @@ ENV VITE_DASHBOARD_URI=${VITE_DASHBOARD_URI}
 ENV VITE_TOKEN_API_URI=${VITE_TOKEN_API_URI}
 ENV VITE_CLOUD_BACKEND_URL=${VITE_CLOUD_BACKEND_URL}
 
+# Skip Playwright browser downloads (not needed for production build)
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
 # Copy entire project
 COPY . .
 
