@@ -39,5 +39,8 @@
     "@adviser/cement": "^0.5.19",
     "@fireproof/core-types-base": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10"
   }
 }
