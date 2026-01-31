@@ -2,7 +2,7 @@ name = "fireproof-v2-cloud"
 main = "server.ts"
 compatibility_date = "2025-02-24"
 # not really needed, but there are some warning of type imports
-compatibility_flags = ["nodejs_compat"]
+# compatibility_flags = ["nodejs_compat"]
 # upload_source_maps = true
 
 # [durable_objects]
