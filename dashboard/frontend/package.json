@@ -69,7 +69,7 @@
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
-    "autoprefixer": "^10.4.23",
+    "autoprefixer": "^10.4.24",
     "drizzle-kit": "0.30.6",
     "drizzle-orm": "^0.45.1",
     "eslint": "^9.39.2",
