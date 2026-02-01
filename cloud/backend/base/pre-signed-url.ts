@@ -61,7 +61,14 @@ export async function calculatePreSignedUrl(psm: PreSignedMsg, env: PreSignedEnv
     .appendRelative(psm.tenant.tenant)
     .appendRelative(psm.tenant.ledger)
     .appendRelative(store)
-    .appendRelative(`${psm.urlParam.key}${suffix}`)
+    // Ensure CID key is converted to string (handles CID objects, dag-json links, and strings)
+    // Runtime: CID objects may arrive despite schema typing as string
+    .appendRelative(`${(() => {
+      const rawKey = psm.urlParam.key as unknown;
+      return typeof rawKey === 'string'
+        ? rawKey
+        : ((rawKey as { toString?: () => string })?.toString?.() || (rawKey as { '/': string })?.['/'] || String(rawKey));
+    })()}${suffix}`)
     .URI();
   const a4f = new AwsClient({
     ...env.aws,

@@ -156,7 +156,13 @@ export abstract class HonoServerBase implements HonoServerImpl {
     if (p.urlParam.index?.length) {
       store = `${store}-${p.urlParam.index}`;
     }
-    const blobPath = `${p.tenant.tenant}/${p.tenant.ledger}/${store}/${p.urlParam.key}`;
+    // Ensure CID key is converted to string (handles CID objects, dag-json links, and strings)
+    // Runtime: CID objects may arrive despite schema typing as string
+    const rawKey = p.urlParam.key as unknown;
+    const keyStr = typeof rawKey === 'string'
+      ? rawKey
+      : ((rawKey as { toString?: () => string })?.toString?.() || (rawKey as { '/': string })?.['/'] || String(rawKey));
+    const blobPath = `${p.tenant.tenant}/${p.tenant.ledger}/${store}/${keyStr}`;
     // Use BLOB_PROXY_URL env var or default to relative path
     const baseUrl = envVars.BLOB_PROXY_URL || "";
     const proxyUrl = URI.from(`${baseUrl}/blob/${blobPath}`);
