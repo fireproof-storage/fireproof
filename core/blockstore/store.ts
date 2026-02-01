@@ -328,7 +328,11 @@ abstract class DataStoreImpl extends BaseStoreImpl {
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     this.logger.Debug().Any("cid", cid).Msg("loading");
-    const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), cid.toString());
+    // Ensure CID is properly stringified (handles CID objects, dag-json links {"/": "..."}, and strings)
+    const cidStr = typeof cid === 'string'
+      ? cid
+      : (cid?.toString?.() !== '[object Object]' ? cid.toString() : (cid as unknown as { '/': string })?.['/'] || String(cid));
+    const url = await this.gateway.buildUrl({ loader: this.loader }, this.url(), cidStr);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("cid", cid.toString()).Msg("got error from gateway.buildUrl").AsError();
     }
