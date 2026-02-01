@@ -1,27 +1,28 @@
 # Fireproof Cloud - Local Development Stack
 #
-# Quick Start:
-#   1. Copy .env.docker to .env: cp .env.docker .env
-#   2. Run: docker compose up --build
+# Quick Start (fresh VM):
+#   ./docker/start.sh --setup    # pulls pre-built images, generates keys, starts
+#
+# Quick Start (local dev):
+#   ./docker/start.sh --build    # builds from source, starts
 #
 # Services:
 # - cloud-backend: Wrangler dev with R2 storage (port 8909)
 # - dashboard: Dashboard frontend + API (port 7370)
-# - todo-app: 3rd-party example application (port 5174)
+# - todo-app: 3rd-party example application (port 5174, profile: frontend)
 #
 # Storage:
 # - R2 blob storage via wrangler dev (no MinIO needed)
 # - Data persisted in wrangler_state volume
-#
-# For a faster dev experience (infrastructure only):
-#   docker compose -f docker-compose.infra.yaml up
 
 services:
   # Cloud Backend (Wrangler dev with R2 storage)
   cloud-backend:
+    image: ghcr.io/fireproof-storage/fireproof/cloud-backend:latest
     build:
       context: .
-      dockerfile: docker/Dockerfile.cloud-backend
+      dockerfile: docker/Dockerfile
+      target: cloud-backend
     container_name: fireproof-cloud-backend
     ports:
       - "8909:8909"
@@ -47,9 +48,11 @@ services:
 
   # Dashboard (Frontend + Backend API)
   dashboard:
+    image: ghcr.io/fireproof-storage/fireproof/dashboard:latest
     build:
       context: .
-      dockerfile: docker/Dockerfile.dashboard
+      dockerfile: docker/Dockerfile
+      target: dashboard
     container_name: fireproof-dashboard
     ports:
       - "7370:7370"
@@ -94,9 +97,12 @@ services:
 
   # 3rd-Party App (Example Application)
   todo-app:
+    image: ghcr.io/fireproof-storage/fireproof/todo-app:latest
+    profiles: ["frontend"]
     build:
       context: .
-      dockerfile: docker/Dockerfile.todo-app
+      dockerfile: docker/Dockerfile
+      target: todo-app
       args:
         VITE_DASHBOARD_URI: http://localhost:8080/fp/cloud/api/token
         VITE_TOKEN_API_URI: http://localhost:8080/api

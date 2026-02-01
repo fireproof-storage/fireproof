@@ -2,8 +2,10 @@
 # Fireproof Cloud - Docker Startup Script
 #
 # Usage:
-#   ./docker/start.sh          # Start all services (full Docker build)
-#   ./docker/start.sh --setup  # Generate keys, write .env, build & start
+#   ./docker/start.sh          # Start services (pulls pre-built images if available)
+#   ./docker/start.sh --setup  # Generate keys, pull images, write .env, start
+#   ./docker/start.sh --build  # Build from source and start
+#   ./docker/start.sh --all    # Start all services including todo-app
 #   ./docker/start.sh --verify # Verify all proxy routes are working
 #   ./docker/start.sh --infra  # Start infrastructure only
 #   ./docker/start.sh --down   # Stop all services
@@ -21,6 +23,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+CLOUD_BACKEND_IMAGE="ghcr.io/fireproof-storage/fireproof/cloud-backend:latest"
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -47,15 +51,17 @@ ensure_env() {
     fi
 }
 
-# Generate keys and write .env using a disposable Docker container
+# Generate keys and write .env using the pre-pulled cloud-backend image
 generate_env() {
     log_info "Generating session tokens and device ID CA certificate..."
-    log_warn "Running key generation inside a disposable node:22-slim container..."
 
+    # Pull pre-built images first
+    log_info "Pulling pre-built images from GHCR..."
+    docker compose pull || log_warn "Some images could not be pulled. Local build will be used as fallback."
+
+    log_info "Running key generation using cloud-backend image..."
     local output
-    output=$(docker run --rm -v "$(pwd):/app" -w /app node:22-slim bash -c '
-        corepack enable && corepack prepare pnpm@latest --activate >&2
-        pnpm install --no-frozen-lockfile >&2
+    output=$(docker run --rm "$CLOUD_BACKEND_IMAGE" bash -c '
         echo "===KEYS==="
         pnpm exec tsx cli/main.ts key --generatePair 2>/dev/null
         echo "===CA==="
@@ -154,15 +160,8 @@ start_infra() {
     echo ""
 }
 
-# Start all services
-start_all() {
-    ensure_env
-
-    log_info "Building and starting all Fireproof Cloud services..."
-    log_warn "This may take several minutes on first run..."
-
-    docker compose up --build -d
-
+# Wait for services to be ready and print status
+wait_and_print_status() {
     log_info "Waiting for services to be ready..."
 
     # Wait for services
@@ -211,7 +210,39 @@ start_all() {
     echo ""
 }
 
-# Full automated setup: generate keys, write .env, build & start
+# Start all services (uses pre-built images if available, builds if not)
+start_all() {
+    ensure_env
+
+    log_info "Starting Fireproof Cloud services..."
+    docker compose up -d
+
+    wait_and_print_status
+}
+
+# Start all services including todo-app (frontend profile)
+start_all_with_frontend() {
+    ensure_env
+
+    log_info "Starting all Fireproof Cloud services (including todo-app)..."
+    docker compose --profile frontend up -d
+
+    wait_and_print_status
+}
+
+# Build from source and start
+build_and_start() {
+    ensure_env
+
+    log_info "Building and starting all Fireproof Cloud services from source..."
+    log_warn "This may take several minutes on first run..."
+
+    docker compose up --build -d
+
+    wait_and_print_status
+}
+
+# Full automated setup: pull images, generate keys, write .env, start
 setup() {
     log_info "Starting full automated setup..."
     generate_env
@@ -282,6 +313,7 @@ verify() {
 stop_services() {
     log_info "Stopping services..."
     docker compose -f docker-compose.infra.yaml down 2>/dev/null || true
+    docker compose --profile frontend down 2>/dev/null || true
     docker compose down 2>/dev/null || true
     log_info "Services stopped."
 }
@@ -290,6 +322,7 @@ stop_services() {
 clean_up() {
     log_info "Stopping services and removing volumes..."
     docker compose -f docker-compose.infra.yaml down -v 2>/dev/null || true
+    docker compose --profile frontend down -v 2>/dev/null || true
     docker compose down -v 2>/dev/null || true
     log_info "Cleanup complete."
 }
@@ -298,6 +331,12 @@ clean_up() {
 case "${1:-}" in
     --setup|-s)
         setup
+        ;;
+    --build|-b)
+        build_and_start
+        ;;
+    --all|-a)
+        start_all_with_frontend
         ;;
     --verify|-v)
         verify
@@ -315,13 +354,20 @@ case "${1:-}" in
         echo "Fireproof Cloud Docker Startup Script"
         echo ""
         echo "Usage:"
-        echo "  ./docker/start.sh          Start all services (full Docker build)"
-        echo "  ./docker/start.sh --setup  Generate keys, write .env, build & start"
+        echo "  ./docker/start.sh          Start services (uses pre-built images if available)"
+        echo "  ./docker/start.sh --setup  Pull images, generate keys, write .env, start"
+        echo "  ./docker/start.sh --build  Build from source and start"
+        echo "  ./docker/start.sh --all    Start all services including todo-app"
         echo "  ./docker/start.sh --verify Verify all proxy routes are working"
         echo "  ./docker/start.sh --infra  Start infrastructure services"
         echo "  ./docker/start.sh --down   Stop all services"
         echo "  ./docker/start.sh --clean  Stop and remove volumes"
         echo "  ./docker/start.sh --help   Show this help"
+        echo ""
+        echo "Fresh VM setup:"
+        echo "  git clone https://github.com/fireproof-storage/fireproof.git"
+        echo "  cd fireproof"
+        echo "  ./docker/start.sh --setup"
         echo ""
         echo "Environment variables (override Clerk defaults from .env.docker):"
         echo "  CLERK_SECRET_KEY           Clerk secret key"
