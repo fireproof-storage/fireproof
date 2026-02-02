@@ -62,7 +62,7 @@
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/deno": "^2.5.0",
     "@types/node": "^25.2.0",
-    "@typescript/native-preview": "7.0.0-dev.20260124.1",
+    "@typescript/native-preview": "7.0.0-dev.20260202.1",
     "@vitest/browser": "^4.0.14",
     "@vitest/browser-playwright": "^4.0.14",
     "deno": "^2.6.6",
