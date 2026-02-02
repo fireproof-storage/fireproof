@@ -17,5 +17,3 @@ updates:
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "deno"
-        versions: [">2.6.6"]
