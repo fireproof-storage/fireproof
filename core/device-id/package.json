@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "@types/node": "^25.0.10"
+    "@types/node": "^25.2.0"
   },
   "engines": {
     "node": ">=20"
