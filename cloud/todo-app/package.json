@@ -44,7 +44,7 @@
     "@adviser/cement": "^0.5.19",
     "@fireproof/vendor": "workspace:0.0.0",
     "@types/react": "^19.2.10",
-    "react-dom": "^19.2.3",
+    "react-dom": "^19.2.4",
     "use-fireproof": "workspace:0.0.0"
   },
   "devDependencies": {
