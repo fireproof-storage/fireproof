@@ -50,7 +50,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.5",
-    "@ipld/dag-json": "^10.2.5",
+    "@ipld/dag-json": "^10.2.6",
     "@web3-storage/pail": "^0.6.2",
     "multiformats": "^13.4.2",
     "p-map": "^7.0.4",

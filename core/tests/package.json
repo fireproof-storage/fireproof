@@ -65,7 +65,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "@ipld/car": "^5.4.2",
     "@ipld/dag-cbor": "^9.2.5",
-    "@ipld/dag-json": "^10.2.5",
+    "@ipld/dag-json": "^10.2.6",
     "@types/node": "^25.2.0",
     "cborg": "^4.5.8",
     "charwise": "^3.0.1",
