@@ -476,6 +476,11 @@ export function buildCmd(sthis: SuperThis) {
         defaultValueIsSerializable: true,
         description: "Package manager to use (pnpm, npm, yarn, bun), defaults to 'pnpm'.",
       }),
+      usePkgPrNew: flag({
+        long: "use-pkg-pr-new",
+        defaultValue: () => !!process.env.CI,
+        description: "Publish via pkg-pr-new (defaults to true in CI environments).",
+      }),
     },
     handler: async (args) => {
       const top = await findUp("tsconfig.dist.json");
@@ -647,6 +652,14 @@ export function buildCmd(sthis: SuperThis) {
         if (res.exitCode !== 0) {
           console.error(`Failed to publish the package.`); //, JSON.stringify(process.env, null, 2));
           process.exit(res.exitCode);
+        }
+        if (args.usePkgPrNew) {
+          console.log(`Publishing via pkg-pr-new...`);
+          const pkgPrNewRes = await $`npx pkg-pr-new publish`.nothrow();
+          if (pkgPrNewRes.exitCode !== 0) {
+            console.error(`Failed to publish via pkg-pr-new.`);
+            process.exit(pkgPrNewRes.exitCode);
+          }
         }
       }
     },
