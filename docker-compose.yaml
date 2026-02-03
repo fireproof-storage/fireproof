@@ -34,6 +34,9 @@ services:
       # Session tokens (set in .env file)
       CLOUD_SESSION_TOKEN_PUBLIC: ${CLOUD_SESSION_TOKEN_PUBLIC:-your-cloud-session-token-public}
 
+      # Blob proxy URL (override for remote deployments)
+      BLOB_PROXY_URL: ${BLOB_PROXY_URL:-http://localhost:8080}
+
       # Protocol settings
       VERSION: FP-MSG-1.0
       FP_DEBUG: "true"
