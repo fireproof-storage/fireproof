@@ -29,6 +29,7 @@ import {
   isProtocolCapabilities,
   defaultGestalt,
   MsgWithConn,
+  TenantLedger,
 } from "@fireproof/core-types-protocols-cloud";
 
 interface ServerType {
@@ -49,6 +50,7 @@ class NodeWSRoom implements WSRoom {
   readonly id: string;
 
   readonly _conns = new Map<string, ConnItem>();
+  readonly _connTenantLedgers = new Map<string, TenantLedger>();
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
     this.id = sthis.nextId(12).str;
@@ -60,8 +62,16 @@ class NodeWSRoom implements WSRoom {
   }
   removeConn(...conns: QSId[]): void {
     for (const conn of conns.flat()) {
-      this._conns.delete(qsidKey(conn));
+      const key = qsidKey(conn);
+      this._conns.delete(key);
+      this._connTenantLedgers.delete(key);
     }
+  }
+  setConnTenantLedger(conn: QSId, tl: TenantLedger): void {
+    this._connTenantLedgers.set(qsidKey(conn), tl);
+  }
+  getConnTenantLedger(conn: QSId): TenantLedger | undefined {
+    return this._connTenantLedgers.get(qsidKey(conn));
   }
   addConn<T extends WSRoom, WS>(ctx: ExposeCtxItem<T>, ws: WSContextWithId<WS>, conn: QSId): QSId {
     // console.log("addConn", this.id, qsidKey(conn));

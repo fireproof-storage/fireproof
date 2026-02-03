@@ -27,6 +27,7 @@ import { Readonly2Writeable, SuperThis } from "@fireproof/core-types-base";
 import {
   QSId,
   qsidEqual,
+  qsidKey,
   MsgBase,
   MsgWithConn,
   MsgIsWithConn,
@@ -35,6 +36,7 @@ import {
   isProtocolCapabilities,
   defaultGestalt,
   buildErrorMsg,
+  TenantLedger,
 } from "@fireproof/core-types-protocols-cloud";
 import { jsonEnDe, defaultMsgParams } from "@fireproof/core-protocols-cloud";
 
@@ -76,6 +78,7 @@ class CFWSRoom implements WSRoom {
 
   isWebsocket = false;
   readonly notWebSockets: ConnItem<WebSocket>[] = [];
+  readonly _connTenantLedgers = new Map<string, TenantLedger>();
 
   #events?: WSEventsConnId<WebSocket>;
 
@@ -131,6 +134,8 @@ class CFWSRoom implements WSRoom {
   }
   removeConn(...conns: QSId[]): void {
     for (const conn of conns) {
+      const key = qsidKey(conn);
+      this._connTenantLedgers.delete(key);
       if (!this.isWebsocket) {
         const idx = this.notWebSockets.findIndex((i) => i.conns.find((c) => qsidEqual(c, conn)));
         if (idx >= 0) {
@@ -142,15 +147,47 @@ class CFWSRoom implements WSRoom {
       if (!found) {
         return;
       }
-      // console.log("removeConn", this.id, conn);
-      const s = found.ws?.raw?.deserializeAttachment() as Readonly2Writeable<ConnItem<WebSocket>>;
+      const s = found.ws?.raw?.deserializeAttachment() as Readonly2Writeable<ConnItem<WebSocket> & { connTenantLedger?: Record<string, TenantLedger> }>;
       if (s && s.conns) {
         s.conns = s.conns.filter((c) => !qsidEqual(c, conn));
       }
+      if (s?.connTenantLedger) {
+        delete s.connTenantLedger[key];
+      }
       found.ws?.raw?.serializeAttachment(s);
     }
-
-    // throw new Error("Method not implemented.");
+  }
+  setConnTenantLedger(conn: QSId, tl: TenantLedger): void {
+    const key = qsidKey(conn);
+    if (!this.isWebsocket) {
+      this._connTenantLedgers.set(key, tl);
+      return;
+    }
+    const getWebSockets = this.#getWebSockets;
+    if (!getWebSockets) return;
+    for (const ws of getWebSockets()) {
+      const attach = ws.deserializeAttachment() as ConnItem & { connTenantLedger?: Record<string, TenantLedger> };
+      if (!attach?.conns?.some((c: QSId) => qsidEqual(c, conn))) continue;
+      attach.connTenantLedger = attach.connTenantLedger ?? {};
+      attach.connTenantLedger[key] = tl;
+      ws.serializeAttachment(attach);
+      return;
+    }
+  }
+  getConnTenantLedger(conn: QSId): TenantLedger | undefined {
+    const key = qsidKey(conn);
+    if (!this.isWebsocket) {
+      return this._connTenantLedgers.get(key);
+    }
+    const getWebSockets = this.#getWebSockets;
+    if (!getWebSockets) return undefined;
+    for (const ws of getWebSockets()) {
+      const attach = ws.deserializeAttachment() as ConnItem & { connTenantLedger?: Record<string, TenantLedger> };
+      if (attach?.connTenantLedger?.[key]) {
+        return attach.connTenantLedger[key];
+      }
+    }
+    return undefined;
   }
   addConn<T extends WSRoom, WS>(ctx: ExposeCtxItem<T>, iws: WSContextWithId<WS> | undefined, conn: QSId): QSId {
     const id = this.sthis.nextId(12).str;

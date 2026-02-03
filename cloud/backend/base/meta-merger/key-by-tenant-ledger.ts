@@ -117,19 +117,24 @@ export class KeyByTenantLedgerSql {
   // }
 
   async ensure(t: KeysForTenantLedger) {
-    const ret = await this.db
-      .insert(sqlKeyByTenantLedger)
-      .values(
-        t.keys.map((key) => ({
-          tenant: t.tenant,
-          ledger: t.ledger,
-          key: key,
-          createdAt: t.createdAt.toISOString(),
-        })),
-      )
-      .onConflictDoNothing()
-      .run();
-    return ret;
+    // D1 has a 100 bound-parameter limit per query.
+    // Each row uses 4 params, so batch at 25 rows max.
+    const batchSize = 25;
+    for (let i = 0; i < t.keys.length; i += batchSize) {
+      const batch = t.keys.slice(i, i + batchSize);
+      await this.db
+        .insert(sqlKeyByTenantLedger)
+        .values(
+          batch.map((key) => ({
+            tenant: t.tenant,
+            ledger: t.ledger,
+            key: key,
+            createdAt: t.createdAt.toISOString(),
+          })),
+        )
+        .onConflictDoNothing()
+        .run();
+    }
   }
 
   // sqlSelectByTenantLedger(): SQLStatement {

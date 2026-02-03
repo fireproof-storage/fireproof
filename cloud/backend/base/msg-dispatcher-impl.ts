@@ -83,7 +83,7 @@ export function ensureTendantLedger<T extends ps.MsgBase>(
       );
     }
     /* need some read and write check here */
-    const ret = await fn(ctx, msg);
+    const ret = await fn(ctx, tlMsg);
     return ret;
   };
 }
@@ -196,6 +196,9 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
     {
       match: MsgIsBindGetMeta,
       fn: ensureTendantLedger<BindGetMeta>((ctx, msg) => {
+        if (msg.tenant) {
+          ctx.wsRoom.setConnTenantLedger(msg.conn, msg.tenant);
+        }
         return ctx.impl.handleBindGetMeta(ctx, msg);
       }),
     },
@@ -207,38 +210,31 @@ export function buildMsgDispatcher(_sthis: SuperThis /*, gestalt: Gestalt, ende:
           return ret;
         }
         const conns = ctx.wsRoom.getConns(req.conn);
-        // console.log("MsgIsReqPutMeta conns", conns.length, req.conn, conns);
         for (const conn of conns) {
           for (const rConn of conn.conns) {
             if (qsidEqual(rConn, req.conn)) {
               continue;
             }
-            // pretty bad but ok for now we should be able to
-            // filter by tenant and ledger on a connection level
+            const rConnTenant = ctx.wsRoom.getConnTenantLedger(rConn);
+            if (!rConnTenant) {
+              continue; // not bound yet
+            }
+            if (rConnTenant.tenant !== req.tenant.tenant || rConnTenant.ledger !== req.tenant.ledger) {
+              continue; // different tenant/ledger
+            }
             const res = await metaMerger(ctx).metaToSend({
               conn: rConn,
-              tenant: req.tenant,
+              tenant: rConnTenant,
             });
             if (res.metas.length === 0) {
-              // console.log("MsgIsReqPutMeta skip empty", conns.length, rConn, req.conn, conn.conns);
               continue;
             }
-            // console.log("MsgIsReqPutMeta send", conns.length, rConn, req.conn, conn.conns);
             dp.send(
               {
                 ...ctx,
                 ws: conn.ws,
               },
-              ps.buildEventGetMeta(
-                ctx,
-                req,
-                res,
-                {
-                  conn: rConn,
-                  tenant: req.tenant,
-                },
-                ret.signedUrl,
-              ),
+              ps.buildEventGetMeta(ctx, req, res, { conn: rConn, tenant: rConnTenant }, ret.signedUrl),
             );
           }
         }
