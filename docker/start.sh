@@ -142,6 +142,12 @@ MAX_ADMIN_USERS=10
 MAX_MEMBER_USERS=50
 MAX_INVITES=100
 MAX_APPID_BINDINGS=50
+
+# Blob Proxy URL
+# For local development, the default (http://localhost:8080) works fine.
+# For remote/VM deployments, set this to the public URL of the proxy
+# so that blob download URLs are reachable by external clients.
+BLOB_PROXY_URL=${BLOB_PROXY_URL:-http://localhost:8080}
 ENVEOF
 
     log_info ".env written with freshly generated keys."
