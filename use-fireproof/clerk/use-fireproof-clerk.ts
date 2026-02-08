@@ -9,8 +9,12 @@ import type { AttachState, SyncStatus, UseFireproofClerkResult } from "./types.j
 const REFRESH_BEFORE_EXPIRY_MS = 5 * 60 * 1000;
 // Minimum delay between refresh attempts (30 seconds)
 const MIN_REFRESH_DELAY_MS = 30 * 1000;
-// Delay before retrying after auth error (2 seconds)
-const AUTH_ERROR_RETRY_DELAY_MS = 2 * 1000;
+// Base delay before retrying after error (2 seconds, doubles each retry)
+const BASE_RETRY_DELAY_MS = 2 * 1000;
+// Maximum delay between retries (30 seconds)
+const MAX_RETRY_DELAY_MS = 30 * 1000;
+// Maximum number of retries before giving up (resets on tab return)
+const MAX_RETRY_COUNT = 8;
 // Small cleanup delay after detach (100ms)
 const DETACH_CLEANUP_DELAY_MS = 100;
 
@@ -45,6 +49,11 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
   const attachingRef = useRef(false);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const strategyRef = useRef<ClerkTokenStrategy | null>(null);
+  const retryCountRef = useRef(0);
+  const attachStateRef = useRef<AttachState>(attachState);
+
+  // Keep ref in sync with state
+  useEffect(() => { attachStateRef.current = attachState; }, [attachState]);
 
   // Use the base useFireproof hook
   const fpResult = useFireproof(name);
@@ -71,7 +80,8 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
 
   // Perform a connection refresh cycle (detach, wait, reattach)
   const performRefreshCycle = useCallback(async () => {
-    if (attachState.status !== "attached" || !attachState.attached || !dashApi) {
+    const currentState = attachStateRef.current;
+    if (currentState.status !== "attached" || !currentState.attached || !dashApi) {
       return;
     }
 
@@ -80,7 +90,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
 
     try {
       // Detach current connection
-      await attachState.attached.detach();
+      await currentState.attached.detach();
 
       // Small delay for cleanup
       await new Promise(resolve => setTimeout(resolve, DETACH_CLEANUP_DELAY_MS));
@@ -108,6 +118,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
         scheduleTokenRefresh(expiry, () => performRefreshCycle());
       }
 
+      retryCountRef.current = 0;
       setAttachState({ status: "attached", attached });
       setSyncStatus("synced");
       setLastSyncError(undefined);
@@ -117,10 +128,10 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
       setLastSyncError(error);
       setAttachState({ status: "error", error });
     }
-  }, [attachState, dashApi, config, name, database, clearRefreshTimer, scheduleTokenRefresh]);
+  }, [dashApi, config, name, database, clearRefreshTimer, scheduleTokenRefresh]);
 
   const doAttach = useCallback(async () => {
-    if (!dashApi || attachingRef.current || attachState.status === "attached") {
+    if (!dashApi || attachingRef.current || attachStateRef.current.status === "attached") {
       return;
     }
 
@@ -152,6 +163,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
         scheduleTokenRefresh(expiry, () => performRefreshCycle());
       }
 
+      retryCountRef.current = 0;
       setAttachState({ status: "attached", attached });
       setSyncStatus("synced");
       setLastSyncError(undefined);
@@ -163,17 +175,19 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
     } finally {
       attachingRef.current = false;
     }
-  }, [dashApi, database, config, name, attachState.status, scheduleTokenRefresh, performRefreshCycle]);
+  }, [dashApi, database, config, name, scheduleTokenRefresh, performRefreshCycle]);
 
   const doDetach = useCallback(async () => {
-    if (attachState.status !== "attached" || !attachState.attached) {
+    const currentState = attachStateRef.current;
+    if (currentState.status !== "attached" || !currentState.attached) {
       return;
     }
 
     clearRefreshTimer();
+    retryCountRef.current = 0;
 
     try {
-      await attachState.attached.detach();
+      await currentState.attached.detach();
       setAttachState({ status: "detached" });
       setSyncStatus("idle");
     } catch (err) {
@@ -183,7 +197,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
       });
       setSyncStatus("error");
     }
-  }, [attachState, clearRefreshTimer]);
+  }, [clearRefreshTimer]);
 
   // Auto-attach when session becomes ready
   useEffect(() => {
@@ -199,46 +213,62 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
     }
   }, [isSessionReady, attachState.status, doDetach]);
 
-  // Handle page visibility changes - refresh if token may have expired while hidden
+  // Handle page visibility changes - refresh if token may have expired while hidden,
+  // or reset retry budget if returning from background while in error state
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (
-        document.visibilityState === "visible" &&
-        attachState.status === "attached" &&
-        strategyRef.current
-      ) {
+      if (document.visibilityState !== "visible") return;
+
+      const currentStatus = attachStateRef.current.status;
+
+      if (currentStatus === "attached" && strategyRef.current) {
         const expiry = strategyRef.current.getLastTokenExpiry();
         if (expiry && Date.now() > expiry - REFRESH_BEFORE_EXPIRY_MS) {
           // Token is close to or past expiry, refresh now
           performRefreshCycle();
         }
+      } else if (currentStatus === "error") {
+        // User returned to tab while in error state — reset retry budget
+        // and trigger a fresh attach cycle
+        console.debug("[fireproof-clerk] Tab visible with error state, resetting retry budget");
+        retryCountRef.current = 0;
+        setAttachState({ status: "detached" });
+        setSyncStatus("idle");
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [attachState.status, performRefreshCycle]);
+  }, [performRefreshCycle]);
 
-  // Reactive error recovery - auto-retry on auth-related errors
+  // Reactive error recovery - auto-retry ALL errors with exponential backoff
   useEffect(() => {
-    if (attachState.status === "error" && attachState.error && isSessionReady) {
-      const msg = attachState.error.message.toLowerCase();
-      const isAuthError =
-        msg.includes("timeout") ||
-        msg.includes("auth") ||
-        msg.includes("token") ||
-        msg.includes("expired") ||
-        msg.includes("unauthorized");
+    if (attachState.status !== "error" || !isSessionReady) return;
 
-      if (isAuthError) {
-        const timer = setTimeout(() => {
-          // Reset to detached to trigger auto-attach
-          setAttachState({ status: "detached" });
-          setSyncStatus("idle");
-        }, AUTH_ERROR_RETRY_DELAY_MS);
-        return () => clearTimeout(timer);
-      }
+    if (retryCountRef.current >= MAX_RETRY_COUNT) {
+      console.debug(
+        `[fireproof-clerk] Max retries (${MAX_RETRY_COUNT}) reached, waiting for tab switch to reset`
+      );
+      return;
     }
+
+    const delay = Math.min(
+      BASE_RETRY_DELAY_MS * Math.pow(2, retryCountRef.current),
+      MAX_RETRY_DELAY_MS
+    );
+    retryCountRef.current += 1;
+
+    console.debug(
+      `[fireproof-clerk] Retry ${retryCountRef.current}/${MAX_RETRY_COUNT} in ${delay}ms`,
+      attachState.error?.message
+    );
+
+    const timer = setTimeout(() => {
+      // Reset to detached to trigger auto-attach
+      setAttachState({ status: "detached" });
+      setSyncStatus("idle");
+    }, delay);
+    return () => clearTimeout(timer);
   }, [attachState, isSessionReady]);
 
   // Cleanup refresh timer on unmount
