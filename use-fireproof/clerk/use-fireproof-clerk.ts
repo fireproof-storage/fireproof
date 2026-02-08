@@ -17,6 +17,12 @@ const MAX_RETRY_DELAY_MS = 30 * 1000;
 const MAX_RETRY_COUNT = 8;
 // Small cleanup delay after detach (100ms)
 const DETACH_CLEANUP_DELAY_MS = 100;
+// Interval for polling database after attach to kick CRDT processing (2 seconds)
+const SYNC_POLL_INTERVAL_MS = 2000;
+// Stop early once doc count is stable for this many consecutive polls
+const SYNC_STABLE_THRESHOLD = 3;
+// Hard ceiling — stop polling regardless (20 seconds)
+const SYNC_POLL_MAX_MS = 20 * 1000;
 
 /**
  * React hook that combines useFireproof with automatic Clerk-authenticated cloud sync.
@@ -270,6 +276,65 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
     }, delay);
     return () => clearTimeout(timer);
   }, [attachState, isSessionReady]);
+
+  // Workaround: kick the CRDT to process sync data after initial attach.
+  // database.attach() resolves when the WebSocket connects, but historical data
+  // streams in asynchronously. The streamed metadata isn't processed until
+  // something queries the database, so useLiveQuery (which only re-queries on
+  // subscription events) never sees the data. A periodic allDocs() call forces
+  // the CRDT to process pending metadata, advancing the clock and triggering
+  // subscriptions. Once the document count stabilizes, sync has caught up and
+  // real-time updates flow through the normal subscription path — no more
+  // polling needed.
+  useEffect(() => {
+    if (attachState.status !== "attached") return;
+
+    let stopped = false;
+    let lastCount = -1;
+    let stableRuns = 0;
+
+    const poll = async () => {
+      if (stopped) return;
+      try {
+        const { rows } = await database.allDocs();
+        const count = rows.length;
+
+        if (count === lastCount) {
+          stableRuns++;
+          if (stableRuns >= SYNC_STABLE_THRESHOLD) {
+            console.debug("[fireproof-clerk] Initial sync settled, polling stopped");
+            stopped = true;
+            return;
+          }
+        } else {
+          stableRuns = 0;
+        }
+        lastCount = count;
+      } catch {
+        // ignore polling errors
+      }
+      if (!stopped) {
+        setTimeout(poll, SYNC_POLL_INTERVAL_MS);
+      }
+    };
+
+    // Start after a brief delay to let the first metadata packet arrive
+    const startTimer = setTimeout(poll, SYNC_POLL_INTERVAL_MS);
+
+    // Hard ceiling — stop regardless
+    const maxTimer = setTimeout(() => {
+      if (!stopped) {
+        console.debug("[fireproof-clerk] Sync poll hit max duration, stopping");
+        stopped = true;
+      }
+    }, SYNC_POLL_MAX_MS);
+
+    return () => {
+      stopped = true;
+      clearTimeout(startTimer);
+      clearTimeout(maxTimer);
+    };
+  }, [attachState.status, database]);
 
   // Cleanup refresh timer on unmount
   useEffect(() => {
