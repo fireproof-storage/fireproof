@@ -1,0 +1,12 @@
+services:
+  cnpmjs:
+    build: .
+    ports:
+      - "7001:7001"
+      - "7002:7002"
+    volumes:
+      - cnpm-data:/cnpm/data
+    restart: unless-stopped
+
+volumes:
+  cnpm-data:

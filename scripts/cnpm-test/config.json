@@ -1,0 +1,26 @@
+{
+  "enableCluster": false,
+  "enablePrivate": true,
+  "scopes": ["@fireproof"],
+  "sourceNpmRegistry": "https://registry.npmjs.org",
+  "sourceNpmRegistryIsCNpm": false,
+  "syncModel": "exist",
+  "database": {
+    "dialect": "sqlite",
+    "storage": "/cnpm/data/cnpmjs.db"
+  },
+  "nfs": {
+    "dir": "/cnpm/data/nfs"
+  },
+  "registryHost": "0.0.0.0",
+  "registryPort": 7001,
+  "webHost": "0.0.0.0",
+  "webPort": 7002,
+  "bindingHost": "0.0.0.0",
+  "admins": {
+    "admin": "admin@example.com"
+  },
+  "syncInterval": "10m",
+  "alwaysAuth": false,
+  "enableCompress": true
+}
