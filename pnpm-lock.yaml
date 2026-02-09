@@ -23,7 +23,7 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260202.1
@@ -382,7 +382,7 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../cli
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
       drizzle-kit:
         specifier: 0.30.6
@@ -505,7 +505,7 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../cli
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
 
   core/blockstore:
@@ -583,7 +583,7 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
       react:
         specifier: '>=18.0.0'
@@ -623,7 +623,7 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../cli
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
 
   core/gateways/base:
@@ -714,7 +714,7 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
 
   core/gateways/file-deno:
@@ -732,7 +732,7 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
 
   core/gateways/file-node:
@@ -748,7 +748,7 @@ importers:
         version: link:../../../vendor
     devDependencies:
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
 
   core/gateways/indexeddb:
@@ -803,7 +803,7 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
 
   core/keybag:
@@ -1083,7 +1083,7 @@ importers:
         specifier: ^10.2.6
         version: 10.2.6
       '@types/node':
-        specifier: ^25.2.0
+        specifier: ^25.2.2
         version: 25.2.2
       cborg:
         specifier: ^4.5.8
