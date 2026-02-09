@@ -1261,8 +1261,8 @@ importers:
         specifier: ^0.5.19
         version: 0.5.21(typescript@5.9.3)
       '@clerk/backend':
-        specifier: ^2.29.5
-        version: 2.29.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^2.30.1
+        version: 2.30.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/clerk-js':
         specifier: ^5.121.1
         version: 5.122.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.10)(bs58@5.0.0)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.10)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))(react@19.2.4)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@5.0.10)(zod@4.3.6)
@@ -1349,8 +1349,8 @@ importers:
         specifier: ^0.5.19
         version: 0.5.21(typescript@5.9.3)
       '@clerk/backend':
-        specifier: ^2.29.5
-        version: 2.29.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^2.30.1
+        version: 2.30.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/clerk-js':
         specifier: ^5.121.1
         version: 5.122.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10))(@types/react@19.2.10)(bs58@5.0.0)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.10)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))(react@19.2.4)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@5.0.10)(zod@4.3.6)
@@ -1934,8 +1934,8 @@ packages:
   '@base-org/account@2.0.1':
     resolution: {integrity: sha512-tySVNx+vd6XEynZL0uvB10uKiwnAfThr8AbKTwILVG86mPbLAhEOInQIk+uDnvpTvfdUhC1Bi5T/46JvFoLZQQ==}
 
-  '@clerk/backend@2.29.7':
-    resolution: {integrity: sha512-OSfFQ85L0FV2wSzqlr0hRvluIu3Z5ClgLiBE6Qx7XjSGyJoqEvP5OP4fl5Nt5icgGvH0EwA1dljPGyQpaqbQEw==}
+  '@clerk/backend@2.30.1':
+    resolution: {integrity: sha512-GoxnJzVH0ycNPAGCDMfo3lPBFbo5nehpLSVFjgGEnzIRGGahBtAB8PQT7KM2zo58pD8apjb/+suhcB/WCiEasQ==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/clerk-js@5.122.0':
@@ -7814,7 +7814,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@clerk/backend@2.29.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@clerk/backend@2.30.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@clerk/shared': 3.44.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/types': 4.101.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
