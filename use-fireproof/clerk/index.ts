@@ -8,6 +8,9 @@ export {
   type ClerkFireproofProviderProps,
 } from "./clerk-provider.js";
 
+// Sharing hook
+export { useSharing, type UseSharingResult } from "./use-sharing.js";
+
 // Token strategy (for advanced use cases)
 export { ClerkTokenStrategy } from "./clerk-token-strategy.js";
 
@@ -20,6 +23,17 @@ export type {
   UseFireproofClerkResult,
   ClerkContextValue,
 } from "./types.js";
+
+// Sharing types re-exported from dashboard protocols
+export type {
+  QueryInviteTicket,
+  InviteTicket,
+  InvitedParams,
+  InviteTicketStatus,
+  QueryUser,
+  User,
+  UserByProvider,
+} from "@fireproof/core-protocols-dashboard";
 
 // Re-export common types from use-fireproof for convenience
 export type {
