@@ -42,10 +42,10 @@ ENV STATIC_DIR=/app/dashboard/frontend/dist/static/client
 ENV DB_PATH=/app/data/sqlite.db
 ENV PORT=7370
 RUN mkdir -p /app/data
+COPY docker/dashboard-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 EXPOSE 7370
-CMD sh -c "cd /app/dashboard/backend && DASH_FP_TEST_SQL_URL=file://${DB_PATH} \
-  pnpm exec drizzle-kit push --config ./drizzle.libsql.config.ts && \
-  cd /app && tsx dashboard/backend/node-serve.ts"
+CMD ["/entrypoint.sh"]
 
 # -- Todo App builder --
 FROM base AS todo-builder
