@@ -52,7 +52,29 @@ export class ClerkTokenStrategy implements TokenStrategie {
 
     // Get cloud token with app ID from context or generate from deviceId
     const appId = (opts.context.get("appId") as string | undefined) || `clerk-${deviceId}`;
-    const rRes = await this.dashApi.ensureCloudToken({ appId });
+
+    // Check for shared ledger (role=member) before creating a new one.
+    // Without passing the ledger param, ensureCloudToken creates a per-user
+    // ledger, causing invited users to fork instead of syncing together.
+    let ledgerParam: string | undefined;
+    try {
+      const rLedgers = await this.dashApi.listLedgersByUser({});
+      if (rLedgers.isOk()) {
+        const ledgers = rLedgers.Ok().ledgers || [];
+        const userId = rUser.Ok().userId;
+        const shared = ledgers.find((l: any) =>
+          l.users?.some((u: any) => u.userId === userId && u.role === "member")
+        );
+        if (shared) {
+          ledgerParam = shared.ledgerId;
+          logger.Info().Str("ledgerId", shared.ledgerId).Msg("Using shared ledger");
+        }
+      }
+    } catch {
+      // Shared ledger lookup is best-effort; fall through to default behavior
+    }
+
+    const rRes = await this.dashApi.ensureCloudToken({ appId, ledger: ledgerParam });
     if (rRes.isErr()) {
       logger.Error().Err(rRes).Msg("Failed to get cloud token");
       return undefined;
