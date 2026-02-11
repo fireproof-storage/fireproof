@@ -1,0 +1,12 @@
+{
+  "url": "https://example.com",
+  "waitForSelector": "h1",
+  "screenshot": true,
+  "fullPage": true,
+  "actions": [
+    {
+      "type": "wait",
+      "timeout": 2000
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+name: "dashboard-base"
+description: "Dashboard-Base Compile & Test Action"
+inputs:
+  CLERK_PUBLISHABLE_KEY:
+    description: "The Clerk publishable key used for dashboard builds"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: ./actions/runtime
+
+    - name: install
+      shell: bash
+      working-directory: dashboard
+      run: pnpm install
+
+    - name: format-check
+      working-directory: dashboard
+      shell: bash
+      run: pnpm run format --check
+
+    - name: lint
+      shell: bash
+      working-directory: dashboard
+      run: pnpm run lint
+
+    - name: build
+      shell: bash
+      working-directory: dashboard
+      env:
+        VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
+      run: pnpm run build
+
+    - name: test
+      shell: bash
+      working-directory: dashboard
+      run: |
+        pnpm run test
