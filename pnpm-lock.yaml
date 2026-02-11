@@ -24,16 +24,16 @@ importers:
         version: 2.5.0
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260208.1
         version: 7.0.0-dev.20260208.1
       '@vitest/browser':
         specifier: ^4.0.14
-        version: 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+        version: 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
       '@vitest/browser-playwright':
         specifier: ^4.0.14
-        version: 4.0.14(bufferutil@4.1.0)(playwright@1.58.1)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+        version: 4.0.14(bufferutil@4.1.0)(playwright@1.58.2)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
       deno:
         specifier: ^2.6.8
         version: 2.6.8
@@ -51,7 +51,7 @@ importers:
         version: 13.4.2
       playwright:
         specifier: ^1.58.0
-        version: 1.58.1
+        version: 1.58.2
       playwright-chromium:
         specifier: ^1.58.0
         version: 1.58.1
@@ -69,7 +69,7 @@ importers:
         version: 8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)
       vitest:
         specifier: ^4.0.14
-        version: 4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.0.14(@types/node@25.2.2)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: ^4.61.1
         version: 4.61.1(@cloudflare/workers-types@4.20260131.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -129,7 +129,7 @@ importers:
         version: 11.0.0
       semver:
         specifier: ^7.7.3
-        version: 7.7.3
+        version: 7.7.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -376,14 +376,14 @@ importers:
         version: 4.11.7
       vitest:
         specifier: ^4.0.14
-        version: 4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.0.14(@types/node@25.2.2)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
         version: link:../../../cli
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
       drizzle-kit:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
@@ -506,7 +506,7 @@ importers:
         version: link:../../cli
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
 
   core/blockstore:
     dependencies:
@@ -584,7 +584,7 @@ importers:
         version: link:../../vendor
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
       react:
         specifier: '>=18.0.0'
         version: 19.2.4
@@ -624,7 +624,7 @@ importers:
         version: link:../../cli
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
 
   core/gateways/base:
     dependencies:
@@ -715,7 +715,7 @@ importers:
         version: 2.5.0
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
 
   core/gateways/file-deno:
     dependencies:
@@ -733,7 +733,7 @@ importers:
         version: 2.5.0
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
 
   core/gateways/file-node:
     dependencies:
@@ -749,7 +749,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
 
   core/gateways/indexeddb:
     dependencies:
@@ -804,7 +804,7 @@ importers:
         version: 2.5.0
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
 
   core/keybag:
     dependencies:
@@ -1084,7 +1084,7 @@ importers:
         version: 10.2.6
       '@types/node':
         specifier: ^25.2.0
-        version: 25.2.0
+        version: 25.2.2
       cborg:
         specifier: ^4.5.8
         version: 4.5.8
@@ -1118,16 +1118,16 @@ importers:
         version: link:../../cli
       '@vitest/browser':
         specifier: ^4.0.14
-        version: 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
+        version: 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
       playwright:
         specifier: ^1.58.0
-        version: 1.58.1
+        version: 1.58.2
       playwright-chromium:
         specifier: ^1.58.0
         version: 1.58.1
       vitest:
         specifier: ^4.0.14
-        version: 4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 4.0.14(@types/node@25.2.2)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -1606,7 +1606,7 @@ importers:
         version: 19.2.10
       playwright:
         specifier: ^1.58.0
-        version: 1.58.1
+        version: 1.58.2
       playwright-chromium:
         specifier: ^1.58.0
         version: 1.58.1
@@ -1669,10 +1669,6 @@ packages:
 
   '@babel/core@7.29.0':
     resolution: {integrity: sha512-CGOfOJqWjg2qW/Mb6zNsDm+u5vFQ8DxXfbM09z69p5Z6+mE1ikP2jUXw+j42Pf1XTYED2Rni5f95npYeuwMDQA==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/generator@7.29.0':
-    resolution: {integrity: sha512-vSH118/wwM/pLR38g/Sgk05sNtro6TlTJKuiMXDaZqPUfjTFcudpCOt00IhOfj+1BFAX+UFAlzCU+6WXr3GLFQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/generator@7.29.1':
@@ -3770,9 +3766,6 @@ packages:
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
-
-  '@types/node@25.2.0':
-    resolution: {integrity: sha512-DZ8VwRFUNzuqJ5khrvwMXHmvPe+zGayJhr2CDNiKB1WBE1ST8Djl00D0IC4vvNmHMdj6DlbYRIaFE7WHjlDl5w==}
 
   '@types/node@25.2.2':
     resolution: {integrity: sha512-BkmoP5/FhRYek5izySdkOneRyXYN35I860MFAGupTdebyE66uZaR+bXLHq8k4DirE5DwQi3NuhvRU1jqTVwUrQ==}
@@ -6262,11 +6255,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.58.1:
-    resolution: {integrity: sha512-+2uTZHxSCcxjvGc5C891LrS1/NlxglGxzrC4seZiVjcYVQfUa87wBL6rTDqzGjuoWNjnBzRqKmF6zRYGMvQUaQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright@1.58.2:
     resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
     engines: {node: '>=18'}
@@ -6619,11 +6607,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.7.3:
-    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.7.4:
@@ -7493,7 +7476,7 @@ snapshots:
   '@babel/core@7.29.0':
     dependencies:
       '@babel/code-frame': 7.29.0
-      '@babel/generator': 7.29.0
+      '@babel/generator': 7.29.1
       '@babel/helper-compilation-targets': 7.28.6
       '@babel/helper-module-transforms': 7.28.6(@babel/core@7.29.0)
       '@babel/helpers': 7.28.6
@@ -7509,14 +7492,6 @@ snapshots:
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
-
-  '@babel/generator@7.29.0':
-    dependencies:
-      '@babel/parser': 7.29.0
-      '@babel/types': 7.29.0
-      '@jridgewell/gen-mapping': 0.3.13
-      '@jridgewell/trace-mapping': 0.3.31
-      jsesc: 3.1.0
 
   '@babel/generator@7.29.1':
     dependencies:
@@ -7805,7 +7780,7 @@ snapshots:
   '@babel/traverse@7.29.0':
     dependencies:
       '@babel/code-frame': 7.29.0
-      '@babel/generator': 7.29.0
+      '@babel/generator': 7.29.1
       '@babel/helper-globals': 7.28.0
       '@babel/parser': 7.29.0
       '@babel/template': 7.28.6
@@ -8860,7 +8835,7 @@ snapshots:
     dependencies:
       '@pnpm/crypto.base32-hash': 3.0.0
       '@pnpm/types': 11.1.0
-      semver: 7.7.3
+      semver: 7.7.4
 
   '@pnpm/error@1000.0.5':
     dependencies:
@@ -8896,7 +8871,7 @@ snapshots:
       '@pnpm/resolver-base': 13.0.1
       graceful-git: 4.0.0
       hosted-git-info: '@pnpm/hosted-git-info@1.0.0'
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - '@pnpm/logger'
       - domexception
@@ -8928,7 +8903,7 @@ snapshots:
       js-yaml: '@zkochan/js-yaml@0.0.7'
       normalize-path: 3.0.0
       ramda: '@pnpm/ramda@0.28.1'
-      semver: 7.7.3
+      semver: 7.7.4
       sort-keys: 4.2.0
       strip-bom: 4.0.0
       write-file-atomic: 5.0.1
@@ -8961,7 +8936,7 @@ snapshots:
       '@pnpm/types': 11.1.0
       comver-to-semver: 1.0.0
       ramda: '@pnpm/ramda@0.28.1'
-      semver: 7.7.3
+      semver: 7.7.4
 
   '@pnpm/network.agent@2.0.3':
     dependencies:
@@ -9523,7 +9498,7 @@ snapshots:
   '@types/fs-extra@11.0.4':
     dependencies:
       '@types/jsonfile': 6.1.4
-      '@types/node': 25.2.0
+      '@types/node': 25.2.2
 
   '@types/graceful-fs@4.1.9':
     dependencies:
@@ -9550,15 +9525,11 @@ snapshots:
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 25.2.0
+      '@types/node': 25.2.2
 
   '@types/minimist@1.2.5': {}
 
   '@types/node@12.20.55': {}
-
-  '@types/node@25.2.0':
-    dependencies:
-      undici-types: 7.16.0
 
   '@types/node@25.2.2':
     dependencies:
@@ -9593,7 +9564,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.2.0
+      '@types/node': 25.2.2
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -9669,7 +9640,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.54.0
       debug: 4.4.3
       minimatch: 9.0.5
-      semver: 7.7.3
+      semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.4.0(typescript@5.9.3)
       typescript: 5.9.3
@@ -9735,33 +9706,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.1)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
-    dependencies:
-      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
-      '@vitest/mocker': 4.0.14(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      playwright: 1.58.1
-      tinyrainbow: 3.0.3
-      vitest: 4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-
-  '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.2)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
-    dependencies:
-      '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
-      '@vitest/mocker': 4.0.14(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      playwright: 1.58.2
-      tinyrainbow: 3.0.3
-      vitest: 4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-    optional: true
-
   '@vitest/browser-playwright@4.0.14(bufferutil@4.1.0)(playwright@1.58.2)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
     dependencies:
       '@vitest/browser': 4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
@@ -9769,24 +9713,6 @@ snapshots:
       playwright: 1.58.2
       tinyrainbow: 3.0.3
       vitest: 4.0.14(@types/node@25.2.2)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - msw
-      - utf-8-validate
-      - vite
-    optional: true
-
-  '@vitest/browser@4.0.14(bufferutil@4.1.0)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)':
-    dependencies:
-      '@vitest/mocker': 4.0.14(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      '@vitest/utils': 4.0.14
-      magic-string: 0.30.21
-      pixelmatch: 7.1.0
-      pngjs: 7.0.0
-      sirv: 3.0.2
-      tinyrainbow: 3.0.3
-      vitest: 4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      ws: 8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -9809,7 +9735,6 @@ snapshots:
       - msw
       - utf-8-validate
       - vite
-    optional: true
 
   '@vitest/expect@4.0.14':
     dependencies:
@@ -9819,14 +9744,6 @@ snapshots:
       '@vitest/utils': 4.0.14
       chai: 6.2.1
       tinyrainbow: 3.0.3
-
-  '@vitest/mocker@4.0.14(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
-    dependencies:
-      '@vitest/spy': 4.0.14
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      vite: 7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/mocker@4.0.14(vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
@@ -11218,7 +11135,7 @@ snapshots:
       '@petamoriken/float16': 3.9.2
       debug: 4.4.3
       env-paths: 3.0.0
-      semver: 7.7.3
+      semver: 7.7.4
       shell-quote: 1.8.3
       which: 4.0.0
     transitivePeerDependencies:
@@ -12259,7 +12176,7 @@ snapshots:
     dependencies:
       hosted-git-info: 4.1.0
       is-core-module: 2.16.1
-      semver: 7.7.3
+      semver: 7.7.4
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
@@ -12493,21 +12410,13 @@ snapshots:
 
   playwright-core@1.58.1: {}
 
-  playwright-core@1.58.2:
-    optional: true
-
-  playwright@1.58.1:
-    dependencies:
-      playwright-core: 1.58.1
-    optionalDependencies:
-      fsevents: 2.3.2
+  playwright-core@1.58.2: {}
 
   playwright@1.58.2:
     dependencies:
       playwright-core: 1.58.2
     optionalDependencies:
       fsevents: 2.3.2
-    optional: true
 
   plur@4.0.0:
     dependencies:
@@ -12913,8 +12822,6 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.7.3: {}
-
   semver@7.7.4: {}
 
   send@0.19.2:
@@ -12982,7 +12889,7 @@ snapshots:
     dependencies:
       '@img/colour': 1.0.0
       detect-libc: 2.1.2
-      semver: 7.7.3
+      semver: 7.7.4
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.5
       '@img/sharp-darwin-x64': 0.34.5
@@ -13537,22 +13444,6 @@ snapshots:
       - utf-8-validate
       - zod
 
-  vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
-    dependencies:
-      esbuild: 0.27.2
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
-      postcss: 8.5.6
-      rollup: 4.55.1
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 25.2.0
-      fsevents: 2.3.3
-      jiti: 1.21.7
-      terser: 5.46.0
-      tsx: 4.21.0
-      yaml: 2.8.2
-
   vite@7.3.1(@types/node@25.2.2)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.27.2
@@ -13568,44 +13459,6 @@ snapshots:
       terser: 5.46.0
       tsx: 4.21.0
       yaml: 2.8.2
-
-  vitest@4.0.14(@types/node@25.2.0)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
-    dependencies:
-      '@vitest/expect': 4.0.14
-      '@vitest/mocker': 4.0.14(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-      '@vitest/pretty-format': 4.0.14
-      '@vitest/runner': 4.0.14
-      '@vitest/snapshot': 4.0.14
-      '@vitest/spy': 4.0.14
-      '@vitest/utils': 4.0.14
-      es-module-lexer: 1.7.0
-      expect-type: 1.2.2
-      magic-string: 0.30.21
-      obug: 2.1.1
-      pathe: 2.0.3
-      picomatch: 4.0.3
-      std-env: 3.10.0
-      tinybench: 2.9.0
-      tinyexec: 0.3.2
-      tinyglobby: 0.2.15
-      tinyrainbow: 3.0.3
-      vite: 7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@types/node': 25.2.0
-      '@vitest/browser-playwright': 4.0.14(bufferutil@4.1.0)(playwright@1.58.2)(utf-8-validate@5.0.10)(vite@7.3.1(@types/node@25.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.14)
-    transitivePeerDependencies:
-      - jiti
-      - less
-      - lightningcss
-      - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
 
   vitest@4.0.14(@types/node@25.2.2)(@vitest/browser-playwright@4.0.14)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
