@@ -4,7 +4,7 @@ import { sts } from "@fireproof/core-runtime";
 import { SuperThis, FPClerkClaim, FPClerkClaimSchema, FPDeviceIDSessionSchema } from "@fireproof/core-types-base";
 import { FPApiToken, VerifiedClaimsResult, ClerkVerifiedAuth } from "@fireproof/core-types-protocols-dashboard";
 import { VerifyWithCertificateOptions } from "@fireproof/core-types-device-id";
-import { jwtVerify } from "jose";
+import { decodeJwt, jwtVerify } from "jose";
 
 export class ClerkApiToken implements FPApiToken {
   readonly sthis: SuperThis;
@@ -46,6 +46,19 @@ export class ClerkApiToken implements FPApiToken {
     }
     return Result.Ok({ keys, urls });
   });
+
+  async decode(token: string): Promise<Result<VerifiedClaimsResult>> {
+    const claims = await decodeJwt(token); // just to verify structure
+    const r = FPClerkClaimSchema.safeParse(claims);
+    if (!r.success) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok({
+      type: "clerk",
+      token,
+      claims: r.data,
+    });
+  }
 
   async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
     const rKaUs = this.keysAndUrls();
@@ -110,6 +123,16 @@ export class DeviceIdApiToken implements FPApiToken {
   constructor(sthis: SuperThis, opts: VerifyWithCertificateOptions) {
     this.sthis = sthis;
     this.opts = opts;
+  }
+
+  async decode(token: string): Promise<Result<VerifiedClaimsResult>> {
+    const claims = await decodeJwt(token); // just to verify structure
+
+    return Result.Ok({
+      type: "device-id",
+      token,
+      claims,
+    });
   }
   async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
     const rCa = await this.opts.deviceIdCA.caCertificate();

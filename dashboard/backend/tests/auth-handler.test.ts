@@ -48,6 +48,14 @@ describe("verifyAuth", () => {
       db,
       {
         clerk: {
+          decode: async (token: string): Promise<Result<VerifiedClaimsResult>> => {
+            const claims = await decodeJwt(token); // just to verify structure
+            return Result.Ok({
+              type: "clerk",
+              token: token,
+              claims,
+            });
+          },
           verify: async (token: string): Promise<Result<VerifiedClaimsResult>> => {
             const claims = await decodeJwt(token); // just to verify structure
             return Result.Ok({

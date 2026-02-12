@@ -13,6 +13,7 @@ export interface TokenByResultIdParam {
 
 export interface FPApiToken {
   verify(token: string): Promise<Result<VerifiedClaimsResult>>;
+  decode(token: string): Promise<Result<VerifiedClaimsResult>>;
 }
 
 export interface WithAuth {
