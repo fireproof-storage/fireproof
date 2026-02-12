@@ -1,10 +1,10 @@
 import { Lazy, Result, param, exception2Result } from "@adviser/cement";
 import { DeviceIdCA, DeviceIdVerifyMsg } from "@fireproof/core-device-id";
 import { sts } from "@fireproof/core-runtime";
-import { SuperThis, FPClerkClaim, FPClerkClaimSchema, FPDeviceIDSessionSchema } from "@fireproof/core-types-base";
+import { SuperThis, FPClerkClaim, FPClerkClaimSchema, FPDeviceIDSessionSchema, ClerkClaimSchema } from "@fireproof/core-types-base";
 import { FPApiToken, VerifiedClaimsResult, ClerkVerifiedAuth } from "@fireproof/core-types-protocols-dashboard";
 import { VerifyWithCertificateOptions } from "@fireproof/core-types-device-id";
-import { decodeJwt, jwtVerify } from "jose";
+import { decodeJwt, decodeProtectedHeader, jwtVerify } from "jose";
 
 export class ClerkApiToken implements FPApiToken {
   readonly sthis: SuperThis;
@@ -48,8 +48,11 @@ export class ClerkApiToken implements FPApiToken {
   });
 
   async decode(token: string): Promise<Result<VerifiedClaimsResult>> {
-    const claims = await decodeJwt(token); // just to verify structure
-    const r = FPClerkClaimSchema.safeParse(claims);
+    const claims = await exception2Result(() => decodeJwt(token)); // just to verify structure
+    if (claims.isErr()) {
+      return Result.Err(claims);
+    }
+    const r = ClerkClaimSchema.safeParse(claims.Ok());
     if (!r.success) {
       return Result.Err(r.error);
     }
@@ -126,14 +129,29 @@ export class DeviceIdApiToken implements FPApiToken {
   }
 
   async decode(token: string): Promise<Result<VerifiedClaimsResult>> {
-    const claims = await decodeJwt(token); // just to verify structure
-
+    const rHeader = await exception2Result(() => decodeProtectedHeader(token));
+    if (rHeader.isErr()) {
+      return Result.Err(rHeader);
+    }
+    if (!rHeader.Ok().x5c || !rHeader.Ok().x5c?.[0]) {
+      return Result.Err("DeviceIdApiToken-decode: missing x5c in header");
+    }
+    const jsStr = this.sthis.txt.base64.decode(rHeader.Ok().x5c?.[0] ?? ""); // just to verify it's valid base64
+    const rJs = await exception2Result(() => JSON.parse(jsStr));
+    if (rJs.isErr()) {
+      return Result.Err(rJs);
+    }
+    const rClaims = ClerkClaimSchema.safeParse(rJs.Ok().creatingUser?.claims);
+    if (!rClaims.success) {
+      return Result.Err(rClaims.error);
+    }
     return Result.Ok({
       type: "device-id",
       token,
-      claims,
+      claims: rClaims.data,
     });
   }
+
   async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
     const rCa = await this.opts.deviceIdCA.caCertificate();
     if (rCa.isErr()) {
