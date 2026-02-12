@@ -186,7 +186,7 @@ export class WSConnection extends MsgRawConnectionBase implements MsgRawConnecti
 
   send<Q extends MsgBase, S extends MsgBase>(msg: Q): Promise<S> {
     // console.log("send", msg);
-    this.ws.send(this.msgP.ende.encode(msg));
+    this.ws.send(this.msgP.ende.encode(msg) as never);
     return Promise.resolve(msg as unknown as S);
   }
 
