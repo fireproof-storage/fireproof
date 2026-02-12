@@ -101,8 +101,8 @@ async function main() {
     getTokenCtx: {
       template: "with-email",
     },
-    // apiUrl: "https://dev.connect.fireproof.direct/api",
-    apiUrl: "http://localhost:7370/api",
+    apiUrl: "https://dev.connect.fireproof.direct/api",
+    // apiUrl: "http://localhost:7370/api",
     fetch: fetch.bind(globalThis),
     getToken: async () => {
       const token = await getDashBoardToken();
