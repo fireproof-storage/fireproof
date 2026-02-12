@@ -56,10 +56,11 @@ export default {
       default:
         ares = env.ASSETS.fetch(uri.build().pathname("/").asURL(), request as unknown as CFRequest);
     }
+    // eslint-disable-next-line no-console
     console.log("cf-serve - awaiting response for", request.url);
     ctx.waitUntil(ares);
     const res = await ares;
-    return new Response(res.body as ReadableStream<Uint8Array>, {
+    return new Response(res.body as never, {
       status: res.status,
       statusText: res.statusText,
       headers: DefaultHttpHeaders(res.headers),
