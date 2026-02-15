@@ -487,6 +487,66 @@ describe("db-api", () => {
     /* */
   });
 
+  it("email-invite auto-redeemed on ensureUser", async () => {
+    // User A (datas[2]) invites a not-yet-existing User B by email to a tenant.
+    // When User B later calls ensureUser, redeemInvite should find the
+    // pending invite by email (invitedUserId is NULL) and redeem it.
+    const userA = datas[2];
+
+    // Build a fresh token for User B (not yet in the system)
+    const freshToken = `test-email-invite-${sthis.nextId().str}`;
+    // TestApiToken derives: userId = `userId-${token}`, email = `test${userId}@test.de`
+    const expectedUserId = `userId-${freshToken}`;
+    const expectedEmail = `test${expectedUserId}@test.de`;
+
+    // User A invites by email (no existingUserId — simulates invite-before-signup)
+    const invite = await fpApi.inviteUser({
+      type: "reqInviteUser",
+      auth: userA.reqs.auth,
+      ticket: {
+        query: {
+          byEmail: expectedEmail,
+        },
+        invitedParams: {
+          tenant: {
+            id: userA.ress.tenants[0].tenantId,
+            role: "member",
+          },
+        },
+      },
+    });
+    expect(invite.isOk()).toBeTruthy();
+    expect(invite.Ok().invite.status).toBe("pending");
+    // invitedUserId should be undefined for email-only invites
+    expect(invite.Ok().invite.invitedUserId).toBeUndefined();
+
+    // User B signs up (ensureUser auto-calls redeemInvite)
+    const userBAuth: DashAuthType = { token: freshToken, type: "clerk" };
+    const userBResult = await fpApi.ensureUser({ type: "reqEnsureUser", auth: userBAuth });
+    expect(userBResult.isOk()).toBeTruthy();
+
+    // Verify: User B should now have access to User A's tenant
+    const tenants = await fpApi.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: userBAuth,
+    });
+    expect(tenants.isOk()).toBeTruthy();
+    const sharedTenant = tenants.Ok().tenants.find((t) => t.tenantId === userA.ress.tenants[0].tenantId);
+    expect(sharedTenant).toBeDefined();
+    expect(sharedTenant!.role).toBe("member");
+
+    // Verify: the invite status should now be "accepted"
+    const invites = await fpApi.listInvites({
+      type: "reqListInvites",
+      auth: userA.reqs.auth,
+      tenantIds: [userA.ress.tenants[0].tenantId],
+    });
+    const redeemedInvite = invites.Ok().tickets.find((t) => t.inviteId === invite.Ok().invite.inviteId);
+    expect(redeemedInvite).toBeDefined();
+    expect(redeemedInvite!.status).toBe("accepted");
+    expect(redeemedInvite!.invitedUserId).toBe(userBResult.Ok().user.userId);
+  });
+
   it("try find an user by string(email)", async () => {
     const res = await fpApi.findUser({
       type: "reqFindUser",

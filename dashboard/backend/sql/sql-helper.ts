@@ -29,7 +29,16 @@ export function queryCondition(
   },
 ) {
   if (query.existingUserId) {
-    return eq(table.userId, query.existingUserId);
+    const conditions = [eq(table.userId, query.existingUserId)] as ReturnType<typeof or>[];
+    const byEmail = queryEmail(query.byString || query.byEmail);
+    if (byEmail) {
+      conditions.push(eq(table.queryEmail, byEmail));
+    }
+    const byNick = queryNick(query.byString || query.byNick);
+    if (byNick) {
+      conditions.push(eq(table.queryNick, byNick));
+    }
+    return or(...conditions);
   }
 
   const str = query.byString?.trim();
