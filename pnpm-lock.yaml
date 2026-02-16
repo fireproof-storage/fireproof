@@ -107,8 +107,8 @@ importers:
         specifier: ^1.0.20
         version: 1.0.20
       cmd-ts:
-        specifier: ^0.14.3
-        version: 0.14.3
+        specifier: ^0.15.0
+        version: 0.15.0
       find-up:
         specifier: ^8.0.0
         version: 8.0.0
@@ -299,8 +299,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       cmd-ts:
-        specifier: ^0.14.3
-        version: 0.14.3
+        specifier: ^0.15.0
+        version: 0.15.0
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@cloudflare/workers-types@4.20260210.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
@@ -412,8 +412,8 @@ importers:
         specifier: ^1.0.20
         version: 1.0.20
       cmd-ts:
-        specifier: ^0.14.3
-        version: 0.14.3
+        specifier: ^0.15.0
+        version: 0.15.0
       jose:
         specifier: ^6.1.3
         version: 6.1.3
@@ -1627,8 +1627,8 @@ importers:
         specifier: ^17.3.0
         version: 17.3.0
       cmd-ts:
-        specifier: ^0.14.3
-        version: 0.14.3
+        specifier: ^0.15.0
+        version: 0.15.0
       jscodeshift:
         specifier: ^17.1.1
         version: 17.3.0
@@ -4218,8 +4218,8 @@ packages:
     resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
     engines: {node: '>=6'}
 
-  cmd-ts@0.14.3:
-    resolution: {integrity: sha512-i9miaLBHGPn4T4vUFUdAdWoQ9HI8ato6usFrhubO21o/MQGqI6Nsqyd4ncZusT2chvPetNMmTt0JWkbaAOdWPg==}
+  cmd-ts@0.15.0:
+    resolution: {integrity: sha512-ASyAx+P6DNzNEZ6OYmvjjaLAQeI3L+4lm5rX2Jg8tondXdj06o9JTxi9mfC92KoVbrVFKhZ+j2TfBF8fcura6g==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -10035,7 +10035,7 @@ snapshots:
 
   clsx@1.2.1: {}
 
-  cmd-ts@0.14.3:
+  cmd-ts@0.15.0:
     dependencies:
       chalk: 5.6.2
       debug: 4.4.3
