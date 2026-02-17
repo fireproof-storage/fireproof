@@ -90,7 +90,7 @@ describe("VersionPinner", () => {
   });
 
   describe("pinVersions", () => {
-    describe.each(["0.14.3"])("should pin unpinned dependencies (%s)", (version) => {
+    describe.each(["0.15.0"])("should pin unpinned dependencies (%s)", (version) => {
       describe.each(["", "^", "~"])("and in-modifier '%s'", (inModifier) => {
         it.each(["", "^", "~"])("and modifier '%s'", (modifier) => {
           const pkg: PackageJson = {
@@ -105,7 +105,7 @@ describe("VersionPinner", () => {
             _3rdPartyVersionModifier: modifier as "~" | "^" | "",
           });
           // Should pin the version
-          expect(result.dependencies["cmd-ts"]).toBe(`${modifier}0.14.3`);
+          expect(result.dependencies["cmd-ts"]).toBe(`${modifier}0.15.0`);
           expect(result.dependencies["my"]).toBe(`1.0.0`);
         });
 
