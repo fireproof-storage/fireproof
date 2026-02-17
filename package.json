@@ -62,7 +62,7 @@
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/deno": "^2.5.0",
     "@types/node": "^25.2.3",
-    "@typescript/native-preview": "7.0.0-dev.20260217.1",
+    "@typescript/native-preview": "7.0.0-dev.20260124.1",
     "@vitest/browser": "^4.0.14",
     "@vitest/browser-playwright": "^4.0.14",
     "deno": "^2.6.8",
@@ -74,7 +74,7 @@
     "playwright-chromium": "^1.58.0",
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "6.0.0-beta",
     "typescript-eslint": "^8.55.0",
     "vitest": "^4.0.14",
     "wrangler": "^4.66.0"
