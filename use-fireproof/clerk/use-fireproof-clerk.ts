@@ -51,6 +51,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
   const [attachState, setAttachState] = useState<AttachState>({ status: "detached" });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [lastSyncError, setLastSyncError] = useState<Error | undefined>(undefined);
+  const [ledgerId, setLedgerId] = useState<string | null>(null);
 
   const attachingRef = useRef(false);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,6 +126,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
       }
 
       retryCountRef.current = 0;
+      setLedgerId(strategy.getLedgerId());
       setAttachState({ status: "attached", attached });
       setSyncStatus("synced");
       setLastSyncError(undefined);
@@ -170,6 +172,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
       }
 
       retryCountRef.current = 0;
+      setLedgerId(strategy.getLedgerId());
       setAttachState({ status: "attached", attached });
       setSyncStatus("synced");
       setLastSyncError(undefined);
@@ -351,5 +354,6 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
     isSyncing: attachState.status === "attached",
     syncStatus,
     lastSyncError,
+    ledgerId,
   };
 }

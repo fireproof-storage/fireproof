@@ -41,6 +41,8 @@ export interface UseFireproofClerkResult extends UseFireproof {
   syncStatus: SyncStatus;
   /** Last sync error if any */
   lastSyncError?: Error;
+  /** Resolved ledger ID from the dashboard (available after attach) */
+  ledgerId: string | null;
 }
 
 export interface ClerkContextValue {

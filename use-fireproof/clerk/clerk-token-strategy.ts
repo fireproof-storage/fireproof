@@ -11,6 +11,7 @@ export class ClerkTokenStrategy implements TokenStrategie {
   private dashApi: DashboardApiImpl<unknown>;
   private apiUrl: string;
   private lastExpiryMs: number | null = null;
+  private resolvedLedgerId: string | null = null;
 
   constructor(dashApi: DashboardApiImpl<unknown>, apiUrl: string) {
     this.dashApi = dashApi;
@@ -23,6 +24,14 @@ export class ClerkTokenStrategy implements TokenStrategie {
    */
   getLastTokenExpiry(): number | null {
     return this.lastExpiryMs;
+  }
+
+  /**
+   * Get the resolved ledger ID from the last ensureCloudToken call.
+   * Returns null if no token has been obtained yet.
+   */
+  getLedgerId(): string | null {
+    return this.resolvedLedgerId;
   }
 
   hash(): string {
@@ -84,6 +93,9 @@ export class ClerkTokenStrategy implements TokenStrategie {
     // Store expiry time for proactive refresh scheduling
     if (res.expiresDate) {
       this.lastExpiryMs = new Date(res.expiresDate).getTime();
+    }
+    if (res.ledger) {
+      this.resolvedLedgerId = res.ledger;
     }
     return {
       token: res.cloudToken,
