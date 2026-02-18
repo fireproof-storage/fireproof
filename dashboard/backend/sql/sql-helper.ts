@@ -1,4 +1,4 @@
-import { Queryable, QueryUser } from "@fireproof/core-protocols-dashboard";
+import { Queryable, QueryUser } from "@fireproof/core-types-protocols-dashboard";
 import { and, eq, or } from "drizzle-orm/sql/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 

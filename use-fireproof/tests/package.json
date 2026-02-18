@@ -24,8 +24,8 @@
   "dependencies": {
     "@fireproof/core-runtime": "workspace:*",
     "@fireproof/core-types-blockstore": "workspace:*",
-    "@testing-library/react": "^16.3.1",
-    "react": "^19.2.3",
+    "@testing-library/react": "^16.3.2",
+    "react": "^19.2.4",
     "use-fireproof": "workspace:0.0.0"
   },
   "keywords": [
@@ -36,8 +36,8 @@
     "sync"
   ],
   "devDependencies": {
-    "@types/react": "^19.2.7",
-    "playwright": "^1.57.0",
-    "playwright-chromium": "^1.57.0"
+    "@types/react": "^19.2.14",
+    "playwright": "^1.58.2",
+    "playwright-chromium": "^1.58.0"
   }
 }

@@ -1,22 +1,20 @@
-import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } from "node:fs";
-import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
+/// <reference types="node" />
 import { toArrayBuffer } from "./to-array-buffer.js";
 import type { SysFileSystem } from "@fireproof/core-types-base";
 
+type PathLike = import("fs").PathLike;
+type MakeDirectoryOptions = import("fs").MakeDirectoryOptions;
+type Stats = import("fs").Stats;
+type ObjectEncodingOptions = import("fs").ObjectEncodingOptions;
+
+type NodeFsPromises = typeof import("fs/promises");
+
 export class NodeFileSystem implements SysFileSystem {
-  fs?: {
-    mkdir: typeof mkdir;
-    readdir: typeof readdir;
-    rm: typeof rm;
-    copyFile: typeof copyFile;
-    readFile: typeof readFile;
-    stat: typeof stat;
-    unlink: typeof unlink;
-    writeFile: typeof writeFile;
-  };
+  fs?: NodeFsPromises;
 
   async start(): Promise<SysFileSystem> {
-    this.fs = await import("node:fs/promises");
+    const fs = "fs/promises";
+    this.fs = await import(fs);
     return this;
   }
   async mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {

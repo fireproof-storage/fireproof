@@ -38,10 +38,10 @@
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/deno": "^2.5.0",
-    "@types/node": "^25.0.3"
+    "@types/node": "^25.2.3"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.8",
+    "@adviser/cement": "^0.5.22",
     "@fireproof/core-gateways-base": "workspace:0.0.0",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:0.0.0",

@@ -1,17 +1,18 @@
-import { Result } from "@adviser/cement";
-import { ReqListInvites, ResListInvites } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqListInvites, ResListInvites, validateListInvites } from "@fireproof/core-types-protocols-dashboard";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { sqlInviteTickets, sqlToInviteTickets } from "../sql/invites.js";
 import { sqlLedgerUsers, sqlLedgers } from "../sql/ledgers.js";
 import { sqlTenantUsers, sqlTenants } from "../sql/tenants.js";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { getRoles } from "../internal/get-roles.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
 /**
  *
  * @description list invites for a user if user is owner of tenant or admin of tenant
  */
-export async function listInvites(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqListInvites>): Promise<Result<ResListInvites>> {
+async function listInvites(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqListInvites>): Promise<Result<ResListInvites>> {
   let tenantCond = and(eq(sqlTenantUsers.userId, req.auth.user.userId), eq(sqlTenantUsers.status, "active"));
   if (req.tenantIds?.length) {
     tenantCond = and(inArray(sqlTenantUsers.tenantId, req.tenantIds), tenantCond);
@@ -153,3 +154,19 @@ export async function listInvites(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser
   //     .filter((x) => x.invites.length),
   // });
 }
+
+export const listInvitesItem: EventoHandler<Request, ReqListInvites, ResListInvites> = {
+  hash: "list-invites",
+  validate: (ctx) => validateListInvites(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqListInvites>, ResListInvites>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await listInvites(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

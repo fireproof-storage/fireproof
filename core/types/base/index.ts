@@ -12,3 +12,4 @@ export * from "./device-id-keybag-item.zod.js";
 
 export * from "./keybag-storage.zod.js";
 export * from "./database-config.zod.js";
+export * from "./fp-clerk-claim.zod.js";

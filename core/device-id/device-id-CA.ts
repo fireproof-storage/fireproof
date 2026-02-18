@@ -10,6 +10,7 @@ import {
   JWKPublic,
   Subject,
   SuperThis,
+  ClerkClaim,
 } from "@fireproof/core-types-base";
 import { SignJWT, jwtVerify } from "jose";
 import { DeviceIdKey } from "./device-id-key.js";
@@ -18,10 +19,8 @@ import { Certor } from "./certor.js";
 import { Result, exception2Result } from "@adviser/cement";
 import { hashObjectAsync } from "@fireproof/core-runtime";
 import { base58btc } from "multiformats/bases/base58";
+import { CAActions, CACertResult, DeviceIdCAIf, DeviceIdCAJsonParam } from "@fireproof/core-types-device-id";
 
-export interface CAActions {
-  generateSerialNumber(pub: JWKPublic): Promise<string>;
-}
 interface DeviceIdCAOpts {
   readonly base64: BaseXXEndeCoder;
   readonly caKey: DeviceIdKey;
@@ -47,12 +46,7 @@ function defaultDeviceIdCAOpts(opts: DeviceIdCAOptsDefaulted): DeviceIdCAOpts {
   };
 }
 
-export interface DeviceIdCAJsonParam {
-  readonly privateKey: JWKPrivate | string; // JWKPrivate object or base58btc-encoded string
-  readonly signedCert: string;
-}
-
-export class DeviceIdCA {
+export class DeviceIdCA implements DeviceIdCAIf {
   readonly #opts: DeviceIdCAOpts;
 
   readonly #caKey: DeviceIdKey;
@@ -149,27 +143,29 @@ export class DeviceIdCA {
     return this.#caKey;
   }
 
-  async processCSR(csrJWS: string): Promise<Result<IssueCertificateResult>> {
+  async processCSR(csrJWS: string, addition: ClerkClaim): Promise<Result<IssueCertificateResult>> {
     const validator = new DeviceIdValidator();
     const validation = await validator.validateCSR(csrJWS);
     if (!validation.valid) {
       return Result.Err(validation.error);
     }
-    return this.issueCertificate(validation.payload);
+    return this.issueCertificate({ ...validation.payload, creatingUser: { type: "clerk", claims: addition } });
   }
 
-  async caCertificate(): Promise<Result<CertificatePayload>> {
+  async caCertificate(): Promise<Result<CACertResult>> {
     const rCert = await this.issueCertificate({
       csr: {
         subject: this.#caSubject,
         publicKey: await this.#caKey.publicKey(),
-        extensions: {},
       },
     });
     if (rCert.isErr()) {
       return Result.Err(rCert);
     }
-    return Result.Ok(Certor.fromUnverifiedJWT(this.#opts.base64, rCert.Ok().certificateJWT).asCert());
+    return Result.Ok({
+      certificate: Certor.fromUnverifiedJWT(this.#opts.base64, rCert.Ok().certificateJWT).asCert(),
+      jwtStr: rCert.Ok().certificateJWT,
+    });
   }
 
   async issueCertificate(devId: FPDeviceIDCSRPayload): Promise<Result<IssueCertificateResult>> {
@@ -186,6 +182,8 @@ export class DeviceIdCA {
       nbf: now, // Not before
       exp: now + this.#opts.validityPeriod, // 1 year validity
       jti: serialNumber, // JWT ID as serial number
+
+      creatingUser: devId.creatingUser,
 
       // Certificate-specific claims
       certificate: {

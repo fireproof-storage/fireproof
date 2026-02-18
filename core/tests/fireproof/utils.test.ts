@@ -569,6 +569,32 @@ describe("coerceJWK", () => {
       expect(result).toHaveLength(1);
       expect(result[0]).not.toHaveProperty("d");
     });
+
+    it("can handle JWK private", async () => {
+      const encoded = await sts.jwk2env(jwkPrivate, sthis);
+      const result = await sts.coerceJWK(sthis, encoded);
+      expect(result).toEqual([jwkPrivate]);
+    });
+
+    it("can handle JWK public", async () => {
+      const encoded = await sts.jwk2env(jwkPublic, sthis);
+      const result = await sts.coerceJWK(sthis, encoded);
+      expect(result).toEqual([jwkPublic]);
+    });
+
+    it("can handle JWK public", async () => {
+      const jsPub = JWKPublicSchema.parse(jwkPublic);
+      const encoded = await sts.jwk2env(jsPub, sthis);
+      const result = await sts.coerceJWK(sthis, encoded);
+      expect(result).toEqual([jsPub]);
+    });
+
+    it("can handle JWK private", async () => {
+      const jsPriv = JWKPrivateSchema.parse(jwkPrivate);
+      const encoded = await sts.jwk2env(jsPriv, sthis);
+      const result = await sts.coerceJWK(sthis, encoded);
+      expect(result).toEqual([jsPriv]);
+    });
   });
 
   describe("with private key", () => {

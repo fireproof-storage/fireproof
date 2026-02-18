@@ -1,13 +1,13 @@
-import { Result } from "@adviser/cement";
-import { ReqCloudSessionToken, ResCloudSessionToken } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqCloudSessionToken, ResCloudSessionToken, validateCloudSessionToken } from "@fireproof/core-types-protocols-dashboard";
 import { FPCloudClaim } from "@fireproof/core-types-protocols-cloud";
-import { getFPTokenContext, createFPToken, toProvider } from "../utils/index.js";
+import { getFPTokenContext, createFPToken, toProvider, checkAuth, wrapStop } from "../utils/index.js";
 import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser } from "../types.js";
 import { listTenantsByUser } from "./list-tenants-by-user.js";
 import { listLedgersByUser } from "./list-ledgers-by-user.js";
 import { addTokenByResultId } from "../internal/add-token-by-result-id.js";
 
-export async function getCloudSessionToken(
+async function getCloudSessionToken(
   ctx: FPApiSQLCtx,
   req: ReqWithVerifiedAuthUser<ReqCloudSessionToken>,
   ictx: Partial<FPTokenContext> = {},
@@ -30,7 +30,7 @@ export async function getCloudSessionToken(
   }
   const rCtx = await getFPTokenContext(ctx.sthis, ictx);
   if (rCtx.isErr()) {
-    return Result.Err(rCtx.Err());
+    return Result.Err(rCtx);
   }
   const fpCtx = rCtx.Ok();
   // verify if tenant and ledger are valid
@@ -76,9 +76,9 @@ export async function getCloudSessionToken(
         };
       })
       .filter((i) => i) as FPCloudClaim["ledgers"],
-    email: req.auth.verifiedAuth.params.email,
-    nickname: req.auth.verifiedAuth.params.nick,
-    provider: toProvider(req.auth.verifiedAuth),
+    email: req.auth.verifiedAuth.claims.params.email ?? `${req.auth.user.userId}@unknown.email`,
+    nickname: req.auth.verifiedAuth.claims.params.nick,
+    provider: toProvider(req.auth.verifiedAuth.claims),
     created: req.auth.user.createdAt,
     selected: {
       tenant: req.selected?.tenant ?? resListTenants.Ok().tenants[0]?.tenantId,
@@ -104,3 +104,19 @@ export async function getCloudSessionToken(
     token: token.token,
   });
 }
+
+export const getCloudSessionTokenItem: EventoHandler<Request, ReqCloudSessionToken, ResCloudSessionToken> = {
+  hash: "get-cloud-session-token",
+  validate: (ctx) => validateCloudSessionToken(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqCloudSessionToken>, ResCloudSessionToken>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await getCloudSessionToken(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

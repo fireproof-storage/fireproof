@@ -1,15 +1,13 @@
-import { Result } from "@adviser/cement";
-import { ReqUpdateLedger, ResUpdateLedger } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqUpdateLedger, ResUpdateLedger, validateUpdateLedger } from "@fireproof/core-types-protocols-dashboard";
 import { Role, ReadWrite } from "@fireproof/core-types-protocols-cloud";
 import { and, eq, ne } from "drizzle-orm";
 import { sqlLedgerUsers, sqlLedgers, sqlToLedgers } from "../sql/ledgers.js";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { isAdminOfLedger } from "../internal/is-admin-of-ledger.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
-export async function updateLedger(
-  ctx: FPApiSQLCtx,
-  req: ReqWithVerifiedAuthUser<ReqUpdateLedger>,
-): Promise<Result<ResUpdateLedger>> {
+async function updateLedger(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqUpdateLedger>): Promise<Result<ResUpdateLedger>> {
   const now = new Date().toISOString();
   // check if owner or admin of tenant
   if (!(await isAdminOfLedger(ctx, req.auth.user.userId, req.ledger.ledgerId))) {
@@ -89,3 +87,19 @@ export async function updateLedger(
     ])[0],
   });
 }
+
+export const updateLedgerItem: EventoHandler<Request, ReqUpdateLedger, ResUpdateLedger> = {
+  hash: "update-ledger",
+  validate: (ctx) => validateUpdateLedger(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqUpdateLedger>, ResUpdateLedger>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await updateLedger(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

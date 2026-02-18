@@ -1,11 +1,17 @@
-import { Result } from "@adviser/cement";
-import { ReqListTenantsByUser, ResListTenantsByUser, UserStatus } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import {
+  ReqListTenantsByUser,
+  ResListTenantsByUser,
+  UserStatus,
+  validateListTenantsByUser,
+} from "@fireproof/core-types-protocols-dashboard";
 import { and, eq } from "drizzle-orm";
 import { toUndef, toBoolean } from "../sql/sql-helper.js";
 import { sqlTenantUsers, sqlTenants } from "../sql/tenants.js";
 import { sqlUsers } from "../sql/users.js";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { getRoles } from "../internal/get-roles.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
 export async function listTenantsByUser(
   ctx: FPApiSQLCtx,
@@ -22,7 +28,7 @@ export async function listTenantsByUser(
   return Result.Ok({
     type: "resListTenantsByUser",
     userId: req.auth.user.userId,
-    authUserId: req.auth.verifiedAuth.userId,
+    authUserId: req.auth.verifiedAuth.claims.userId,
     tenants: (
       await Promise.all(
         tenantUsers.map(async (t) => {
@@ -84,3 +90,19 @@ export async function listTenantsByUser(
     ).filter((t) => !!t),
   });
 }
+
+export const listTenantsByUserItem: EventoHandler<Request, ReqListTenantsByUser, ResListTenantsByUser> = {
+  hash: "list-tenants-by-user",
+  validate: (ctx) => validateListTenantsByUser(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqListTenantsByUser>, ResListTenantsByUser>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await listTenantsByUser(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

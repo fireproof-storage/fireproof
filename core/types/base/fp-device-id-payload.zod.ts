@@ -1,7 +1,12 @@
 import { z } from "zod/v4";
 import { JWKPublicSchema } from "./jwk-public.zod.js";
 import { JWTPayloadSchema } from "./jwt-payload.zod.js";
+import { ClerkClaimSchema } from "./fp-clerk-claim.zod.js";
 
+export const CreatingUserSchema = z.object({
+  type: z.literal("clerk"),
+  claims: ClerkClaimSchema,
+});
 // Subject Schema
 export const SubjectSchema = z.object({
   commonName: z.string(), //.optional(),
@@ -92,6 +97,7 @@ export type Extensions = z.infer<typeof ExtensionsSchema>;
 
 // Main FPDeviceIDPayload Schema
 export const FPDeviceIDCSRPayloadSchema = JWTPayloadSchema.extend({
+  creatingUser: CreatingUserSchema.optional(),
   csr: z
     .object({
       subject: SubjectSchema,

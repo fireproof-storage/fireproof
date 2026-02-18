@@ -1,19 +1,24 @@
-import { Result } from "@adviser/cement";
-import { DashAuthType, ReqEnsureCloudToken, ResEnsureCloudToken } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import {
+  ReqEnsureCloudToken,
+  ResEnsureCloudToken,
+  validateEnsureCloudToken,
+  VerifiedAuthUserResult,
+} from "@fireproof/core-types-protocols-dashboard";
 import { FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
-import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser, VerifiedAuthUser } from "../types.js";
-import { getFPTokenContext, createFPToken, toProvider } from "../utils/index.js";
+import { FPApiSQLCtx, FPTokenContext, ReqWithVerifiedAuthUser } from "../types.js";
+import { getFPTokenContext, createFPToken, toProvider, checkAuth, wrapStop } from "../utils/index.js";
 import { createLedger } from "./create-ledger.js";
 import { ensureUser } from "./ensure-user.js";
 import { listLedgersByUser } from "./list-ledgers-by-user.js";
 import { decodeJwt } from "jose";
 
-function getAppIdBinding<T extends DashAuthType>(
+function getAppIdBinding(
   ctx: FPApiSQLCtx,
-  auth: VerifiedAuthUser<T>,
+  auth: VerifiedAuthUserResult,
   req: ReqWithVerifiedAuthUser<ReqEnsureCloudToken>,
   filters: ReturnType<typeof eq>[],
 ) {
@@ -33,7 +38,7 @@ function getAppIdBinding<T extends DashAuthType>(
     .get();
 }
 
-export async function ensureCloudToken(
+async function ensureCloudToken(
   ctx: FPApiSQLCtx,
   req: ReqWithVerifiedAuthUser<ReqEnsureCloudToken>,
   ictx: Partial<FPTokenContext> = {},
@@ -68,7 +73,7 @@ export async function ensureCloudToken(
       }
       const rEnsureUser = await ensureUser(ctx, {
         type: "reqEnsureUser",
-        auth: req.auth.verifiedAuth,
+        auth: req.auth.inDashAuth,
       });
       if (rEnsureUser.isErr()) {
         return Result.Err(rEnsureUser);
@@ -88,65 +93,39 @@ export async function ensureCloudToken(
       return Result.Err(`no tenant found for binding of appId:${req.appId} userId:${req.auth.user.userId}`);
     }
     if (!ledgerId) {
-      // Check if ledger with this name already exists for this tenant
-      const ledgerName = `${req.appId}-${req.auth.user.userId}`;
-      const existingLedgerByName = await ctx.db
-        .select()
-        .from(sqlLedgers)
-        .innerJoin(sqlLedgerUsers, and(
-          eq(sqlLedgerUsers.ledgerId, sqlLedgers.ledgerId),
-          eq(sqlLedgerUsers.userId, req.auth.user.userId),
-          eq(sqlLedgerUsers.status, "active"),
-        ))
-        .where(and(eq(sqlLedgers.tenantId, tenantId), eq(sqlLedgers.name, ledgerName)))
-        .get();
-
-      if (existingLedgerByName) {
-        ledgerId = existingLedgerByName.Ledgers.ledgerId;
-      } else {
-        // create ledger
-        const rCreateLedger = await createLedger(ctx, {
-          type: "reqCreateLedger",
-          auth: req.auth,
-          ledger: {
-            tenantId,
-            name: ledgerName,
-          },
-        });
-        if (rCreateLedger.isErr()) {
-          return Result.Err(rCreateLedger.Err());
-        }
-        ledgerId = rCreateLedger.Ok().ledger.ledgerId;
+      // create ledger
+      const rCreateLedger = await createLedger(ctx, {
+        type: "reqCreateLedger",
+        auth: req.auth,
+        ledger: {
+          tenantId,
+          name: `${req.appId}-${req.auth.user.userId}`,
+        },
+      });
+      if (rCreateLedger.isErr()) {
+        return Result.Err(rCreateLedger.Err());
       }
-      // Check if binding already exists before inserting
-      const existingBinding = await ctx.db
-        .select()
+      ledgerId = rCreateLedger.Ok().ledger.ledgerId;
+      const maxBindings = await ctx.db
+        .select({
+          total: count(sqlAppIdBinding.appId),
+        })
         .from(sqlAppIdBinding)
-        .where(and(eq(sqlAppIdBinding.appId, req.appId), eq(sqlAppIdBinding.env, req.env ?? "prod")))
+        .where(eq(sqlAppIdBinding.appId, req.appId))
         .get();
-
-      if (!existingBinding) {
-        const maxBindings = await ctx.db
-          .select({
-            total: count(sqlAppIdBinding.appId),
-          })
-          .from(sqlAppIdBinding)
-          .where(eq(sqlAppIdBinding.appId, req.appId))
-          .get();
-        if (maxBindings && maxBindings.total >= ctx.params.maxAppIdBindings) {
-          return Result.Err(`max appId bindings reached for appId:${req.appId}`);
-        }
-        await ctx.db
-          .insert(sqlAppIdBinding)
-          .values({
-            appId: req.appId,
-            env: req.env ?? "prod",
-            ledgerId,
-            tenantId,
-            createdAt: new Date().toISOString(),
-          })
-          .run();
+      if (maxBindings && maxBindings.total >= ctx.params.maxAppIdBindings) {
+        return Result.Err(`max appId bindings reached for appId:${req.appId}`);
       }
+      await ctx.db
+        .insert(sqlAppIdBinding)
+        .values({
+          appId: req.appId,
+          env: req.env ?? "prod",
+          ledgerId,
+          tenantId,
+          createdAt: new Date().toISOString(),
+        })
+        .run();
     }
   } else {
     ledgerId = binding.Ledgers.ledgerId;
@@ -157,17 +136,13 @@ export async function ensureCloudToken(
     return Result.Err(rCtx.Err());
   }
   const fpCtx = rCtx.Ok();
-  // For device-id auth, use a generated email based on the device fingerprint
-  const email = req.auth.verifiedAuth.params?.email ||
-    `${req.auth.user.userId}@device.fireproof.local`;
-
   const cloudToken = await createFPToken(fpCtx, {
     userId: req.auth.user.userId,
-    tenants: [{ id: tenantId, role: "admin" }],
-    ledgers: [{ id: ledgerId, role: "admin", right: "write" }],
-    email,
-    nickname: req.auth.verifiedAuth.params?.nick,
-    provider: toProvider(req.auth.verifiedAuth),
+    tenants: [],
+    ledgers: [],
+    email: req.auth.verifiedAuth.claims.params.email ?? `${req.auth.user.userId}@no-email.dummy`,
+    nickname: req.auth.verifiedAuth.claims.params.nick,
+    provider: toProvider(req.auth.verifiedAuth.claims),
     created: req.auth.user.createdAt,
     selected: {
       appId: req.appId,
@@ -187,3 +162,19 @@ export async function ensureCloudToken(
     claims,
   });
 }
+
+export const ensureCloudTokenItem: EventoHandler<Request, ReqEnsureCloudToken, ResEnsureCloudToken> = {
+  hash: "ensure-cloud-token",
+  validate: (ctx) => validateEnsureCloudToken(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqEnsureCloudToken>, ResEnsureCloudToken>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await ensureCloudToken(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

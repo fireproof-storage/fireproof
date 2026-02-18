@@ -41,42 +41,15 @@ import {
   ReqEnsureCloudToken,
   ResEnsureCloudToken,
   DashAuthType,
-} from "./msg-types.js";
-import { FPApiInterface } from "./fp-api-interface.js";
+  ClerkDashboardApiConfig,
+  DashboardApiConfigIntern,
+  FPApiInterface,
+  DashboardApiConfig,
+  WithType,
+  TypeString,
+  WithoutTypeAndAuth,
+} from "@fireproof/core-types-protocols-dashboard";
 import type { Clerk } from "@clerk/shared/types";
-
-interface TypeString {
-  readonly type: string;
-}
-
-interface WithType<T extends TypeString> {
-  readonly type: T["type"];
-}
-
-export type WithoutTypeAndAuth<T> = Omit<T, "type" | "auth">;
-
-export interface ClerkDashboardApiConfig<T> {
-  readonly apiUrl: string;
-  readonly getTokenCtx?: T;
-  readonly template?: string; // if not provided default to "with-email"
-  readonly gracePeriodMs?: number; // if not provided default to 5 seconds
-  fetch?(input: RequestInfo, init?: RequestInit): Promise<Response>;
-}
-export interface DashboardApiConfig<T> {
-  readonly apiUrl: string;
-  readonly getTokenCtx?: T;
-  readonly gracePeriodMs: number; // if not provided default to 5 seconds
-  fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
-  getToken: (ctx: never) => Promise<Result<DashAuthType>>;
-}
-
-// type NullOrUndefined<T> = T | undefined | null;
-
-// export type ClerkCallback = (resources: { session: NullOrUndefined<{ getToken: () => Promise<string|null>  }> }) => void;
-// export interface ClerkIf {
-//   addListener: (callback: ClerkCallback) => () => void;
-// }
-// type ClerkIf = Loaded
 
 /**
  * DashboardApi provides a client for interacting with the dashboard backend.
@@ -97,21 +70,26 @@ export interface DashboardApiConfig<T> {
  * ```
  */
 export class DashboardApiImpl<T> implements FPApiInterface {
-  readonly cfg: DashboardApiConfig<T>;
+  readonly cfg: DashboardApiConfigIntern<T>;
   constructor(cfg: DashboardApiConfig<T>) {
     this.cfg = {
+      gracePeriodMs: 5000,
       ...cfg,
     };
   }
 
   private async request<T extends TypeString, S>(req: WithType<T>): Promise<Result<S>> {
-    const rAuth = await this.cfg.getToken(this.cfg.getTokenCtx as never);
-    if (rAuth.isErr()) {
-      return Result.Err(rAuth.Err());
+    let auth = req.auth;
+    if (!req.auth) {
+      const rAuth = await this.cfg.getToken(this.cfg.getTokenCtx);
+      if (rAuth.isErr()) {
+        return Result.Err(rAuth);
+      }
+      auth = rAuth.Ok();
     }
     const reqBody = JSON.stringify({
       ...req,
-      auth: rAuth.Ok(),
+      auth,
     });
     // console.log(API_URL, API_URL, reqBody);
     const res = await this.cfg.fetch(this.cfg.apiUrl, {
@@ -252,6 +230,6 @@ export function clerkDashApi<T>(clerk: Clerk, iopts: ClerkDashboardApiConfig<T>)
         waitForToken.setValue(Option.From(token));
       });
     });
-    return dashApi;
-  });
+    return dashApi as DashboardApiImpl<unknown>;
+  }) as DashboardApiImpl<T>;
 }

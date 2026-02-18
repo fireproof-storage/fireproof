@@ -26,14 +26,14 @@
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
     "@types/jscodeshift": "^17.3.0",
-    "cmd-ts": "^0.14.3",
+    "cmd-ts": "^0.15.0",
     "jscodeshift": "^17.1.1",
     "tsd": "^0.33.0",
     "tsx": "^4.21.0",
     "zx": "^8.8.5"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.8",
+    "@adviser/cement": "^0.5.22",
     "yocto-queue": "^1.2.2"
   }
 }

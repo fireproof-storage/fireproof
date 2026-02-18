@@ -1,73 +1,27 @@
-import { BaseXXEndeCoder, CertificatePayload, JWKPublic } from "@fireproof/core-types-base";
+import { BaseXXEndeCoder, CertificatePayload } from "@fireproof/core-types-base";
 import { jwtVerify, decodeProtectedHeader } from "jose";
 import { Certor } from "./certor.js";
 import { exception2Result, Result } from "@adviser/cement";
 import z from "zod/v4";
 import { sts } from "@fireproof/core-runtime";
-
-interface HeaderCertInfo {
-  readonly certificate: Certor;
-  readonly certificateChain: Certor[];
-  readonly thumbprint?: string;
-  readonly thumbprintSha256?: string;
-  readonly keyId?: string;
-  readonly algorithm?: string;
-  readonly certificateUrl?: string;
-  readonly rawHeader: unknown;
-}
-
-interface VerifyWithCertificateSuccess<T = unknown> {
-  readonly valid: true;
-  readonly payload: T;
-  readonly header: unknown;
-  readonly certificate: HeaderCertInfo & {
-    readonly validation: {
-      readonly valid: true;
-      readonly subject: Record<string, string>;
-      readonly issuer: Record<string, string>;
-      readonly serialNumber: string;
-      readonly notBefore: Date;
-      readonly notAfter: Date;
-      readonly publicKey: JWKPublic;
-      readonly trustedCA?: CertificatePayload;
-      readonly validityPeriod: {
-        readonly days: number;
-      };
-    };
-    readonly publicKey: JWKPublic;
-  };
-  readonly verificationTimestamp: string;
-}
-
-interface VerifyWithCertificateError {
-  readonly valid: false;
-  readonly error: Error;
-  readonly errorCode: string;
-  readonly partialResults: {
-    readonly certificateExtracted: boolean;
-    readonly jwtSignatureValid: boolean;
-    readonly certificateInfo?: HeaderCertInfo;
-  };
-  readonly verificationTimestamp: string;
-}
-
-export type VerifyWithCertificateResult<T> =
-  | VerifyWithCertificateSuccess<T extends z.ZodTypeAny ? z.infer<T> : unknown>
-  | VerifyWithCertificateError;
-
-export interface VerifyWithCertificateOptions {
-  readonly clockTolerance: number; // Clock skew tolerance in seconds
-  readonly maxAge?: number; // Maximum JWT age in seconds
-}
+import {
+  CACertResult,
+  CertorIf,
+  HeaderCertInfo,
+  VerifyWithCertificateError,
+  VerifyWithCertificateOptions,
+  VerifyWithCertificateResult,
+  VerifyWithCertificateSuccess,
+} from "@fireproof/core-types-device-id";
 
 export class DeviceIdVerifyMsg {
   readonly #base64: BaseXXEndeCoder;
   readonly #trustedCAs: CertificatePayload[];
   readonly #options: VerifyWithCertificateOptions;
 
-  constructor(base64: BaseXXEndeCoder, trustedCAs: CertificatePayload[], options: VerifyWithCertificateOptions) {
+  constructor(base64: BaseXXEndeCoder, trustedCAs: CACertResult[], options: VerifyWithCertificateOptions) {
     this.#base64 = base64;
-    this.#trustedCAs = trustedCAs;
+    this.#trustedCAs = trustedCAs.map((ca) => ca.certificate);
     this.#options = options;
   }
 
@@ -250,7 +204,7 @@ export class DeviceIdVerifyMsg {
   /**
    * Validate certificate properties
    */
-  async validateCertificate(certor: Certor): Promise<Result<VerifyWithCertificateSuccess["certificate"]["validation"]>> {
+  async validateCertificate(certor: CertorIf): Promise<Result<VerifyWithCertificateSuccess["certificate"]["validation"]>> {
     const now = new Date();
     return exception2Result(() => {
       const cert = certor.asCert();

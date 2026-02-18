@@ -1,30 +1,15 @@
-import { Result } from "@adviser/cement";
-import { DeviceIdCA } from "@fireproof/core-device-id";
+import { Logger } from "@adviser/cement";
 import {
-  FAPIMsgImpl,
-  VerifiedAuth,
   UserStatus,
   DashAuthType,
-  ClerkVerifyAuth,
-  User,
   FPApiParameters,
-} from "@fireproof/core-protocols-dashboard";
+  VerifiedAuthUserResult,
+  FPApiToken,
+} from "@fireproof/core-types-protocols-dashboard";
 import { SuperThis } from "@fireproof/core-types-base";
 import { Role, ReadWrite } from "@fireproof/core-types-protocols-cloud";
 import { DashSqlite } from "./create-handler.js";
-
-export interface TokenByResultIdParam {
-  readonly status: "found" | "not-found";
-  readonly resultId: string;
-  readonly token?: string; // JWT
-  readonly now: Date;
-}
-
-export const FPAPIMsg = new FAPIMsgImpl();
-
-export interface FPApiToken {
-  verify(token: string, clerkId?: string): Promise<Result<VerifiedAuth>>;
-}
+import { DeviceIdCAIf } from "@fireproof/core-types-device-id";
 
 export interface AddUserToTenant {
   readonly userName?: string;
@@ -50,36 +35,8 @@ export interface AddUserToLedger {
   readonly right: ReadWrite;
 }
 
-export interface WithAuth {
-  readonly auth: DashAuthType;
-}
-
-export interface WithVerifiedAuth<T extends DashAuthType> {
-  readonly verifiedAuth: T;
-}
-
-export interface VerifiedAuthUser<T extends DashAuthType> extends WithVerifiedAuth<T> {
-  readonly user: User;
-}
-
-export function isVerifiedUserActive<T extends DashAuthType>(obj: ActiveUser<T>): obj is VerifiedAuthUser<T> {
-  return (obj as VerifiedAuthUser<T>).user !== undefined;
-}
-
-export type ActiveUser<T extends DashAuthType = ClerkVerifyAuth> = WithVerifiedAuth<T> | VerifiedAuthUser<T>;
-
-export type ReqWithVerifiedAuthUser<
-  REQ extends { type: string; auth: DashAuthType },
-  T extends DashAuthType = ClerkVerifyAuth,
-> = Omit<REQ, "auth"> & {
-  readonly auth: VerifiedAuthUser<T>;
-};
-
-export type ActiveUserWithUserId<T extends DashAuthType = ClerkVerifyAuth> = Omit<ActiveUser<T>, "user"> & {
-  user: {
-    userId: string;
-    maxTenants: number;
-  };
+export type ReqWithVerifiedAuthUser<REQ extends { type: string; auth: DashAuthType }> = Omit<REQ, "auth"> & {
+  readonly auth: VerifiedAuthUserResult;
 };
 
 export interface FPTokenContext {
@@ -93,8 +50,9 @@ export interface FPTokenContext {
 
 export interface FPApiSQLCtx {
   readonly db: DashSqlite;
+  readonly logger: Logger;
   readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
   readonly params: FPApiParameters;
-  readonly deviceCA: DeviceIdCA;
+  readonly deviceCA: DeviceIdCAIf;
 }

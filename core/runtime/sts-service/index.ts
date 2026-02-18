@@ -1,5 +1,5 @@
 import { BuildURI, CoerceURI, KeyedResolvOnce, Option, Result, exception2Result, timeouted } from "@adviser/cement";
-import { exportJWK, importJWK as joseImportJWK, JWTVerifyResult, jwtVerify, SignJWT, JWK, importSPKI } from "jose";
+import { exportJWK, importJWK as joseImportJWK, JWTVerifyResult, jwtVerify, SignJWT, JWK, importSPKI, KeyObject } from "jose";
 import { generateKeyPair, GenerateKeyPairOptions } from "jose/key/generate/keypair";
 import { base58btc } from "multiformats/bases/base58";
 import { ensureSuperThis, mimeBlockParser, filterOk } from "../utils.js";
@@ -70,8 +70,12 @@ interface SessionTokenServiceFromEnvParam extends Partial<BaseTokenParam> {
   readonly publicEnvKey?: string; // defaults CLOUD_SESSION_TOKEN_PUBLIC
 }
 
-export async function jwk2env(jwk: CryptoKey, sthis = ensureSuperThis()): Promise<string> {
-  const inPubKey = await exportJWK(jwk);
+export async function jwk2env(
+  jwk: CryptoKey | KeyObject | JWKPrivate | JWKPublic | JWK,
+  sthis = ensureSuperThis(),
+): Promise<string> {
+  const rJwk = await exception2Result(() => exportJWK(jwk as CryptoKey | KeyObject));
+  const inPubKey = rJwk.isOk() ? rJwk.Ok() : jwk;
   return base58btc.encode(sthis.txt.encode(JSON.stringify(inPubKey)));
 }
 

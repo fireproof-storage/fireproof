@@ -1,47 +1,40 @@
 /// <reference types="deno" />
 import type { FPStats, SysFileSystem } from "@fireproof/core-types-base";
-import { to_uint8 } from "@adviser/cement";
+import { Lazy, to_uint8 } from "@adviser/cement";
 
 export class DenoFileSystem implements SysFileSystem {
-  fs?: {
-    mkdir: typeof Deno.mkdir;
-    readDir: typeof Deno.readDir;
-    rm: typeof Deno.remove;
-    copyFile: typeof Deno.copyFile;
-    readFile: typeof Deno.readFile;
-    stat: typeof Deno.stat;
-    remove: typeof Deno.remove;
-    writeFile: typeof Deno.writeFile;
-  };
+  readonly fs = Lazy(() => {
+    return Deno; // as unknown as DenoFileSystem["fs"];
+  });
 
   async start(): Promise<SysFileSystem> {
-    this.fs = Deno as unknown as DenoFileSystem["fs"];
     return this;
   }
   async mkdir(path: string, options?: { recursive: boolean }): Promise<string | undefined> {
-    return this.fs?.mkdir(path, options).then(() => path);
+    return this.fs()
+      .mkdir(path, options)
+      .then(() => path);
   }
   async readdir(path: string): Promise<string[]> {
     const ret = [];
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    for await (const dirEntry of this.fs!.readDir(path)) {
+    for await (const dirEntry of this.fs().readDir(path)) {
       ret.push(dirEntry.name);
     }
     return ret;
   }
   async rm(path: string, options?: { recursive: boolean }): Promise<void> {
-    return this.fs?.rm(path, options);
+    return this.fs().remove(path, options);
   }
   async copyFile(source: string, destination: string): Promise<void> {
-    return this.fs?.copyFile(source, destination);
+    return this.fs().copyFile(source, destination);
   }
   async readfile(path: string): Promise<Uint8Array> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.fs!.readFile(path);
+    const ret = await this.fs().readFile(path);
+    //2.6.7debug console.log("DenoFileSystem-readfile", path, typeof ret, ret instanceof Uint8Array ? ret.length : ret, await sha256(ret));
+    return ret;
   }
   async stat(path: string): Promise<FPStats> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const x = await this.fs!.stat(path);
+    const x = await this.fs().stat(path);
     return {
       isFile: () => x.isFile,
       isDirectory: () => x.isDirectory,
@@ -60,9 +53,22 @@ export class DenoFileSystem implements SysFileSystem {
     };
   }
   async unlink(path: string): Promise<void> {
-    return this.fs?.remove(path);
+    return this.fs().remove(path);
   }
   async writefile(path: string, data: Uint8Array | string): Promise<void> {
-    return this.fs?.writeFile(path, to_uint8(data));
+    const toUint8 = to_uint8(data);
+    //2.6.7debug console.log("DenoFileSystem-writefile", path, typeof data, data.length, equals(toUint8, data as Uint8Array), await sha256(toUint8), data instanceof Uint8Array ? await sha256(data) : "not Uint8Array");
+    return this.fs().writeFile(path, toUint8);
   }
 }
+
+/*2.6.7debug helpers
+const equals = (a: Uint8Array, b: Uint8Array) =>
+  a.length === b.length && a.every((val, i) => val === b[i]);
+
+async function sha256(data: Uint8Array): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer); 
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+*/

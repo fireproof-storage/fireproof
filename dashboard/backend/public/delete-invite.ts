@@ -1,13 +1,11 @@
-import { Result } from "@adviser/cement";
-import { ReqDeleteInvite, ResDeleteInvite } from "@fireproof/core-protocols-dashboard";
+import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
+import { ReqDeleteInvite, ResDeleteInvite, validateDeleteInvite } from "@fireproof/core-types-protocols-dashboard";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
 import { sqlInviteTickets } from "../sql/db-api-schema.js";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
+import { checkAuth, wrapStop } from "../utils/index.js";
 
-export async function deleteInvite(
-  ctx: FPApiSQLCtx,
-  req: ReqWithVerifiedAuthUser<ReqDeleteInvite>,
-): Promise<Result<ResDeleteInvite>> {
+async function deleteInvite(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqDeleteInvite>): Promise<Result<ResDeleteInvite>> {
   // const rAuth = await activeUser(ctx, req);
   // if (rAuth.isErr()) {
   //   return Result.Err(rAuth.Err());
@@ -22,3 +20,19 @@ export async function deleteInvite(
     inviteId: req.inviteId,
   });
 }
+
+export const deleteInviteItem: EventoHandler<Request, ReqDeleteInvite, ResDeleteInvite> = {
+  hash: "delete-invite",
+  validate: (ctx) => validateDeleteInvite(ctx.enRequest),
+  handle: checkAuth(
+    async (
+      ctx: HandleTriggerCtx<Request, ReqWithVerifiedAuthUser<ReqDeleteInvite>, ResDeleteInvite>,
+    ): Promise<Result<EventoResultType>> => {
+      const res = await deleteInvite(ctx.ctx.getOrThrow("fpApiCtx"), ctx.validated);
+      if (res.isErr()) {
+        return Result.Err(res);
+      }
+      return wrapStop(ctx.send.send(ctx, res.Ok()));
+    },
+  ),
+};

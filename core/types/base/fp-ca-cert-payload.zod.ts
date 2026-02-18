@@ -1,7 +1,8 @@
 import { z } from "zod/v4";
 
-import { ExtensionsSchema, SubjectSchema } from "./fp-device-id-payload.zod.js";
+import { CreatingUserSchema, ExtensionsSchema, SubjectSchema } from "./fp-device-id-payload.zod.js";
 import { JWKPublicSchema } from "./jwk-public.zod.js";
+
 // Certificate Payload Schema
 export const CertificateSchema = z.object({
   version: z.literal("3"), // X.509 v3
@@ -58,6 +59,7 @@ export const CertificatePayloadSchema = z
 
     // Certificate-specific claims
     certificate: CertificateSchema,
+    creatingUser: CreatingUserSchema.optional(),
   })
   .readonly();
 

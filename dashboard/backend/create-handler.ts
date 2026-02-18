@@ -1,43 +1,50 @@
 // import { auth } from "./better-auth.js";
-import { CoercedHeadersInit, HttpHeader, Lazy, LoggerImpl, Result, exception2Result, param } from "@adviser/cement";
-import { FPDeviceIDSessionSchema, SuperThis, SuperThisOpts } from "@fireproof/core";
-import { FPApiSQL } from "./api.js";
+import {
+  CoercedHeadersInit,
+  HttpHeader,
+  Lazy,
+  LoggerImpl,
+  Result,
+  param,
+  Option,
+  Evento,
+  EventoEnDecoder,
+  EventoType,
+  AppContext,
+  ValidateTriggerCtx,
+  HandleTriggerCtx,
+  EventoResultType,
+  EventoResult,
+  EventoSendProvider,
+} from "@adviser/cement";
+import { SuperThisOpts } from "@fireproof/core-types-base";
+import { createFPApiSQLCtx } from "./api.js";
 import type { Env } from "./cf-serve.js";
-import { FPClerkClaim, FPClerkClaimSchema, VerifiedAuth } from "@fireproof/core-protocols-dashboard";
-import { ensureSuperThis, ensureLogger, coerceInt, sts } from "@fireproof/core-runtime";
+import { ensureSuperThis, coerceInt } from "@fireproof/core-runtime";
 import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 import { ResultSet } from "@libsql/client";
-import { getCloudPubkeyFromEnv } from "./get-cloud-pubkey-from-env.js";
-import { DeviceIdCA, DeviceIdVerifyMsg, VerifyWithCertificateOptions } from "@fireproof/core-device-id";
-import { jwtVerify } from "jose";
-import { FPApiToken, FPAPIMsg } from "./types.js";
-
-// In-memory registry for custom Clerk instances
-export interface RegisteredClerkInstance {
-  readonly clerkId: string;
-  readonly jwksUrl: string;
-  readonly registeredAt: Date;
-}
-
-const clerkRegistry = new Map<string, RegisteredClerkInstance>();
-
-export function registerClerkInstance(clerkId: string, jwksUrl: string): RegisteredClerkInstance {
-  const instance: RegisteredClerkInstance = {
-    clerkId,
-    jwksUrl,
-    registeredAt: new Date(),
-  };
-  clerkRegistry.set(clerkId, instance);
-  return instance;
-}
-
-export function getClerkInstance(clerkId: string): RegisteredClerkInstance | undefined {
-  return clerkRegistry.get(clerkId);
-}
-
-export function listClerkInstances(): RegisteredClerkInstance[] {
-  return Array.from(clerkRegistry.values());
-}
+import { FPApiSQLCtx } from "./types.js";
+import { deleteTenantItem } from "./public/delete-tenant.js";
+import { updateTenantItem } from "./public/update-tenant.js";
+import { createTenantItem } from "./public/create-tenant.js";
+import { updateLedgerItem } from "./public/update-ledger.js";
+import { deleteLedgerItem } from "./public/delete-ledger.js";
+import { createLedgerItem } from "./public/create-ledger.js";
+import { listInvitesItem } from "./public/list-invites.js";
+import { inviteUserItem } from "./public/invite-user.js";
+import { findUserItem } from "./public/find-user.js";
+import { redeemInviteItem } from "./public/redeem-invite.js";
+import { listTenantsByUserItem } from "./public/list-tenants-by-user.js";
+import { updateUserTenantItem } from "./public/update-user-tenant.js";
+import { listLedgersByUserItem } from "./public/list-ledgers-by-user.js";
+import { deleteInviteItem } from "./public/delete-invite.js";
+import { getCloudSessionTokenItem } from "./public/get-cloud-session-token.js";
+import { getTokenByResultIdItem } from "./public/get-token-by-result-id.js";
+import { getCertFromCsrItem } from "./public/get-cert-from-csr.js";
+import { ensureUserItem } from "./public/ensure-user.js";
+import { ensureCloudTokenItem } from "./public/ensure-cloud-token.js";
+import { FPApiParameters } from "@fireproof/core-types-protocols-dashboard";
+import { deviceIdCAFromEnv, tokenApi, getCloudPubkeyFromEnv } from "@fireproof/core-protocols-dashboard";
 
 const defaultHttpHeaders = Lazy(() =>
   HttpHeader.from({
@@ -54,239 +61,218 @@ export function DefaultHttpHeaders(...h: CoercedHeadersInit[]): HeadersInit {
     .AsHeaderInit();
 }
 
-class ClerkApiToken implements FPApiToken {
-  readonly sthis: SuperThis;
-  constructor(sthis: SuperThis) {
-    this.sthis = sthis;
-  }
-
-  readonly keysAndUrls = Lazy((): Result<{ keys: string[]; urls: string[] }> => {
-    const keys: string[] = [];
-    const urls: string[] = [];
-    // eslint-disable-next-line no-constant-condition
-    for (let idx = 0; true; idx++) {
-      const suffix = !idx ? "" : `_${idx}`;
-      const key = `CLERK_PUB_JWT_KEY${suffix}`;
-      const url = `CLERK_PUB_JWT_URL${suffix}`;
-      const rEnvVal = this.sthis.env.gets({
-        [key]: param.OPTIONAL,
-        [url]: param.OPTIONAL,
-      });
-      if (rEnvVal.isErr()) {
-        return Result.Err(rEnvVal.Err());
-      }
-      const { [key]: keyVal, [url]: urlVal } = rEnvVal.Ok();
-      if (!keyVal && !urlVal) {
-        // end loop of CLERK_PUB_JWT_KEYn and CLERK_PUB_JWT_URLn
-        break;
-      }
-      if (keyVal) {
-        keys.push(keyVal);
-      }
-      if (urlVal) {
-        urls.push(
-          ...urlVal
-            .split(",")
-            .map((u) => u.trim())
-            .filter((u) => u),
-        );
-      }
-    }
-    return Result.Ok({ keys, urls });
-  });
-
-  // Get keys/urls for a specific clerkId (custom instance) or fall back to default
-  getKeysAndUrlsForClerkId(clerkId?: string): { keys: string[]; urls: string[] } {
-    if (clerkId) {
-      const instance = getClerkInstance(clerkId);
-      if (instance) {
-        return { keys: [], urls: [instance.jwksUrl] };
-      }
-    }
-    // Fall back to default configured keys
-    return this.keysAndUrls().Ok();
-  }
-
-  async verify(token: string, clerkId?: string): Promise<Result<VerifiedAuth>> {
-    const { keys, urls } = this.getKeysAndUrlsForClerkId(clerkId);
-
-    if (keys.length === 0 && urls.length === 0) {
-      return Result.Err(`No Clerk keys configured${clerkId ? ` for clerkId: ${clerkId}` : ""}`);
-    }
-
-    const rt = await sts.verifyToken(token, keys, urls, {
-      parseSchema: (payload: unknown): Result<FPClerkClaim> => {
-        const r = FPClerkClaimSchema.safeParse(payload);
-        if (r.success) {
-          return Result.Ok(r.data);
-        } else {
-          console.log("FPClerkClaimSchema parse error", payload, r.error);
-          return Result.Err(r.error);
-        }
-      },
-      verifyToken: async (token, key) => {
-        const rPublicKey = await sts.importJWK(key, "RS256");
-        if (rPublicKey.isErr()) {
-          return Result.Err(rPublicKey);
-        }
-        // const pem = await exportSPKI(rPublicKey.Ok().key);
-        // console.log("ClerkApiToken-verify", pem);
-
-        const r = await exception2Result(
-          () => jwtVerify(token, rPublicKey.Ok().key),
-          // ClerkVerifyToken(token, {
-          //   jwtKey: pem,
-          //   // authorizedParties: ["http://localhost:7370"],
-          // }),
-        );
-        // console.log("ClerkApiToken-verify-jwtVerify", r);
-        if (r.isErr()) {
-          return Result.Err(r);
-        }
-        if (!r.Ok()) {
-          return Result.Err("ClerkVerifyToken: failed");
-        }
-        return Result.Ok({
-          payload: r.Ok(),
-        });
-      },
-    });
-    if (rt.isErr()) {
-      return Result.Err(rt.Err());
-    }
-    const t = rt.Ok();
-    return Result.Ok({
-      type: "clerk",
-      token,
-      userId: t.payload.sub,
-      provider: clerkId || "default",
-      params: {
-        ...t.payload.params,
-      },
-    });
-  }
-}
-
-const rDeviceIdCA = Lazy((sthis: SuperThis) => {
-  const rEnv = sthis.env.gets({
-    DEVICE_ID_CA_PRIV_KEY: param.REQUIRED,
-    DEVICE_ID_CA_CERT: param.REQUIRED,
-  });
-  if (rEnv.isErr()) {
-    throw rEnv.Err();
-  }
-  const envVals = rEnv.Ok();
-  return DeviceIdCA.from(
-    sthis,
-    {
-      privateKey: envVals.DEVICE_ID_CA_PRIV_KEY,
-      signedCert: envVals.DEVICE_ID_CA_CERT,
-    },
-    {
-      generateSerialNumber: async () => sthis.nextId(32).str,
-    },
-  );
-});
-
-class DeviceIdApiToken implements FPApiToken {
-  readonly sthis: SuperThis;
-  readonly opts: VerifyWithCertificateOptions;
-  constructor(sthis: SuperThis, opts: VerifyWithCertificateOptions) {
-    this.sthis = sthis;
-    this.opts = opts;
-  }
-  async verify(token: string, _clerkId?: string): Promise<Result<VerifiedAuth>> {
-    const rCA = await rDeviceIdCA(this.sthis);
-    if (rCA.isErr()) {
-      return Result.Err(rCA.Err());
-    }
-    const verify = new DeviceIdVerifyMsg(this.sthis.txt.base64, [(await rCA.Ok().caCertificate()).Ok()], {
-      maxAge: 3600,
-      ...this.opts,
-    });
-
-    const res = await verify.verifyWithCertificate(token, FPDeviceIDSessionSchema);
-    if (res.valid) {
-      return Result.Ok({
-        type: "device-id",
-        token,
-        userId: res.payload.deviceId,
-        provider: "device-id",
-        params: {},
-      });
-    }
-    return Result.Err(res.error);
-  }
-}
-
-// class BetterApiToken implements FPApiToken {
-//   readonly sthis: SuperThis;
-//   readonly pk?: JWK;
-//   constructor(sthis: SuperThis) {
-//     this.sthis = sthis;
-//     try {
-//       this.pk = JSON.parse(this.sthis.env.get("BETTER_PUBLICSHABLE_KEY")!) as JWK;
-//     } catch (e) {
-//       this.sthis.logger.Error().Err(e).Msg("Invalid BETTER_PUBLICSHABLE_KEY");
-//     }
-//   }
-//   async verify(token: string): Promise<Result<VerifiedAuth>> {
-//     if (!this.pk) {
-//       return Result.Err("Invalid BETTER_PUBLICSHABLE_KEY");
-//     }
-//     const rAuth = await jwtVerify(token, this.pk);
-//     console.log("rAuth", rAuth);
-//     if (!rAuth || !rAuth.payload.sub) {
-//       return Result.Err("invalid token");
-//     }
-//     const params = (rAuth.payload as { params: ClerkClaim }).params;
-//     return Result.Ok({
-//       type: "better",
-//       provider: "better",
-//       token,
-//       userId: rAuth.payload.sub as string,
-//       params,
-//     });
-//   }
-// }
-
 export type DashSqlite = BaseSQLiteDatabase<"async", ResultSet | D1Result, Record<string, never>>;
 
-const tokenApi = Lazy(async (sthis: SuperThis) => {
-  // const rDeviceIdCA = await DeviceIdCA.from(sthis, {
-  //   privateKeyEnv: "DEVICE_ID_CA_PRIV_KEY",
-  //   signedCertEnv: "DEVICE_ID_CA_CERT",
-  // }, {
-  //   generateSerialNumber: async () => sthis.nextId(32).str,
-  // });
-  return {
-    "device-id": new DeviceIdApiToken(sthis, {
-      clockTolerance: 60,
-    }),
-    clerk: new ClerkApiToken(sthis),
+export type BindPromise<T> = (promise: Promise<T>) => Promise<T>;
+
+class ReqResEventoEnDecoder implements EventoEnDecoder<Request, string> {
+  async encode(args: Request): Promise<Result<unknown>> {
+    if (args.method === "POST" || args.method === "PUT") {
+      const body = (await args.json()) as unknown;
+      return Result.Ok(body);
+    }
+    return Result.Ok(null);
+  }
+  decode(data: unknown): Promise<Result<string>> {
+    return Promise.resolve(Result.Ok(JSON.stringify(data)));
+  }
+}
+
+interface ResponseType {
+  type: "Response";
+  payload: {
+    status: number;
+    headers: HeadersInit;
+    body: BodyInit;
   };
+}
+
+function isResponseType(obj: unknown): obj is ResponseType {
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
+  return (obj as ResponseType).type === "Response";
+}
+
+export const fpApiEvento = Lazy(() => {
+  const evento = new Evento(new ReqResEventoEnDecoder());
+  evento.push(
+    {
+      hash: "cors-preflight",
+      validate: (ctx: ValidateTriggerCtx<Request, unknown, unknown>) => {
+        const { request: req } = ctx;
+        if (req && req.method === "OPTIONS") {
+          return Promise.resolve(Result.Ok(Option.Some("Send CORS preflight response")));
+        }
+        return Promise.resolve(Result.Ok(Option.None()));
+      },
+      handle: async (ctx: HandleTriggerCtx<Request, string, unknown>): Promise<Result<EventoResultType>> => {
+        await ctx.send.send(ctx, {
+          type: "Response",
+          payload: {
+            status: 200,
+            headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ type: "ok", message: "CORS preflight" }),
+          },
+        } satisfies ResponseType);
+        return Result.Ok(EventoResult.Stop);
+      },
+    },
+    {
+      hash: "log-request ",
+      validate: async (_ctx: ValidateTriggerCtx<Request, unknown, unknown>): Promise<Result<Option<unknown>>> => {
+        return Promise.resolve(Result.Ok(Option.Some("Log request")));
+      },
+      handle: async (ctx: HandleTriggerCtx<Request, unknown, unknown>): Promise<Result<EventoResultType>> => {
+        const { request: req } = ctx;
+        if (!["POST", "PUT"].includes(req.method)) {
+          await ctx.send.send(ctx, {
+            type: "Response",
+            payload: {
+              status: 503,
+              headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ type: "error", message: "Only POST and PUT methods are supported", req: ctx.enRequest }),
+            },
+          } satisfies ResponseType);
+          return Result.Ok(EventoResult.Stop);
+        }
+        ctx.ctx
+          .getOrThrow<FPApiSQLCtx>("fpApiCtx")
+          .sthis.logger.Debug()
+          .TimerStart(`api-request-${ctx.id}`)
+          .Any({
+            method: req.method,
+            url: req.url,
+            headers: HttpHeader.from(req.headers).AsRecordStringString(),
+            body: ctx.enRequest,
+          })
+          .Msg("API Request started");
+        return Result.Ok(EventoResult.Continue);
+      },
+      post: async (ctx: HandleTriggerCtx<Request, unknown, unknown>): Promise<void> => {
+        // ctx.send.tranfer(ctx);
+        ctx.ctx
+          .getOrThrow<FPApiSQLCtx>("fpApiCtx")
+          .sthis.logger.Debug()
+          .TimerEnd(`api-request-${ctx.id}`)
+          .Any({ stats: ctx.stats })
+          .Msg("API Request ended");
+      },
+    },
+    createLedgerItem,
+    createTenantItem,
+    deleteLedgerItem,
+    deleteInviteItem,
+    deleteTenantItem,
+    ensureCloudTokenItem,
+    ensureUserItem,
+    findUserItem,
+    getCertFromCsrItem,
+    getCloudSessionTokenItem,
+    getTokenByResultIdItem,
+    inviteUserItem,
+    listInvitesItem,
+    listLedgersByUserItem,
+    listTenantsByUserItem,
+    redeemInviteItem,
+    updateLedgerItem,
+    updateTenantItem,
+    updateUserTenantItem,
+    {
+      type: EventoType.WildCard,
+      hash: "not-found-handler",
+      handle: async (ctx) => {
+        await ctx.send.send(ctx, {
+          type: "Response",
+          payload: {
+            status: 404,
+            headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ type: "error", message: "Not Found", req: ctx.enRequest }),
+          },
+        } satisfies ResponseType);
+        return Result.Ok(EventoResult.Continue);
+      },
+    },
+    {
+      type: EventoType.Error,
+      hash: "error-handler",
+      handle: async (ctx) => {
+        await ctx.send.send(ctx, {
+          type: "Response",
+          payload: {
+            status: 500,
+            headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ type: "error", message: "Internal Server Error", error: ctx.error?.toString() }),
+          },
+        } satisfies ResponseType);
+        return Result.Ok(EventoResult.Continue);
+      },
+    },
+  );
+  return evento;
 });
 
-export type BindPromise<T> = (promise: Promise<T>) => Promise<T>;
+class SendResponseProvider implements EventoSendProvider<Request, unknown, unknown> {
+  response?: Response;
+  getResponse(): Response {
+    if (!this.response) {
+      this.response = new Response(JSON.stringify({ type: "error", message: "Response not set" }), {
+        status: 500,
+        headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+      });
+    }
+    const res = this.response;
+    this.response = undefined;
+    return res;
+  }
+  async send<T>(ctx: HandleTriggerCtx<Request, unknown, unknown>, res: unknown): Promise<Result<T>> {
+    // noop, handled in createHandler
+    if (this.response) {
+      return Result.Err("response could only be set once");
+    }
+    if (isResponseType(res)) {
+      this.response = new Response(res.payload.body, {
+        status: res.payload.status,
+        headers: res.payload.headers,
+      });
+      return Result.Ok();
+    }
+    // need to set src / transactionId ... the optionals to real
+    const defaultRes = { ...(res as object) };
+    return ctx.encoder.decode(res).then((rStr) => {
+      if (rStr.isErr()) {
+        const x = { type: "error", message: "Failed to decode response", error: rStr.Err() };
+        this.response = new Response(JSON.stringify(x), {
+          status: 500,
+          headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+        });
+        return Result.Err(rStr.Err());
+      }
+      this.response = new Response(rStr.Ok() as string, {
+        status: 200,
+        headers: DefaultHttpHeaders({
+          "Content-Type": "application/json",
+          "Server-Timing": `total;dur=${(ctx.stats.request.doneTime.getTime() - ctx.stats.request.startTime.getTime()).toFixed(2)}`,
+        }),
+      });
+      return Result.Ok(defaultRes as T);
+    });
+  }
+}
+
 // BaseSQLiteDatabase<'async', ResultSet, TSchema>
 export async function createHandler<T extends DashSqlite>(db: T, env: Record<string, string> | Env) {
   // const stream = new utils.ConsoleWriterStream();
   const sthis = ensureSuperThis({
     logger: new LoggerImpl(),
   } as unknown as SuperThisOpts);
-  // try {
-  //   if (import.meta && import.meta.env) {
-  //     sthis.env.sets(import.meta.env as unknown as Record<string, string>);
-  //   }
-  // } catch (e) {
-  //   sthis.logger.Error().Err(e).Msg("Error setting import.meta.env");
-  // }
   sthis.env.sets(env as unknown as Record<string, string>);
   const rEnvVals = sthis.env.gets({
     CLOUD_SESSION_TOKEN_PUBLIC: param.REQUIRED,
     CLERK_PUBLISHABLE_KEY: param.REQUIRED,
     DEVICE_ID_CA_PRIV_KEY: param.REQUIRED,
     DEVICE_ID_CA_CERT: param.REQUIRED,
+    CA_CLOCK_TOLERANCE: param.OPTIONAL,
   });
   if (rEnvVals.isErr()) {
     throw rEnvVals.Err();
@@ -298,24 +284,12 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
     throw rCloudPublicKey.Err();
   }
 
-  // Create DeviceIdCA from environment variables
-  const rDeviceIdCA = await DeviceIdCA.from(
-    sthis,
-    {
-      privateKey: envVals.DEVICE_ID_CA_PRIV_KEY,
-      signedCert: envVals.DEVICE_ID_CA_CERT,
-    },
-    {
-      generateSerialNumber: async () => sthis.nextId(32).str,
-    },
-  );
-
+  const rDeviceIdCA = await deviceIdCAFromEnv(sthis);
   if (rDeviceIdCA.isErr()) {
     throw rDeviceIdCA.Err();
   }
 
-  const logger = ensureLogger(sthis, "createHandler");
-  const fpApi = new FPApiSQL(sthis, db, await tokenApi(sthis), {
+  const svcParams: FPApiParameters = {
     cloudPublicKeys: rCloudPublicKey.Ok().keys,
     clerkPublishableKey: envVals.CLERK_PUBLISHABLE_KEY,
     maxTenants: coerceInt(env.MAX_TENANTS, 10),
@@ -324,188 +298,85 @@ export async function createHandler<T extends DashSqlite>(db: T, env: Record<str
     maxInvites: coerceInt(env.MAX_INVITES, 10),
     maxLedgers: coerceInt(env.MAX_LEDGERS, 5),
     maxAppIdBindings: coerceInt(env.MAX_APPID_BINDINGS, 10),
-    deviceCA: rDeviceIdCA.Ok(),
-  });
-  return async (req: Request, bindPromise: BindPromise<Result<unknown>> = (p) => p): Promise<Response> => {
-    const startTime = performance.now();
-    if (req.method === "OPTIONS") {
-      return new Response("ok", {
-        status: 200,
-        headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
-      });
-    }
-    if (!["POST", "PUT"].includes(req.method)) {
-      return new Response("Invalid request", { status: 404, headers: DefaultHttpHeaders() });
-    }
-    const rJso = await exception2Result(async () => await req.json());
-    if (rJso.isErr()) {
-      logger.Error().Err(rJso.Err()).Msg("createhandler-Error");
-      return new Response("Invalid request", { status: 404, headers: DefaultHttpHeaders() });
-    }
-    const jso = rJso.Ok();
-
-    // console.log(jso);
-    let res: Promise<Result<unknown>>;
-    switch (true) {
-      case FPAPIMsg.isDeleteTenant(jso):
-        res = fpApi.deleteTenant(jso);
+  };
+  sthis.env.onSet((k, v) => {
+    // console.log(`Env set: ${k}=${v}`);
+    switch (k) {
+      case "MAX_TENANTS":
+        svcParams.maxTenants = coerceInt(v, 10);
         break;
-      case FPAPIMsg.isUpdateTenant(jso):
-        res = fpApi.updateTenant(jso);
+      case "MAX_ADMIN_USERS":
+        svcParams.maxAdminUsers = coerceInt(v, 10);
         break;
-      case FPAPIMsg.isCreateTenant(jso):
-        res = fpApi.createTenant(jso);
+      case "MAX_MEMBER_USERS":
+        svcParams.maxMemberUsers = coerceInt(v, 10);
         break;
-      case FPAPIMsg.isDeleteInvite(jso):
-        res = fpApi.deleteInvite(jso);
+      case "MAX_INVITES":
+        svcParams.maxInvites = coerceInt(v, 10);
         break;
-      case FPAPIMsg.isListInvites(jso):
-        res = fpApi.listInvites(jso);
+      case "MAX_LEDGERS":
+        svcParams.maxLedgers = coerceInt(v, 10);
         break;
-      case FPAPIMsg.isInviteUser(jso):
-        res = fpApi.inviteUser(jso);
+      case "MAX_APPID_BINDINGS":
+        svcParams.maxAppIdBindings = coerceInt(v, 10);
         break;
-      case FPAPIMsg.isFindUser(jso):
-        res = fpApi.findUser(jso);
-        break;
-      case FPAPIMsg.isRedeemInvite(jso):
-        res = fpApi.redeemInvite(jso);
-        break;
-      case FPAPIMsg.isEnsureUser(jso):
-        res = fpApi.ensureUser(jso);
-        break;
-      case FPAPIMsg.isListTenantsByUser(jso):
-        res = fpApi.listTenantsByUser(jso);
-        break;
-      case FPAPIMsg.isUpdateUserTenant(jso):
-        res = fpApi.updateUserTenant(jso);
-        break;
-      case FPAPIMsg.isListLedgersByUser(jso):
-        res = fpApi.listLedgersByUser(jso);
-        break;
-
-      case FPAPIMsg.isCreateLedger(jso):
-        res = fpApi.createLedger(jso);
-        break;
-
-      case FPAPIMsg.isUpdateLedger(jso):
-        res = fpApi.updateLedger(jso);
-        break;
-
-      case FPAPIMsg.isDeleteLedger(jso):
-        res = fpApi.deleteLedger(jso);
-        break;
-
-      case FPAPIMsg.isCloudSessionToken(jso):
-        res = fpApi.getCloudSessionToken(jso);
-        break;
-
-      case FPAPIMsg.isReqTokenByResultId(jso):
-        res = fpApi.getTokenByResultId(jso);
-        break;
-
-      case FPAPIMsg.isReqExtendToken(jso):
-        res = fpApi.extendToken(jso);
-        break;
-
-      case FPAPIMsg.isEnsureCloudToken(jso):
-        res = fpApi.ensureCloudToken(jso);
-        break;
-
-      case FPAPIMsg.isReqCertFromCsr(jso):
-        res = fpApi.getCertFromCsr(jso);
-        break;
-
-      // Handle custom Clerk instance registration
-      case jso.type === "reqRegisterClerkKeys": {
-        const { clerkId, jwksUrl } = jso as { clerkId: string; jwksUrl: string };
-        if (!clerkId || !jwksUrl) {
-          return new Response(
-            JSON.stringify({ type: "error", message: "clerkId and jwksUrl are required" }),
-            { status: 400, headers: DefaultHttpHeaders({ "Content-Type": "application/json" }) },
-          );
-        }
-        const instance = registerClerkInstance(clerkId, jwksUrl);
-        res = Promise.resolve(
-          Result.Ok({
-            type: "resRegisterClerkKeys",
-            clerkId: instance.clerkId,
-            jwksUrl: instance.jwksUrl,
-            registeredAt: instance.registeredAt.toISOString(),
-          }),
-        );
-        break;
-      }
-
-      // List registered Clerk instances
-      case jso.type === "reqListClerkInstances": {
-        const instances = listClerkInstances();
-        res = Promise.resolve(
-          Result.Ok({
-            type: "resListClerkInstances",
-            instances: instances.map((i) => ({
-              clerkId: i.clerkId,
-              jwksUrl: i.jwksUrl,
-              registeredAt: i.registeredAt.toISOString(),
-            })),
-          }),
-        );
-        break;
-      }
-
       default:
-        return new Response("Invalid request", { status: 400, headers: DefaultHttpHeaders() });
+        return;
     }
-    try {
-      const rRes = await bindPromise(res);
-      // console.log("Response", rRes);
-      if (rRes.isErr()) {
-        logger.Error().Any({ request: jso.type }).Err(rRes).Msg("Result-Error");
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-        return new Response(
-          JSON.stringify({
-            type: "error",
-            message: rRes.Err().message,
-          }),
-          {
-            status: 500,
-            headers: DefaultHttpHeaders({
-              "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-            }),
-          },
-        );
-      }
-      logger
-        .Info()
-        .Any({ request: jso.type, response: (rRes.Ok() as { type: string }).type })
-        .Msg("Success");
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      return new Response(JSON.stringify(rRes.Ok()), {
-        status: 200,
-        headers: DefaultHttpHeaders({
-          "Content-Type": "application/json",
-          "Server-Timing": `total;dur=${duration.toFixed(2)}`,
-        }),
-      });
-    } catch (e) {
-      logger.Error().Any({ request: jso.type }).Err(e).Msg("global-Error");
-      const endTime = performance.now();
-      const duration = endTime - startTime;
+  });
+
+  const fpApiCtx = new AppContext().set(
+    "fpApiCtx",
+    createFPApiSQLCtx(
+      sthis,
+      db,
+      await tokenApi(sthis, {
+        clockTolerance: coerceInt(envVals.CA_CLOCK_TOLERANCE, 60),
+        deviceIdCA: rDeviceIdCA.Ok(),
+      }),
+      rDeviceIdCA.Ok(),
+      svcParams,
+    ),
+  );
+  const evento = fpApiEvento();
+  const send = new SendResponseProvider();
+  return async (req: Request, bindPromise: BindPromise<Result<unknown>> = (p) => p): Promise<Response> => {
+    // const startTime = performance.now();
+    // if (req.method === "OPTIONS") {
+    //   return new Response("ok", {
+    //     status: 200,
+    //     headers: DefaultHttpHeaders({ "Content-Type": "application/json" }),
+    //   });
+    // }
+
+    // const rJso = await exception2Result(async () => await req.json());
+    // if (rJso.isErr()) {
+    //   logger.Error().Err(rJso.Err()).Msg("createhandler-Error");
+    //   return new Response("Invalid request", { status: 404, headers: DefaultHttpHeaders() });
+    // }
+    // const jso = rJso.Ok();
+    const rTrigger = await bindPromise(
+      evento.trigger({
+        ctx: fpApiCtx,
+        send,
+        request: req,
+      }),
+    );
+    if (rTrigger.isErr()) {
+      fpApiCtx.getOrThrow<FPApiSQLCtx>("fpApiCtx").logger.Error().Err(rTrigger).Msg("createhandler-Error");
       return new Response(
         JSON.stringify({
           type: "error",
-          message: (e as Error).message,
+          message: rTrigger.Err().message,
         }),
         {
           status: 500,
           headers: DefaultHttpHeaders({
             "Content-Type": "application/json",
-            "Server-Timing": `total;dur=${duration.toFixed(2)}`,
           }),
         },
       );
     }
+    return send.getResponse();
   };
 }

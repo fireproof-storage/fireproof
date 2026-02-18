@@ -1,13 +1,13 @@
 import { toSortedObject } from "@adviser/cement";
-import { BaseXXEndeCoder } from "@fireproof/core-types-base";
+import { BaseXXEndeCoder, CertificatePayload, CertificatePayloadSchema } from "@fireproof/core-types-base";
 import { decodeJwt } from "jose";
 import { base58btc } from "multiformats/bases/base58";
 import { sha1 } from "multiformats/hashes/sha1";
 import { sha256 } from "multiformats/hashes/sha2";
 import { deepFreeze } from "@fireproof/core-runtime";
-import { CertificatePayload, CertificatePayloadSchema } from "@fireproof/core-types-base/fp-ca-cert-payload.zod.js";
+import { CertorIf } from "@fireproof/core-types-device-id";
 
-export class Certor {
+export class Certor implements CertorIf {
   readonly #cert: CertificatePayload;
   readonly base64: BaseXXEndeCoder;
   #strCert?: string;

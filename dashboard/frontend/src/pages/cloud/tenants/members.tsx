@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.js";
 import { Minus } from "../../../components/Minus.js";
 import { Plus } from "../../../components/Plus.js";
-import { isAdmin, UserTenant, ResFindUser, User, QueryUser } from "@fireproof/core-protocols-dashboard";
+import { isAdmin, UserTenant, ResFindUser, User, QueryUser } from "@fireproof/core-types-protocols-dashboard";
 
 const reEmail =
   // eslint-disable-next-line no-control-regex

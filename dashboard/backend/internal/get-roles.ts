@@ -1,9 +1,9 @@
-import { RoleType } from "@fireproof/core-protocols-dashboard";
 import { toRole, toReadWrite } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, inArray } from "drizzle-orm";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
 import { sqlTenants, sqlTenantUsers } from "../sql/tenants.js";
 import { FPApiSQLCtx } from "../types.js";
+import { RoleType } from "@fireproof/core-types-protocols-dashboard";
 
 export async function getRoles(
   { db }: FPApiSQLCtx,

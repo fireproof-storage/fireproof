@@ -35,7 +35,7 @@ it("getVersion emptyString", async () => {
 
 it("should set package version but leave workspace dependencies as-is", async () => {
   const version = new Version("0.0.0-smoke", "^");
-  const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, { mock });
   expect(patchedPackageJson.version).toBe("0.0.0-smoke");
   // Workspace dependencies are no longer replaced by patchPackageJson - use VersionPinner for that
   expect(patchedPackageJson.dependencies).toHaveProperty("@fireproof/vendor", "workspace:0.0.0");
@@ -43,7 +43,7 @@ it("should set package version but leave workspace dependencies as-is", async ()
 
 it("should only use prefix version in dependencies", async () => {
   const version = new Version("0.0.0-smoke", "^");
-  const { patchedPackageJson } = await patchPackageJson("package.json", version, undefined, mock);
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, { mock });
   const originalPackageJson = (await mock.readJSON()) as unknown as PackageJson;
   const jsrConf = await buildJsrConf({ originalPackageJson, patchedPackageJson }, version.prefixedVersion);
   expect(jsrConf.version).toBe("0.0.0-smoke");
@@ -215,6 +215,33 @@ it("sanitizeNpmrc with // lhs", async () => {
       '//localhost:4873/:_authToken="Zjk5MjVhZTg4ZTlkNzQ3MW"',
     ].join("\n"),
   );
+});
+
+it("unmodified dependencies", async () => {
+  const pjson = {
+    version: "0.0.0",
+    scripts: {
+      pack: "core-cli build --doPack x",
+      publish: "core-cli build x",
+    },
+    dependencies: {
+      "@fireproof/vendor": "workspace:*",
+      "xcmd-ts": "^0.13.0",
+      "ycmd-ts": "~0.13.0",
+      "zcmd-ts": "0.13.0",
+    },
+  };
+  const patchedPjson = await patchPackageJson("package.json", new Version("1.2.3", ""), { mock: { readJSON: async () => pjson } });
+  expect(patchedPjson.patchedPackageJson).toEqual({
+    scripts: {},
+    version: "1.2.3",
+    dependencies: {
+      "@fireproof/vendor": "workspace:*",
+      "xcmd-ts": "^0.13.0",
+      "ycmd-ts": "~0.13.0",
+      "zcmd-ts": "0.13.0",
+    },
+  });
 });
 
 it("sanitizeNpmrc with http lhs", async () => {
