@@ -13,3 +13,5 @@ import "./compact-strategies.js";
 export { getCompactStrategy, registerCompactStrategy, getCompactStrategyThrow } from "@fireproof/core-runtime";
 
 export { registerStoreProtocol } from "@fireproof/core-blockstore";
+
+export { getLedgerSvc } from "./ledger-svc.js";

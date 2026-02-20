@@ -26,6 +26,7 @@ import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
 import { getDefaultURI } from "@fireproof/core-blockstore";
 import { defaultKeyBagOpts } from "@fireproof/core-keybag";
+import { getLedgerSvc } from "./ledger-svc.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
@@ -68,7 +69,10 @@ export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
             /* noop */
           }),
       });
+      const svc = getLedgerSvc();
+      svc.onCreate.invoke(db);
       db.onClosed(() => {
+        svc.onClose.invoke(db);
         ledgers.unget(key);
       });
       return db;
