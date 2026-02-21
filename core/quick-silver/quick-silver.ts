@@ -51,25 +51,29 @@ export class QuickSilver implements Database {
     this.logger = opts.sthis.logger;
   }
 
-  readonly _baseURL = Lazy(() => BuildURI.from("indexeddb://fp").setParam(PARAM.NAME, this.name).URI());
+  readonly _baseURL = Lazy(() =>
+    BuildURI.from("indexeddb://fp").setParam(PARAM.NAME, this.name).setParam(PARAM.STORE, "file").URI(),
+  );
 
   readonly ready = Lazy(async () => {
-    const result = await this._gateway.start(BuildURI.from(this._baseURL()).setParam(PARAM.STORE, "file").URI(), this.sthis);
+    const result = await this._gateway.start(BuildURI.from(this._baseURL()).URI(), this.sthis);
     if (result.isErr()) throw result.Err();
     return result.Ok();
   });
 
   async close(): Promise<void> {
-    return this.ready().then(() => this._gateway.close(this._baseURL(), this.sthis));
+    const url = BuildURI.from(this._baseURL()).URI();
+    return this.ready()
+      .then(() => this._gateway.close(url, this.sthis))
+      .then(() => this.onClosed.invoke());
   }
 
   async destroy(): Promise<void> {
-    return this.ready().then(() => this._gateway.destroy(this._baseURL(), this.sthis));
+    const url = BuildURI.from(this._baseURL()).URI();
+    return this.ready().then(() => this._gateway.destroy(url, this.sthis));
   }
 
-  onClosed(_fn: () => void): void {
-    throw new Error("not implemented");
-  }
+  readonly onClosed = OnFunc<() => void>();
 
   attach(_a: Attachable): Promise<Attached> {
     throw new Error("not implemented");
@@ -77,7 +81,7 @@ export class QuickSilver implements Database {
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
     await this.ready();
-    const url = BuildURI.from(this._baseURL()).setParam(PARAM.STORE, "file").setParam(PARAM.KEY, id).URI();
+    const url = BuildURI.from(this._baseURL()).setParam(PARAM.KEY, id).URI();
     const result = await this._gateway.get(url, this.sthis);
     if (result.isErr()) throw result.Err();
     const decoded = this.sthis.ende.cbor.decodeUint8<QCDoc>(result.Ok());
@@ -123,7 +127,7 @@ export class QuickSilver implements Database {
     const results = await Promise.allSettled(
       envelopes.map((envelope) => {
         const key = isQCDoc(envelope) ? envelope.id : envelope.cid;
-        const url = BuildURI.from(this._baseURL()).setParam(PARAM.STORE, "file").setParam(PARAM.KEY, key).URI();
+        const url = BuildURI.from(this._baseURL()).setParam(PARAM.KEY, key).URI();
         const bytes = this.sthis.ende.cbor.encodeToUint8(envelope);
         return this._gateway.put(url, bytes, this.sthis);
       }),
@@ -146,12 +150,16 @@ export class QuickSilver implements Database {
     return { ids: writtenDocs.map((d) => d._id), clock: [], name: this.name };
   }
 
-  del(_id: string): Promise<DocResponse> {
-    throw new Error("not implemented");
+  async del(id: string): Promise<DocResponse> {
+    await this.ready();
+    const url = BuildURI.from(this._baseURL()).setParam(PARAM.KEY, id).URI();
+    const result = await this._gateway.delete(url, this.sthis);
+    if (result.isErr()) throw result.Err();
+    return { id, clock: [], name: this.name };
   }
 
-  remove(_id: string): Promise<DocResponse> {
-    throw new Error("not implemented");
+  remove(id: string): Promise<DocResponse> {
+    return this.del(id);
   }
 
   changes<T extends DocTypes>(_since?: ClockHead, _opts?: ChangesOptions): Promise<ChangesResponse<T>> {
@@ -183,6 +191,6 @@ export class QuickSilver implements Database {
   }
 
   compact(): Promise<void> {
-    throw new Error("not implemented");
+    return Promise.resolve();
   }
 }

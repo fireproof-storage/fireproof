@@ -112,4 +112,39 @@ describe("quick-silver", () => {
       await expect(db.get("missing")).rejects.toThrow();
     });
   });
+
+  describe("del", () => {
+    let db: Database;
+    beforeEach(() => {
+      db = fireproof("del-test");
+    });
+    afterEach(async () => {
+      await db.destroy();
+    });
+
+    it("should delete a doc", async () => {
+      await db.put({ _id: "to-delete", foo: "bar" });
+      const ok = await db.del("to-delete");
+      expect(ok.id).toBe("to-delete");
+      await expect(db.get("to-delete")).rejects.toThrow();
+    });
+
+    it("remove should be an alias for del", async () => {
+      await db.put({ _id: "to-remove", foo: "bar" });
+      const ok = await db.remove("to-remove");
+      expect(ok.id).toBe("to-remove");
+    });
+  });
+
+  describe("close", () => {
+    it("should invoke onClosed listeners", async () => {
+      const db = fireproof("close-test");
+      let called = 0;
+      db.onClosed(() => {
+        called++;
+      });
+      await db.close();
+      expect(called).toBe(1);
+    });
+  });
 });
