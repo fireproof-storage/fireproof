@@ -17,6 +17,7 @@ import {
   AppContext,
   toSortedArray,
   toSorted,
+  top_uint8,
   exception2Result,
 } from "@adviser/cement";
 import {
@@ -611,6 +612,11 @@ class Hasher {
 }
 export async function hashStringAsync(str: string): Promise<string> {
   const bytes = json.encode(str);
+  return hashBlobAsync(bytes);
+}
+
+export async function hashBlobAsync(uint8: ToUint8): Promise<string> {
+  const bytes = await top_uint8(uint8);
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash).toString();
 }

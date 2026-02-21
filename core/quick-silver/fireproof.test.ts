@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { fireproof } from "./fireproof.js";
 import { Database } from "@fireproof/core-types-base";
+import type { QS_Doc, QS_DocFile, QS_File } from "./envelope.js";
+import { hashBlobAsync } from "@fireproof/core-runtime";
 
 describe("quick-silver", () => {
   it("one instance per dbname", () => {
@@ -26,6 +28,24 @@ describe("quick-silver", () => {
       ]);
       expect(result.ids).toHaveLength(3);
       expect(result.ids[1]).toBe("setkey");
+    });
+
+    it("file _ has cid matching content hash and get resolves docFile", async () => {
+      const file = new File(["hello file"], "hello.txt");
+      const expectedCid = await hashBlobAsync(file);
+
+      const result = await db.bulk([{ _id: "file-doc", _files: { hello: file }, label: "test" }]);
+      expect(result.ids[0]).toBe("file-doc");
+
+      const doc = await db.get<{ label: string; _: QS_DocFile }>("file-doc");
+      expect(doc._.fileRefs).toHaveLength(1);
+      expect(doc._.fileRefs[0].filename).toBe("hello.txt");
+      expect(doc._.fileRefs[0].cid).toBe(expectedCid);
+
+      const fileDoc = await db.get<{ _: QS_File; payload: Uint8Array }>(doc._.fileRefs[0].cid);
+      expect(fileDoc._.filename).toBe("hello.txt");
+      expect(fileDoc._.cid).toBe(expectedCid);
+      expect(fileDoc.payload).toBeInstanceOf(Uint8Array);
     });
   });
 
@@ -106,6 +126,17 @@ describe("quick-silver", () => {
       const doc = await db.get<{ foo: string }>("gettest");
       expect(doc._id).toBe("gettest");
       expect(doc.foo).toBe("bar");
+    });
+
+    it("should include _ metadata in returned doc", async () => {
+      await db.put({ _id: "with-meta", foo: "bar" });
+      const doc = await db.get<{ foo: string; _: QS_Doc }>("with-meta");
+      expect(doc.foo).toBe("bar");
+      expect(doc._).toBeDefined();
+      expect(doc._.id).toBe("with-meta");
+      expect(doc._.cid).toBeTruthy();
+      expect(doc._.fileRefs).toEqual([]);
+      expect(doc._.synced).toEqual([]);
     });
 
     it("should throw NotFoundError for missing id", async () => {

@@ -21,10 +21,11 @@ import type {
   Attachable,
   Attached,
 } from "@fireproof/core-types-base";
-import { BuildURI, Lazy, Logger, OnFunc, URI } from "@adviser/cement";
+import { BuildURI, Lazy, Logger, OnFunc, URI, stripper } from "@adviser/cement";
 import { GatewayImpl as IndexedDBGateway } from "@fireproof/core-gateways-indexeddb";
+import { hashObjectCID, hashBlobAsync } from "@fireproof/core-runtime";
 import { PARAM } from "@fireproof/core-types-base";
-import { QCDoc, QCFile, isQCDoc } from "./envelope.js";
+import { QCDoc, QCFile, isQCDoc, isQCFile } from "./envelope.js";
 import { NotFoundError } from "@fireproof/core-types-base";
 
 export interface QuickSilverOpts {
@@ -84,13 +85,28 @@ export class QuickSilver implements Database {
     const url = BuildURI.from(this._baseURL()).setParam(PARAM.KEY, id).URI();
     const result = await this._gateway.get(url, this.sthis);
     if (result.isErr()) throw result.Err();
-    const decoded = this.sthis.ende.cbor.decodeUint8<QCDoc>(result.Ok());
+    const decoded = this.sthis.ende.cbor.decodeUint8<QCDoc | QCFile>(result.Ok());
     if (decoded.isErr()) throw decoded.Err();
     const envelope = decoded.Ok();
+    if (isQCFile(envelope)) {
+      return { _id: envelope._.cid, _: envelope._, payload: envelope.payload } as DocWithId<T>;
+    }
     if (!isQCDoc(envelope)) {
       throw new NotFoundError(`not a doc: ${id}`);
     }
-    return { _id: envelope.id, ...(envelope.payload as T) } as DocWithId<T>;
+    const docFile = await Promise.all(
+      envelope._.fileRefs.map(async (cid) => {
+        const fileUrl = BuildURI.from(this._baseURL()).setParam(PARAM.KEY, cid).URI();
+        const fileResult = await this._gateway.get(fileUrl, this.sthis);
+        if (fileResult.isErr()) throw fileResult.Err();
+        const fileDecoded = this.sthis.ende.cbor.decodeUint8<QCFile>(fileResult.Ok());
+        if (fileDecoded.isErr()) throw fileDecoded.Err();
+        const fileEnvelope = fileDecoded.Ok();
+        if (!isQCFile(fileEnvelope)) throw new NotFoundError(`not a file: ${cid}`);
+        return fileEnvelope._;
+      }),
+    );
+    return { _id: envelope._.id, ...(envelope.data as T), _: { ...envelope._, fileRefs: docFile } } as DocWithId<T>;
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
@@ -101,32 +117,40 @@ export class QuickSilver implements Database {
   async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
     await this.ready();
 
-    const envelopes = docs.flatMap((doc) => {
-      const { _id, _files, ...payload } = doc as DocSet<T> & { _files?: Record<string, File> };
-      const id = _id ?? this.sthis.timeOrderedNextId().str;
+    const envelopes = await Promise.all(
+      docs.map(async (doc) => {
+        const raw = doc as DocSet<T> & { _files?: Record<string, File> };
+        const id = raw._id ?? this.sthis.timeOrderedNextId().str;
+        const data = stripper(/(_id|_files)/, raw);
 
-      const qcFiles: QCFile[] = Object.entries(_files ?? {}).map(([filename, _file]) => ({
-        type: "qc.file" as const,
-        cid: this.sthis.timeOrderedNextId().str,
-        filename,
-        synced: [],
-        payload: new Uint8Array(), // TODO: read file bytes
-      }));
+        const { cid } = await hashObjectCID(data);
 
-      const qcDoc: QCDoc = {
-        type: "qc.doc",
-        id,
-        fileRefs: qcFiles.map((f) => f.cid),
-        synced: [],
-        payload,
-      };
+        const qcFiles: QCFile[] = await Promise.all(
+          Object.entries(raw._files ?? {}).map(async ([filename, file]) => {
+            const payload = new Uint8Array(await file.arrayBuffer());
+            const cid = await hashBlobAsync(file);
+            return {
+              type: "qc.file" as const,
+              _: { type: "file" as const, filename: file.name, cid, synced: [] },
+              payload,
+            };
+          }),
+        );
 
-      return [...qcFiles, qcDoc];
-    });
+        const qcDoc: QCDoc = {
+          type: "qc.doc",
+          _: { type: "doc" as const, id, cid: cid.toString(), fileRefs: qcFiles.map((f) => f._.cid), synced: [] },
+          data,
+        };
+
+        return [...qcFiles, qcDoc];
+      }),
+    );
+    const flatEnvelopes = envelopes.flat();
 
     const results = await Promise.allSettled(
-      envelopes.map((envelope) => {
-        const key = isQCDoc(envelope) ? envelope.id : envelope.cid;
+      flatEnvelopes.map((envelope) => {
+        const key = isQCDoc(envelope) ? envelope._.id : envelope._.cid;
         const url = BuildURI.from(this._baseURL()).setParam(PARAM.KEY, key).URI();
         const bytes = this.sthis.ende.cbor.encodeToUint8(envelope);
         return this._gateway.put(url, bytes, this.sthis);
@@ -142,7 +166,7 @@ export class QuickSilver implements Database {
       throw this.logger.Error().Any("errors", errors).Msg("bulk put failed").AsError();
     }
 
-    const writtenDocs = envelopes.filter(isQCDoc).map((e) => ({ _id: e.id, ...(e.payload as DocTypes) }) as DocWithId<DocTypes>);
+    const writtenDocs = flatEnvelopes.filter(isQCDoc).map((e) => ({ _id: e._.id, ...(e.data as DocTypes) }) as DocWithId<DocTypes>);
 
     this._updateListeners.invoke(writtenDocs);
     this._noUpdateListeners.invoke();

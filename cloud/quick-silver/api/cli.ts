@@ -131,7 +131,10 @@ const subscribeCmd = command({
 
     const cleanup = () => {
       handle.close();
-      api.close().then(() => process.exit(0)).catch(() => process.exit(1));
+      api
+        .close()
+        .then(() => process.exit(0))
+        .catch(() => process.exit(1));
     };
     process.on("SIGINT", cleanup);
     process.on("SIGTERM", cleanup);
@@ -152,4 +155,6 @@ const cmd = subcommands({
   cmds: { get: getCmd, put: putCmd, query: queryCmd, subscribe: subscribeCmd },
 });
 
-run(cmd, process.argv.slice(2)).then(() => process.exit(0)).catch(console.error);
+run(cmd, process.argv.slice(2))
+  .then(() => process.exit(0))
+  .catch(console.error);

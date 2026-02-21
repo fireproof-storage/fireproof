@@ -64,7 +64,9 @@ class QSApiImpl {
     const ws = new WebSocket(this.opts.url);
     const opened = new Future<WebSocket>();
     ws.binaryType = "arraybuffer";
-    ws.onopen = () => { opened.resolve(ws); };
+    ws.onopen = () => {
+      opened.resolve(ws);
+    };
     ws.onerror = (e) => opened.reject(new Error(String(e)));
     ws.onmessage = (evt) => {
       const decoded = sthis.ende.cbor.decodeUint8<QSMsg>(new Uint8Array(evt.data as ArrayBuffer));
@@ -79,18 +81,13 @@ class QSApiImpl {
 
   private onMessage = OnFunc<(msg: QSMsg) => void>();
 
-  private withTimeout(
-    done: Future<void>,
-    unreg: () => void,
-    writer: WritableStreamDefaultWriter<unknown>,
-  ): void {
-    timeouted(done.asPromise(), { timeout: this.opts.timeoutMs ?? DEFAULT_TIMEOUT_MS })
-      .then((result) => {
-        if (isTimeout(result) || isError(result)) {
-          unreg();
-          writer.abort(new Error(isTimeout(result) ? "request timeout" : result.error?.message));
-        }
-      });
+  private withTimeout(done: Future<void>, unreg: () => void, writer: WritableStreamDefaultWriter<unknown>): void {
+    timeouted(done.asPromise(), { timeout: this.opts.timeoutMs ?? DEFAULT_TIMEOUT_MS }).then((result) => {
+      if (isTimeout(result) || isError(result)) {
+        unreg();
+        writer.abort(new Error(isTimeout(result) ? "request timeout" : result.error?.message));
+      }
+    });
   }
 
   get(ops: QSGet[]): ReadableStream<QSResGet | QSResGetNotFound | QSResErr> {
@@ -108,7 +105,11 @@ class QSApiImpl {
       if (!isQSResGet(msg) && !isQSResGetNotFound(msg) && !isQSResErr(msg)) return;
       pending.delete(msg.tid);
       writer.write(msg);
-      if (pending.size === 0) { unreg(); done.resolve(); writer.close(); }
+      if (pending.size === 0) {
+        unreg();
+        done.resolve();
+        writer.close();
+      }
     });
 
     this.withTimeout(done, unreg, writer);
@@ -116,17 +117,23 @@ class QSApiImpl {
     this.connect()
       .then((ws) => {
         for (let i = 0; i < ops.length; i++) {
-          ws.send(sthis.ende.cbor.encodeToUint8({
-            type: "QSReqGet",
-            tid: tids[i],
-            arg: 0,
-            db: this.opts.db,
-            auth: this.opts.auth(),
-            ...ops[i],
-          } satisfies QSReqGet));
+          ws.send(
+            sthis.ende.cbor.encodeToUint8({
+              type: "QSReqGet",
+              tid: tids[i],
+              arg: 0,
+              db: this.opts.db,
+              auth: this.opts.auth(),
+              ...ops[i],
+            } satisfies QSReqGet),
+          );
         }
       })
-      .catch((e) => { unreg(); done.reject(e); writer.abort(e); });
+      .catch((e) => {
+        unreg();
+        done.reject(e);
+        writer.abort(e);
+      });
 
     return readable;
   }
@@ -143,7 +150,11 @@ class QSApiImpl {
       if (!isQSResPut(msg) && !isQSResErr(msg)) return;
       pending.delete(msg.tid);
       writer.write(msg);
-      if (pending.size === 0) { unreg(); done.resolve(); writer.close(); }
+      if (pending.size === 0) {
+        unreg();
+        done.resolve();
+        writer.close();
+      }
     });
 
     this.withTimeout(done, unreg, writer);
@@ -151,17 +162,23 @@ class QSApiImpl {
     this.connect()
       .then((ws) => {
         for (let i = 0; i < ops.length; i++) {
-          ws.send(sthis.ende.cbor.encodeToUint8({
-            type: "QSReqPut",
-            tid: tids[i],
-            arg: 0,
-            db: this.opts.db,
-            auth: this.opts.auth(),
-            ...ops[i],
-          } satisfies QSReqPut));
+          ws.send(
+            sthis.ende.cbor.encodeToUint8({
+              type: "QSReqPut",
+              tid: tids[i],
+              arg: 0,
+              db: this.opts.db,
+              auth: this.opts.auth(),
+              ...ops[i],
+            } satisfies QSReqPut),
+          );
         }
       })
-      .catch((e) => { unreg(); done.reject(e); writer.abort(e); });
+      .catch((e) => {
+        unreg();
+        done.reject(e);
+        writer.abort(e);
+      });
 
     return readable;
   }
@@ -179,22 +196,32 @@ class QSApiImpl {
     const unreg = this.onMessage((msg) => {
       if (msg.tid !== tid) return;
       writer.write(msg as QSResQueryBegin | QSResQueryRow | QSResQueryEnd | QSResErr);
-      if (isQSResQueryEnd(msg) || isQSResErr(msg)) { unreg(); done.resolve(); writer.close(); }
+      if (isQSResQueryEnd(msg) || isQSResErr(msg)) {
+        unreg();
+        done.resolve();
+        writer.close();
+      }
     });
 
     this.withTimeout(done, unreg, writer);
 
     this.connect()
       .then((ws) => {
-        ws.send(sthis.ende.cbor.encodeToUint8({
-          type: "QSReqQuery",
-          tid,
-          arg: 0,
-          db: this.opts.db,
-          auth: this.opts.auth(),
-        } satisfies QSReqQuery));
+        ws.send(
+          sthis.ende.cbor.encodeToUint8({
+            type: "QSReqQuery",
+            tid,
+            arg: 0,
+            db: this.opts.db,
+            auth: this.opts.auth(),
+          } satisfies QSReqQuery),
+        );
       })
-      .catch((e) => { unreg(); done.reject(e); writer.abort(e); });
+      .catch((e) => {
+        unreg();
+        done.reject(e);
+        writer.abort(e);
+      });
 
     return readable;
   }
@@ -211,44 +238,62 @@ class QSApiImpl {
       if (msg.tid !== tid) return;
       if (!isQSResRegisterSubscribe(msg) && !isQSEvtSubscribe(msg) && !isQSResErr(msg)) return;
       writer.write(msg);
-      if (isQSResErr(msg)) { unreg(); writer.close(); }
+      if (isQSResErr(msg)) {
+        unreg();
+        writer.close();
+      }
     });
 
     this.connect()
       .then((ws) => {
-        ws.send(sthis.ende.cbor.encodeToUint8({
-          type: "QSReqRegisterSubscribe",
-          tid,
-          arg: 0,
-          db: this.opts.db,
-          auth: this.opts.auth(),
-        } satisfies QSReqRegisterSubscribe));
+        ws.send(
+          sthis.ende.cbor.encodeToUint8({
+            type: "QSReqRegisterSubscribe",
+            tid,
+            arg: 0,
+            db: this.opts.db,
+            auth: this.opts.auth(),
+          } satisfies QSReqRegisterSubscribe),
+        );
       })
-      .catch((e) => { unreg(); writer.abort(e); });
+      .catch((e) => {
+        unreg();
+        writer.abort(e);
+      });
 
     return {
       events: readable,
       close: () => {
         unreg();
-        writer.close().catch(() => { /* ignore if already closed */ });
+        writer.close().catch(() => {
+          /* ignore if already closed */
+        });
         this.connect()
           .then((ws) => {
-            ws.send(sthis.ende.cbor.encodeToUint8({
-              type: "QSReqUnregisterSubscribe",
-              tid,
-              arg: 0,
-              db: this.opts.db,
-              auth: this.opts.auth(),
-            } satisfies QSReqUnregisterSubscribe));
+            ws.send(
+              sthis.ende.cbor.encodeToUint8({
+                type: "QSReqUnregisterSubscribe",
+                tid,
+                arg: 0,
+                db: this.opts.db,
+                auth: this.opts.auth(),
+              } satisfies QSReqUnregisterSubscribe),
+            );
           })
-          .catch(() => { /* ignore */ });
+          .catch(() => {
+            /* ignore */
+          });
       },
     };
   }
 
   close(): Promise<void> {
     return this.connect()
-      .then((ws) => { ws.close(); })
-      .catch(() => { /* ignore */ });
+      .then((ws) => {
+        ws.close();
+      })
+      .catch(() => {
+        /* ignore */
+      });
   }
 }

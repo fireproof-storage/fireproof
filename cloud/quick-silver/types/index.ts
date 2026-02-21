@@ -58,29 +58,39 @@ export const QSResGet = type({
   type: '"QSResGet"',
   key: "string",
   data: type.instanceOf(Uint8Array),
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 export const QSResGetNotFound = type({
   type: '"QSResGetNotFound"',
   key: "string",
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 export const QSResPut = type({
   type: '"QSResPut"',
   key: "string",
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 export const QSResErr = type({
   type: '"QSResErr"',
   error: "string",
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 // ── subscribe responses ───────────────────────────────────────────────────────
 
 export const QSResRegisterSubscribe = type({
   type: '"QSResRegisterSubscribe"',
   db: "string",
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 export const QSEvtSubscribe = type({
   type: '"QSEvtSubscribe"',
@@ -100,7 +110,9 @@ export const QSQueryRowMeta = type({
 
 export const QSResQueryBegin = type({
   type: '"QSResQueryBegin"',
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 export const QSResQueryRow = type({
   type: '"QSResQueryRow"',
@@ -109,15 +121,18 @@ export const QSResQueryRow = type({
     _: QSQueryRowMeta,
     payload: type.instanceOf(Uint8Array),
   }),
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
 export const QSResQueryEnd = type({
   type: '"QSResQueryEnd"',
   rows: "number",
-}).and(QSTid).and(QSArg);
+})
+  .and(QSTid)
+  .and(QSArg);
 
-export const QSOpRes = QSResGet
-  .or(QSResGetNotFound)
+export const QSOpRes = QSResGet.or(QSResGetNotFound)
   .or(QSResPut)
   .or(QSResErr)
   .or(QSResQueryBegin)
@@ -169,7 +184,6 @@ export function isQSGet(x: unknown): x is QSGet {
   return QSGet(x) instanceof type.errors === false;
 }
 
-
 export function isQSQuery(x: unknown): x is QSQuery {
   return QSQuery(x) instanceof type.errors === false;
 }
@@ -197,7 +211,6 @@ export function isQSResGetNotFound(x: unknown): x is QSResGetNotFound {
 export function isQSResPut(x: unknown): x is QSResPut {
   return QSResPut(x) instanceof type.errors === false;
 }
-
 
 export function isQSResErr(x: unknown): x is QSResErr {
   return QSResErr(x) instanceof type.errors === false;

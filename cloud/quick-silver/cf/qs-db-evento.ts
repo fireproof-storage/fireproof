@@ -2,10 +2,7 @@
 
 import { Lazy, Evento, EventoResult, EventoType, LoggerImpl, Result, Option } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import {
-  isQSReqGet, isQSReqPut, isQSReqQuery,
-  QSResErr, QSEvtSubscribe,
-} from "@fireproof/cloud-quick-silver-types";
+import { isQSReqGet, isQSReqPut, isQSReqQuery, QSResErr, QSEvtSubscribe } from "@fireproof/cloud-quick-silver-types";
 import type { QSReqGet, QSReqPut, QSReqQuery } from "@fireproof/cloud-quick-silver-types";
 import { QSCborEventoEnDecoder } from "./qs-encoder.js";
 
@@ -35,10 +32,16 @@ export const qsDbEvento = Lazy(() => {
         sql.exec(
           `INSERT INTO docs (id, cid, data) VALUES (?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET cid = excluded.cid, data = excluded.data`,
-          req.key, req.key, req.data,
+          req.key,
+          req.key,
+          req.data,
         );
         await ctx.send.send(ctx, { type: "QSResPut", tid: req.tid, arg: req.arg, key: req.key });
-        await ctx.send.send(ctx, { type: "QSEvtSubscribe", tid: req.tid, msg: { key: req.key, data: req.data } } satisfies QSEvtSubscribe);
+        await ctx.send.send(ctx, {
+          type: "QSEvtSubscribe",
+          tid: req.tid,
+          msg: { key: req.key, data: req.data },
+        } satisfies QSEvtSubscribe);
         return Result.Ok(EventoResult.Continue);
       },
     },
@@ -51,9 +54,9 @@ export const qsDbEvento = Lazy(() => {
       handle: async (ctx) => {
         const req = ctx.validated as QSReqGet;
         const sql = handlerSql(ctx);
-        const rows = [...sql.exec<{ id: string; cid: string; data: Uint8Array }>(
-          `SELECT id, cid, data FROM docs WHERE id = ?`, req.key,
-        )];
+        const rows = [
+          ...sql.exec<{ id: string; cid: string; data: Uint8Array }>(`SELECT id, cid, data FROM docs WHERE id = ?`, req.key),
+        ];
         if (!rows.length) {
           await ctx.send.send(ctx, { type: "QSResGetNotFound", tid: req.tid, arg: req.arg, key: req.key });
         } else {
@@ -95,7 +98,10 @@ export const qsDbEvento = Lazy(() => {
       hash: "qs-unknown",
       handle: async (ctx) => {
         await ctx.send.send(ctx, {
-          type: "QSResErr", tid: "unknown", arg: 0, error: `unknown request: ${JSON.stringify(ctx.enRequest)}`,
+          type: "QSResErr",
+          tid: "unknown",
+          arg: 0,
+          error: `unknown request: ${JSON.stringify(ctx.enRequest)}`,
         } satisfies QSResErr);
         return Result.Ok(EventoResult.Continue);
       },
@@ -105,7 +111,10 @@ export const qsDbEvento = Lazy(() => {
       hash: "qs-error",
       handle: async (ctx) => {
         await ctx.send.send(ctx, {
-          type: "QSResErr", tid: "unknown", arg: 0, error: ctx.error?.message ?? "internal error",
+          type: "QSResErr",
+          tid: "unknown",
+          arg: 0,
+          error: ctx.error?.message ?? "internal error",
         } satisfies QSResErr);
         return Result.Ok(EventoResult.Continue);
       },

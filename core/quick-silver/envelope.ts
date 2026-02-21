@@ -1,18 +1,43 @@
 import { type } from "arktype";
 
-export const QCDoc = type({
-  type: '"qc.doc"',
+export const QS_Base = type({
+  cid: "string",
+  synced: "string[]",
+});
+
+export const QS_Doc = type({
+  type: '"doc"',
   id: "string",
   fileRefs: "string[]",
-  synced: "string[]",
-  payload: "unknown",
+}).and(QS_Base);
+
+export const QS_File = type({
+  type: '"file"',
+  filename: "string",
+}).and(QS_Base);
+
+export const QS_DocFile = QS_Base.and(
+  type({
+    type: '"doc"',
+    id: "string",
+    fileRefs: QS_File.array(),
+  }),
+);
+
+export type QS_Base = typeof QS_Base.infer;
+export type QS_Doc = typeof QS_Doc.infer;
+export type QS_File = typeof QS_File.infer;
+export type QS_DocFile = typeof QS_DocFile.infer;
+
+export const QCDoc = type({
+  type: '"qc.doc"',
+  _: QS_Doc,
+  data: "unknown",
 });
 
 export const QCFile = type({
   type: '"qc.file"',
-  cid: "string",
-  filename: "string",
-  synced: "string[]",
+  _: QS_File,
   payload: type.instanceOf(Uint8Array),
 });
 
