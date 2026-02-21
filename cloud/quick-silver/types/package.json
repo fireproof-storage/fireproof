@@ -1,0 +1,9 @@
+{
+  "name": "@fireproof/cloud-quick-silver-types",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "arktype": "^2.1.20"
+  }
+}

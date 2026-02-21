@@ -1,0 +1,12 @@
+{
+  "name": "@fireproof/cloud-quick-silver-api",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@adviser/cement": "^0.5.22",
+    "@fireproof/cloud-quick-silver-types": "workspace:*",
+    "@fireproof/core-runtime": "workspace:*",
+    "cmd-ts": "^0.15.0"
+  }
+}
