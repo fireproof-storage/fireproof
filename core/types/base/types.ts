@@ -138,6 +138,23 @@ export interface TextEndeCodable {
   txt: TextEndeCoder;
 }
 
+export interface EndeJson {
+  encodeToStr(obj: object): string;
+  encodeToUint8(obj: object): Uint8Array;
+  decodeStr<R>(str: string): Result<R>;
+  decodeUint8<R>(uint8: Uint8Array): Result<R>;
+}
+
+export interface EndeCbor {
+  encodeToUint8(obj: object): Uint8Array;
+  decodeUint8<R>(uint8: Uint8Array): Result<R>;
+}
+
+export interface Ende {
+  readonly json: EndeJson;
+  readonly cbor: EndeCbor;
+}
+
 export interface SuperThisOpts {
   // readonly crypto?: CryptoRuntime;
   readonly logger: Logger;
@@ -155,6 +172,7 @@ export interface SuperThis {
   readonly pathOps: PathOps;
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
+  readonly ende: Ende;
   // hash(): string;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };

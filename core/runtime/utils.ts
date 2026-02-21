@@ -17,6 +17,7 @@ import {
   AppContext,
   toSortedArray,
   toSorted,
+  exception2Result,
 } from "@adviser/cement";
 import {
   PARAM,
@@ -28,7 +29,9 @@ import {
   PromiseToUInt8,
   ToUInt8,
   HasLogger,
+  Ende,
 } from "@fireproof/core-types-base";
+import { decode as cborDecode, encode as cborEncode } from "cborg";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 } from "multiformats/hashes/sha2";
 import { CID } from "multiformats/cid";
@@ -62,6 +65,7 @@ class SuperThisImpl implements SuperThis {
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
+  readonly ende: Ende;
 
   constructor(opts: superThisOpts) {
     this.logger = opts.logger;
@@ -70,7 +74,18 @@ class SuperThisImpl implements SuperThis {
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
     this.ctx = opts.ctx;
-    // console.log("superThis", this);
+    this.ende = {
+      json: {
+        encodeToStr: (obj) => JSON.stringify(obj),
+        encodeToUint8: (obj) => this.txt.encode(JSON.stringify(obj)),
+        decodeStr: <R>(str: string) => exception2Result(() => JSON.parse(str) as R),
+        decodeUint8: <R>(uint8: Uint8Array) => exception2Result(() => JSON.parse(this.txt.decode(uint8)) as R),
+      },
+      cbor: {
+        encodeToUint8: (obj) => cborEncode(obj),
+        decodeUint8: <R>(uint8: Uint8Array) => exception2Result(() => cborDecode(uint8) as R),
+      },
+    };
   }
 
   nextId(bytes = 6): { str: string; bin: Uint8Array } {
