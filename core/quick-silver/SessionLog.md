@@ -3,9 +3,11 @@
 ## Session 2026-02-21
 
 ### What was built
+
 New offline database in `core/quick-silver/` implementing the Fireproof `Database` interface from scratch.
 
 ### Files created
+
 - `fireproof.ts` — `fireproof(name, opts?)` factory, singleton per name via `KeyedResolvOnce<Database>`
 - `quick-silver.ts` — `QuickSilver` class implementing `Database`
 - `types.ts` — `QSConfigOpts { sthis?: SuperThis }`
@@ -14,6 +16,7 @@ New offline database in `core/quick-silver/` implementing the Fireproof `Databas
 - `package.json` — dependencies: `@adviser/cement`, `@fireproof/core-runtime`, `@fireproof/core-gateways-indexeddb`, `@fireproof/core-types-base`, `arktype`
 
 ### Key decisions
+
 - `_baseURL` bakes in `PARAM.STORE = "file"` and `PARAM.NAME` — do NOT add at call sites
 - `ready = Lazy(...)` — memoized start, called internally, not required by user
 - `onClosed = OnFunc<() => void>()` — field IS callable to register listeners; `close()` calls `.invoke()`
@@ -23,12 +26,14 @@ New offline database in `core/quick-silver/` implementing the Fireproof `Databas
 - `compact` is no-op
 
 ### Changes to core packages
+
 - `core/types/base/types.ts` — added `Ende`, `EndeJson`, `EndeCbor` interfaces; added `readonly ende: Ende` to `SuperThis`
 - `core/runtime/utils.ts` — implemented `ende` in `SuperThisImpl` using `cborg` + `this.txt`; `decode*` wrapped in `exception2Result`
 
 ### Status: 12 tests passing
 
 ### TODO next session
+
 - `changes`
 - `allDocs` / `allDocuments`
 - `query`

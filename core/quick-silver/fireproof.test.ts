@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { fireproof } from "./fireproof.js";
 import { Database } from "@fireproof/core-types-base";
-import type { QS_Doc, QS_DocFile, QS_File } from "./envelope.js";
-import { hashBlobAsync } from "@fireproof/core-runtime";
+import { isQSDocMeta, isQSFileMeta } from "./envelope.js";
+
 
 describe("quick-silver", () => {
   it("one instance per dbname", () => {
@@ -32,20 +32,16 @@ describe("quick-silver", () => {
 
     it("file _ has cid matching content hash and get resolves docFile", async () => {
       const file = new File(["hello file"], "hello.txt");
-      const expectedCid = await hashBlobAsync(file);
 
       const result = await db.bulk([{ _id: "file-doc", _files: { hello: file }, label: "test" }]);
       expect(result.ids[0]).toBe("file-doc");
 
-      const doc = await db.get<{ label: string; _: QS_DocFile }>("file-doc");
-      expect(doc._.fileRefs).toHaveLength(1);
-      expect(doc._.fileRefs[0].filename).toBe("hello.txt");
-      expect(doc._.fileRefs[0].cid).toBe(expectedCid);
-
-      const fileDoc = await db.get<{ _: QS_File; payload: Uint8Array }>(doc._.fileRefs[0].cid);
-      expect(fileDoc._.filename).toBe("hello.txt");
-      expect(fileDoc._.cid).toBe(expectedCid);
-      expect(fileDoc.payload).toBeInstanceOf(Uint8Array);
+      const doc = await db.get<{ label: string }>("file-doc");
+      const fileMetas = (doc._meta ?? []).filter(isQSFileMeta);
+      expect(fileMetas).toHaveLength(1);
+      expect(fileMetas[0].payload.filename).toBe("hello.txt");
+      expect(fileMetas[0].key).toBeTruthy();
+      expect(doc._files?.["hello.txt"]).toBeInstanceOf(File);
     });
   });
 
@@ -130,13 +126,13 @@ describe("quick-silver", () => {
 
     it("should include _ metadata in returned doc", async () => {
       await db.put({ _id: "with-meta", foo: "bar" });
-      const doc = await db.get<{ foo: string; _: QS_Doc }>("with-meta");
+      const doc = await db.get<{ foo: string }>("with-meta");
       expect(doc.foo).toBe("bar");
-      expect(doc._).toBeDefined();
-      expect(doc._.id).toBe("with-meta");
-      expect(doc._.cid).toBeTruthy();
-      expect(doc._.fileRefs).toEqual([]);
-      expect(doc._.synced).toEqual([]);
+      const docMeta = (doc._meta ?? []).find(isQSDocMeta);
+      expect(docMeta).toBeDefined();
+      expect(docMeta?.key).toBe("with-meta");
+      expect(docMeta?.payload.cid).toBeTruthy();
+      expect((doc._meta ?? []).filter(isQSFileMeta)).toHaveLength(0);
     });
 
     it("should throw NotFoundError for missing id", async () => {
@@ -164,6 +160,159 @@ describe("quick-silver", () => {
       await db.put({ _id: "to-remove", foo: "bar" });
       const ok = await db.remove("to-remove");
       expect(ok.id).toBe("to-remove");
+    });
+  });
+
+  describe("destroy", () => {
+    it("clears all docs — get throws after destroy", async () => {
+      const db = fireproof("destroy-test");
+      await db.put({ _id: "survivor", x: 1 });
+      await db.destroy();
+
+      const db2 = fireproof("destroy-test");
+      await expect(db2.get("survivor")).rejects.toThrow();
+      await db2.destroy();
+    });
+
+    it("allDocs returns empty after destroy", async () => {
+      const db = fireproof("destroy-alldocs-test");
+      await db.bulk([{ _id: "a" }, { _id: "b" }]);
+      await db.destroy();
+
+      const db2 = fireproof("destroy-alldocs-test");
+      const result = await db2.allDocs();
+      expect(result.rows).toHaveLength(0);
+      await db2.destroy();
+    });
+  });
+
+  describe("allDocs", () => {
+    let db: Database;
+    beforeEach(() => {
+      db = fireproof("alldocs-test");
+    });
+    afterEach(async () => {
+      await db.destroy();
+    });
+
+    it("returns all docs", async () => {
+      await db.bulk([
+        { _id: "a", x: 1 },
+        { _id: "b", x: 2 },
+        { _id: "c", x: 3 },
+      ]);
+      const result = await db.allDocs<{ x: number }>();
+      expect(result.rows).toHaveLength(3);
+      const keys = result.rows.map((r) => r.key).sort();
+      expect(keys).toEqual(["a", "b", "c"]);
+      expect(result.rows.find((r) => r.key === "b")?.value.x).toBe(2);
+    });
+
+    it("filters by keys", async () => {
+      await db.bulk([
+        { _id: "a", x: 1 },
+        { _id: "b", x: 2 },
+        { _id: "c", x: 3 },
+      ]);
+      const result = await db.allDocs<{ x: number }>({ keys: ["a", "c"] });
+      expect(result.rows).toHaveLength(2);
+      expect(result.rows.map((r) => r.key).sort()).toEqual(["a", "c"]);
+    });
+
+    it("excludes deleted docs by default", async () => {
+      await db.bulk([{ _id: "x", v: 1 }, { _id: "y", v: 2 }]);
+      await db.del("x");
+      const result = await db.allDocs();
+      expect(result.rows.map((r) => r.key)).not.toContain("x");
+      expect(result.rows.map((r) => r.key)).toContain("y");
+    });
+
+    it("allDocuments is an alias for allDocs", async () => {
+      await db.put({ _id: "z", v: 1 });
+      const r1 = await db.allDocs();
+      const r2 = await db.allDocuments();
+      expect(r1.rows.map((r) => r.key)).toEqual(r2.rows.map((r) => r.key));
+    });
+  });
+
+  describe("query", () => {
+    let db: Database;
+    beforeEach(async () => {
+      db = fireproof("query-test");
+      await db.bulk([
+        { _id: "a", score: 3, tag: "x" },
+        { _id: "b", score: 1, tag: "y" },
+        { _id: "c", score: 2, tag: "x" },
+        { _id: "d", score: 4, tag: "z" },
+      ]);
+    });
+    afterEach(async () => {
+      await db.destroy();
+    });
+
+    it("field string — rows keyed by that field, sorted asc", async () => {
+      const r = await db.query<{ score: number; tag: string }, number>("score");
+      expect(r.rows.map((row) => row.key)).toEqual([1, 2, 3, 4]);
+      expect(r.rows.map((row) => row.id)).toEqual(["b", "c", "a", "d"]);
+    });
+
+    it("field string — descending", async () => {
+      const r = await db.query<{ score: number }, number>("score", { descending: true });
+      expect(r.rows.map((row) => row.key)).toEqual([4, 3, 2, 1]);
+    });
+
+    it("field string — limit", async () => {
+      const r = await db.query<{ score: number }, number>("score", { limit: 2 });
+      expect(r.rows).toHaveLength(2);
+      expect(r.rows.map((row) => row.key)).toEqual([1, 2]);
+    });
+
+    it("field string — key filter", async () => {
+      const r = await db.query<{ score: number }, number>("score", { key: 2 });
+      expect(r.rows).toHaveLength(1);
+      expect(r.rows[0].id).toBe("c");
+    });
+
+    it("field string — keys filter", async () => {
+      const r = await db.query<{ score: number }, number>("score", { keys: [1, 3] });
+      expect(r.rows.map((row) => row.key).sort()).toEqual([1, 3]);
+    });
+
+    it("field string — range filter (inclusive)", async () => {
+      const r = await db.query<{ score: number }, number>("score", { range: [2, 3] });
+      expect(r.rows.map((row) => row.key)).toEqual([2, 3]);
+    });
+
+    it("MapFn — emit per doc", async () => {
+      const r = await db.query<{ tag: string }, string>((doc, emit) => {
+        emit(doc.tag);
+      });
+      expect(r.rows.map((row) => row.key).sort()).toEqual(["x", "x", "y", "z"]);
+    });
+
+    it("MapFn — multi-emit per doc (one row per emit)", async () => {
+      const r = await db.query<{ score: number; tag: string }, string>((doc, emit) => {
+        emit(doc.tag, doc.score);
+        emit(`score:${doc.score}`);
+      });
+      expect(r.rows).toHaveLength(8); // 4 docs × 2 emits each
+    });
+
+    it("includeDocs: false — no doc on rows", async () => {
+      const r = await db.query("score", { includeDocs: false });
+      expect(r.rows.every((row) => row.doc === undefined)).toBe(true);
+    });
+
+    it("docs array present when includeDocs is not false", async () => {
+      const r = await db.query("score") as { rows: unknown[]; docs: unknown[] };
+      expect(r.docs).toHaveLength(4);
+    });
+
+    it("skips docs without the queried field", async () => {
+      await db.put({ _id: "no-score", tag: "x" });
+      const r = await db.query("score");
+      expect(r.rows.map((row) => row.id)).not.toContain("no-score");
+      await db.del("no-score");
     });
   });
 

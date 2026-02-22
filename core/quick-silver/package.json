@@ -41,7 +41,10 @@
     "@fireproof/core-gateways-indexeddb": "workspace:*",
     "@fireproof/core-runtime": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:*",
-    "arktype": "^2.1.29"
+    "@noble/hashes": "^1.8.0",
+    "arktype": "^2.1.29",
+    "dexie": "^4.3.0",
+    "multiformats": "^13.4.2"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0"

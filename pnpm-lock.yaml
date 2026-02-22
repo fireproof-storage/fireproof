@@ -170,6 +170,9 @@ importers:
       '@fireproof/core-protocols-dashboard':
         specifier: workspace:*
         version: link:../../core/protocols/dashboard
+      '@fireproof/core-quick-silver':
+        specifier: workspace:*
+        version: link:../../core/quick-silver
       '@fireproof/core-runtime':
         specifier: workspace:*
         version: link:../../core/runtime
@@ -950,9 +953,18 @@ importers:
       '@fireproof/core-types-base':
         specifier: workspace:*
         version: link:../types/base
+      '@noble/hashes':
+        specifier: ^1.8.0
+        version: 1.8.0
       arktype:
         specifier: ^2.1.29
         version: 2.1.29
+      dexie:
+        specifier: ^4.3.0
+        version: 4.3.0
+      multiformats:
+        specifier: ^13.4.2
+        version: 13.4.2
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -4527,6 +4539,9 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
+
+  dexie@4.3.0:
+    resolution: {integrity: sha512-5EeoQpJvMKHe6zWt/FSIIuRa3CWlZeIl6zKXt+Lz7BU6RoRRLgX9dZEynRfXrkLcldKYCBiz7xekTEylnie1Ug==}
 
   didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
@@ -10367,6 +10382,8 @@ snapshots:
   detect-libc@2.0.2: {}
 
   detect-libc@2.1.2: {}
+
+  dexie@4.3.0: {}
 
   didyoumean@1.2.2: {}
 

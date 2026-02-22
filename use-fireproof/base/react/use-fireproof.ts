@@ -1,4 +1,4 @@
-import { fireproof } from "@fireproof/core-base";
+import { fireproof, isDatabase } from "@fireproof/core-base";
 import { useMemo } from "react";
 import { createAttach } from "./use-attach.js";
 import type { UseFPConfig, UseFireproof } from "./types.js";
@@ -28,10 +28,15 @@ export const FireproofCtx = {} as UseFireproof;
  *
  *
  */
-export function useFireproof(name: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
+export function useFireproof(nameOrDatabase: string | Database = "useFireproof", config: UseFPConfig = {}): UseFireproof {
   const strConfig = hashObjectSync(config);
 
-  const database = useMemo(() => (typeof name === "string" ? fireproof(name, config) : name), [name, strConfig]);
+  const database = useMemo(() => {
+    if (isDatabase(nameOrDatabase)) {
+      return nameOrDatabase;
+    }
+    return (config.databaseFactory ?? fireproof)(nameOrDatabase, config);
+  }, [nameOrDatabase, strConfig]);
   const attach = createAttach(database, config);
 
   const useDocument = useMemo(() => createUseDocument(database), [database.name, strConfig]);

@@ -45,6 +45,7 @@
     "@fireproof/core-keybag": "workspace:*",
     "@fireproof/core-protocols-dashboard": "workspace:*",
     "@fireproof/core-runtime": "workspace:*",
+    "@fireproof/core-quick-silver": "workspace:*",
     "@fireproof/core-types-protocols-cloud": "workspace:*",
     "@fireproof/core-types-protocols-dashboard": "workspace:*",
     "jose": "^6.1.3",

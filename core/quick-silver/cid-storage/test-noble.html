@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>noble/hashes streaming test</title>
+  <style>
+    body { font-family: monospace; padding: 2rem; background: #111; color: #eee; }
+    pre  { background: #222; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .ok  { color: #4caf50; }
+    .err { color: #f44336; }
+    button { padding: .5rem 1.2rem; font-size: 1rem; cursor: pointer; margin-right: .5rem; }
+  </style>
+</head>
+<body>
+  <h2>@noble/hashes — streaming sha256 in browser</h2>
+  <button id="run">Run test</button>
+  <button id="run500">Run 50 MB stress</button>
+  <pre id="out">press a button…</pre>
+
+  <script type="module">
+    import { sha256 } from "https://esm.sh/@noble/hashes/sha2";
+    import { CID }    from "https://esm.sh/multiformats/cid";
+    import * as raw   from "https://esm.sh/multiformats/codecs/raw";
+    import { create as createDigest } from "https://esm.sh/multiformats/hashes/digest";
+
+    const log = (...args) => {
+      const out = document.getElementById("out");
+      out.textContent += args.join(" ") + "\n";
+    };
+    const clear = () => { document.getElementById("out").textContent = ""; };
+
+    // Build a ReadableStream from an array of Uint8Array chunks
+    function streamFrom(chunks) {
+      return new ReadableStream({
+        start(ctrl) {
+          for (const c of chunks) ctrl.enqueue(c);
+          ctrl.close();
+        }
+      });
+    }
+
+    // Hash incrementally via TransformStream, pass bytes through unchanged
+    function hashingTap() {
+      const h = sha256.create();
+      let size = 0;
+      const transform = new TransformStream({
+        transform(chunk, ctrl) {
+          h.update(chunk);
+          size += chunk.byteLength;
+          ctrl.enqueue(chunk);
+        }
+      });
+      const getCID = () => {
+        // multiformats create(code, digestBytes) — sha2-256 code is 0x12
+        const digest = createDigest(0x12, h.digest());
+        return { cid: CID.create(1, raw.code, digest).toString(), size };
+      };
+      return { transform, getCID };
+    }
+
+    // Drain a stream into a single Uint8Array
+    async function drain(stream) {
+      const chunks = [];
+      const reader = stream.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      const total = chunks.reduce((s, c) => s + c.byteLength, 0);
+      const out = new Uint8Array(total);
+      let off = 0;
+      for (const c of chunks) { out.set(c, off); off += c.byteLength; }
+      return out;
+    }
+
+    // Reference CID using crypto.subtle (one-shot, needs full buffer)
+    async function referenceCID(bytes) {
+      const buf = await crypto.subtle.digest("SHA-256", bytes);
+      const digest = createDigest(0x12, new Uint8Array(buf));
+      return CID.create(1, raw.code, digest).toString();
+    }
+
+    async function runTest(mbSize) {
+      clear();
+      log(`--- test: ${mbSize} MB ---`);
+
+      // build chunks (~256 KB each)
+      const chunkSize = 256 * 1024;
+      const totalBytes = mbSize * 1024 * 1024;
+      const chunkCount = Math.ceil(totalBytes / chunkSize);
+      const chunks = Array.from({ length: chunkCount }, (_, i) => {
+        const c = new Uint8Array(chunkSize);
+        // fill with deterministic pattern
+        for (let j = 0; j < chunkSize; j++) c[j] = (i * 7 + j) & 0xff;
+        return c;
+      });
+
+      const t0 = performance.now();
+
+      const { transform, getCID } = hashingTap();
+
+      // pipe through hashing tap → drain (simulates backend write)
+      const tapped = streamFrom(chunks).pipeThrough(transform);
+      const received = await drain(tapped);
+      const { cid, size } = getCID();
+
+      const elapsed = performance.now() - t0;
+      log(`streamed  : ${(size / 1024 / 1024).toFixed(1)} MB in ${elapsed.toFixed(0)} ms`);
+      log(`streaming CID : ${cid}`);
+
+      // verify against one-shot reference
+      const t1 = performance.now();
+      const refCid = await referenceCID(received);
+      log(`reference CID : ${refCid}  (crypto.subtle, ${(performance.now()-t1).toFixed(0)} ms)`);
+
+      if (cid === refCid) {
+        log("%c✓ CIDs match", "color:green");
+        document.getElementById("out").innerHTML +=
+          '<span class="ok">✓ CIDs match</span>\n';
+      } else {
+        document.getElementById("out").innerHTML +=
+          '<span class="err">✗ MISMATCH</span>\n';
+      }
+    }
+
+    document.getElementById("run").onclick    = () => runTest(1);
+    document.getElementById("run500").onclick = () => runTest(50);
+  </script>
+</body>
+</html>

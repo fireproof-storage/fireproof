@@ -216,6 +216,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly writeQueue?: Partial<WriteQueueParams>;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly autoCompact?: number;
+  readonly databaseFactory?: (name: string, opts: ConfigOpts) => Database;
   // could be registered with registerCompactStrategy(name: string, compactStrategy: CompactStrategy)
   readonly compactStrategy?: string; // default "FULL" other "fireproof" , "no-op"
   readonly storeUrls?: StoreUrlsOpts;
@@ -251,6 +252,7 @@ export interface DocBase {
   readonly _id: string;
   readonly _files?: DocFiles;
   readonly _publicFiles?: DocFiles;
+  readonly _meta?: unknown[];
   readonly _deleted?: boolean;
 }
 
