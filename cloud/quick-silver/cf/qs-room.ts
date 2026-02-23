@@ -77,12 +77,14 @@ export class QSRoom extends DurableObject<Env> implements QSRoomDO {
   }
 
   async getStoreWs(db: string, clientWs: WebSocket): Promise<WebSocket> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return (await this.stores.getSet(db, async () => {
       const id = this.env.QS_DB_STORE.idFromName(db);
       const stub = this.env.QS_DB_STORE.get(id);
       const res = await stub.fetch("https://internal/ws", {
         headers: { Upgrade: "websocket" },
       });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const storeWs = res.webSocket!;
       storeWs.accept();
       storeWs.addEventListener("message", (evt) => {

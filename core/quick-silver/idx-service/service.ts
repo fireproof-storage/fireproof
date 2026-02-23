@@ -1,5 +1,5 @@
 import { Dexie, type Collection, type Table } from "dexie"; // Dexie used for minKey/maxKey + IdxDB base
-import { consumeStream, exception2Result, KeyedResolvOnce, processStream, Result } from "@adviser/cement";
+import { consumeStream, exception2Result, KeyedResolvOnce, Result } from "@adviser/cement";
 import type {
   AddToIdxOpts,
   DeleteFromIdxOpts,

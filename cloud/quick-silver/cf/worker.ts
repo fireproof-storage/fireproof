@@ -8,6 +8,7 @@ export { QSRoom, QSDBStore };
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
+    // eslint-disable-next-line no-restricted-globals
     const url = new URL(req.url);
     const roomName = url.searchParams.get("room") ?? "default";
     const id = env.QS_ROOM.idFromName(roomName);
