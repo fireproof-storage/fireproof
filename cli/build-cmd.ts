@@ -122,10 +122,13 @@ export interface PackageJson {
   exports: Record<string, string | Record<string, string>>;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
+  publishConfig?: Record<string, string>;
+  repository?: { type: string; url: string } | string;
 }
 
 export interface PatchPackageJsonOptions {
   changeScope?: string;
+  repositoryUrl?: string;
   readonly mock?: {
     readonly readJSON: typeof fs.readJson;
   };
@@ -155,6 +158,10 @@ export async function patchPackageJson(
   patchedPackageJson.version = version.version;
   delete patchedPackageJson.scripts["pack"];
   delete patchedPackageJson.scripts["publish"];
+  patchedPackageJson.publishConfig = { ...patchedPackageJson.publishConfig, access: "public" };
+  if (opts.repositoryUrl) {
+    patchedPackageJson.repository = { type: "git", url: opts.repositoryUrl };
+  }
 
   return { patchedPackageJson, originalPackageJson };
 }
@@ -319,6 +326,14 @@ export async function buildJsrConf(
   return jsrConf;
 }
 
+export async function getGitOriginUrl(): Promise<string> {
+  const res = await $`git config --get remote.origin.url`.nothrow();
+  if (res.exitCode !== 0) {
+    return "";
+  }
+  return res.stdout.trim();
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function buildCmd(sthis: SuperThis) {
   const cmd = command({
@@ -476,6 +491,12 @@ export function buildCmd(sthis: SuperThis) {
         defaultValueIsSerializable: true,
         description: "Package manager to use (pnpm, npm, yarn, bun), defaults to 'pnpm'.",
       }),
+      repositoryUrl: option({
+        long: "repository-url",
+        type: string,
+        defaultValue: () => "",
+        description: "The repository URL to set in package.json. Defaults to the origin URL read from .git/config.",
+      }),
     },
     handler: async (args) => {
       const top = await findUp("tsconfig.dist.json");
@@ -546,7 +567,14 @@ export function buildCmd(sthis: SuperThis) {
       $.verbose = true;
       cd(jsrDstDir);
 
-      let packageJson = await patchPackageJson("package.json", version, { changeScope: args.changeScope });
+      if (!args.repositoryUrl) {
+        args.repositoryUrl = await getGitOriginUrl();
+      }
+
+      let packageJson = await patchPackageJson("package.json", version, {
+        changeScope: args.changeScope,
+        repositoryUrl: args.repositoryUrl,
+      });
       if (!args.noPinned) {
         console.log(
           "Prepared package.json with pinning for",

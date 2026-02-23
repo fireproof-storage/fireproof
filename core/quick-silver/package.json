@@ -1,16 +1,14 @@
 {
-  "name": "@fireproof/cloud-3rd-party",
+  "name": "@fireproof/core-quick-silver",
   "version": "0.0.0",
   "description": "Live ledger for the web.",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
+  "main": "./index.js",
   "scripts": {
     "build": "core-cli tsc",
-    "dev": "vite dev",
-    "pack": "echo cloud need not to pack",
-    "publish": "echo skip"
+    "test": "vitest --run",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
   },
   "keywords": [
     "ledger",
@@ -39,24 +37,17 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@adviser/cement": "^0.5.23",
-    "@fireproof/core": "workspace:*",
-    "@fireproof/core-device-id": "workspace:*",
-    "@fireproof/core-keybag": "workspace:*",
-    "@fireproof/core-protocols-dashboard": "workspace:*",
-    "@fireproof/core-runtime": "workspace:*",
-    "@fireproof/core-quick-silver": "workspace:*",
-    "@fireproof/core-types-protocols-cloud": "workspace:*",
-    "@fireproof/core-types-protocols-dashboard": "workspace:*",
-    "jose": "^6.1.3",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "use-fireproof": "workspace:0.0.0"
+    "@adviser/cement": "^0.5.22",
+    "@fireproof/core-gateways-indexeddb": "workspace:*",
+    "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-device-id": "workspace:0.0.0",
+    "@fireproof/core-types-base": "workspace:*",
+    "@noble/hashes": "^1.8.0",
+    "arktype": "^2.1.29",
+    "dexie": "^4.3.0",
+    "multiformats": "^13.4.2"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.4",
-    "vite": "^7.3.1"
+    "@fireproof/core-cli": "workspace:0.0.0"
   }
 }

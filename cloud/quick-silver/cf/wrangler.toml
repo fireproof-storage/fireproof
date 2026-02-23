@@ -1,0 +1,13 @@
+name = "quicksilver"
+main = "worker.ts"
+compatibility_date = "2025-02-21"
+
+[durable_objects]
+bindings = [
+  { name = "QS_ROOM", class_name = "QSRoom" },
+  { name = "QS_DB_STORE", class_name = "QSDBStore" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["QSRoom", "QSDBStore"]

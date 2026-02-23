@@ -1,0 +1,13 @@
+{
+  "name": "@fireproof/cloud-quick-silver-types",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "core-cli tsc",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
+  },
+  "dependencies": {
+    "arktype": "^2.1.20"
+  }
+}
