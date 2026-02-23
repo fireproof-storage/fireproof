@@ -19,6 +19,7 @@ import {
   toSorted,
   top_uint8,
   exception2Result,
+  CoerceBinaryInput,
 } from "@adviser/cement";
 import {
   PARAM,
@@ -79,12 +80,12 @@ class SuperThisImpl implements SuperThis {
       json: {
         encodeToStr: (obj) => JSON.stringify(obj),
         encodeToUint8: (obj) => this.txt.encode(JSON.stringify(obj)),
-        decodeStr: <R>(str: string) => exception2Result(() => JSON.parse(str) as R),
-        decodeUint8: <R>(uint8: Uint8Array) => exception2Result(() => JSON.parse(this.txt.decode(uint8)) as R),
+        decodeStr: <R>(str: string) => exception2Result(() => JSON.parse(str)) as Result<R>,
+        decodeUint8: <R>(uint8: Uint8Array) => exception2Result(() => JSON.parse(this.txt.decode(uint8))) as Result<R>,
       },
       cbor: {
         encodeToUint8: (obj) => cborEncode(obj),
-        decodeUint8: <R>(uint8: Uint8Array) => exception2Result(() => cborDecode(uint8) as R),
+        decodeUint8: <R>(uint8: Uint8Array) => exception2Result(() => cborDecode(uint8)) as Result<R>,
       },
     };
   }
@@ -615,7 +616,7 @@ export async function hashStringAsync(str: string): Promise<string> {
   return hashBlobAsync(bytes);
 }
 
-export async function hashBlobAsync(uint8: ToUint8): Promise<string> {
+export async function hashBlobAsync(uint8: CoerceBinaryInput | Blob): Promise<string> {
   const bytes = await top_uint8(uint8);
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash).toString();

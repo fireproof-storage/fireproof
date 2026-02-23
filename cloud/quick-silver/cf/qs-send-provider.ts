@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { EventoSendProvider, HandleTriggerCtx, Result } from "@adviser/cement";
-import type { SuperThis } from "@fireproof/core-runtime";
+import type { SuperThis } from "@fireproof/core-types-base";
 import type { QSOpRes } from "@fireproof/cloud-quick-silver-types";
 
 export class QSSendProvider implements EventoSendProvider<ArrayBuffer, unknown, unknown> {

@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { EventoEnDecoder, Result } from "@adviser/cement";
-import type { SuperThis } from "@fireproof/core-runtime";
+import type { SuperThis } from "@fireproof/core-types-base";
 
 export class QSCborEventoEnDecoder implements EventoEnDecoder<ArrayBuffer, string> {
   private readonly sthis: SuperThis;

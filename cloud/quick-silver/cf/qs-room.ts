@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { DurableObject } from "cloudflare:workers";
-import { LRUMap, LoggerImpl } from "@adviser/cement";
+import { LRUMap, LoggerImpl, AppContext } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { Env } from "./env.js";
 import { isQSEvtSubscribe, QSResErr } from "@fireproof/cloud-quick-silver-types";
@@ -46,7 +46,8 @@ export class QSRoom extends DurableObject<Env> implements QSRoomDO {
       } satisfies QSResErr);
       return;
     }
-    await qsRoomEvento().trigger({ ctx: this, request: msg as ArrayBuffer, send: sendProvider });
+    const ctx = new AppContext().set("QSRoomDO", this);
+    await qsRoomEvento().trigger({ ctx, request: msg as ArrayBuffer, send: sendProvider });
   }
 
   registerSubscription(ws: WebSocket, db: string, tid: string): void {

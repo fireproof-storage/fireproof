@@ -1,8 +1,9 @@
 /* eslint-disable no-console */
-import { command, option, multioption, string, run, subcommands } from "cmd-ts";
+import { command, option, multioption, string, run, subcommands, array } from "cmd-ts";
 import { QSApi } from "./qs-api.js";
 import type { QSGet, QSPut } from "@fireproof/cloud-quick-silver-types";
 import { ensureSuperThis } from "@fireproof/core-runtime";
+import { processStream } from "@adviser/cement";
 
 const sthis = ensureSuperThis();
 
@@ -57,15 +58,15 @@ const getCmd = command({
       long: "keys",
       short: "k",
       description: "Key to fetch (repeatable)",
-      type: string,
+      type: array(string),
     }),
   },
   handler: async (args) => {
     const api = await makeApi(args);
     const ops: QSGet[] = args.keys.map((key) => ({ key }));
-    for await (const r of api.get(ops)) {
+    await processStream(api.get(ops), async (r) => {
       console.log(JSON.stringify(r));
-    }
+    });
     await api.close();
   },
 });
@@ -81,7 +82,7 @@ const putCmd = command({
       long: "pkg",
       short: "p",
       description: "key,{json} pair to store (repeatable)",
-      type: string,
+      type: array(string),
     }),
   },
   handler: async (args) => {
@@ -89,13 +90,13 @@ const putCmd = command({
       const comma = pair.indexOf(",");
       if (comma === -1) throw new Error(`invalid --pkg "${pair}": expected key,{json}`);
       const key = pair.slice(0, comma);
-      const data = sthis.ende.cbor.encodeToUint8(JSON.parse(pair.slice(comma + 1)));
-      return { key, data };
+      const data = sthis.ende.cbor.encodeToUint8(JSON.parse(pair.slice(comma + 1))) as Uint8Array<ArrayBuffer>;
+      return { key, data } satisfies QSPut;
     });
     const api = await makeApi(args);
-    for await (const r of api.put(ops)) {
+    await processStream(api.put(ops), async (r) => {
       console.log(JSON.stringify(r));
-    }
+    });
     await api.close();
   },
 });
@@ -110,9 +111,9 @@ const queryCmd = command({
   },
   handler: async (args) => {
     const api = await makeApi(args);
-    for await (const r of api.query()) {
+    await processStream(api.query(), async (r) => {
       console.log(JSON.stringify(r));
-    }
+    });
     await api.close();
   },
 });
@@ -139,9 +140,9 @@ const subscribeCmd = command({
     process.on("SIGINT", cleanup);
     process.on("SIGTERM", cleanup);
 
-    for await (const r of handle.events) {
+    await processStream(handle.events, async (r) => {
       console.log(JSON.stringify(r));
-    }
+    });
     await api.close();
   },
 });

@@ -17,7 +17,7 @@ function handlerSql(ctx: { ctx: unknown }): SqlStorage {
 
 export const qsDbEvento = Lazy(() => {
   const sthis = ensureSuperThis({ logger: new LoggerImpl() });
-  const evento = new Evento<ArrayBuffer, string>(new QSCborEventoEnDecoder(sthis));
+  const evento = new Evento(new QSCborEventoEnDecoder(sthis));
 
   evento.push(
     {
@@ -55,7 +55,7 @@ export const qsDbEvento = Lazy(() => {
         const req = ctx.validated as QSReqGet;
         const sql = handlerSql(ctx);
         const rows = [
-          ...sql.exec<{ id: string; cid: string; data: Uint8Array }>(`SELECT id, cid, data FROM docs WHERE id = ?`, req.key),
+          ...sql.exec<{ id: string; cid: string; data: ArrayBuffer }>(`SELECT id, cid, data FROM docs WHERE id = ?`, req.key),
         ];
         if (!rows.length) {
           await ctx.send.send(ctx, { type: "QSResGetNotFound", tid: req.tid, arg: req.arg, key: req.key });
@@ -76,7 +76,7 @@ export const qsDbEvento = Lazy(() => {
         const req = ctx.validated as QSReqQuery;
         const sql = handlerSql(ctx);
         await ctx.send.send(ctx, { type: "QSResQueryBegin", tid: req.tid, arg: req.arg });
-        const cursor = sql.exec<{ id: string; cid: string; data: Uint8Array; synced: number }>(
+        const cursor = sql.exec<{ id: string; cid: string; data: ArrayBuffer; synced: number }>(
           `SELECT id, cid, data, synced FROM docs`,
         );
         let rowNr = 0;

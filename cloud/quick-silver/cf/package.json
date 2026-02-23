@@ -10,6 +10,7 @@
   "dependencies": {
     "@adviser/cement": "^0.5.22",
     "@fireproof/cloud-quick-silver-types": "workspace:*",
+    "@fireproof/core-types-base": "workspace:*",
     "@fireproof/core-runtime": "workspace:*"
   },
   "devDependencies": {

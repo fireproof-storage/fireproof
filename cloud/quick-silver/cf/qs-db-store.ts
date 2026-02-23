@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { DurableObject } from "cloudflare:workers";
-import { LoggerImpl } from "@adviser/cement";
+import { AppContext, LoggerImpl } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { Env } from "./env.js";
 import { QSSendProvider } from "./qs-send-provider.js";
@@ -41,7 +41,8 @@ export class QSDBStore extends DurableObject<Env> {
       return;
     }
     console.log("[QSDBStore] dispatching binary message, bytes:", (msg as ArrayBuffer).byteLength);
-    await qsDbEvento().trigger({ ctx: this, request: msg as ArrayBuffer, send: sendProvider });
+    const ctx = new AppContext().set("QSDBStore", this);
+    await qsDbEvento().trigger({ ctx, request: msg as ArrayBuffer, send: sendProvider });
   }
 
   webSocketClose(ws: WebSocket, code: number, reason: string): void {

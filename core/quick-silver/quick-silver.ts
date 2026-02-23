@@ -24,6 +24,7 @@ import type {
 import {
   KeyedResolvOnce,
   Logger,
+  LoggerImpl,
   OnFunc,
   Result,
   consumeStream,
@@ -41,7 +42,7 @@ import {
   isQSFileMeta,
 } from "./envelope.js";
 import { NotFoundError } from "@fireproof/core-types-base";
-import { hashStringSync } from "@fireproof/core-runtime";
+import { ensureLogger, ensureSuperThis, hashStringSync } from "@fireproof/core-runtime";
 import { CIDStorageService } from "./cid-storage/service.js";
 import { IdxService } from "./idx-service/service.js";
 import { PrimaryKeyStrategy } from "./idx-service/primary-key-strategy.js";
@@ -67,7 +68,7 @@ function compareKeys(a: IndexKeyType, b: IndexKeyType): number {
 }
 
 export interface QuickSilverOpts {
-  readonly sthis: SuperThis;
+  readonly sthis?: SuperThis;
   readonly name: string;
   readonly cacheSize?: number;
 }
@@ -88,13 +89,13 @@ export class QuickSilver implements Database {
 
   constructor(opts: QuickSilverOpts) {
     this.name = opts.name;
-    this.sthis = opts.sthis;
-    this.logger = opts.sthis.logger;
+    this.sthis = opts.sthis ?? ensureSuperThis({ logger: new LoggerImpl() });
+    this.logger = ensureLogger(this.sthis, "QuickSilver");
     const cacheSize = opts.cacheSize ?? 64;
     if (cacheSize > 0) {
       this._docCache.setParam({ lru: { maxEntries: cacheSize } });
     }
-    this._primaryKeyStrategy = new PrimaryKeyStrategy({ sthis: opts.sthis });
+    this._primaryKeyStrategy = new PrimaryKeyStrategy({ sthis: this.sthis });
   }
 
   readonly onClosed = OnFunc<() => void>();

@@ -1,6 +1,6 @@
 /// <reference types="@cloudflare/workers-types" />
 
-import { Lazy, Evento, EventoResult, EventoType, LoggerImpl, Result, Option } from "@adviser/cement";
+import { Lazy, Evento, EventoResult, EventoType, LoggerImpl, Result, Option, HandleTriggerCtx } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import {
   isQSReqGet,
@@ -38,7 +38,7 @@ function clientWs(ctx: { send: unknown }): WebSocket {
 
 export const qsRoomEvento = Lazy(() => {
   const sthis = ensureSuperThis({ logger: new LoggerImpl() });
-  const evento = new Evento<ArrayBuffer, string>(new QSCborEventoEnDecoder(sthis));
+  const evento = new Evento(new QSCborEventoEnDecoder(sthis));
 
   evento.push(
     {
@@ -80,7 +80,7 @@ export const qsRoomEvento = Lazy(() => {
         if (isQSReqGet(p) || isQSReqPut(p) || isQSReqQuery(p)) return Result.Ok(Option.Some(p as QSReqGet | QSReqPut | QSReqQuery));
         return Result.Ok(Option.None());
       },
-      handle: async (ctx) => {
+      handle: async (ctx: HandleTriggerCtx<Uint8Array, unknown, unknown>) => {
         const req = ctx.validated as QSReqGet | QSReqPut | QSReqQuery;
         console.log("[QSRoom] routing", req.type, "tid:", req.tid, "db:", req.db);
         const storeWs = await room(ctx).getStoreWs(req.db, clientWs(ctx));

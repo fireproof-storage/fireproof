@@ -49,7 +49,7 @@ export interface QSApiOpts {
 
 const connections = new KeyedResolvOnce<QSApiImpl>();
 
-export function QSApi(opts: QSApiOpts): Promise<QSApiImpl> {
+export async function QSApi(opts: QSApiOpts): Promise<QSApiImpl> {
   return connections.get(opts.url).once(() => new QSApiImpl(opts));
 }
 
