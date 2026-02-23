@@ -2,10 +2,12 @@
   "name": "@fireproof/cloud-quick-silver-cf",
   "version": "0.0.0",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "build": "core-cli tsc",
+    "pack": "core-cli build --doPack",
+    "publish": "core-cli build"
   },
   "dependencies": {
     "@adviser/cement": "^0.5.22",
