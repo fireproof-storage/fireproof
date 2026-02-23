@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { useFireproof, type Database } from "use-fireproof";
+import { useFireproof, type Database, type UseFPConfig } from "use-fireproof";
 import { toCloud } from "@fireproof/core-gateways-cloud";
 import { ClerkTokenStrategy } from "./clerk-token-strategy.js";
 import { useClerkFireproofContext } from "./clerk-provider.js";
@@ -46,7 +46,7 @@ const SYNC_POLL_MAX_MS = 20 * 1000;
  * }
  * ```
  */
-export function useFireproofClerk(name: string | Database): UseFireproofClerkResult {
+export function useFireproofClerk(name: string | Database, fpConfig?: UseFPConfig): UseFireproofClerkResult {
   const { config, isSessionReady, dashApi } = useClerkFireproofContext();
   const [attachState, setAttachState] = useState<AttachState>({ status: "detached" });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
@@ -63,7 +63,7 @@ export function useFireproofClerk(name: string | Database): UseFireproofClerkRes
   useEffect(() => { attachStateRef.current = attachState; }, [attachState]);
 
   // Use the base useFireproof hook
-  const fpResult = useFireproof(name);
+  const fpResult = useFireproof(name, fpConfig);
   const { database } = fpResult;
 
   // Clear any pending refresh timer

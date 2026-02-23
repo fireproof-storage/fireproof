@@ -5,7 +5,7 @@ import type {
   InviteTicket,
   QueryUser,
   User,
-} from "@fireproof/core-protocols-dashboard";
+} from "@fireproof/core-types-protocols-dashboard";
 import type { DashboardApiImpl } from "@fireproof/core-protocols-dashboard";
 
 export interface UseSharingResult {

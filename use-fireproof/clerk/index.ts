@@ -24,7 +24,7 @@ export type {
   ClerkContextValue,
 } from "./types.js";
 
-// Sharing types re-exported from dashboard protocols
+// Sharing types re-exported from dashboard types
 export type {
   QueryInviteTicket,
   InviteTicket,
@@ -33,12 +33,13 @@ export type {
   QueryUser,
   User,
   UserByProvider,
-} from "@fireproof/core-protocols-dashboard";
+} from "@fireproof/core-types-protocols-dashboard";
 
 // Re-export common types from use-fireproof for convenience
 export type {
   Database,
   UseFireproof,
+  UseFPConfig,
   UseLiveQuery,
   UseDocument,
   UseAllDocs,

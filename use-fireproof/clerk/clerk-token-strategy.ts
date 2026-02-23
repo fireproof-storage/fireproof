@@ -70,7 +70,7 @@ export class ClerkTokenStrategy implements TokenStrategie {
       const rLedgers = await this.dashApi.listLedgersByUser({});
       if (rLedgers.isOk()) {
         const ledgers = rLedgers.Ok().ledgers || [];
-        const userId = rUser.Ok().userId;
+        const userId = rUser.Ok().user.userId;
         const shared = ledgers.find((l: any) =>
           l.users?.some((u: any) => u.userId === userId && u.role === "member")
         );
