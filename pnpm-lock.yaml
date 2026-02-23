@@ -438,7 +438,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.22
-        version: 0.5.22(typescript@5.9.3)
+        version: 0.5.23(typescript@5.9.3)
       '@fireproof/cloud-quick-silver-types':
         specifier: workspace:*
         version: link:../types
@@ -453,7 +453,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.22
-        version: 0.5.22(typescript@5.9.3)
+        version: 0.5.23(typescript@5.9.3)
       '@fireproof/cloud-quick-silver-types':
         specifier: workspace:*
         version: link:../types
@@ -463,10 +463,10 @@ importers:
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260214.0
-        version: 4.20260214.0
+        version: 4.20260302.0
       wrangler:
         specifier: ^4.66.0
-        version: 4.66.0(@cloudflare/workers-types@4.20260214.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+        version: 4.67.0(@cloudflare/workers-types@4.20260302.0)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
 
   cloud/quick-silver/types:
     dependencies:
@@ -943,7 +943,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.22
-        version: 0.5.22(typescript@5.9.3)
+        version: 0.5.23(typescript@5.9.3)
       '@fireproof/core-device-id':
         specifier: workspace:0.0.0
         version: link:../device-id
