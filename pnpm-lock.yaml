@@ -944,6 +944,9 @@ importers:
       '@adviser/cement':
         specifier: ^0.5.22
         version: 0.5.22(typescript@5.9.3)
+      '@fireproof/core-device-id':
+        specifier: workspace:0.0.0
+        version: link:../device-id
       '@fireproof/core-gateways-indexeddb':
         specifier: workspace:*
         version: link:../gateways/indexeddb

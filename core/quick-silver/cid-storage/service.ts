@@ -25,12 +25,18 @@ function hashingTap() {
   return { transform, getCID };
 }
 
-const cidStorageServicePerBackend = new KeyedResolvOnce<CIDStorageServiceImpl>()
+const cidStorageServicePerBackend = new KeyedResolvOnce<CIDStorageServiceImpl>();
 
-export function CIDStorageService(x?: { backends?: StorageBackend[] }  ) { 
+export function CIDStorageService(x?: { backends?: StorageBackend[] }) {
   const bs = x?.backends ?? [DexieStorageBackend()];
-  return cidStorageServicePerBackend.get(bs.map(b => b.name).sort().join(","))
-    .once(() => new CIDStorageServiceImpl(bs))
+  return cidStorageServicePerBackend
+    .get(
+      bs
+        .map((b) => b.name)
+        .sort()
+        .join(","),
+    )
+    .once(() => new CIDStorageServiceImpl(bs));
 }
 
 export class CIDStorageServiceImpl {
@@ -49,17 +55,17 @@ export class CIDStorageServiceImpl {
     return exception2Result(async (): Promise<Result<CIDStoreResult>> => {
       const { transform, getCID } = hashingTap();
       const write = await this.backend.store(stream.pipeThrough(transform));
-      if (write.isErr()) return Result.Err(write)
+      if (write.isErr()) return Result.Err(write);
 
       const { cid, size } = getCID();
 
       const commit = await write.Ok().commit(cid);
-      if (commit.isErr()) return Result.Err(commit)
+      if (commit.isErr()) return Result.Err(commit);
 
-      const url = BuildURI.from(`${this.backend.name}://`).setParam("cid", cid).toString()
+      const url = BuildURI.from(`${this.backend.name}://`).setParam("cid", cid).toString();
 
       return Result.Ok({ cid, size, created: new Date(), url });
-    })
+    });
   }
 
   async get(url: string): Promise<Result<CIDGetResult>> {

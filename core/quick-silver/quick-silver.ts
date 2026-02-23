@@ -32,15 +32,22 @@ import {
   toSortedObject,
   uint8array2stream,
 } from "@adviser/cement";
-import { QSDocMeta, QSFileMeta, isQSFileMeta } from "./envelope.js";
+import {
+  QSDocMeta,
+  QSIdxValueMeta,
+  QSFileMeta,
+  isQSDocMeta,
+  isQSEmitIdxValueMeta as isQSIdxValueMeta,
+  isQSFileMeta,
+} from "./envelope.js";
 import { NotFoundError } from "@fireproof/core-types-base";
 import { hashStringSync } from "@fireproof/core-runtime";
 import { CIDStorageService } from "./cid-storage/service.js";
 import { IdxService } from "./idx-service/service.js";
-import { IdxEntry } from "./idx-service/types.js";
-import { CIDGetResult } from "./cid-storage/types.js";
+import { PrimaryKeyStrategy } from "./idx-service/primary-key-strategy.js";
+import { IdxEntry, MetaEntry } from "./idx-service/types.js";
+import { CIDGetResult, CIDStoreResult } from "./cid-storage/types.js";
 import { type } from "arktype";
-
 
 function secIdxName(field: string | MapFn<never>): string {
   return typeof field === "string" ? `_field_${field}` : `_map_${hashStringSync(field.toString())}`;
@@ -73,6 +80,7 @@ export class QuickSilver implements Database {
   private readonly _docCache = new KeyedResolvOnce<DocWithId<DocTypes>>();
   private readonly _updateListeners = OnFunc<(docs: DocWithId<DocTypes>[]) => void>();
   private readonly _noUpdateListeners = OnFunc<() => void>();
+  private readonly _primaryKeyStrategy: PrimaryKeyStrategy;
 
   get ledger(): Ledger {
     throw new Error("not implemented");
@@ -86,6 +94,7 @@ export class QuickSilver implements Database {
     if (cacheSize > 0) {
       this._docCache.setParam({ lru: { maxEntries: cacheSize } });
     }
+    this._primaryKeyStrategy = new PrimaryKeyStrategy({ sthis: opts.sthis });
   }
 
   readonly onClosed = OnFunc<() => void>();
@@ -104,6 +113,10 @@ export class QuickSilver implements Database {
     throw new Error("not implemented");
   }
 
+  findQSDocMeta(meta: MetaEntry[] = []): QSDocMeta | undefined {
+    return meta.find((m) => isQSDocMeta(m));
+  }
+
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
     return this._docCache.get(id).once(async () => {
       const rQ = await IdxService().query({ dbname: this.name, idxName: "_id", keys: [id] });
@@ -113,7 +126,11 @@ export class QuickSilver implements Database {
       if (entries.length === 0) throw new NotFoundError(`doc not found: ${id}`);
       const item = entries[0];
       const cids = await Promise.all([
-        CIDStorageService().get(item.cidUrl),
+        (async () => {
+          const docMeta = this.findQSDocMeta(item.meta);
+          if (!docMeta) return Result.Err(new Error(`no doc meta found for id: ${id}`));
+          return CIDStorageService().get(docMeta.payload.url);
+        })(),
         ...(item.meta ?? [])
           .filter((m) => isQSFileMeta(m))
           .map((m) =>
@@ -164,66 +181,102 @@ export class QuickSilver implements Database {
     return { id: ids[0], clock, name };
   }
 
+  qsFiles(files: Record<string, File>): Promise<Result<IdxEntry>[]> {
+    return Promise.all(
+      Object.values(files).map(async (file) => {
+        const rFile = await CIDStorageService().store(file.stream());
+        if (rFile.isErr()) return Result.Err(rFile);
+        const rFileIdx = await IdxService().addToIdx({
+          dbname: this.name,
+          idxName: "_files",
+          keys: [rFile.Ok().cid],
+          meta: [
+            {
+              type: "qs.file.meta",
+              key: rFile.Ok().cid,
+              payload: {
+                idxName: "_files",
+                url: rFile.Ok().url,
+                filename: file.name,
+                size: rFile.Ok().size,
+                created: new Date().toISOString(),
+                cid: rFile.Ok().cid,
+              },
+            } satisfies QSFileMeta,
+          ],
+        });
+        return rFileIdx;
+      }),
+    );
+  }
+
   async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
     const writtenDocs: DocWithId<DocTypes>[] = [];
 
-    for (const doc of docs) {
-      const raw = doc as DocSet<T> & { _files?: Record<string, File> };
-      const id = raw._id ?? this.sthis.timeOrderedNextId().str;
-      const data = toSortedObject(stripper(/(_id|_files|_publicFiles|_meta|_deleted)/, raw)) as object;
+    // dexie abort transaction if something other is called
+    await this._primaryKeyStrategy.deviceFingerPrint();
 
-      const qcFiles: Result<IdxEntry>[] = await Promise.all(
-        Object.entries(raw._files ?? {}).map(async ([_filename, file]) => {
-          const rFile = await CIDStorageService().store(file.stream());
-          if (rFile.isErr()) return Result.Err(rFile);
-          const rFileIdx = await IdxService().addToIdx({
-            dbname: this.name,
-            idxName: "_files",
-            keys: [rFile.Ok().cid],
-            cidUrl: rFile.Ok().url,
-            primaryKey: id,
-            meta: [
-              {
-                type: "qs.file.meta",
-                key: rFile.Ok().cid,
-                payload: { url: rFile.Ok().url, filename: file.name, size: rFile.Ok().size, created: new Date().toISOString() },
-              } satisfies QSFileMeta,
-            ],
-          });
-          return rFileIdx;
-        }),
-      );
-      const rData = await CIDStorageService().store(uint8array2stream(this.sthis.ende.cbor.encodeToUint8(data)));
-      if (rData.isErr()) {
-        continue;
-      }
-      const fileMeta = qcFiles
-        .filter((f): f is Result<IdxEntry & { meta: QSFileMeta[] }> => f.isOk() && !!f.Ok().meta)
-        .map((f) => f.Ok().meta)
-        .flat();
-      const docMeta: QSDocMeta = {
-        type: "qs.doc.meta",
-        key: id,
-        payload: { cid: rData.Ok().cid, url: rData.Ok().url, created: new Date().toISOString() },
-      };
-      const rIdx = await IdxService().addToIdx({
-        dbname: this.name,
-        idxName: "_id",
-        keys: [id],
-        cidUrl: rData.Ok().url,
-        primaryKey: id,
-        meta: [docMeta, ...fileMeta],
-      });
-      if (rIdx.isErr()) {
-        continue;
-      }
-      this._docCache.delete(id);
-      writtenDocs.push({
-        _id: id,
-        ...(data as DocTypes),
-        _meta: [docMeta, ...fileMeta],
-      });
+    const docAndFiles = await Promise.all(
+      docs.map(async (doc): Promise<Result<{ doc: DocSet<T>; docResult: CIDStoreResult; files: IdxEntry[] }>> => {
+        const raw = doc as DocSet<T> & { _files?: Record<string, File> };
+        const data = toSortedObject(stripper(/(_id|_files|_publicFiles|_meta|_deleted)/, raw)) as object;
+        const rData = await CIDStorageService().store(uint8array2stream(this.sthis.ende.cbor.encodeToUint8(data)));
+        if (rData.isErr()) {
+          return Result.Err(rData);
+        }
+        const qcFiles = await this.qsFiles(raw._files ?? {});
+        if (qcFiles.some((f) => f.isErr())) {
+          return Result.Err(new Error(`failed to store files for doc with id: ${raw._id ?? "unknown"}`));
+        }
+        return Result.Ok({ doc, docResult: rData.Ok(), files: qcFiles.map((i) => i.Ok()) });
+      }),
+    );
+    if (docAndFiles.some((r) => r.isErr())) {
+      throw new Error(`failed to store some docs/files: ${docAndFiles.map((r) => r.Err().message).join("\n ")}`);
     }
+    await IdxService().transaction(this.name, async (tx) => {
+      for (const rDoc of docAndFiles) {
+        if (rDoc.isErr()) continue;
+        const daf = rDoc.Ok();
+        const id = daf.doc._id ?? this.sthis.timeOrderedNextId().str;
+
+        const fileMeta = daf.files
+          .filter((f) => !!f.meta)
+          .map((f) => f.meta)
+          .flat() as MetaEntry[];
+        const docMeta: QSDocMeta = {
+          type: "qs.doc.meta",
+          key: id,
+          payload: {
+            idxName: "_id",
+            primaryKey: id,
+            cid: daf.docResult.cid,
+            url: daf.docResult.url,
+            created: new Date().toISOString(),
+          },
+        };
+        const meta = [docMeta, ...fileMeta];
+        const rIdx = await IdxService().addToIdx({
+          tx,
+          dbname: this.name,
+          idxName: "_id",
+          keys: [id],
+          meta,
+          strategy: this._primaryKeyStrategy,
+        });
+        if (rIdx.isErr()) {
+          console.log("Failed to index doc with id:", id, "error:", rIdx.Err());
+          continue;
+        }
+        this._docCache.delete(id);
+        writtenDocs.push({
+          ...(daf.doc as DocTypes),
+          _id: id,
+          _meta: meta,
+        });
+        // console.log("Doc indexed with id:", id, "meta:", docMeta, "file meta:", fileMeta);
+      }
+    });
 
     this._updateListeners.invoke(writtenDocs);
     this._noUpdateListeners.invoke();
@@ -301,7 +354,10 @@ export class QuickSilver implements Database {
       if (rPrimary.isErr()) throw rPrimary.Err();
       const primaryReader = rPrimary.Ok().getReader();
       try {
-        interface PendingEmit { k: IndexKeyType; v?: DocFragment }
+        interface PendingEmit {
+          k: IndexKeyType;
+          v?: DocFragment;
+        }
         while (true) {
           const { done, value: entry } = await primaryReader.read();
           if (done) break;
@@ -312,28 +368,67 @@ export class QuickSilver implements Database {
           } catch {
             continue;
           }
-          const docId = entry.keys[0];
+          // const docId = entry.keys[0];
+          const docMeta = this.findQSDocMeta(entry.meta);
+          if (!docMeta) continue;
 
-          const pending: PendingEmit[] = [];
+          const pending = new Map<string, PendingEmit[]>();
           if (typeof field === "string") {
             const key = (doc as unknown as Record<string, unknown>)[field];
-            if (key !== undefined) pending.push({ k: key as IndexKeyType });
+            if (key !== undefined) pending.set(String(key), [{ k: key as IndexKeyType }]);
           } else {
-            const emit = (k: IndexKeyType, v?: DocFragment) => pending.push({ k, v });
-            const ret = field(doc, emit);
-            if (pending.length === 0 && ret !== undefined && ret !== null) {
-              pending.push({ k: ret as IndexKeyType });
+            let called = 0;
+            const emit = (k: IndexKeyType, v?: DocFragment) => {
+              called++;
+              const key = JSON.stringify(k);
+              if (!pending.has(key)) pending.set(key, []);
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              pending.get(key)!.push({ k, v });
+            };
+            try {
+              const ret = field(doc, emit);
+              if (!called && ret !== undefined && ret !== null) {
+                if (!pending.has(JSON.stringify(ret))) {
+                  pending.set(JSON.stringify(ret), []);
+                }
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                pending.get(JSON.stringify(ret))!.push({ k: ret as IndexKeyType });
+              }
+            } catch (e) {
+              console.log("Error executing map function for doc with id:", doc._id, "error:", e);
             }
           }
 
-          for (const { k, v } of pending) {
+          for (const [_sk, emits] of pending.entries()) {
+            const meta: MetaEntry[] = [
+              {
+                type: "qs.doc.meta",
+                key: doc._id,
+                payload: {
+                  primaryKey: doc._id,
+                  idxName,
+                  cid: docMeta.payload.cid,
+                  url: docMeta.payload.url,
+                  created: new Date().toISOString(),
+                },
+              } satisfies QSDocMeta,
+              ...Array.from(emits).reduce((acc, emit) => {
+                acc.push({
+                  type: "qs.emit.value",
+                  key: `${JSON.stringify(emit.k)}:${doc._id}`,
+                  payload: {
+                    keys: Array.isArray(emit.k) ? emit.k : [emit.k],
+                    emitValue: emit.v,
+                  },
+                } satisfies QSIdxValueMeta);
+                return acc;
+              }, [] as MetaEntry[]),
+            ];
             await IdxService().addToIdx({
               dbname: this.name,
               idxName,
-              keys: [JSON.stringify(k), docId],
-              cidUrl: entry.cidUrl,
-              primaryKey: docId,
-              meta: v !== undefined ? [{ type: "qs.emit.value", key: docId, payload: v }] : undefined,
+              keys: Array.isArray(emits[0].k) ? emits[0].k.map(String) : [String(emits[0].k)],
+              meta,
             });
           }
         }
@@ -369,7 +464,12 @@ export class QuickSilver implements Database {
     const rQ = await IdxService().query({ dbname: this.name, idxName, select });
     if (rQ.isErr()) throw rQ.Err();
 
-    interface EmittedRow { id: string; key: K; value: R; doc: DocWithId<T> }
+    interface EmittedRow {
+      id: string;
+      key: K;
+      value: R;
+      doc: DocWithId<T>;
+    }
     const emitted: EmittedRow[] = [];
     const reader = rQ.Ok().getReader();
     try {
@@ -377,20 +477,37 @@ export class QuickSilver implements Database {
         const { done, value: entry } = await reader.read();
         if (done) break;
 
-        const emittedKey = JSON.parse(entry.keys[0]) as K;
-        const docId = entry.primaryKey ?? entry.keys[1];
+        const docMeta = this.findQSDocMeta(entry.meta);
+        if (!docMeta) continue;
 
         let doc: DocWithId<T>;
         try {
-          doc = await this.get<T>(docId);
+          doc = await this.get<T>(docMeta.payload.primaryKey);
         } catch {
           continue;
         }
 
-        const valueMeta = entry.meta?.find((m) => m.type === "qs.emit.value" && m.key === docId);
-        const value = (valueMeta ? valueMeta.payload : emittedKey) as unknown as R;
+        // const valueMeta = entry.meta?.find((m) => m.type === "qs.emit.value" && m.key === docId);
+        // const value = (valueMeta ? valueMeta.payload : emittedKey) as unknown as R;
 
-        emitted.push({ id: docId, key: emittedKey, value, doc });
+        const idxValues = entry.meta?.filter((m) => isQSIdxValueMeta(m));
+        for (const idxValue of idxValues ?? []) {
+          if (idxValue instanceof type.errors) continue;
+          if (idxValue.payload.keys.length === 0) continue;
+          let key: K;
+          if (idxValue.payload.keys.length === 1) {
+            key = idxValue.payload.keys[0] as K;
+          } else {
+            key = idxValue.payload.keys as unknown as K;
+          }
+
+          emitted.push({
+            id: doc._id,
+            key,
+            value: {} as R,
+            doc,
+          });
+        }
       }
     } finally {
       reader.releaseLock();

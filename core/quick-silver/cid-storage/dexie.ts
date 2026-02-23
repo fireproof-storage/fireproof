@@ -1,5 +1,5 @@
 import { Dexie, type Table } from "dexie";
-import { Lazy, Result, consumeStream } from "@adviser/cement";
+import { Lazy, ResolveSeq, Result, consumeStream, exception2Result } from "@adviser/cement";
 import type { StorageBackend, StorageBackendReadResult, StorageBackendWriteResult } from "./types.js";
 
 interface BlobRecord {
@@ -9,9 +9,7 @@ interface BlobRecord {
   created: Date;
 }
 
-export const DexieStorageBackend = Lazy(({ name }: { name?: string } = {}) =>
-  new DexieStorageBackendImpl(name ?? "cid-storage"),
-);
+export const DexieStorageBackend = Lazy(({ name }: { name?: string } = {}) => new DexieStorageBackendImpl(name ?? "cid-storage"));
 
 export class DexieStorageBackendImpl implements StorageBackend {
   readonly name: string;
@@ -27,6 +25,7 @@ export class DexieStorageBackendImpl implements StorageBackend {
     return this.dexie.table<BlobRecord, string>("blobs");
   }
 
+  private commitSeq = new ResolveSeq<Result<void>>();
   async store(stream: ReadableStream<Uint8Array>): Promise<Result<StorageBackendWriteResult>> {
     try {
       const chunks = await consumeStream(stream, (chunk: Uint8Array) => chunk);
@@ -40,15 +39,15 @@ export class DexieStorageBackendImpl implements StorageBackend {
       const size = data.byteLength;
 
       const commit = async (cid: string): Promise<Result<void>> => {
-        try {
-          const existing = await this.blobs.get(cid);
-          if (!existing) {
-            await this.blobs.add({ cid, data, size, created: new Date() });
-          }
-          return Result.Ok(undefined);
-        } catch (e) {
-          return Result.Err(e instanceof Error ? e : new Error(String(e)));
-        }
+        return this.commitSeq.add(async () =>
+          exception2Result(async (): Promise<Result<void>> => {
+            const existing = await this.blobs.get(cid);
+            if (!existing) {
+              await this.blobs.add({ cid, data, size, created: new Date() }, cid);
+            }
+            return Result.Ok(undefined);
+          }),
+        );
       };
 
       const rollback = async (): Promise<Result<void>> => {

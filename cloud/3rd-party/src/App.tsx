@@ -6,7 +6,9 @@ import { QuickSilver } from "../../../core/quick-silver/quick-silver.js";
 
 function App() {
   const { database, attach } = useFireproof("fireproof-5-party", {
-    databaseFactory: (name) => new QuickSilver({ name })
+    databaseFactory: (name) => {
+      return new QuickSilver({ name });
+    },
     // attach: toCloud({
     //   strategy: new RedirectStrategy({
     //     //   overlayCss: defaultOverlayCss,
@@ -17,11 +19,11 @@ function App() {
     //       <a href="${url}" target="_blank">Redirect to Fireproof</a>
     //     </div>`,
     //   }),
-      // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
-      // tokenApiURI: "http://localhost:7370/api",
-      // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
-      // tenant: "3rd-party",
-      // ledger: "vibes",
+    // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
+    // tokenApiURI: "http://localhost:7370/api",
+    // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
+    // tenant: "3rd-party",
+    // ledger: "vibes",
     // }),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);

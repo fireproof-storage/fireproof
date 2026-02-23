@@ -21,13 +21,16 @@ async function drainStream(stream: ReadableStream<Uint8Array>): Promise<Uint8Arr
   const total = chunks.reduce((s, c) => s + c.byteLength, 0);
   const out = new Uint8Array(total);
   let off = 0;
-  for (const c of chunks) { out.set(c, off); off += c.byteLength; }
+  for (const c of chunks) {
+    out.set(c, off);
+    off += c.byteLength;
+  }
   return out;
 }
 
 const backends = [
-  { name: "dexie",  make: () => new DexieStorageBackendImpl("cid-test-dexie") },
-  { name: "opfs",   make: () => new OPFSStorageBackendImpl("cid-test-opfs", sthis) },
+  { name: "dexie", make: () => new DexieStorageBackendImpl("cid-test-dexie") },
+  { name: "opfs", make: () => new OPFSStorageBackendImpl("cid-test-opfs", sthis) },
 ];
 
 describe.each(backends)("CIDStorageService / $name", ({ make }) => {

@@ -3,7 +3,7 @@ import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
   test: {
-    name: "indexeddb",
+    name: "quick-silver",
     exclude: ["dist/**", "node_modules/**", "examples/**", "gateway/file"],
     include: ["**/*test.?(c|m)[jt]s?(x)"],
     browser: {

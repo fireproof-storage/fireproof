@@ -21,7 +21,7 @@ function db(): string {
 describe("IdxService / addToIdx + query", () => {
   it("stores an entry and query returns it", async () => {
     const dbname = db();
-    const r = await svc.addToIdx({ dbname, idxName, keys: ["apple"], cidUrl: "x://?cid=a" });
+    const r = await svc.addToIdx({ dbname, idxName, keys: ["apple"] });
     expect(r.isErr()).toBe(false);
 
     const qr = await svc.query({ dbname, idxName });
@@ -29,14 +29,13 @@ describe("IdxService / addToIdx + query", () => {
     const entries = await drain(qr.Ok());
     expect(entries).toHaveLength(1);
     expect(entries[0].keys[0]).toBe("apple");
-    expect(entries[0].cidUrl).toBe("x://?cid=a");
   });
 
   it("returns entries in ascending order by default", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["cherry"], cidUrl: "x://?cid=c" });
-    await svc.addToIdx({ dbname, idxName, keys: ["apple"], cidUrl: "x://?cid=a" });
-    await svc.addToIdx({ dbname, idxName, keys: ["banana"], cidUrl: "x://?cid=b" });
+    await svc.addToIdx({ dbname, idxName, keys: ["cherry"] });
+    await svc.addToIdx({ dbname, idxName, keys: ["apple"] });
+    await svc.addToIdx({ dbname, idxName, keys: ["banana"] });
 
     const qr = await svc.query({ dbname, idxName, order: "asc" });
     const entries = await drain(qr.Ok());
@@ -45,9 +44,9 @@ describe("IdxService / addToIdx + query", () => {
 
   it("returns entries in descending order", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["cherry"], cidUrl: "x://?cid=c" });
-    await svc.addToIdx({ dbname, idxName, keys: ["apple"], cidUrl: "x://?cid=a" });
-    await svc.addToIdx({ dbname, idxName, keys: ["banana"], cidUrl: "x://?cid=b" });
+    await svc.addToIdx({ dbname, idxName, keys: ["cherry"] });
+    await svc.addToIdx({ dbname, idxName, keys: ["apple"] });
+    await svc.addToIdx({ dbname, idxName, keys: ["banana"] });
 
     const qr = await svc.query({ dbname, idxName, order: "desc" });
     const entries = await drain(qr.Ok());
@@ -56,9 +55,9 @@ describe("IdxService / addToIdx + query", () => {
 
   it("filters by specific keys", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["x"], cidUrl: "x://?cid=x" });
-    await svc.addToIdx({ dbname, idxName, keys: ["y"], cidUrl: "x://?cid=y" });
-    await svc.addToIdx({ dbname, idxName, keys: ["z"], cidUrl: "x://?cid=z" });
+    await svc.addToIdx({ dbname, idxName, keys: ["x"] });
+    await svc.addToIdx({ dbname, idxName, keys: ["y"] });
+    await svc.addToIdx({ dbname, idxName, keys: ["z"] });
 
     const qr = await svc.query({ dbname, idxName, keys: ["x", "z"] });
     const entries = await drain(qr.Ok());
@@ -67,9 +66,9 @@ describe("IdxService / addToIdx + query", () => {
 
   it("select filters entries at cursor level", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["aaa"], cidUrl: "x://?cid=1", meta: [{ type: "t", key: "v", payload: 1 }] });
-    await svc.addToIdx({ dbname, idxName, keys: ["bbb"], cidUrl: "x://?cid=2", meta: [{ type: "t", key: "v", payload: 2 }] });
-    await svc.addToIdx({ dbname, idxName, keys: ["ccc"], cidUrl: "x://?cid=3", meta: [{ type: "t", key: "v", payload: 3 }] });
+    await svc.addToIdx({ dbname, idxName, keys: ["aaa"], meta: [{ type: "t", key: "v", payload: 1 }] });
+    await svc.addToIdx({ dbname, idxName, keys: ["bbb"], meta: [{ type: "t", key: "v", payload: 2 }] });
+    await svc.addToIdx({ dbname, idxName, keys: ["ccc"], meta: [{ type: "t", key: "v", payload: 3 }] });
 
     const qr = await svc.query({
       dbname,
@@ -84,8 +83,12 @@ describe("IdxService / addToIdx + query", () => {
 describe("IdxService / meta merging", () => {
   it("merges meta — existing entries not in incoming are kept", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["k"], cidUrl: "x://?cid=k", meta: [{ type: "tag", key: "color", payload: "yellow" }] });
-    await svc.addToIdx({ dbname, idxName, keys: ["k"], cidUrl: "x://?cid=k", meta: [{ type: "tag", key: "size", payload: "large" }] });
+    await svc.addToIdx({ dbname, idxName, keys: ["k"], meta: [{ type: "tag", key: "color", payload: "yellow" }] });
+    const r2 = await svc.addToIdx({ dbname, idxName, keys: ["k"], meta: [{ type: "tag", key: "size", payload: "large" }] });
+    expect(r2.isErr()).toBe(false);
+    const r2Meta = r2.Ok().meta ?? [];
+    expect(r2Meta.find((m) => m.key === "color")?.payload).toBe("yellow");
+    expect(r2Meta.find((m) => m.key === "size")?.payload).toBe("large");
 
     const qr = await svc.query({ dbname, idxName });
     const [entry] = await drain(qr.Ok());
@@ -96,20 +99,23 @@ describe("IdxService / meta merging", () => {
 
   it("incoming wins on type+key collision", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["k"], cidUrl: "x://?cid=k", meta: [{ type: "tag", key: "color", payload: "yellow" }] });
-    await svc.addToIdx({ dbname, idxName, keys: ["k"], cidUrl: "x://?cid=k", meta: [{ type: "tag", key: "color", payload: "green" }] });
+    await svc.addToIdx({ dbname, idxName, keys: ["k"], meta: [{ type: "tag", key: "color", payload: "yellow" }] });
+    const r2 = await svc.addToIdx({ dbname, idxName, keys: ["k"], meta: [{ type: "tag", key: "color", payload: "green" }] });
+    expect(r2.isErr()).toBe(false);
+    const colorTag = (r2.Ok().meta ?? []).find((m) => m.type === "tag" && m.key === "color");
+    expect(colorTag?.payload).toBe("green");
 
     const qr = await svc.query({ dbname, idxName });
     const [entry] = await drain(qr.Ok());
-    const colorTag = (entry.meta ?? []).find((m) => m.type === "tag" && m.key === "color");
-    expect(colorTag?.payload).toBe("green");
+    const queriedColorTag = (entry.meta ?? []).find((m) => m.type === "tag" && m.key === "color");
+    expect(queriedColorTag?.payload).toBe("green");
   });
 });
 
 describe("IdxService / soft delete", () => {
   it("deleteFromIdx excludes entry from query by default", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["fig"], cidUrl: "x://?cid=fig" });
+    await svc.addToIdx({ dbname, idxName, keys: ["fig"] });
     const dr = await svc.deleteFromIdx({ dbname, idxName, keys: ["fig"] });
     expect(dr.isErr()).toBe(false);
 
@@ -120,7 +126,7 @@ describe("IdxService / soft delete", () => {
 
   it("includeDeleted: true emits the deleted entry with deleted=true", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["grape"], cidUrl: "x://?cid=grape" });
+    await svc.addToIdx({ dbname, idxName, keys: ["grape"] });
     await svc.deleteFromIdx({ dbname, idxName, keys: ["grape"] });
 
     const qr = await svc.query({ dbname, idxName, includeDeleted: true });
@@ -131,9 +137,9 @@ describe("IdxService / soft delete", () => {
 
   it("addToIdx resets the deleted marker so entry reappears", async () => {
     const dbname = db();
-    await svc.addToIdx({ dbname, idxName, keys: ["mango"], cidUrl: "x://?cid=mango" });
+    await svc.addToIdx({ dbname, idxName, keys: ["mango"] });
     await svc.deleteFromIdx({ dbname, idxName, keys: ["mango"] });
-    await svc.addToIdx({ dbname, idxName, keys: ["mango"], cidUrl: "x://?cid=mango" });
+    await svc.addToIdx({ dbname, idxName, keys: ["mango"] });
 
     const qr = await svc.query({ dbname, idxName });
     const entries = await drain(qr.Ok());

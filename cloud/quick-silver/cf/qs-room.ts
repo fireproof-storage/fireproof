@@ -38,7 +38,12 @@ export class QSRoom extends DurableObject<Env> implements QSRoomDO {
     const sendProvider = new QSSendProvider(ws, this.sthis);
     if (typeof msg === "string") {
       console.log("[QSRoom] rejected string message");
-      await sendProvider.send({} as never, { type: "QSResErr", tid: "unknown", arg: 0, error: "binary messages only" } satisfies QSResErr);
+      await sendProvider.send({} as never, {
+        type: "QSResErr",
+        tid: "unknown",
+        arg: 0,
+        error: "binary messages only",
+      } satisfies QSResErr);
       return;
     }
     await qsRoomEvento().trigger({ ctx: this, request: msg as ArrayBuffer, send: sendProvider });
@@ -99,10 +104,18 @@ export class QSRoom extends DurableObject<Env> implements QSRoomDO {
     const safeCode = code === 1006 ? 1000 : code;
     console.log("[QSRoom] websocket closed:", code, reason);
     this.stores.forEach((storeWs) => {
-      try { storeWs.close(safeCode, reason); } catch { /* already closed */ }
+      try {
+        storeWs.close(safeCode, reason);
+      } catch {
+        /* already closed */
+      }
     });
     this.stores.clear();
-    try { ws.close(safeCode, reason); } catch { /* already closed */ }
+    try {
+      ws.close(safeCode, reason);
+    } catch {
+      /* already closed */
+    }
   }
 
   webSocketError(ws: WebSocket, error: unknown): void {

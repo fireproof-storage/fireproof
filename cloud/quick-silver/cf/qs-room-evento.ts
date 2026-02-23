@@ -3,13 +3,20 @@
 import { Lazy, Evento, EventoResult, EventoType, LoggerImpl, Result, Option } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import {
-  isQSReqGet, isQSReqPut, isQSReqQuery,
-  isQSReqRegisterSubscribe, isQSReqUnregisterSubscribe,
-  QSResErr, QSResRegisterSubscribe,
+  isQSReqGet,
+  isQSReqPut,
+  isQSReqQuery,
+  isQSReqRegisterSubscribe,
+  isQSReqUnregisterSubscribe,
+  QSResErr,
+  QSResRegisterSubscribe,
 } from "@fireproof/cloud-quick-silver-types";
 import type {
-  QSReqGet, QSReqPut, QSReqQuery,
-  QSReqRegisterSubscribe, QSReqUnregisterSubscribe,
+  QSReqGet,
+  QSReqPut,
+  QSReqQuery,
+  QSReqRegisterSubscribe,
+  QSReqUnregisterSubscribe,
 } from "@fireproof/cloud-quick-silver-types";
 import { QSCborEventoEnDecoder } from "./qs-encoder.js";
 import type { QSSendProvider } from "./qs-send-provider.js";
@@ -26,7 +33,7 @@ function room(ctx: { ctx: unknown }): QSRoomDO {
 }
 
 function clientWs(ctx: { send: unknown }): WebSocket {
-  return ((ctx.send as { provider: QSSendProvider }).provider).ws;
+  return (ctx.send as { provider: QSSendProvider }).provider.ws;
 }
 
 export const qsRoomEvento = Lazy(() => {
@@ -44,7 +51,12 @@ export const qsRoomEvento = Lazy(() => {
         const req = ctx.validated as QSReqRegisterSubscribe;
         console.log("[QSRoom] register subscribe tid:", req.tid, "db:", req.db);
         room(ctx).registerSubscription(clientWs(ctx), req.db, req.tid);
-        await ctx.send.send(ctx, { type: "QSResRegisterSubscribe", tid: req.tid, arg: req.arg, db: req.db } satisfies QSResRegisterSubscribe);
+        await ctx.send.send(ctx, {
+          type: "QSResRegisterSubscribe",
+          tid: req.tid,
+          arg: req.arg,
+          db: req.db,
+        } satisfies QSResRegisterSubscribe);
         return Result.Ok(EventoResult.Continue);
       },
     },
@@ -85,7 +97,10 @@ export const qsRoomEvento = Lazy(() => {
       hash: "qs-room-unknown",
       handle: async (ctx) => {
         await ctx.send.send(ctx, {
-          type: "QSResErr", tid: "unknown", arg: 0, error: `unknown request: ${JSON.stringify(ctx.enRequest)}`,
+          type: "QSResErr",
+          tid: "unknown",
+          arg: 0,
+          error: `unknown request: ${JSON.stringify(ctx.enRequest)}`,
         } satisfies QSResErr);
         return Result.Ok(EventoResult.Continue);
       },
@@ -95,7 +110,10 @@ export const qsRoomEvento = Lazy(() => {
       hash: "qs-room-error",
       handle: async (ctx) => {
         await ctx.send.send(ctx, {
-          type: "QSResErr", tid: "unknown", arg: 0, error: ctx.error?.message ?? "internal error",
+          type: "QSResErr",
+          tid: "unknown",
+          arg: 0,
+          error: ctx.error?.message ?? "internal error",
         } satisfies QSResErr);
         return Result.Ok(EventoResult.Continue);
       },

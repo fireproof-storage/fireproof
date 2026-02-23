@@ -2,9 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { fireproof } from "./fireproof.js";
 import { Database } from "@fireproof/core-types-base";
 import { isQSDocMeta, isQSFileMeta } from "./envelope.js";
-
+import { ensureSuperThis } from "@fireproof/core-runtime";
 
 describe("quick-silver", () => {
+  const sthis = ensureSuperThis();
   it("one instance per dbname", () => {
     const db1 = fireproof("db");
     const db2 = fireproof("db");
@@ -175,11 +176,12 @@ describe("quick-silver", () => {
     });
 
     it("allDocs returns empty after destroy", async () => {
-      const db = fireproof("destroy-alldocs-test");
+      const dbName = `destroy-alldocs-test-${sthis.nextId().str}`;
+      const db = fireproof(dbName);
       await db.bulk([{ _id: "a" }, { _id: "b" }]);
       await db.destroy();
 
-      const db2 = fireproof("destroy-alldocs-test");
+      const db2 = fireproof(dbName);
       const result = await db2.allDocs();
       expect(result.rows).toHaveLength(0);
       await db2.destroy();
@@ -220,7 +222,10 @@ describe("quick-silver", () => {
     });
 
     it("excludes deleted docs by default", async () => {
-      await db.bulk([{ _id: "x", v: 1 }, { _id: "y", v: 2 }]);
+      await db.bulk([
+        { _id: "x", v: 1 },
+        { _id: "y", v: 2 },
+      ]);
       await db.del("x");
       const result = await db.allDocs();
       expect(result.rows.map((r) => r.key)).not.toContain("x");
@@ -290,6 +295,13 @@ describe("quick-silver", () => {
       expect(r.rows.map((row) => row.key).sort()).toEqual(["x", "x", "y", "z"]);
     });
 
+    it("MapFn — emit per return", async () => {
+      const r = await db.query<{ tag: string }, string>((doc, _emit) => {
+        return doc.tag;
+      });
+      expect(r.rows.map((row) => row.key).sort()).toEqual(["x", "x", "y", "z"]);
+    });
+
     it("MapFn — multi-emit per doc (one row per emit)", async () => {
       const r = await db.query<{ score: number; tag: string }, string>((doc, emit) => {
         emit(doc.tag, doc.score);
@@ -304,7 +316,7 @@ describe("quick-silver", () => {
     });
 
     it("docs array present when includeDocs is not false", async () => {
-      const r = await db.query("score") as { rows: unknown[]; docs: unknown[] };
+      const r = (await db.query("score")) as { rows: unknown[]; docs: unknown[] };
       expect(r.docs).toHaveLength(4);
     });
 

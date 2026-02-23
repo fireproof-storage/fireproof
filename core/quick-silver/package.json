@@ -40,6 +40,7 @@
     "@adviser/cement": "^0.5.22",
     "@fireproof/core-gateways-indexeddb": "workspace:*",
     "@fireproof/core-runtime": "workspace:0.0.0",
+    "@fireproof/core-device-id": "workspace:0.0.0",
     "@fireproof/core-types-base": "workspace:*",
     "@noble/hashes": "^1.8.0",
     "arktype": "^2.1.29",

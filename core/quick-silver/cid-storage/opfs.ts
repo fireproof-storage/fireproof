@@ -3,8 +3,9 @@ import { ensureSuperThis } from "@fireproof/core-runtime";
 import type { SuperThis } from "@fireproof/core-types-base";
 import type { StorageBackend, StorageBackendReadResult, StorageBackendWriteResult } from "./types.js";
 
-export const OPFSStorageBackend = Lazy(({ name, sthis }: { name?: string; sthis?: SuperThis } = {}) =>
-  new OPFSStorageBackendImpl(name ?? "cid-opfs", sthis ?? ensureSuperThis()),
+export const OPFSStorageBackend = Lazy(
+  ({ name, sthis }: { name?: string; sthis?: SuperThis } = {}) =>
+    new OPFSStorageBackendImpl(name ?? "cid-opfs", sthis ?? ensureSuperThis()),
 );
 
 export class OPFSStorageBackendImpl implements StorageBackend {
