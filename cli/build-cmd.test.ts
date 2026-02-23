@@ -235,6 +235,9 @@ it("unmodified dependencies", async () => {
   expect(patchedPjson.patchedPackageJson).toEqual({
     scripts: {},
     version: "1.2.3",
+    publishConfig: {
+      access: "public",
+    },
     dependencies: {
       "@fireproof/vendor": "workspace:*",
       "xcmd-ts": "^0.13.0",
@@ -242,6 +245,24 @@ it("unmodified dependencies", async () => {
       "zcmd-ts": "0.13.0",
     },
   });
+});
+
+it("patchPackageJson sets repository when repositoryUrl is provided", async () => {
+  const version = new Version("1.2.3", "");
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, {
+    mock,
+    repositoryUrl: "https://github.com/fireproof-storage/fireproof.git",
+  });
+  expect(patchedPackageJson.repository).toEqual({
+    type: "git",
+    url: "https://github.com/fireproof-storage/fireproof.git",
+  });
+});
+
+it("patchPackageJson does not set repository when repositoryUrl is omitted", async () => {
+  const version = new Version("1.2.3", "");
+  const { patchedPackageJson } = await patchPackageJson("package.json", version, { mock });
+  expect(patchedPackageJson.repository).toBeUndefined();
 });
 
 it("sanitizeNpmrc with http lhs", async () => {
