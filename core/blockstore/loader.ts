@@ -157,15 +157,15 @@ class CommitAction implements CommitParams {
 
 export class Loader implements Loadable {
   // readonly name: string;
-  readonly blockstoreParent?: BlockFetcher;
+  blockstoreParent?: BlockFetcher;
   readonly ebOpts: BlockstoreRuntime;
   readonly logger: Logger;
   readonly commitQueue: CommitQueueIf<CarGroup>;
   isCompacting = false;
-  readonly cidCache: KeyedResolvOnce<FPBlock>;
+  private cidCache: KeyedResolvOnce<FPBlock>;
   private readonly maxConcurrentCarReader: ReturnType<typeof pLimit>;
   private readonly maxConcurrentWrite = pLimit(1);
-  readonly seenCompacted: LRUSet<string>;
+  private seenCompacted: LRUSet<string>;
   // readonly processedCars: Set<string> = new Set<string>();
   readonly sthis: SuperThis;
   readonly taskManager: TaskManager;
@@ -299,6 +299,11 @@ export class Loader implements Loadable {
 
   // private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta: LRUSet<string>;
+  private readonly cacheSizes: {
+    readonly carCacheSize: number;
+    readonly metaCacheSize: number;
+    readonly compactCacheSize: number;
+  };
 
   keyBag(): Promise<KeyBagIf> {
     return getKeyBag(this.sthis, this.ebOpts.keyBag);
@@ -306,7 +311,36 @@ export class Loader implements Loadable {
 
   private readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
 
-  metaStreamReader!: ReadableStreamDefaultReader<DbMeta[]>;
+  /**
+   * Create a new CID cache for block lookups.
+   */
+  private buildCidCache() {
+    return new KeyedResolvOnce<FPBlock>({
+      lru: {
+        maxEntries: this.cacheSizes.carCacheSize,
+      },
+    });
+  }
+
+  /**
+   * Create a new cache for seen metadata groups.
+   */
+  private buildSeenMeta() {
+    return new LRUSet<string>({
+      maxEntries: this.cacheSizes.metaCacheSize,
+    });
+  }
+
+  /**
+   * Create a new cache for seen compaction events.
+   */
+  private buildSeenCompacted() {
+    return new LRUSet<string>({
+      maxEntries: this.cacheSizes.compactCacheSize,
+    });
+  }
+
+  metaStreamReader?: ReadableStreamDefaultReader<DbMeta[]>;
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       await createAttachedStores(
@@ -407,19 +441,31 @@ export class Loader implements Loadable {
     await this.attachedStores.detach();
     // console.log("close-3");
     await this.metaStreamReader?.cancel("close");
+    this.metaStreamReader = undefined;
     // console.log("close-4");
     // const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     // await Promise.all(toClose.map((store) => store.close()));
+    this.attachedStores.reset();
+    await this.taskManager.close();
+    this.currentMeta = [];
+    this.carLog.update([]);
+    this.cidCache = this.buildCidCache();
+    this.seenMeta = this.buildSeenMeta();
+    this.seenCompacted = this.buildSeenCompacted();
+    this.blockstoreParent = undefined;
   }
 
+  /**
+   * Destroys all local stores. Safe to call after close().
+   */
   async destroy() {
     // console.log("destroy", this.attachedStores.local().baseStores().map((store) => store.url().toString()));
-    await Promise.all(
-      this.attachedStores
-        .local()
-        .baseStores()
-        .map((store) => store.destroy()),
-    );
+    const local = this.attachedStores.localOrUndefined?.();
+    if (!local) {
+      // Already reset by close(), nothing to destroy
+      return;
+    }
+    await Promise.all(local.baseStores().map((store) => store.destroy()));
   }
 
   readonly id: string;
@@ -439,17 +485,14 @@ export class Loader implements Loadable {
       "Loader",
     );
     this.logger = ensureLogger(sthis, "Loader");
-    this.cidCache = new KeyedResolvOnce({
-      lru: {
-        maxEntries: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_CACHE_SIZE, "1000000"), 10),
-      },
-    });
-    this.seenMeta = new LRUSet({
-      maxEntries: parseInt(this.ebOpts.storeUrls.meta.getParam(PARAM.CAR_META_CACHE_SIZE, "1000"), 10),
-    });
-    this.seenCompacted = new LRUSet({
-      maxEntries: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_COMPACT_CACHE_SIZE, "1000"), 10),
-    });
+    this.cacheSizes = {
+      carCacheSize: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_CACHE_SIZE, "1000000"), 10),
+      metaCacheSize: parseInt(this.ebOpts.storeUrls.meta.getParam(PARAM.CAR_META_CACHE_SIZE, "1000"), 10),
+      compactCacheSize: parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_COMPACT_CACHE_SIZE, "1000"), 10),
+    };
+    this.cidCache = this.buildCidCache();
+    this.seenMeta = this.buildSeenMeta();
+    this.seenCompacted = this.buildSeenCompacted();
     this.maxConcurrentCarReader = pLimit(parseInt(this.ebOpts.storeUrls.car.getParam(PARAM.CAR_PARALLEL, "10"), 10));
     // console.log("maxConcurrentCarReader", this.maxConcurrentCarReader.concurrency);
 
