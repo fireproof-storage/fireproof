@@ -1302,6 +1302,15 @@ importers:
       '@fireproof/vendor':
         specifier: ^3.0.0
         version: 3.0.0
+      '@libsql/client':
+        specifier: ^0.17.0
+        version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      drizzle-kit:
+        specifier: 0.30.6
+        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
+      drizzle-orm:
+        specifier: ^0.45.1
+        version: 0.45.1(@cloudflare/workers-types@4.20260214.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       jose:
         specifier: ^6.1.3
         version: 6.1.3
@@ -1321,18 +1330,9 @@ importers:
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../../core/keybag
-      '@libsql/client':
-        specifier: ^0.17.0
-        version: 0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       '@libsql/kysely-libsql':
         specifier: ^0.4.1
         version: 0.4.1(bufferutil@4.1.0)(kysely@0.28.7)(utf-8-validate@5.0.10)
-      drizzle-kit:
-        specifier: 0.30.6
-        version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
-      drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260214.0)(@libsql/client@0.17.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@1.21.7)
