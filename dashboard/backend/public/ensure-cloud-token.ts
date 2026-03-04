@@ -5,7 +5,7 @@ import {
   validateEnsureCloudToken,
   VerifiedAuthUserResult,
 } from "@fireproof/core-types-protocols-dashboard";
-import { FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
+import { FPCloudClaim, FPCloudClaimSchema } from "@fireproof/core-types-protocols-cloud";
 import { eq, and, count } from "drizzle-orm";
 import { sqlAppIdBinding } from "../sql/app-id-bind.js";
 import { sqlLedgers, sqlLedgerUsers } from "../sql/ledgers.js";
@@ -14,6 +14,7 @@ import { getFPTokenContext, createFPToken, toProvider, checkAuth, wrapStop } fro
 import { createLedger } from "./create-ledger.js";
 import { ensureUser } from "./ensure-user.js";
 import { listLedgersByUser } from "./list-ledgers-by-user.js";
+import { listTenantsByUser } from "./list-tenants-by-user.js";
 import { decodeJwt } from "jose";
 
 function getAppIdBinding(
@@ -131,6 +132,20 @@ async function ensureCloudToken(
     ledgerId = binding.Ledgers.ledgerId;
     tenantId = binding.Ledgers.tenantId;
   }
+  const resListTenants = await listTenantsByUser(ctx, {
+    type: "reqListTenantsByUser",
+    auth: req.auth,
+  });
+  if (resListTenants.isErr()) {
+    return Result.Err(resListTenants.Err());
+  }
+  const resListLedgers = await listLedgersByUser(ctx, {
+    type: "reqListLedgersByUser",
+    auth: req.auth,
+  });
+  if (resListLedgers.isErr()) {
+    return Result.Err(resListLedgers.Err());
+  }
   const rCtx = await getFPTokenContext(ctx.sthis, ictx);
   if (rCtx.isErr()) {
     return Result.Err(rCtx.Err());
@@ -138,8 +153,24 @@ async function ensureCloudToken(
   const fpCtx = rCtx.Ok();
   const cloudToken = await createFPToken(fpCtx, {
     userId: req.auth.user.userId,
-    tenants: [],
-    ledgers: [],
+    tenants: resListTenants.Ok().tenants.map((i) => ({
+      id: i.tenantId,
+      role: i.role,
+    })),
+    ledgers: resListLedgers
+      .Ok()
+      .ledgers.map((i) => {
+        const rights = i.users.find((u) => u.userId === req.auth.user?.userId);
+        if (!rights) {
+          return undefined;
+        }
+        return {
+          id: i.ledgerId,
+          role: rights.role,
+          right: rights.right,
+        };
+      })
+      .filter((i) => i) as FPCloudClaim["ledgers"],
     email: req.auth.verifiedAuth.claims.params.email ?? `${req.auth.user.userId}@no-email.dummy`,
     nickname: req.auth.verifiedAuth.claims.params.nick,
     provider: toProvider(req.auth.verifiedAuth.claims),
