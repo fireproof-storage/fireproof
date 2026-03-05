@@ -4,7 +4,7 @@ You are helping deploy Fireproof's cloud infrastructure to Cloudflare using Alch
 
 ## What Gets Deployed
 
-The deployment provisions the following Cloudflare resources, all suffixed by stage (`dev`, `staging`, `production`):
+The deployment provisions the following Cloudflare resources, all suffixed by stage (any name: `dev`, `staging`, `production`, `acme`, etc.):
 
 | Resource | Name Pattern | Purpose |
 |---|---|---|
@@ -23,8 +23,9 @@ In production, the dashboard also gets the custom domain `connect.fireproof.dire
 1. **Node.js >= 22** and **pnpm** installed
 2. **Cloudflare Global API Key** and account email (not a scoped API token -- alchemy needs global key for R2 token creation)
 3. **Clerk account** with a configured application
-4. **Dashboard frontend built**: `pnpm --filter @fireproof/dashboard-frontend build`
-5. **Environment variables** configured (see below)
+4. **Environment variables** configured (see below)
+
+The dashboard frontend build and Drizzle migrations are handled automatically by the predeploy step.
 
 ## Environment Setup
 
@@ -66,32 +67,53 @@ All commands run from the repo root. Environment variables must be exported befo
 # Export env vars
 set -a && source alchemy/.env && set +a
 
-# Deploy to dev
+# Deploy to a named stage (dev, staging, production)
 pnpm alchemy:deploy:dev
-
-# Deploy to staging
 pnpm alchemy:deploy:staging
-
-# Deploy to production
 pnpm alchemy:deploy:production
 
-# Destroy all resources for the current stage
-pnpm alchemy:destroy --stage dev
+# Destroy all resources for a stage
+pnpm alchemy:destroy -- --stage dev
 ```
 
-The deploy commands automatically run `alchemy:predeploy` first, which generates Drizzle migrations for the dashboard D1 database.
+The deploy commands automatically run `alchemy:predeploy` first, which builds the dashboard frontend and generates Drizzle migrations.
+
+### Spinning Up a New Instance
+
+Each `--stage` name creates a fully isolated stack -- its own Workers, D1 databases, R2 bucket, and API tokens. No state is shared between stages. Use any name:
+
+```bash
+# Deploy an isolated instance named "acme"
+pnpm alchemy:deploy -- --stage acme
+
+# Deploy another with different Clerk keys
+CLERK_PUBLISHABLE_KEY=pk_test_other \
+CLERK_PUB_JWT_URL=https://other.clerk.accounts.dev \
+pnpm alchemy:deploy -- --stage otherclient
+
+# Tear down a specific instance
+pnpm alchemy:destroy -- --stage acme
+```
+
+This creates completely independent resources:
+- `fireproof-cloud-acme` / `fireproof-dashboard-acme` (Workers)
+- `fp-storage-acme` (R2 bucket)
+- `fp-meta-acme` / `fp-connect-acme` (D1 databases)
+- `fp-r2-s3-acme` (API token)
+
+### Deploy Output
 
 After a successful deploy, the script outputs the deployed URLs and ready-to-use VITE env vars:
 
 ```
 --- Deployed URLs ---
-Stage: dev
-Cloud Backend: https://fireproof-cloud-dev.{your-subdomain}.workers.dev
-Dashboard: https://fireproof-dashboard-dev.{your-subdomain}.workers.dev
+Stage: acme
+Cloud Backend: https://fireproof-cloud-acme.{your-subdomain}.workers.dev
+Dashboard: https://fireproof-dashboard-acme.{your-subdomain}.workers.dev
 
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-VITE_API_URL=https://fireproof-dashboard-dev.{your-subdomain}.workers.dev
-VITE_CLOUD_URL=https://fireproof-cloud-dev.{your-subdomain}.workers.dev
+VITE_API_URL=https://fireproof-dashboard-acme.{your-subdomain}.workers.dev
+VITE_CLOUD_URL=https://fireproof-cloud-acme.{your-subdomain}.workers.dev
 ```
 
 ## Verify a Deployment
@@ -105,7 +127,6 @@ npx tsx alchemy/alchemy.verify.ts <cloud-backend-url> <dashboard-url>
 This checks:
 - Cloud backend `/health` endpoint
 - Blob PUT/GET/DELETE round-trip via R2
-- WebSocket upgrade on `/fp`
 - Dashboard serves HTML
 - Dashboard JWKS endpoint (`.well-known/jwks.json`)
 
