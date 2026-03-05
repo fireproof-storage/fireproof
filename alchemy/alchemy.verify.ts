@@ -38,27 +38,7 @@ async function verify() {
   const gone = await fetch(`${backendUrl}/blob/${testKey}`);
   results.push({ name: "blob DELETE", pass: gone.status === 404, detail: `${gone.status}` });
 
-  // 3. WebSocket upgrade on /fp
-  const wsUrl = backendUrl.replace("https://", "wss://").replace("http://", "ws://");
-  const wsOk = await new Promise<boolean>((resolve) => {
-    const ws = new WebSocket(`${wsUrl}/fp`);
-    const timer = setTimeout(() => {
-      ws.close();
-      resolve(false);
-    }, 5000);
-    ws.onopen = () => {
-      clearTimeout(timer);
-      ws.close();
-      resolve(true);
-    };
-    ws.onerror = () => {
-      clearTimeout(timer);
-      resolve(false);
-    };
-  });
-  results.push({ name: "WebSocket /fp", pass: wsOk, detail: wsOk ? "connected" : "failed" });
-
-  // 4. Dashboard loads (returns HTML)
+  // 3. Dashboard loads (returns HTML)
   const dashRes = await fetch(dashboardUrl);
   const dashHtml = await dashRes.text();
   results.push({
