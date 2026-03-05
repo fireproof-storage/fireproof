@@ -1,4 +1,6 @@
 # Files
+.alchemy/
+alchemy/.env
 .claude/
 .vscode
 .idea
