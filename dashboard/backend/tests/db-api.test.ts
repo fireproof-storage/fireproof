@@ -1208,6 +1208,76 @@ describe("db-api", () => {
     });
   });
 
+  it("redeemInvite for ledger invite also adds user to the ledger's tenant", async () => {
+    // User A (admin) creates a ledger in their default tenant
+    const userA = datas[7];
+    const userB = datas[8];
+
+    // Create a ledger under User A's tenant
+    const rLedger = await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: userA.reqs.auth,
+      ledger: {
+        tenantId: userA.ress.tenants[0].tenantId,
+        name: "shared-ledger-tenant-test",
+      },
+    });
+    expect(rLedger.isOk()).toBeTruthy();
+    const ledgerId = rLedger.Ok().ledger.ledgerId;
+
+    // User A invites User B to the ledger
+    const rInvite = await fpApi.inviteUser({
+      type: "reqInviteUser",
+      auth: userA.reqs.auth,
+      ticket: {
+        query: {
+          existingUserId: userB.ress.user.userId,
+        },
+        invitedParams: {
+          ledger: { id: ledgerId, role: "member", right: "write" },
+        },
+      },
+    });
+    expect(rInvite.isOk()).toBeTruthy();
+    expect(rInvite.Ok().invite.status).toBe("pending");
+
+    // User B redeems the invite
+    const rRedeem = await fpApi.redeemInvite({
+      type: "reqRedeemInvite",
+      auth: userB.reqs.auth,
+    });
+    expect(rRedeem.isOk()).toBeTruthy();
+
+    // Verify: User B should now be in the ledger's tenant
+    const rTenants = await fpApi.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: userB.reqs.auth,
+    });
+    expect(rTenants.isOk()).toBeTruthy();
+    const memberTenant = rTenants.Ok().tenants.find(
+      (t) => t.tenantId === userA.ress.tenants[0].tenantId,
+    );
+    expect(memberTenant).toBeDefined();
+    expect(memberTenant!.role).toBe("member");
+
+    // Verify: ensureCloudToken should succeed with the shared ledger
+    const rToken = await fpApi.ensureCloudToken({
+      type: "reqEnsureCloudToken",
+      auth: userB.reqs.auth,
+      appId: "test-tenant-fix",
+      ledger: ledgerId,
+    });
+    expect(rToken.isOk()).toBeTruthy();
+    expect(rToken.Ok().tenant).toBe(userA.ress.tenants[0].tenantId);
+    expect(rToken.Ok().ledger).toBe(ledgerId);
+
+    // Verify: the cloud token's tenants array includes the admin's tenant
+    const hasTenant = rToken.Ok().claims.tenants.some(
+      (t) => t.id === userA.ress.tenants[0].tenantId,
+    );
+    expect(hasTenant).toBe(true);
+  });
+
   it("create session with claim", async () => {
     const auth: DashAuthType = datas[0].reqs.auth;
     // fpApi.sthis.env.set("CLOUD_SESSION_TOKEN_SECRET", "
