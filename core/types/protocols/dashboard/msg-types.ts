@@ -73,7 +73,7 @@ export interface InviteTicket {
 export type UserStatus = "active" | "inactive" | "banned" | "invited";
 
 export interface DashAuthType {
-  readonly type: "ucan" | "clerk" | "device-id";
+  readonly type: "ucan" | "clerk" | "device-id" | "service";
   readonly token: string;
   readonly clerkId?: string; // optional: identifies which Clerk instance to use for verification
 }

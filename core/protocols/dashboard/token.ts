@@ -202,6 +202,61 @@ export const deviceIdCAFromEnv = Lazy((sthis: SuperThis) => {
   );
 });
 
+export class ServiceApiToken implements FPApiToken {
+  readonly sthis: SuperThis;
+
+  constructor(sthis: SuperThis) {
+    this.sthis = sthis;
+  }
+
+  async decode(token: string): Promise<Result<VerifiedClaimsResult>> {
+    return this.verify(token);
+  }
+
+  async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
+    const rEnv = this.sthis.env.gets({
+      SERVICE_API_KEY: param.OPTIONAL,
+    });
+    if (rEnv.isErr()) {
+      return Result.Err("Service auth configuration error");
+    }
+    const configuredKey = rEnv.Ok().SERVICE_API_KEY;
+    if (!configuredKey) {
+      return Result.Err("Service auth not configured");
+    }
+
+    // Compound token format: <key>|<userId>|<email>
+    const parts = token.split("|");
+    if (parts.length < 3) {
+      return Result.Err("Invalid service token format");
+    }
+    const [key, userId, email] = parts;
+
+    if (key !== configuredKey) {
+      return Result.Err("Invalid service key");
+    }
+
+    return Result.Ok({
+      type: "service",
+      token,
+      claims: {
+        userId,
+        sub: userId,
+        role: "admin",
+        params: {
+          email: email,
+          email_verified: true,
+          first: "Service",
+          last: "Account",
+          image_url: "",
+          name: "Service Account",
+          public_meta: {},
+        },
+      },
+    });
+  }
+}
+
 export const tokenApi = Lazy(async (sthis: SuperThis, opts: VerifyWithCertificateOptions) => {
   // const rDeviceIdCA = await DeviceIdCA.from(sthis, {
   //   privateKeyEnv: "DEVICE_ID_CA_PRIV_KEY",
@@ -212,5 +267,6 @@ export const tokenApi = Lazy(async (sthis: SuperThis, opts: VerifyWithCertificat
   return {
     "device-id": new DeviceIdApiToken(sthis, opts),
     clerk: new ClerkApiToken(sthis),
+    service: new ServiceApiToken(sthis),
   };
 });
