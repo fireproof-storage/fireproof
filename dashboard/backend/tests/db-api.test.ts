@@ -33,6 +33,7 @@ describe("db-api", () => {
   }[];
   // const logger = ensureLogger(sthis, "dashboard-backend-db-api-test");
   let deviceCA: DeviceIdCA;
+  let svc: (req: Request) => Promise<Response>;
 
   async function jwkPackage() {
     // const pair = await SessionTokenService.generateKeyPair();
@@ -72,8 +73,9 @@ describe("db-api", () => {
       MAX_ADMIN_USERS: "5",
       MAX_MEMBER_USERS: "5",
       MAX_TENANTS: "10",
+      SERVICE_API_KEY: "test-service-key",
     };
-    const svc = await createHandler(db, env);
+    svc = await createHandler(db, env);
 
     const unknownDevId = await createTestUser({
       sthis,
@@ -1914,6 +1916,74 @@ describe("db-api", () => {
   //     expect(tandC.claims.selected.tenant).toBe(tenant.Ok().tenant.tenantId);
   //     expect(tandC.claims.selected.ledger).toBeDefined();
   //   });
+
+  describe("service auth", () => {
+    it("accepts inviteUser with valid service auth", async () => {
+      // Use User A (admin) as the service identity
+      const adminData = datas[0];
+      const adminTenants = await fpApi.listTenantsByUser({
+        type: "reqListTenantsByUser",
+        auth: adminData.reqs.auth,
+      });
+      const adminTenant = adminTenants.Ok().tenants.find((t) => t.role === "admin" && t.default);
+
+      const rLedger = await fpApi.createLedger({
+        type: "reqCreateLedger",
+        auth: adminData.reqs.auth,
+        ledger: {
+          tenantId: adminTenant!.tenantId,
+          name: "service-auth-test-ledger",
+        },
+      });
+      expect(rLedger.isOk()).toBeTruthy();
+      const ledgerId = rLedger.Ok().ledger.ledgerId;
+
+      // Call inviteUser with service auth (compound token: key|userId|email)
+      const serviceToken = `test-service-key|${adminData.ress.user.userId}|${adminData.ress.user.byProviders[0].cleanEmail}`;
+      const targetEmail = "newuser-service@example.com";
+
+      const res = await svc(
+        new Request("https://test/api", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "reqInviteUser",
+            auth: { type: "service", token: serviceToken },
+            ticket: {
+              query: { byString: targetEmail },
+              invitedParams: {
+                ledger: { id: ledgerId, role: "member", right: "write" },
+              },
+            },
+          }),
+        }),
+      );
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.type).toBe("resInviteUser");
+      expect(body.invite.status).toBe("pending");
+    });
+
+    it("rejects service auth with wrong key", async () => {
+      const res = await svc(
+        new Request("https://test/api", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "reqInviteUser",
+            auth: { type: "service", token: "wrong-key|user|email" },
+            ticket: {
+              query: { byString: "x@x.com" },
+              invitedParams: { tenant: { id: "x", role: "member" } },
+            },
+          }),
+        }),
+      );
+      expect(res.status).toBe(500); // Evento returns 500 for auth errors
+      const body = await res.json();
+      expect(body.type).toBe("error");
+    });
+  });
 });
 
 it("queryEmail strips +....@", async () => {
@@ -1943,3 +2013,4 @@ it("resWellKnownJwks", async () => {
     ],
   });
 });
+
