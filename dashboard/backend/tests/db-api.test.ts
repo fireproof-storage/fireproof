@@ -1938,8 +1938,9 @@ describe("db-api", () => {
       expect(rLedger.isOk()).toBeTruthy();
       const ledgerId = rLedger.Ok().ledger.ledgerId;
 
-      // Call inviteUser with service auth (compound token: key|userId|email)
-      const serviceToken = `test-service-key|${adminData.ress.user.userId}|${adminData.ress.user.byProviders[0].cleanEmail}`;
+      // Call inviteUser with service auth (compound token: key|providerUserId|email)
+      // providerUserId is what getUser looks up by
+      const serviceToken = `test-service-key|${adminData.ress.user.byProviders[0].providerUserId}|${adminData.ress.user.byProviders[0].cleanEmail}`;
       const targetEmail = "newuser-service@example.com";
 
       const res = await svc(

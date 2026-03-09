@@ -33,7 +33,8 @@ export async function verifyExtractClaims(
 export function coercedVerifiedAuthUser(ver: VerifiedClaimsResult): Result<VerifiedAuthResult["verifiedAuth"]> {
   switch (ver.type) {
     case "device-id":
-    case "clerk": {
+    case "clerk":
+    case "service": {
       const claims = ClerkClaimSchema.safeParse(ver.claims);
       if (!claims.success) {
         return Result.Err(claims.error);
