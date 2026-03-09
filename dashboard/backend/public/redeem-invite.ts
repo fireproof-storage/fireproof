@@ -56,6 +56,13 @@ export async function redeemInvite(
               if (!ledger) {
                 throw new Error("ledger not found");
               }
+              // Add user to the ledger's parent tenant (required for cloud token validation)
+              await addUserToTenant(ctx, {
+                userName: `invited-${ledger.name}`,
+                tenantId: ledger.tenantId,
+                userId: req.auth.user.userId,
+                role: invite.invitedParams.ledger.role ?? "member",
+              });
               await addUserToLedger(ctx, {
                 userName: `invited-${ledger.name}`,
                 ledgerId: ledger.ledgerId,
