@@ -43,6 +43,7 @@ export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<
         };
         break;
       case "clerk":
+      case "oidc":
         queryProvider = {
           providerUserId: auth.verifiedAuth.claims.userId,
           queryProvider: nickFromClarkClaim(auth.verifiedAuth.claims.params) ? "github" : "google",
