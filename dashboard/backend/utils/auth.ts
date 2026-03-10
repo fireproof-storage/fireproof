@@ -34,6 +34,7 @@ export function coercedVerifiedAuthUser(ver: VerifiedClaimsResult): Result<Verif
   switch (ver.type) {
     case "device-id":
     case "clerk":
+    case "oidc":
     case "service": {
       const claims = ClerkClaimSchema.safeParse(ver.claims);
       if (!claims.success) {

@@ -257,6 +257,89 @@ export class ServiceApiToken implements FPApiToken {
   }
 }
 
+/**
+ * OIDCApiToken — handles standard OIDC tokens (e.g. Pocket ID).
+ * Verifies JWT via JWKS (same as ClerkApiToken) but maps standard OIDC claims
+ * (sub, email, name) to the Clerk claim format the dashboard expects.
+ */
+export class OIDCApiToken extends ClerkApiToken {
+  async verify(token: string): Promise<Result<VerifiedClaimsResult>> {
+    const rKaUs = this.keysAndUrls();
+    if (rKaUs.isErr()) {
+      return Result.Err(rKaUs);
+    }
+    const { keys, urls } = rKaUs.Ok();
+
+    const rt = await sts.verifyToken(token, keys, urls, {
+      parseSchema: (payload: unknown): Result<FPClerkClaim> => {
+        // Accept any valid JWT payload — we'll map claims below
+        if (!payload || typeof payload !== "object") {
+          return Result.Err("Invalid JWT payload");
+        }
+        const p = payload as Record<string, unknown>;
+        const inner = (p as { payload?: Record<string, unknown> }).payload ?? p;
+
+        const sub = (inner.sub as string) || "";
+        const email = (inner.email as string) || "";
+        const name = (inner.name as string) || "";
+        const nameParts = name.split(" ");
+
+        // Map standard OIDC claims to Clerk claim format
+        const mapped = {
+          protectedHeader: { alg: "RS256", cat: "", kid: "", typ: "JWT" },
+          payload: {
+            sub,
+            userId: sub,
+            role: "member",
+            iss: (inner.iss as string) || "",
+            aud: inner.aud as string | string[] | undefined,
+            exp: inner.exp as number | undefined,
+            iat: inner.iat as number | undefined,
+            params: {
+              email,
+              email_verified: (inner.email_verified as boolean) ?? true,
+              first: nameParts[0] || "",
+              last: nameParts.slice(1).join(" ") || "",
+              image_url: (inner.picture as string) || "",
+              name: name || null,
+              public_meta: {},
+            },
+          },
+        };
+
+        return Result.Ok(mapped as FPClerkClaim);
+      },
+      verifyToken: async (token, key) => {
+        const rPublicKey = await sts.importJWK(key, "RS256");
+        if (rPublicKey.isErr()) {
+          return Result.Err(rPublicKey);
+        }
+        const r = await exception2Result(
+          () => jwtVerify(token, rPublicKey.Ok().key),
+        );
+        if (r.isErr()) {
+          return Result.Err(r);
+        }
+        if (!r.Ok()) {
+          return Result.Err("OIDCVerifyToken: failed");
+        }
+        return Result.Ok({
+          payload: r.Ok(),
+        });
+      },
+    });
+    if (rt.isErr()) {
+      return Result.Err(rt.Err());
+    }
+    const t = rt.Ok();
+    return Result.Ok({
+      type: "oidc",
+      token,
+      claims: t.payload,
+    });
+  }
+}
+
 export const tokenApi = Lazy(async (sthis: SuperThis, opts: VerifyWithCertificateOptions) => {
   // const rDeviceIdCA = await DeviceIdCA.from(sthis, {
   //   privateKeyEnv: "DEVICE_ID_CA_PRIV_KEY",
@@ -267,6 +350,7 @@ export const tokenApi = Lazy(async (sthis: SuperThis, opts: VerifyWithCertificat
   return {
     "device-id": new DeviceIdApiToken(sthis, opts),
     clerk: new ClerkApiToken(sthis),
+    oidc: new OIDCApiToken(sthis),
     service: new ServiceApiToken(sthis),
   };
 });
