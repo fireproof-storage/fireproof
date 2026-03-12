@@ -24,7 +24,7 @@ runs:
 
     - name: build
       shell: bash
-      run: pnpm run build
+      run: FP_TSC=tsc pnpm run build
 
     - name: playwright
       shell: bash
