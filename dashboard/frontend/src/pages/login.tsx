@@ -1,9 +1,9 @@
 import { URI } from "@adviser/cement";
-import { SignIn } from "@clerk/clerk-react";
 import { base64url } from "jose";
 import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { AppContext } from "../app-context.jsx";
+import { SignIn } from "@clerk/react";
 const slides = [
   { text: "This is going to be the way to\u00A0make apps.", author: "Boorad / Brad Anderson", role: "startup founder" },
   { text: "Fastest I’ve ever developed any app of any kind.", author: "Mykle Hansen", role: "developer" },

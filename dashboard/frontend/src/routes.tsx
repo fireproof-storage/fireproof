@@ -3,7 +3,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider } from "@clerk/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppContextProvider } from "./app-context.jsx";
 import { App } from "./components/App.jsx";

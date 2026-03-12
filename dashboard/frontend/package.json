@@ -28,7 +28,7 @@
     "@adviser/cement": "^0.5.33",
     "@clerk/backend": "^3.2.0",
     "@clerk/clerk-js": "^6.3.0",
-    "@clerk/clerk-react": "^5.61.3",
+    "@clerk/react": "^6.1.0",
     "@clerk/shared": "^4.3.0",
     "@fireproof/core": "workspace:0.0.0",
     "@fireproof/core-device-id": "workspace:0.0.0",
@@ -57,7 +57,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@clerk/clerk-react": "^5.61.3",
     "@cloudflare/vite-plugin": "^1.27.0",
     "@cloudflare/workers-types": "^4.20260312.1",
     "@eslint/js": "^9.39.3",

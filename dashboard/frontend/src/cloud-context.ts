@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { useClerk, useSession } from "@clerk/clerk-react";
+import { useClerk, useSession } from "@clerk/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ResCloudSessionToken,
@@ -14,7 +14,6 @@ import {
   InviteTicket,
 } from "@fireproof/core-types-protocols-dashboard";
 import { DASHAPI_URL } from "./helpers.js";
-import type { Clerk } from "@clerk/shared/types";
 import { clerkDashApi } from "@fireproof/core-protocols-dashboard";
 
 export interface InviteItem {
@@ -57,7 +56,7 @@ export class CloudContext {
   }
 
   initContext() {
-    const clerk = useClerk() as Clerk;
+    const clerk = useClerk();
     this.dashApi = clerkDashApi(clerk, { apiUrl: DASHAPI_URL });
     this._clerkSession = useSession();
     this._ensureUser = useQuery({
