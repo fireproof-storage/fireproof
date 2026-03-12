@@ -6,6 +6,7 @@ on:
 
 env:
   FP_CI: 'fp_ci'
+  FP_TSC: 'tsc'
 
 jobs:
   ci_core_cf_deploy:
