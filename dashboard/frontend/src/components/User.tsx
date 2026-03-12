@@ -1,5 +1,5 @@
 import React from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { Show, SignInButton, UserButton } from "@clerk/react";
 
 // let user;
 
@@ -67,11 +67,11 @@ export function User() {
   //   if (isLoaded && !isSignedIn) {
   return (
     <>
-      <SignedIn>
+      <Show when="signed-in">
         {/* Login */}
         <UserButton />
-      </SignedIn>
-      <SignedOut>
+      </Show>
+      <Show when="signed-out">
         {/* LoggedIn */}
         <SignInButton>
           <img
@@ -80,7 +80,7 @@ export function User() {
             className="w-8 h-8 rounded-full"
           />
         </SignInButton>
-      </SignedOut>
+      </Show>
     </>
   );
 }

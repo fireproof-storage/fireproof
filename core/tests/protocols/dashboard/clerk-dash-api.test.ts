@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { ClerkApiToken, clerkDashApi, DeviceIdApiToken } from "@fireproof/core-protocols-dashboard";
 import { ResEnsureUser } from "@fireproof/core-types-protocols-dashboard";
 import { Future, OnFunc } from "@adviser/cement";
-import type { Clerk } from "@clerk/shared/types";
+import type { Clerk, LoadedClerk } from "@clerk/shared/types";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { DeviceIdCA } from "@fireproof/core-device-id";
 
 describe("clerk-dash-api", () => {
-  function testClerk(getToken: () => Promise<string>): Clerk & {
+  function testClerk(getToken: () => Promise<string>): LoadedClerk & {
     invokeCallback: ReturnType<typeof OnFunc<() => void>>;
   } {
     const invokeCallback = OnFunc<() => void>();
@@ -21,7 +21,7 @@ describe("clerk-dash-api", () => {
           /* no-op */
         };
       },
-    } as unknown as Clerk & { invokeCallback: ReturnType<typeof OnFunc<() => void>> };
+    } as unknown as LoadedClerk & { invokeCallback: ReturnType<typeof OnFunc<() => void>> };
   }
 
   it("is a singleton", () => {

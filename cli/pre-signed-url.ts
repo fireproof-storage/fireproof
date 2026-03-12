@@ -15,7 +15,7 @@ export function preSignedUrlCmd(sthis: SuperThis) {
     args: {
       method: option({
         long: "method",
-        type: oneOf(["GET", "PUT", "POST", "DELETE"]),
+        type: oneOf(["GET", "PUT", "POST", "DELETE"]) as never,
         defaultValue: () => "PUT",
         defaultValueIsSerializable: true,
       }),

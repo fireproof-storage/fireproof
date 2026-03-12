@@ -49,7 +49,7 @@ import {
   TypeString,
   WithoutTypeAndAuth,
 } from "@fireproof/core-types-protocols-dashboard";
-import type { Clerk } from "@clerk/shared/types";
+import type { LoadedClerk } from "@clerk/shared/types";
 
 /**
  * DashboardApi provides a client for interacting with the dashboard backend.
@@ -196,7 +196,7 @@ export class DashboardApiImpl<T> implements FPApiInterface {
 }
 
 const keyedDashApis = new KeyedResolvOnce<DashboardApiImpl<unknown>>();
-export function clerkDashApi<T>(clerk: Clerk, iopts: ClerkDashboardApiConfig<T>): DashboardApiImpl<T> {
+export function clerkDashApi<T>(clerk: LoadedClerk, iopts: ClerkDashboardApiConfig<T>): DashboardApiImpl<T> {
   return keyedDashApis.get(iopts.apiUrl).once(() => {
     const waitForToken = new WaitingForValue<string>();
     const dashApi = new DashboardApiImpl({

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { SignUp } from "@clerk/clerk-react";
+import { SignUp } from "@clerk/react";
 import { URI } from "@adviser/cement";
 import { AppContext } from "../app-context.jsx";
 import { base64url } from "jose";
