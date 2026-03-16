@@ -75,7 +75,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@clerk/clerk-js": "^6.3.0",
     "@clerk/shared": "^4.3.0",
     "@fireproof/core-cli": "workspace:0.0.0",
     "@vitest/browser": "^4.0.14",
