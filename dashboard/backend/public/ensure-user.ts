@@ -11,12 +11,13 @@ import { getTableColumns, eq } from "drizzle-orm";
 import { queryEmail, queryNick } from "../sql/sql-helper.js";
 import { sqlTenants } from "../sql/tenants.js";
 import { upsetUserByProvider, sqlUsers, UserByProviderWithoutDate } from "../sql/users.js";
-import { nickFromClarkClaim, nameFromAuth, wrapStop, verifyAuth } from "../utils/index.js";
+import { wrapStop, verifyAuth } from "../utils/index.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
 import { insertTenant } from "../internal/insert-tenant.js";
 import { FPApiSQLCtx } from "../types.js";
 import { listTenantsByUser } from "./list-tenants-by-user.js";
 import { redeemInvite } from "./redeem-invite.js";
+import { nickFromClarkClaim, nameFromAuth } from "@fireproof/core-protocols-dashboard";
 
 export async function ensureUser(ctx: FPApiSQLCtx, req: ReqEnsureUser): Promise<Result<ResEnsureUser>> {
   const rAuth = await verifyAuth(ctx, req);
