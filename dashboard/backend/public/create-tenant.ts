@@ -1,9 +1,10 @@
 import { EventoHandler, Result, EventoResultType, HandleTriggerCtx } from "@adviser/cement";
 import { ReqCreateTenant, ResCreateTenant, validateCreateTenant } from "@fireproof/core-types-protocols-dashboard";
 import { FPApiSQLCtx, ReqWithVerifiedAuthUser } from "../types.js";
-import { nameFromAuth, checkAuth, wrapStop } from "../utils/index.js";
+import { checkAuth, wrapStop } from "../utils/index.js";
 import { insertTenant } from "../internal/insert-tenant.js";
 import { addUserToTenant } from "../internal/add-user-to-tenant.js";
+import { nameFromAuth } from "@fireproof/core-protocols-dashboard";
 
 async function createTenant(ctx: FPApiSQLCtx, req: ReqWithVerifiedAuthUser<ReqCreateTenant>): Promise<Result<ResCreateTenant>> {
   const rTenant = await insertTenant(ctx, req.auth.user, {

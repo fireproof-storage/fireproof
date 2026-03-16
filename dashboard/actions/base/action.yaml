@@ -29,7 +29,7 @@ runs:
       working-directory: dashboard/frontend
       env:
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
-      run: pnpm run build
+      run: FP_TSC=tsc pnpm run build
 
     - name: FRONTEND test
       shell: bash
@@ -57,7 +57,7 @@ runs:
       working-directory: dashboard/backend
       env:
         VITE_CLERK_PUBLISHABLE_KEY: ${{ inputs.CLERK_PUBLISHABLE_KEY }}
-      run: pnpm run build
+      run: FP_TSC=tsc pnpm run build
 
     - name: BACKEND test
       shell: bash

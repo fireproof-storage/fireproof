@@ -39,15 +39,6 @@ export type ReqWithVerifiedAuthUser<REQ extends { type: string; auth: DashAuthTy
   readonly auth: VerifiedAuthUserResult;
 };
 
-export interface FPTokenContext {
-  readonly secretToken: string;
-  readonly publicToken: string;
-  readonly issuer: string;
-  readonly audience: string;
-  readonly validFor: number; // seconds
-  readonly extendValidFor: number; // seconds
-}
-
 export interface FPApiSQLCtx {
   readonly db: DashSqlite;
   readonly logger: Logger;
