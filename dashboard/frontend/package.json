@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@adviser/cement": "^0.5.34",
-    "@clerk/backend": "^3.2.0",
+    "@clerk/backend": "^3.2.1",
     "@clerk/react": "^6.1.0",
     "@clerk/shared": "^4.3.0",
     "@fireproof/core": "workspace:0.0.0",
