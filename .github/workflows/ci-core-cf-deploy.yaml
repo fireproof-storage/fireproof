@@ -23,6 +23,14 @@ jobs:
 
       - uses: ./actions/base
 
+      - name: deploy cloud/backend/cf-storage-cors
+        working-directory: cloud/backend/cf-storage-cors
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm run wrangler:deploy
+
       - name: deploy cloud/backend/cf-d1 - 1
         working-directory: cloud/backend/cf-d1
         env:
