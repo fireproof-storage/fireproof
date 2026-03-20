@@ -1,0 +1,23 @@
+name = "fireproof-storage-cors"
+main = "index.ts"
+compatibility_date = "2025-02-24"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# R2 binding points to the existing fireproof-cloud bucket
+# The custom domain storage.fireproof.direct must be re-pointed
+# from direct R2 access to this worker in the Cloudflare dashboard.
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "fireproof-cloud"
+
+[env.dev]
+[[env.dev.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "fireproof-cloud"
+
+[[env.dev.routes]]
+pattern = "storage.fireproof.direct/*"
+zone_name = "fireproof.direct"
