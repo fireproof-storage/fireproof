@@ -16,6 +16,7 @@ packages:
   - "dashboard/frontend"
   - "dashboard/backend"
   - "vendor"
+  - "examples/react-router"
 #catalog:
 #  adviserCement: ^0.4.20
 #
