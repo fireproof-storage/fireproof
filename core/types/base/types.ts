@@ -138,6 +138,23 @@ export interface TextEndeCodable {
   txt: TextEndeCoder;
 }
 
+export interface EndeJson {
+  encodeToStr(obj: object): string;
+  encodeToUint8(obj: object): Uint8Array;
+  decodeStr<R>(str: string): Result<R>;
+  decodeUint8<R>(uint8: Uint8Array): Result<R>;
+}
+
+export interface EndeCbor {
+  encodeToUint8(obj: object): Uint8Array;
+  decodeUint8<R>(uint8: Uint8Array): Result<R>;
+}
+
+export interface Ende {
+  readonly json: EndeJson;
+  readonly cbor: EndeCbor;
+}
+
 export interface SuperThisOpts {
   // readonly crypto?: CryptoRuntime;
   readonly logger: Logger;
@@ -155,6 +172,7 @@ export interface SuperThis {
   readonly pathOps: PathOps;
   readonly ctx: AppContext;
   readonly txt: TextEndeCoder;
+  readonly ende: Ende;
   // hash(): string;
   timeOrderedNextId(time?: number): { str: string; toString: () => string };
   nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
@@ -198,6 +216,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly writeQueue?: Partial<WriteQueueParams>;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly autoCompact?: number;
+  readonly databaseFactory?: (name: string, opts: ConfigOpts) => Database;
   // could be registered with registerCompactStrategy(name: string, compactStrategy: CompactStrategy)
   readonly compactStrategy?: string; // default "FULL" other "fireproof" , "no-op"
   readonly storeUrls?: StoreUrlsOpts;
@@ -233,6 +252,7 @@ export interface DocBase {
   readonly _id: string;
   readonly _files?: DocFiles;
   readonly _publicFiles?: DocFiles;
+  readonly _meta?: unknown[];
   readonly _deleted?: boolean;
 }
 

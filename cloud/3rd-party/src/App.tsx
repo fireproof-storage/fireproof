@@ -1,26 +1,30 @@
-import { DocWithId, useFireproof, toCloud, RedirectStrategy } from "use-fireproof";
+import { DocWithId, useFireproof } from "use-fireproof";
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { QuickSilver } from "../../../core/quick-silver/quick-silver.js";
 // import { URI } from "@adviser/cement";
 
 function App() {
   const { database, attach } = useFireproof("fireproof-5-party", {
-    attach: toCloud({
-      strategy: new RedirectStrategy({
-        //   overlayCss: defaultOverlayCss,
-        overlayHtml: (url: string) => `<div class="fpOverlayContent">
-          <div class="fpCloseButton">&times;</div>
-          Fireproof Dashboard<br />
-          Sign in to Fireproof Dashboard
-          <a href="${url}" target="_blank">Redirect to Fireproof</a>
-        </div>`,
-      }),
-      // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
-      // tokenApiURI: "http://localhost:7370/api",
-      // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
-      // tenant: "3rd-party",
-      // ledger: "vibes",
-    }),
+    databaseFactory: (name) => {
+      return new QuickSilver({ name });
+    },
+    // attach: toCloud({
+    //   strategy: new RedirectStrategy({
+    //     //   overlayCss: defaultOverlayCss,
+    //     overlayHtml: (url: string) => `<div class="fpOverlayContent">
+    //       <div class="fpCloseButton">&times;</div>
+    //       Fireproof Dashboard<br />
+    //       Sign in to Fireproof Dashboard
+    //       <a href="${url}" target="_blank">Redirect to Fireproof</a>
+    //     </div>`,
+    //   }),
+    // dashboardURI: "http://localhost:7370/fp/cloud/api/token",
+    // tokenApiURI: "http://localhost:7370/api",
+    // urls: { base: "fpcloud://localhost:8787?protocol=ws" },
+    // tenant: "3rd-party",
+    // ledger: "vibes",
+    // }),
   });
   const [rows, setRows] = useState([] as DocWithId<{ value: string }>[]);
   // const [token, setToken] = useState("");

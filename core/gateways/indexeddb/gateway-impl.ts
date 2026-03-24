@@ -167,6 +167,7 @@ export class IndexedDBGateway implements Gateway {
     return exception2Result(async () => {
       const key = getKey(url, sthis.logger);
       const store = getStore(url, sthis, joinDBName).name;
+      // console.log(">>>>>>", url.toString());
       sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
       const idb = await connectIdb("write", url, sthis);
       const tx = idb.db.transaction([store], "readwrite");
