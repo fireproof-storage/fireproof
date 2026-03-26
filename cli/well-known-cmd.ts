@@ -1,10 +1,131 @@
 /* eslint-disable no-console */
-import { SuperThis } from "@fireproof/core-types-base";
 import * as rt from "@fireproof/core-runtime";
 import { command, restPositionals, string, option, flag } from "cmd-ts";
 import { exportSPKI } from "jose";
+import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
+import { type } from "arktype";
+import { CliCtx } from "./cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
 
-export function wellKnownCmd(_sthis: SuperThis) {
+export const ReqWellKnown = type({
+  type: "'core-cli.req-well-known'",
+});
+export type ReqWellKnown = typeof ReqWellKnown.infer;
+
+export const ResWellKnown = type({
+  type: "'core-cli.res-well-known'",
+  output: "string",
+});
+export type ResWellKnown = typeof ResWellKnown.infer;
+
+export function isResWellKnown(u: unknown): u is ResWellKnown {
+  return !(ResWellKnown(u) instanceof type.errors);
+}
+
+export const wellKnownEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqWellKnown, ResWellKnown> = {
+  hash: "core-cli.req-well-known",
+  validate: (ctx) => {
+    if (!(ReqWellKnown(ctx.enRequest) instanceof type.errors)) {
+      return Promise.resolve(Result.Ok(Option.Some(ctx.enRequest as ReqWellKnown)));
+    }
+    return Promise.resolve(Result.Ok(Option.None()));
+  },
+  handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqWellKnown, ResWellKnown>): Promise<Result<EventoResultType>> => {
+    const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
+    const sthis = cliCtx.sthis;
+    const args = ctx.request.cmdTs.raw as {
+      json: boolean;
+      jsons: boolean;
+      pem: boolean;
+      env: boolean;
+      presetKey: string;
+      envPrefix: string;
+      urls: string[];
+    };
+
+    // Split comma-separated URLs
+    const urls = args.urls.flatMap((url) => url.split(",").map((u) => u.trim())).filter((u) => u.length > 0);
+
+    // Process presetKey if provided
+    const presetKeys = args.presetKey ? await rt.sts.coerceJWKPublic(sthis, args.presetKey) : [];
+
+    // Fetch from URLs if provided
+    const results =
+      urls.length > 0
+        ? await rt.sts.fetchWellKnownJwks(urls, {
+            fetchTimeoutMs: 5000,
+          })
+        : [];
+
+    if (urls.length === 0 && presetKeys.length === 0) {
+      return Result.Err("At least one URL or presetKey must be provided");
+    }
+
+    // Determine format - default to json if no flag specified
+    const hasCustomEnvPrefix = args.envPrefix !== "CLERK_PUB_JWT_KEY";
+    const format = args.pem ? "pem" : args.env || hasCustomEnvPrefix ? "env" : args.jsons ? "jsons" : "json";
+
+    // Combine all keys from preset and URLs, removing duplicates by kid
+    const keyMap = new Map();
+
+    // Add preset keys first
+    for (const key of presetKeys) {
+      if (key.kid) {
+        keyMap.set(key.kid, key);
+      } else {
+        keyMap.set(JSON.stringify(key), key);
+      }
+    }
+
+    // Add keys from URLs
+    for (const result of results) {
+      if (result.type === "ok") {
+        for (const key of result.keys) {
+          if (key.kid) {
+            keyMap.set(key.kid, key);
+          } else {
+            keyMap.set(JSON.stringify(key), key);
+          }
+        }
+      }
+    }
+
+    const combinedOutput = { keys: Array.from(keyMap.values()) };
+    let output: string;
+    switch (format) {
+      case "json":
+        output = JSON.stringify(combinedOutput, null, 2);
+        break;
+      case "pem":
+        {
+          const pemParts: string[] = [];
+          for (const jwk of combinedOutput.keys) {
+            const rKey = await rt.sts.importJWK(jwk);
+            if (rKey.isErr()) {
+              return Result.Err(`Error importing JWK: ${rKey.Err()}`);
+            }
+            pemParts.push(await exportSPKI(rKey.Ok().key));
+          }
+          output = pemParts.join("\n");
+        }
+        break;
+      case "env":
+        output = `${args.envPrefix}=${JSON.stringify(JSON.stringify(combinedOutput))}`;
+        break;
+      case "jsons":
+      default:
+        output = JSON.stringify(combinedOutput);
+        break;
+    }
+
+    return sendMsg(ctx, {
+      type: "core-cli.res-well-known",
+      output,
+    } satisfies ResWellKnown);
+  },
+};
+
+export function wellKnownCmd(ctx: CliCtx) {
   return command({
     name: "well-known",
     description: "Fetch well-known JWKS from URLs",
@@ -48,83 +169,10 @@ export function wellKnownCmd(_sthis: SuperThis) {
         description: "URLs to fetch well-known JWKS from",
       }),
     },
-    handler: async (args) => {
-      // Split comma-separated URLs
-      const urls = args.urls.flatMap((url) => url.split(",").map((u) => u.trim())).filter((u) => u.length > 0);
-
-      // Process presetKey if provided
-      const presetKeys = args.presetKey ? await rt.sts.coerceJWKPublic(_sthis, args.presetKey) : [];
-
-      // Fetch from URLs if provided
-      const results =
-        urls.length > 0
-          ? await rt.sts.fetchWellKnownJwks(urls, {
-              fetchTimeoutMs: 5000,
-            })
-          : [];
-
-      if (urls.length === 0 && presetKeys.length === 0) {
-        console.error("Error: At least one URL or presetKey must be provided");
-        process.exit(1);
-      }
-
-      // Determine format - default to json if no flag specified
-      // If combine is set, default to jsons; if env-prefix is set to non-default value, use env format
-      const hasCustomEnvPrefix = args.envPrefix !== "CLERK_PUB_JWT_KEY";
-      const format = args.pem ? "pem" : args.env || hasCustomEnvPrefix ? "env" : args.jsons ? "jsons" : "json";
-
-      // Combine all keys from preset and URLs, removing duplicates by kid
-      const keyMap = new Map();
-
-      // Add preset keys first
-      for (const key of presetKeys) {
-        if (key.kid) {
-          keyMap.set(key.kid, key);
-        } else {
-          // If no kid, add it anyway (won't dedupe)
-          keyMap.set(JSON.stringify(key), key);
-        }
-      }
-
-      // Add keys from URLs
-      for (const result of results) {
-        if (result.type === "ok") {
-          for (const key of result.keys) {
-            if (key.kid) {
-              keyMap.set(key.kid, key);
-            } else {
-              // If no kid, add it anyway (won't dedupe)
-              keyMap.set(JSON.stringify(key), key);
-            }
-          }
-        }
-      }
-
-      const combinedOutput = { keys: Array.from(keyMap.values()) };
-      switch (format) {
-        case "json":
-          console.log(JSON.stringify(combinedOutput, null, 2));
-          break;
-        case "pem":
-          {
-            for (const jwk of combinedOutput.keys) {
-              const rKey = await rt.sts.importJWK(jwk);
-              if (rKey.isErr()) {
-                console.error(`Error importing JWK: ${rKey.Err()}`);
-                process.exit(1);
-              }
-              console.log(await exportSPKI(rKey.Ok().key));
-            }
-          }
-          break;
-        case "env":
-          console.log(`${args.envPrefix}=${JSON.stringify(JSON.stringify(combinedOutput))}`);
-          break;
-        case "jsons":
-        default:
-          console.log(JSON.stringify(combinedOutput));
-          break;
-      }
-    },
+    handler: ctx.cliStream.enqueue(async (_args) => {
+      return {
+        type: "core-cli.req-well-known",
+      } satisfies ReqWellKnown;
+    }),
   });
 }

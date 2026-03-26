@@ -4,9 +4,11 @@ import fs from "fs-extra";
 import path from "node:path";
 import { findUp } from "find-up";
 import { cd, $ } from "zx";
-import { SuperThis } from "@fireproof/core-types-base";
 import { SemVer } from "semver";
-import { exception2Result } from "@adviser/cement";
+import { exception2Result, Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
+import { type } from "arktype";
+import { CliCtx } from "./cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
 import { VersionPinner } from "./version-pinner.js";
 
 export type VersionModifier = "~" | "^" | "";
@@ -319,8 +321,241 @@ export async function buildJsrConf(
   return jsrConf;
 }
 
+export const ReqBuild = type({
+  type: "'core-cli.build'",
+});
+export type ReqBuild = typeof ReqBuild.infer;
+
+export const ResBuild = type({
+  type: "'core-cli.res-build'",
+  output: "string",
+});
+export type ResBuild = typeof ResBuild.infer;
+
+export function isResBuild(u: unknown): u is ResBuild {
+  return !(ResBuild(u) instanceof type.errors);
+}
+
+export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuild> = {
+  hash: "core-cli.build",
+  validate: (ctx) => {
+    if (!(ReqBuild(ctx.enRequest) instanceof type.errors)) {
+      return Promise.resolve(Result.Ok(Option.Some(ctx.enRequest as ReqBuild)));
+    }
+    return Promise.resolve(Result.Ok(Option.None()));
+  },
+  handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqBuild, ResBuild>): Promise<Result<EventoResultType>> => {
+    const args = ctx.request.cmdTs.raw as {
+      prepareVersion: boolean;
+      fpVersion: string;
+      version: string;
+      srcDir: string;
+      dstDir: string;
+      excludedNames: string[];
+      noCleanDst: boolean;
+      noTsconfig: boolean;
+      patchVersionModify: VersionModifier;
+      noPatchedVersionModify: boolean;
+      noPinned: boolean;
+      lockfile: string;
+      noBuild: boolean;
+      doPack: boolean;
+      packDestDir: string;
+      npmrc: string;
+      licenseFile: string;
+      readmeFile: string;
+      registry: string;
+      publishJsr: boolean;
+      changeScope: string;
+      versionPrefix: string;
+      pubTags: string[];
+      npm: string;
+    };
+
+    const top = await findUp("tsconfig.dist.json");
+    if (!top) {
+      return Result.Err("Could not find tsconfig.dist.json in the project root.");
+    }
+    if (args.fpVersion) {
+      args.fpVersion = path.join(args.dstDir, args.fpVersion);
+    }
+    if (!args.version) {
+      args.version = await getVersion(args.fpVersion);
+    }
+
+    const version = new Version(args.version, args.versionPrefix);
+
+    if (args.prepareVersion) {
+      await fs.mkdirp(args.dstDir);
+      const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
+      const rawVersion = await getVersion(args.fpVersion);
+      const vx = new Version(rawVersion, args.versionPrefix);
+      await fs.writeFile(fpVersionFile, vx.version);
+      console.log(`Using version: ${vx.version}`);
+      return sendMsg(ctx, {
+        type: "core-cli.res-build",
+        output: `Prepared version: ${vx.version}`,
+      } satisfies ResBuild);
+    }
+    if (args.srcDir === args.dstDir) {
+      return Result.Err("Source and destination directories cannot be the same.");
+    }
+
+    // args.srcDir = path.resolve(args.srcDir);
+
+    const tmpDest = await fs.mkdtemp("../fp-dist-");
+    const licenseFile = await findUp(args.licenseFile);
+    if (licenseFile) {
+      await fs.copyFile(licenseFile, path.join(tmpDest, path.basename(args.licenseFile)));
+    }
+    const readmeFile = await findUp(args.readmeFile);
+    if (readmeFile) {
+      await fs.copyFile(readmeFile, path.join(tmpDest, path.basename(args.readmeFile)));
+    }
+
+    await fs.copy(args.srcDir, tmpDest, {
+      filter: (src: string, _dst: string) => {
+        if (src.startsWith(args.dstDir)) {
+          return false; // Skip copying if the source is within the destination directory
+        }
+        // const basename = path.basename(src);
+
+        // Exclude by full name (for directories or specific files)
+        if (args.excludedNames.find((name) => src.includes(name))) {
+          return false;
+        }
+        // Include everything else
+        return true;
+      },
+    });
+    const jsrDstDir = path.join(args.dstDir, "jsr");
+    const npmDstDir = path.join(args.dstDir, "npm");
+    if (!args.noCleanDst) {
+      await fs.rm(args.dstDir, { recursive: true, force: true });
+    }
+    //await fs.mkdirp(jsrDstDir);
+    await fs.mkdirp(npmDstDir);
+    await fs.move(tmpDest, jsrDstDir);
+
+    if (!args.noTsconfig) {
+      await updateTsconfig(path.join(args.srcDir, "tsconfig.json"), path.join(jsrDstDir, "tsconfig.json"));
+    }
+    $.verbose = true;
+    cd(jsrDstDir);
+
+    let packageJson = await patchPackageJson("package.json", version, { changeScope: args.changeScope });
+    if (!args.noPinned) {
+      console.log(
+        "Prepared package.json with pinning for",
+        packageJson.patchedPackageJson.name,
+        "version",
+        packageJson.patchedPackageJson.version,
+      );
+      const lockfilePath = args.lockfile || path.join(path.dirname(top), "pnpm-lock.yaml");
+      const pinner = await VersionPinner.create({ lockfilePath });
+      packageJson = {
+        ...packageJson,
+        patchedPackageJson: pinner.pinVersions(packageJson.patchedPackageJson, {
+          workspaceVersion: version.prefixedVersion,
+          _3rdPartyVersionModifier: args.noPatchedVersionModify ? undefined : args.patchVersionModify,
+        }),
+      };
+    }
+    await fs.writeJSON("package.json", packageJson.patchedPackageJson, { spaces: 2 });
+    // await $`pnpm version ${args.version}`;
+
+    fs.copy(".", "../npm", {
+      filter: (src: string, _dst: string) => {
+        if (src.endsWith(".ts") || src.endsWith(".tsx")) {
+          return false;
+        }
+        return true;
+      },
+    });
+    if (!args.noBuild) {
+      const res = await $`${args.npm} run build`.nothrow();
+      if (res.exitCode !== 0) {
+        return Result.Err(`Build failed with exit code ${res.exitCode}`);
+      }
+    }
+    for (const f of ["package.json", "README.md", "LICENSE.md"]) {
+      await fs.copyFile(f, path.join("../npm", f));
+    }
+
+    if (args.publishJsr) {
+      const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
+      await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
+      if (!isPrivate(packageJson.originalPackageJson)) {
+        const res = await $`${args.npm} exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`.nothrow();
+        if (res.exitCode !== 0) {
+          console.log(`Failed to pack the package.`);
+          return Result.Err(`JSR publish failed with exit code ${res.exitCode}`);
+        }
+      }
+    }
+
+    //await fs.copy(jsrDstDir, npmDstDir);
+    cd("../npm");
+    if (args.doPack) {
+      if (!args.packDestDir) {
+        args.packDestDir = path.join(path.dirname(top), "dist");
+        await fs.mkdirp(args.packDestDir);
+      }
+      if (args.packDestDir) {
+        await fs.copyFile(path.join(path.dirname(args.packDestDir), ".gitignore"), ".gitignore");
+        await fs.copyFile(path.join(path.dirname(args.packDestDir), ".npmignore"), ".npmignore");
+        const res = await $`${args.npm} pack --out "${args.packDestDir}/%s.tgz"`.nothrow();
+        if (res.exitCode !== 0) {
+          console.error(`Failed to pack the package.`);
+          return Result.Err(`Pack failed with exit code ${res.exitCode}`);
+        }
+      }
+    } else {
+      if (!args.registry) {
+        args.registry = "https://registry.npmjs.org/";
+      }
+      if (!args.npmrc) {
+        args.npmrc = path.join(path.join(path.dirname(top), "dist"), "npmrc-smoke");
+      }
+      if (fs.existsSync(args.npmrc)) {
+        console.log(`Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
+        const niceNpmrc = sanitizeNpmrc(await fs.readFile(args.npmrc, "utf-8"));
+        await fs.writeFile(".npmrc", niceNpmrc);
+        // await fs.copyFile(args.npmrc, ".npmrc");
+        // await $`cat .npmrc`;
+        // await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
+      }
+      const tags = args.pubTags;
+      try {
+        const semVer = new SemVer(args.version);
+        if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
+          tags.push("dev");
+        } else {
+          tags.push("latest"); // override to latest in prod
+        }
+      } catch (e) {
+        console.warn(`Warn parsing version ${args.version}:`, e);
+      }
+
+      const registry = ["--registry", args.registry];
+      const tagsOpts = tags.map((tag) => ["--tag", tag]).flat();
+      $.verbose = true;
+      const res = await $`${[args.npm, "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
+      if (res.exitCode !== 0) {
+        console.error(`Failed to publish the package.`); //, JSON.stringify(process.env, null, 2));
+        return Result.Err(`Publish failed with exit code ${res.exitCode}`);
+      }
+    }
+
+    return sendMsg(ctx, {
+      type: "core-cli.res-build",
+      output: "Build completed successfully",
+    } satisfies ResBuild);
+  },
+};
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function buildCmd(sthis: SuperThis) {
+export function buildCmd(ctx: CliCtx) {
   const cmd = command({
     name: "fireproof build cli",
     description: "helps to build fp",
@@ -477,179 +712,11 @@ export function buildCmd(sthis: SuperThis) {
         description: "Package manager to use (pnpm, npm, yarn, bun), defaults to 'pnpm'.",
       }),
     },
-    handler: async (args) => {
-      const top = await findUp("tsconfig.dist.json");
-      if (!top) {
-        throw new Error("Could not find tsconfig.dist.json in the project root.");
-      }
-      if (args.fpVersion) {
-        args.fpVersion = path.join(args.dstDir, args.fpVersion);
-      }
-      if (!args.version) {
-        args.version = await getVersion(args.fpVersion);
-      }
-
-      const version = new Version(args.version, args.versionPrefix);
-
-      if (args.prepareVersion) {
-        await fs.mkdirp(args.dstDir);
-        const fpVersionFile = path.join(args.dstDir, "fp-version.txt");
-        const rawVersion = await getVersion(args.fpVersion);
-        const vx = new Version(rawVersion, args.versionPrefix);
-        await fs.writeFile(fpVersionFile, vx.version);
-        console.log(`Using version: ${vx.version}`);
-        return;
-      }
-      if (args.srcDir === args.dstDir) {
-        throw new Error("Source and destination directories cannot be the same.");
-      }
-
-      // args.srcDir = path.resolve(args.srcDir);
-
-      const tmpDest = await fs.mkdtemp("../fp-dist-");
-      const licenseFile = await findUp(args.licenseFile);
-      if (licenseFile) {
-        await fs.copyFile(licenseFile, path.join(tmpDest, path.basename(args.licenseFile)));
-      }
-      const readmeFile = await findUp(args.readmeFile);
-      if (readmeFile) {
-        await fs.copyFile(readmeFile, path.join(tmpDest, path.basename(args.readmeFile)));
-      }
-
-      await fs.copy(args.srcDir, tmpDest, {
-        filter: (src: string, _dst: string) => {
-          if (src.startsWith(args.dstDir)) {
-            return false; // Skip copying if the source is within the destination directory
-          }
-          // const basename = path.basename(src);
-
-          // Exclude by full name (for directories or specific files)
-          if (args.excludedNames.find((name) => src.includes(name))) {
-            return false;
-          }
-          // Include everything else
-          return true;
-        },
-      });
-      const jsrDstDir = path.join(args.dstDir, "jsr");
-      const npmDstDir = path.join(args.dstDir, "npm");
-      if (!args.noCleanDst) {
-        await fs.rm(args.dstDir, { recursive: true, force: true });
-      }
-      //await fs.mkdirp(jsrDstDir);
-      await fs.mkdirp(npmDstDir);
-      await fs.move(tmpDest, jsrDstDir);
-
-      if (!args.noTsconfig) {
-        await updateTsconfig(path.join(args.srcDir, "tsconfig.json"), path.join(jsrDstDir, "tsconfig.json"));
-      }
-      $.verbose = true;
-      cd(jsrDstDir);
-
-      let packageJson = await patchPackageJson("package.json", version, { changeScope: args.changeScope });
-      if (!args.noPinned) {
-        console.log(
-          "Prepared package.json with pinning for",
-          packageJson.patchedPackageJson.name,
-          "version",
-          packageJson.patchedPackageJson.version,
-        );
-        const lockfilePath = args.lockfile || path.join(path.dirname(top), "pnpm-lock.yaml");
-        const pinner = await VersionPinner.create({ lockfilePath });
-        packageJson = {
-          ...packageJson,
-          patchedPackageJson: pinner.pinVersions(packageJson.patchedPackageJson, {
-            workspaceVersion: version.prefixedVersion,
-            _3rdPartyVersionModifier: args.noPatchedVersionModify ? undefined : args.patchVersionModify,
-          }),
-        };
-      }
-      await fs.writeJSON("package.json", packageJson.patchedPackageJson, { spaces: 2 });
-      // await $`pnpm version ${args.version}`;
-
-      fs.copy(".", "../npm", {
-        filter: (src: string, _dst: string) => {
-          if (src.endsWith(".ts") || src.endsWith(".tsx")) {
-            return false;
-          }
-          return true;
-        },
-      });
-      if (!args.noBuild) {
-        const res = await $`${args.npm} run build`.nothrow();
-        if (res.exitCode !== 0) {
-          process.exit(res.exitCode);
-        }
-      }
-      for (const f of ["package.json", "README.md", "LICENSE.md"]) {
-        await fs.copyFile(f, path.join("../npm", f));
-      }
-
-      if (args.publishJsr) {
-        const jsrConf = await buildJsrConf(packageJson, version.prefixedVersion);
-        await fs.writeJSON("jsr.json", jsrConf, { spaces: 2 });
-        if (!isPrivate(packageJson.originalPackageJson)) {
-          const res = await $`${args.npm} exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`.nothrow();
-          if (res.exitCode !== 0) {
-            console.log(`Failed to pack the package.`);
-            process.exit(res.exitCode);
-          }
-        }
-      }
-
-      //await fs.copy(jsrDstDir, npmDstDir);
-      cd("../npm");
-      if (args.doPack) {
-        if (!args.packDestDir) {
-          args.packDestDir = path.join(path.dirname(top), "dist");
-          await fs.mkdirp(args.packDestDir);
-        }
-        if (args.packDestDir) {
-          await fs.copyFile(path.join(path.dirname(args.packDestDir), ".gitignore"), ".gitignore");
-          await fs.copyFile(path.join(path.dirname(args.packDestDir), ".npmignore"), ".npmignore");
-          const res = await $`${args.npm} pack --out "${args.packDestDir}/%s.tgz"`.nothrow();
-          if (res.exitCode !== 0) {
-            console.error(`Failed to pack the package.`);
-            process.exit(res.exitCode);
-          }
-        }
-      } else {
-        if (!args.registry) {
-          args.registry = "https://registry.npmjs.org/";
-        }
-        if (!args.npmrc) {
-          args.npmrc = path.join(path.join(path.dirname(top), "dist"), "npmrc-smoke");
-        }
-        if (fs.existsSync(args.npmrc)) {
-          console.log(`Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
-          const niceNpmrc = sanitizeNpmrc(await fs.readFile(args.npmrc, "utf-8"));
-          await fs.writeFile(".npmrc", niceNpmrc);
-          // await fs.copyFile(args.npmrc, ".npmrc");
-          // await $`cat .npmrc`;
-          // await $`env | grep -e npm_config -e NPM_CONFIG -e PNPM_CONFIG`;
-        }
-        const tags = args.pubTags;
-        try {
-          const semVer = new SemVer(args.version);
-          if (semVer.prerelease.find((i) => typeof i === "string" && i.includes("dev"))) {
-            tags.push("dev");
-          } else {
-            tags.push("latest"); // override to latest in prod
-          }
-        } catch (e) {
-          console.warn(`Warn parsing version ${args.version}:`, e);
-        }
-
-        const registry = ["--registry", args.registry];
-        const tagsOpts = tags.map((tag) => ["--tag", tag]).flat();
-        $.verbose = true;
-        const res = await $`${[args.npm, "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
-        if (res.exitCode !== 0) {
-          console.error(`Failed to publish the package.`); //, JSON.stringify(process.env, null, 2));
-          process.exit(res.exitCode);
-        }
-      }
-    },
+    handler: ctx.cliStream.enqueue(async (_args) => {
+      return {
+        type: "core-cli.build",
+      } satisfies ReqBuild;
+    }),
   });
   return cmd;
 }
