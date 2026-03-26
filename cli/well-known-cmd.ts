@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as rt from "@fireproof/core-runtime";
 import { command, restPositionals, string, option, flag } from "cmd-ts";
 import { exportSPKI } from "jose";

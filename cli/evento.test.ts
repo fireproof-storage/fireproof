@@ -3,8 +3,7 @@ import { triggerEvento } from "./evento-test-helper.js";
 import { isResKey } from "./cloud-token-key-cmd.js";
 import { isResWellKnown } from "./well-known-cmd.js";
 import { isResWriteEnv } from "./write-env-cmd.js";
-import { isResDeviceIdCreate } from "./device-id-cmd.js";
-import { isResDeviceIdExport } from "./device-id-cmd.js";
+import { isResDeviceIdCreate, isResDeviceIdExport } from "./device-id-cmd.js";
 import { isResRetry } from "./retry-cmd.js";
 
 describe("evento pipeline", () => {
@@ -74,8 +73,8 @@ describe("evento pipeline", () => {
       const msg = wmsg.result;
       expect(isResWriteEnv(msg)).toBe(true);
       if (isResWriteEnv(msg)) {
-        // output is the filename "-" for stdout
-        expect(msg.output).toBe("-");
+        // stdout mode returns empty output (content already written to stdout)
+        expect(msg.output).toBe("");
       }
     });
   });

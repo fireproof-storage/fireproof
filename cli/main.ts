@@ -7,7 +7,7 @@ import { err, isErr } from "cmd-ts/dist/cjs/Result.js";
 
 import { cmd_tsStream } from "./cmd-ts-stream.js";
 import { CliCtx } from "./cli-ctx.js";
-import { cmdTsEvento, WrapCmdTSMsg } from "./cmd-evento.js";
+import { cmdTsEvento, isCmdProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
 import { buildCmd, isResBuild } from "./build-cmd.js";
 import { setDependenciesCmd, setScriptsCmd, isResSetScripts, isResSetDependencies } from "./set-scripts-cmd.js";
@@ -99,19 +99,37 @@ async function main() {
   await Promise.all([
     processStream(
       ctx.cliStream.stream,
-      (msg) => {
-        return evento
-          .trigger({
-            ctx: appCtx,
-            send: outputSelector,
-            request: msg,
-          })
-          .then(() => {
-            /* no-op */
-          });
+      async (msg) => {
+        const triggered = await evento.trigger({
+          ctx: appCtx,
+          send: outputSelector,
+          request: msg,
+        });
+        if (triggered.isErr()) {
+          throw triggered.Err();
+        }
+        const triggerCtx = triggered.unwrap();
+        if (triggerCtx.error) {
+          throw triggerCtx.error;
+        }
       },
       processStream(outputSelector.outputStream, async (wmsg) => {
         const msg = wmsg.result;
+        if (isCmdProgress(msg)) {
+          switch (msg.level) {
+            case "warn":
+              console.warn(msg.message);
+              break;
+            case "error":
+              console.error(msg.message);
+              break;
+            case "info":
+            default:
+              console.log(msg.message);
+              break;
+          }
+          return;
+        }
         switch (true) {
           case isResWellKnown(msg):
           case isResWriteEnv(msg):

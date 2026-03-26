@@ -1,6 +1,5 @@
 import { command, option, string, flag, optional, array, multioption } from "cmd-ts";
 import * as rt from "@fireproof/core-runtime";
-import { SuperThis } from "@fireproof/core-types-base";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option, param } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
@@ -27,7 +26,7 @@ export function isResWriteEnv(u: unknown): u is ResWriteEnv {
 // --- Utility function (kept as-is) ---
 
 export async function writeEnvFile(
-  sthis: SuperThis,
+  sthis: CliCtx["sthis"],
   envFname: string,
   outFname: string | undefined,
   env: string,
@@ -125,7 +124,7 @@ export const writeEnvEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqWriteEnv, R
     }
     const fname = await writeEnvFile(sthis, args.wranglerToml, args.out, args.env, rVal.Ok(), args.doNotOverwrite, args.json);
     const output = ["-", "stdout"].find((i) => args.out?.includes(i))
-      ? fname
+      ? ""
       : `Wrote: ${fname} keys:  ${JSON.stringify(Object.keys(rVal.Ok()))}`;
 
     return sendMsg(ctx, {

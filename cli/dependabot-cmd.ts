@@ -1,10 +1,9 @@
-/* eslint-disable no-console */
 import { command, flag, option, string } from "cmd-ts";
 import { $ } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
 interface PR {
   readonly number: number;
@@ -14,32 +13,40 @@ interface PR {
   readonly headRefName: string;
 }
 
-async function fetchDependabotPRs(): Promise<PR[]> {
+async function fetchDependabotPRs(ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqDependabot, ResDependabot>): Promise<PR[]> {
   try {
     const result = await $`gh pr list --author app/dependabot --json number,title,author,url,headRefName --limit 100`;
     const prs = JSON.parse(result.stdout) as PR[];
     return prs;
   } catch (error) {
-    console.error("Failed to fetch Dependabot PRs:", error);
+    await sendProgress(ctx, "error", `Failed to fetch Dependabot PRs: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 }
 
-async function applyPR(pr: PR, rebase: boolean): Promise<void> {
+async function applyPR(
+  ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqDependabot, ResDependabot>,
+  pr: PR,
+  rebase: boolean,
+): Promise<void> {
   try {
-    console.log(`\nProcessing PR #${pr.number}: ${pr.title}`);
+    await sendProgress(ctx, "info", `\nProcessing PR #${pr.number}: ${pr.title}`);
 
     if (rebase) {
       // Rebase and merge the PR
       await $`gh pr merge ${pr.number} --auto --rebase`;
-      console.log(`✓ Rebased and merged PR #${pr.number}`);
+      await sendProgress(ctx, "info", `✓ Rebased and merged PR #${pr.number}`);
     } else {
       // Just checkout the PR
       await $`gh pr checkout ${pr.number}`;
-      console.log(`✓ Checked out PR #${pr.number}`);
+      await sendProgress(ctx, "info", `✓ Checked out PR #${pr.number}`);
     }
   } catch (error) {
-    console.error(`✗ Failed to process PR #${pr.number}:`, error);
+    await sendProgress(
+      ctx,
+      "error",
+      `✗ Failed to process PR #${pr.number}: ${error instanceof Error ? error.message : String(error)}`,
+    );
     throw error;
   }
 }
@@ -75,11 +82,10 @@ export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabo
       list: boolean;
     };
 
-    console.log("Fetching Dependabot PRs...");
-    const prs = await fetchDependabotPRs();
+    await sendProgress(ctx, "info", "Fetching Dependabot PRs...");
+    const prs = await fetchDependabotPRs(ctx);
 
     if (prs.length === 0) {
-      console.log("No Dependabot PRs found.");
       return sendMsg(ctx, {
         type: "core-cli.res-dependabot",
         output: "No Dependabot PRs found.",
@@ -88,17 +94,16 @@ export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabo
 
     // List mode (default)
     if (args.list || (!args.apply && !args.rebase && !args.prNumber)) {
-      console.log(`\nFound ${prs.length} Dependabot PR(s):\n`);
-      const lines: string[] = [];
-      prs.forEach((pr) => {
-        console.log(`#${pr.number}: ${pr.title}`);
-        console.log(`  URL: ${pr.url}`);
-        console.log(`  Branch: ${pr.headRefName}\n`);
+      const lines: string[] = [`Found ${prs.length} Dependabot PR(s):`, ""];
+      for (const pr of prs) {
         lines.push(`#${pr.number}: ${pr.title}`);
-      });
+        lines.push(`  URL: ${pr.url}`);
+        lines.push(`  Branch: ${pr.headRefName}`);
+        lines.push("");
+      }
       return sendMsg(ctx, {
         type: "core-cli.res-dependabot",
-        output: `Found ${prs.length} Dependabot PR(s):\n${lines.join("\n")}`,
+        output: lines.join("\n"),
       } satisfies ResDependabot);
     }
 
@@ -109,7 +114,7 @@ export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabo
       if (!pr) {
         return Result.Err(`PR #${prNum} not found or is not a Dependabot PR.`);
       }
-      await applyPR(pr, args.rebase);
+      await applyPR(ctx, pr, args.rebase);
       return sendMsg(ctx, {
         type: "core-cli.res-dependabot",
         output: `Processed PR #${prNum}: ${pr.title}`,
@@ -118,19 +123,18 @@ export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabo
 
     // Apply all PRs
     if (args.apply || args.rebase) {
-      console.log(`\nProcessing ${prs.length} Dependabot PR(s)...\n`);
+      await sendProgress(ctx, "info", `Processing ${prs.length} Dependabot PR(s)...`);
       const processed: number[] = [];
       const skipped: number[] = [];
       for (const pr of prs) {
         try {
-          await applyPR(pr, args.rebase);
+          await applyPR(ctx, pr, args.rebase);
           processed.push(pr.number);
         } catch (error) {
-          console.error(`Skipping PR #${pr.number} due to error.`);
+          await sendProgress(ctx, "error", `Skipping PR #${pr.number} due to error.`);
           skipped.push(pr.number);
         }
       }
-      console.log("\nDone processing Dependabot PRs.");
       return sendMsg(ctx, {
         type: "core-cli.res-dependabot",
         output: `Processed ${processed.length} PRs, skipped ${skipped.length}.`,

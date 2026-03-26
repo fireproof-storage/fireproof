@@ -1,11 +1,10 @@
-/* eslint-disable no-console */
 import { command, flag, multioption, option, string, array } from "cmd-ts";
 import { $, glob } from "zx";
 import { readFile } from "fs/promises";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
 interface PackageJson {
   dependencies?: Record<string, string>;
@@ -21,13 +20,17 @@ async function findPackageJsonFiles(dir: string): Promise<string[]> {
 }
 
 // Find packages matching the regex patterns in a package.json
-async function findMatchingPackages(packageJsonPath: string, patterns: string[]): Promise<string[]> {
+async function findMatchingPackages(
+  ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqUpdateDeps, ResUpdateDeps>,
+  packageJsonPath: string,
+  patterns: string[],
+): Promise<string[]> {
   let pkg: PackageJson;
   try {
     const content = await readFile(packageJsonPath, "utf-8");
     pkg = JSON.parse(content) as PackageJson;
   } catch (e) {
-    console.warn(`⚠️  Skipping unreadable/invalid JSON: ${packageJsonPath}`);
+    await sendProgress(ctx, "warn", `⚠️  Skipping unreadable/invalid JSON: ${packageJsonPath}`);
     return [];
   }
 
@@ -92,47 +95,49 @@ export const updateDepsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqUpdateDep
 
     $.verbose = true;
 
-    console.log(`\n🔍 Searching for package.json files in: ${currentDir}`);
-    console.log(`📋 Package patterns: ${patterns.join(", ")}`);
-    console.log(`🔄 Target version: ${ver}`);
+    await sendProgress(ctx, "info", `\n🔍 Searching for package.json files in: ${currentDir}`);
+    await sendProgress(ctx, "info", `📋 Package patterns: ${patterns.join(", ")}`);
+    await sendProgress(ctx, "info", `🔄 Target version: ${ver}`);
     if (dryRun) {
-      console.log(`🧪 DRY RUN MODE - No changes will be made`);
+      await sendProgress(ctx, "info", `🧪 DRY RUN MODE - No changes will be made`);
     }
-    console.log();
+    await sendProgress(ctx, "info", "");
 
     try {
       // Find all package.json files
       const packageJsonFiles = await findPackageJsonFiles(currentDir);
-      console.log(`Found ${packageJsonFiles.length} package.json files\n`);
+      await sendProgress(ctx, "info", `Found ${packageJsonFiles.length} package.json files\n`);
 
       // Collect all unique package names matching our patterns
       const allMatchingPackages = new Set<string>();
 
       for (const file of packageJsonFiles) {
-        const matches = await findMatchingPackages(file, patterns);
+        const matches = await findMatchingPackages(ctx, file, patterns);
         matches.forEach((pkg) => allMatchingPackages.add(pkg));
       }
 
       const packagesToUpdate = Array.from(allMatchingPackages).sort();
 
       if (packagesToUpdate.length === 0) {
-        console.log("⚠️  No matching packages found!");
+        await sendProgress(ctx, "warn", "⚠️  No matching packages found!");
         return sendMsg(ctx, {
           type: "core-cli.res-update-deps",
           output: "No matching packages found",
         } satisfies ResUpdateDeps);
       }
 
-      console.log(`📦 Found ${packagesToUpdate.length} unique packages to update:\n`);
-      packagesToUpdate.forEach((pkg) => console.log(`   - ${pkg}`));
-      console.log();
+      await sendProgress(ctx, "info", `📦 Found ${packagesToUpdate.length} unique packages to update:\n`);
+      for (const pkg of packagesToUpdate) {
+        await sendProgress(ctx, "info", `   - ${pkg}`);
+      }
+      await sendProgress(ctx, "info", "");
 
       if (dryRun) {
-        console.log("🧪 DRY RUN: Would run the following commands:\n");
+        await sendProgress(ctx, "info", "🧪 DRY RUN: Would run the following commands:\n");
         for (const pkg of packagesToUpdate) {
-          console.log(`   pnpm update -r ${pkg}@${ver}`);
+          await sendProgress(ctx, "info", `   pnpm update -r ${pkg}@${ver}`);
         }
-        console.log("\n✨ Dry run complete! Re-run without --dry-run to apply changes.\n");
+        await sendProgress(ctx, "info", "\n✨ Dry run complete! Re-run without --dry-run to apply changes.\n");
         return sendMsg(ctx, {
           type: "core-cli.res-update-deps",
           output: `Dry run complete. ${packagesToUpdate.length} package(s) would be updated.`,
@@ -143,33 +148,33 @@ export const updateDepsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqUpdateDep
       const failures: { pkg: string; error: string }[] = [];
 
       for (const pkg of packagesToUpdate) {
-        console.log(`\n📦 Updating ${pkg} to ${ver}...`);
+        await sendProgress(ctx, "info", `\n📦 Updating ${pkg} to ${ver}...`);
         try {
           await $({ cwd: currentDir })`pnpm update -r ${pkg}@${ver}`;
-          console.log(`   ✅ Updated ${pkg}`);
+          await sendProgress(ctx, "info", `   ✅ Updated ${pkg}`);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           failures.push({ pkg, error: errorMessage });
-          console.log(`   ❌ Failed to update ${pkg}`);
-          console.log(`      Error: ${errorMessage}`);
+          await sendProgress(ctx, "error", `   ❌ Failed to update ${pkg}`);
+          await sendProgress(ctx, "error", `      Error: ${errorMessage}`);
         }
       }
 
       if (failures.length > 0) {
-        console.log("\n❌ Update failed!\n");
-        console.log(`Failed to update ${failures.length} package(s):\n`);
-        failures.forEach(({ pkg, error }) => {
-          console.log(`   - ${pkg}`);
-          console.log(`     ${error}\n`);
-        });
+        await sendProgress(ctx, "error", "\n❌ Update failed!\n");
+        await sendProgress(ctx, "error", `Failed to update ${failures.length} package(s):\n`);
+        for (const { pkg, error } of failures) {
+          await sendProgress(ctx, "error", `   - ${pkg}`);
+          await sendProgress(ctx, "error", `     ${error}\n`);
+        }
         return Result.Err(`Failed to update ${failures.length} package(s)`);
       }
 
-      console.log("\n✨ Update complete!\n");
-      console.log("📋 Next steps:");
-      console.log("  1. Review changes: git diff");
-      console.log("  2. Run checks: pnpm check");
-      console.log("  3. Run tests: pnpm test:all");
+      await sendProgress(ctx, "info", "\n✨ Update complete!\n");
+      await sendProgress(ctx, "info", "📋 Next steps:");
+      await sendProgress(ctx, "info", "  1. Review changes: git diff");
+      await sendProgress(ctx, "info", "  2. Run checks: pnpm check");
+      await sendProgress(ctx, "info", "  3. Run tests: pnpm test:all");
 
       return sendMsg(ctx, {
         type: "core-cli.res-update-deps",
@@ -177,7 +182,7 @@ export const updateDepsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqUpdateDep
       } satisfies ResUpdateDeps);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error("\n❌ Error updating dependencies:", errorMessage);
+      await sendProgress(ctx, "error", `\n❌ Error updating dependencies: ${errorMessage}`);
       return Result.Err(`Error updating dependencies: ${errorMessage}`);
     }
   },

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { command, option, number, restPositionals } from "cmd-ts";
 import { $ } from "zx";
 import {
@@ -15,7 +14,7 @@ import {
 } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
 export const ReqRetry = type({
   type: "'core-cli.retry'",
@@ -52,7 +51,7 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
     const timeoutSec = args.timeout;
 
     if (isNaN(retryCount) || retryCount < 1) {
-      console.error("Error: --retry must be a positive number");
+      await sendProgress(ctx, "error", "Error: --retry must be a positive number");
       return sendMsg(ctx, {
         type: "core-cli.res-retry",
         output: "Error: --retry must be a positive number",
@@ -61,7 +60,7 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
     }
 
     if (isNaN(timeoutSec) || timeoutSec < 0) {
-      console.error("Error: --timeout must be a non-negative number");
+      await sendProgress(ctx, "error", "Error: --timeout must be a non-negative number");
       return sendMsg(ctx, {
         type: "core-cli.res-retry",
         output: "Error: --timeout must be a non-negative number",
@@ -70,7 +69,7 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
     }
 
     if (!args.command || args.command.length === 0) {
-      console.error("Error: No command specified");
+      await sendProgress(ctx, "error", "Error: No command specified");
       return sendMsg(ctx, {
         type: "core-cli.res-retry",
         output: "Error: No command specified",
@@ -84,7 +83,7 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const isLastAttempt = attempt === maxAttempts;
 
-      console.log(`[Attempt ${attempt}/${maxAttempts}] Running: ${commandStr}`);
+      await sendProgress(ctx, "info", `[Attempt ${attempt}/${maxAttempts}] Running: ${commandStr}`);
 
       const executeCommand = async () => {
         $.verbose = true;
@@ -101,22 +100,21 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
 
       switch (true) {
         case isSuccess(result): {
-          console.log(`[Attempt ${attempt}/${maxAttempts}] Command succeeded`);
+          await sendProgress(ctx, "info", `[Attempt ${attempt}/${maxAttempts}] Command succeeded`);
           return sendMsg(ctx, {
             type: "core-cli.res-retry",
-            output: "Command succeeded",
+            output: "",
             exitCode: 0,
           } satisfies ResRetry);
         }
 
         case isTimeout(result): {
-          console.error(`[Attempt ${attempt}/${maxAttempts}] Command timed out after ${timeoutSec}s`);
+          await sendProgress(ctx, "error", `[Attempt ${attempt}/${maxAttempts}] Command timed out after ${timeoutSec}s`);
           if (isLastAttempt) {
-            const msg = `All ${maxAttempts} attempts failed. Last failure: timeout`;
-            console.error(msg);
+            await sendProgress(ctx, "error", `All ${maxAttempts} attempts failed. Last failure: timeout`);
             return sendMsg(ctx, {
               type: "core-cli.res-retry",
-              output: msg,
+              output: "",
               exitCode: 124,
             } satisfies ResRetry);
           }
@@ -124,13 +122,12 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
         }
 
         case isAborted(result): {
-          console.error(`[Attempt ${attempt}/${maxAttempts}] Command was aborted`);
+          await sendProgress(ctx, "error", `[Attempt ${attempt}/${maxAttempts}] Command was aborted`);
           if (isLastAttempt) {
-            const msg = `All ${maxAttempts} attempts failed. Last failure: aborted`;
-            console.error(msg);
+            await sendProgress(ctx, "error", `All ${maxAttempts} attempts failed. Last failure: aborted`);
             return sendMsg(ctx, {
               type: "core-cli.res-retry",
-              output: msg,
+              output: "",
               exitCode: 130,
             } satisfies ResRetry);
           }
@@ -139,13 +136,12 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
 
         case isError(result): {
           const errorMsg = result.error instanceof Error ? result.error.message : String(result.error);
-          console.error(`[Attempt ${attempt}/${maxAttempts}] Command failed: ${errorMsg}`);
+          await sendProgress(ctx, "error", `[Attempt ${attempt}/${maxAttempts}] Command failed: ${errorMsg}`);
           if (isLastAttempt) {
-            const msg = `All ${maxAttempts} attempts failed. Last failure: ${errorMsg}`;
-            console.error(msg);
+            await sendProgress(ctx, "error", `All ${maxAttempts} attempts failed. Last failure: ${errorMsg}`);
             return sendMsg(ctx, {
               type: "core-cli.res-retry",
-              output: msg,
+              output: "",
               exitCode: 1,
             } satisfies ResRetry);
           }
