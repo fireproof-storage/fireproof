@@ -2,6 +2,10 @@ import { command, flag } from "cmd-ts";
 import { SuperThis } from "@fireproof/core-types-base";
 // import { findUp } from "find-up";
 import { $, quotePowerShell } from "zx";
+import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
+import { type } from "arktype";
+import { CliCtx } from "./cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
 
 function isPowerShell() {
   // PowerShell sets these environment variables
@@ -35,8 +39,42 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
   });
 }
 
-export function tscCmd(sthis: SuperThis) {
-  const cmd = command({
+export const ReqTsc = type({
+  type: "'core-cli.tsc'",
+});
+export type ReqTsc = typeof ReqTsc.infer;
+
+export const ResTsc = type({
+  type: "'core-cli.res-tsc'",
+  output: "string",
+});
+export type ResTsc = typeof ResTsc.infer;
+
+export function isResTsc(u: unknown): u is ResTsc {
+  return !(ResTsc(u) instanceof type.errors);
+}
+
+export const tscEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqTsc, ResTsc> = {
+  hash: "core-cli.tsc",
+  validate: (ctx) => {
+    if (!(ReqTsc(ctx.enRequest) instanceof type.errors)) {
+      return Promise.resolve(Result.Ok(Option.Some(ctx.enRequest as ReqTsc)));
+    }
+    return Promise.resolve(Result.Ok(Option.None()));
+  },
+  handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqTsc, ResTsc>): Promise<Result<EventoResultType>> => {
+    const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
+    const args = ctx.request.cmdTs.raw as string[];
+    await handleTsc(args, cliCtx.sthis);
+    return sendMsg(ctx, {
+      type: "core-cli.res-tsc",
+      output: "tsc completed",
+    } satisfies ResTsc);
+  },
+};
+
+export function tscCmd(ctx: CliCtx) {
+  return command({
     name: "tsc or tsgo",
     description: "tsc evolution tsgo",
     args: {
@@ -47,10 +85,10 @@ export function tscCmd(sthis: SuperThis) {
         description: "Show help.",
       }),
     },
-
-    handler: async (args) => {
-      return handleTsc(args as unknown as string[], sthis);
-    },
+    handler: ctx.cliStream.enqueue(async (_args) => {
+      return {
+        type: "core-cli.tsc",
+      } satisfies ReqTsc;
+    }),
   });
-  return cmd;
 }

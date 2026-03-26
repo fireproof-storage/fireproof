@@ -2,11 +2,90 @@
 import { array, command, flag, multioption, option, string } from "cmd-ts";
 import fs from "fs-extra";
 import { glob } from "zx";
-import { SuperThis } from "@fireproof/core-types-base";
+import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
+import { type } from "arktype";
+import { CliCtx } from "./cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function setDependenciesCmd(sthis: SuperThis) {
-  const cmd = command({
+// --- Set Dependencies ---
+
+export const ReqSetDependencies = type({
+  type: "'core-cli.set-dependencies'",
+});
+export type ReqSetDependencies = typeof ReqSetDependencies.infer;
+
+export const ResSetDependencies = type({
+  type: "'core-cli.res-set-dependencies'",
+  output: "string",
+});
+export type ResSetDependencies = typeof ResSetDependencies.infer;
+
+export function isResSetDependencies(u: unknown): u is ResSetDependencies {
+  return !(ResSetDependencies(u) instanceof type.errors);
+}
+
+export const setDependenciesEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetDependencies, ResSetDependencies> = {
+  hash: "core-cli.set-dependencies",
+  validate: (ctx) => {
+    if (!(ReqSetDependencies(ctx.enRequest) instanceof type.errors)) {
+      return Promise.resolve(Result.Ok(Option.Some(ctx.enRequest as ReqSetDependencies)));
+    }
+    return Promise.resolve(Result.Ok(Option.None()));
+  },
+  handle: async (
+    ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqSetDependencies, ResSetDependencies>,
+  ): Promise<Result<EventoResultType>> => {
+    const args = ctx.request.cmdTs.raw as {
+      packageJsons: string[];
+      depName: string;
+      depVersion: string;
+      devDependency: boolean;
+      peerDependency: boolean;
+    };
+
+    const packagesJsonFiles = await glob(args.packageJsons, {
+      gitignore: true,
+      dot: false,
+      ignore: ["node_modules/**", "**/node_modules/**", "dist/**", "build/**", ".next/**", "coverage/**"],
+      onlyFiles: true,
+      absolute: false,
+      caseSensitiveMatch: false,
+    });
+    console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
+    for (const packageJsonPath of packagesJsonFiles) {
+      const packageJson = await fs.readJSON(packageJsonPath);
+      let ref: Record<string, string>;
+      if (args.devDependency) {
+        ref = packageJson.devDependencies || {};
+        packageJson.devDependencies = ref;
+        console.log(`Setting devDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+      } else if (args.peerDependency) {
+        ref = packageJson.peerDependencies || {};
+        packageJson.peerDependencies = ref;
+        console.log(`Setting peerDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+      } else {
+        ref = packageJson.dependencies || {};
+        packageJson.dependencies = ref;
+        console.log(`Setting dependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+      }
+      if (!args.depVersion) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete ref[args.depName];
+      } else {
+        ref[args.depName] = args.depVersion;
+      }
+      await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
+    }
+
+    return sendMsg(ctx, {
+      type: "core-cli.res-set-dependencies",
+      output: `Patched ${packagesJsonFiles.length} package.json files.`,
+    } satisfies ResSetDependencies);
+  },
+};
+
+export function setDependenciesCmd(ctx: CliCtx) {
+  return command({
     name: "fireproof set dependencies",
     description: "helps to set dependencies in package.json files",
     version: "1.0.0",
@@ -43,56 +122,78 @@ export function setDependenciesCmd(sthis: SuperThis) {
         description: "If set, the dependency will be added to peerDependencies instead of dependencies.",
       }),
     },
-    handler: async (args) => {
-      const packagesJsonFiles = await glob(args.packageJsons, {
-        gitignore: true, // Respect .gitignore
-        dot: false, // Don't include hidden files
-        ignore: [
-          // Additional ignores
-          "node_modules/**",
-          "**/node_modules/**",
-          "dist/**",
-          "build/**",
-          ".next/**",
-          "coverage/**",
-        ],
-        onlyFiles: true, // Only return files, not directories
-        absolute: false, // Return relative paths
-        caseSensitiveMatch: false,
-      });
-      console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
-      for (const packageJsonPath of packagesJsonFiles) {
-        const packageJson = await fs.readJSON(packageJsonPath);
-        let ref: Record<string, string>;
-        if (args.devDependency) {
-          ref = packageJson.devDependencies || {};
-          packageJson.devDependencies = ref;
-          console.log(`Setting devDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
-        } else if (args.peerDependency) {
-          ref = packageJson.peerDependencies || {};
-          packageJson.peerDependencies = ref;
-          console.log(`Setting peerDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
-        } else {
-          ref = packageJson.dependencies || {};
-          packageJson.dependencies = ref;
-          console.log(`Setting dependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
-        }
-        if (!args.depVersion) {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete ref[args.depName];
-        } else {
-          ref[args.depName] = args.depVersion;
-        }
-        await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
-      }
-    },
+    handler: ctx.cliStream.enqueue(async (_args) => {
+      return {
+        type: "core-cli.set-dependencies",
+      } satisfies ReqSetDependencies;
+    }),
   });
-  return cmd;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function setScriptsCmd(sthis: SuperThis) {
-  const cmd = command({
+// --- Set Scripts ---
+
+export const ReqSetScripts = type({
+  type: "'core-cli.set-scripts'",
+});
+export type ReqSetScripts = typeof ReqSetScripts.infer;
+
+export const ResSetScripts = type({
+  type: "'core-cli.res-set-scripts'",
+  output: "string",
+});
+export type ResSetScripts = typeof ResSetScripts.infer;
+
+export function isResSetScripts(u: unknown): u is ResSetScripts {
+  return !(ResSetScripts(u) instanceof type.errors);
+}
+
+export const setScriptsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetScripts, ResSetScripts> = {
+  hash: "core-cli.set-scripts",
+  validate: (ctx) => {
+    if (!(ReqSetScripts(ctx.enRequest) instanceof type.errors)) {
+      return Promise.resolve(Result.Ok(Option.Some(ctx.enRequest as ReqSetScripts)));
+    }
+    return Promise.resolve(Result.Ok(Option.None()));
+  },
+  handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqSetScripts, ResSetScripts>): Promise<Result<EventoResultType>> => {
+    const args = ctx.request.cmdTs.raw as {
+      packageJsons: string[];
+      scriptName: string;
+      scriptAction: string;
+      scriptDelete: boolean;
+    };
+
+    const packagesJsonFiles = await glob(args.packageJsons, {
+      gitignore: true,
+      dot: false,
+      ignore: ["node_modules/**", "**/node_modules/**", "dist/**", "build/**", ".next/**", "coverage/**"],
+      onlyFiles: true,
+      absolute: false,
+      caseSensitiveMatch: false,
+    });
+    console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
+    for (const packageJsonPath of packagesJsonFiles) {
+      const packageJson = await fs.readJSON(packageJsonPath);
+      if (args.scriptDelete || !args.scriptAction) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete packageJson.scripts[args.scriptName];
+        console.log(`Deleting script ${args.scriptName} from ${packageJsonPath}`);
+      } else {
+        packageJson.scripts[args.scriptName] = args.scriptAction;
+        console.log(`Setting script ${args.scriptName} to "${args.scriptAction}" in ${packageJsonPath}`);
+      }
+      await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
+    }
+
+    return sendMsg(ctx, {
+      type: "core-cli.res-set-scripts",
+      output: `Patched ${packagesJsonFiles.length} package.json files.`,
+    } satisfies ResSetScripts);
+  },
+};
+
+export function setScriptsCmd(ctx: CliCtx) {
+  return command({
     name: "fireproof build cli",
     description: "helps to build fp",
     version: "1.0.0",
@@ -124,37 +225,10 @@ export function setScriptsCmd(sthis: SuperThis) {
         description: "If set, the script will be deleted instead of set.",
       }),
     },
-    handler: async (args) => {
-      const packagesJsonFiles = await glob(args.packageJsons, {
-        gitignore: true, // Respect .gitignore
-        dot: false, // Don't include hidden files
-        ignore: [
-          // Additional ignores
-          "node_modules/**",
-          "**/node_modules/**",
-          "dist/**",
-          "build/**",
-          ".next/**",
-          "coverage/**",
-        ],
-        onlyFiles: true, // Only return files, not directories
-        absolute: false, // Return relative paths
-        caseSensitiveMatch: false,
-      });
-      console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
-      for (const packageJsonPath of packagesJsonFiles) {
-        const packageJson = await fs.readJSON(packageJsonPath);
-        if (args.scriptDelete || !args.scriptAction) {
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete packageJson.scripts[args.scriptName];
-          console.log(`Deleting script ${args.scriptName} from ${packageJsonPath}`);
-        } else {
-          packageJson.scripts[args.scriptName] = args.scriptAction;
-          console.log(`Setting script ${args.scriptName} to "${args.scriptAction}" in ${packageJsonPath}`);
-        }
-        await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
-      }
-    },
+    handler: ctx.cliStream.enqueue(async (_args) => {
+      return {
+        type: "core-cli.set-scripts",
+      } satisfies ReqSetScripts;
+    }),
   });
-  return cmd;
 }

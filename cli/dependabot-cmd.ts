@@ -1,7 +1,10 @@
 /* eslint-disable no-console */
 import { command, flag, option, string } from "cmd-ts";
 import { $ } from "zx";
-import { SuperThis } from "@fireproof/core-types-base";
+import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
+import { type } from "arktype";
+import { CliCtx } from "./cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
 
 interface PR {
   readonly number: number;
@@ -41,8 +44,107 @@ async function applyPR(pr: PR, rebase: boolean): Promise<void> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function dependabotCmd(sthis: SuperThis) {
+export const ReqDependabot = type({
+  type: "'core-cli.dependabot'",
+});
+export type ReqDependabot = typeof ReqDependabot.infer;
+
+export const ResDependabot = type({
+  type: "'core-cli.res-dependabot'",
+  output: "string",
+});
+export type ResDependabot = typeof ResDependabot.infer;
+
+export function isResDependabot(u: unknown): u is ResDependabot {
+  return !(ResDependabot(u) instanceof type.errors);
+}
+
+export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabot, ResDependabot> = {
+  hash: "core-cli.dependabot",
+  validate: (ctx) => {
+    if (!(ReqDependabot(ctx.enRequest) instanceof type.errors)) {
+      return Promise.resolve(Result.Ok(Option.Some(ctx.enRequest as ReqDependabot)));
+    }
+    return Promise.resolve(Result.Ok(Option.None()));
+  },
+  handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqDependabot, ResDependabot>): Promise<Result<EventoResultType>> => {
+    const args = ctx.request.cmdTs.raw as {
+      rebase: boolean;
+      apply: boolean;
+      prNumber: string;
+      list: boolean;
+    };
+
+    console.log("Fetching Dependabot PRs...");
+    const prs = await fetchDependabotPRs();
+
+    if (prs.length === 0) {
+      console.log("No Dependabot PRs found.");
+      return sendMsg(ctx, {
+        type: "core-cli.res-dependabot",
+        output: "No Dependabot PRs found.",
+      } satisfies ResDependabot);
+    }
+
+    // List mode (default)
+    if (args.list || (!args.apply && !args.rebase && !args.prNumber)) {
+      console.log(`\nFound ${prs.length} Dependabot PR(s):\n`);
+      const lines: string[] = [];
+      prs.forEach((pr) => {
+        console.log(`#${pr.number}: ${pr.title}`);
+        console.log(`  URL: ${pr.url}`);
+        console.log(`  Branch: ${pr.headRefName}\n`);
+        lines.push(`#${pr.number}: ${pr.title}`);
+      });
+      return sendMsg(ctx, {
+        type: "core-cli.res-dependabot",
+        output: `Found ${prs.length} Dependabot PR(s):\n${lines.join("\n")}`,
+      } satisfies ResDependabot);
+    }
+
+    // Apply specific PR
+    if (args.prNumber) {
+      const prNum = parseInt(args.prNumber, 10);
+      const pr = prs.find((p) => p.number === prNum);
+      if (!pr) {
+        return Result.Err(`PR #${prNum} not found or is not a Dependabot PR.`);
+      }
+      await applyPR(pr, args.rebase);
+      return sendMsg(ctx, {
+        type: "core-cli.res-dependabot",
+        output: `Processed PR #${prNum}: ${pr.title}`,
+      } satisfies ResDependabot);
+    }
+
+    // Apply all PRs
+    if (args.apply || args.rebase) {
+      console.log(`\nProcessing ${prs.length} Dependabot PR(s)...\n`);
+      const processed: number[] = [];
+      const skipped: number[] = [];
+      for (const pr of prs) {
+        try {
+          await applyPR(pr, args.rebase);
+          processed.push(pr.number);
+        } catch (error) {
+          console.error(`Skipping PR #${pr.number} due to error.`);
+          skipped.push(pr.number);
+        }
+      }
+      console.log("\nDone processing Dependabot PRs.");
+      return sendMsg(ctx, {
+        type: "core-cli.res-dependabot",
+        output: `Processed ${processed.length} PRs, skipped ${skipped.length}.`,
+      } satisfies ResDependabot);
+    }
+
+    return sendMsg(ctx, {
+      type: "core-cli.res-dependabot",
+      output: "No action taken.",
+    } satisfies ResDependabot);
+  },
+};
+
+export function dependabotCmd(ctx: CliCtx) {
   const cmd = command({
     name: "dependabot",
     description: "Fetch and apply Dependabot PRs",
@@ -71,51 +173,11 @@ export function dependabotCmd(sthis: SuperThis) {
         description: "List all Dependabot PRs (default action)",
       }),
     },
-    handler: async (args) => {
-      console.log("Fetching Dependabot PRs...");
-      const prs = await fetchDependabotPRs();
-
-      if (prs.length === 0) {
-        console.log("No Dependabot PRs found.");
-        return;
-      }
-
-      // List mode (default)
-      if (args.list || (!args.apply && !args.rebase && !args.prNumber)) {
-        console.log(`\nFound ${prs.length} Dependabot PR(s):\n`);
-        prs.forEach((pr) => {
-          console.log(`#${pr.number}: ${pr.title}`);
-          console.log(`  URL: ${pr.url}`);
-          console.log(`  Branch: ${pr.headRefName}\n`);
-        });
-        return;
-      }
-
-      // Apply specific PR
-      if (args.prNumber) {
-        const prNum = parseInt(args.prNumber, 10);
-        const pr = prs.find((p) => p.number === prNum);
-        if (!pr) {
-          console.error(`PR #${prNum} not found or is not a Dependabot PR.`);
-          process.exit(1);
-        }
-        await applyPR(pr, args.rebase);
-        return;
-      }
-
-      // Apply all PRs
-      if (args.apply || args.rebase) {
-        console.log(`\nProcessing ${prs.length} Dependabot PR(s)...\n`);
-        for (const pr of prs) {
-          try {
-            await applyPR(pr, args.rebase);
-          } catch (error) {
-            console.error(`Skipping PR #${pr.number} due to error.`);
-          }
-        }
-        console.log("\nDone processing Dependabot PRs.");
-      }
-    },
+    handler: ctx.cliStream.enqueue(async (_args) => {
+      return {
+        type: "core-cli.dependabot",
+      } satisfies ReqDependabot;
+    }),
   });
   return cmd;
 }

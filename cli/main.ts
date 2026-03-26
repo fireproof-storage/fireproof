@@ -1,50 +1,159 @@
+/* eslint-disable no-console */
+import { AppContext, EventoSendProvider, HandleTriggerCtx, processStream, Result } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
-import { run, subcommands } from "cmd-ts";
-
 import { dotenv } from "zx";
-import { buildCmd } from "./build-cmd.js";
-import { setDependenciesCmd, setScriptsCmd } from "./set-scripts-cmd.js";
-import { handleTsc, tscCmd } from "./tsc-cmd.js";
-import { writeEnvCmd } from "./write-env-cmd.js";
-import { keyCmd } from "./cloud-token-key-cmd.js";
-import { preSignedUrlCmd } from "./pre-signed-url.js";
-import { dependabotCmd } from "./dependabot-cmd.js";
-import { testContainerCmd } from "./test-container-cmd.js";
-import { deviceIdCmd } from "./device-id-cmd.js";
-import { wellKnownCmd } from "./well-known-cmd.js";
-import { retryCmd } from "./retry-cmd.js";
-import { updateDepsCmd } from "./update-deps-cmd.js";
+import { runSafely, subcommands } from "cmd-ts";
+import { err, isErr } from "cmd-ts/dist/cjs/Result.js";
 
-(async () => {
+import { cmd_tsStream } from "./cmd-ts-stream.js";
+import { CliCtx } from "./cli-ctx.js";
+import { cmdTsEvento, WrapCmdTSMsg } from "./cmd-evento.js";
+
+import { buildCmd, isResBuild } from "./build-cmd.js";
+import { setDependenciesCmd, setScriptsCmd, isResSetScripts, isResSetDependencies } from "./set-scripts-cmd.js";
+import { handleTsc, tscCmd, isResTsc } from "./tsc-cmd.js";
+import { writeEnvCmd, isResWriteEnv } from "./write-env-cmd.js";
+import { keyCmd, isResKey } from "./cloud-token-key-cmd.js";
+import { preSignedUrlCmd, isResPreSignedUrl } from "./pre-signed-url.js";
+import { dependabotCmd, isResDependabot } from "./dependabot-cmd.js";
+import {
+  testContainerCmd,
+  isResTestContainerBuild,
+  isResTestContainerTemplate,
+  isResTestContainerPublish,
+} from "./test-container-cmd.js";
+import {
+  deviceIdCmd,
+  isResDeviceIdCreate,
+  isResDeviceIdCsr,
+  isResDeviceIdExport,
+  isResDeviceIdCert,
+  isResDeviceIdCaCert,
+  isResDeviceIdRegister,
+} from "./device-id-cmd.js";
+import { wellKnownCmd, isResWellKnown } from "./well-known-cmd.js";
+import { retryCmd, isResRetry } from "./retry-cmd.js";
+import { updateDepsCmd, isResUpdateDeps } from "./update-deps-cmd.js";
+
+class OutputSelector implements EventoSendProvider<unknown, unknown, unknown> {
+  readonly tstream = new TransformStream<unknown, WrapCmdTSMsg<unknown>>();
+  readonly outputStream: ReadableStream<WrapCmdTSMsg<unknown>> = this.tstream.readable;
+  readonly writer = this.tstream.writable.getWriter();
+  async send<IS, OS>(_trigger: HandleTriggerCtx<unknown, unknown, unknown>, data: IS): Promise<Result<OS, Error>> {
+    await this.writer.write(data);
+    return Promise.resolve(Result.Ok());
+  }
+  done(_trigger: HandleTriggerCtx<unknown, unknown, unknown>): Promise<Result<void>> {
+    this.writer.releaseLock();
+    this.tstream.writable.close();
+    return Promise.resolve(Result.Ok());
+  }
+}
+
+async function main() {
   dotenv.config(process.env.FP_ENV ?? ".env");
   const sthis = ensureSuperThis();
 
-  // console.log("tsc", process.argv);
+  // tsc bypass: called directly before cmd-ts runs
   if (process.argv[2] === "tsc") {
     return handleTsc(process.argv.slice(3), sthis);
   }
 
-  const cmd = subcommands({
-    name: "core-cli",
-    description: "fireproof/core-cli",
-    version: "1.0.0",
-    cmds: {
-      tsc: tscCmd(sthis),
-      key: keyCmd(sthis),
-      writeEnv: writeEnvCmd(sthis),
-      preSigned: preSignedUrlCmd(sthis),
-      build: buildCmd(sthis),
-      setScripts: setScriptsCmd(sthis),
-      setDependencies: setDependenciesCmd(sthis),
-      dependabot: dependabotCmd(sthis),
-      testContainer: testContainerCmd(sthis),
-      deviceId: deviceIdCmd(sthis),
-      wellKnown: wellKnownCmd(sthis),
-      retry: retryCmd(sthis),
-      updateDeps: updateDepsCmd(sthis),
-    },
-  });
+  const ctx: CliCtx = {
+    sthis,
+    cliStream: cmd_tsStream(),
+  };
 
-  await run(cmd, process.argv.slice(2));
-  // eslint-disable-next-line no-console
-})().catch(console.error);
+  const rs = await runSafely(
+    subcommands({
+      name: "core-cli",
+      description: "fireproof/core-cli",
+      version: "1.0.0",
+      cmds: {
+        tsc: tscCmd(ctx),
+        key: keyCmd(ctx),
+        writeEnv: writeEnvCmd(ctx),
+        preSigned: preSignedUrlCmd(ctx),
+        build: buildCmd(ctx),
+        setScripts: setScriptsCmd(ctx),
+        setDependencies: setDependenciesCmd(ctx),
+        dependabot: dependabotCmd(ctx),
+        testContainer: testContainerCmd(ctx),
+        deviceId: deviceIdCmd(ctx),
+        wellKnown: wellKnownCmd(ctx),
+        retry: retryCmd(ctx),
+        updateDeps: updateDepsCmd(ctx),
+      },
+    }),
+    process.argv.slice(2),
+  );
+  if (isErr(rs)) {
+    console.error(err(rs).error.error.config.message);
+    process.exit(err(rs).error.error.config.exitCode);
+  }
+
+  const outputSelector = new OutputSelector();
+  const evento = cmdTsEvento();
+  const appCtx = new AppContext().set("cliCtx", ctx);
+
+  await Promise.all([
+    processStream(
+      ctx.cliStream.stream,
+      (msg) => {
+        return evento
+          .trigger({
+            ctx: appCtx,
+            send: outputSelector,
+            request: msg,
+          })
+          .then(() => {
+            /* no-op */
+          });
+      },
+      processStream(outputSelector.outputStream, async (wmsg) => {
+        const msg = wmsg.result;
+        switch (true) {
+          case isResWellKnown(msg):
+          case isResWriteEnv(msg):
+          case isResKey(msg):
+          case isResPreSignedUrl(msg):
+          case isResDependabot(msg):
+          case isResUpdateDeps(msg):
+          case isResSetScripts(msg):
+          case isResSetDependencies(msg):
+          case isResTsc(msg):
+          case isResTestContainerBuild(msg):
+          case isResTestContainerTemplate(msg):
+          case isResTestContainerPublish(msg):
+          case isResDeviceIdCreate(msg):
+          case isResDeviceIdCsr(msg):
+          case isResDeviceIdExport(msg):
+          case isResDeviceIdCert(msg):
+          case isResDeviceIdCaCert(msg):
+          case isResDeviceIdRegister(msg):
+          case isResBuild(msg): {
+            if (msg.output) {
+              console.log(msg.output);
+            }
+            break;
+          }
+          case isResRetry(msg): {
+            if (msg.output) {
+              console.log(msg.output);
+            }
+            process.exit(msg.exitCode);
+            break;
+          }
+        }
+      }),
+    ),
+    ctx.cliStream.close(),
+  ]);
+}
+
+main()
+  .catch((e) => {
+    console.error("Error in core-cli:", e);
+    process.exit(1);
+  })
+  .then(() => process.exit(0));
