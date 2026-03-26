@@ -1,11 +1,10 @@
-/* eslint-disable no-console */
 import { array, command, flag, multioption, option, string } from "cmd-ts";
 import fs from "fs-extra";
 import { glob } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
 // --- Set Dependencies ---
 
@@ -51,22 +50,22 @@ export const setDependenciesEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetD
       absolute: false,
       caseSensitiveMatch: false,
     });
-    console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
+    await sendProgress(ctx, "info", `Found ${packagesJsonFiles.length} package.json files to patch.`);
     for (const packageJsonPath of packagesJsonFiles) {
       const packageJson = await fs.readJSON(packageJsonPath);
       let ref: Record<string, string>;
       if (args.devDependency) {
         ref = packageJson.devDependencies || {};
         packageJson.devDependencies = ref;
-        console.log(`Setting devDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+        await sendProgress(ctx, "info", `Setting devDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
       } else if (args.peerDependency) {
         ref = packageJson.peerDependencies || {};
         packageJson.peerDependencies = ref;
-        console.log(`Setting peerDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+        await sendProgress(ctx, "info", `Setting peerDependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
       } else {
         ref = packageJson.dependencies || {};
         packageJson.dependencies = ref;
-        console.log(`Setting dependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
+        await sendProgress(ctx, "info", `Setting dependency ${args.depName} to "${args.depVersion}" in ${packageJsonPath}`);
       }
       if (!args.depVersion) {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
@@ -171,16 +170,16 @@ export const setScriptsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetScript
       absolute: false,
       caseSensitiveMatch: false,
     });
-    console.log(`Found ${packagesJsonFiles.length} package.json files to patch.`);
+    await sendProgress(ctx, "info", `Found ${packagesJsonFiles.length} package.json files to patch.`);
     for (const packageJsonPath of packagesJsonFiles) {
       const packageJson = await fs.readJSON(packageJsonPath);
       if (args.scriptDelete || !args.scriptAction) {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete packageJson.scripts[args.scriptName];
-        console.log(`Deleting script ${args.scriptName} from ${packageJsonPath}`);
+        await sendProgress(ctx, "info", `Deleting script ${args.scriptName} from ${packageJsonPath}`);
       } else {
         packageJson.scripts[args.scriptName] = args.scriptAction;
-        console.log(`Setting script ${args.scriptName} to "${args.scriptAction}" in ${packageJsonPath}`);
+        await sendProgress(ctx, "info", `Setting script ${args.scriptName} to "${args.scriptAction}" in ${packageJsonPath}`);
       }
       await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
     }

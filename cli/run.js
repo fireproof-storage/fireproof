@@ -38,7 +38,6 @@ if (fs.existsSync(mainJs)) {
   import(addFile).catch((e) => console.error(e));
 } else {
   const restArgv = process.argv.slice(idxRunIdx + 1) ?? [];
-  // console.log(">>>>>", restArgv)
   exec("tsx", [path.join(runDirectory, "main.ts"), ...restArgv], runDirectory);
 }
 // }

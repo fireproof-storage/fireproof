@@ -1,13 +1,15 @@
-/* eslint-disable no-console */
 import { command, subcommands, option, string, flag } from "cmd-ts";
 import { $ } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 import fs from "fs-extra";
 
-async function getPackageVersion(packageName: string): Promise<string | undefined> {
+async function getPackageVersion(
+  ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqTestContainerTemplate, ResTestContainerTemplate>,
+  packageName: string,
+): Promise<string | undefined> {
   try {
     const result = await $`pnpm why ${packageName} --json`;
     const data = JSON.parse(result.stdout);
@@ -29,7 +31,7 @@ async function getPackageVersion(packageName: string): Promise<string | undefine
 
     return undefined;
   } catch (e) {
-    console.warn(`Failed to get ${packageName} version:`, e);
+    await sendProgress(ctx, "warn", `Failed to get ${packageName} version: ${e instanceof Error ? e.message : String(e)}`);
     return undefined;
   }
 }
@@ -64,33 +66,32 @@ export const testContainerBuildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqT
   ): Promise<Result<EventoResultType>> => {
     $.verbose = true;
 
-    console.log("Installing required packages...");
+    await sendProgress(ctx, "info", "Installing required packages...");
     await $`apt-get update`;
     await $`apt-get install -y ca-certificates curl gnupg lsb-release jq rsync`;
 
-    console.log("Adding Docker's official GPG key...");
+    await sendProgress(ctx, "info", "Adding Docker's official GPG key...");
     await $`install -m 0755 -d /etc/apt/keyrings`;
     await $`curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg`;
     await $`chmod a+r /etc/apt/keyrings/docker.gpg`;
 
-    console.log("Setting up Docker repository...");
+    await sendProgress(ctx, "info", "Setting up Docker repository...");
     await $`bash -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \\"$VERSION_CODENAME\\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null'`;
 
-    console.log("Installing Docker Compose plugin...");
+    await sendProgress(ctx, "info", "Installing Docker Compose plugin...");
     await $`apt-get update`;
     await $`apt-get install -y docker-ce-cli docker-compose-plugin`;
 
-    console.log("Verifying Docker installation...");
+    await sendProgress(ctx, "info", "Verifying Docker installation...");
     await $`docker ps`;
     await $`docker compose version`;
 
-    console.log("Checking Playwright version...");
+    await sendProgress(ctx, "info", "Checking Playwright version...");
     await $`pnpm exec playwright --version`;
 
-    console.log("Configuring git safe directory...");
+    await sendProgress(ctx, "info", "Configuring git safe directory...");
     await $`git config --global --add safe.directory ${process.cwd()}`;
 
-    console.log("Test container build completed successfully!");
     return sendMsg(ctx, {
       type: "core-cli.res-test-container-build",
       output: "Test container build completed successfully!",
@@ -151,12 +152,12 @@ export const testContainerTemplateEvento: EventoHandler<
     let version = args.tag;
     let detectedVersion: string | undefined;
     if (!version) {
-      detectedVersion = await getPackageVersion(args.packageName);
+      detectedVersion = await getPackageVersion(ctx, args.packageName);
       if (!detectedVersion) {
         return Result.Err(`Could not detect version for package ${args.packageName}. Please specify --tag explicitly.`);
       }
       version = `v${detectedVersion}`;
-      console.log(`Detected ${args.packageName} version: ${detectedVersion}`);
+      await sendProgress(ctx, "info", `Detected ${args.packageName} version: ${detectedVersion}`);
     }
 
     // Build full tag with suffix
@@ -197,8 +198,8 @@ CMD ["/bin/bash"]
 `;
 
     await fs.writeFile(args.output, dockerfile);
-    console.log(`Dockerfile generated at: ${args.output}`);
-    console.log(`Base image: ${fullImageName}`);
+    await sendProgress(ctx, "info", `Dockerfile generated at: ${args.output}`);
+    await sendProgress(ctx, "info", `Base image: ${fullImageName}`);
 
     // If --publish flag is set, build and publish the image
     if (args.publish) {
@@ -221,33 +222,30 @@ CMD ["/bin/bash"]
       const publishTag = detectedVersion ? detectedVersion : args.imageTag;
       const publishImageTag = `${fullImagePath}:${publishTag}`;
 
-      console.log(`Checking if image already exists: ${publishImageTag}`);
+      await sendProgress(ctx, "info", `Checking if image already exists: ${publishImageTag}`);
 
       // Login to GitHub Container Registry first (needed to check if image exists)
-      console.log("Logging in to GitHub Container Registry...");
+      await sendProgress(ctx, "info", "Logging in to GitHub Container Registry...");
       await $`echo ${args.token} | docker login ghcr.io -u ${args.actor} --password-stdin`;
 
       // Check if the image with this tag already exists
       try {
         await $`docker manifest inspect ${publishImageTag}`;
-        console.log(`Image ${publishImageTag} already exists. Skipping build and push.`);
         return sendMsg(ctx, {
           type: "core-cli.res-test-container-template",
           output: `Image ${publishImageTag} already exists. Skipping build and push.`,
         } satisfies ResTestContainerTemplate);
       } catch (e) {
-        console.log(`Image ${publishImageTag} does not exist. Proceeding with build and push.`);
+        await sendProgress(ctx, "info", `Image ${publishImageTag} does not exist. Proceeding with build and push.`);
       }
 
-      console.log(`Building and publishing Docker image: ${publishImageTag}`);
-      console.log(`Using Dockerfile: ${args.output}`);
-      console.log(`Build context: ${args.context}`);
+      await sendProgress(ctx, "info", `Building and publishing Docker image: ${publishImageTag}`);
+      await sendProgress(ctx, "info", `Using Dockerfile: ${args.output}`);
+      await sendProgress(ctx, "info", `Build context: ${args.context}`);
 
       // Build and push the Docker image using buildx
-      console.log("Building and pushing Docker image with buildx...");
+      await sendProgress(ctx, "info", "Building and pushing Docker image with buildx...");
       await $`docker buildx build --push -t ${publishImageTag} -f ${args.output} ${args.context}`;
-
-      console.log(`Successfully published ${publishImageTag}`);
     }
 
     return sendMsg(ctx, {
@@ -311,19 +309,18 @@ export const testContainerPublishEvento: EventoHandler<WrapCmdTSMsg<unknown>, Re
     const imageName = `ghcr.io/${args.repoUrl.toLowerCase()}`;
     const imageTag = `${imageName}:${args.tag}`;
 
-    console.log(`Building Docker image: ${imageTag}`);
-    console.log(`Using Dockerfile: ${args.dockerfile}`);
-    console.log(`Build context: ${args.context}`);
+    await sendProgress(ctx, "info", `Building Docker image: ${imageTag}`);
+    await sendProgress(ctx, "info", `Using Dockerfile: ${args.dockerfile}`);
+    await sendProgress(ctx, "info", `Build context: ${args.context}`);
 
     // Login to GitHub Container Registry
-    console.log("Logging in to GitHub Container Registry...");
+    await sendProgress(ctx, "info", "Logging in to GitHub Container Registry...");
     await $`echo ${args.token} | docker login ghcr.io -u ${args.actor} --password-stdin`;
 
     // Build and push the Docker image using buildx
-    console.log("Building and pushing Docker image with buildx...");
+    await sendProgress(ctx, "info", "Building and pushing Docker image with buildx...");
     await $`docker buildx build --push -t ${imageTag} -f ${args.dockerfile} ${args.context}`;
 
-    console.log(`Successfully published ${imageTag}`);
     return sendMsg(ctx, {
       type: "core-cli.res-test-container-publish",
       output: `Successfully published ${imageTag}`,

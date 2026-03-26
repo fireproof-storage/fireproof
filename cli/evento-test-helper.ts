@@ -15,10 +15,7 @@ export class TestSendProvider implements EventoSendProvider<unknown, unknown, un
   }
 }
 
-export async function triggerEvento(opts: {
-  reqType: string;
-  raw: unknown;
-}): Promise<WrapCmdTSMsg<unknown>> {
+export async function triggerEvento(opts: { reqType: string; raw: unknown }): Promise<WrapCmdTSMsg<unknown>> {
   const evento = cmdTsEvento();
   const send = new TestSendProvider();
   const sthis = ensureSuperThis();
@@ -32,5 +29,9 @@ export async function triggerEvento(opts: {
   };
 
   await evento.trigger({ ctx: appCtx, send, request });
-  return send.results[0];
+  const result = send.results[send.results.length - 1];
+  if (!result) {
+    throw new Error(`No evento response emitted for ${opts.reqType}`);
+  }
+  return result;
 }

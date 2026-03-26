@@ -24,8 +24,6 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
   const tsc = sthis.env.get("FP_TSC") ?? "tsgo";
   // const rargs = process.argv.slice(2);
   const cmd = [tsc, ...args];
-  // console.log("args[", cmd, "]");
-
   // eslint-disable-next-line no-console
   console.log(`Using typescript: ${cmd} on ${isPowerShell() ? "PowerShell" : "UnixShell"}`);
   if (isPowerShell()) {

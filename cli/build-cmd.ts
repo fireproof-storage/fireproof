@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { array, command, flag, multioption, option, string, Type } from "cmd-ts";
 import fs from "fs-extra";
 import path from "node:path";
@@ -8,7 +7,7 @@ import { SemVer } from "semver";
 import { exception2Result, Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 import { VersionPinner } from "./version-pinner.js";
 
 export type VersionModifier = "~" | "^" | "";
@@ -174,7 +173,6 @@ async function updateTsconfig(srcTsConfig: string, dstTsConfig: string) {
   tsconfig.exclude = tsconfig.exclude || [];
   tsconfig.exclude.push("node_modules", "dist", ".git", ".vscode");
 
-  // console.log("tsconfig", tsconfig);
   await fs.writeJSONSync(dstTsConfig, tsconfig, { spaces: 2 });
   // {
   // "extends": "../../tsconfig.json",
@@ -391,7 +389,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
       const rawVersion = await getVersion(args.fpVersion);
       const vx = new Version(rawVersion, args.versionPrefix);
       await fs.writeFile(fpVersionFile, vx.version);
-      console.log(`Using version: ${vx.version}`);
+      await sendProgress(ctx, "info", `Using version: ${vx.version}`);
       return sendMsg(ctx, {
         type: "core-cli.res-build",
         output: `Prepared version: ${vx.version}`,
@@ -445,11 +443,10 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
 
     let packageJson = await patchPackageJson("package.json", version, { changeScope: args.changeScope });
     if (!args.noPinned) {
-      console.log(
-        "Prepared package.json with pinning for",
-        packageJson.patchedPackageJson.name,
-        "version",
-        packageJson.patchedPackageJson.version,
+      await sendProgress(
+        ctx,
+        "info",
+        `Prepared package.json with pinning for ${packageJson.patchedPackageJson.name} version ${packageJson.patchedPackageJson.version}`,
       );
       const lockfilePath = args.lockfile || path.join(path.dirname(top), "pnpm-lock.yaml");
       const pinner = await VersionPinner.create({ lockfilePath });
@@ -488,7 +485,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
       if (!isPrivate(packageJson.originalPackageJson)) {
         const res = await $`${args.npm} exec deno publish --allow-dirty ${args.doPack ? "--dry-run" : ""}`.nothrow();
         if (res.exitCode !== 0) {
-          console.log(`Failed to pack the package.`);
+          await sendProgress(ctx, "error", "Failed to pack the package.");
           return Result.Err(`JSR publish failed with exit code ${res.exitCode}`);
         }
       }
@@ -506,7 +503,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
         await fs.copyFile(path.join(path.dirname(args.packDestDir), ".npmignore"), ".npmignore");
         const res = await $`${args.npm} pack --out "${args.packDestDir}/%s.tgz"`.nothrow();
         if (res.exitCode !== 0) {
-          console.error(`Failed to pack the package.`);
+          await sendProgress(ctx, "error", "Failed to pack the package.");
           return Result.Err(`Pack failed with exit code ${res.exitCode}`);
         }
       }
@@ -518,7 +515,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
         args.npmrc = path.join(path.join(path.dirname(top), "dist"), "npmrc-smoke");
       }
       if (fs.existsSync(args.npmrc)) {
-        console.log(`Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
+        await sendProgress(ctx, "info", `Using npmrc: ${args.npmrc}, destination: ${args.dstDir}`);
         const niceNpmrc = sanitizeNpmrc(await fs.readFile(args.npmrc, "utf-8"));
         await fs.writeFile(".npmrc", niceNpmrc);
         // await fs.copyFile(args.npmrc, ".npmrc");
@@ -534,7 +531,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
           tags.push("latest"); // override to latest in prod
         }
       } catch (e) {
-        console.warn(`Warn parsing version ${args.version}:`, e);
+        await sendProgress(ctx, "warn", `Warn parsing version ${args.version}: ${e instanceof Error ? e.message : String(e)}`);
       }
 
       const registry = ["--registry", args.registry];
@@ -542,7 +539,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
       $.verbose = true;
       const res = await $`${[args.npm, "publish", "--access", "public", ...registry, "--no-git-checks", ...tagsOpts]}`.nothrow();
       if (res.exitCode !== 0) {
-        console.error(`Failed to publish the package.`); //, JSON.stringify(process.env, null, 2));
+        await sendProgress(ctx, "error", "Failed to publish the package.");
         return Result.Err(`Publish failed with exit code ${res.exitCode}`);
       }
     }

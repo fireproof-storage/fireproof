@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { command, option, string, subcommands, flag } from "cmd-ts";
 import { Subject, CertificatePayloadSchema, JWKPublic, JWKPrivate } from "@fireproof/core-types-base";
 import { DeviceIdKey, DeviceIdCSR, DeviceIdCA } from "@fireproof/core-device-id";
@@ -23,7 +22,7 @@ import {
 import { sts } from "@fireproof/core-runtime";
 import { type } from "arktype";
 import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
 function getStdin(): Promise<string> {
   return new Promise<string>((resolve) => {
@@ -393,6 +392,7 @@ export const deviceIdCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDeviceI
       certificateContent = await fs.readFile(args.file, "utf8");
       lines.push(`Certificate read from ${args.file}`);
     } else {
+      // eslint-disable-next-line no-console
       console.log("Waiting for certificate content from stdin (Ctrl+D to finish):");
       certificateContent = await getStdin();
       lines.push("Certificate read from stdin.");
@@ -459,9 +459,11 @@ export const deviceIdCaCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
       envVars: boolean;
     };
 
-    // Create conditional logger: silent for --json or --env, otherwise console.log
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const log = args.json || args.envVars ? () => {} : console.log.bind(console);
+    const progress = async (message: string) => {
+      if (!args.json && !args.envVars) {
+        await sendProgress(ctx, "info", message);
+      }
+    };
 
     // Load or create the CA key
     let caKey: DeviceIdKey;
@@ -476,17 +478,17 @@ export const deviceIdCaCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
         return Result.Err(`Error loading private key from file: ${keyResult.Err()}`);
       }
       caKey = keyResult.Ok();
-      log(`Loaded private key from ${args.keyFile}`);
+      await progress(`Loaded private key from ${args.keyFile}`);
     } else {
       // Generate new key
       caKey = await DeviceIdKey.create();
       jwkPrivate = await caKey.exportPrivateJWK();
-      log("Generated new CA private key");
+      await progress("Generated new CA private key");
 
       // Save the key if output path provided
       if (args.outputKey) {
         await fs.writeFile(args.outputKey, JSON.stringify(jwkPrivate, null, 2), "utf8");
-        log(`Private key saved to ${args.outputKey}`);
+        await progress(`Private key saved to ${args.outputKey}`);
       }
     }
 
@@ -642,20 +644,20 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
     }
 
     if (args.forceRenew && existingDeviceIdResult.cert.IsSome()) {
-      console.log("Force renewing certificate...");
+      await sendProgress(ctx, "info", "Force renewing certificate...");
     }
 
     // Step 1: Create or get device ID key
     let deviceIdKey: DeviceIdKey;
     if (existingDeviceIdResult.deviceId.IsNone()) {
-      console.log("Creating new device ID key pair...");
+      await sendProgress(ctx, "info", "Creating new device ID key pair...");
       deviceIdKey = await DeviceIdKey.create();
       const jwkPrivate = await deviceIdKey.exportPrivateJWK();
       await keyBag.setDeviceId(jwkPrivate);
       const fingerprint = await deviceIdKey.fingerPrint();
-      console.log(`Created Device ID Fingerprint: ${fingerprint}`);
+      await sendProgress(ctx, "info", `Created Device ID Fingerprint: ${fingerprint}`);
     } else {
-      console.log("Using existing device ID key...");
+      await sendProgress(ctx, "info", "Using existing device ID key...");
       const jwkPrivate = existingDeviceIdResult.deviceId.unwrap();
       const createResult = await DeviceIdKey.createFromJWK(jwkPrivate);
       if (createResult.isErr()) {
@@ -663,11 +665,11 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
       }
       deviceIdKey = createResult.Ok();
       const fingerprint = await deviceIdKey.fingerPrint();
-      console.log(`Device ID Fingerprint: ${fingerprint}`);
+      await sendProgress(ctx, "info", `Device ID Fingerprint: ${fingerprint}`);
     }
 
     // Step 2: Generate CSR
-    console.log("Generating Certificate Signing Request (CSR)...");
+    await sendProgress(ctx, "info", "Generating Certificate Signing Request (CSR)...");
     const deviceIdCSR = new DeviceIdCSR(sthis, deviceIdKey);
     const subject = buildSubject(args);
     const csrResult = await deviceIdCSR.createCSR(subject);
@@ -677,7 +679,7 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
     }
 
     const csrJWS = csrResult.Ok();
-    console.log("CSR generated successfully.");
+    await sendProgress(ctx, "info", "CSR generated successfully.");
 
     // Step 3: Start local server on specified or random port with Future for cert
     const certFuture = new Future<string>();
@@ -690,7 +692,7 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
         certFuture.reject(new Error("Missing cert parameter"));
         return c.text("Missing cert parameter", 400);
       }
-      console.log("\nCertificate received from CA!");
+      void sendProgress(ctx, "info", "\nCertificate received from CA!");
       certFuture.resolve(cert);
       return c.text("Certificate received successfully. You can close this window.");
     });
@@ -699,7 +701,7 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
     const port = args.port ? parseInt(args.port, 10) : Math.floor(Math.random() * (65535 - 49152) + 49152);
     const callbackUrl = `http://localhost:${port}/cert`;
 
-    console.log(`Starting local server on port ${port}...`);
+    await sendProgress(ctx, "info", `Starting local server on port ${port}...`);
     serverInstance = serve({
       fetch: app.fetch,
       port,
@@ -709,20 +711,20 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
     const caUri = BuildURI.from(args.caUrl).setParam("csr", csrJWS).setParam("returnUrl", callbackUrl);
     const caUrlWithParams = caUri.toString();
 
-    console.log(`\nOpening browser to CA for certificate signing...`);
-    console.log(`URL: ${caUrlWithParams}\n`);
+    await sendProgress(ctx, "info", "\nOpening browser to CA for certificate signing...");
+    await sendProgress(ctx, "info", `URL: ${caUrlWithParams}\n`);
 
     // Step 5: Open browser
     try {
       await open(caUrlWithParams);
     } catch (error) {
-      console.log("Could not automatically open browser. Please open this URL manually:");
-      console.log(caUrlWithParams);
+      await sendProgress(ctx, "warn", "Could not automatically open browser. Please open this URL manually:");
+      await sendProgress(ctx, "warn", caUrlWithParams);
     }
 
     // Step 6: Wait for certificate with timeout
-    console.log("Waiting for certificate from CA...");
-    console.log("(The browser should redirect back to this application after signing)\n");
+    await sendProgress(ctx, "info", "Waiting for certificate from CA...");
+    await sendProgress(ctx, "info", "(The browser should redirect back to this application after signing)\n");
 
     const timeoutMs = parseInt(args.timeout, 10) * 1000;
     const result = await timeouted(certFuture.asPromise(), { timeout: timeoutMs });
@@ -743,7 +745,7 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
     const receivedCert = result.value;
 
     // Step 7: Store certificate (cert is a base64 string, not PEM)
-    console.log("Storing certificate...");
+    await sendProgress(ctx, "info", "Storing certificate...");
     const decoded = decodeJwt(receivedCert);
     const certPayload = CertificatePayloadSchema.parse(decoded);
 
