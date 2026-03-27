@@ -26,7 +26,7 @@ function exec(cmd, args) {
 }
 
 // const idxTsc = process.argv.findIndex(i => i === 'tsc')
-const idxRunIdx = process.argv.findIndex((i) => i.endsWith("run.js"));
+const idxRunIdx = process.argv.findIndex((i) => i.endsWith("run.js") || i.endsWith("core-cli"));
 const runDirectory = path.dirname(process.argv[idxRunIdx]);
 const mainJs = path.join(runDirectory, "main.js");
 //const mainWithDistJs = path.join(runDirectory, "dist", "npm", "main.js");
