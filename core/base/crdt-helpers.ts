@@ -78,6 +78,10 @@ export function sanitizeDocumentFields<T>(obj: T): T {
       return item;
     }) as T;
   } else if (typeof obj === "object" && obj !== null) {
+    // Preserve Uint8Array for CBOR byte string encoding
+    if (obj instanceof Uint8Array) {
+      return obj;
+    }
     // Special case for Date objects - convert to ISO string
     if (obj instanceof Date) {
       return obj.toISOString() as unknown as T;
