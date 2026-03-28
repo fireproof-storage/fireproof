@@ -53,7 +53,7 @@ describe("Uint8Array document field round-trip", () => {
     const a = new Uint8Array([1, 2]);
     const b = new Uint8Array([3, 4]);
     const { id } = await db.put({ type: "arr", items: [{ data: a }, { data: b }] });
-    const doc = await db.get<{ type: string; items: Array<{ data: Uint8Array }> }>(id);
+    const doc = await db.get<{ type: string; items: { data: Uint8Array }[] }>(id);
     expect(doc.items[0].data).toBeInstanceOf(Uint8Array);
     expect(doc.items[1].data).toBeInstanceOf(Uint8Array);
     expect(new Uint8Array(doc.items[0].data)).toEqual(a);
