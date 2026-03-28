@@ -1,7 +1,7 @@
 import { AppContext, EventoSendProvider, HandleTriggerCtx, Result } from "@adviser/cement";
 import { ensureSuperThis } from "@fireproof/core-runtime";
 import { CliCtx } from "./cli-ctx.js";
-import { cmd_tsStream } from "./cmd-ts-stream.js";
+import { createCliStream } from "./create-cli-stream.js";
 import { cmdTsEvento, WrapCmdTSMsg } from "./cmd-evento.js";
 
 export class TestSendProvider implements EventoSendProvider<unknown, unknown, unknown> {
@@ -19,7 +19,7 @@ export async function triggerEvento(opts: { reqType: string; raw: unknown }): Pr
   const evento = cmdTsEvento();
   const send = new TestSendProvider();
   const sthis = ensureSuperThis();
-  const ctx: CliCtx = { sthis, cliStream: cmd_tsStream() };
+  const ctx: CliCtx = { sthis, cliStream: createCliStream() };
   const appCtx = new AppContext().set("cliCtx", ctx);
 
   const request: WrapCmdTSMsg<unknown> = {
