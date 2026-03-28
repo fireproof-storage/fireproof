@@ -26,7 +26,7 @@ describe("HOOK: useLiveQuery reactivity after concurrent writes", () => {
       let query: LiveQueryResult<{ type: string; index: number }, string>;
       let database: ReturnType<typeof useFireproof>["database"];
 
-      renderHook(() => {
+      const { unmount } = renderHook(() => {
         const fp = useFireproof(dbName);
         database = fp.database;
         query = fp.useLiveQuery<{ type: string; index: number }>("type", { key: "batch-item" });
@@ -52,6 +52,8 @@ describe("HOOK: useLiveQuery reactivity after concurrent writes", () => {
         },
         { timeout: TEST_TIMEOUT },
       );
+
+      unmount();
     },
     TEST_TIMEOUT,
   );
