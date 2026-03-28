@@ -1,4 +1,4 @@
-import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson, sanitizeNpmrc } from "./build-cmd.js";
+import { PackageJson, Version, buildJsrConf, getVersion, patchPackageJson, sanitizeNpmrc } from "./cmds/build-cmd.js";
 import { expect, it } from "vitest";
 
 const mock = {

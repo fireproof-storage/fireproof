@@ -2,14 +2,21 @@ import { command, option, string, flag, optional, array, multioption } from "cmd
 import * as rt from "@fireproof/core-runtime";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option, param } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "../cmd-evento.js";
 import fs from "fs/promises";
 
 // --- Arktype types ---
 
 export const ReqWriteEnv = type({
   type: "'core-cli.write-env'",
+  wranglerToml: "string",
+  env: "string",
+  doNotOverwrite: "boolean",
+  excludeSecrets: "boolean",
+  fromEnv: "string[]",
+  out: "string | undefined",
+  json: "boolean",
 });
 export type ReqWriteEnv = typeof ReqWriteEnv.infer;
 
@@ -82,15 +89,7 @@ export const writeEnvEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqWriteEnv, R
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqWriteEnv, ResWriteEnv>): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      wranglerToml: string;
-      env: string;
-      doNotOverwrite: boolean;
-      excludeSecrets: boolean;
-      fromEnv: string[];
-      out: string | undefined;
-      json: boolean;
-    };
+    const args = ctx.validated;
 
     let vals: Record<string, string | param> = {};
     if (args.fromEnv.length === 0) {
@@ -172,10 +171,11 @@ export function writeEnvCmd(ctx: CliCtx) {
         long: "json",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.write-env",
-      } satisfies ReqWriteEnv;
+        ...args,
+      };
     }),
   });
 }

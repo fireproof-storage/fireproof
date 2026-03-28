@@ -2,8 +2,8 @@ import { command, subcommands, option, string, flag } from "cmd-ts";
 import { $ } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 import fs from "fs-extra";
 
 async function getPackageVersion(
@@ -103,6 +103,18 @@ export const testContainerBuildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqT
 
 export const ReqTestContainerTemplate = type({
   type: "'core-cli.test-container-template'",
+  baseImage: "string",
+  tag: "string",
+  tagSuffix: "string",
+  packageName: "string",
+  output: "string",
+  publish: "boolean",
+  repoUrl: "string",
+  token: "string",
+  actor: "string",
+  imageName: "string",
+  imageTag: "string",
+  context: "string",
 });
 export type ReqTestContainerTemplate = typeof ReqTestContainerTemplate.infer;
 
@@ -131,20 +143,7 @@ export const testContainerTemplateEvento: EventoHandler<
   handle: async (
     ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqTestContainerTemplate, ResTestContainerTemplate>,
   ): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      baseImage: string;
-      tag: string;
-      tagSuffix: string;
-      packageName: string;
-      output: string;
-      publish: boolean;
-      repoUrl: string;
-      token: string;
-      actor: string;
-      imageName: string;
-      imageTag: string;
-      context: string;
-    };
+    const args = ctx.validated;
 
     $.verbose = true;
 
@@ -259,6 +258,12 @@ CMD ["/bin/bash"]
 
 export const ReqTestContainerPublish = type({
   type: "'core-cli.test-container-publish'",
+  repoUrl: "string",
+  token: "string",
+  actor: "string",
+  tag: "string",
+  dockerfile: "string",
+  context: "string",
 });
 export type ReqTestContainerPublish = typeof ReqTestContainerPublish.infer;
 
@@ -283,14 +288,7 @@ export const testContainerPublishEvento: EventoHandler<WrapCmdTSMsg<unknown>, Re
   handle: async (
     ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqTestContainerPublish, ResTestContainerPublish>,
   ): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      repoUrl: string;
-      token: string;
-      actor: string;
-      tag: string;
-      dockerfile: string;
-      context: string;
-    };
+    const args = ctx.validated;
 
     $.verbose = true;
 
@@ -336,10 +334,10 @@ function testContainerBuildCmd(ctx: CliCtx) {
     description: "Build test container with Docker and Playwright",
     version: "1.0.0",
     args: {},
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue(() => {
       return {
         type: "core-cli.test-container-build",
-      } satisfies ReqTestContainerBuild;
+      };
     }),
   });
   return cmd;
@@ -444,10 +442,11 @@ function testContainerTemplateCmd(ctx: CliCtx) {
         defaultValueIsSerializable: true,
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.test-container-template",
-      } satisfies ReqTestContainerTemplate;
+        ...args,
+      };
     }),
   });
   return cmd;
@@ -508,10 +507,11 @@ function testContainerPublishCmd(ctx: CliCtx) {
         defaultValueIsSerializable: true,
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.test-container-publish",
-      } satisfies ReqTestContainerPublish;
+        ...args,
+      };
     }),
   });
   return cmd;

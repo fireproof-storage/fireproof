@@ -21,8 +21,8 @@ import {
 } from "@adviser/cement";
 import { sts } from "@fireproof/core-runtime";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 
 function getStdin(): Promise<string> {
   return new Promise<string>((resolve) => {
@@ -100,6 +100,7 @@ function buildSubject(args: {
 
 export const ReqDeviceIdCreate = type({
   type: "'core-cli.device-id-create'",
+  force: "boolean",
 });
 export type ReqDeviceIdCreate = typeof ReqDeviceIdCreate.infer;
 
@@ -126,9 +127,7 @@ export const deviceIdCreateEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
   ): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      force: boolean;
-    };
+    const args = ctx.validated;
 
     const keyBag = await getKeyBag(sthis);
     const existingDeviceIdResult = await keyBag.getDeviceId();
@@ -164,6 +163,11 @@ export const deviceIdCreateEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
 
 export const ReqDeviceIdCsr = type({
   type: "'core-cli.device-id-csr'",
+  commonName: "string",
+  organization: "string",
+  locality: "string",
+  state: "string",
+  country: "string",
 });
 export type ReqDeviceIdCsr = typeof ReqDeviceIdCsr.infer;
 
@@ -190,13 +194,7 @@ export const deviceIdCsrEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDeviceId
   ): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      commonName: string;
-      organization: string;
-      locality: string;
-      state: string;
-      country: string;
-    };
+    const args = ctx.validated;
 
     const keyBag = await getKeyBag(sthis);
     const existingDeviceIdResult = await keyBag.getDeviceId();
@@ -238,6 +236,10 @@ export const deviceIdCsrEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDeviceId
 
 export const ReqDeviceIdExport = type({
   type: "'core-cli.device-id-export'",
+  private: "boolean",
+  json: "boolean",
+  public: "boolean",
+  cert: "boolean",
 });
 export type ReqDeviceIdExport = typeof ReqDeviceIdExport.infer;
 
@@ -264,12 +266,7 @@ export const deviceIdExportEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
   ): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      private: boolean;
-      json: boolean;
-      public: boolean;
-      cert: boolean;
-    };
+    const args = ctx.validated;
 
     const keyBag = await getKeyBag(sthis);
     const existingDeviceIdResult = await keyBag.getDeviceId();
@@ -347,6 +344,7 @@ export const deviceIdExportEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
 
 export const ReqDeviceIdCert = type({
   type: "'core-cli.device-id-cert'",
+  file: "string",
 });
 export type ReqDeviceIdCert = typeof ReqDeviceIdCert.infer;
 
@@ -373,9 +371,7 @@ export const deviceIdCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDeviceI
   ): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      file: string;
-    };
+    const args = ctx.validated;
 
     const keyBag = await getKeyBag(sthis);
     const existingDeviceIdResult = await keyBag.getDeviceId();
@@ -420,6 +416,16 @@ export const deviceIdCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDeviceI
 
 export const ReqDeviceIdCaCert = type({
   type: "'core-cli.device-id-ca-cert'",
+  commonName: "string",
+  organization: "string",
+  locality: "string",
+  state: "string",
+  country: "string",
+  keyFile: "string",
+  outputKey: "string",
+  outputCert: "string",
+  json: "boolean",
+  envVars: "boolean",
 });
 export type ReqDeviceIdCaCert = typeof ReqDeviceIdCaCert.infer;
 
@@ -446,18 +452,7 @@ export const deviceIdCaCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
   ): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      commonName: string;
-      organization: string;
-      locality: string;
-      state: string;
-      country: string;
-      keyFile: string;
-      outputKey: string;
-      outputCert: string;
-      json: boolean;
-      envVars: boolean;
-    };
+    const args = ctx.validated;
 
     const progress = async (message: string) => {
       if (!args.json && !args.envVars) {
@@ -587,6 +582,15 @@ export const deviceIdCaCertEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDevic
 
 export const ReqDeviceIdRegister = type({
   type: "'core-cli.device-id-register'",
+  commonName: "string",
+  organization: "string",
+  locality: "string",
+  state: "string",
+  country: "string",
+  caUrl: "string",
+  port: "string",
+  timeout: "string",
+  forceRenew: "boolean",
 });
 export type ReqDeviceIdRegister = typeof ReqDeviceIdRegister.infer;
 
@@ -613,17 +617,7 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
   ): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      commonName: string;
-      organization: string;
-      locality: string;
-      state: string;
-      country: string;
-      caUrl: string;
-      port: string;
-      timeout: string;
-      forceRenew: boolean;
-    };
+    const args = ctx.validated;
 
     const keyBag = await getKeyBag(sthis);
     const existingDeviceIdResult = await keyBag.getDeviceId();
@@ -781,10 +775,11 @@ export function deviceIdCmd(ctx: CliCtx) {
         description: "Force creation of a new device ID, overwriting any existing one.",
       }),
     },
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.device-id-create",
-      } satisfies ReqDeviceIdCreate;
+        ...args,
+      };
     }),
   });
 
@@ -792,10 +787,11 @@ export function deviceIdCmd(ctx: CliCtx) {
     name: "csr",
     description: "Generate a Certificate Signing Request (CSR) for the current device ID.",
     args: subjectOptions(),
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.device-id-csr",
-      } satisfies ReqDeviceIdCsr;
+        ...args,
+      };
     }),
   });
 
@@ -821,10 +817,11 @@ export function deviceIdCmd(ctx: CliCtx) {
         description: "Export the certificate if available.",
       }),
     },
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.device-id-export",
-      } satisfies ReqDeviceIdExport;
+        ...args,
+      };
     }),
   });
 
@@ -840,10 +837,11 @@ export function deviceIdCmd(ctx: CliCtx) {
         defaultValue: () => "",
       }),
     },
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.device-id-cert",
-      } satisfies ReqDeviceIdCert;
+        ...args,
+      };
     }),
   });
 
@@ -880,10 +878,11 @@ export function deviceIdCmd(ctx: CliCtx) {
         description: "Output as environment variables (DEVICE_ID_CA_PRIV_KEY and DEVICE_ID_CA_CERT).",
       }),
     },
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.device-id-ca-cert",
-      } satisfies ReqDeviceIdCaCert;
+        ...args,
+      };
     }),
   });
 
@@ -915,10 +914,11 @@ export function deviceIdCmd(ctx: CliCtx) {
         description: "Force certificate renewal even if one already exists",
       }),
     },
-    handler: ctx.cliStream.enqueue(async () => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.device-id-register",
-      } satisfies ReqDeviceIdRegister;
+        ...args,
+      };
     }),
   });
 

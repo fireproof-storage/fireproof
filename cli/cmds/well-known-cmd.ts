@@ -3,11 +3,18 @@ import { command, restPositionals, string, option, flag } from "cmd-ts";
 import { exportSPKI } from "jose";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "../cmd-evento.js";
 
 export const ReqWellKnown = type({
   type: "'core-cli.req-well-known'",
+  json: "boolean",
+  jsons: "boolean",
+  pem: "boolean",
+  env: "boolean",
+  presetKey: "string",
+  envPrefix: "string",
+  urls: "string[]",
 });
 export type ReqWellKnown = typeof ReqWellKnown.infer;
 
@@ -32,15 +39,7 @@ export const wellKnownEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqWellKnown,
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqWellKnown, ResWellKnown>): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      json: boolean;
-      jsons: boolean;
-      pem: boolean;
-      env: boolean;
-      presetKey: string;
-      envPrefix: string;
-      urls: string[];
-    };
+    const args = ctx.validated;
 
     // Split comma-separated URLs
     const urls = args.urls.flatMap((url) => url.split(",").map((u) => u.trim())).filter((u) => u.length > 0);
@@ -168,10 +167,11 @@ export function wellKnownCmd(ctx: CliCtx) {
         description: "URLs to fetch well-known JWKS from",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.req-well-known",
-      } satisfies ReqWellKnown;
+        ...args,
+      };
     }),
   });
 }

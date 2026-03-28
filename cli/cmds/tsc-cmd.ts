@@ -4,8 +4,8 @@ import { SuperThis } from "@fireproof/core-types-base";
 import { $, quotePowerShell } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "../cmd-evento.js";
 
 function isPowerShell() {
   // PowerShell sets these environment variables
@@ -39,6 +39,7 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
 
 export const ReqTsc = type({
   type: "'core-cli.tsc'",
+  help: "boolean",
 });
 export type ReqTsc = typeof ReqTsc.infer;
 
@@ -62,8 +63,19 @@ export const tscEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqTsc, ResTsc> = {
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqTsc, ResTsc>): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
-    const args = ctx.request.cmdTs.raw as string[];
-    await handleTsc(args, cliCtx.sthis);
+    const args = ctx.validated;
+    const tscArgs = args.help ? ["--help"] : [];
+    const sthis = cliCtx.sthis;
+    const tsc = sthis.env.get("FP_TSC") ?? "tsgo";
+    const cmd = [tsc, ...tscArgs];
+    if (isPowerShell()) {
+      $.quote = quotePowerShell;
+    }
+    $.verbose = false;
+    const p = await $({ stdio: ["inherit", "inherit", "inherit"] })`${cmd}`.nothrow();
+    if (p.exitCode !== 0) {
+      return Result.Err(`tsc failed with exit code ${p.exitCode}`);
+    }
     return sendMsg(ctx, {
       type: "core-cli.res-tsc",
       output: "tsc completed",
@@ -83,10 +95,11 @@ export function tscCmd(ctx: CliCtx) {
         description: "Show help.",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.tsc",
-      } satisfies ReqTsc;
+        ...args,
+      };
     }),
   });
 }

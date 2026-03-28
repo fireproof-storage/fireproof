@@ -13,11 +13,14 @@ import {
   Option,
 } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 
 export const ReqRetry = type({
   type: "'core-cli.retry'",
+  retry: "number",
+  timeout: "number",
+  command: "string[]",
 });
 export type ReqRetry = typeof ReqRetry.infer;
 
@@ -41,11 +44,7 @@ export const retryEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqRetry, ResRetr
     return Promise.resolve(Result.Ok(Option.None()));
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqRetry, ResRetry>): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      retry: number;
-      timeout: number;
-      command: string[];
-    };
+    const args = ctx.validated;
 
     const retryCount = args.retry;
     const timeoutSec = args.timeout;
@@ -182,10 +181,11 @@ export function retryCmd(ctx: CliCtx) {
         displayName: "command",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.retry",
-      } satisfies ReqRetry;
+        ...args,
+      };
     }),
   });
 }

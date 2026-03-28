@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { triggerEvento } from "./evento-test-helper.js";
-import { isResKey } from "./cloud-token-key-cmd.js";
-import { isResWellKnown } from "./well-known-cmd.js";
-import { isResWriteEnv } from "./write-env-cmd.js";
-import { isResDeviceIdCreate, isResDeviceIdExport } from "./device-id-cmd.js";
-import { isResRetry } from "./retry-cmd.js";
+import { isResKey } from "./cmds/cloud-token-key-cmd.js";
+import { isResWellKnown } from "./cmds/well-known-cmd.js";
+import { isResWriteEnv } from "./cmds/write-env-cmd.js";
+import { isResDeviceIdCreate, isResDeviceIdExport } from "./cmds/device-id-cmd.js";
+import { isResRetry } from "./cmds/retry-cmd.js";
 
 describe("evento pipeline", () => {
   describe("key --generatePair", () => {

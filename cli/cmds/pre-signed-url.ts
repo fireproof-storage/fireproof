@@ -5,11 +5,20 @@ import { BuildURI, Result, HandleTriggerCtx, EventoHandler, EventoResultType, Op
 import { AwsClient } from "aws4fetch";
 import { command, option, oneOf, string } from "cmd-ts";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "../cmd-evento.js";
 
 export const ReqPreSignedUrl = type({
   type: "'core-cli.req-pre-signed-url'",
+  method: "string",
+  accessKeyId: "string",
+  secretAccessKey: "string",
+  region: "string",
+  service: "string",
+  storageURL: "string",
+  path: "string",
+  expires: "string",
+  now: "string",
 });
 export type ReqPreSignedUrl = typeof ReqPreSignedUrl.infer;
 
@@ -34,17 +43,7 @@ export const preSignedUrlEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqPreSign
   handle: async (
     ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqPreSignedUrl, ResPreSignedUrl>,
   ): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      method: string;
-      accessKeyId: string;
-      secretAccessKey: string;
-      region: string;
-      service: string;
-      storageURL: string;
-      path: string;
-      expires: string;
-      now: string;
-    };
+    const args = ctx.validated;
 
     const a4f = new AwsClient({
       accessKeyId: args.accessKeyId,
@@ -151,10 +150,11 @@ export function preSignedUrlCmd(ctx: CliCtx) {
         defaultValueIsSerializable: true,
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.req-pre-signed-url",
-      } satisfies ReqPreSignedUrl;
+        ...args,
+      };
     }),
   });
 }

@@ -6,9 +6,9 @@ import { cd, $ } from "zx";
 import { SemVer } from "semver";
 import { exception2Result, Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
-import { VersionPinner } from "./version-pinner.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
+import { VersionPinner } from "../version-pinner.js";
 
 export type VersionModifier = "~" | "^" | "";
 const allowedVersionModifiers: VersionModifier[] = ["~", "^", ""];
@@ -321,6 +321,30 @@ export async function buildJsrConf(
 
 export const ReqBuild = type({
   type: "'core-cli.build'",
+  prepareVersion: "boolean",
+  fpVersion: "string",
+  version: "string",
+  srcDir: "string",
+  dstDir: "string",
+  excludedNames: "string[]",
+  noCleanDst: "boolean",
+  noTsconfig: "boolean",
+  patchVersionModify: "'~'|'^'|''",
+  noPatchedVersionModify: "boolean",
+  noPinned: "boolean",
+  lockfile: "string",
+  noBuild: "boolean",
+  doPack: "boolean",
+  packDestDir: "string",
+  npmrc: "string",
+  licenseFile: "string",
+  readmeFile: "string",
+  registry: "string",
+  publishJsr: "boolean",
+  changeScope: "string",
+  versionPrefix: "string",
+  pubTags: "string[]",
+  npm: "string",
 });
 export type ReqBuild = typeof ReqBuild.infer;
 
@@ -343,32 +367,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
     return Promise.resolve(Result.Ok(Option.None()));
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqBuild, ResBuild>): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      prepareVersion: boolean;
-      fpVersion: string;
-      version: string;
-      srcDir: string;
-      dstDir: string;
-      excludedNames: string[];
-      noCleanDst: boolean;
-      noTsconfig: boolean;
-      patchVersionModify: VersionModifier;
-      noPatchedVersionModify: boolean;
-      noPinned: boolean;
-      lockfile: string;
-      noBuild: boolean;
-      doPack: boolean;
-      packDestDir: string;
-      npmrc: string;
-      licenseFile: string;
-      readmeFile: string;
-      registry: string;
-      publishJsr: boolean;
-      changeScope: string;
-      versionPrefix: string;
-      pubTags: string[];
-      npm: string;
-    };
+    const args = ctx.validated;
 
     const top = await findUp("tsconfig.dist.json");
     if (!top) {
@@ -461,7 +460,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
     await fs.writeJSON("package.json", packageJson.patchedPackageJson, { spaces: 2 });
     // await $`pnpm version ${args.version}`;
 
-    fs.copy(".", "../npm", {
+    await fs.copy(".", "../npm", {
       filter: (src: string, _dst: string) => {
         if (src.endsWith(".ts") || src.endsWith(".tsx")) {
           return false;
@@ -475,7 +474,7 @@ export const buildEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqBuild, ResBuil
         return Result.Err(`Build failed with exit code ${res.exitCode}`);
       }
     }
-    for (const f of ["package.json", "README.md", "LICENSE.md"]) {
+    for (const f of ["package.json", path.basename(args.readmeFile), path.basename(args.licenseFile)]) {
       await fs.copyFile(f, path.join("../npm", f));
     }
 
@@ -709,10 +708,11 @@ export function buildCmd(ctx: CliCtx) {
         description: "Package manager to use (pnpm, npm, yarn, bun), defaults to 'pnpm'.",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.build",
-      } satisfies ReqBuild;
+        ...args,
+      };
     }),
   });
   return cmd;

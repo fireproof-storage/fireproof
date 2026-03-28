@@ -1,16 +1,16 @@
 import { Evento, EventoResult, EventoResultType, HandleTriggerCtx, Result } from "@adviser/cement";
 import { type } from "arktype";
 
-import { wellKnownEvento } from "./well-known-cmd.js";
-import { writeEnvEvento } from "./write-env-cmd.js";
-import { keyEvento } from "./cloud-token-key-cmd.js";
-import { preSignedUrlEvento } from "./pre-signed-url.js";
-import { retryEvento } from "./retry-cmd.js";
-import { dependabotEvento } from "./dependabot-cmd.js";
-import { updateDepsEvento } from "./update-deps-cmd.js";
-import { setScriptsEvento, setDependenciesEvento } from "./set-scripts-cmd.js";
-import { tscEvento } from "./tsc-cmd.js";
-import { testContainerBuildEvento, testContainerTemplateEvento, testContainerPublishEvento } from "./test-container-cmd.js";
+import { wellKnownEvento } from "./cmds/well-known-cmd.js";
+import { writeEnvEvento } from "./cmds/write-env-cmd.js";
+import { keyEvento } from "./cmds/cloud-token-key-cmd.js";
+import { preSignedUrlEvento } from "./cmds/pre-signed-url.js";
+import { retryEvento } from "./cmds/retry-cmd.js";
+import { dependabotEvento } from "./cmds/dependabot-cmd.js";
+import { updateDepsEvento } from "./cmds/update-deps-cmd.js";
+import { setScriptsEvento, setDependenciesEvento } from "./cmds/set-scripts-cmd.js";
+import { tscEvento } from "./cmds/tsc-cmd.js";
+import { testContainerBuildEvento, testContainerTemplateEvento, testContainerPublishEvento } from "./cmds/test-container-cmd.js";
 import {
   deviceIdCreateEvento,
   deviceIdCsrEvento,
@@ -18,8 +18,8 @@ import {
   deviceIdCertEvento,
   deviceIdCaCertEvento,
   deviceIdRegisterEvento,
-} from "./device-id-cmd.js";
-import { buildEvento } from "./build-cmd.js";
+} from "./cmds/device-id-cmd.js";
+import { buildEvento } from "./cmds/build-cmd.js";
 
 export const CmdTSMsg = type({
   type: "'msg.cmd-ts'",

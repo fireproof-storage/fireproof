@@ -3,8 +3,8 @@ import { $, glob } from "zx";
 import { readFile } from "fs/promises";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 
 interface PackageJson {
   dependencies?: Record<string, string>;
@@ -62,6 +62,10 @@ async function findMatchingPackages(
 
 export const ReqUpdateDeps = type({
   type: "'core-cli.update-deps'",
+  ver: "string",
+  pkg: "string[]",
+  currentDir: "string",
+  dryRun: "boolean",
 });
 export type ReqUpdateDeps = typeof ReqUpdateDeps.infer;
 
@@ -84,12 +88,7 @@ export const updateDepsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqUpdateDep
     return Promise.resolve(Result.Ok(Option.None()));
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqUpdateDeps, ResUpdateDeps>): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      ver: string;
-      pkg: string[];
-      currentDir: string;
-      dryRun: boolean;
-    };
+    const args = ctx.validated;
 
     const { ver, pkg: patterns, currentDir, dryRun } = args;
 
@@ -222,10 +221,11 @@ export function updateDepsCmd(ctx: CliCtx) {
         description: "Show what would be updated without making changes",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.update-deps",
-      } satisfies ReqUpdateDeps;
+        ...args,
+      };
     }),
   });
   return cmd;
