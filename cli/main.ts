@@ -5,7 +5,7 @@ import { dotenv } from "zx";
 import { runSafely, subcommands } from "cmd-ts";
 import { err, isErr } from "cmd-ts/dist/cjs/Result.js";
 
-import { cmd_tsStream } from "./cmd-ts-stream.js";
+import { createCliStream } from "./create-cli-stream.js";
 import { CliCtx } from "./cli-ctx.js";
 import { cmdTsEvento, isCmdProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
@@ -61,7 +61,7 @@ async function main() {
 
   const ctx: CliCtx = {
     sthis,
-    cliStream: cmd_tsStream(),
+    cliStream: createCliStream(),
   };
 
   const rs = await runSafely(

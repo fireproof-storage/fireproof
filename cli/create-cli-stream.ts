@@ -12,7 +12,7 @@ export interface CliStream<Args extends readonly unknown[], Return, RealReturn =
 export type HandlerArgsType = Parameters<Parameters<typeof command>[0]["handler"]>;
 export type HandlerReturnType = never;
 
-export function cmd_tsStream(): CliStream<HandlerArgsType, HandlerReturnType> {
+export function createCliStream(): CliStream<HandlerArgsType, HandlerReturnType> {
   const tstream = new TransformStream<WrapCmdTSMsg<unknown>>();
   const writer = tstream.writable.getWriter();
   const pending = new Set<Promise<void>>();
