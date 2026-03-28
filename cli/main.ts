@@ -9,19 +9,19 @@ import { cmd_tsStream } from "./cmd-ts-stream.js";
 import { CliCtx } from "./cli-ctx.js";
 import { cmdTsEvento, isCmdProgress, WrapCmdTSMsg } from "./cmd-evento.js";
 
-import { buildCmd, isResBuild } from "./build-cmd.js";
-import { setDependenciesCmd, setScriptsCmd, isResSetScripts, isResSetDependencies } from "./set-scripts-cmd.js";
-import { handleTsc, tscCmd, isResTsc } from "./tsc-cmd.js";
-import { writeEnvCmd, isResWriteEnv } from "./write-env-cmd.js";
-import { keyCmd, isResKey } from "./cloud-token-key-cmd.js";
-import { preSignedUrlCmd, isResPreSignedUrl } from "./pre-signed-url.js";
-import { dependabotCmd, isResDependabot } from "./dependabot-cmd.js";
+import { buildCmd, isResBuild } from "./cmds/build-cmd.js";
+import { setDependenciesCmd, setScriptsCmd, isResSetScripts, isResSetDependencies } from "./cmds/set-scripts-cmd.js";
+import { handleTsc, tscCmd, isResTsc } from "./cmds/tsc-cmd.js";
+import { writeEnvCmd, isResWriteEnv } from "./cmds/write-env-cmd.js";
+import { keyCmd, isResKey } from "./cmds/cloud-token-key-cmd.js";
+import { preSignedUrlCmd, isResPreSignedUrl } from "./cmds/pre-signed-url.js";
+import { dependabotCmd, isResDependabot } from "./cmds/dependabot-cmd.js";
 import {
   testContainerCmd,
   isResTestContainerBuild,
   isResTestContainerTemplate,
   isResTestContainerPublish,
-} from "./test-container-cmd.js";
+} from "./cmds/test-container-cmd.js";
 import {
   deviceIdCmd,
   isResDeviceIdCreate,
@@ -30,10 +30,10 @@ import {
   isResDeviceIdCert,
   isResDeviceIdCaCert,
   isResDeviceIdRegister,
-} from "./device-id-cmd.js";
-import { wellKnownCmd, isResWellKnown } from "./well-known-cmd.js";
-import { retryCmd, isResRetry } from "./retry-cmd.js";
-import { updateDepsCmd, isResUpdateDeps } from "./update-deps-cmd.js";
+} from "./cmds/device-id-cmd.js";
+import { wellKnownCmd, isResWellKnown } from "./cmds/well-known-cmd.js";
+import { retryCmd, isResRetry } from "./cmds/retry-cmd.js";
+import { updateDepsCmd, isResUpdateDeps } from "./cmds/update-deps-cmd.js";
 
 class OutputSelector implements EventoSendProvider<unknown, unknown, unknown> {
   readonly tstream = new TransformStream<unknown, WrapCmdTSMsg<unknown>>();
@@ -169,9 +169,10 @@ async function main() {
   ]);
 }
 
-main()
-  .catch((e) => {
+main().then(
+  () => process.exit(0),
+  (e) => {
     console.error("Error in core-cli:", e);
     process.exit(1);
-  })
-  .then(() => process.exit(0));
+  },
+);

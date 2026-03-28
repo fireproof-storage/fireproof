@@ -1,6 +1,6 @@
 import { expect, it, describe, beforeAll } from "vitest";
 import { VersionPinner } from "./version-pinner.js";
-import { PackageJson } from "./build-cmd.js";
+import { PackageJson } from "./cmds/build-cmd.js";
 import { findUp } from "find-up";
 import { $ } from "zx";
 import { Lazy } from "@adviser/cement";

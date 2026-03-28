@@ -3,13 +3,18 @@ import fs from "fs-extra";
 import { glob } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 
 // --- Set Dependencies ---
 
 export const ReqSetDependencies = type({
   type: "'core-cli.set-dependencies'",
+  packageJsons: "string[]",
+  depName: "string",
+  depVersion: "string",
+  devDependency: "boolean",
+  peerDependency: "boolean",
 });
 export type ReqSetDependencies = typeof ReqSetDependencies.infer;
 
@@ -34,13 +39,7 @@ export const setDependenciesEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetD
   handle: async (
     ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqSetDependencies, ResSetDependencies>,
   ): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      packageJsons: string[];
-      depName: string;
-      depVersion: string;
-      devDependency: boolean;
-      peerDependency: boolean;
-    };
+    const args = ctx.validated;
 
     const packagesJsonFiles = await glob(args.packageJsons, {
       gitignore: true,
@@ -121,10 +120,11 @@ export function setDependenciesCmd(ctx: CliCtx) {
         description: "If set, the dependency will be added to peerDependencies instead of dependencies.",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.set-dependencies",
-      } satisfies ReqSetDependencies;
+        ...args,
+      };
     }),
   });
 }
@@ -133,6 +133,10 @@ export function setDependenciesCmd(ctx: CliCtx) {
 
 export const ReqSetScripts = type({
   type: "'core-cli.set-scripts'",
+  packageJsons: "string[]",
+  scriptName: "string",
+  scriptAction: "string",
+  scriptDelete: "boolean",
 });
 export type ReqSetScripts = typeof ReqSetScripts.infer;
 
@@ -155,12 +159,7 @@ export const setScriptsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetScript
     return Promise.resolve(Result.Ok(Option.None()));
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqSetScripts, ResSetScripts>): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      packageJsons: string[];
-      scriptName: string;
-      scriptAction: string;
-      scriptDelete: boolean;
-    };
+    const args = ctx.validated;
 
     const packagesJsonFiles = await glob(args.packageJsons, {
       gitignore: true,
@@ -173,14 +172,16 @@ export const setScriptsEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqSetScript
     await sendProgress(ctx, "info", `Found ${packagesJsonFiles.length} package.json files to patch.`);
     for (const packageJsonPath of packagesJsonFiles) {
       const packageJson = await fs.readJSON(packageJsonPath);
+      const scripts = packageJson.scripts ?? {};
       if (args.scriptDelete || !args.scriptAction) {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete packageJson.scripts[args.scriptName];
+        delete scripts[args.scriptName];
         await sendProgress(ctx, "info", `Deleting script ${args.scriptName} from ${packageJsonPath}`);
       } else {
-        packageJson.scripts[args.scriptName] = args.scriptAction;
+        scripts[args.scriptName] = args.scriptAction;
         await sendProgress(ctx, "info", `Setting script ${args.scriptName} to "${args.scriptAction}" in ${packageJsonPath}`);
       }
+      packageJson.scripts = scripts;
       await fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
     }
 
@@ -224,10 +225,11 @@ export function setScriptsCmd(ctx: CliCtx) {
         description: "If set, the script will be deleted instead of set.",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.set-scripts",
-      } satisfies ReqSetScripts;
+        ...args,
+      };
     }),
   });
 }

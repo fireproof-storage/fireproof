@@ -1,5 +1,5 @@
 import { readWantedLockfile } from "@pnpm/lockfile-file";
-import { PackageJson } from "./build-cmd.js";
+import { PackageJson } from "./cmds/build-cmd.js";
 import { findUp } from "find-up";
 
 interface PinVersionOptions {

@@ -5,8 +5,8 @@ import { exportJWK } from "jose/key/export";
 import { Result, exception2Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { z } from "zod/v4";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, WrapCmdTSMsg } from "../cmd-evento.js";
 
 async function ourToJWK(env: string, sthis: SuperThis): Promise<Result<{ keys: (JWKPublic | JWKPrivate)[] }>> {
   const rCryptoKeys = await exception2Result(() => rt.sts.env2jwk(env, undefined, sthis));
@@ -34,6 +34,9 @@ async function ourToJWK(env: string, sthis: SuperThis): Promise<Result<{ keys: (
 
 export const ReqKey = type({
   type: "'core-cli.key'",
+  generatePair: "boolean",
+  ourToJWK: "string",
+  JWKToour: "string",
 });
 export type ReqKey = typeof ReqKey.infer;
 
@@ -58,11 +61,7 @@ export const keyEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqKey, ResKey> = {
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqKey, ResKey>): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
     const sthis = cliCtx.sthis;
-    const args = ctx.request.cmdTs.raw as {
-      generatePair: boolean;
-      ourToJWK: string;
-      JWKToour: string;
-    };
+    const args = ctx.validated;
 
     let output: string;
     switch (true) {
@@ -118,10 +117,11 @@ export function keyCmd(ctx: CliCtx) {
         type: string,
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.key",
-      } satisfies ReqKey;
+        ...args,
+      };
     }),
   });
 }

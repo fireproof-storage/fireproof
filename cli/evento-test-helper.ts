@@ -25,10 +25,17 @@ export async function triggerEvento(opts: { reqType: string; raw: unknown }): Pr
   const request: WrapCmdTSMsg<unknown> = {
     type: "msg.cmd-ts",
     cmdTs: { raw: opts.raw, outputFormat: "text" },
-    result: { type: opts.reqType },
+    result: { type: opts.reqType, ...(opts.raw as Record<string, unknown>) },
   };
 
-  await evento.trigger({ ctx: appCtx, send, request });
+  const triggered = await evento.trigger({ ctx: appCtx, send, request });
+  if (triggered.isErr()) {
+    throw triggered.Err();
+  }
+  const triggerCtx = triggered.unwrap();
+  if (triggerCtx.error) {
+    throw triggerCtx.error;
+  }
   const result = send.results[send.results.length - 1];
   if (!result) {
     throw new Error(`No evento response emitted for ${opts.reqType}`);

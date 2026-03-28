@@ -2,8 +2,8 @@ import { command, flag, option, string } from "cmd-ts";
 import { $ } from "zx";
 import { Result, HandleTriggerCtx, EventoHandler, EventoResultType, Option } from "@adviser/cement";
 import { type } from "arktype";
-import { CliCtx } from "./cli-ctx.js";
-import { sendMsg, sendProgress, WrapCmdTSMsg } from "./cmd-evento.js";
+import { CliCtx } from "../cli-ctx.js";
+import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 
 interface PR {
   readonly number: number;
@@ -53,6 +53,10 @@ async function applyPR(
 
 export const ReqDependabot = type({
   type: "'core-cli.dependabot'",
+  rebase: "boolean",
+  apply: "boolean",
+  prNumber: "string",
+  list: "boolean",
 });
 export type ReqDependabot = typeof ReqDependabot.infer;
 
@@ -75,12 +79,7 @@ export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabo
     return Promise.resolve(Result.Ok(Option.None()));
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqDependabot, ResDependabot>): Promise<Result<EventoResultType>> => {
-    const args = ctx.request.cmdTs.raw as {
-      rebase: boolean;
-      apply: boolean;
-      prNumber: string;
-      list: boolean;
-    };
+    const args = ctx.validated;
 
     await sendProgress(ctx, "info", "Fetching Dependabot PRs...");
     const prs = await fetchDependabotPRs(ctx);
@@ -112,7 +111,10 @@ export const dependabotEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDependabo
       const prNum = parseInt(args.prNumber, 10);
       const pr = prs.find((p) => p.number === prNum);
       if (!pr) {
-        return Result.Err(`PR #${prNum} not found or is not a Dependabot PR.`);
+        return sendMsg(ctx, {
+          type: "core-cli.res-dependabot",
+          output: `PR #${prNum} not found or is not a Dependabot PR.`,
+        } satisfies ResDependabot);
       }
       await applyPR(ctx, pr, args.rebase);
       return sendMsg(ctx, {
@@ -177,10 +179,11 @@ export function dependabotCmd(ctx: CliCtx) {
         description: "List all Dependabot PRs (default action)",
       }),
     },
-    handler: ctx.cliStream.enqueue(async (_args) => {
+    handler: ctx.cliStream.enqueue((args) => {
       return {
         type: "core-cli.dependabot",
-      } satisfies ReqDependabot;
+        ...args,
+      };
     }),
   });
   return cmd;
