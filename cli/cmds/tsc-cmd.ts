@@ -40,6 +40,7 @@ export async function handleTsc(args: string[], sthis: SuperThis) {
 export const ReqTsc = type({
   type: "'core-cli.tsc'",
   help: "boolean",
+  args: "string[]",
 });
 export type ReqTsc = typeof ReqTsc.infer;
 
@@ -63,19 +64,8 @@ export const tscEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqTsc, ResTsc> = {
   },
   handle: async (ctx: HandleTriggerCtx<WrapCmdTSMsg<unknown>, ReqTsc, ResTsc>): Promise<Result<EventoResultType>> => {
     const cliCtx = ctx.ctx.getOrThrow<CliCtx>("cliCtx");
-    const args = ctx.validated;
-    const tscArgs = args.help ? ["--help"] : [];
-    const sthis = cliCtx.sthis;
-    const tsc = sthis.env.get("FP_TSC") ?? "tsgo";
-    const cmd = [tsc, ...tscArgs];
-    if (isPowerShell()) {
-      $.quote = quotePowerShell;
-    }
-    $.verbose = false;
-    const p = await $({ stdio: ["inherit", "inherit", "inherit"] })`${cmd}`.nothrow();
-    if (p.exitCode !== 0) {
-      return Result.Err(`tsc failed with exit code ${p.exitCode}`);
-    }
+    const req = ctx.validated;
+    await handleTsc(req.args, cliCtx.sthis);
     return sendMsg(ctx, {
       type: "core-cli.res-tsc",
       output: "tsc completed",
@@ -99,6 +89,7 @@ export function tscCmd(ctx: CliCtx) {
       return {
         type: "core-cli.tsc",
         ...args,
+        args: process.argv.slice(3),
       };
     }),
   });
