@@ -490,6 +490,46 @@ describe("basic Ledger with no update subscription", function () {
   });
 });
 
+describe("payload subscription with concurrent writes", () => {
+  let db: Database;
+  const sthis = ensureSuperThis();
+
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  });
+
+  beforeEach(async () => {
+    await sthis.start();
+    db = fireproof("sub-concurrent-writes");
+  });
+
+  it("should deliver all docs to payload subscriber during concurrent puts", async () => {
+    const received: DocWithId<NonNullable<unknown>>[] = [];
+    let resolveAll: () => void;
+    const allReceived = new Promise<void>((resolve) => {
+      resolveAll = resolve;
+    });
+
+    db.subscribe((docs) => {
+      received.push(...docs);
+      if (received.length >= 4) resolveAll();
+    }, true);
+
+    // 4 concurrent puts — the minimal counterexample from property test
+    await Promise.all([
+      db.put({ _id: "a", v: 1 }),
+      db.put({ _id: "b", v: 2 }),
+      db.put({ _id: "c", v: 3 }),
+      db.put({ _id: "d", v: 4 }),
+    ]);
+
+    await allReceived;
+    const ids = received.map((d) => d._id).sort();
+    expect(ids).toEqual(["a", "b", "c", "d"]);
+  }, 10000);
+});
+
 describe("ledger with files input", () => {
   let db: Database;
   let imagefiles: FileWithCid[] = [];

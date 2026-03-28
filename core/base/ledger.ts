@@ -269,9 +269,6 @@ class LedgerImpl implements Ledger {
 
   private async _notify(updates: DocUpdate<DocTypes>[]) {
     await this.ready();
-    if (this.writeQueue.hasPending()) {
-      return;
-    }
     if (this._listeners.size) {
       const docs: DocWithId<DocTypes>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
