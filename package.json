@@ -63,9 +63,9 @@
     "@types/deno": "^2.5.0",
     "@types/node": "^25.3.5",
     "@typescript/native-preview": "7.0.0-dev.20260328.1",
-    "@vitest/browser": "^4.0.14",
-    "@vitest/browser-playwright": "^4.0.14",
-    "deno": "^2.7.7",
+    "@vitest/browser": "^4.1.2",
+    "@vitest/browser-playwright": "^4.1.2",
+    "deno": "^2.7.9",
     "drizzle-kit": "0.30.6",
     "eslint": "^9.39.2",
     "eslint-plugin-import": "^2.32.0",
@@ -76,7 +76,7 @@
     "tsx": "^4.21.0",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.57.0",
-    "vitest": "^4.0.14",
+    "vitest": "^4.1.2",
     "wrangler": "^4.76.0"
   },
   "repository": {
