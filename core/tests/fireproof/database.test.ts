@@ -347,7 +347,8 @@ describe("basic Ledger parallel writes / public", () => {
   });
   it("should resolve to one head", async () => {
     const crdt = db.ledger.crdt;
-    expect(crdt.clock.head.length).toBe(9);
+    // With merged write queue chunks, parallel puts produce a single head
+    expect(crdt.clock.head.length).toBe(1);
     await db.put({ _id: "id-10", hello: "world" });
     expect(crdt.clock.head.length).toBe(1);
   });

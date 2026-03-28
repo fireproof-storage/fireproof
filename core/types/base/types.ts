@@ -690,6 +690,7 @@ export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocType
   push(task: T): Promise<MetaType>;
   bulk(tasks: T[]): Promise<MetaType>;
   close(): Promise<void>;
+  hasPending(): boolean;
 }
 
 export type TraceFn = (traceEvent: TraceEvent) => void;

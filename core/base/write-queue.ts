@@ -49,16 +49,18 @@ class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> impl
     try {
       this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processing tasks");
       const tasksToProcess = this.queue.splice(0, this.opts.chunkSize);
-      const updates = tasksToProcess.map((item) => item.tasks).filter((item) => item) as DocUpdate<S>[][];
-      const promises = updates.map(async (update, index) => {
-        try {
-          const result = await this.worker(update);
-          tasksToProcess[index].resolve(result);
-        } catch (error) {
-          tasksToProcess[index].reject(this.logger.Error().Err(error).Msg("Error processing task").AsError());
+      const allUpdates = tasksToProcess.flatMap((item) => item.tasks || []);
+      try {
+        const result = await this.worker(allUpdates);
+        for (const task of tasksToProcess) {
+          task.resolve(result);
         }
-      });
-      await Promise.allSettled(promises);
+      } catch (error) {
+        const err = this.logger.Error().Err(error).Msg("Error processing task").AsError();
+        for (const task of tasksToProcess) {
+          task.reject(err);
+        }
+      }
       this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processed tasks");
     } catch (error) {
       this.logger.Error().Err(error).Msg("Error processing tasks");
@@ -81,6 +83,9 @@ class WriteQueueImpl<T extends DocUpdate<S>, S extends DocTypes = DocTypes> impl
     this.waitForEmptyQueue = new Future();
     this.testEmptyQueue();
     return this.waitForEmptyQueue.asPromise();
+  }
+  hasPending(): boolean {
+    return this.queue.length > 0;
   }
 }
 
