@@ -1359,8 +1359,8 @@ importers:
         specifier: ^3.2.3
         version: 3.2.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/react':
-        specifier: ^6.1.0
-        version: 6.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^6.1.3
+        version: 6.1.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/shared':
         specifier: ^4.3.2
         version: 4.3.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1912,8 +1912,8 @@ packages:
     resolution: {integrity: sha512-I3YLnSioYFG+EVFBYm0ilN28+FC8H+hkqMgB5Pdl7AcotQOn3JhiZMqLel2H0P390p8FEJKQNnrvXk3BemeKKQ==}
     engines: {node: '>=20.9.0'}
 
-  '@clerk/react@6.1.0':
-    resolution: {integrity: sha512-xHFvpQGBZGuuAp/d7+n2LAPoaeqPsqrG5ValR0//Ol6gRGCttnjJ0CVk806dlIzs7JZNLO68+i/MZanowCjEMw==}
+  '@clerk/react@6.1.3':
+    resolution: {integrity: sha512-9t5C8eM5cTmOmpBO5nb8FDA40biQqeQLUW+cVwAE0t5hnGRwiC6mSv83vqHg+9qQBqtliR013BGVjpCz53gVCA==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
@@ -6707,7 +6707,7 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/react@6.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@clerk/react@6.1.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@clerk/shared': 4.3.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
