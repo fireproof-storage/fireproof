@@ -40,7 +40,7 @@ import {
   PARAM,
   NotFoundError,
 } from "@fireproof/core-types-base";
-import { Logger } from "@adviser/cement";
+import { Logger, isUint8Array } from "@adviser/cement";
 import { Link, Version } from "multiformats";
 
 function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
@@ -79,7 +79,7 @@ export function sanitizeDocumentFields<T>(obj: T): T {
     }) as T;
   } else if (typeof obj === "object" && obj !== null) {
     // Preserve Uint8Array for CBOR byte string encoding
-    if (obj instanceof Uint8Array) {
+    if (isUint8Array(obj)) {
       return obj;
     }
     // Special case for Date objects - convert to ISO string
