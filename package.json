@@ -77,7 +77,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "^8.57.0",
     "vitest": "^4.1.2",
-    "wrangler": "^4.76.0"
+    "wrangler": "^4.78.0"
   },
   "repository": {
     "type": "git",
