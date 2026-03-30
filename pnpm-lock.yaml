@@ -241,8 +241,8 @@ importers:
         specifier: ^1.0.20
         version: 1.0.20
       drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.12.8
         version: 4.12.8
@@ -305,8 +305,8 @@ importers:
         specifier: ^0.15.0
         version: 0.15.0
       drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.12.8
         version: 4.12.8
@@ -385,8 +385,8 @@ importers:
         specifier: ^0.17.2
         version: 0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6)
       drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
       hono:
         specifier: ^4.12.8
         version: 4.12.8
@@ -1335,8 +1335,8 @@ importers:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
@@ -1483,8 +1483,8 @@ importers:
         specifier: 0.30.6
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       drizzle-orm:
-        specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7)
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@1.21.7)
@@ -4083,8 +4083,8 @@ packages:
     resolution: {integrity: sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g==}
     hasBin: true
 
-  drizzle-orm@0.45.1:
-    resolution: {integrity: sha512-Te0FOdKIistGNPMq2jscdqngBRfBpC8uMFVwqjf6gtTVJHIQ/dosgV/CLBU2N4ZJBsXL5savCba9b0YJskKdcA==}
+  drizzle-orm@0.45.2:
+    resolution: {integrity: sha512-kY0BSaTNYWnoDMVoyY8uxmyHjpJW1geOmBMdSSicKo9CIIWkSxMIj2rkeSR51b8KAPB7m+qysjuHme5nKP+E5Q==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -8745,7 +8745,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7):
+  drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260317.1)(@libsql/client@0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6))(gel@2.1.1)(kysely@0.28.7):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20260317.1
       '@libsql/client': 0.17.2(bufferutil@4.1.0)(utf-8-validate@6.0.6)
