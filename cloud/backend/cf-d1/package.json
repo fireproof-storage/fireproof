@@ -50,7 +50,7 @@
     "@fireproof/vendor": "workspace:0.0.0",
     "cmd-ts": "^0.15.0",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.8",
+    "hono": "^4.12.10",
     "multiformats": "^13.4.2"
   },
   "devDependencies": {
