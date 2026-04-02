@@ -21,8 +21,8 @@
     "use-fireproof": "workspace:*"
   },
   "devDependencies": {
-    "@fireproof/core-cli": "workspace:*",
     "@eslint/js": "^10.0.1",
+    "@fireproof/core-cli": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
