@@ -939,8 +939,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       cborg:
-        specifier: ^4.5.8
-        version: 4.5.8
+        specifier: ^5.0.1
+        version: 5.0.1
       jose:
         specifier: ^6.2.2
         version: 6.2.2
@@ -1015,8 +1015,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../types/blockstore
       cborg:
-        specifier: ^4.5.8
-        version: 4.5.8
+        specifier: ^5.0.1
+        version: 5.0.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -1105,8 +1105,8 @@ importers:
         specifier: ^25.3.5
         version: 25.5.0
       cborg:
-        specifier: ^4.5.8
-        version: 4.5.8
+        specifier: ^5.0.1
+        version: 5.0.1
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
