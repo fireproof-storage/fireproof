@@ -572,8 +572,8 @@ importers:
         specifier: ^9.2.5
         version: 9.2.5
       '@ipld/dag-json':
-        specifier: ^10.2.6
-        version: 10.2.6
+        specifier: ^10.2.7
+        version: 10.2.7
       '@web3-storage/pail':
         specifier: ^0.6.2
         version: 0.6.2
@@ -663,8 +663,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../../vendor
       '@ipld/dag-json':
-        specifier: ^10.2.6
-        version: 10.2.6
+        specifier: ^10.2.7
+        version: 10.2.7
       '@web3-storage/pail':
         specifier: ^0.6.2
         version: 0.6.2
@@ -1099,8 +1099,8 @@ importers:
         specifier: ^9.2.5
         version: 9.2.5
       '@ipld/dag-json':
-        specifier: ^10.2.6
-        version: 10.2.6
+        specifier: ^10.2.7
+        version: 10.2.7
       '@types/node':
         specifier: ^25.3.5
         version: 25.5.0
@@ -2882,8 +2882,8 @@ packages:
     resolution: {integrity: sha512-84wSr4jv30biui7endhobYhXBQzQE4c/wdoWlFrKcfiwH+ofaPg8fwsM8okX9cOzkkrsAsNdDyH3ou+kiLquwQ==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-json@10.2.6':
-    resolution: {integrity: sha512-51yc5azhmkvc9mp2HV/vtJ8SlgFXADp55wAPuuAjQZ+yPurAYuTVddS3ke5vT4sjcd4DbE+DWjsMZGXjFB2cuA==}
+  '@ipld/dag-json@10.2.7':
+    resolution: {integrity: sha512-G+pXbOV6JpNUQrB+4H+0apnE85M9V0JjSjc7Mm2DdKbC6Qn8so9UYIGnJps+ZRMAvGUieO2iCZbAFLeWE2snvA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@jest/schemas@29.6.3':
@@ -4044,6 +4044,10 @@ packages:
 
   cborg@4.5.8:
     resolution: {integrity: sha512-6/viltD51JklRhq4L7jC3zgy6gryuG5xfZ3kzpE+PravtyeQLeQmCYLREhQH7pWENg5pY4Yu/XCd6a7dKScVlw==}
+    hasBin: true
+
+  cborg@5.0.1:
+    resolution: {integrity: sha512-3UinwdU6Qtr60sLhCpfjh+/jXleI2+8TMaWaZSO3Zx6YxWlPgGsyA01tRitT2KXbHTZrKcx3vaMIbkdXP8AfPw==}
     hasBin: true
 
   chai@6.2.2:
@@ -7462,9 +7466,9 @@ snapshots:
       cborg: 4.5.8
       multiformats: 13.4.2
 
-  '@ipld/dag-json@10.2.6':
+  '@ipld/dag-json@10.2.7':
     dependencies:
-      cborg: 4.5.8
+      cborg: 5.0.1
       multiformats: 13.4.2
 
   '@jest/schemas@29.6.3':
@@ -8775,6 +8779,8 @@ snapshots:
       uint8arraylist: 2.4.8
 
   cborg@4.5.8: {}
+
+  cborg@5.0.1: {}
 
   chai@6.2.2: {}
 
