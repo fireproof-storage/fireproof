@@ -64,7 +64,7 @@
     "@fireproof/core-types-runtime": "workspace:0.0.0",
     "@fireproof/vendor": "workspace:0.0.0",
     "@ipld/car": "^5.4.3",
-    "@ipld/dag-cbor": "^9.2.5",
+    "@ipld/dag-cbor": "^9.2.6",
     "@ipld/dag-json": "^10.2.7",
     "@types/node": "^25.5.2",
     "cborg": "^5.0.1",

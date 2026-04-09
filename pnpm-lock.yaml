@@ -508,8 +508,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       '@ipld/dag-cbor':
-        specifier: ^9.2.5
-        version: 9.2.5
+        specifier: ^9.2.6
+        version: 9.2.6
       '@web3-storage/pail':
         specifier: ^0.6.2
         version: 0.6.2
@@ -569,8 +569,8 @@ importers:
         specifier: ^5.4.3
         version: 5.4.3
       '@ipld/dag-cbor':
-        specifier: ^9.2.5
-        version: 9.2.5
+        specifier: ^9.2.6
+        version: 9.2.6
       '@ipld/dag-json':
         specifier: ^10.2.7
         version: 10.2.7
@@ -1096,8 +1096,8 @@ importers:
         specifier: ^5.4.3
         version: 5.4.3
       '@ipld/dag-cbor':
-        specifier: ^9.2.5
-        version: 9.2.5
+        specifier: ^9.2.6
+        version: 9.2.6
       '@ipld/dag-json':
         specifier: ^10.2.7
         version: 10.2.7
@@ -2894,8 +2894,8 @@ packages:
     resolution: {integrity: sha512-+6QHy+9sLov1K28PmazHyqEmD5oDeMWa3mwxst8rt5OsP7CmEexwYDOflGSjPDOUWgHQ4WabQnBSZfXKvZ0DUw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-cbor@9.2.5':
-    resolution: {integrity: sha512-84wSr4jv30biui7endhobYhXBQzQE4c/wdoWlFrKcfiwH+ofaPg8fwsM8okX9cOzkkrsAsNdDyH3ou+kiLquwQ==}
+  '@ipld/dag-cbor@9.2.6':
+    resolution: {integrity: sha512-vZGJ84Em2jCVAS7td5gc08YTVN8/s4bTQxg4pU77PAXDAR/yLYOthOvkCu01fdl1lrZwz47RdUterxdkrs3p5A==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-json@10.2.7':
@@ -7494,21 +7494,21 @@ snapshots:
 
   '@ipld/car@5.4.2':
     dependencies:
-      '@ipld/dag-cbor': 9.2.5
+      '@ipld/dag-cbor': 9.2.6
       cborg: 4.5.8
       multiformats: 13.4.2
       varint: 6.0.0
 
   '@ipld/car@5.4.3':
     dependencies:
-      '@ipld/dag-cbor': 9.2.5
+      '@ipld/dag-cbor': 9.2.6
       cborg: 5.1.0
       multiformats: 13.4.2
       varint: 6.0.0
 
-  '@ipld/dag-cbor@9.2.5':
+  '@ipld/dag-cbor@9.2.6':
     dependencies:
-      cborg: 4.5.8
+      cborg: 5.1.0
       multiformats: 13.4.2
 
   '@ipld/dag-json@10.2.7':
@@ -8553,7 +8553,7 @@ snapshots:
   '@web3-storage/pail@0.6.2':
     dependencies:
       '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.5
+      '@ipld/dag-cbor': 9.2.6
       archy: 1.0.0
       carstream: 2.3.0
       cli-color: 2.0.4
@@ -8823,7 +8823,7 @@ snapshots:
 
   carstream@2.3.0:
     dependencies:
-      '@ipld/dag-cbor': 9.2.5
+      '@ipld/dag-cbor': 9.2.6
       multiformats: 13.4.2
       uint8arraylist: 2.4.8
 
