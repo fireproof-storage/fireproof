@@ -566,8 +566,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       '@ipld/car':
-        specifier: ^5.4.2
-        version: 5.4.2
+        specifier: ^5.4.3
+        version: 5.4.3
       '@ipld/dag-cbor':
         specifier: ^9.2.5
         version: 9.2.5
@@ -1093,8 +1093,8 @@ importers:
         specifier: workspace:0.0.0
         version: link:../../vendor
       '@ipld/car':
-        specifier: ^5.4.2
-        version: 5.4.2
+        specifier: ^5.4.3
+        version: 5.4.3
       '@ipld/dag-cbor':
         specifier: ^9.2.5
         version: 9.2.5
@@ -2878,6 +2878,10 @@ packages:
     resolution: {integrity: sha512-gfyrJvePyXnh2Fbj8mPg4JYvEZ3izhk8C9WgAle7xIYbrJNSXmNQ6BxAls8Gof97vvGbCROdxbTWRmHJtTCbcg==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
+  '@ipld/car@5.4.3':
+    resolution: {integrity: sha512-+6QHy+9sLov1K28PmazHyqEmD5oDeMWa3mwxst8rt5OsP7CmEexwYDOflGSjPDOUWgHQ4WabQnBSZfXKvZ0DUw==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+
   '@ipld/dag-cbor@9.2.5':
     resolution: {integrity: sha512-84wSr4jv30biui7endhobYhXBQzQE4c/wdoWlFrKcfiwH+ofaPg8fwsM8okX9cOzkkrsAsNdDyH3ou+kiLquwQ==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
@@ -4048,6 +4052,10 @@ packages:
 
   cborg@5.0.1:
     resolution: {integrity: sha512-3UinwdU6Qtr60sLhCpfjh+/jXleI2+8TMaWaZSO3Zx6YxWlPgGsyA01tRitT2KXbHTZrKcx3vaMIbkdXP8AfPw==}
+    hasBin: true
+
+  cborg@5.1.0:
+    resolution: {integrity: sha512-OwailRORD5pIyxaLKKVdGHQ2OXWmYW7YsjDXnl64cIwWdQiyXRffVFsL34JR5c+BEeeSOHADM3cy/QNERH1SUw==}
     hasBin: true
 
   chai@6.2.2:
@@ -7461,6 +7469,13 @@ snapshots:
       multiformats: 13.4.2
       varint: 6.0.0
 
+  '@ipld/car@5.4.3':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.5
+      cborg: 5.1.0
+      multiformats: 13.4.2
+      varint: 6.0.0
+
   '@ipld/dag-cbor@9.2.5':
     dependencies:
       cborg: 4.5.8
@@ -8781,6 +8796,8 @@ snapshots:
   cborg@4.5.8: {}
 
   cborg@5.0.1: {}
+
+  cborg@5.1.0: {}
 
   chai@6.2.2: {}
 
