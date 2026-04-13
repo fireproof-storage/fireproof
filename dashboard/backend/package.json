@@ -45,7 +45,7 @@
     "drizzle-kit": "0.30.6",
     "drizzle-orm": "^0.45.2",
     "eslint": "^9.39.2",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "vitest": "^4.1.2",
     "wrangler": "^4.80.0",
     "zx": "^8.8.5"
