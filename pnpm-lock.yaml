@@ -192,8 +192,8 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4
       react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: ^19.2.5
+        version: 19.2.5(react@19.2.4)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/pkg
@@ -270,7 +270,7 @@ importers:
         version: 0.30.6(patch_hash=9e79163b9304da5cbc3c787034937aeddaf678492ba5636df601baaa78e130d8)
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@types/node@25.5.2)(@vitest/browser-playwright@4.1.2)(vite@8.0.5(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.2)(@types/node@25.5.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 4.1.2(@types/node@25.5.2)(@vitest/browser-playwright@4.1.2)(vite@8.0.5(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.2)(@types/node@25.5.2)(esbuild@0.19.12)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       zx:
         specifier: ^8.8.5
         version: 8.8.5
@@ -328,7 +328,7 @@ importers:
         version: 4.21.0
       vitest:
         specifier: ^4.1.2
-        version: 4.1.2(@types/node@25.5.2)(@vitest/browser-playwright@4.1.2)(vite@8.0.5(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.2)(@types/node@25.5.2)(esbuild@0.19.12)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 4.1.2(@types/node@25.5.2)(@vitest/browser-playwright@4.1.2)(vite@8.0.5(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.2)(@types/node@25.5.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       wrangler:
         specifier: ^4.80.0
         version: 4.80.0(@cloudflare/workers-types@4.20260409.1)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
@@ -465,8 +465,8 @@ importers:
         specifier: '>=18.0.0'
         version: 19.2.4
       react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: ^19.2.5
+        version: 19.2.5(react@19.2.4)
       use-fireproof:
         specifier: workspace:0.0.0
         version: link:../../use-fireproof/pkg
@@ -886,7 +886,7 @@ importers:
         version: 0.5.34(typescript@6.0.2)
       '@clerk/shared':
         specifier: ^4.4.0
-        version: 4.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 4.6.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@fireproof/core-device-id':
         specifier: workspace:0.0.0
         version: link:../../device-id
@@ -1128,7 +1128,7 @@ importers:
     devDependencies:
       '@clerk/shared':
         specifier: ^4.4.0
-        version: 4.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 4.6.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
         version: link:../../cli
@@ -1278,7 +1278,7 @@ importers:
         version: 0.5.34(typescript@6.0.2)
       '@clerk/backend':
         specifier: ^3.2.8
-        version: 3.2.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 3.2.8(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -1363,13 +1363,13 @@ importers:
         version: 0.5.34(typescript@6.0.2)
       '@clerk/backend':
         specifier: ^3.2.8
-        version: 3.2.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 3.2.8(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@clerk/react':
         specifier: ^6.2.1
-        version: 6.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 6.2.1(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@clerk/shared':
         specifier: ^4.4.0
-        version: 4.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 4.6.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../../core/core
@@ -1399,7 +1399,7 @@ importers:
         version: 3.0.0
       '@monaco-editor/react':
         specifier: ^4.7.0
-        version: 4.7.0(monaco-editor@0.53.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 4.7.0(monaco-editor@0.53.0)(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.2))
@@ -1425,17 +1425,17 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4
       react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: ^19.2.5
+        version: 19.2.5(react@19.2.4)
       react-hook-form:
         specifier: ^7.72.1
         version: 7.72.1(react@19.2.4)
       react-router-dom:
         specifier: ^7.14.0
-        version: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 7.14.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       react-simple-code-editor:
         specifier: ^0.14.1
-        version: 0.14.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 0.14.1(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       use-editable:
         specifier: ^2.3.3
         version: 2.3.3(react@19.2.4)
@@ -1469,7 +1469,7 @@ importers:
         version: 6.0.3(rollup@4.59.0)
       '@testing-library/react':
         specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -1546,11 +1546,11 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4
       react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: ^19.2.5
+        version: 19.2.5(react@19.2.4)
       react-router-dom:
         specifier: ^7.14.0
-        version: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 7.14.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       use-fireproof:
         specifier: workspace:*
         version: link:../../use-fireproof/pkg
@@ -1670,7 +1670,7 @@ importers:
         version: link:../../core/types/blockstore
       '@testing-library/react':
         specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -5770,10 +5770,10 @@ packages:
     resolution: {integrity: sha512-ARhCpm70fzdcvNQfPoy49IaanKkTlRWF2JMzqhcJbhSFRZv7nPTvZJdcY7301IPmvW+/p0RgIWnQDLJxifsQ7g==}
     engines: {node: '>=8'}
 
-  react-dom@19.2.4:
-    resolution: {integrity: sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==}
+  react-dom@19.2.5:
+    resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
     peerDependencies:
-      react: ^19.2.4
+      react: ^19.2.5
 
   react-hook-form@7.72.1:
     resolution: {integrity: sha512-RhwBoy2ygeVZje+C+bwJ8g0NjTdBmDlJvAUHTxRjTmSUKPYsKfMphkS2sgEMotsY03bP358yEYlnUeZy//D9Ig==}
@@ -6875,23 +6875,23 @@ snapshots:
 
   '@blazediff/core@1.9.1': {}
 
-  '@clerk/backend@3.2.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@clerk/backend@3.2.8(react-dom@19.2.5(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@clerk/shared': 4.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@clerk/shared': 4.6.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       standardwebhooks: 1.0.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@clerk/react@6.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@clerk/react@6.2.1(react-dom@19.2.5(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@clerk/shared': 4.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@clerk/shared': 4.6.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
       react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
       tslib: 2.8.1
 
-  '@clerk/shared@4.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@clerk/shared@4.6.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@tanstack/query-core': 5.90.16
       dequal: 2.0.3
@@ -6900,7 +6900,7 @@ snapshots:
       std-env: 3.10.0
     optionalDependencies:
       react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
 
   '@cloudflare/kv-asset-handler@0.4.2': {}
 
@@ -7684,12 +7684,12 @@ snapshots:
     dependencies:
       state-local: 1.0.7
 
-  '@monaco-editor/react@4.7.0(monaco-editor@0.53.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@monaco-editor/react@4.7.0(monaco-editor@0.53.0)(react-dom@19.2.5(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@monaco-editor/loader': 1.5.0
       monaco-editor: 0.53.0
       react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
 
   '@napi-rs/wasm-runtime@1.1.2(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.2)':
     dependencies:
@@ -8142,12 +8142,12 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@babel/runtime': 7.29.2
       '@testing-library/dom': 10.4.1
       react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
     optionalDependencies:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -10714,7 +10714,7 @@ snapshots:
 
   quick-lru@4.0.1: {}
 
-  react-dom@19.2.4(react@19.2.4):
+  react-dom@19.2.5(react@19.2.4):
     dependencies:
       react: 19.2.4
       scheduler: 0.27.0
@@ -10729,24 +10729,24 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-router-dom@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-router-dom@7.14.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      react-router: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
+      react-router: 7.14.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4)
 
-  react-router@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-router@7.14.0(react-dom@19.2.5(react@19.2.4))(react@19.2.4):
     dependencies:
       cookie: 1.1.1
       react: 19.2.4
       set-cookie-parser: 2.7.2
     optionalDependencies:
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
 
-  react-simple-code-editor@0.14.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-simple-code-editor@0.14.1(react-dom@19.2.5(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.4)
 
   react@19.2.4: {}
 
