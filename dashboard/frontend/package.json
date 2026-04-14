@@ -46,7 +46,7 @@
     "jose": "^6.2.2",
     "minimatch": "^10.2.5",
     "multiformats": "^13.4.2",
-    "react": "^19.2.4",
+    "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.72.1",
     "react-router-dom": "^7.14.0",
