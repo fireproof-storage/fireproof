@@ -35,7 +35,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20260409.1"
+    "@cloudflare/workers-types": "^4.20260414.1"
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
