@@ -24,6 +24,59 @@ import { type } from "arktype";
 import { CliCtx } from "../cli-ctx.js";
 import { sendMsg, sendProgress, WrapCmdTSMsg } from "../cmd-evento.js";
 
+function certSuccessHtml(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Certificate received</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #1f2937;
+    background-color: #f8fafc;
+    background-image:
+      linear-gradient(to right, rgba(15, 23, 42, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-position: -1px -1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 12px;
+    padding: 2rem 2.25rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    max-width: 28rem;
+    text-align: center;
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
+  p { margin: 0; color: #475569; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e2e8f0; background-color: #0f172a; background-image:
+      linear-gradient(to right, rgba(226, 232, 240, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(226, 232, 240, 0.08) 1px, transparent 1px); }
+    .card { background: rgba(15, 23, 42, 0.85); border-color: rgba(226, 232, 240, 0.12); }
+    p { color: #cbd5e1; }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>Certificate received successfully.</h1>
+    <p>You can close this window.</p>
+  </main>
+</body>
+</html>`;
+}
+
 function getStdin(): Promise<string> {
   return new Promise<string>((resolve) => {
     let data = "";
@@ -688,7 +741,7 @@ export const deviceIdRegisterEvento: EventoHandler<WrapCmdTSMsg<unknown>, ReqDev
       }
       void sendProgress(ctx, "info", "\nCertificate received from CA!");
       certFuture.resolve(cert);
-      return c.text("Certificate received successfully. You can close this window.");
+      return c.html(certSuccessHtml());
     });
 
     // Determine port: use specified port or generate random one
