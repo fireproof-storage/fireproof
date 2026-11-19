@@ -65,11 +65,11 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
       typescript:
-        specifier: 6.0.2
-        version: 6.0.2
+        specifier: 6.0.3
+        version: 6.0.3
       typescript-eslint:
         specifier: ^8.58.1
-        version: 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
+        version: 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
       vitest:
         specifier: ^4.1.2
         version: 4.1.2(@types/node@25.6.0)(@vitest/browser-playwright@4.1.2)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -81,7 +81,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-device-id':
         specifier: workspace:0.0.0
         version: link:../core/device-id
@@ -163,7 +163,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core':
         specifier: workspace:*
         version: link:../../core/core
@@ -215,7 +215,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@cloudflare/workers-types':
         specifier: ^4.20260414.1
         version: 4.20260414.1
@@ -279,7 +279,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@cloudflare/workers-types':
         specifier: ^4.20260414.1
         version: 4.20260414.1
@@ -353,7 +353,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/cloud-backend-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -414,7 +414,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../../core/blockstore
@@ -454,7 +454,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../vendor
@@ -485,7 +485,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -531,7 +531,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../gateways/base
@@ -591,7 +591,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -612,7 +612,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-keybag':
         specifier: workspace:0.0.0
         version: link:../keybag
@@ -649,7 +649,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -673,7 +673,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -703,7 +703,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -740,7 +740,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -758,7 +758,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../types/base
@@ -774,7 +774,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -798,7 +798,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-gateways-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -829,7 +829,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-gateways-file':
         specifier: workspace:0.0.0
         version: link:../gateways/file
@@ -859,7 +859,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -883,7 +883,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@clerk/shared':
         specifier: ^4.4.0
         version: 4.6.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -919,7 +919,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@adviser/ts-xxhash':
         specifier: ^1.0.2
         version: 1.0.2
@@ -959,7 +959,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -980,7 +980,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1004,7 +1004,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-runtime':
         specifier: workspace:0.0.0
         version: link:../../runtime
@@ -1025,7 +1025,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core':
         specifier: workspace:0.0.0
         version: link:../core
@@ -1152,7 +1152,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-blockstore':
         specifier: workspace:0.0.0
         version: link:../blockstore
@@ -1179,7 +1179,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1204,7 +1204,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../base
@@ -1216,7 +1216,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1244,7 +1244,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-types-base':
         specifier: workspace:0.0.0
         version: link:../../base
@@ -1263,7 +1263,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/vendor':
         specifier: workspace:0.0.0
         version: link:../../../vendor
@@ -1275,7 +1275,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@clerk/backend':
         specifier: ^3.2.8
         version: 3.2.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -1360,7 +1360,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@clerk/backend':
         specifier: ^3.2.8
         version: 3.2.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -1516,8 +1516,8 @@ importers:
         specifier: ^3.4.19
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.2)
       typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^6.0.3
+        version: 6.0.3
       vite:
         specifier: ^8.0.8
         version: 8.0.8(@types/node@25.6.0)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -1535,7 +1535,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core':
         specifier: workspace:*
         version: link:../../core/core
@@ -1589,11 +1589,11 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2
       typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^6.0.3
+        version: 6.0.3
       typescript-eslint:
         specifier: ^8.58.1
-        version: 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
+        version: 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
       vite:
         specifier: ^8.0.8
         version: 8.0.8(@types/node@25.6.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -1602,7 +1602,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       '@fireproof/core-base':
         specifier: workspace:0.0.0
         version: link:../../core/base
@@ -1641,7 +1641,7 @@ importers:
         version: 19.2.5
       ts-essentials:
         specifier: ^10.1.1
-        version: 10.1.1(typescript@6.0.2)
+        version: 10.1.1(typescript@6.0.3)
     devDependencies:
       '@fireproof/core-cli':
         specifier: workspace:0.0.0
@@ -1692,7 +1692,7 @@ importers:
     dependencies:
       '@adviser/cement':
         specifier: ^0.5.34
-        version: 0.5.34(typescript@6.0.2)
+        version: 0.5.34(typescript@6.0.3)
       yocto-queue:
         specifier: ^1.2.2
         version: 1.2.2
@@ -6473,8 +6473,8 @@ packages:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
-  typescript@6.0.2:
-    resolution: {integrity: sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -6773,9 +6773,9 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.5.34(typescript@6.0.2)':
+  '@adviser/cement@0.5.34(typescript@6.0.3)':
     dependencies:
-      ts-essentials: 10.1.1(typescript@6.0.2)
+      ts-essentials: 10.1.1(typescript@6.0.3)
       yaml: 2.8.2
     transitivePeerDependencies:
       - typescript
@@ -8456,68 +8456,68 @@ snapshots:
     dependencies:
       '@types/node': 25.6.0
 
-  '@typescript-eslint/eslint-plugin@8.58.1(@typescript-eslint/parser@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2))(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/eslint-plugin@8.58.1(@typescript-eslint/parser@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3))(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/parser': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/scope-manager': 8.58.1
-      '@typescript-eslint/type-utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
-      '@typescript-eslint/utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/type-utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/visitor-keys': 8.58.1
       eslint: 10.0.3(jiti@2.6.1)
       ignore: 7.0.5
       natural-compare: 1.4.0
-      ts-api-utils: 2.5.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/eslint-plugin@8.58.1(@typescript-eslint/parser@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/eslint-plugin@8.58.1(@typescript-eslint/parser@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3))(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/parser': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/scope-manager': 8.58.1
-      '@typescript-eslint/type-utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
-      '@typescript-eslint/utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/type-utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
       '@typescript-eslint/visitor-keys': 8.58.1
       eslint: 9.39.2(jiti@2.6.1)
       ignore: 7.0.5
       natural-compare: 1.4.0
-      ts-api-utils: 2.5.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/parser@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.58.1
       '@typescript-eslint/types': 8.58.1
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
       '@typescript-eslint/visitor-keys': 8.58.1
       debug: 4.4.3
       eslint: 10.0.3(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/parser@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.58.1
       '@typescript-eslint/types': 8.58.1
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
       '@typescript-eslint/visitor-keys': 8.58.1
       debug: 4.4.3
       eslint: 9.39.2(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.58.1(typescript@6.0.2)':
+  '@typescript-eslint/project-service@8.58.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.58.1(typescript@6.0.2)
+      '@typescript-eslint/tsconfig-utils': 8.58.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.58.1
       debug: 4.4.3
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -8526,70 +8526,70 @@ snapshots:
       '@typescript-eslint/types': 8.58.1
       '@typescript-eslint/visitor-keys': 8.58.1
 
-  '@typescript-eslint/tsconfig-utils@8.58.1(typescript@6.0.2)':
+  '@typescript-eslint/tsconfig-utils@8.58.1(typescript@6.0.3)':
     dependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
 
-  '@typescript-eslint/type-utils@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/type-utils@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/types': 8.58.1
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
-      '@typescript-eslint/utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
       debug: 4.4.3
       eslint: 10.0.3(jiti@2.6.1)
-      ts-api-utils: 2.5.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/type-utils@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/type-utils@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/types': 8.58.1
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
-      '@typescript-eslint/utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
       debug: 4.4.3
       eslint: 9.39.2(jiti@2.6.1)
-      ts-api-utils: 2.5.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
   '@typescript-eslint/types@8.58.1': {}
 
-  '@typescript-eslint/typescript-estree@8.58.1(typescript@6.0.2)':
+  '@typescript-eslint/typescript-estree@8.58.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.58.1(typescript@6.0.2)
-      '@typescript-eslint/tsconfig-utils': 8.58.1(typescript@6.0.2)
+      '@typescript-eslint/project-service': 8.58.1(typescript@6.0.3)
+      '@typescript-eslint/tsconfig-utils': 8.58.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.58.1
       '@typescript-eslint/visitor-keys': 8.58.1
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.7.4
       tinyglobby: 0.2.16
-      ts-api-utils: 2.5.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/utils@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.0.3(jiti@2.6.1))
       '@typescript-eslint/scope-manager': 8.58.1
       '@typescript-eslint/types': 8.58.1
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
       eslint: 10.0.3(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/utils@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@9.39.2(jiti@2.6.1))
       '@typescript-eslint/scope-manager': 8.58.1
       '@typescript-eslint/types': 8.58.1
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
       eslint: 9.39.2(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -11567,13 +11567,13 @@ snapshots:
 
   trim-newlines@3.0.1: {}
 
-  ts-api-utils@2.5.0(typescript@6.0.2):
+  ts-api-utils@2.5.0(typescript@6.0.3):
     dependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
 
-  ts-essentials@10.1.1(typescript@6.0.2):
+  ts-essentials@10.1.1(typescript@6.0.3):
     optionalDependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
 
   ts-interface-checker@0.1.13: {}
 
@@ -11650,29 +11650,29 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typescript-eslint@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2):
+  typescript-eslint@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.58.1(@typescript-eslint/parser@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2))(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
-      '@typescript-eslint/parser': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
-      '@typescript-eslint/utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/eslint-plugin': 8.58.1(@typescript-eslint/parser@8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3))(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/parser': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@10.0.3(jiti@2.6.1))(typescript@6.0.3)
       eslint: 10.0.3(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  typescript-eslint@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2):
+  typescript-eslint@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.58.1(@typescript-eslint/parser@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
-      '@typescript-eslint/parser': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
-      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.2)
-      '@typescript-eslint/utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/eslint-plugin': 8.58.1(@typescript-eslint/parser@8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3))(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/parser': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/typescript-estree': 8.58.1(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@9.39.2(jiti@2.6.1))(typescript@6.0.3)
       eslint: 9.39.2(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  typescript@6.0.2: {}
+  typescript@6.0.3: {}
 
   uint8arraylist@2.4.8:
     dependencies:
