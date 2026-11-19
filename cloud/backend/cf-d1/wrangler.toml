@@ -79,3 +79,20 @@ binding = "FP_BACKEND_D1"
 database_name = "fp-cloud-dev"
 database_id = "b0c1ea22-b733-420c-b812-bea9ffaa1676"
 
+[env.production.vars]
+VERSION = "FP-MSG-1.0"
+
+[[env.production.migrations]]
+tag = "v1"
+new_classes = ["FPRoomDurableObject"]
+
+[env.production.durable_objects]
+bindings = [
+  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+]
+
+[[env.production.d1_databases]]
+binding = "FP_BACKEND_D1"
+database_name = "fp-cloud-production"
+database_id = "ee23476b-c3c8-44c9-8388-d9455dd1b00f"
+

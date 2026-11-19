@@ -42,6 +42,7 @@ jobs:
           ACCESS_KEY_ID: ${{ vars.ACCESS_KEY_ID }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_DATABASE_ID: ${{ vars.CLOUDFLARE_DATABASE_ID }}
+          CLOUDFLARE_ENV: ${{ vars.CLOUDFLARE_ENV }}
           FP_ENDPOINT: ${{ vars.FP_ENDPOINT }}
           STORAGE_URL: ${{ vars.STORAGE_URL }}
         run: |
