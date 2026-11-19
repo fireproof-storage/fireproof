@@ -39,6 +39,6 @@
   },
   "devDependencies": {
     "@fireproof/core-cli": "workspace:0.0.0",
-    "wrangler": "^4.82.2"
+    "wrangler": "^4.85.0"
   }
 }
